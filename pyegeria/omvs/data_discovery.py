@@ -296,7 +296,7 @@ class DataDiscovery(ServerClient):
         ```
         """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/annotations/{annotation_guid}/update"
-        await self._async_update_element_body_request(url, body)
+        await self._async_update_element_body_request(url, body=body)
 
     def update_annotation(self, annotation_guid: str, body: dict | UpdateElementRequestBody) -> None:
         """Update an annotation.

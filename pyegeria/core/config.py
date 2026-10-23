@@ -527,6 +527,19 @@ class _LazySettings:
 settings = _LazySettings()
 
 
+def resolve_egeria_credentials(user_id: Optional[str] = None, user_pwd: Optional[str] = None) -> tuple[str, str]:
+    """Resolve the Egeria user and password at call time (ISSUE-161).
+
+    Precedence: an explicit value, then the EGERIA_USER / EGERIA_USER_PASSWORD environment
+    variables as they are now, then the User Profile from pyegeria's settings (config.json /
+    .env), then the quickstart defaults. Call it when a command runs, not at import, so a
+    variable set after import is still honoured.
+    """
+    user = user_id or os.environ.get("EGERIA_USER") or settings.User_Profile.user_name or "erinoverview"
+    pwd = user_pwd or os.environ.get("EGERIA_USER_PASSWORD") or settings.User_Profile.user_pwd or "secret"
+    return user, pwd
+
+
 def pretty_print_config(env_file: str | None = None, safe: bool = True, to_console: bool = True) -> Dict[str, Dict[str, Any]]:
     """
     Pretty print the current configuration and indicate the source of each value

@@ -286,6 +286,117 @@ they're holding real port materialization until this exists server-side
 
 ---
 
+### ISSUE-161: Dr.Egeria's two entry points resolve the Egeria user differently, and the CLI fixes its credential defaults at import time
+
+**Layer:** Pyegeria · **Status:** fixed on branch `fix/issue-161-dr-egeria-credentials` (owner approved 2026-10-21), not yet released · **Found:** 2026-10-21, while checking an RE report that `dr_egeria --process` ignored `EGERIA_USER`. **That report is withdrawn; RE was the cause:** RE's own `config.py:316` defaulted its daemon identity (`EGERIA_USER_ID`) to "erinoverview", so RE handed the child process erinoverview. The CLI correctly used it. RE is removing that default.
+
+**What was checked:** with `EGERIA_USER` set, the CLI path resolves and uses it throughout on 6.2.8:
+- `config.py:423` (`os.getenv("EGERIA_USER", config.json / .env value)`) feeds `settings.User_Profile.user_name`, the `--userid` default;
+- `EgeriaTech` / `BasePlatformClient` keep that `user_id`;
+- `create_egeria_bearer_token()` with no arguments uses `self.user_id`;
+- `_get_subclient` passes the user and token to every sub-client, and there is no token cache.
+Intended precedence (CLAUDE.md): explicit `--userid` > OS env > `.env` > `config.json` > default.
+
+**Real issues (pyegeria):**
+1. **Inconsistent resolution between entry points:** `md_processing/dr_egeria.py:93` (module constants) and `:923` (its own `__main__` path) read `os.environ.get("EGERIA_USER", "erinoverview")` / `EGERIA_USER_PASSWORD` directly, bypassing `.env` and `config.json`. `md_processing/md_processing_utils/common_md_utils.py:29-30` does the same. So `python -m md_processing.dr_egeria` and the `dr_egeria` CLI disagree whenever the user is set only in `.env` or `config.json`.
+2. **Import-time defaults:** `commands/cat/dr_egeria.py:32-33` computes the `--userid` / `--user_pass` defaults when the module is imported. Code that imports it, then sets `EGERIA_USER` and invokes the command in the same process, gets the earlier user. This doesn't affect normal CLI use, where each run is a new process.
+3. **Help text:** "Overrides EGERIA_USER (env var or .env file)" doesn't mention `config.json`, or that the default is fixed at import.
+
+**Fix (2026-10-21):** a new `pyegeria.core.config.resolve_egeria_credentials(user_id=None, user_pwd=None)` resolves, when called: an explicit value > the `EGERIA_USER` / `EGERIA_USER_PASSWORD` environment variables > the settings User Profile (`config.json` / `.env`) > "erinoverview" / "secret".
+- The `dr_egeria` and `dr_egeria_folder` CLIs now default `--userid` / `--user_pass` to `None` and call it when they run. Their help text says so.
+- `md_processing/dr_egeria.py` (module constants and its `__main__` path) and `common_md_utils.py` constants now use it too. The module-level `EGERIA_USER` names are kept for importers.
+- Tests: `tests/micro-tests/test_issue_161_dr_egeria_credentials.py`. Five cases: precedence; env set after import, for both CLIs; config-only user; explicit flag wins. The three behaviour cases fail with the old caller code. The full micro-test suite (1,425) passes in a clean python:3.13-slim container.
+- **Not changed:** other `commands/cat` tools (`list_glossaries`, `get_asset_graph`, `run_report`, `get_collection_tree`, `get_project_dependencies`, `list_user_ids`, `view_schema_tree`) still read `EGERIA_USER_PASSWORD` straight from the environment. They could adopt the helper later.
+
+**Originally proposed:**
+- Resolve credentials through `settings.User_Profile` in all three places.
+- Look them up when the command runs (click `default=None`, then resolve inside the command).
+- Add a micro-test that both entry points pick up a user set only in `config.json` or `.env`.
+
+---
+
+### ISSUE-160: `AutomatedCuration`'s template builders miss placeholders Egeria's templates now use, so created elements keep literal `~{name}~` values (folder endpoint `~{directoryAddress}~` breaks folder surveys)
+
+**Layer:** Pyegeria · **Status:** partly fixed on branch `fix/issue-160-template-placeholders` (owner approved 2026-10-21); not yet merged or released. The rest is listed below for the owner. **Found:** 2026-10-21, live by the RE coordinator against Egeria `main` 05a5e982 with pyegeria 6.2.7. Two FileFolders made with `create_folder_element_from_template` had Endpoint `networkAddress` = `~{directoryAddress}~`. Egeria's Folder Survey then failed with `BASIC-FILE-CONNECTOR-404-001` "The folder named ~{directoryAddress}~ ... does not exist" (engine action `c1d924b5`). The same folders also kept `versionIdentifier` = `~{versionIdentifier}~` and `deployedImplementationType` = `~{deployedImplementationType}~` (record `~/.re-gate/repair-folder-endpoints-20261021T143415Z.json`).
+
+**Cause (Egeria `origin/main` d8f72cbe25, read-only):** no placeholder was renamed (`git log -S` on `PlaceholderProperty.java`). Egeria **added** placeholders that pyegeria never sends:
+- **`directoryAddress` / `fileAddress`:** added by `156650efd6` (2026-07-19, "file system control for file cataloging"). They are now the Endpoint address in the folder and file templates (`DataAssetTemplateDefinition` `FILE_FOLDER_TEMPLATE`, `DATA_FOLDER_TEMPLATE`, `CSV_FILE_TEMPLATE`, ...). The templates still use `directoryPathName` / `filePathName` in the qualifiedName, so both are needed.
+- **`deployedImplementationType`:** in every folder/file placeholder list (`getFolderPlaceholderPropertyTypes`, `getDataFilesPlaceholderPropertyTypes`).
+- **`databaseDescription`:** the PostgreSQL Relational Database template's description placeholder (`PostgresPlaceholderProperty.DATABASE_DESCRIPTION`); pyegeria sent `description`.
+
+An unsent placeholder is stored as the literal `~{name}~`. `body_slimmer` drops `None` values, so an optional argument left unset has the same effect.
+
+**Fixed on the branch** (`pyegeria/omvs/automated_curation.py`; signatures unchanged):
+| Method | Added |
+|---|---|
+| `create_folder_element_from_template` | `directoryAddress` (= `path_name`), `deployedImplementationType: "File System Directory"` |
+| `create_csv_data_file_element_from_template`, `get_create_csv_data_file_element_from_template` | `fileAddress` (= `file_path_name`), `deployedImplementationType: "CSV Data File"` |
+| `create_secrets_store_element_from_template` | `fileAddress` (= `file_path_name`), `deployedImplementationType: "YAML File Secrets Collection"` |
+| `create_postgres_database_element_from_template` | `databaseDescription` (= `description`; `description` still sent) |
+
+Tests: `tests/micro-tests/test_issue_160_template_placeholders.py` (5 cases; all fail on the old code, all pass on the fix). The full micro-test suite (1,409) passes in a clean python:3.13-slim container.
+
+**Live check 2026-10-21 14:52Z** (Egeria `main` 05a5e982, erinoverview, after a peer round; the fixed code on this branch): `create_folder_element_from_template("/tmp/pyeg_rt_folder_20261021T145254Z", ..., version="1.0")` created FileFolder `e9a45c7f` with `deployedImplementationType` "File System Directory" and `versionIdentifier` "1.0". Its anchored Endpoint `8f003544` had **`networkAddress` = `/tmp/pyeg_rt_folder_20261021T145254Z`**. The folder, Connection `18ef2ee9` and Endpoint had no `~{...}~` left in their own properties. A metadata-expert delete (`deleteMethod: PURGE`, `cascadedDelete: true`) removed all three; each was verified gone by GUID. A first run (`a3475d3e`) confirmed the folder fields but its script missed the Endpoint. Exact `networkAddress` searches (forLineage) afterwards found no leftover for that run either. The survey itself was not run.
+
+**Follow-up fix 2026-10-21 (owner: "fix them all in a new pr")** on branch `fix/issue-160-remaining-placeholders`, built on #474. All 13 hard-coded builders now wrap their values in `_placeholder_values`, which sends `""` for any placeholder left `None`, so no `~{name}~` literal is stored. `body_slimmer` drops only `None`. A folder created without a file system therefore gets qualified name `FileFolder:::/path`.
+- **Postgres server and database:** new optional `secrets_store_path_name` / `secrets_collection_name`, sent as `secretsStorePathName` / `secretsCollectionName`, plus `version` (and `resource_name` on the server, defaulting to the server name). `db_user` / `db_pwd` are now optional, deprecated and no longer sent; passing either raises a `DeprecationWarning`.
+- **Kafka server:** `resourceName` (defaults to the server name) and `versionIdentifier`.
+- **Unity Catalog:**
+  - UC server: `resourceName`, defaulting to the server name;
+  - UC catalog: `ucServerQualifiedName`;
+  - UC table and function: `rootSchemaTypeQualifiedName`;
+  - UC volume: `directoryPathName` and `localStorageLocation`.
+  Each is a new optional parameter on the async method and its sync wrapper.
+- **Item 4 needed no change:** "Keystore File" is a real template (`DataAssetTemplateDefinition.KEYSTORE_FILE_TEMPLATE`), and live, both "YAML File Secrets Collection" and "Keystore File" resolve to template `fbcfcc0c`.
+
+Tests: `tests/micro-tests/test_issue_160_remaining_placeholders.py`, 11 cases, all failing on #474's code. The full micro-test suite (1,420) passes in a clean python:3.13-slim container. **Dr.Egeria follow-up, done 2026-10-21** (after 6.2.8; branch `claude/elegant-chatterjee-d280de`): the `Create Postgres Server Element` / `Create Postgres Database Element` commands no longer offer `Database User Id` / `Database Password`. Both attributes were deleted from the Asset Maker compact spec, since no other command used them. The commands now offer `Secrets Store Path Name`, `Secrets Collection Name` and `Version Identifier`, and the server also offers `Resource Name` (the canonical Governance Officer definition, copied). `AssetMakerProcessor` passes them as `secrets_store_path_name` / `secrets_collection_name` / `version` / `resource_name` and no longer passes `db_user` / `db_pwd`. Templates, help and report specs were regenerated, and the templates were copied to egeria-workspaces and trellis on local branches. Test: `tests/micro-tests/test_postgres_element_secrets.py`. Not run against a live server.
+
+**Follow-up live check 2026-10-21 15:16Z** (Egeria `main` 05a5e982, erinoverview, after a peer round; #475 code):
+- **(a)** `create_postgres_server_element_from_template("pyeg_rt_pg_…", "pyeg-rt.invalid", "5432", secrets_store_path_name=…, secrets_collection_name=…)`, with no `db_user` / `db_pwd`, created SoftwareServer `b6b2ebff`: `resourceName` = the server name, `versionIdentifier` and `description` = `""`, and no `~{...}~` in its own properties. Its Connection `55686913` and Endpoint `59014065` (`jdbc:postgresql://pyeg-rt.invalid:5432/postgres`) had no literals either.
+- The server had **no CatalogTarget link** (its relationships were sourcedFromTemplate, serverEndpoints, capabilities, connections), so the JDBC integration connector never saw it.
+- I did not find where Egeria stored the secrets-store values. They were not in the Connection's own properties, and no literal was left. Unconfirmed.
+- **(b)** `create_folder_element_from_template("/tmp/pyeg_rt_folder2_…", …, None)`, with no file system, version or description: qualifiedName `FileFolder:::/tmp/pyeg_rt_folder2_…`, `resourceName` `:/tmp/…`, `versionIdentifier` / `description` = `""`, `deployedImplementationType` "File System Directory", and Endpoint `networkAddress` = the path. No literals on the folder, Connection or Endpoint.
+- Both were purged (metadata-expert delete, `PURGE`, `cascadedDelete`), and all six GUIDs were verified gone. Name, host, stamp and secrets-file searches afterwards found nothing, which covers the server's capabilities too.
+
+**Originally listed as not fixed** (kept for the record):
+1. **Postgres server and database credentials:** both templates now take `secretsStorePathName` and `secretsCollectionName` (credentials come from a secrets store). pyegeria never sends them, so the connection keeps literals. pyegeria still sends `databaseUserId` / `databasePassword`, which the templates no longer list (`312c172639`, `56fa898e43`), so those are dead. Proposed: add optional `secrets_store_path_name` / `secrets_collection_name` parameters, and deprecate `db_user` / `db_pwd`.
+2. **Optional arguments left unset:** `versionIdentifier`, `description`, `fileSystemName` and the like are dropped when `None`, so they stay `~{...}~` (RE's `versionIdentifier` case). Options: send `""` for unset optional placeholders, or document that callers must pass them.
+3. **Unsent template placeholders in the Unity Catalog and Kafka builders:**
+   - UC catalog: `ucServerQualifiedName`;
+   - UC table and function: `rootSchemaTypeQualifiedName`;
+   - UC volume: `directoryPathName`, `localStorageLocation`;
+   - UC server and Kafka server: `resourceName` (Kafka also `versionIdentifier`).
+   Add parameters for them where a caller can know the value.
+4. **The secrets-store builder's fallback** to a "Keystore File" technology type (`_async_get_template_guid_for_technology_type`) matches no template on `origin/main`.
+
+Builders with no hard-coded keys (`create_elem_from_template`, Dr.Egeria's "Placeholder Property Values" attribute) are unaffected. The UC schema builder sends all its placeholders.
+
+---
+
+### ISSUE-159: no archive wrappers on the project or collection managers, and no restore wrapper at all, although Egeria offers both
+
+**Layer:** Pyegeria · **Status:** open, logged only (no fix without the owner's word) · **Found:** 2026-10-20, raised by the Resource Explorer expansion-architecture session: RE's investigation-delete ruling needs a Project archived through the project manager and restored by GUID. Facts confirmed here against Egeria `origin/main` 05a5e982 and pyegeria upstream `main`, read-only.
+
+**Egeria:** `OpenMetadataAPIGenericHandler.java` (common-services/generic-handlers):
+- `archiveBeanInRepository` (`:3289`) classifies the element Memento, renames each affected Referenceable's qualifiedName to `<qn>_archivedOn_<date>` (marker `archivedQualifiedNameMarker = "_archivedOn_"`, `:51`), and records one `lastOperationId` per operation.
+- `restoreBeanInRepository` (`:4170`) restores an element and everything the same delete or archive changed, given any GUID that operation touched.
+
+The OMF store's delete (`OpenMetadataStoreRESTServices`, around `:4118`) also routes `deleteMethod: ARCHIVE` to `archiveMetadataElementInStore`, and resolves `LOOK_FOR_LINEAGE` to ARCHIVE when lineage relationships exist.
+
+**pyegeria:**
+- Archive exists only as `MetadataExpert.archive_metadata_element` (`metadata-expert/metadata-elements/{guid}/archive`).
+- There is no `archive_project`, `archive_collection` or other manager-level archive.
+- There is no `restore_*` method anywhere. ISSUE-155 item 5 already lists Metadata Expert `metadata-elements/{guid}/restore` and `related-elements/{guid}/restore` as missing.
+
+**Possible route today (unverified):** `ProjectManager.delete_project(guid, body={"class": "DeleteElementRequestBody", "deleteMethod": "ARCHIVE"})`. pyegeria passes `deleteMethod` through, but whether the project-manager delete path honours ARCHIVE as the OMF store delete does was not traced.
+
+**Proposed (not made):**
+1. Add `MetadataExpert.restore_metadata_element` / `restore_related_elements` (and undo), per ISSUE-155 item 5.
+2. Add `ProjectManager.archive_project` and `CollectionManager.archive_collection`. These can be thin wrappers that send `deleteMethod: ARCHIVE` once that path is confirmed live, or call Metadata Expert archive.
+3. Live-test archive then restore of a throwaway Project, including the `_archivedOn_` rename and its reversal.
+
+---
+
 ### ISSUE-158: `GOV_DEF_PROPERTIES_LIST` lacks `DataQualityRuleProperties`, and Dr.Egeria's governance create fallback silently drops every type-specific attribute
 
 **Layer:** Pyegeria · **Status:** open, not fixed (owner approval needed) · **Found:** 2026-10-19, raised by the TestGen evaluation session while drafting a DataQualityRule convenience-API spec (`~/localGit/egeria-v6/wt-testgen-notes/packages/resource-explorer/docs/design-notes/SPEC-PYEGERIA-DATA-QUALITY-RULE.md`, uncommitted, pending owner review). Both points confirmed in source here, read-only; not run live.
@@ -388,6 +499,8 @@ Egeria says none of its changes break existing requests: the old class names and
 ### ISSUE-152: five update methods pass the body into `_async_update_element_body_request`'s `prop` slot, so nothing is sent
 
 **Layer:** Pyegeria · **Status:** open (found 2026-10-15 by Resource Explorer's ClassificationAnnotation backfill; not fixed, per this repo's policy)
+
+**Fixed 2026-10-20 (owner approved) on branch `fix/issue-152-update-body-slot`, not yet merged or released.** All five call sites now pass `body=body`. `tests/micro-tests/test_issue_152_update_body_slot.py` sends a dict body and an `UpdateElementRequestBody` through each method and checks that the body reaches the HTTP layer. All 10 cases fail on the old lines and pass on the fix, and the full micro-test suite (1,404) passes in a clean python:3.13-slim container. Not live-tested. Hit again 2026-10-20 by the TestGen evaluation session (RE #791, `update_annotation`), which carries its own workaround until a release ships this.
 
 `_async_update_element_body_request(self, url, prop=None, body=None)` (`pyegeria/core/_server_client.py:7317`) takes the body as its **third** parameter. Five callers pass it positionally as the second, so it lands in `prop` and `body` is `None`; the call fails before any request goes out (the builder observed an AttributeError):
 
@@ -737,6 +850,8 @@ then deleted and verified gone. **Confirmed still present on the rebuilt platfor
 
 **Re-test 2026-10-19 (quickstart recreated 13:02Z on Egeria `main` 05a5e982, image 6.3-SNAPSHOT built 2026-10-18 16:13Z; as erinoverview on qs-view-server; throwaways named `pyeg_rt_*`, each deleted and verified gone by GUID; peers cleared first):** **Plain path PASS; Memento path not re-tested here.** A fresh CSV asset (`create_csv_data_file_element_from_template`) with its Connection, deleted with `{"class": "DeleteElementRequestBody", "cascadeDelete": True}` (forLineage default), succeeded; the asset and Connection were both gone by GUID. The soft-delete (Memento) path, which was the actual bug, needs an asset used as an engine-action target. Resource Explorer is re-testing that path with its own throwaways (agreed with the RE coordinator).
 
+**Memento path re-test 2026-10-20 01:54:50Z by Resource Explorer (reported to this session; its record read here, the test not re-run): PASS** on Egeria `main` 05a5e982, as erinoverview. A throwaway CSV asset (`create_csv_data_file_element_from_template`, with anchored Connection and Endpoint) was the `destinationDataSet` of `ProvisioningActionProcess::Actor, Places and Products::Create Subscription::EVALUATION-SUBSCRIPTION`. The requester was erinoverview's own UserIdentity (Callie's gives 403-020 to erin). The engine action ran with the asset as action target and ended INVALID (`GOVERNANCE-ACTION-CONNECTORS-0033 ... not been passed a licenseType action target`), so no DigitalSubscription was created. Being the target of a real, executed engine action was enough. The original failing call, `delete_metadata_element(asset, {"class": "DeleteElementRequestBody", "cascadeDelete": True})` with forLineage left false, **succeeded**: the asset and both anchored elements read back not visible. The record says `not_visible`; RE reports they returned 400-010 (Memento), i.e. soft-deleted. Nothing was left live or half-deleted. **Note for re-testers:** an EngineAction that was never initiated, linked by ActionTarget, makes Egeria purge instead, so it does not reach the Memento path. Record `~/.re-gate/retest-issue-117-heavy-20261020T015450Z.json`; script `~/.re-gate/scripts/retest_issue_117_heavy.py`. Ready to move to the Appendix.
+
 **Layer:** Egeria Server · **Status:** open, workaround known; reported to the Egeria team (response 2026-10-05); Egeria fix merged to Egeria `main` 2026-10-06 (odpi/egeria#9363), not yet re-tested on a platform built from it · **Found:** 2026-10-02, live test of Dr.Egeria's
 Automation family (`Initiate Subscription` / `Cancel Subscription`, PR #414),
 cleaning up the throwaway destination data set afterwards.
@@ -806,6 +921,13 @@ reproduction is to run a subscription process with a fresh asset as
 **Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: fixed on Egeria `main`; re-test against a platform built from current `main`** (the new view-services FVT exercises this request). Client-side secret save and delete now refuse a secrets store that cannot be updated instead of reporting success. **pyegeria:** no code change; callers must now expect an error where they used to get a silent success.
 
 **Re-test 2026-10-19 (quickstart recreated 13:02Z on Egeria `main` 05a5e982, image 6.3-SNAPSHOT built 2026-10-18 16:13Z; as erinoverview on qs-view-server; throwaways named `pyeg_rt_*`, each deleted and verified gone by GUID; peers cleared first):** **Left to Resource Explorer** (agreed with the RE coordinator); not re-tested here.
+
+**Re-test 2026-10-20 01:25Z by Resource Explorer (reported to this session; its record read here, the test not re-run): PASS** on Egeria `main` 05a5e982, run once by the owner as peterprofile with two throwaway secrets-store graphs (ConnectorType, Endpoint, Connection, Asset; `RE::rt112::<T>::...`) and fake values only.
+- **Case A, read-only provider** (`YAMLSecretsStoreProvider`): `save_client_side_secret` now raises `InvalidParameterException` `OMAG-COMMON-400-034`: "The saveClientSideSecret operation cannot be performed on asset <guid> because its connector, ...YAMLSecretsStoreConnector, does not support it". pyegeria surfaces it as `SERVER_ERROR_500` wrapping that 400. No file was written. Before the fix this returned success with no write.
+- **Case B, control** (`YAMLSecretsFileProvider`): the save succeeded and the file was created (184 B).
+- **Cleanup:** `delete_client_side_secret`, all 8 elements deleted, both `/tmp` files removed; typed getters return `PyegeriaNotFoundException` for all 8.
+
+Script `~/.re-gate/scripts/retest_issue_112.py`; record `~/.re-gate/retest-issue-112-20261020T012543Z.json`. Ready to move to the Appendix.
 
 **Layer:** Egeria Server (`automated-curation` OMVS) · **Status:** open ·
 **Found:** 2026-09-21, live-verifying Resource Explorer's own client-side

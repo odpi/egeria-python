@@ -7,6 +7,7 @@ Copyright Contributors to the ODPi Egeria project.
 """
 
 import asyncio
+import warnings
 from datetime import datetime
 
 from httpx import Response
@@ -673,6 +674,12 @@ class AutomatedCuration(ServerClient):
         )
         return response
 
+    @staticmethod
+    def _placeholder_values(values: dict) -> dict:
+        """ISSUE-160: Egeria stores an unsent template placeholder as the literal ~{name}~, and body_slimmer
+        drops None values, so send "" for any placeholder the caller left unset."""
+        return {k: ("" if v is None else v) for k, v in values.items()}
+
     async def _async_create_secrets_store_element_from_template(
             self,
             file_path_name: str,
@@ -731,7 +738,7 @@ class AutomatedCuration(ServerClient):
         {
           "templateGUID": "130d819e-e17d-46bf-bfea-d09d862e341f",
           "isOwnAnchor": true,
-          "placeholderPropertyValues": {
+          "placeholderPropertyValues": self._placeholder_values({
             "fileSystemName": "",
             "filePathName": "secrets/mySecrets.omsecrets",
             "fileName": "mySecrets.omsecrets",
@@ -740,7 +747,7 @@ class AutomatedCuration(ServerClient):
             "fileExtension": "omsecrets",
             "fileEncoding": "YAML",
             "versionIdentifier": "V1.0"
-          }
+          })
         }
         ```
         """
@@ -754,6 +761,9 @@ class AutomatedCuration(ServerClient):
             "placeholderPropertyValues": {
                 "fileSystemName": file_system_name,
                 "filePathName": file_path_name,
+                # ISSUE-160: the template's endpoint address is ~{fileAddress}~.
+                "fileAddress": file_path_name,
+                "deployedImplementationType": "YAML File Secrets Collection",
                 "fileName": file_name,
                 "description": description,
                 "fileType": file_type,
@@ -851,6 +861,8 @@ class AutomatedCuration(ServerClient):
             host_name: str,
             port: str,
             description: Optional[str] = None,
+            resource_name: Optional[str] = None,
+            version: Optional[str] = None,
     ) -> str:
         """Create a Kafka server element from a template. Async version.
 
@@ -867,6 +879,10 @@ class AutomatedCuration(ServerClient):
 
         description: str, opt
             A description of the Kafka server.
+        resource_name : str, optional
+            Technical identifier for the element (the template's resourceName). Defaults to the element's name.
+        version : str, optional
+            Version identifier for the element.
 
 
 
@@ -880,12 +896,14 @@ class AutomatedCuration(ServerClient):
             "class": "TemplateRequestBody",
             "templateGUID": template_guid,
             "isOwnAnchor": True,
-            "placeholderPropertyValues": {
+            "placeholderPropertyValues": self._placeholder_values({
                 "serverName": kafka_server,
                 "hostIdentifier": host_name,
                 "portNumber": port,
                 "description": description,
-            },
+                "resourceName": resource_name or kafka_server,
+                "versionIdentifier": version,
+            }),
         }
         body_s = body_slimmer(body)
         return await self._async_create_elem_from_template(body_s)
@@ -896,6 +914,8 @@ class AutomatedCuration(ServerClient):
             host_name: str,
             port: str,
             description: Optional[str] = None,
+            resource_name: Optional[str] = None,
+            version: Optional[str] = None,
     ) -> str:
         """Create a Kafka server element from a template.
 
@@ -912,6 +932,10 @@ class AutomatedCuration(ServerClient):
 
         description: str, opt
             A description of the Kafka server.
+        resource_name : str, optional
+            Technical identifier for the element (the template's resourceName). Defaults to the element's name.
+        version : str, optional
+            Version identifier for the element.
 
 
 
@@ -923,7 +947,11 @@ class AutomatedCuration(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_create_kafka_server_element_from_template(
-                kafka_server, host_name, port, description
+                kafka_server, host_name, port, description,
+
+                resource_name=resource_name,
+
+                version=version,
             )
         )
         return response
@@ -971,16 +999,19 @@ class AutomatedCuration(ServerClient):
             "class": "TemplateRequestBody",
             "templateGUID": template_guid,
             "isOwnAnchor": True,
-            "placeholderPropertyValues": {
+            "placeholderPropertyValues": self._placeholder_values({
                 "fileName": file_name,
                 "fileType": file_type,
                 "filePathName": file_path_name,
+                # ISSUE-160: the template's endpoint address is ~{fileAddress}~.
+                "fileAddress": file_path_name,
+                "deployedImplementationType": "CSV Data File",
                 "versionIdentifier": version_identifier,
                 "fileEncoding": file_encoding,
                 "fileExtension": file_extension,
                 "fileSystemName": file_system_name,
                 "description": description
-            },
+            }),
         }
         body_s = body_slimmer(body)
         return await self._async_create_elem_from_template(body_s)
@@ -1079,16 +1110,19 @@ class AutomatedCuration(ServerClient):
             "templateGUID": template_guid,
             "isOwnAnchor": True,
             "allowRetrieve": True,
-            "placeholderPropertyValues": {
+            "placeholderPropertyValues": self._placeholder_values({
                 "fileName": file_name,
                 "fileType": file_type,
                 "filePathName": file_path_name,
+                # ISSUE-160: the template's endpoint address is ~{fileAddress}~.
+                "fileAddress": file_path_name,
+                "deployedImplementationType": "CSV Data File",
                 "versionIdentifier": version_identifier,
                 "fileEncoding": file_encoding,
                 "fileExtension": file_extension,
                 "fileSystemName": file_system_name,
                 "description": description
-            },
+            }),
             **kwargs,
         }
         body_s = body_slimmer(body)
@@ -1156,9 +1190,13 @@ class AutomatedCuration(ServerClient):
             postgres_server: str,
             host_name: str,
             port: str,
-            db_user: str,
-            db_pwd: str,
+            db_user: Optional[str] = None,
+            db_pwd: Optional[str] = None,
             description: Optional[str] = None,
+            secrets_store_path_name: Optional[str] = None,
+            secrets_collection_name: Optional[str] = None,
+            version: Optional[str] = None,
+            resource_name: Optional[str] = None,
     ) -> str:
         """Create a Postgres server element from a template. Async version.
 
@@ -1181,6 +1219,16 @@ class AutomatedCuration(ServerClient):
 
         description: str, opt
             A description of the element.
+        secrets_store_path_name : str, optional
+            Path name of the secrets store file holding the connection's credentials (secretsStorePathName).
+        secrets_collection_name : str, optional
+            Name of the secrets collection in that store (secretsCollectionName).
+        version : str, optional
+            Version identifier for the element.
+        resource_name : str, optional
+            Technical identifier for the element (the template's resourceName). Defaults to the element's name.
+        db_user, db_pwd : str, optional
+            Deprecated and ignored (ISSUE-160): the templates now take credentials from a secrets store.
 
 
 
@@ -1189,20 +1237,28 @@ class AutomatedCuration(ServerClient):
         str
             The GUID of the Postgres server element.
         """
+        if db_user is not None or db_pwd is not None:
+            # ISSUE-160: Egeria's Postgres templates take credentials from a secrets store
+            # (secretsStorePathName / secretsCollectionName); databaseUserId / databasePassword
+            # are no longer template placeholders, so these values are not sent.
+            warnings.warn("db_user and db_pwd are deprecated and ignored; pass secrets_store_path_name "
+                          "and secrets_collection_name instead (ISSUE-160)", DeprecationWarning, stacklevel=2)
         template_guid = await self._async_get_template_guid_for_technology_type("PostgreSQL Server")
 
         body = {
             "class": "TemplateRequestBody",
             "templateGUID": template_guid,
             "isOwnAnchor": True,
-            "placeholderPropertyValues": {
+            "placeholderPropertyValues": self._placeholder_values({
                 "serverName": postgres_server,
                 "hostIdentifier": host_name,
                 "portNumber": port,
-                "databaseUserId": db_user,
                 "description": description,
-                "databasePassword": db_pwd,
-            },
+                "secretsStorePathName": secrets_store_path_name,
+                "secretsCollectionName": secrets_collection_name,
+                "resourceName": resource_name or postgres_server,
+                "versionIdentifier": version,
+            }),
         }
         body_s = body_slimmer(body)
         return await self._async_create_elem_from_template(body_s)
@@ -1212,9 +1268,13 @@ class AutomatedCuration(ServerClient):
             postgres_server: str,
             host_name: str,
             port: str,
-            db_user: str,
-            db_pwd: str,
+            db_user: Optional[str] = None,
+            db_pwd: Optional[str] = None,
             description: Optional[str] = None,
+            secrets_store_path_name: Optional[str] = None,
+            secrets_collection_name: Optional[str] = None,
+            version: Optional[str] = None,
+            resource_name: Optional[str] = None,
     ) -> str:
         """Create a Postgres server element from a template.
 
@@ -1239,6 +1299,16 @@ class AutomatedCuration(ServerClient):
 
         db_pwd: str
             User password to connect to the database
+        secrets_store_path_name : str, optional
+            Path name of the secrets store file holding the connection's credentials (secretsStorePathName).
+        secrets_collection_name : str, optional
+            Name of the secrets collection in that store (secretsCollectionName).
+        version : str, optional
+            Version identifier for the element.
+        resource_name : str, optional
+            Technical identifier for the element (the template's resourceName). Defaults to the element's name.
+        db_user, db_pwd : str, optional
+            Deprecated and ignored (ISSUE-160): the templates now take credentials from a secrets store.
 
         Returns
         -------
@@ -1248,7 +1318,15 @@ class AutomatedCuration(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_create_postgres_server_element_from_template(
-                postgres_server, host_name, port, db_user, db_pwd, description
+                postgres_server, host_name, port, db_user, db_pwd, description,
+
+                secrets_store_path_name=secrets_store_path_name,
+
+                secrets_collection_name=secrets_collection_name,
+
+                version=version,
+
+                resource_name=resource_name,
             )
         )
         return response
@@ -1259,9 +1337,12 @@ class AutomatedCuration(ServerClient):
             server_name: str,
             host_identifier: str,
             port: str,
-            db_user: str,
-            db_pwd: str,
+            db_user: Optional[str] = None,
+            db_pwd: Optional[str] = None,
             description: Optional[str] = None,
+            secrets_store_path_name: Optional[str] = None,
+            secrets_collection_name: Optional[str] = None,
+            version: Optional[str] = None,
     ) -> str:
         """Create a Postgres database element from a template. Async version.
 
@@ -1281,27 +1362,44 @@ class AutomatedCuration(ServerClient):
             User password to connect to the database
         description: str, opt
             A description of the element.
+        secrets_store_path_name : str, optional
+            Path name of the secrets store file holding the connection's credentials (secretsStorePathName).
+        secrets_collection_name : str, optional
+            Name of the secrets collection in that store (secretsCollectionName).
+        version : str, optional
+            Version identifier for the element.
+        db_user, db_pwd : str, optional
+            Deprecated and ignored (ISSUE-160): the templates now take credentials from a secrets store.
 
         Returns
         -------
         str
             The GUID of the Postgres database element.
         """
+        if db_user is not None or db_pwd is not None:
+            # ISSUE-160: Egeria's Postgres templates take credentials from a secrets store
+            # (secretsStorePathName / secretsCollectionName); databaseUserId / databasePassword
+            # are no longer template placeholders, so these values are not sent.
+            warnings.warn("db_user and db_pwd are deprecated and ignored; pass secrets_store_path_name "
+                          "and secrets_collection_name instead (ISSUE-160)", DeprecationWarning, stacklevel=2)
         template_guid = await self._async_get_template_guid_for_technology_type("PostgreSQL Relational Database")
 
         body = {
             "class": "TemplateRequestBody",
             "templateGUID": template_guid,
             "isOwnAnchor": True,
-            "placeholderPropertyValues": {
+            "placeholderPropertyValues": self._placeholder_values({
                 "databaseName": postgres_database,
                 "serverName": server_name,
                 "hostIdentifier": host_identifier,
                 "portNumber": port,
-                "databaseUserId": db_user,
                 "description": description,
-                "databasePassword": db_pwd,
-            },
+                "secretsStorePathName": secrets_store_path_name,
+                "secretsCollectionName": secrets_collection_name,
+                "versionIdentifier": version,
+                # ISSUE-160: the database template's description placeholder is databaseDescription.
+                "databaseDescription": description,
+            }),
         }
         body_s = body_slimmer(body)
         response = await self._async_create_elem_from_template(body_s)
@@ -1313,9 +1411,12 @@ class AutomatedCuration(ServerClient):
             server_name: str,
             host_identifier: str,
             port: str,
-            db_user: str,
-            db_pwd: str,
+            db_user: Optional[str] = None,
+            db_pwd: Optional[str] = None,
             description: Optional[str] = None,
+            secrets_store_path_name: Optional[str] = None,
+            secrets_collection_name: Optional[str] = None,
+            version: Optional[str] = None,
     ) -> str:
         """Create a Postgres database element from a template. Async version.
 
@@ -1335,6 +1436,14 @@ class AutomatedCuration(ServerClient):
             User password to connect to the database
         description: str, opt
             A description of the element.
+        secrets_store_path_name : str, optional
+            Path name of the secrets store file holding the connection's credentials (secretsStorePathName).
+        secrets_collection_name : str, optional
+            Name of the secrets collection in that store (secretsCollectionName).
+        version : str, optional
+            Version identifier for the element.
+        db_user, db_pwd : str, optional
+            Deprecated and ignored (ISSUE-160): the templates now take credentials from a secrets store.
 
         Returns
         -------
@@ -1351,6 +1460,12 @@ class AutomatedCuration(ServerClient):
                 db_user,
                 db_pwd,
                 description,
+
+                secrets_store_path_name=secrets_store_path_name,
+
+                secrets_collection_name=secrets_collection_name,
+
+                version=version,
             )
         )
         return response
@@ -1406,13 +1521,16 @@ class AutomatedCuration(ServerClient):
             "templateGUID": template_guid,
             "isOwnAnchor": is_own_anchor,
             "initialClassifications": initial_classifications,
-            "placeholderPropertyValues": {
+            "placeholderPropertyValues": self._placeholder_values({
                 "directoryPathName": path_name,
+                # ISSUE-160: the template's endpoint address is ~{directoryAddress}~.
+                "directoryAddress": path_name,
                 "directoryName": folder_name,
+                "deployedImplementationType": "File System Directory",
                 "versionIdentifier": version,
                 "fileSystemName": file_system,
                 "description": description,
-            },
+            }),
         }
         body_s = body_slimmer(body)
         response = await self._async_create_elem_from_template(body_s)
@@ -1476,6 +1594,7 @@ class AutomatedCuration(ServerClient):
             port: str,
             description: Optional[str] = None,
             version: Optional[str] = None,
+            resource_name: Optional[str] = None,
     ) -> str:
         """Create a Unity Catalog Server element from a template. Async version.
 
@@ -1495,6 +1614,8 @@ class AutomatedCuration(ServerClient):
 
         version: str, opt
                 version of the element - typically of the form x.y.z
+        resource_name : str, optional
+            Technical identifier for the element (the template's resourceName). Defaults to the element's name.
 
 
 
@@ -1509,13 +1630,14 @@ class AutomatedCuration(ServerClient):
             "class": "TemplateRequestBody",
             "templateGUID": template_guid,
             "isOwnAnchor": True,
-            "placeholderPropertyValues": {
+            "placeholderPropertyValues": self._placeholder_values({
                 "serverName": server_name,
                 "hostURL": host_url,
                 "versionIdentifier": version,
                 "portNumber": port,
                 "description": description,
-            },
+                "resourceName": resource_name or server_name,
+            }),
         }
         body_s = body_slimmer(body)
         response = await self._async_create_elem_from_template(body_s)
@@ -1528,6 +1650,7 @@ class AutomatedCuration(ServerClient):
             port: str,
             description: Optional[str] = None,
             version: Optional[str] = None,
+            resource_name: Optional[str] = None,
     ) -> str:
         """Create a Unity Catalog Server element from a template. Async version.
 
@@ -1547,6 +1670,8 @@ class AutomatedCuration(ServerClient):
 
         version: str, opt
                 version of the element - typically of the form x.y.z
+        resource_name : str, optional
+            Technical identifier for the element (the template's resourceName). Defaults to the element's name.
 
 
 
@@ -1558,7 +1683,9 @@ class AutomatedCuration(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_create_uc_server_element_from_template(
-                server_name, host_url, port, description, version
+                server_name, host_url, port, description, version,
+
+                resource_name=resource_name,
             )
         )
         return response
@@ -1569,6 +1696,7 @@ class AutomatedCuration(ServerClient):
             network_address: str,
             description: Optional[str] = None,
             version: Optional[str] = None,
+            uc_server_qualified_name: Optional[str] = None,
     ) -> str:
         """Create a Unity Catalog Catalog element from a template. Async version.
 
@@ -1585,6 +1713,8 @@ class AutomatedCuration(ServerClient):
 
         version: str, opt
                 version of the element - typically of the form x.y.z
+        uc_server_qualified_name : str, optional
+            Qualified name of the Unity Catalog server element (ucServerQualifiedName).
 
 
 
@@ -1599,12 +1729,13 @@ class AutomatedCuration(ServerClient):
             "class": "TemplateRequestBody",
             "templateGUID": template_guid,
             "isOwnAnchor": True,
-            "placeholderPropertyValues": {
+            "placeholderPropertyValues": self._placeholder_values({
                 "ucCatalogName": uc_catalog,
                 "serverNetworkAddress": network_address,
                 "versionIdentifier": version,
                 "description": description,
-            },
+                "ucServerQualifiedName": uc_server_qualified_name,
+            }),
         }
         body_s = body_slimmer(body)
         response = await self._async_create_elem_from_template(body_s)
@@ -1616,6 +1747,7 @@ class AutomatedCuration(ServerClient):
             network_address: str,
             description: Optional[str] = None,
             version: Optional[str] = None,
+            uc_server_qualified_name: Optional[str] = None,
     ) -> str:
         """Create a Unity Catalog Catalog element from a template.
 
@@ -1632,6 +1764,8 @@ class AutomatedCuration(ServerClient):
 
         version: str, opt
                 version of the element - typically of the form x.y.z
+        uc_server_qualified_name : str, optional
+            Qualified name of the Unity Catalog server element (ucServerQualifiedName).
 
 
 
@@ -1643,7 +1777,9 @@ class AutomatedCuration(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_create_uc_catalog_element_from_template(
-                uc_catalog, network_address, description, version
+                uc_catalog, network_address, description, version,
+
+                uc_server_qualified_name=uc_server_qualified_name,
             )
         )
         return response
@@ -1688,13 +1824,13 @@ class AutomatedCuration(ServerClient):
             "class": "TemplateRequestBody",
             "templateGUID": template_guid,
             "isOwnAnchor": True,
-            "placeholderPropertyValues": {
+            "placeholderPropertyValues": self._placeholder_values({
                 "ucCatalogName": uc_catalog,
                 "ucSchemaName": uc_schema,
                 "serverNetworkAddress": network_address,
                 "versionIdentifier": version,
                 "description": description,
-            },
+            }),
         }
         body_s = body_slimmer(body)
         response = await self._async_create_elem_from_template(body_s)
@@ -1753,6 +1889,7 @@ class AutomatedCuration(ServerClient):
             network_address: str,
             description: Optional[str] = None,
             version: Optional[str] = None,
+            root_schema_type_qualified_name: Optional[str] = None,
     ) -> str:
         """Create a Unity Catalog table element from a template. Async version.
 
@@ -1781,6 +1918,8 @@ class AutomatedCuration(ServerClient):
 
         version: str, opt
                 version of the element - typically of the form x.y.z
+        root_schema_type_qualified_name : str, optional
+            Qualified name of the root schema type (rootSchemaTypeQualifiedName).
 
 
 
@@ -1795,7 +1934,7 @@ class AutomatedCuration(ServerClient):
             "class": "TemplateRequestBody",
             "templateGUID": template_guid,
             "isOwnAnchor": True,
-            "placeholderPropertyValues": {
+            "placeholderPropertyValues": self._placeholder_values({
                 "ucCatalogName": uc_catalog,
                 "ucSchemaName": uc_schema,
                 "ucTableName": uc_table,
@@ -1805,7 +1944,8 @@ class AutomatedCuration(ServerClient):
                 "serverNetworkAddress": network_address,
                 "versionIdentifier": version,
                 "description": description,
-            },
+                "rootSchemaTypeQualifiedName": root_schema_type_qualified_name,
+            }),
         }
         body_s = body_slimmer(body)
         response = await self._async_create_elem_from_template(body_s)
@@ -1822,6 +1962,7 @@ class AutomatedCuration(ServerClient):
             network_address: str,
             description: Optional[str] = None,
             version: Optional[str] = None,
+            root_schema_type_qualified_name: Optional[str] = None,
     ) -> str:
         """Create a Unity Catalog table element from a template.
 
@@ -1850,6 +1991,8 @@ class AutomatedCuration(ServerClient):
 
         version: str, opt
                 version of the element - typically of the form x.y.z
+        root_schema_type_qualified_name : str, optional
+            Qualified name of the root schema type (rootSchemaTypeQualifiedName).
 
 
 
@@ -1870,6 +2013,8 @@ class AutomatedCuration(ServerClient):
                 network_address,
                 description,
                 version,
+
+                root_schema_type_qualified_name=root_schema_type_qualified_name,
             )
         )
         return response
@@ -1882,6 +2027,7 @@ class AutomatedCuration(ServerClient):
             network_address: str,
             description: Optional[str] = None,
             version: Optional[str] = None,
+            root_schema_type_qualified_name: Optional[str] = None,
     ) -> str:
         """Create a Unity Catalog function element from a template. Async version.
 
@@ -1904,6 +2050,8 @@ class AutomatedCuration(ServerClient):
 
         version: str, opt
                 version of the element - typically of the form x.y.z
+        root_schema_type_qualified_name : str, optional
+            Qualified name of the root schema type (rootSchemaTypeQualifiedName).
 
 
 
@@ -1918,14 +2066,15 @@ class AutomatedCuration(ServerClient):
             "class": "TemplateRequestBody",
             "templateGUID": template_guid,
             "isOwnAnchor": True,
-            "placeholderPropertyValues": {
+            "placeholderPropertyValues": self._placeholder_values({
                 "ucCatalogName": uc_catalog,
                 "ucSchemaName": uc_schema,
                 "ucFunctionName": uc_function,
                 "serverNetworkAddress": network_address,
                 "versionIdentifier": version,
                 "description": description,
-            },
+                "rootSchemaTypeQualifiedName": root_schema_type_qualified_name,
+            }),
         }
         body_s = body_slimmer(body)
         response = await self._async_create_elem_from_template(body_s)
@@ -1939,6 +2088,7 @@ class AutomatedCuration(ServerClient):
             network_address: str,
             description: Optional[str] = None,
             version: Optional[str] = None,
+            root_schema_type_qualified_name: Optional[str] = None,
     ) -> str:
         """Create a Unity Catalog function element from a template.
 
@@ -1961,6 +2111,8 @@ class AutomatedCuration(ServerClient):
 
         version: str, opt
                 version of the element - typically of the form x.y.z
+        root_schema_type_qualified_name : str, optional
+            Qualified name of the root schema type (rootSchemaTypeQualifiedName).
 
 
 
@@ -1978,6 +2130,8 @@ class AutomatedCuration(ServerClient):
                 network_address,
                 description,
                 version,
+
+                root_schema_type_qualified_name=root_schema_type_qualified_name,
             )
         )
         return response
@@ -1992,6 +2146,8 @@ class AutomatedCuration(ServerClient):
             network_address: str,
             description: Optional[str] = None,
             version: Optional[str] = None,
+            directory_path_name: Optional[str] = None,
+            local_storage_location: Optional[str] = None,
     ) -> str:
         """Create a Unity Catalog volume element from a template. Async version.
 
@@ -2019,6 +2175,10 @@ class AutomatedCuration(ServerClient):
 
         version: str, opt
                 version of the element - typically of the form x.y.z
+        directory_path_name : str, optional
+            Path name of the volume's directory (directoryPathName).
+        local_storage_location : str, optional
+            Local storage location of the volume (localStorageLocation).
 
 
 
@@ -2033,7 +2193,7 @@ class AutomatedCuration(ServerClient):
             "class": "TemplateRequestBody",
             "templateGUID": template_guid,
             "isOwnAnchor": True,
-            "placeholderPropertyValues": {
+            "placeholderPropertyValues": self._placeholder_values({
                 "ucCatalogName": uc_catalog,
                 "ucSchemaName": uc_schema,
                 "ucVolumeName": uc_volume,
@@ -2042,7 +2202,9 @@ class AutomatedCuration(ServerClient):
                 "serverNetworkAddress": network_address,
                 "versionIdentifier": version,
                 "description": description,
-            },
+                "directoryPathName": directory_path_name,
+                "localStorageLocation": local_storage_location,
+            }),
         }
         body_s = body_slimmer(body)
         response = await self._async_create_elem_from_template(body_s)
@@ -2058,6 +2220,8 @@ class AutomatedCuration(ServerClient):
             network_address: str,
             description: Optional[str] = None,
             version: Optional[str] = None,
+            directory_path_name: Optional[str] = None,
+            local_storage_location: Optional[str] = None,
     ) -> str:
         """Create a Unity Catalog volume element from a template. Async version.
 
@@ -2086,6 +2250,10 @@ class AutomatedCuration(ServerClient):
 
         version: str, opt
                 version of the element - typically of the form x.y.z
+        directory_path_name : str, optional
+            Path name of the volume's directory (directoryPathName).
+        local_storage_location : str, optional
+            Local storage location of the volume (localStorageLocation).
 
 
 
@@ -2105,6 +2273,10 @@ class AutomatedCuration(ServerClient):
                 network_address,
                 description,
                 version,
+
+                directory_path_name=directory_path_name,
+
+                local_storage_location=local_storage_location,
             )
         )
         return response

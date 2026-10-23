@@ -339,7 +339,7 @@ class TimeKeeper(ServerClient):
         ```
         """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/time-keeper/context-events/{context_event_guid}/update"
-        await self._async_update_element_body_request(url, body)
+        await self._async_update_element_body_request(url, body=body)
 
     def update_context_event(self, context_event_guid: str, body: dict | UpdateElementRequestBody) -> None:
         """Update a context event.

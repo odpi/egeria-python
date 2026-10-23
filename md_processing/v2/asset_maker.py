@@ -115,9 +115,11 @@ class AssetMakerProcessor(AsyncBaseCommandProcessor):
                 postgres_server=_v(attributes, "Postgres Server Name"),
                 host_name=_v(attributes, "Host Name"),
                 port=_v(attributes, "Port"),
-                db_user=_v(attributes, "Database User Id"),
-                db_pwd=_v(attributes, "Database Password"),
                 description=_v(attributes, "Description"),
+                secrets_store_path_name=_v(attributes, "Secrets Store Path Name"),
+                secrets_collection_name=_v(attributes, "Secrets Collection Name"),
+                version=_v(attributes, "Version Identifier"),
+                resource_name=_v(attributes, "Resource Name"),
             )
             display_name = _v(attributes, "Postgres Server Name")
 
@@ -127,9 +129,10 @@ class AssetMakerProcessor(AsyncBaseCommandProcessor):
                 server_name=_v(attributes, "Postgres Server Name"),
                 host_identifier=_v(attributes, "Host Name"),
                 port=_v(attributes, "Port"),
-                db_user=_v(attributes, "Database User Id"),
-                db_pwd=_v(attributes, "Database Password"),
                 description=_v(attributes, "Description"),
+                secrets_store_path_name=_v(attributes, "Secrets Store Path Name"),
+                secrets_collection_name=_v(attributes, "Secrets Collection Name"),
+                version=_v(attributes, "Version Identifier"),
             )
             display_name = _v(attributes, "Postgres Database Name")
 

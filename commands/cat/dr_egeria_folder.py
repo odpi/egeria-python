@@ -65,7 +65,7 @@ from loguru import logger
 from rich.console import Console
 from rich.table import Table
 
-from pyegeria.core.config import settings
+from pyegeria.core.config import settings, resolve_egeria_credentials
 
 # Configure logging (matches commands/cat/dr_egeria.py)
 log_format = "{time} | {level} | {function} | {line} | {message} | {extra}"
@@ -77,8 +77,8 @@ logger.add("debug_log.log", rotation="1 day", retention="1 week", compression="z
 app_config = settings.Environment
 EGERIA_VIEW_SERVER = os.environ.get("EGERIA_VIEW_SERVER", app_config.egeria_view_server)
 EGERIA_VIEW_SERVER_URL = os.environ.get("EGERIA_VIEW_SERVER_URL", app_config.egeria_view_server_url)
-EGERIA_USER = settings.User_Profile.user_name or "erinoverview"
-EGERIA_USER_PASSWORD = settings.User_Profile.user_pwd or "secret"
+# Kept for importers; the command itself resolves credentials when it runs (ISSUE-161).
+EGERIA_USER, EGERIA_USER_PASSWORD = resolve_egeria_credentials()
 EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", settings.Environment.egeria_width or 190))
 
 console = Console(width=EGERIA_WIDTH)
@@ -250,9 +250,9 @@ async def run_one_file(input_file: Path, display_name: str, directive: str, clie
               help="Shortcut: execute all commands in every file and make permanent changes in Egeria")
 @click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use.")
 @click.option("--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to")
-@click.option("--userid", default=EGERIA_USER, help="Egeria user. Overrides EGERIA_USER (env var or .env file).")
-@click.option("--user_pass", default=EGERIA_USER_PASSWORD,
-              help="Egeria user password. Overrides EGERIA_USER_PASSWORD (env var or .env file).")
+@click.option("--userid", default=None, help="Egeria user. Defaults to EGERIA_USER (env var), then the User Profile in config.json or .env; resolved when the command runs.")
+@click.option("--user_pass", default=None,
+              help="Egeria user password. Defaults to EGERIA_USER_PASSWORD (env var), then the User Profile in config.json or .env; resolved when the command runs.")
 @click.option("--parse-summary", default="none", help="When to show parse summaries",
               type=click.Choice(["all", "errors", "none"], case_sensitive=False))
 @click.option("--attribute-logs", default="info", help="Per-attribute log verbosity",
@@ -279,6 +279,7 @@ def dr_egeria_folder(folder: str, directive: str, do_validate: bool, do_process:
     elif do_validate:
         directive = "validate"
 
+    userid, user_pass = resolve_egeria_credentials(userid, user_pass)
     usage_level = "Advanced" if advanced else "Basic"
     folder_path = Path(folder)
 

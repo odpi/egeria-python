@@ -128,7 +128,7 @@ class SchemaMaker(ServerClient):
         self, schema_type_guid: str, body: dict | UpdateElementRequestBody
     ) -> None:
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/schema-types/{schema_type_guid}/update"
-        await self._async_update_element_body_request(url, body)
+        await self._async_update_element_body_request(url, body=body)
 
     def update_schema_type(self, schema_type_guid: str, body: dict | UpdateElementRequestBody) -> None:
         loop = asyncio.get_event_loop()
@@ -171,7 +171,7 @@ class SchemaMaker(ServerClient):
         self, schema_attribute_guid: str, body: dict | UpdateElementRequestBody
     ) -> None:
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/schema-attributes/{schema_attribute_guid}/update"
-        await self._async_update_element_body_request(url, body)
+        await self._async_update_element_body_request(url, body=body)
 
     def update_schema_attribute(
         self, schema_attribute_guid: str, body: dict | UpdateElementRequestBody
