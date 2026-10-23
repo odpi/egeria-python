@@ -3836,15 +3836,17 @@ class AutomatedCuration(ServerClient):
         url = f"{self.ref_curation_command_base}/governance-engines/{governance_engine_name}/engine-actions/initiate"
 
         body = {
-            "class": "GovernanceActionRequestBody",
+            "class": "InitiateEngineActionRequestBody",
             "qualifiedName": qualified_name + str(int(start_time.timestamp())),
             "domainIdentifier": domain_identifier,
             "displayName": display_name,
             "description": description,
-            "requestSourceGUIDs": request_source_guids,
+            # Egeria's InitiateEngineActionRequestBody names: requestSourceGUIDs and
+            # startTime were dropped silently, so the action started at once (ISSUE-164)
+            "actionSourceGUIDs": request_source_guids,
             "actionTargets": action_targets,
             "receivedGuards": received_guards,
-            "startTime": int(start_time.timestamp() * 1000),
+            "startDate": int(start_time.timestamp() * 1000),
             "requestType": request_type,
             "requestParameters": request_parameters,
             "processName": process_name,

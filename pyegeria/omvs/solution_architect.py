@@ -5395,7 +5395,7 @@ class SolutionArchitect(ServerClient):
           },
           "parentAtEnd1": false,
           "properties": {
-            "class" : "SolutionRoleProperties",
+            "class" : "SolutionActorRoleProperties",
             "qualifiedName": "add unique name here",
             "name": "add short name here",
             "description": "add description here",
@@ -5417,7 +5417,7 @@ class SolutionArchitect(ServerClient):
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"solution-roles")
 
-        return await self._async_create_element_body_request(url, ["SolutionRoleProperties"], body)
+        return await self._async_create_element_body_request(url, ["SolutionActorRoleProperties"], body)
 
     @dynamic_catch
     def create_solution_role(self, body: dict| NewElementRequestBody) -> str:
@@ -5466,7 +5466,7 @@ class SolutionArchitect(ServerClient):
           },
           "parentAtEnd1": false,
           "properties": {
-            "class" : "SolutionRoleProperties",
+            "class" : "SolutionActorRoleProperties",
             "qualifiedName": "add unique name here",
             "name": "add short name here",
             "description": "add description here",
@@ -5688,7 +5688,7 @@ class SolutionArchitect(ServerClient):
          {
           "class" : "UpdateElementRequestBody",
           "properties": {
-            "class" : "SolutionRoleProperties",
+            "class" : "SolutionActorRoleProperties",
             "qualifiedName": "add unique name here",
             "name": "add short name here",
             "description": "add description here",
@@ -5712,7 +5712,7 @@ class SolutionArchitect(ServerClient):
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"solution-roles/{guid}/update")
 
-        await self._async_update_element_body_request(url, ["SolutionRoleProperties"], body)
+        await self._async_update_element_body_request(url, ["SolutionActorRoleProperties"], body)
 
     @dynamic_catch
     def update_solution_role(self, guid: str, body: dict | UpdateElementRequestBody) -> None:
@@ -5748,7 +5748,7 @@ class SolutionArchitect(ServerClient):
         {
           "class" : "UpdateElementRequestBody",
           "properties": {
-            "class" : "SolutionRoleProperties",
+            "class" : "SolutionActorRoleProperties",
             "qualifiedName": "add unique name here",
             "name": "add short name here",
             "description": "add description here",

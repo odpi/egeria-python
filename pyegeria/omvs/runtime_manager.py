@@ -3732,7 +3732,7 @@ class RuntimeManager(ServerClient):
 
     @dynamic_catch
     async def _async_detach_cohort_member(self, cohort_guid: str, cohort_member_guid: str,
-                                          body: Optional[dict | MetadataSourceRequestBody] = None) -> None:
+                                          body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Detach a cohort member from a cohort. Async version.
 
         Parameters
@@ -3741,7 +3741,7 @@ class RuntimeManager(ServerClient):
             The unique identifier of the cohort.
         cohort_member_guid: str
             The unique identifier of the cohort member.
-        body: dict | MetadataSourceRequestBody, optional, default = None
+        body: dict | DeleteRelationshipRequestBody, optional, default = None
             A structure representing the details of the request.
 
         Returns
@@ -3768,12 +3768,12 @@ class RuntimeManager(ServerClient):
         ```
         """
         url = f"{self.runtime_command_root}/metadata-repository-cohorts/{cohort_guid}/cohort-members/{cohort_member_guid}/detach"
-        await self._async_metadata_source_body_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.info(f"Detached cohort member {cohort_member_guid} from cohort {cohort_guid}")
 
     @dynamic_catch
     def detach_cohort_member(self, cohort_guid: str, cohort_member_guid: str,
-                             body: Optional[dict | MetadataSourceRequestBody] = None) -> None:
+                             body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Detach a cohort member from a cohort."""
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_detach_cohort_member(cohort_guid, cohort_member_guid, body))

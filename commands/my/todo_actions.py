@@ -198,7 +198,7 @@ def change_todo_status(server, url, userid, password, timeout, todo_guid, new_st
         if new_status not in ACTIVITY_STATUS:
             raise PyegeriaInvalidParameterException(context={"reason":"Invalid activity status"})
         body = {
-            "class": "UpdataElementRequestBody",
+            "class": "UpdateElementRequestBody",
             "properties": {
                 "class": "ToDoProperties",
                 "activityStatus": new_status
@@ -234,7 +234,7 @@ def mark_todo_complete(server, url, userid, password, timeout, todo_guid):
 
         m_client.create_egeria_bearer_token()
         body = {
-            "class": "UpdataElementRequestBody",
+            "class": "UpdateElementRequestBody",
             "properties": {
                 "class": "ToDoProperties",
                 "activityStatus": "COMPLETED",

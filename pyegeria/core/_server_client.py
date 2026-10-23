@@ -5652,7 +5652,7 @@ class ServerClient(BaseServerClient):
         """
 
         url = f"{self.command_root}classification-explorer/search-keywords/{keyword_guid}/remove"
-        await self._async_delete_relationship_request(url = url, body = None, cascade_delete = False)
+        await self._async_delete_element_request(url = url, body = None, cascade_delete = False)
 
     @dynamic_catch
     def remove_search_keyword(
