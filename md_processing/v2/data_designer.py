@@ -17,6 +17,29 @@ from md_processing.md_processing_utils.common_md_utils import (
 from pyegeria.core.utils import body_slimmer
 
 # --- DataValueSpecificationProcessor ---
+
+# ISSUE-162: defaults applied only when creating a data value specification / data class.
+# On update, unset attributes stay None and are dropped (Egeria's mergeUpdate defaults to
+# true), so an update no longer resets these properties.
+_DATA_VALUE_SPEC_CREATE_DEFAULTS = {
+    "matchPropertyNames": [],
+    "matchThreshold": 0,
+    "specificationDetails": {},
+    "allowsDuplicateValues": True,
+    "isNullable": True,
+    "sampleValues": [],
+    "dataPatterns": [],
+    "additionalProperties": {},
+}
+
+
+def _with_create_defaults(props: dict) -> dict:
+    out = dict(props)
+    for key, default in _DATA_VALUE_SPEC_CREATE_DEFAULTS.items():
+        if key in out and out[key] is None:
+            out[key] = default
+    return out
+
 class DataValueSpecificationProcessor(AsyncBaseCommandProcessor):
     """
     Processor for Data Value Specification create/update with upsert logic.
@@ -43,24 +66,24 @@ class DataValueSpecificationProcessor(AsyncBaseCommandProcessor):
             "displayName": display_name,
             "description": attributes.get('Description', {}).get('value'),
             "namespacePath": attributes.get('Namespace Path', {}).get('value'),
-            "matchPropertyNames": attributes.get('Match Property Names', {}).get('value', []),
-            "matchThreshold": attributes.get('Match Threshold', {}).get('value', 0),
+            "matchPropertyNames": attributes.get('Match Property Names', {}).get('value'),
+            "matchThreshold": attributes.get('Match Threshold', {}).get('value'),
             "specification": attributes.get('Specification', {}).get('value'),
-            "specificationDetails": attributes.get('Specification Details', {}).get('value', {}),
+            "specificationDetails": attributes.get('Specification Details', {}).get('value'),
             "dataType": attributes.get('Data Type', {}).get('value'),
             "units": attributes.get('Units', {}).get('value'),
             "absoluteUncertainty": attributes.get('Absolute Uncertainty', {}).get('value'),
             "relativeUncertainty": attributes.get('Relative Uncertainty', {}).get('value'),
-            "allowsDuplicateValues": attributes.get('Allow Duplicates', {}).get('value', True),
-            "isNullable": attributes.get('Is Nullable', {}).get('value', True),
+            "allowsDuplicateValues": attributes.get('Allow Duplicates', {}).get('value'),
+            "isNullable": attributes.get('Is Nullable', {}).get('value'),
             "defaultValue": attributes.get('Default Value', {}).get('value'),
             "averageValue": attributes.get('Average Value', {}).get('value'),
             "valueList": attributes.get('Value List', {}).get('value'),
             "valueRangeFrom": attributes.get('Value Range From', {}).get('value'),
             "valueRangeTo": attributes.get('Value Range To', {}).get('value'),
-            "sampleValues": attributes.get('Sample Values', {}).get('value', []),
-            "dataPatterns": attributes.get('Data Patterns', {}).get('value', []),
-            "additionalProperties": attributes.get('Additional Properties', {}).get('value', {})
+            "sampleValues": attributes.get('Sample Values', {}).get('value'),
+            "dataPatterns": attributes.get('Data Patterns', {}).get('value'),
+            "additionalProperties": attributes.get('Additional Properties', {}).get('value')
         }
 
         # "In Data Value Specification"/"Specializes Data Value Specification"
@@ -98,6 +121,7 @@ class DataValueSpecificationProcessor(AsyncBaseCommandProcessor):
             return await self.render_result_markdown(guid)
 
         elif verb == "Create":
+            props = _with_create_defaults(props)
             self.last_body = body = {"class": "NewElementRequestBody", "properties": props}
             raw_guid = await self.client.data_designer._async_create_data_value_specification(body)
             guid = self.extract_guid_or_raise(raw_guid, "Create Data Value Specification")
@@ -539,22 +563,22 @@ class DataClassProcessor(AsyncBaseCommandProcessor):
             "displayName": display_name,
             "description": attributes.get('Description', {}).get('value'),
             "namespacePath": attributes.get('Namespace', {}).get('value'),
-            "matchPropertyNames": attributes.get('Match Property Names', {}).get('value', []),
-            "matchThreshold": attributes.get('Match Threshold', {}).get('value', 0),
+            "matchPropertyNames": attributes.get('Match Property Names', {}).get('value'),
+            "matchThreshold": attributes.get('Match Threshold', {}).get('value'),
             "specification": attributes.get('Specification', {}).get('value'),
-            "specificationDetails": attributes.get('Specification Details', {}).get('value', {}),
+            "specificationDetails": attributes.get('Specification Details', {}).get('value'),
             "dataType": attributes.get('Data Type', {}).get('value'),
-            "allowsDuplicateValues": attributes.get('Allow Duplicate Values', {}).get('value', True),
+            "allowsDuplicateValues": attributes.get('Allow Duplicate Values', {}).get('value'),
             "isCaseSensitive": attributes.get('Is Case Sensitive', {}).get('value'),
-            "isNullable": attributes.get('Is Nullable', {}).get('value', True),
+            "isNullable": attributes.get('Is Nullable', {}).get('value'),
             "defaultValue": attributes.get('Default Value', {}).get('value'),
             "averageValue": attributes.get('Average Value', {}).get('value'),
             "valueList": attributes.get('Value List', {}).get('value'),
             "valueRangeFrom": attributes.get('Value Range From', {}).get('value'),
             "valueRangeTo": attributes.get('Value Range To', {}).get('value'),
-            "sampleValues": attributes.get('Sample Values', {}).get('value', []),
-            "dataPatterns": attributes.get('Data Patterns', {}).get('value', []),
-            "additionalProperties": attributes.get('Additional Properties', {}).get('value', {})
+            "sampleValues": attributes.get('Sample Values', {}).get('value'),
+            "dataPatterns": attributes.get('Data Patterns', {}).get('value'),
+            "additionalProperties": attributes.get('Additional Properties', {}).get('value')
         }
 
         # 2. Relationships
@@ -600,6 +624,7 @@ class DataClassProcessor(AsyncBaseCommandProcessor):
             return await self.render_result_markdown(guid)
 
         elif verb == "Create":
+            props = _with_create_defaults(props)
             self.last_body = body = {"class": "NewElementRequestBody", "properties": props}
             raw_guid = await self.client.data_designer._async_create_data_class(body)
             guid = self.extract_guid_or_raise(raw_guid, "Create Data Class")

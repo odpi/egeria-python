@@ -487,6 +487,28 @@ The improved audit flags all eight on the pre-fix code.
 
 ---
 
+### ISSUE-162: Dr.Egeria "Update Glossary Term" resets isAbstractConcept / isActivityDescription / isContext / isDataValue to False whenever the document doesn't mention them
+
+**Layer:** Pyegeria (Dr.Egeria) · **Status:** fixed on branch `fix/issue-162-update-resets-booleans` (owner approved 2026-10-23), not yet released · **Found:** 2026-10-23 by RE's question-term update batch builder, reading `md_processing/v2` (RE term batch fix round 3). Reported via the Thursday Coordinator; confirmed here in source on `main` (6.2.9), not run live.
+
+**What:** `TermProcessor.apply_changes` (`md_processing/v2/glossary.py:145-148`) builds the term properties with `attributes.get('Is Abstract Concept', {}).get('value', False)`, and likewise for `Is Activity Description`, `Is Context` and `Is Data Value`. On update, the body goes through `filter_update_properties` (`md_processing/v2/processors.py:1957`). For a merge update that drops only `None` values, so the `False` defaults are always sent. Every "Update Glossary Term", even one that changes only the description, therefore writes `False` to all four flags and clears any that were `True`.
+
+**Same pattern, likely affected (not confirmed):** `md_processing/v2/data_designer.py:54-55` (`DataValueSpecificationProcessor`) and `:547-549` (`DataClassProcessor`) default `allowsDuplicateValues` / `isNullable` to `True`. Both processors appear to build one property body for create and update, so an unrelated update would reset those to `True`. Other `.get('value', <default>)` uses checked in `md_processing` are request options (`forLineage`, `startsWith`, ...) or create-only values, not stored properties.
+
+**Impact:** a term with any of the four flags set loses it on an unrelated update. RE's 96-term question update batch will check the terms before applying.
+
+**Fix (2026-10-23):**
+- **Glossary terms:** the four flags now default to `None`, so a merge update omits them unless the document sets them. Create still sets them to `False` as before.
+- **Data Designer: confirmed and wider than first logged.** Both `DataValueSpecificationProcessor` and `DataClassProcessor` updates send their property body straight to `_async_update_element_body_request`, where `body_slimmer` drops only `None`. So an unrelated update also reset `matchPropertyNames`, `sampleValues` and `dataPatterns` to `[]`, `matchThreshold` to `0`, and `specificationDetails` and `additionalProperties` to `{}`, besides `allowsDuplicateValues` / `isNullable` to `True`. All of these now default to `None`, and the old defaults are applied only on Create (`_with_create_defaults`). Egeria's `mergeUpdate` defaults to `true` (`UpdateOptions.java:23`), so omitted properties keep their values.
+- Tests: `tests/micro-tests/test_issue_162_update_does_not_reset_properties.py`, 7 cases. The 4 update cases fail on the old code; the 3 create cases guard the unchanged create defaults. The full micro-test suite (1,436) passes in a clean python:3.13-slim container. Not live-tested.
+
+**Originally proposed:**
+- Default these attributes to `None` (`.get('value')`), so a merge update omits them unless the document sets them. Keep `False` / `True` only on the create path, or leave creation to Egeria's own defaults.
+- Check the Data Designer cases the same way.
+- Add a micro-test: an update with no flag attributes sends none of the four keys.
+
+---
+
 ### ISSUE-161: Dr.Egeria's two entry points resolve the Egeria user differently, and the CLI fixes its credential defaults at import time
 
 **Layer:** Pyegeria · **Status:** fixed on branch `fix/issue-161-dr-egeria-credentials` (owner approved 2026-10-21), not yet released · **Found:** 2026-10-21, while checking an RE report that `dr_egeria --process` ignored `EGERIA_USER`. **That report is withdrawn; RE was the cause:** RE's own `config.py:316` defaulted its daemon identity (`EGERIA_USER_ID`) to "erinoverview", so RE handed the child process erinoverview. The CLI correctly used it. RE is removing that default.
