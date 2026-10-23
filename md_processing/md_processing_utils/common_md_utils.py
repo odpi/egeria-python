@@ -264,7 +264,7 @@ def set_find_body(object_type: str, attributes: dict)->dict:
         "class": "SearchStringRequestBody",
         "searchString": search_string,
         "startsWith": attributes.get('Start With', {}).get('value', True),
-        "endWith": attributes.get('End With', {}).get('value', False),
+        "endsWith": attributes.get('End With', {}).get('value', False),
         "ignoreCase": attributes.get('Ignore Case', {}).get('value', False),
         "limitResultsByStatus": attributes.get('Limit Results By Status', {}).get('value', []),
         "startFrom": int(attributes.get('Start From', {}).get('value', 0)),
@@ -294,7 +294,6 @@ def set_create_body(object_type: str, attributes: dict)->dict:
         "externalSourceGUID": attributes.get('External Source GUID', {}).get('guid', None),
         "externalSourceName": attributes.get('External Source Name', {}).get('value', None),
         "effectiveTime": attributes.get('Effective Time', {}).get('value', None),
-        "governanceZoneFilter" : attributes.get('Governance Zone Filter', {}).get('value', None),
         "forLineage": attributes.get('For Lineage', {}).get('value', False),
         "forDuplicateProcessing": attributes.get('For Duplicate Processing', {}).get('value', False),
         "anchorGUID": attributes.get('Anchor ID', {}).get('guid', None),
@@ -303,7 +302,9 @@ def set_create_body(object_type: str, attributes: dict)->dict:
         "parentRelationshipTypeName": attributes.get('Parent Relationship Type Name', {}).get('value', None) or attributes.get('Parent Relationship Type', {}).get('value', None),
         "parentRelationshipProperties": attributes.get('Parent Relationship Attributes', {}).get('value', None) or attributes.get('Parent Relationship Properties', {}).get('value', None),
         "parentAtEnd1": attributes.get('Parent at End1', {}).get('value', True),
-        "anchorScopeGUID": attributes.get('Anchor Scope ID', {}).get('guid', None),
+        # Egeria reads a list, anchorScopeGUIDs; the singular key was dropped (ISSUE-164)
+        "anchorScopeGUIDs": ([attributes['Anchor Scope ID']['guid']]
+                             if attributes.get('Anchor Scope ID', {}).get('guid') else None),
         "properties": "",
         "initialClassifications": {}}
 
@@ -324,7 +325,6 @@ def set_update_body(object_type: str, attributes: dict)->dict:
       "class" : "UpdateElementRequestBody",
       "externalSourceGUID": attributes.get('External Source GUID', {}).get('guid', None),
       "externalSourceName": attributes.get('External Source Name', {}).get('value', None),
-      "governanceZoneFilter": attributes.get('Governance Zone Filter', {}).get('value', None),
       "effectiveTime": attributes.get('Effective Time', {}).get('value', None),
       "forLineage": attributes.get('For Lineage', {}).get('value', False),
       "forDuplicateProcessing": attributes.get('For Duplicate Processing', {}).get('value', False),

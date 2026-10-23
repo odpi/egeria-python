@@ -154,3 +154,51 @@ def test_solution_role_and_governance_purpose_use_registered_class_names():
         "properties": {"class": "SolutionActorRoleProperties", "qualifiedName": "q"}})
     assert "DataProcessingPurposeProperties" in GOV_DEF_PROPERTIES_LIST
     assert "GovernanceProcessingPurposeProperties" not in GOV_DEF_PROPERTIES_LIST
+
+
+# --- group 3: model gaps and Dr.Egeria / CLI keys ------------------------------
+
+def test_action_request_body_carries_egerias_anchor_fields_and_new_action_targets():
+    # My Profile sends isOwnAnchor for to-dos/meetings/reviews; the model lacked it, so
+    # Pydantic dropped it. Egeria's field for targets is newActionTargets.
+    from pyegeria.models import ActionRequestBody
+    targets = [{"actionTargetName": "subject", "actionTargetGUID": "t-1"}]
+    for key in ("newActionTargets", "actionTargetGUIDs"):
+        sent = ActionRequestBody.model_validate({
+            "class": "ActionRequestBody", "isOwnAnchor": True, "anchorGUID": "a-1",
+            "anchorScopeGUIDs": ["s-1"], key: targets}).model_dump(by_alias=True, exclude_none=True)
+        assert sent["isOwnAnchor"] is True
+        assert sent["anchorGUID"] == "a-1"
+        assert sent["anchorScopeGUIDs"] == ["s-1"]
+        assert sent["newActionTargets"] == targets
+        assert "actionTargetGUIDs" not in sent
+
+
+def test_template_request_body_sends_replacement_classifications_and_parent_relationship_properties():
+    from pyegeria.models import TemplateRequestBody
+    cls = {"Confidentiality": {"class": "ConfidentialityProperties", "confidentialityLevel": 1}}
+    rel = {"class": "CollectionMembershipProperties"}
+    for key in ("initialClassifications", "replacementClassifications"):
+        sent = TemplateRequestBody.model_validate({
+            "class": "TemplateRequestBody", "templateGUID": "t", key: cls,
+            "parentRelationshipProperties": rel}).model_dump(by_alias=True, exclude_none=True)
+        assert sent["replacementClassifications"] == cls
+        assert sent["parentRelationshipProperties"] == rel
+        assert "initialClassifications" not in sent
+
+
+def test_dr_egeria_find_create_update_bodies_use_keys_the_models_read():
+    from md_processing.md_processing_utils.common_md_utils import set_create_body, set_find_body, set_update_body
+    from pyegeria.models import NewElementRequestBody, SearchStringRequestBody
+
+    find = set_find_body("Glossary Term", {"Search String": {"value": "x"}, "End With": {"value": True}})
+    assert find["endsWith"] is True and "endWith" not in find
+    assert SearchStringRequestBody.model_validate(find).ends_with is True
+
+    create = set_create_body("Glossary Term", {"Anchor Scope ID": {"guid": "scope-1"}})
+    # callers fill "properties" in afterwards (two-layer convention)
+    assert NewElementRequestBody.model_validate({**create, "properties": None}).model_dump(
+        by_alias=True, exclude_none=True)["anchorScopeGUIDs"] == ["scope-1"]
+    # create/update bodies have no zone filter in Egeria
+    assert "governanceZoneFilter" not in create
+    assert "governanceZoneFilter" not in set_update_body("Glossary Term", {})
