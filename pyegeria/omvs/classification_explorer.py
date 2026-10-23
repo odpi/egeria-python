@@ -13578,8 +13578,11 @@ class ClassificationExplorer(ServerClient):
     @dynamic_catch
     async def _async_update_usage_activity(self, element_guid: str,
                                            body: dict | UpdateClassificationRequestBody) -> None:
-        """Update the properties of an element's UsageActivity classification. Set
-        "mergeUpdate": true to change only the properties supplied. Async version. Sample body:
+        """Update the properties of an element's UsageActivity classification. Async version.
+
+        Send every count, even with "mergeUpdate": true. Egeria's count fields are primitive longs,
+        so an omitted count arrives as 0 and overwrites the stored value (seen live: explicitGetCount
+        1 -> 0 on a findCount-only merge update). Profile maps that are omitted are kept. Sample body:
 
         {
            "class" : "UpdateClassificationRequestBody",
@@ -13675,8 +13678,11 @@ class ClassificationExplorer(ServerClient):
     @dynamic_catch
     async def _async_update_member_popularity_profile(self, element_guid: str,
                                                       body: dict | UpdateClassificationRequestBody) -> None:
-        """Update the properties of an element's MemberPopularityProfile classification. Set
-        "mergeUpdate": true to change only the properties supplied. Async version. Sample body:
+        """Update the properties of an element's MemberPopularityProfile classification. Async version.
+
+        Send every count, even with "mergeUpdate": true. Egeria's count fields are primitive longs,
+        so an omitted count arrives as 0 and overwrites the stored value (seen live: explicitGetCount
+        1 -> 0 on a findCount-only merge update). Profile maps that are omitted are kept. Sample body:
 
         {
            "class" : "UpdateClassificationRequestBody",
