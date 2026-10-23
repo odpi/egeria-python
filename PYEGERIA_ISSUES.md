@@ -288,7 +288,38 @@ they're holding real port materialization until this exists server-side
 
 ### ISSUE-164: `omvs_audit` now checks against Egeria's Java source. The first sweep finds 6 always-400 calls, 4 more 400s with a body, and 24 endpoints with no Spring mapping
 
-**Layer:** Pyegeria (+ Dr.Egeria, CLI) · **Status:** audit improved on branch `fix/role-appointment-class-names`; the findings below are **open, not fixed** (triaged, awaiting the owner's go) · **Found:** 2026-10-23, sweep requested by the owner before the next release, after ISSUE-163.
+**Layer:** Pyegeria (+ Dr.Egeria, CLI) · **Status:** audit improved, and the findings were fixed on branch `fix/role-appointment-class-names` (owner approved 2026-10-23; not yet released), except the items under *Not fixed* at the end · **Found:** 2026-10-23, sweep requested by the owner before the next release, after ISSUE-163.
+
+**Fixed 2026-10-23, in the owner's order:**
+1. **Anchor scope and find keys** (3bb233c1): `anchorScopeGUIDs` serialisation on the New/Relationship/Template models; the `_async_find_request` keys.
+2. **Always-400 deletes and wrong class names** (b8b4567b): `remove_is_abstract_concept`, `remove_activity_description`, `detach_cohort_member`, `remove_search_keyword`, `initiate_engine_action` (`InitiateEngineActionRequestBody`, `actionSourceGUIDs`, `startDate`), `DataValueMeaningProperties`, `SolutionActorRoleProperties`, `DataProcessingPurposeProperties`, and the CLI todo typo.
+3. **Model gaps and Dr.Egeria/CLI keys** (13c17e37): `ActionRequestBody` anchor fields and `newActionTargets`; `TemplateRequestBody` `parentRelationshipProperties` and `replacementClassifications`; `endsWith`; Dr.Egeria/CLI `anchorScopeGUIDs`; the CLI update `properties`.
+
+Tests: `tests/micro-tests/test_issue164_silent_field_drops.py` (15 tests).
+
+**Live on quickstart 9443, 2026-10-23** (three peer-cleared runs, throwaway `pyeg-test::issue164::` glossary/terms/solution role; every GUID read back as gone and the prefix find was empty after each run):
+- **Anchor scope stored:** a term created with `anchorScopeGUIDs: [<glossary>]` reads back with `elementHeader.anchor.classificationProperties.anchorScopeGUIDs == [<glossary>]`; a term created without it has none.
+- **Classification add/remove round trips:** AbstractConcept, ContextDefinition, ActivityDescription and DataValue (stored as `DataValueMeaning`, matching the corrected class) each appear in `elementHeader.glossaryTermKinds` after the add and are gone after the remove. Before the fix, `remove_is_abstract_concept` was a 400 on every call.
+- **Solution role:** `create_solution_role` with `SolutionActorRoleProperties` created, then deleted.
+- **Not verified live:**
+  - The find zone filter: an unzoned element matches any zone filter, and zoning a throwaway element could make it undeletable for the test user. Verified at the wire level only.
+  - `remove_search_keyword`: my test body was wrong (`keyword`; Egeria's field is `displayName`, as the docstring says).
+  - `detach_cohort_member`, `initiate_engine_action`: not exercised, by design.
+
+**Egeria 6 element shape (for anyone reading classifications back; RE's read-backs too).** `get_*_by_guid(output_format="JSON")` returns the element with `elementHeader` and `properties`. **There is no `classifications` list.** Each classification is a named camelCase slot on `elementHeader` (`anchor`, `zoneMembership`, `retention`, `glossaryTermKinds`, `projectClassification`, `memento`, … per Java `ElementHeader`), and anything unslotted is in `elementHeader.otherClassifications`. A slot holds an `ElementClassification`, or a list of them for the `…Kinds` slots, each with `classificationName` and `classificationProperties`. Trimmed raw sample from this run:
+```json
+"elementHeader": {
+  "guid": "97581996-622d-46fe-82e0-0feaeea17132",
+  "anchor": {"class": "ElementClassification", "classificationName": "Anchors",
+             "classificationProperties": {"class": "AnchorsProperties", "anchorTypeName": "GlossaryTerm",
+                                          "anchorDomainName": "AuthoredReferenceable",
+                                          "anchorScopeGUIDs": ["057d4bd3-62bc-4591-8777-410f7528d867"]}},
+  "glossaryTermKinds": [{"class": "ElementClassification", "classificationName": "AbstractConcept", "...": "..."}]
+}
+```
+Note that the anchor property is the plural `anchorScopeGUIDs`, a list. Code that looks for a generic `classifications` list, or for a singular `anchorScopeGUID`, finds nothing. That is how this run's first two read-backs reported false absences.
+
+**Correction to the triage below:** `RetentionClassificationProperties` and `SecurityGroupMembershipProperties` are **not** bugs. Egeria registers them as `@JsonSubTypes` aliases (`names = {...}`): `RetentionProperties` is also accepted as `"RetentionClassificationProperties"`, and `processors.py` records a 2026-08-03 live 400 for `RetentionProperties` on an older build. Left unchanged; the audit now reads registered names and aliases.
 
 **Audit changes** (`scripts/omvs_audit.py`, docs in CLAUDE.md and `scripts/README.md`, tests in `tests/micro-tests/test_omvs_audit_java_truth.py`):
 - **RENAMED matches** now get the verb/body checks too; they used to be skipped.
@@ -351,6 +382,15 @@ they're holding real port materialization until this exists server-side
 *FIELD-DROP: the method passes it, Egeria's class lacks it.*
 - `get_tech_types_for_open_metadata_type(tech_name=...)` and `get_endpoints_for_asset(name=...)` send `filter` in a `FilterRequestBody`. The endpoints declare `ResultsRequestBody`, which has no `filter`, so they return everything unfiltered.
 - `find_software_capabilities(property_names=...)` sends `propertyNames` where Java declares `SearchStringRequestBody`, so the property restriction is lost.
+
+**Not fixed (owner's call or Egeria's):**
+- **19 endpoints Egeria doesn't serve.** Confirmed absent from the live platform's OpenAPI doc (`omvs_audit.py --live`; GET `/v3/api-docs` on 9443) and from Egeria `main` 4486d1a7f1: the 8 Data Discovery analysis-report methods, data-classification create/update/link/detach, subject-area member add/remove, subject-area hierarchy link/detach (the SDK uses `collections/{g}/collection-hierarchies`; Egeria has `subject-areas/{g}/subject-area-hierarchies`), `find_governance_action_processes`, `get_gov_def_in_context` and `get_platform_organization`. Raise with the Egeria team, or remove from the SDK. Three other JAVA-MISSING entries are served live, so they were Java-scan false positives.
+- **No server-side filter exists:** `get_tech_types_for_open_metadata_type(tech_name=)` and `get_endpoints_for_asset(name=)`, whose endpoints take `ResultsRequestBody` (no `filter`), and `find_software_capabilities(property_names=)` (`SearchStringRequestBody`). Options: filter client-side, or drop and document the argument.
+- **Dr.Egeria Asset Maker template `typeName`:** Egeria's nearest field is `TemplateOptions.metadataElementSubtypeName` ("create an element of a subtype to the template type"). That isn't clearly the same as the spec's "type name of the element to create", so it needs a live check before mapping. Part of ISSUE-155 item 4 (Metadata Expert create-from-template) is covered by the `TemplateRequestBody` fields added above.
+- **Harmless top-level names Egeria ignores:** `FindProperties`, `AnyTimeRequestBody` (Java: `GetRequestBody`), `IntegrationServiceRequestBody` (legacy admin-services config).
+- `cascadeDelete` stays as it is: ISSUE-132, on hold for Egeria.
+- **New `.http` coverage, not part of this sweep:** the refreshed collections document usage-activity, member-popularity-profile and metadata undo/restore, which pyegeria lacks (ISSUE-155 style).
+- **Dead legacy path:** `pyegeria/view/md_processing_utils.py:1539` (behind the `dr_egeria_jupyter` CLI) still sends the sunset `initialStatus`, but it calls `create_controlled_glossary_term`, which no longer exists.
 
 *MODEL-FIELD gaps (review; 27 model→Java pairs, with users, in the report).*
 - Most are benign. For example, `ResultsRequestBody → GetRequestBody` drops paging on 51 `get_*_by_guid` calls, where paging means nothing.
