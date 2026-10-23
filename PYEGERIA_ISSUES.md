@@ -319,6 +319,19 @@ Three other JAVA-MISSING rows are served live, so they are Java-scan false posit
 
 **Every call above returns a 404 today.** Before ISSUE-164, pyegeria reported a 404 as "unable to connect to the Egeria platform", so a caller could not tell "this API is gone" from "the server is down".
 
+**Egeria team's answer (Mandy Chessell, 2026-10-23), and what pyegeria now does** (branch `fix/issue-165-replacements`). Each obsolete method is now a deprecated wrapper (`DeprecationWarning`) that delegates to the replacement, following the ISSUE-153 pattern; removal comes in a later release:
+
+| Obsolete | Why (Mandy) | Now delegates to |
+|---|---|---|
+| analysis-report create/update/delete/get/find | SurveyReport now inherits from Report, so it is an Asset | `AssetMaker.create_asset(["SurveyReportProperties"])` / `update_asset` / `delete_asset` / `get_asset_by_guid` / `get_assets_by_name` / `find_assets`, with type `SurveyReport`. A body naming `AnalysisReportProperties` is rewritten to `SurveyReportProperties`. |
+| `link/detach_analysis_report_to/from_asset` | use the ReportSubject relationship, `/elements/{subjectGUID}/reports/{reportGUID}/attach` | `AssetMaker.link_report_subject` / `unlink_report_subject(asset_guid, report_guid)` |
+| `add/remove_element_to/from_subject_area` | SubjectArea now inherits from Collection; use collection membership | `CollectionManager.add_to_collection` / `remove_from_collection(subject_area_guid, element_guid)`. The old methods never took the subject area, so they gain an optional `subject_area_guid`; without it they raise an error naming the replacement. |
+| `find_governance_action_processes` | GovernanceActionProcess now inherits from GovernanceDefinition | `find_governance_definitions(..., metadata_element_type="GovernanceActionProcess")` |
+| `get_gov_def_in_context` | no longer needed: OpenMetadataRootElement returns the context by default | `get_governance_definition_by_guid`. Dr.Egeria's `View Governance Definition Context` calls it directly. |
+| data-classification create/update/link/detach | "probably the old data class operations", now data value specifications (the common root of DataClass and DataGrain); **Mandy was not certain** | `create/update_data_value_specification` (a body naming `DataClassificationProperties` is rewritten to `DataClassProperties`) and `link/detach_data_value_assignment(data_field_guid, spec_guid)` (`DataValueAssignmentProperties`). A best-effort mapping. |
+
+Still open: `get_platform_organization` (removed in `816076ab50`; not covered by the answer). Tests: `tests/micro-tests/test_issue165_replacements.py` (8). Not verified live: Egeria was reset at 21:10Z on 2026-10-23.
+
 **Proposed (not made):**
 1. ~~Repoint `link/detach_subject_area_hierarchy`~~ (done).
 2. Mark the analysis-report, data-classification and `get_gov_def_in_context` methods deprecated, raising a clear "not supported by Egeria" error, before removing them in a later release. Dr.Egeria/CLI usage needs checking first.

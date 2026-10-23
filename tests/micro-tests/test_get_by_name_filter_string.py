@@ -11,7 +11,6 @@ from typing import Any, cast
 
 import pytest
 
-from pyegeria.omvs.data_discovery import DataDiscovery
 from pyegeria.omvs.schema_maker import SchemaMaker
 
 
@@ -19,7 +18,8 @@ from pyegeria.omvs.schema_maker import SchemaMaker
 @pytest.mark.parametrize("cls, method", [
     (SchemaMaker, "_async_get_schema_types_by_name"),
     (SchemaMaker, "_async_get_schema_attributes_by_name"),
-    (DataDiscovery, "_async_get_analysis_reports_by_name"),
+    # DataDiscovery.get_analysis_reports_by_name now delegates (deprecated) to
+    # AssetMaker.get_assets_by_name, which is listed; see test_issue165_replacements.py.
 ])
 async def test_name_is_sent_as_filter_string(cls, method):
     captured = {}

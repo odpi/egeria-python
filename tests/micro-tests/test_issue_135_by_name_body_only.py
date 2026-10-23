@@ -12,7 +12,6 @@ from pyegeria.omvs.actor_manager import ActorManager
 from pyegeria.omvs.asset_maker import AssetMaker
 from pyegeria.omvs.connection_maker import ConnectionMaker
 from pyegeria.omvs.data_designer import DataDesigner
-from pyegeria.omvs.data_discovery import DataDiscovery
 from pyegeria.omvs.product_manager import ProductManager
 from pyegeria.omvs.schema_maker import SchemaMaker
 from pyegeria.omvs.solution_architect import SolutionArchitect
@@ -27,7 +26,8 @@ WRAPPERS = [
     (ConnectionMaker, "get_endpoints_by_name"),
     (DataDesigner, "get_data_fields_by_name"),
     (DataDesigner, "get_data_value_specifications_by_name"),
-    (DataDiscovery, "get_analysis_reports_by_name"),
+    # DataDiscovery.get_analysis_reports_by_name now delegates (deprecated) to
+    # AssetMaker.get_assets_by_name, which is listed; see test_issue165_replacements.py.
     (ProductManager, "get_governance_action_processes_by_name"),
     (SchemaMaker, "get_schema_types_by_name"),
     (SchemaMaker, "get_schema_attributes_by_name"),
