@@ -296,4 +296,9 @@ Input {
 
 #add_input_container .link_row Switch {
     width: auto;
+    border: solid white;
+}
+#add_input_container .link_row Switch--slider {
+    color: chartreuse;
+    background: cornsilk;
 }
