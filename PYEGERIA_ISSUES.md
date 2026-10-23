@@ -286,6 +286,45 @@ they're holding real port materialization until this exists server-side
 
 ---
 
+### ISSUE-165: 19 SDK methods call endpoints Egeria doesn't serve: 13 removed upstream, 6 never existed
+
+**Layer:** Pyegeria · **Status:** open, documented, not changed (owner to decide: remove/deprecate, repoint, or raise with the Egeria team) · **Found:** 2026-10-23 by `scripts/omvs_audit.py` JAVA-MISSING (ISSUE-164).
+
+**Validation.** Each URL was checked three ways:
+1. **No Spring mapping** in Egeria `main` 4486d1a7f1 (2026-10-23), the checkout `omvs_audit.py` reads.
+2. **Absent from the live platform's OpenAPI doc** (`GET https://localhost:9443/v3/api-docs`, which `omvs_audit.py --live` reads; it marks these rows "[LIVE: absent, so a confirmed 404]").
+3. **Git history:** `git log -S` on the path fragment, to find the commit that removed it, or to show it was never in Egeria's Java.
+
+Three other JAVA-MISSING rows are served live, so they are Java-scan false positives and are excluded: `get_classified_elements_by` (runtime `by-{}` segment), `get_search_keyword_by_guid` and `new_subscription_type`.
+
+**Removed from Egeria:**
+
+| SDK method (file:line) | Calls | Removed by Egeria | Replacement in Egeria now |
+|---|---|---|---|
+| `data_discovery`: `create/update/delete_analysis_report`, `get_analysis_reports_by_name`, `find_analysis_reports`, `get_analysis_report_by_guid`, `link/detach_analysis_report_to/from_asset` (`data_discovery.py:1692-1773`, 8 methods) | `data-discovery/analysis-reports/...` | `e17cc09d44`, 2025-08-04 "Radical simplification of platform" | None as a CRUD API. Data Discovery now serves only `survey-reports/{g}/new-annotations[/{g}/attach\|detach]`; survey reports are produced by survey engines. The `AnalysisReportProperties` class these methods use doesn't exist either. |
+| `classification_explorer.add_element_to_subject_area` / `remove_element_from_subject_area` (`classification_explorer.py:12293/12405`) | `classification-explorer/elements/{g}/subject-area-member[/remove]` | `6a49a3e23f`, 2026-01-09, which also removed `elements/by-subject-area-membership` | Not confirmed. Likely collection membership on the subject area (`{urlMarker}/collections/{g}/members/{g}/attach\|detach`, served by the generic CollectionManager resource); ask the Egeria team. `SubjectAreaMemberProperties` doesn't exist either. |
+| `governance_officer.find_governance_action_processes` (`governance_officer.py:2310`) | `governance-officer/governance-action-processes/by-search-string` | `d299b120f4`, 2025-10-16, which removed all of Governance Officer's process create/update/publish/withdraw/remove/search endpoints | Not confirmed; a generic search by type `GovernanceActionProcess` is the likely route. `initiate` and `cancel` live on Automated Curation / Governance Engine (ISSUE-153). |
+| `platform_services.get_platform_organization` (`platform_services.py:1083`) | `GET platform-services/server-platform/organization-name` | `816076ab50`, 2026-06-05 "Improve OMAGServerPlatform properties…" | Not confirmed; presumably folded into the platform properties. `GET server-platform/origin` remains. |
+
+**Never in Egeria's Java (the SDK URL was a guess):**
+
+| SDK method (file:line) | Calls | What Egeria has |
+|---|---|---|
+| `data_designer.create_data_classification`, `update_data_classification`, `link_data_classification_to_data_field`, `detach_data_classification_from_data_field` (`data_designer.py:3298/3465/3601/3709`) | `data-designer/data-classifications/...` | Only `data-classes/{g}/nested-data-classes/{g}/attach\|detach`; there is no "data classification" element API. The `DataFieldClassificationProperties` class doesn't exist either. |
+| `subject_area.link_subject_area_hierarchy` / `detach_subject_area_hierarchy` (`subject_area.py:408/495`) | `subject-area/collections/{g}/collection-hierarchies/{g}/attach\|detach` | `subject-area/subject-areas/{parent}/subject-area-hierarchies/{nested}/attach\|detach`. **A straightforward URL fix**: same verbs and GUID pair, different segments. |
+| `governance_officer.get_gov_def_in_context` (`governance_officer.py:2796`) | `governance-officer/governance-definitions/{g}/retrieve-context` | Only `governance-definitions/{g}/retrieve` (plus update/delete and the peer/supporting links). |
+
+**Known consumer:** Dr.Egeria's `View Governance Definition Context` command (`GovernanceContextProcessor`, `md_processing/v2/governance.py:775`, registered in `dr_egeria.py:207`) calls `get_gov_def_in_context`, so that command 404s too. No other Dr.Egeria or CLI code calls these methods.
+
+**Every call above returns a 404 today.** Before ISSUE-164, pyegeria reported a 404 as "unable to connect to the Egeria platform", so a caller could not tell "this API is gone" from "the server is down".
+
+**Proposed (not made):**
+1. Repoint `link/detach_subject_area_hierarchy` to the `subject-areas/.../subject-area-hierarchies/...` paths and live-test them.
+2. Mark the analysis-report, data-classification and `get_gov_def_in_context` methods deprecated, raising a clear "not supported by Egeria" error, before removing them in a later release. Dr.Egeria/CLI usage needs checking first.
+3. Ask the Egeria team for the intended replacements for subject-area membership, governance-action-process search and the platform organization name.
+
+---
+
 ### ISSUE-164: `omvs_audit` now checks against Egeria's Java source. The first sweep finds 6 always-400 calls, 4 more 400s with a body, and 24 endpoints with no Spring mapping
 
 **Layer:** Pyegeria (+ Dr.Egeria, CLI) · **Status:** audit improved, and the findings were fixed on branch `fix/role-appointment-class-names` (owner approved 2026-10-23; not yet released), except the items under *Not fixed* at the end · **Found:** 2026-10-23, sweep requested by the owner before the next release, after ISSUE-163.
@@ -384,7 +423,7 @@ Note that the anchor property is the plural `anchorScopeGUIDs`, a list. Code tha
 - `find_software_capabilities(property_names=...)` sends `propertyNames` where Java declares `SearchStringRequestBody`, so the property restriction is lost.
 
 **Not fixed (owner's call or Egeria's):**
-- **19 endpoints Egeria doesn't serve.** Confirmed absent from the live platform's OpenAPI doc (`omvs_audit.py --live`; GET `/v3/api-docs` on 9443) and from Egeria `main` 4486d1a7f1: the 8 Data Discovery analysis-report methods, data-classification create/update/link/detach, subject-area member add/remove, subject-area hierarchy link/detach (the SDK uses `collections/{g}/collection-hierarchies`; Egeria has `subject-areas/{g}/subject-area-hierarchies`), `find_governance_action_processes`, `get_gov_def_in_context` and `get_platform_organization`. Raise with the Egeria team, or remove from the SDK. Three other JAVA-MISSING entries are served live, so they were Java-scan false positives.
+- **19 endpoints Egeria doesn't serve**, documented in full with provenance in **ISSUE-165**. Confirmed absent from the live platform's OpenAPI doc (`omvs_audit.py --live`; GET `/v3/api-docs` on 9443) and from Egeria `main` 4486d1a7f1: the 8 Data Discovery analysis-report methods, data-classification create/update/link/detach, subject-area member add/remove, subject-area hierarchy link/detach (the SDK uses `collections/{g}/collection-hierarchies`; Egeria has `subject-areas/{g}/subject-area-hierarchies`), `find_governance_action_processes`, `get_gov_def_in_context` and `get_platform_organization`. Raise with the Egeria team, or remove from the SDK. Three other JAVA-MISSING entries are served live, so they were Java-scan false positives.
 - **No server-side filter exists:** `get_tech_types_for_open_metadata_type(tech_name=)` and `get_endpoints_for_asset(name=)`, whose endpoints take `ResultsRequestBody` (no `filter`), and `find_software_capabilities(property_names=)` (`SearchStringRequestBody`). Options: filter client-side, or drop and document the argument.
 - **Dr.Egeria Asset Maker template `typeName`:** Egeria's nearest field is `TemplateOptions.metadataElementSubtypeName` ("create an element of a subtype to the template type"). That isn't clearly the same as the spec's "type name of the element to create", so it needs a live check before mapping. Part of ISSUE-155 item 4 (Metadata Expert create-from-template) is covered by the `TemplateRequestBody` fields added above.
 - **Harmless top-level names Egeria ignores:** `FindProperties`, `AnyTimeRequestBody` (Java: `GetRequestBody`), `IntegrationServiceRequestBody` (legacy admin-services config).
