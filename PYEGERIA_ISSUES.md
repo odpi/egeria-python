@@ -286,7 +286,7 @@ they're holding real port materialization until this exists server-side
 
 ---
 
-### ISSUE-165: 19 SDK methods call endpoints Egeria doesn't serve: 13 removed upstream, 6 never existed
+### ISSUE-165: 19 SDK methods called endpoints Egeria doesn't serve: 13 removed upstream, 6 never existed (2 since repointed)
 
 **Layer:** Pyegeria · **Status:** open, documented, not changed (owner to decide: remove/deprecate, repoint, or raise with the Egeria team) · **Found:** 2026-10-23 by `scripts/omvs_audit.py` JAVA-MISSING (ISSUE-164).
 
@@ -312,7 +312,7 @@ Three other JAVA-MISSING rows are served live, so they are Java-scan false posit
 | SDK method (file:line) | Calls | What Egeria has |
 |---|---|---|
 | `data_designer.create_data_classification`, `update_data_classification`, `link_data_classification_to_data_field`, `detach_data_classification_from_data_field` (`data_designer.py:3298/3465/3601/3709`) | `data-designer/data-classifications/...` | Only `data-classes/{g}/nested-data-classes/{g}/attach\|detach`; there is no "data classification" element API. The `DataFieldClassificationProperties` class doesn't exist either. |
-| `subject_area.link_subject_area_hierarchy` / `detach_subject_area_hierarchy` (`subject_area.py:408/495`) | `subject-area/collections/{g}/collection-hierarchies/{g}/attach\|detach` | `subject-area/subject-areas/{parent}/subject-area-hierarchies/{nested}/attach\|detach`. **A straightforward URL fix**: same verbs and GUID pair, different segments. |
+| `subject_area.link_subject_area_hierarchy` / `detach_subject_area_hierarchy` (`subject_area.py:408/495`) | `subject-area/collections/{g}/collection-hierarchies/{g}/attach\|detach` | `subject-area/subject-areas/{parent}/subject-area-hierarchies/{nested}/attach\|detach`. **Fixed 2026-10-23** (owner approved): repointed. The same module already had `link_subject_areas` / `detach_subject_areas` on the correct URLs, so these were broken duplicates; both names are kept for existing callers. |
 | `governance_officer.get_gov_def_in_context` (`governance_officer.py:2796`) | `governance-officer/governance-definitions/{g}/retrieve-context` | Only `governance-definitions/{g}/retrieve` (plus update/delete and the peer/supporting links). |
 
 **Known consumer:** Dr.Egeria's `View Governance Definition Context` command (`GovernanceContextProcessor`, `md_processing/v2/governance.py:775`, registered in `dr_egeria.py:207`) calls `get_gov_def_in_context`, so that command 404s too. No other Dr.Egeria or CLI code calls these methods.
@@ -320,7 +320,7 @@ Three other JAVA-MISSING rows are served live, so they are Java-scan false posit
 **Every call above returns a 404 today.** Before ISSUE-164, pyegeria reported a 404 as "unable to connect to the Egeria platform", so a caller could not tell "this API is gone" from "the server is down".
 
 **Proposed (not made):**
-1. Repoint `link/detach_subject_area_hierarchy` to the `subject-areas/.../subject-area-hierarchies/...` paths and live-test them.
+1. ~~Repoint `link/detach_subject_area_hierarchy`~~ (done).
 2. Mark the analysis-report, data-classification and `get_gov_def_in_context` methods deprecated, raising a clear "not supported by Egeria" error, before removing them in a later release. Dr.Egeria/CLI usage needs checking first.
 3. Ask the Egeria team for the intended replacements for subject-area membership, governance-action-process search and the platform organization name.
 

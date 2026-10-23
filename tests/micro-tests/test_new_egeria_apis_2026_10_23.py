@@ -114,3 +114,19 @@ def test_product_catalog_keeps_collection_manager_behaviour_for_inherited_method
     monkeypatch.setattr(ProductCatalog, "check_connection", lambda self: "test")
     pc = ProductCatalog("view-server", "https://localhost:1", "user", "pwd")
     assert pc.collection_command_root.endswith("/api/open-metadata/collection-manager/collections")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("method, verb, body_class", [
+    ("_async_link_subject_area_hierarchy", "attach", "NewRelationshipRequestBody"),
+    ("_async_detach_subject_area_hierarchy", "detach", "DeleteRelationshipRequestBody"),
+])
+async def test_subject_area_hierarchy_uses_egerias_url(monkeypatch, method, verb, body_class):
+    # ISSUE-165: the SDK called subject-area/collections/{g}/collection-hierarchies/{g}/..., which
+    # Egeria never served; SubjectAreaResource maps subject-areas/{g}/subject-area-hierarchies/{g}/...
+    from pyegeria.omvs.subject_area import SubjectArea
+    calls: list = []
+    client = _client(SubjectArea, calls, monkeypatch)
+    await getattr(client, method)("parent-guid", "nested-guid", {"class": body_class})
+    assert calls[0]["url"].endswith(
+        f"/api/open-metadata/subject-area/subject-areas/parent-guid/subject-area-hierarchies/nested-guid/{verb}")
