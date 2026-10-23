@@ -278,7 +278,16 @@ class RequestBody(PyegeriaModel):
 class NewRelationshipRequestBody(RequestBody):
     class_: Annotated[Literal["NewRelationshipRequestBody"], Field(alias="class")]
     make_anchor: bool | None = False # do I make element at end2 an anchor to end1
-    anchor_scope_guids: list[str] | None = None # in anchor classification for end2
+    anchor_scope_guids: list[str] | None = Field(
+        # Egeria's MakeAnchorOptions reads "anchorScopeGUIDs"; the camel-case
+        # generator produced "anchorScopeGuids", which Egeria dropped (and the
+        # documented "anchorScopeGUIDs" was dropped here by extra='ignore'), so
+        # anchor scope could never be set (ISSUE-164). Old spellings still read.
+        # (in the anchor classification for end2)
+        default=None,
+        validation_alias=AliasChoices("anchorScopeGUIDs", "anchorScopeGuids", "anchor_scope_guids"),
+        serialization_alias="anchorScopeGUIDs",
+    )
     properties: dict | None = None
     relationship_properties: dict | None = Field(default=None, alias="relationshipProperties")
 
@@ -489,7 +498,15 @@ class NewElementRequestBody(RequestBody):
     class_: Annotated[Literal["NewElementRequestBody"], Field(alias="class")]
     anchor_guid: str | None = None
     is_own_anchor: bool | None = True
-    anchor_scope_guids: list[str] | None = None
+    anchor_scope_guids: list[str] | None = Field(
+        # Egeria's MakeAnchorOptions reads "anchorScopeGUIDs"; the camel-case
+        # generator produced "anchorScopeGuids", which Egeria dropped (and the
+        # documented "anchorScopeGUIDs" was dropped here by extra='ignore'), so
+        # anchor scope could never be set (ISSUE-164). Old spellings still read.
+        default=None,
+        validation_alias=AliasChoices("anchorScopeGUIDs", "anchorScopeGuids", "anchor_scope_guids"),
+        serialization_alias="anchorScopeGUIDs",
+    )
     initial_classifications:  Dict[str, InitialClassifications] | None = None
     parent_relationship_properties: dict | None = None
     properties: dict | None = None
@@ -527,7 +544,15 @@ class TemplateRequestBody(RequestBody):
     class_: Annotated[Literal["TemplateRequestBody"], Field(alias="class")]
     anchor_guid: str | None = None
     is_own_anchor: bool | None = True
-    anchor_scope_guids: list[str] | None = None
+    anchor_scope_guids: list[str] | None = Field(
+        # Egeria's MakeAnchorOptions reads "anchorScopeGUIDs"; the camel-case
+        # generator produced "anchorScopeGuids", which Egeria dropped (and the
+        # documented "anchorScopeGUIDs" was dropped here by extra='ignore'), so
+        # anchor scope could never be set (ISSUE-164). Old spellings still read.
+        default=None,
+        validation_alias=AliasChoices("anchorScopeGUIDs", "anchorScopeGuids", "anchor_scope_guids"),
+        serialization_alias="anchorScopeGUIDs",
+    )
     initial_classifications: dict | None = None  # unsure
     parent_guid: str | None = None
     parent_relationship_type_name: str | None = None
