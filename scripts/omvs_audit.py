@@ -651,7 +651,7 @@ def model_fields(name: str) -> set[str] | None:
     cls = getattr(models, name, None)
     if cls is None or not hasattr(cls, "model_fields"):
         return None
-    return {f.alias or k for k, f in cls.model_fields.items()} - {"class"}
+    return {f.serialization_alias or f.alias or k for k, f in cls.model_fields.items()} - {"class"}
 
 
 def model_accepts(name: str) -> set[str] | None:
@@ -665,7 +665,15 @@ def model_accepts(name: str) -> set[str] | None:
     cls = getattr(models, name, None)
     if cls is None or not hasattr(cls, "model_fields"):
         return None
-    return {f.alias or k for k, f in cls.model_fields.items()} | set(cls.model_fields) | {"class"}
+    keys = set(cls.model_fields) | {"class"}
+    for k, f in cls.model_fields.items():
+        keys.add(f.alias or k)
+        va = f.validation_alias
+        if isinstance(va, str):
+            keys.add(va)
+        elif va is not None:                            # AliasChoices
+            keys |= {c for c in getattr(va, "choices", []) if isinstance(c, str)}
+    return keys
 
 
 def client_drops(filepath: str) -> list[tuple[int, str, list[str]]]:
@@ -1242,7 +1250,14 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
                         mapped = True
                         declared |= {b for b in hit if b}
                 if not mapped and "{" not in d.path.split("/")[1] and d.path.count("/") > 1:
-                    java_missing.append(f"- `{svc}.py:{d.lineno}` `{m}` `{d.verb} {d.path}`")
+                    # With --live, the running platform's OpenAPI doc settles it:
+                    # the Java scan can miss a mapping it cannot parse.
+                    tag = ""
+                    if live_index is not None:
+                        tag = ("  **[LIVE: served, so a Java-scan false positive]**"
+                               if live_matches(d.verb, d.path, *live_index)
+                               else "  **[LIVE: absent, so a confirmed 404]**")
+                    java_missing.append(f"- `{svc}.py:{d.lineno}` `{m}` `{d.verb} {d.path}`{tag}")
                 if not d.body_class:
                     continue
                 if not declared:
@@ -1330,7 +1345,8 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
             lines.append("_none_")
         lines.append("\n### JAVA-MISSING (review): no Spring mapping for this verb+path\n")
         lines.append("_Removed or renamed in Egeria, or an endpoint the SDK guessed. Static path "
-                     "resolution can also miss a runtime-built segment, so confirm before changing._\n")
+                     "resolution can also miss a runtime-built segment, so confirm before changing. "
+                     "Run with `--live` to check each one against the platform's OpenAPI doc._\n")
         lines.extend(java_missing or ["_none_"])
         lines.append("\n### HTTP-vs-JAVA (informational): the .http file disagrees with Java\n")
         lines.extend(http_vs_java or ["_none_"])
