@@ -286,6 +286,56 @@ they're holding real port materialization until this exists server-side
 
 ---
 
+### ISSUE-164: `omvs_audit` now checks against Egeria's Java source. The first sweep finds 6 always-400 calls, 4 more 400s with a body, and 24 endpoints with no Spring mapping
+
+**Layer:** Pyegeria (+ Dr.Egeria, CLI) · **Status:** audit improved on branch `fix/role-appointment-class-names`; the findings below are **open, not fixed** (triaged, awaiting the owner's go) · **Found:** 2026-10-23, sweep requested by the owner before the next release, after ISSUE-163.
+
+**Audit changes** (`scripts/omvs_audit.py`, docs in CLAUDE.md and `scripts/README.md`, tests in `tests/micro-tests/test_omvs_audit_java_truth.py`):
+- **RENAMED matches** now get the verb/body checks too; they used to be skipped.
+- **Java ground truth** (`--java-dir`, `$EGERIA_JAVA_DIR`, default `~/localGit/egeria-v6/egeria`; `--no-java` skips it). The audit indexes 1,587 Spring endpoints → `@RequestBody` type.
+  - **JAVA-BODY REJECTED** (defect): fires only when the declared type sits under a `@JsonTypeInfo(property="class")` base. Among request bodies that's only `DeleteRequestBody` → `Delete{Element,Relationship,Classification}RequestBody`, where a sibling class is a 400.
+  - **CLASS-IGNORED** (review): everywhere else Egeria's DTOs are plain `@JsonIgnoreProperties(ignoreUnknown=true)`, so `"class"` is ignored and fields map by name.
+  - **UNKNOWN-CLASS** (defect): any `"…Properties"`/`"…RequestBody"` string in `pyegeria/omvs`, `md_processing` or `commands` that is no Egeria class and no pyegeria class. The properties bases (`RelationshipBeanProperties`, `ClassificationBeanProperties`, …) are polymorphic, so an unknown name there is a 400.
+  - **JAVA-MISSING** (review): an SDK verb+path with no Spring mapping.
+  - **HTTP-vs-JAVA** (info): 21 `.http` entries name a body class Java doesn't accept. When Java accepts what the SDK sends, the `.http` BODY mismatch is no longer counted.
+- **Regression check:** on the pre-ISSUE-163 code the audit flags all eight ISSUE-163 bugs: 5 REJECTED and 3 UNKNOWN-CLASS, the detaches via the RENAMED path.
+
+**Findings, current branch** (`python scripts/omvs_audit.py --quiet`: java_ok=951, rejected=4, class_ignored=25, unknown_class=16, java_missing=24, http_vs_java=21):
+
+*Always fails: the SDK always sends this, so every call is a 400 or a client-side ValidationError.*
+
+| Where | What | Fix (from Java) |
+|---|---|---|
+| `glossary_manager.remove_is_abstract_concept` | element helper always sends `DeleteElementRequestBody`; endpoint takes `DeleteClassificationRequestBody` | `_async_delete_classification_request` |
+| `runtime_manager.detach_cohort_member` | `_async_metadata_source_body_request` always sends `{"class":"MetadataSourceRequestBody"}`; endpoint takes `DeleteRelationshipRequestBody` | `_async_delete_relationship_request` |
+| Dr.Egeria `Retention` classify (`md_processing/v2/curation.py:136`, `processors.py:237`) | body `class` is `RetentionClassificationProperties` | `RetentionProperties` |
+| CLI todo status update (`commands/my/todo_actions.py:201`) | typo `UpdataElementRequestBody`; pyegeria's Literal validator rejects it before sending | `UpdateElementRequestBody` |
+| `data_discovery` analysis-report methods (8) | `analysis-reports/...` has no mapping in `DataDiscoveryResource`; class `AnalysisReportProperties` doesn't exist | confirm whether Egeria still has the endpoint |
+| `classification_explorer.add/remove_element_to/from_subject_area` | `elements/{g}/subject-area-member` has no mapping; class `SubjectAreaMemberProperties` doesn't exist | confirm |
+
+*Fails only when a no-body default or a docstring-style body is used. With the caller's own correct body these work.*
+
+| Where | What | Fix |
+|---|---|---|
+| `feedback_manager.remove_search_keyword` | relationship body to an element `/remove` | `_async_delete_element_request` |
+| `glossary_manager.remove_activity_description` | relationship body; endpoint takes `DeleteClassificationRequestBody` | `_async_delete_classification_request` |
+| `actor_manager.add_security_group_membership` default class | `SecurityGroupMembershipProperties` | `SecurityListMembershipProperties` |
+| `classification_explorer.set_retention_classification` default class | `RetentionClassificationProperties` | `RetentionProperties` |
+| `glossary_manager.add_is_data_value` default class | `DataValueProperties` | `DataValueMeaningProperties` |
+| `solution_architect.create/update_solution_role` default class | `SolutionRoleProperties` | `SolutionActorRoleProperties` (extends `ActorRoleProperties`; the endpoint is `createActorRole`) |
+| `data_designer.link_data_classification_to_data_field` | `data-classifications/.../data-fields/{g}/attach` has no mapping; `DataFieldClassificationProperties` doesn't exist. The create/update/detach data-classification methods are also unmapped | confirm |
+| `GOV_DEF_PROPERTIES_LIST` (`governance_officer.py:40`) | `GovernanceProcessingPurposeProperties` | `DataProcessingPurposeProperties`; probably one of ISSUE-154's renames |
+
+*Harmless on the wire: an unknown top-level `class` that Egeria ignores.* `GovernanceActionRequestBody` (`automated_curation.initiate_engine_action`), `IntegrationServiceRequestBody` (`full_omag_server_config`), `AnyTimeRequestBody` (`metadata_expert.get_relationship_by_guid`, three Solution Architect retrieves) and `FindProperties` (`classification_explorer.retrieve_instance_for_guid`). Worth renaming for clarity only.
+
+*JAVA-MISSING, other entries to confirm.* `cancel_governance_action_process`, `get_search_keyword_by_guid`, `get_approved_engine_actions` (GET), `find_governance_action_processes`, `get_gov_def_in_context`, `get_platform_organization`, `new_subscription_type`, and `subject_area.link/detach_subject_area_hierarchy`. The last calls `collections/{g}/collection-hierarchies`, while Java has `subject-areas/{g}/subject-area-hierarchies/{g}/attach|detach`, so it is likely a real 404. `get_classified_elements_by` (`by-{}`) is a static-analysis false positive.
+
+*CLASS-IGNORED (25), review only.* Mostly Filter-vs-Results and MetadataSource-vs-DeleteClassification pairs that are harmless. Worth a field-level look: `metadata_expert.create_metadata_element_from_template` (Java `OpenMetadataTemplateRequestBody`) and `metadata_expert.classify_metadata_element` (Java `NewOpenMetadataClassificationRequestBody`). Both Java classes use typed `ElementProperties`, so the flat SDK shape may silently lose fields; see CLAUDE.md's note on `MetadataExpert` create. Also `project_manager.create_project_task` (Java `NewAttachmentRequestBody`).
+
+**Still not checked:** field-level drops on the CLASS-IGNORED pairs (Pydantic fields vs Java getters), which would be the next audit step.
+
+---
+
 ### ISSUE-163: Actor Manager role-appointment links send non-existent `*AppointmentProperties` classes, and five delete/detach methods send the wrong request-body class
 
 **Fixed 2026-10-23 on branch `fix/role-appointment-class-names` (not yet released).** **Live on quickstart 9443** (two runs, throwaway `pyeg-test::role-appt::` elements, all read back as gone by GUID afterwards, and a find on the prefix returned nothing). The old person-link class was refused with a 400. All three fixed links, called with no body, read back the relationship to the profile. The old IT detach body was refused with a 400; the fixed detach made the link unreadable. The fixed `delete_actor_role` deleted its role.
@@ -316,7 +366,12 @@ POST .../actor-manager/actor-roles/a6e578d4-…/it-profile-role-appointments/91c
 
 **Fix:** corrected the three `prop` lists; switched the two detaches to `_async_delete_relationship_request`, `delete_actor_role` and `delete_contribution_record` to `_async_delete_element_request`, and `remove_is_context_definition` to `_async_delete_classification_request`; aligned the type hints and docstrings; corrected the Dr.Egeria method name. Tests: `tests/micro-tests/test_role_appointment_class_names.py` (11 tests; 9 of them fail on the old code; the two that pass cover the person and team detaches, which were already correct).
 
-**Checked and left alone:** `MetadataExpert.delete_related_elements` sends `DeleteRelationshipRequestBody`, while Egeria declares `OpenMetadataDeleteRequestBody`. That's deliberate (ISSUE-63): the Egeria class can't carry `deleteMethod`. Decertify and unlicense (`GovernanceOfficerResource`: `DeleteRelationshipRequestBody`) are already correct. **Follow-up:** `scripts/omvs_audit.py --service actor-manager` on the old code reported 59 OK and 1 unrelated mismatch, so its BODY check flagged none of these. It takes the first `*RequestBody` identifier in the method, which is the signature annotation, so a wrong helper with a matching type hint looks clean. Comparing the helper called against the `.http` body class would catch this class of bug.
+**Checked and left alone:** `MetadataExpert.delete_related_elements` sends `DeleteRelationshipRequestBody`, while Egeria declares `OpenMetadataDeleteRequestBody`. That's deliberate (ISSUE-63): the Egeria class can't carry `deleteMethod`. Decertify and unlicense (`GovernanceOfficerResource`: `DeleteRelationshipRequestBody`) are already correct. **Why the audit missed them:** `scripts/omvs_audit.py --service actor-manager` on the old code reported 59 OK and 1 unrelated mismatch. Three blind spots, all fixed in ISSUE-164:
+- Both detaches matched only by verb+path (RENAMED), and RENAMED matches skipped the body check.
+- Nothing compared the inner `properties` class, which is where the three link bugs were.
+- For `delete_actor_role`, `delete_contribution_record` and `is-context-definition`, the `.http` file named the same wrong class the SDK sent.
+
+The improved audit flags all eight on the pre-fix code.
 
 ---
 
