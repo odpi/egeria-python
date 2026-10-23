@@ -450,6 +450,11 @@ FIELD_RE = re.compile(r'(?:@JsonProperty\s*\(\s*(?:value\s*=\s*)?"(\w+)"\s*\)\s*
                       r'^[ \t]*(?:private|protected|public)\s+(?!static\b)(?:final\s+)?'
                       r'[\w.<>\[\],? ]+?\s+(\w+)\s*(?:=[^;]*)?;', re.M)
 # String constants in the SDK that name an Egeria Java class.
+# Wire names Jackson accepts: @JsonSubTypes.Type(value = X.class, name = "N",
+# names = {"Alias", ...}). The alias list keeps old names working, e.g.
+# RetentionProperties is also registered as "RetentionClassificationProperties".
+SUBTYPE_RE = re.compile(r'@JsonSubTypes\.Type\(\s*value\s*=\s*\w+\.class\s*,\s*name\s*=\s*"(\w+)"'
+                        r'(?:\s*,\s*names\s*=\s*\{([^}]*)\})?')
 CLASS_CONST_RE = re.compile(r"^[A-Z][A-Za-z0-9]*(?:Properties|RequestBody)$")
 
 
@@ -556,6 +561,9 @@ def load_java_truth(java_dir: str) -> JavaTruth | None:
             text = open(os.path.join(root, fname), encoding="utf-8", errors="ignore").read()
             for child, parent in EXTENDS_RE.findall(text):
                 parents.setdefault(child, parent)
+            for name, aliases in SUBTYPE_RE.findall(text):
+                known.add(name)
+                known.update(re.findall(r'"(\w+)"', aliases))
             if "@JsonTypeInfo" in text and 'property = "class"' in text.replace("property=", "property = "):
                 polymorphic.add(stem)
             if stem.endswith(("Properties", "RequestBody", "Options")) and f"class {stem}" in text:
