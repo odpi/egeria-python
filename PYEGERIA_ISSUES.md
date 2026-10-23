@@ -300,7 +300,7 @@ they're holding real port materialization until this exists server-side
   - **HTTP-vs-JAVA** (info): 21 `.http` entries name a body class Java doesn't accept. When Java accepts what the SDK sends, the `.http` BODY mismatch is no longer counted.
 - **Regression check:** on the pre-ISSUE-163 code the audit flags all eight ISSUE-163 bugs: 5 REJECTED and 3 UNKNOWN-CLASS, the detaches via the RENAMED path.
 
-**Findings, current branch** (`python scripts/omvs_audit.py --quiet`: java_ok=951, rejected=4, class_ignored=25, unknown_class=16, java_missing=24, http_vs_java=21):
+**Findings, current branch**, against Egeria `main` 4486d1a7f1 (2026-10-23). `python scripts/omvs_audit.py --quiet` reports java_ok=951, rejected=4, class_ignored=25, unknown_class=16, java_missing=22, field_drop=3, client_drop=13, model_gaps=27, http_vs_java=21. An earlier run against a 2026-10-06 checkout listed 24 JAVA-MISSING; `cancel_governance_action_process` and `get_approved_engine_actions` (ISSUE-153's Governance Engine paths) now resolve.
 
 *Always fails: the SDK always sends this, so every call is a 400 or a client-side ValidationError.*
 
@@ -328,11 +328,34 @@ they're holding real port materialization until this exists server-side
 
 *Harmless on the wire: an unknown top-level `class` that Egeria ignores.* `GovernanceActionRequestBody` (`automated_curation.initiate_engine_action`), `IntegrationServiceRequestBody` (`full_omag_server_config`), `AnyTimeRequestBody` (`metadata_expert.get_relationship_by_guid`, three Solution Architect retrieves) and `FindProperties` (`classification_explorer.retrieve_instance_for_guid`). Worth renaming for clarity only.
 
-*JAVA-MISSING, other entries to confirm.* `cancel_governance_action_process`, `get_search_keyword_by_guid`, `get_approved_engine_actions` (GET), `find_governance_action_processes`, `get_gov_def_in_context`, `get_platform_organization`, `new_subscription_type`, and `subject_area.link/detach_subject_area_hierarchy`. The last calls `collections/{g}/collection-hierarchies`, while Java has `subject-areas/{g}/subject-area-hierarchies/{g}/attach|detach`, so it is likely a real 404. `get_classified_elements_by` (`by-{}`) is a static-analysis false positive.
+*JAVA-MISSING (meaning no such URL in Egeria; it is not about classes), other entries to confirm.* `get_search_keyword_by_guid`, `find_governance_action_processes`, `get_gov_def_in_context`, `get_platform_organization`, `new_subscription_type`, and `subject_area.link/detach_subject_area_hierarchy`. The last calls `collections/{g}/collection-hierarchies`, while Java has `subject-areas/{g}/subject-area-hierarchies/{g}/attach|detach`, so it is likely a real 404. `get_classified_elements_by` (`by-{}`) is a static-analysis false positive.
 
 *CLASS-IGNORED (25), review only.* Mostly Filter-vs-Results and MetadataSource-vs-DeleteClassification pairs that are harmless. Worth a field-level look: `metadata_expert.create_metadata_element_from_template` (Java `OpenMetadataTemplateRequestBody`) and `metadata_expert.classify_metadata_element` (Java `NewOpenMetadataClassificationRequestBody`). Both Java classes use typed `ElementProperties`, so the flat SDK shape may silently lose fields; see CLAUDE.md's note on `MetadataExpert` create. Also `project_manager.create_project_task` (Java `NewAttachmentRequestBody`).
 
-**Still not checked:** field-level drops on the CLASS-IGNORED pairs (Pydantic fields vs Java getters), which would be the next audit step.
+**Field-level findings.** These calls succeed but silently ignore an option. Egeria's DTOs are `ignoreUnknown=true`, and pyegeria's models are `extra='ignore'`, so a misnamed field disappears on either side with no error.
+
+*CLIENT-DROP: pyegeria's own model discards the key before sending.*
+
+| Where | Key sent | Model/Java field | Effect |
+|---|---|---|---|
+| `_async_find_request` (`_server_client.py:6543`, every `find_*` without property names) | `zoneFilter`, `relationshipPageSize`, `anchorScopeGuid`, `anchorTypeName` | `governanceZoneFilter`, `relationshipsPageSize`, `anchorScopeGUID`; `anchorTypeName` is not a field at all | `governance_zone_filter`, `relationship_page_size` and `anchor_scope_guid` never take effect on any find |
+| My Profile to-do / meeting / review create (`my_profile.py:1314/1431/1523`) | `isOwnAnchor` | Java `ActionRequestBody` (via `AnchorOptions`) has it; **pyegeria's `ActionRequestBody` model lacks it**, and also `anchorGUID`, `anchorScopeGUIDs` and `initialClassifications`. It names Java's `newActionTargets` `actionTargetGUIDs` | not anchored as intended |
+| Dr.Egeria `common_md_utils.py:263` | `endWith` | `endsWith` | the "ends with" search option is ignored |
+| Dr.Egeria `common_md_utils.py:292/323/737`, `v2/schema_maker.py:28`, `v2/asset_maker.py:57`, CLI `glossary_actions.py:123` | `anchorScopeGUID(s)`, `governanceZoneFilter` on create/update bodies | the model reads `anchorScopeGuids` (see below); create/update bodies have no zone filter | anchor scope is dropped |
+| Dr.Egeria `v2/asset_maker.py:57` | `parentRelationshipProperties`, `typeName` | Java `TemplateRequestBody` has `parentRelationshipProperties` (and `replacementClassifications`); **the pyegeria model lacks both** | parent-relationship properties are dropped |
+| CLI `glossary_actions.py:178` | `elementProperties` | `properties` | update has no properties |
+| `validate_delete_classification_request` default (`_server_client.py:6244`) | `cascadeDelete` | not on the model, and Java spells it `cascadedDelete` | ISSUE-132 |
+
+*Model spelling that Egeria discards. Confirmed: anchor scope cannot be set through pyegeria at all.* The `NewElementRequestBody`, `NewRelationshipRequestBody` and `TemplateRequestBody` models alias `anchor_scope_guids` as `anchorScopeGuids`, while Java's `MakeAnchorOptions` reads `anchorScopeGUIDs`. A dict using the documented `"anchorScopeGUIDs"` (as in `collection_manager.py`'s docstrings) is dropped client-side. `anchorScopeGuids` / `anchor_scope_guids` are sent, then dropped server-side. Checked by `model_validate` → `model_dump_json`. This affects 47 create, 157 link and 26 from-template methods; one alias fixes it.
+
+*FIELD-DROP: the method passes it, Egeria's class lacks it.*
+- `get_tech_types_for_open_metadata_type(tech_name=...)` and `get_endpoints_for_asset(name=...)` send `filter` in a `FilterRequestBody`. The endpoints declare `ResultsRequestBody`, which has no `filter`, so they return everything unfiltered.
+- `find_software_capabilities(property_names=...)` sends `propertyNames` where Java declares `SearchStringRequestBody`, so the property restriction is lost.
+
+*MODEL-FIELD gaps (review; 27 model→Java pairs, with users, in the report).*
+- Most are benign. For example, `ResultsRequestBody → GetRequestBody` drops paging on 51 `get_*_by_guid` calls, where paging means nothing.
+- Status-filter models carry both `activityStatus` and `activityStatusList`; only the `…List` form exists in Java. No current caller uses the singular form in a filter (My Profile's uses are inside the nested `…Properties`, where it is a real field).
+- `UpdatePropertiesRequestBody.replaceProperties` (Java `UpdateOptions` has only `mergeUpdate`) is used by three Metadata Expert updates.
 
 ---
 
