@@ -32,6 +32,13 @@ truth, because the .http files can name the same wrong class the SDK sends:
                               polymorphic properties base this is a 400)
   * JAVA-MISSING            - no Spring mapping for the SDK's verb+path (review)
   * HTTP-vs-JAVA            - the .http body class disagrees with Java (info)
+  * FIELD-DROP              - the method passes an argument whose JSON key the
+                              server-side class does not declare; Egeria's
+                              ignoreUnknown=true discards it, no error (defect)
+  * CLIENT-DROP             - a dict naming a pyegeria model uses a key the model
+                              reads neither as alias nor field name; Pydantic
+                              discards it before sending (defect)
+  * MODEL-FIELD gaps        - pyegeria model fields the Java class lacks (review)
 
 Usage
 -----
@@ -46,7 +53,7 @@ https://localhost:9443. Best-effort: an unreachable platform just skips live
 verification rather than failing the run.
 
 Exit status is 1 when any confirmed defect (verb/path/body mismatch, lint,
-JAVA-BODY REJECTED or UNKNOWN-CLASS) is found, so this can gate CI.
+JAVA-BODY REJECTED, UNKNOWN-CLASS, FIELD-DROP or CLIENT-DROP) is found, so this can gate CI.
 
 Note: ``pyegeria/http-clients/`` is gitignored. It must be present locally or
 the audit cannot run - the script fails loudly rather than reporting a clean
@@ -168,6 +175,8 @@ QUERY_STRING_FUNCS = {"query_string"}
 # their own request, so they must not be mistaken for the method's own verb.
 LOOKUP_HELPER_RE = re.compile(r"get_guid__|__async_get_guid")
 
+# helper -> (ordered params, {param: JSON key}); filled by audit() before parsing.
+HELPER_FIELDS: dict[str, tuple[list[str], dict[str, set[str]]]] = {}
 # Known-duplicate endpoints: same verb+path by design, differing only by body.
 EXPECTED_DUPLICATE_PATHS = {
     "POST platform-services/server-platform/servers/{}/instance",
@@ -437,6 +446,9 @@ MAPPING_RE = re.compile(r"@(Get|Post|Put|Delete|Patch)Mapping\s*\(")
 CLASS_MAPPING_RE = re.compile(r"@RequestMapping\s*\(")
 REQUEST_BODY_RE = re.compile(r"@RequestBody\s*(?:\([^)]*\))?\s*([A-Z]\w*)")
 EXTENDS_RE = re.compile(r"\bclass\s+(\w+)(?:<[^>]*>)?\s+extends\s+(\w+)")
+FIELD_RE = re.compile(r'(?:@JsonProperty\s*\(\s*(?:value\s*=\s*)?"(\w+)"\s*\)\s*)?'
+                      r'^[ \t]*(?:private|protected|public)\s+(?!static\b)(?:final\s+)?'
+                      r'[\w.<>\[\],? ]+?\s+(\w+)\s*(?:=[^;]*)?;', re.M)
 # String constants in the SDK that name an Egeria Java class.
 CLASS_CONST_RE = re.compile(r"^[A-Z][A-Za-z0-9]*(?:Properties|RequestBody)$")
 
@@ -470,6 +482,19 @@ class JavaTruth:
     # Everywhere else "class" is an ignored unknown property and fields map
     # by name, so a wrong class there is harmless unless fields are dropped.
     polymorphic: set[str] = field(default_factory=set)
+    # class -> JSON property names declared directly on it (instance fields,
+    # honouring @JsonProperty renames). Inherited ones come via json_fields().
+    fields: dict[str, set[str]] = field(default_factory=dict)
+
+    def json_fields(self, cls: str) -> set[str] | None:
+        """Every JSON property ``cls`` deserialises, or None if its own source
+        was not parsed (then nothing can be said about dropped fields)."""
+        if cls not in self.fields:
+            return None
+        out: set[str] = set()
+        for a in self.ancestors(cls):
+            out |= self.fields.get(a, set())
+        return out
 
     def lookup(self, verb: str, path: str) -> set[str | None] | None:
         hit = self.endpoints.get((verb, path))
@@ -510,6 +535,7 @@ def load_java_truth(java_dir: str) -> JavaTruth | None:
     parents: dict[str, str] = {}
     known: set[str] = set()
     polymorphic: set[str] = set()
+    fields: dict[str, set[str]] = {}
     for root, _dirs, files in os.walk(impl):
         if {"test", "build", "target"} & set(os.path.relpath(root, impl).split(os.sep)):
             continue
@@ -522,11 +548,19 @@ def load_java_truth(java_dir: str) -> JavaTruth | None:
             if not (stem.endswith(("Properties", "RequestBody", "Options", "Resource"))
                     or "properties" in root or "rest" in root):
                 continue
+            # Connector-internal DTOs reuse API class names (the Unity Catalog
+            # adapter has its own UpdateElementRequestBody); never let them
+            # shadow the REST API's classes.
+            if "adapters" in os.path.relpath(root, impl).split(os.sep):
+                continue
             text = open(os.path.join(root, fname), encoding="utf-8", errors="ignore").read()
             for child, parent in EXTENDS_RE.findall(text):
                 parents.setdefault(child, parent)
             if "@JsonTypeInfo" in text and 'property = "class"' in text.replace("property=", "property = "):
                 polymorphic.add(stem)
+            if stem.endswith(("Properties", "RequestBody", "Options")) and f"class {stem}" in text:
+                fields[stem] = {renamed or name for renamed, name in FIELD_RE.findall(text)
+                                if name != "serialVersionUID"}
             if not (stem.endswith("Resource") and "spring" in root.split(os.sep)):
                 continue
             cm = CLASS_MAPPING_RE.search(text)
@@ -545,7 +579,7 @@ def load_java_truth(java_dir: str) -> JavaTruth | None:
                     body = rb.group(1) if rb else None
                 for p in paths:
                     endpoints[(verb, canon_path(base + p))].add(body)
-    return JavaTruth(dict(endpoints), parents, known, polymorphic)
+    return JavaTruth(dict(endpoints), parents, known, polymorphic, fields)
 
 
 def class_constants(filepath: str) -> list[tuple[int, str]]:
@@ -561,6 +595,108 @@ def class_constants(filepath: str) -> list[tuple[int, str]]:
     return [(n.lineno, n.value) for n in ast.walk(tree)
             if isinstance(n, ast.Constant) and isinstance(n.value, str)
             and id(n) not in fragments and CLASS_CONST_RE.match(n.value)]
+
+
+def discover_helper_fields(path: str) -> dict[str, tuple[list[str], dict[str, set[str]]]]:
+    """For each ``_async_*_request`` helper that builds its own default body:
+    (ordered parameter names, {parameter: JSON keys it can fill}).
+
+    A parameter can fill different keys in different branches
+    (``_async_find_request`` puts ``search_string`` in ``searchString`` or, with
+    property names, in ``propertyValue``), so the value is a set.
+
+    Read from the helper's dict literals, e.g. ``"filter": filter_string``
+    maps ``filter_string`` -> ``filter``. Lets the audit tell whether a method
+    actually sets a field the server will drop, not just whether it could.
+    """
+    out: dict[str, tuple[list[str], dict[str, set[str]]]] = {}
+    if not os.path.exists(path):
+        return out
+    tree = ast.parse(open(path, encoding="utf-8").read())
+    for fn in ast.walk(tree):
+        if not (isinstance(fn, (ast.FunctionDef, ast.AsyncFunctionDef))
+                and fn.name.startswith("_async_") and fn.name.endswith("_request")):
+            continue
+        params = [a.arg for a in fn.args.args if a.arg != "self"]
+        mapping: dict[str, set[str]] = defaultdict(set)
+        # Locals derived from a parameter, e.g. ``effective_search_string =
+        # None if search_string == "*" else search_string`` -> search_string.
+        alias: dict[str, set[str]] = {}
+        for a in ast.walk(fn):
+            if (isinstance(a, ast.Assign) and len(a.targets) == 1
+                    and isinstance(a.targets[0], ast.Name) and a.targets[0].id not in params):
+                srcs = {n.id for n in ast.walk(a.value) if isinstance(n, ast.Name) and n.id in params}
+                if srcs:
+                    alias.setdefault(a.targets[0].id, set()).update(srcs)
+        for d in ast.walk(fn):
+            if not isinstance(d, ast.Dict):
+                continue
+            for k, v in zip(d.keys, d.values):
+                if isinstance(k, ast.Constant) and isinstance(k.value, str) and k.value != "class":
+                    for n in ast.walk(v):
+                        if isinstance(n, ast.Name):
+                            for src in ({n.id} if n.id in params else alias.get(n.id, set())):
+                                mapping[src].add(k.value)
+        out[fn.name] = (params, dict(mapping))
+    return out
+
+
+def model_fields(name: str) -> set[str] | None:
+    """JSON keys a pyegeria request-body model can serialise (aliases), or
+    None if pyegeria has no model of that name."""
+    try:
+        from pyegeria import models
+    except Exception:                                   # pragma: no cover
+        return None
+    cls = getattr(models, name, None)
+    if cls is None or not hasattr(cls, "model_fields"):
+        return None
+    return {f.alias or k for k, f in cls.model_fields.items()} - {"class"}
+
+
+def model_accepts(name: str) -> set[str] | None:
+    """Keys a pyegeria model reads from an input dict: aliases and, because
+    PyegeriaModel sets populate_by_name, field names. Anything else is
+    discarded by extra='ignore' before the request is sent."""
+    try:
+        from pyegeria import models
+    except Exception:                                   # pragma: no cover
+        return None
+    cls = getattr(models, name, None)
+    if cls is None or not hasattr(cls, "model_fields"):
+        return None
+    return {f.alias or k for k, f in cls.model_fields.items()} | set(cls.model_fields) | {"class"}
+
+
+def client_drops(filepath: str) -> list[tuple[int, str, list[str]]]:
+    """(line, model, keys) for dict literals in code that name a pyegeria
+    request model via "class" but use keys that model does not read.
+
+    These never leave the client: Pydantic validates the dict and silently
+    drops the unknown keys (e.g. "anchorScopeGuid" where the model reads
+    anchorScopeGUID). Docstring examples are strings, not dicts, so they are
+    not scanned."""
+    try:
+        tree = ast.parse(open(filepath, encoding="utf-8").read())
+    except SyntaxError:
+        return []
+    out = []
+    for d in ast.walk(tree):
+        if not isinstance(d, ast.Dict):
+            continue
+        keys = [k.value for k in d.keys if isinstance(k, ast.Constant) and isinstance(k.value, str)]
+        cls = next((v.value for k, v in zip(d.keys, d.values)
+                    if isinstance(k, ast.Constant) and k.value == "class"
+                    and isinstance(v, ast.Constant) and isinstance(v.value, str)), None)
+        if not cls or not cls.endswith("RequestBody"):
+            continue
+        accepted = model_accepts(cls)
+        if accepted is None:
+            continue
+        bad = sorted(k for k in keys if k not in accepted)
+        if bad:
+            out.append((d.lineno, cls, bad))
+    return out
 
 
 @dataclass
@@ -584,6 +720,10 @@ class PyMethod:
     # hint (the method posts whatever the caller passes).
     body_source: str | None = None
     lineno: int = 0
+    # The body-building helper this method calls, and the helper parameters it
+    # passes explicitly with a value other than None.
+    helper: str | None = None
+    passed: frozenset[str] = frozenset()
 
 
 def _flatten(node: ast.AST, roots: dict[str, str]) -> str:
@@ -717,6 +857,8 @@ def parse_py_file(filepath: str, helper_verbs: dict[str, str],
 
         raw_url = path = body_class = None
         direct_verb = helper_verb = helper_body = None
+        helper_name = None
+        helper_passed: frozenset[str] = frozenset()
         lint: list[str] = []
         helper_bodies = helper_bodies or {}
 
@@ -781,13 +923,21 @@ def parse_py_file(filepath: str, helper_verbs: dict[str, str],
                         helper_verb = helper_verbs[fname]
                     if helper_body is None and fname in helper_bodies:
                         helper_body = helper_bodies[fname]
+                    if helper_name is None:
+                        helper_name = fname
+                        order = HELPER_FIELDS.get(fname, ([], {}))[0]
+                        given = {order[i]: a for i, a in enumerate(node.args) if i < len(order)}
+                        given.update({k.arg: k.value for k in node.keywords if k.arg})
+                        helper_passed = frozenset(
+                            k for k, v in given.items()
+                            if not (isinstance(v, ast.Constant) and v.value is None))
 
         methods[fn.name] = PyMethod(
             name=fn.name, verb=direct_verb or helper_verb, path=path,
             raw_url=raw_url, body_class=helper_body or body_class, lint=lint,
             all_paths=all_paths,
             body_source="helper" if helper_body else ("signature" if body_class else None),
-            lineno=fn.lineno,
+            lineno=fn.lineno, helper=helper_name, passed=helper_passed,
         )
 
     for sm in sync_names:
@@ -825,6 +975,7 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
 
     helper_verbs = discover_helper_verbs(SERVER_CLIENT)
     helper_bodies = discover_helper_bodies(SERVER_CLIENT)
+    HELPER_FIELDS.update(discover_helper_fields(SERVER_CLIENT))
     java = load_java_truth(java_dir) if java_dir else None
     if java_dir and java is None:
         print(f"  ! Egeria Java source not found at '{java_dir}'; skipping the "
@@ -1035,6 +1186,41 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
     unknown_rows: list[str] = []
     http_vs_java: list[str] = []
     java_missing: list[str] = []
+    field_rows: list[str] = []
+    client_rows: list[str] = []
+    model_gaps: dict[tuple[str, str], set[str]] = {}
+    gap_methods: dict[tuple[str, str], list[str]] = defaultdict(list)
+
+    def check_fields(svc: str, m: str, d: PyMethod, declared: set[str]) -> None:
+        """Fields the SDK model can send that the class Egeria instantiates
+        does not declare are dropped silently (ignoreUnknown=true)."""
+        for sent in sorted(d.body_class):
+            sdk = model_fields(sent)
+            if not sdk:
+                continue
+            for decl in sorted(declared):
+                # Under a polymorphic base Jackson builds the class named by
+                # "class" when it is assignable; otherwise the declared one.
+                polymorphic = any(a in java.polymorphic for a in java.ancestors(decl))
+                target = sent if (polymorphic and java.accepts(decl, sent)) else decl
+                known = java.json_fields(target)
+                if known is None:
+                    continue
+                dropped = sdk - known
+                if not dropped:
+                    continue
+                model_gaps.setdefault((sent, target), set()).update(dropped)
+                gap_methods[(sent, target)].append(f"{svc}.{m.removeprefix('_async_')}")
+                mapping = HELPER_FIELDS.get(d.helper or "", ([], {}))[1]
+                # A passed parameter is lost only if every key it can fill is dropped.
+                set_here = sorted({k for p in d.passed if mapping.get(p) and mapping[p] <= dropped
+                                   for k in mapping[p]})
+                if set_here:
+                    field_rows.append(
+                        f"- `{svc}.py:{d.lineno}` `{m}` `{d.verb} {d.path}`: sets "
+                        f"{', '.join(f'`{x}`' for x in set_here)}, which {target} does not have "
+                        f"(sent as {sent})")
+
     if java is not None:
         # Names of pyegeria's own Python classes (e.g. the SpecificationProperties
         # OMVS client, or FindPropertyNamesRequestBody, a local model) appear as
@@ -1061,6 +1247,8 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
                     continue
                 if not declared:
                     continue
+                if d.body_source == "helper":
+                    check_fields(svc, m, d, declared)
                 if any(java.accepts(decl, sent) for decl in declared for sent in d.body_class):
                     counts["java_ok"] += 1
                     continue
@@ -1084,6 +1272,9 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
             svc = os.path.basename(pf).replace(".py", "").replace("_omvs", "").replace("_", "-")
             if service_filter and service_filter != svc:
                 continue
+            for lineno, cls, bad in client_drops(pf):
+                client_rows.append(f"- `{pf}:{lineno}` {cls}: "
+                                   f"{', '.join(f'`{k}`' for k in bad)} not read by the model")
             seen: set[str] = set()
             for lineno, cls in class_constants(pf):
                 if cls in java.known_classes or cls in py_classes or cls in seen:
@@ -1119,6 +1310,24 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
         lines.extend(java_soft or ["_none_"])
         lines.append("\n### UNKNOWN-CLASS: SDK names a Properties/RequestBody class Egeria does not have\n")
         lines.extend(unknown_rows or ["_none_"])
+        lines.append("\n### FIELD-DROP: the method sets a field the server-side class does not have\n")
+        lines.append("_Egeria's DTOs are `@JsonIgnoreProperties(ignoreUnknown=true)`, so the field is "
+                     "discarded without an error and the call runs as if it had not been set._\n")
+        lines.extend(sorted(set(field_rows)) or ["_none_"])
+        lines.append("\n### CLIENT-DROP: keys pyegeria's own model discards before sending\n")
+        lines.append("_A dict names a pyegeria request model via `class`, but a key matches neither a "
+                     "field name nor its alias, so Pydantic (`extra='ignore'`) drops it silently._\n")
+        lines.extend(client_rows or ["_none_"])
+        lines.append("\n### MODEL-FIELD gaps (review): pyegeria model fields the Java class lacks\n")
+        lines.append("_Dropped whenever a caller sets them. A near-miss spelling (`cascadeDelete` vs "
+                     "`cascadedDelete`) is a bug; a pyegeria-only convenience field may be intended._\n")
+        for (sent, target), gap in sorted(model_gaps.items()):
+            users = sorted(set(gap_methods[(sent, target)]))
+            eg = ", ".join(users[:3]) + (f" (+{len(users) - 3} more)" if len(users) > 3 else "")
+            lines.append(f"- {sent} -> {target}: {', '.join(f'`{x}`' for x in sorted(gap))}  \n"
+                         f"  used by {len(users)}: {eg}")
+        if not model_gaps:
+            lines.append("_none_")
         lines.append("\n### JAVA-MISSING (review): no Spring mapping for this verb+path\n")
         lines.append("_Removed or renamed in Egeria, or an endpoint the SDK guessed. Static path "
                      "resolution can also miss a runtime-built segment, so confirm before changing._\n")
@@ -1126,7 +1335,7 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
         lines.append("\n### HTTP-vs-JAVA (informational): the .http file disagrees with Java\n")
         lines.extend(http_vs_java or ["_none_"])
         lines.append("")
-        defects += len(java_rows) + len(unknown_rows)
+        defects += len(java_rows) + len(unknown_rows) + len(set(field_rows)) + len(client_rows)
         counts["java_body"] = len(java_rows)
         counts["unknown_class"] = len(unknown_rows)
 
@@ -1152,6 +1361,9 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
             f"| JAVA-BODY CLASS-IGNORED (different class, `class` ignored by Egeria) | {len(java_ignored)} |",
             f"| JAVA-BODY low confidence (type hint only) | {len(java_soft)} |",
             f"| UNKNOWN-CLASS | {len(unknown_rows)} |",
+            f"| FIELD-DROP (method sets a field Egeria discards) | {len(set(field_rows))} |",
+            f"| CLIENT-DROP (key pyegeria's model discards before sending) | {len(client_rows)} |",
+            f"| MODEL-FIELD gaps (model/Java class pairs; review) | {len(model_gaps)} |",
             f"| JAVA-MISSING (no Spring mapping; review) | {len(java_missing)} |",
             f"| HTTP-vs-JAVA disagreements (informational) | {len(http_vs_java)} |",
         ]
@@ -1173,7 +1385,8 @@ def audit(service_filter: str | None, report_path: str, quiet: bool,
         print(f"  java_ok={counts['java_ok']} java_rejected={len(java_rows)} "
               f"java_class_ignored={len(java_ignored)} "
               f"java_soft={len(java_soft)} unknown_class={len(unknown_rows)} "
-              f"java_missing={len(java_missing)} "
+              f"java_missing={len(java_missing)} field_drop={len(set(field_rows))} "
+              f"model_gaps={len(model_gaps)} client_drop={len(client_rows)} "
               f"http_vs_java={len(http_vs_java)}")
     if live_index is not None:
         print(f"  live_ok={counts['live_ok']} live_stale={counts['live_stale']}")

@@ -81,3 +81,51 @@ def test_known_classes_and_class_constant_scan(tmp_path):
     # docstring prose is not a bare class-name constant
     assert found == {"PersonAppointmentProperties", "DeleteElementRequestBody"}
     assert "PersonAppointmentProperties" not in java.known_classes
+
+
+def test_inherited_json_fields_and_json_property_rename(tmp_path):
+    impl = tmp_path / "open-metadata-implementation" / "frameworks" / "src" / "main" / "java" / "rest"
+    impl.mkdir(parents=True)
+    (impl / "BaseOptions.java").write_text(
+        "public class BaseOptions extends Object {\n"
+        "    private static final long serialVersionUID = 1L;\n"
+        "    private boolean cascadedDelete = false;\n}\n")
+    (impl / "ThingRequestBody.java").write_text(
+        "public class ThingRequestBody extends BaseOptions {\n"
+        "    @JsonProperty(\"class\")\n    private String className;\n"
+        "    private List<String> anchorScopeGUIDs = null;\n}\n")
+    java = omvs_audit.load_java_truth(str(tmp_path))
+    # inherited field included, serialVersionUID and statics excluded, rename honoured
+    assert java.json_fields("ThingRequestBody") == {"class", "anchorScopeGUIDs", "cascadedDelete"}
+    assert java.json_fields("NoSuchRequestBody") is None
+
+
+def test_helper_field_map_follows_local_aliases(tmp_path):
+    src = tmp_path / "client.py"
+    src.write_text(textwrap.dedent('''
+        class C:
+            async def _async_find_request(self, url, search_string="*", property_names=None):
+                effective = None if search_string == "*" else search_string
+                if property_names:
+                    body = {"class": "FindPropertyNamesProperties", "propertyValue": search_string,
+                            "propertyNames": property_names}
+                else:
+                    body = {"class": "SearchStringRequestBody", "searchString": effective}
+    '''))
+    params, mapping = omvs_audit.discover_helper_fields(str(src))["_async_find_request"]
+    assert params == ["url", "search_string", "property_names"]
+    # search_string reaches two keys (one via the `effective` local); a field is
+    # only "dropped" when every key it can fill is dropped
+    assert mapping["search_string"] == {"propertyValue", "searchString"}
+    assert mapping["property_names"] == {"propertyNames"}
+
+
+def test_client_drops_flags_keys_the_pyegeria_model_does_not_read(tmp_path):
+    src = tmp_path / "client.py"
+    src.write_text('def f(x):\n'
+                   '    return {"class": "SearchStringRequestBody", "searchString": x,\n'
+                   '            "zoneFilter": x, "relationshipPageSize": 5, "start_from": 0}\n')
+    # zoneFilter / relationshipPageSize are near-misses of governanceZoneFilter /
+    # relationshipsPageSize; start_from is a field name, accepted via populate_by_name
+    assert omvs_audit.client_drops(str(src)) == [
+        (2, "SearchStringRequestBody", ["relationshipPageSize", "zoneFilter"])]

@@ -14,7 +14,8 @@ package or the pytest suite.
   When an Egeria Java checkout is present (`--java-dir`, `$EGERIA_JAVA_DIR`,
   default `~/localGit/egeria-v6/egeria`) it also checks against the Spring
   `@RequestBody` types: JAVA-BODY REJECTED / CLASS-IGNORED, UNKNOWN-CLASS,
-  JAVA-MISSING and HTTP-vs-JAVA (ISSUE-163). `--no-java` skips them.
+  JAVA-MISSING and HTTP-vs-JAVA, plus field-level FIELD-DROP / CLIENT-DROP /
+  MODEL-FIELD gaps (ISSUE-163/164). `--no-java` skips them.
   `python scripts/omvs_audit.py [--report PATH] [--service NAME] [--quiet]`;
   exits 1 on any confirmed defect, so it can gate CI.
 - `safe_git_sync.sh` — stashes all local changes (including untracked),

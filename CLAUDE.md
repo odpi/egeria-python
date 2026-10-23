@@ -201,7 +201,23 @@ after a real defect slipped through an earlier, weaker version of this script:
   `"…RequestBody"` string in `pyegeria/omvs` that isn't an Egeria Java class.
   The properties bases are polymorphic, so sending one is a 400; this is what
   caught `PersonAppointmentProperties`. **JAVA-MISSING** (review) lists SDK
-  endpoints with no Spring mapping.
+  endpoints with no Spring mapping, meaning no URL, not a missing class.
+- **Field-level checks** — these catch the "call succeeds but silently ignores
+  an option" bugs that no class check can see.
+  - **FIELD-DROP** (defect): a method passes an argument whose JSON key the
+    server-side class (and its ancestors) doesn't declare. The helper-argument
+    → JSON-key map is read from each helper's dict literals, following simple
+    local aliases, so a parameter counts as dropped only if *every* key it can
+    fill is dropped.
+  - **CLIENT-DROP** (defect): a dict in our own code names a pyegeria model
+    via `"class"` but uses a key that model reads neither as alias nor as field
+    name, so Pydantic discards it before sending (e.g. `"zoneFilter"` vs
+    `governanceZoneFilter`).
+  - **MODEL-FIELD gaps** (review): pyegeria model fields the Java class
+    lacks, with the methods that use each pair. A near-miss spelling there
+    (`anchorScopeGuids` vs `anchorScopeGUIDs`) is a bug.
+  - `adapters/` is excluded from the Java index, because connector-internal
+    DTOs reuse API class names.
 
 URL extraction is AST-based, not regex — multi-line f-strings silently produced
 empty paths under the regex version, which made whole modules look clean.
