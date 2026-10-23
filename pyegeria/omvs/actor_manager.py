@@ -1659,7 +1659,7 @@ class ActorManager(ServerClient):
 
         url = url = (
             f"{self.command_root}/actor-roles/{person_role_guid}/person-role-appointments/{person_profile_guid}/attach")
-        await self._async_new_relationship_request(url, ["PersonAppointmentProperties"], body)
+        await self._async_new_relationship_request(url, ["PersonRoleAppointmentProperties"], body)
         logger.debug(f"Linking person role {person_role_guid} to Person Profile  {person_profile_guid}")
 
     @dynamic_catch
@@ -1851,7 +1851,7 @@ class ActorManager(ServerClient):
 
         url = url = (
             f"{self.command_root}/actor-roles/{team_role_guid}/team-role-appointments/{team_profile_guid}/attach")
-        await self._async_new_relationship_request(url, ["TeamAppointmentProperties"], body)
+        await self._async_new_relationship_request(url, ["TeamRoleAppointmentProperties"], body)
         logger.debug(f"Linking team role {team_role_guid} to Team Profile  {team_profile_guid}")
 
     @dynamic_catch
@@ -2041,7 +2041,7 @@ class ActorManager(ServerClient):
 
         url = url = (
             f"{self.command_root}/actor-roles/{it_profile_role_guid}/it-profile-role-appointments/{it_profile_guid}/attach")
-        await self._async_new_relationship_request(url, ["ITProfileAppointmentProperties"], body)
+        await self._async_new_relationship_request(url, ["ITProfileRoleAppointmentProperties"], body)
         logger.debug(f"Linking IT Profile role {it_profile_role_guid} to IT Profile  {it_profile_guid}")
 
     @dynamic_catch
@@ -2137,7 +2137,7 @@ class ActorManager(ServerClient):
         url = (
             f"{self.command_root}/actor-roles/{it_profile_role_guid}/it-profile-role-appointments/{it_profile_guid}/detach")
 
-        await self._async_delete_element_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.debug(f"Detached IT Profile Role {it_profile_role_guid} from IT Profile {it_profile_guid}")
 
     def detach_it_profile_role_from_it_profile(self, it_profile_role_guid: str, it_profile_guid: str,
@@ -2188,7 +2188,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     async def _async_delete_actor_role(self, actor_role_guid: str,
-                                       body: Optional[dict | DeleteRelationshipRequestBody] = None,
+                                       body: Optional[dict | DeleteElementRequestBody] = None,
                                        cascade: bool = False) -> None:
         """ Delete an actor role. Async Version.
 
@@ -2221,7 +2221,7 @@ class ActorManager(ServerClient):
         _____
         JSON Structure looks like:
         {
-          "class": "DeleteRelationshipRequestBody",
+          "class": "DeleteElementRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": "{{$isoTimestamp}}",
@@ -2231,11 +2231,11 @@ class ActorManager(ServerClient):
         """
         url = f"{self.command_root}/actor-roles/{actor_role_guid}/delete"
 
-        await self._async_delete_relationship_request(url, body, cascade)
+        await self._async_delete_element_request(url, body, cascade)
         logger.debug(f"Deleted actor role {actor_role_guid} with cascade {cascade}")
 
     @dynamic_catch
-    def delete_actor_role(self, actor_role_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None,
+    def delete_actor_role(self, actor_role_guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
                           cascade: bool = False) -> None:
         """ Delete an actor role. Async Version.
 
@@ -2247,7 +2247,7 @@ class ActorManager(ServerClient):
          cascade: bool, optional, defaults to True
              If true, a cascade delete is performed.
 
-         body: dict | DeleteRelationshipRequestBody, optional, default = None
+         body: dict | DeleteElementRequestBody, optional, default = None
              A structure representing the details of the relationship.
 
          Returns
@@ -2268,7 +2268,7 @@ class ActorManager(ServerClient):
          _____
          JSON Structure looks like:
          {
-           "class": "DeleteRelationshipRequestBody",
+           "class": "DeleteElementRequestBody",
            "externalSourceGUID": "add guid here",
            "externalSourceName": "add qualified name here",
            "effectiveTime": "{{$isoTimestamp}}",
@@ -3328,7 +3328,7 @@ class ActorManager(ServerClient):
         """
         url = (f"{self.command_root}/user-identities/{user_identity_guid}/profile-identity/{actor_profile_guid}/detach")
 
-        await self._async_delete_element_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.debug(f"Detached User Identity {user_identity_guid} from it a actor profile {actor_profile_guid}")
 
     @dynamic_catch
@@ -4744,15 +4744,15 @@ class ActorManager(ServerClient):
         return asyncio.run(self._async_update_contribution_record(contribution_record_guid, body))
 
     @dynamic_catch
-    async def _async_delete_contribution_record(self, contribution_record_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+    async def _async_delete_contribution_record(self, contribution_record_guid: str, body: Optional[dict | DeleteElementRequestBody] = None) -> None:
         """ Delete a contribution record. Async version.
 
         Parameters
         ----------
         contribution_record_guid: str
             The unique identifier of the contribution record to delete.
-        body: dict | DeleteRelationshipRequestBody, optional
-            A dict or DeleteRelationshipRequestBody representing the delete options.
+        body: dict | DeleteElementRequestBody, optional
+            A dict or DeleteElementRequestBody representing the delete options.
 
         Returns
         -------
@@ -4764,7 +4764,7 @@ class ActorManager(ServerClient):
             One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
             Egeria errors.
         ValidationError
-            Pydantic validation errors are raised if the body does not conform to the DeleteRelationshipRequestBody.
+            Pydantic validation errors are raised if the body does not conform to the DeleteElementRequestBody.
         PyegeriaNotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
 
@@ -4772,7 +4772,7 @@ class ActorManager(ServerClient):
         -----
         example:
         {
-          "class" : "DeleteRelationshipRequestBody",
+          "class" : "DeleteElementRequestBody",
           "cascadeDelete" : false,
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
@@ -4782,18 +4782,18 @@ class ActorManager(ServerClient):
         }
         """
         url = f"{self.command_root}/contribution-records/{contribution_record_guid}/delete"
-        await self._async_delete_relationship_request(url, body)
+        await self._async_delete_element_request(url, body)
 
     @dynamic_catch
-    def delete_contribution_record(self, contribution_record_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+    def delete_contribution_record(self, contribution_record_guid: str, body: Optional[dict | DeleteElementRequestBody] = None) -> None:
         """ Delete a contribution record.
 
         Parameters
         ----------
         contribution_record_guid: str
             The unique identifier of the contribution record to delete.
-        body: dict | DeleteRelationshipRequestBody, optional
-            A dict or DeleteRelationshipRequestBody representing the delete options.
+        body: dict | DeleteElementRequestBody, optional
+            A dict or DeleteElementRequestBody representing the delete options.
 
         Returns
         -------
@@ -4805,7 +4805,7 @@ class ActorManager(ServerClient):
             One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
             Egeria errors.
         ValidationError
-            Pydantic validation errors are raised if the body does not conform to the DeleteRelationshipRequestBody.
+            Pydantic validation errors are raised if the body does not conform to the DeleteElementRequestBody.
         PyegeriaNotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
 
@@ -4813,7 +4813,7 @@ class ActorManager(ServerClient):
         -----
         example:
         {
-          "class" : "DeleteRelationshipRequestBody",
+          "class" : "DeleteElementRequestBody",
           "cascadeDelete" : false,
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",

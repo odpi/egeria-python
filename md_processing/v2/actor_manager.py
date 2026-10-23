@@ -145,7 +145,7 @@ class ActorManagerLinkProcessor(AsyncBaseCommandProcessor):
                 # Canonical: IT Profile Role, IT Profile
                 role_guid = attributes.get("IT Profile Role", {}).get("guid")
                 profile_guid = attributes.get("IT Profile", {}).get("guid")
-                link_coro = self.client.actor_manager._async_link_it_profile_role_to_profile
+                link_coro = self.client.actor_manager._async_link_it_profile_role_to_it_profile
                 detach_coro = self.client.actor_manager._async_detach_it_profile_role_from_it_profile
             else:
                  raise PyegeriaException(f"Unsupported role appointment type: {object_type}")

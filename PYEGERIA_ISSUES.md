@@ -286,6 +286,40 @@ they're holding real port materialization until this exists server-side
 
 ---
 
+### ISSUE-163: Actor Manager role-appointment links send non-existent `*AppointmentProperties` classes, and five delete/detach methods send the wrong request-body class
+
+**Fixed 2026-10-23 on branch `fix/role-appointment-class-names` (not yet released).** **Live on quickstart 9443** (two runs, throwaway `pyeg-test::role-appt::` elements, all read back as gone by GUID afterwards, and a find on the prefix returned nothing). The old person-link class was refused with a 400. All three fixed links, called with no body, read back the relationship to the profile. The old IT detach body was refused with a 400; the fixed detach made the link unreadable. The fixed `delete_actor_role` deleted its role.
+
+**Layer:** Pyegeria (+ Dr.Egeria) · **Status:** fixed on branch · **Found:** 2026-10-23, reported by the owner ("pyegeria is using the wrong class name when linking a role to a profile").
+
+**Root cause:** each method below either passes a properties class that doesn't exist to `_async_new_relationship_request`, or calls the shared delete helper for the wrong body class. Neither is caught client-side. A wrong `prop` list only matters when the caller passes no body: the helper then builds `{"class": "NewRelationshipRequestBody", "properties": {"class": prop[0]}}` itself. My Profile's "add role" calls `link_person_role_to_profile` that way. The ground truth is `ActorManagerResource.java` / `GlossaryManagerResource.java` (`@RequestBody` types) and `open-metadata-framework .../properties/actors/*RoleAppointmentProperties.java`. **The `.http` file is wrong for `actor-roles/{guid}/delete`:** it says `DeleteRelationshipRequestBody`, but Egeria declares `DeleteElementRequestBody`.
+
+| Method | Sent | Egeria expects | Live before fix |
+|---|---|---|---|
+| `link_person_role_to_profile` | `PersonAppointmentProperties` | `PersonRoleAppointmentProperties` | 400 |
+| `link_team_role_to_profile` | `TeamAppointmentProperties` | `TeamRoleAppointmentProperties` | (same shape) |
+| `link_it_profile_role_to_it_profile` | `ITProfileAppointmentProperties` | `ITProfileRoleAppointmentProperties` | (same shape) |
+| `detach_it_profile_role_from_it_profile` | `DeleteElementRequestBody` | `DeleteRelationshipRequestBody` | 400 |
+| `detach_identity_from_profile` (`user-identities/{g}/profile-identity/{g}/detach`) | `DeleteElementRequestBody` | `DeleteRelationshipRequestBody` | not run |
+| `delete_actor_role` | `DeleteRelationshipRequestBody` | `DeleteElementRequestBody` | accepted (tolerated) |
+| `delete_contribution_record` | `DeleteRelationshipRequestBody` | `DeleteElementRequestBody` | not run |
+| `GlossaryManager.remove_is_context_definition` | `DeleteRelationshipRequestBody` | `DeleteClassificationRequestBody` | not run |
+
+**IT detach request and response (before the fix), Egeria quickstart 9443, 2026-10-23:**
+```
+POST .../actor-manager/actor-roles/a6e578d4-…/it-profile-role-appointments/91cc35e6-…/detach
+{"forLineage":false,"forDuplicateProcessing":false,"class":"DeleteElementRequestBody","cascadeDelete":false}
+→ HTTP 400 (pyegeria reports it as CLIENT_ERROR_400, "The client is unable to connect to the Egeria platform", which is misleading for a 400)
+```
+
+**Dr.Egeria:** `ActorManagerLinkProcessor` (`md_processing/v2/actor_manager.py`) called `_async_link_it_profile_role_to_profile` for `Link IT Profile Role Appointment`. No such method exists (the real one is `_async_link_it_profile_role_to_it_profile`), so that command raised `AttributeError` on every Link.
+
+**Fix:** corrected the three `prop` lists; switched the two detaches to `_async_delete_relationship_request`, `delete_actor_role` and `delete_contribution_record` to `_async_delete_element_request`, and `remove_is_context_definition` to `_async_delete_classification_request`; aligned the type hints and docstrings; corrected the Dr.Egeria method name. Tests: `tests/micro-tests/test_role_appointment_class_names.py` (11 tests; 9 of them fail on the old code; the two that pass cover the person and team detaches, which were already correct).
+
+**Checked and left alone:** `MetadataExpert.delete_related_elements` sends `DeleteRelationshipRequestBody`, while Egeria declares `OpenMetadataDeleteRequestBody`. That's deliberate (ISSUE-63): the Egeria class can't carry `deleteMethod`. Decertify and unlicense (`GovernanceOfficerResource`: `DeleteRelationshipRequestBody`) are already correct. **Follow-up:** `scripts/omvs_audit.py --service actor-manager` on the old code reported 59 OK and 1 unrelated mismatch, so its BODY check flagged none of these. It takes the first `*RequestBody` identifier in the method, which is the signature annotation, so a wrong helper with a matching type hint looks clean. Comparing the helper called against the `.http` body class would catch this class of bug.
+
+---
+
 ### ISSUE-161: Dr.Egeria's two entry points resolve the Egeria user differently, and the CLI fixes its credential defaults at import time
 
 **Layer:** Pyegeria · **Status:** fixed on branch `fix/issue-161-dr-egeria-credentials` (owner approved 2026-10-21), not yet released · **Found:** 2026-10-21, while checking an RE report that `dr_egeria --process` ignored `EGERIA_USER`. **That report is withdrawn; RE was the cause:** RE's own `config.py:316` defaulted its daemon identity (`EGERIA_USER_ID`) to "erinoverview", so RE handed the child process erinoverview. The CLI correctly used it. RE is removing that default.
