@@ -79,9 +79,10 @@ async def test_initiate_engine_action_body_shape():
     )
 
     body = cap["body"]
-    assert body["class"] == "GovernanceActionRequestBody"
+    # Egeria declares InitiateEngineActionRequestBody (ISSUE-164)
+    assert body["class"] == "InitiateEngineActionRequestBody"
     assert body["requestType"] == "survey-file-folder"
-    assert body["requestSourceGUIDs"] == ["src-guid"]
+    assert body["actionSourceGUIDs"] == ["src-guid"]
     assert body["actionTargets"] == [{"actionTargetName": "resource", "actionTargetGUID": "tgt-guid"}]
     assert body["requestParameters"] == {"key": "value"}
     # qualifiedName has a timestamp suffix appended -- just confirm the prefix survives

@@ -124,7 +124,7 @@ def create_term(server, url, userid, password, glossary_name, term_name, summary
             "class": "NewElementRequestBody",
             "parentGUID" : glossary_guid,
             "parentRelationshipTypeName" : "CollectionMembership",
-            "anchorScopeGUID" : glossary_guid,
+            "anchorScopeGUIDs" : [glossary_guid],
             "isOwnAnchor": True,
             "parentAtEnd1": True,
             "properties": {
@@ -178,7 +178,7 @@ def update_term(server, url, userid, password, term_name, summary, description, 
         body = {
             "class": "UpdateElementRequestBody",
             "mergeUpdate": True,
-            "elementProperties": {
+            "properties": {
                 "class": "GlossaryTermProperties",
                 "displayName": term_name,
                 "summary": summary,

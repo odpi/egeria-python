@@ -142,10 +142,10 @@ class TermProcessor(AsyncBaseCommandProcessor):
         prop_body["user_defined_status"] = attributes.get('UserDefinedStatus', {}).get('value', None)
         prop_body["contextDescription"] = attributes.get('Context Description', {}).get('value', None)
         prop_body["contextScope"] = attributes.get('Context Scope', {}).get('value', None)
-        prop_body["isAbstractConcept"] = attributes.get('Is Abstract Concept', {}).get('value', False)
-        prop_body["isActivityDescription"] = attributes.get('Is Activity Description', {}).get('value', False)
-        prop_body["isContext"] = attributes.get('Is Context', {}).get('value', False)
-        prop_body["isDataValue"] = attributes.get('Is Data Value', {}).get('value', False)
+        prop_body["isAbstractConcept"] = attributes.get('Is Abstract Concept', {}).get('value')
+        prop_body["isActivityDescription"] = attributes.get('Is Activity Description', {}).get('value')
+        prop_body["isContext"] = attributes.get('Is Context', {}).get('value')
+        prop_body["isDataValue"] = attributes.get('Is Data Value', {}).get('value')
         prop_body["termActivityType"] = attributes.get('Term Activity Type', {}).get('value', None)
         
         # 2. Extract collection GUIDs
@@ -193,6 +193,11 @@ class TermProcessor(AsyncBaseCommandProcessor):
 
         elif verb == "Create":
             self.last_body = body = set_create_body(om_type or "GlossaryTerm", attributes)
+            # ISSUE-162: the term flags default to False only on create; on update an unset
+            # flag stays None so filter_update_properties drops it and Egeria keeps the value.
+            for flag in ("isAbstractConcept", "isActivityDescription", "isContext", "isDataValue"):
+                if prop_body.get(flag) is None:
+                    prop_body[flag] = False
             body["properties"] = prop_body
             
             # Anchor Scope check

@@ -37,7 +37,7 @@ from pyegeria.core.utils import dynamic_catch
 GOV_DEF_PROPERTIES_LIST = ["GovernanceDefinitionProperties", "GovernanceStrategyProperties", "RegulationProperties",
                            "GovernanceControlProperties", "SecurityAccessControlProperties", "NamingStandardRuleProperties",
                            "CertificationTypeProperties", "LicenseTypeProperties", "GovernanceApproachProperties",
-                            "GovernanceProcessingPurposeProperties","RegulationProperties","GovernanceControlProperties",
+                            "DataProcessingPurposeProperties","RegulationProperties","GovernanceControlProperties",
                            "BusinessImperativeProperties", "RegulationArticleProperties", "ThreatProperties",
                            "DataLensProperties","NotificationTypeProperties", "ServiceAccessControlProperties",
                            "GovernanceZoneProperties", "GovernancePolicyProperties", "GovernancePrincipleProperties",
