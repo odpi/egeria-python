@@ -288,7 +288,7 @@ they're holding real port materialization until this exists server-side
 
 ### ISSUE-165: 19 SDK methods called endpoints Egeria doesn't serve: 13 removed upstream, 6 never existed (2 since repointed)
 
-**Layer:** Pyegeria · **Status:** open, documented, not changed (owner to decide: remove/deprecate, repoint, or raise with the Egeria team) · **Found:** 2026-10-23 by `scripts/omvs_audit.py` JAVA-MISSING (ISSUE-164).
+**Layer:** Pyegeria · **Status:** replacements implemented as deprecated wrappers and verified live (branch `fix/issue-165-replacements`); `get_platform_organization` still open · **Found:** 2026-10-23 by `scripts/omvs_audit.py` JAVA-MISSING (ISSUE-164).
 
 **Validation.** Each URL was checked three ways:
 1. **No Spring mapping** in Egeria `main` 4486d1a7f1 (2026-10-23), the checkout `omvs_audit.py` reads.
@@ -319,10 +319,30 @@ Three other JAVA-MISSING rows are served live, so they are Java-scan false posit
 
 **Every call above returns a 404 today.** Before ISSUE-164, pyegeria reported a 404 as "unable to connect to the Egeria platform", so a caller could not tell "this API is gone" from "the server is down".
 
+**Egeria team's answer (Mandy Chessell, 2026-10-23), and what pyegeria now does** (branch `fix/issue-165-replacements`). Each obsolete method is now a deprecated wrapper (`DeprecationWarning`) that delegates to the replacement, following the ISSUE-153 pattern; removal comes in a later release:
+
+| Obsolete | Why (Mandy) | Now delegates to |
+|---|---|---|
+| analysis-report create/update/delete/get/find | SurveyReport now inherits from Report, so it is an Asset | `AssetMaker.create_asset(["SurveyReportProperties"])` / `update_asset` / `delete_asset` / `get_asset_by_guid` / `get_assets_by_name` / `find_assets`, with type `SurveyReport`. A body naming `AnalysisReportProperties` is rewritten to `SurveyReportProperties`. |
+| `link/detach_analysis_report_to/from_asset` | use the ReportSubject relationship, `/elements/{subjectGUID}/reports/{reportGUID}/attach` | `AssetMaker.link_report_subject` / `unlink_report_subject(asset_guid, report_guid)` |
+| `add/remove_element_to/from_subject_area` | SubjectArea now inherits from Collection; use collection membership | `CollectionManager.add_to_collection` / `remove_from_collection(subject_area_guid, element_guid)`. The old methods never took the subject area, so they gain an optional `subject_area_guid`; without it they raise an error naming the replacement. |
+| `find_governance_action_processes` | GovernanceActionProcess now inherits from GovernanceDefinition | `find_governance_definitions(..., metadata_element_type="GovernanceActionProcess")` |
+| `get_gov_def_in_context` | no longer needed: OpenMetadataRootElement returns the context by default | `get_governance_definition_by_guid`. Dr.Egeria's `View Governance Definition Context` calls it directly. |
+| data-classification create/update/link/detach | "probably the old data class operations", now data value specifications (the common root of DataClass and DataGrain); **Mandy was not certain** | `create/update_data_value_specification` (a body naming `DataClassificationProperties` is rewritten to `DataClassProperties`) and `link/detach_data_value_assignment(data_field_guid, spec_guid)` (`DataValueAssignmentProperties`). A best-effort mapping. |
+
+Still open: `get_platform_organization` (removed in `816076ab50`; not covered by the answer). Tests: `tests/micro-tests/test_issue165_replacements.py` (8).
+
+**Live on quickstart 9443, 2026-10-24** (Egeria 81beb8e5 after the reset; one peer-cleared run as `peterprofile` with throwaway `pyeg-test::issue165::` elements, all 5 deleted and read back as NotFound by GUID, and the prefix find was empty afterwards). Each wrapper reached its replacement and the replacement had the intended effect:
+- `find_governance_action_processes("*")` returned 100 GovernanceActionProcess-family elements (GovernanceActionProcess plus its Provisioning/Deleting/Subscribing subtypes).
+- `get_gov_def_in_context` returned the same element as `get_governance_definition_by_guid`, including `relatedActions`, `associatedGovernanceActions` and `subscribers`, which confirms Mandy's point that the context now comes by default.
+- `add_element_to_subject_area` without `subject_area_guid` raised the guidance error. With it, the term was listed in the subject area's collection members; after `remove_element_from_subject_area` the subject area had no members.
+- `create_analysis_report` created a `SurveyReport`; `get_analysis_report_by_guid` and `find_analysis_reports` returned it. After `link_analysis_report_to_asset(report, term)` the report showed the term under `reportSubjects`; after the detach it didn't.
+- `create_data_classification` created a `DataClass`. After `link_data_classification_to_data_field` the field showed it under `assignedDataValueSpecifications`; after the detach it didn't.
+
 **Proposed (not made):**
 1. ~~Repoint `link/detach_subject_area_hierarchy`~~ (done).
-2. Mark the analysis-report, data-classification and `get_gov_def_in_context` methods deprecated, raising a clear "not supported by Egeria" error, before removing them in a later release. Dr.Egeria/CLI usage needs checking first.
-3. Ask the Egeria team for the intended replacements for subject-area membership, governance-action-process search and the platform organization name.
+2. ~~Mark the obsolete methods deprecated~~ (done, as delegating wrappers rather than errors, per the Egeria team's answer).
+3. ~~Ask the Egeria team for the intended replacements~~ (answered, except the platform organization name).
 
 ---
 
