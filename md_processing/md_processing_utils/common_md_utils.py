@@ -465,6 +465,13 @@ def set_collection_manager_body(object_type: str, qualified_name: str, attribute
     if "Working Set" in object_type:
         prop_bod['disposition'] = attributes.get('Disposition', {}).get('value', None)
 
+    # Handle Business Capability (0715 Digital Business)
+    if object_type in ["Business Capability", "BusinessCapability"]:
+        prop_bod.update({
+            "businessCapabilityType": attributes.get('Business Capability Type', {}).get('value', None),
+            "businessImplementationType": attributes.get('Business Implementation Type', {}).get('value', None),
+        })
+
     return prop_bod
 
 
