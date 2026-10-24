@@ -2272,6 +2272,126 @@
       "max_cardinality": 1,
       "level": "Domain",
       "Journal Entry": ""
+    },
+    "Business Capability Type": {
+      "variable_name": "business_capability_type",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "UNCLASSIFIED",
+      "valid_values": [
+        "UNCLASSIFIED",
+        "BUSINESS_SERVICE",
+        "BUSINESS_AREA",
+        "BUSINESS_DOMAIN",
+        "OTHER"
+      ],
+      "existing_element": "",
+      "description": "The kind of business capability (BusinessCapabilityType enum, 0715 Digital Business).",
+      "generated": false,
+      "style": "Valid Value",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": ""
+    },
+    "Business Implementation Type": {
+      "variable_name": "business_implementation_type",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "How the business capability is implemented, e.g. organization, process, or third party.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": ""
+    },
+    "Dependent Capability": {
+      "variable_name": "dependent_capability",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "BusinessCapability",
+      "description": "The business capability that depends on the supporting capability (end 1 of BusinessCapabilityDependency).",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": true,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": ""
+    },
+    "Supporting Capability": {
+      "variable_name": "supporting_capability",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "BusinessCapability",
+      "description": "The business capability that supports the dependent capability (end 2 of BusinessCapabilityDependency).",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": true,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": ""
+    },
+    "Digital Service": {
+      "variable_name": "digital_service",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "Referenceable",
+      "description": "The element (for example a digital service or product) that supports the business capability (end 2 of DigitalSupport).",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": true,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": ""
+    },
+    "Supported Capability": {
+      "variable_name": "supported_capability",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "BusinessCapability",
+      "description": "The business capability supported by the digital service (end 1 of DigitalSupport).",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": true,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": ""
     }
   },
   "bundles": {
@@ -2397,6 +2517,27 @@
     "Data Description Base": {
       "inherits": "Link Command Base",
       "own_attributes": []
+    },
+    "Business Capability Base": {
+      "inherits": "Collection Base",
+      "own_attributes": [
+        "Business Capability Type",
+        "Business Implementation Type"
+      ]
+    },
+    "Business Capability Dependency Base": {
+      "inherits": "Link Command Base",
+      "own_attributes": [
+        "Dependent Capability",
+        "Supporting Capability"
+      ]
+    },
+    "Digital Support Base": {
+      "inherits": "Link Command Base",
+      "own_attributes": [
+        "Supported Capability",
+        "Digital Service"
+      ]
     }
   },
   "commands": {
@@ -2974,6 +3115,105 @@
         "Collection Id",
         "Element Id"
       ],
+      "Journal Entry": ""
+    },
+    "Create Business Capability": {
+      "display_name": "Business Capability",
+      "qn_prefix": "BusinessCapability",
+      "alternate_names": [],
+      "family": "Collections",
+      "description": "Create a Business Capability - a collection describing a function, capability or skill set of the organization (0715 Digital Business).",
+      "verb": "Create",
+      "upsert": true,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "CollectionManager.find_collections",
+      "find_constraints": "{\"metadata_element_type\": \"BusinessCapability\"}",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "BusinessCapability",
+      "bundle": "Business Capability Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Link Business Capability Dependency": {
+      "display_name": "Business Capability Dependency",
+      "qn_prefix": "",
+      "alternate_names": [
+        "Link Business Capability to Supporting Capability"
+      ],
+      "family": "Collections",
+      "description": "Record that one business capability depends on another (BusinessCapabilityDependency relationship).",
+      "verb": "Link",
+      "upsert": false,
+      "attach": true,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "BusinessCapabilityDependency",
+      "bundle": "Business Capability Dependency Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Detach Business Capability Dependency": {
+      "display_name": "Business Capability Dependency",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Collections",
+      "description": "Remove the BusinessCapabilityDependency relationship between two business capabilities.",
+      "verb": "Detach",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "BusinessCapabilityDependency",
+      "bundle": "Business Capability Dependency Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Link Digital Support": {
+      "display_name": "Digital Support",
+      "qn_prefix": "",
+      "alternate_names": [
+        "Link Business Capability to Digital Service"
+      ],
+      "family": "Collections",
+      "description": "Record that an element, such as a digital service or product, supports a business capability (DigitalSupport relationship).",
+      "verb": "Link",
+      "upsert": false,
+      "attach": true,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "DigitalSupport",
+      "bundle": "Digital Support Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Detach Digital Support": {
+      "display_name": "Digital Support",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Collections",
+      "description": "Remove the DigitalSupport relationship between a business capability and a supporting element.",
+      "verb": "Detach",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "DigitalSupport",
+      "bundle": "Digital Support Base",
+      "custom_attributes": [],
       "Journal Entry": ""
     }
   }
