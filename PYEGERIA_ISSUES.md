@@ -288,7 +288,7 @@ they're holding real port materialization until this exists server-side
 
 ### ISSUE-165: 19 SDK methods called endpoints Egeria doesn't serve: 13 removed upstream, 6 never existed (2 since repointed)
 
-**Layer:** Pyegeria · **Status:** open, documented, not changed (owner to decide: remove/deprecate, repoint, or raise with the Egeria team) · **Found:** 2026-10-23 by `scripts/omvs_audit.py` JAVA-MISSING (ISSUE-164).
+**Layer:** Pyegeria · **Status:** replacements implemented as deprecated wrappers and verified live (branch `fix/issue-165-replacements`); `get_platform_organization` still open · **Found:** 2026-10-23 by `scripts/omvs_audit.py` JAVA-MISSING (ISSUE-164).
 
 **Validation.** Each URL was checked three ways:
 1. **No Spring mapping** in Egeria `main` 4486d1a7f1 (2026-10-23), the checkout `omvs_audit.py` reads.
@@ -330,12 +330,19 @@ Three other JAVA-MISSING rows are served live, so they are Java-scan false posit
 | `get_gov_def_in_context` | no longer needed: OpenMetadataRootElement returns the context by default | `get_governance_definition_by_guid`. Dr.Egeria's `View Governance Definition Context` calls it directly. |
 | data-classification create/update/link/detach | "probably the old data class operations", now data value specifications (the common root of DataClass and DataGrain); **Mandy was not certain** | `create/update_data_value_specification` (a body naming `DataClassificationProperties` is rewritten to `DataClassProperties`) and `link/detach_data_value_assignment(data_field_guid, spec_guid)` (`DataValueAssignmentProperties`). A best-effort mapping. |
 
-Still open: `get_platform_organization` (removed in `816076ab50`; not covered by the answer). Tests: `tests/micro-tests/test_issue165_replacements.py` (8). Not verified live: Egeria was reset at 21:10Z on 2026-10-23.
+Still open: `get_platform_organization` (removed in `816076ab50`; not covered by the answer). Tests: `tests/micro-tests/test_issue165_replacements.py` (8).
+
+**Live on quickstart 9443, 2026-10-24** (Egeria 81beb8e5 after the reset; one peer-cleared run as `peterprofile` with throwaway `pyeg-test::issue165::` elements, all 5 deleted and read back as NotFound by GUID, and the prefix find was empty afterwards). Each wrapper reached its replacement and the replacement had the intended effect:
+- `find_governance_action_processes("*")` returned 100 GovernanceActionProcess-family elements (GovernanceActionProcess plus its Provisioning/Deleting/Subscribing subtypes).
+- `get_gov_def_in_context` returned the same element as `get_governance_definition_by_guid`, including `relatedActions`, `associatedGovernanceActions` and `subscribers`, which confirms Mandy's point that the context now comes by default.
+- `add_element_to_subject_area` without `subject_area_guid` raised the guidance error. With it, the term was listed in the subject area's collection members; after `remove_element_from_subject_area` the subject area had no members.
+- `create_analysis_report` created a `SurveyReport`; `get_analysis_report_by_guid` and `find_analysis_reports` returned it. After `link_analysis_report_to_asset(report, term)` the report showed the term under `reportSubjects`; after the detach it didn't.
+- `create_data_classification` created a `DataClass`. After `link_data_classification_to_data_field` the field showed it under `assignedDataValueSpecifications`; after the detach it didn't.
 
 **Proposed (not made):**
 1. ~~Repoint `link/detach_subject_area_hierarchy`~~ (done).
-2. Mark the analysis-report, data-classification and `get_gov_def_in_context` methods deprecated, raising a clear "not supported by Egeria" error, before removing them in a later release. Dr.Egeria/CLI usage needs checking first.
-3. Ask the Egeria team for the intended replacements for subject-area membership, governance-action-process search and the platform organization name.
+2. ~~Mark the obsolete methods deprecated~~ (done, as delegating wrappers rather than errors, per the Egeria team's answer).
+3. ~~Ask the Egeria team for the intended replacements~~ (answered, except the platform organization name).
 
 ---
 
