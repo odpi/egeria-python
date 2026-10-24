@@ -136,3 +136,27 @@ def test_dr_egeria_governance_context_no_longer_calls_the_removed_endpoint():
     src = inspect.getsource(GovernanceContextProcessor)
     assert "_async_get_governance_definition_by_guid" in src
     assert "_async_get_gov_def_in_context" not in src
+
+
+@pytest.mark.asyncio
+async def test_platform_organization_reads_public_app_info(monkeypatch):
+    # organization-name was removed (816076ab50); Egeria returns the same value as
+    # organizationName in /api/public/app/info, which has no relatedHTTPCode envelope.
+    from pyegeria.core._base_platform_client import BasePlatformClient
+    from pyegeria.omvs.platform_services import Platform
+    captured: list = []
+
+    class _AppInfo:
+        def json(self):
+            return {"displayName": "Quickstart OMAG Server Platform", "organizationName": "Coco Pharmaceuticals"}
+
+    async def fake_make_request(self, method, url, payload=None, is_json=True, *args, **kwargs):
+        captured.append({"method": method, "url": url, "is_json": is_json})
+        return _AppInfo()
+
+    monkeypatch.setattr(BasePlatformClient, "check_connection", lambda self: "test", raising=False)
+    monkeypatch.setattr(BasePlatformClient, "_async_make_request", fake_make_request)
+    p = Platform("view-server", "https://localhost:1", "user", "pwd")
+
+    assert await p._async_get_platform_organization() == "Coco Pharmaceuticals"
+    assert captured == [{"method": "GET", "url": "https://localhost:1/api/public/app/info", "is_json": False}]
