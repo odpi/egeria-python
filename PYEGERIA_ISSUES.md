@@ -288,7 +288,7 @@ they're holding real port materialization until this exists server-side
 
 ### ISSUE-165: 19 SDK methods called endpoints Egeria doesn't serve: 13 removed upstream, 6 never existed (2 since repointed)
 
-**Layer:** Pyegeria · **Status:** replacements implemented as deprecated wrappers and verified live (branch `fix/issue-165-replacements`); `get_platform_organization` still open · **Found:** 2026-10-23 by `scripts/omvs_audit.py` JAVA-MISSING (ISSUE-164).
+**Layer:** Pyegeria · **Status:** resolved: replacements implemented as deprecated wrappers and verified live (#485); `get_platform_organization` repointed (2026-10-24) · **Found:** 2026-10-23 by `scripts/omvs_audit.py` JAVA-MISSING (ISSUE-164).
 
 **Validation.** Each URL was checked three ways:
 1. **No Spring mapping** in Egeria `main` 4486d1a7f1 (2026-10-23), the checkout `omvs_audit.py` reads.
@@ -305,7 +305,7 @@ Three other JAVA-MISSING rows are served live, so they are Java-scan false posit
 | `data_discovery`: `create/update/delete_analysis_report`, `get_analysis_reports_by_name`, `find_analysis_reports`, `get_analysis_report_by_guid`, `link/detach_analysis_report_to/from_asset` (`data_discovery.py:1692-1773`, 8 methods) | `data-discovery/analysis-reports/...` | `e17cc09d44`, 2025-08-04 "Radical simplification of platform" | None as a CRUD API. Data Discovery now serves only `survey-reports/{g}/new-annotations[/{g}/attach\|detach]`; survey reports are produced by survey engines. The `AnalysisReportProperties` class these methods use doesn't exist either. |
 | `classification_explorer.add_element_to_subject_area` / `remove_element_from_subject_area` (`classification_explorer.py:12293/12405`) | `classification-explorer/elements/{g}/subject-area-member[/remove]` | `6a49a3e23f`, 2026-01-09, which also removed `elements/by-subject-area-membership` | Not confirmed. Likely collection membership on the subject area (`{urlMarker}/collections/{g}/members/{g}/attach\|detach`, served by the generic CollectionManager resource); ask the Egeria team. `SubjectAreaMemberProperties` doesn't exist either. |
 | `governance_officer.find_governance_action_processes` (`governance_officer.py:2310`) | `governance-officer/governance-action-processes/by-search-string` | `d299b120f4`, 2025-10-16, which removed all of Governance Officer's process create/update/publish/withdraw/remove/search endpoints | Not confirmed; a generic search by type `GovernanceActionProcess` is the likely route. `initiate` and `cancel` live on Automated Curation / Governance Engine (ISSUE-153). |
-| `platform_services.get_platform_organization` (`platform_services.py:1083`) | `GET platform-services/server-platform/organization-name` | `816076ab50`, 2026-06-05 "Improve OMAGServerPlatform properties…" | Not confirmed; presumably folded into the platform properties. `GET server-platform/origin` remains. |
+| `platform_services.get_platform_organization` (`platform_services.py:1083`) | `GET platform-services/server-platform/organization-name` | `816076ab50`, 2026-06-05 "Improve OMAGServerPlatform properties…" | **Fixed 2026-10-24:** Mandy Chessell confirmed the value is now the `organizationName` field of `GET /api/public/app/info`, and the method reads it from there. |
 
 **Never in Egeria's Java (the SDK URL was a guess):**
 
@@ -330,7 +330,7 @@ Three other JAVA-MISSING rows are served live, so they are Java-scan false posit
 | `get_gov_def_in_context` | no longer needed: OpenMetadataRootElement returns the context by default | `get_governance_definition_by_guid`. Dr.Egeria's `View Governance Definition Context` calls it directly. |
 | data-classification create/update/link/detach | "probably the old data class operations", now data value specifications (the common root of DataClass and DataGrain); **Mandy was not certain** | `create/update_data_value_specification` (a body naming `DataClassificationProperties` is rewritten to `DataClassProperties`) and `link/detach_data_value_assignment(data_field_guid, spec_guid)` (`DataValueAssignmentProperties`). A best-effort mapping. |
 
-Still open: `get_platform_organization` (removed in `816076ab50`; not covered by the answer). Tests: `tests/micro-tests/test_issue165_replacements.py` (8).
+`get_platform_organization` (removed in `816076ab50`): Mandy confirmed on 2026-10-24 that the same value is returned by `GET /api/public/app/info`. The method now returns that response's `organizationName`, not a deprecated wrapper, because its signature and meaning are unchanged. That response has no `relatedHTTPCode` envelope, so it is requested with `is_json=False`. Verified live: it returns `'Coco Pharmaceuticals'` on quickstart 9443. Tests: `tests/micro-tests/test_issue165_replacements.py` (9).
 
 **Live on quickstart 9443, 2026-10-24** (Egeria 81beb8e5 after the reset; one peer-cleared run as `peterprofile` with throwaway `pyeg-test::issue165::` elements, all 5 deleted and read back as NotFound by GUID, and the prefix find was empty afterwards). Each wrapper reached its replacement and the replacement had the intended effect:
 - `find_governance_action_processes("*")` returned 100 GovernanceActionProcess-family elements (GovernanceActionProcess plus its Provisioning/Deleting/Subscribing subtypes).

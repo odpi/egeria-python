@@ -1080,13 +1080,19 @@ class Platform(BasePlatformClient):
             self._async_activate_platform(platform_name, hosted_server_names, timeout)
         )
 
-    async def _async_get_platform_organization(self) -> str:
-        """Get the name of the organization that owns this platform. Async version."""
-        url = f"{self.admin_command_root}/organization-name"
-        response = await self._async_make_request("GET", url)
-        return response.text
+    async def _async_get_platform_organization(self) -> str | None:
+        """Get the name of the organization that owns this platform. Async version.
 
-    def get_platform_organization(self) -> str:
+        Egeria removed `platform-services/server-platform/organization-name`
+        (816076ab50); the same value is the `organizationName` field of the
+        platform's public application info (ISSUE-165). That response has no
+        `relatedHTTPCode` envelope, so it is requested with is_json=False.
+        """
+        url = f"{self.platform_url}/api/public/app/info"
+        response = await self._async_make_request("GET", url, is_json=False)
+        return response.json().get("organizationName")
+
+    def get_platform_organization(self) -> str | None:
         """Get the name of the organization that owns this platform."""
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(self._async_get_platform_organization())
