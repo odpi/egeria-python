@@ -1685,98 +1685,132 @@ class DataDiscovery(ServerClient):
         )
 
     #
-    # Analysis Reports
+    # Analysis Reports (deprecated)
     #
+    # Egeria removed the data-discovery/analysis-reports endpoints when SurveyReport became a Report, and
+    # so an Asset (Egeria e17cc09d44; ISSUE-165). These wrappers are deprecated for one release: they
+    # delegate to AssetMaker's asset calls for type SurveyReport, and to the ReportSubject relationship
+    # for linking a report to the asset it describes.
+
+    def _asset_maker_client(self):
+        from pyegeria.omvs.asset_maker import AssetMaker
+        client = getattr(self, "_asset_maker", None)
+        if client is None:
+            client = AssetMaker(self.view_server, self.platform_url, self.user_id, self.user_pwd,
+                                token=self.token, timeout=getattr(self, "timeout", None))
+            self._asset_maker = client
+        return client
+
+    @staticmethod
+    def _warn_analysis_report(name: str, use: str) -> None:
+        import warnings
+        warnings.warn(f"DataDiscovery.{name} is deprecated; Egeria no longer has analysis-report endpoints "
+                      f"(a SurveyReport is now a Report asset) - use {use}.", DeprecationWarning, stacklevel=3)
+
+    @staticmethod
+    def _as_survey_report(body):
+        # AnalysisReportProperties no longer exists in Egeria; the type is SurveyReport.
+        if isinstance(body, dict) and isinstance(body.get("properties"), dict) \
+                and body["properties"].get("class") in (None, "AnalysisReportProperties"):
+            body = {**body, "properties": {**body["properties"], "class": "SurveyReportProperties"}}
+        return body
 
     @dynamic_catch
     async def _async_create_analysis_report(self, body: dict | NewElementRequestBody) -> str:
-        """Create an analysis report. Async version."""
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/analysis-reports"
-        return await self._async_create_element_body_request(url, ["AnalysisReportProperties"], body)
+        """Deprecated - use AssetMaker.create_asset(["SurveyReportProperties"], body). Async version."""
+        self._warn_analysis_report("create_analysis_report", 'AssetMaker.create_asset(["SurveyReportProperties"], body)')
+        return await self._asset_maker_client()._async_create_asset(["SurveyReportProperties"],
+                                                                    self._as_survey_report(body))
 
     def create_analysis_report(self, body: dict | NewElementRequestBody) -> str:
-        """Create an analysis report."""
+        """Deprecated - use AssetMaker.create_asset(["SurveyReportProperties"], body)."""
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(self._async_create_analysis_report(body))
 
     @dynamic_catch
     async def _async_update_analysis_report(self, report_guid: str, body: dict | UpdateElementRequestBody) -> None:
-        """Update an analysis report. Async version."""
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/analysis-reports/{report_guid}/update"
-        await self._async_update_element_body_request(url, ["AnalysisReportProperties"], body)
+        """Deprecated - use AssetMaker.update_asset. Async version."""
+        self._warn_analysis_report("update_analysis_report", "AssetMaker.update_asset")
+        await self._asset_maker_client()._async_update_asset(report_guid, self._as_survey_report(body))
 
     def update_analysis_report(self, report_guid: str, body: dict | UpdateElementRequestBody) -> None:
-        """Update an analysis report."""
+        """Deprecated - use AssetMaker.update_asset."""
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_update_analysis_report(report_guid, body))
 
     @dynamic_catch
     async def _async_delete_analysis_report(self, report_guid: str, body: Optional[dict | DeleteElementRequestBody] = None) -> None:
-        """Delete an analysis report. Async version."""
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/analysis-reports/{report_guid}/delete"
-        await self._async_delete_element_request(url, body)
+        """Deprecated - use AssetMaker.delete_asset. Async version."""
+        self._warn_analysis_report("delete_analysis_report", "AssetMaker.delete_asset")
+        await self._asset_maker_client()._async_delete_asset(report_guid, body)
 
     def delete_analysis_report(self, report_guid: str, body: Optional[dict | DeleteElementRequestBody] = None) -> None:
-        """Delete an analysis report."""
+        """Deprecated - use AssetMaker.delete_asset."""
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_delete_analysis_report(report_guid, body))
 
     @dynamic_catch
     async def _async_get_analysis_reports_by_name(self, name: str | None = None, start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
-        """Get analysis reports by name. Async version."""
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/analysis-reports/by-name"
-        return await self._async_get_name_request(url, _type="AnalysisReport", _gen_output=self._generate_annotation_output, filter_string=name, start_from=start_from, page_size=page_size, **kwargs)
+        """Deprecated - use AssetMaker.get_assets_by_name(name, metadata_element_type_name="SurveyReport"). Async version."""
+        self._warn_analysis_report("get_analysis_reports_by_name",
+                                   'AssetMaker.get_assets_by_name(name, metadata_element_type_name="SurveyReport")')
+        return await self._asset_maker_client()._async_get_assets_by_name(
+            filter_string=name, metadata_element_type_name="SurveyReport", start_from=start_from,
+            page_size=page_size, **kwargs)
 
     def get_analysis_reports_by_name(self, name: str | None = None, start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
-        """Get analysis reports by name."""
+        """Deprecated - use AssetMaker.get_assets_by_name(name, metadata_element_type_name="SurveyReport")."""
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(self._async_get_analysis_reports_by_name(name, start_from, page_size, **kwargs))
 
     @dynamic_catch
     async def _async_find_analysis_reports(self, search_string: str = "*", start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
-        """Find analysis reports. Async version."""
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/analysis-reports/by-search-string"
-        return await self._async_find_request(url, _type="AnalysisReport", _gen_output=self._generate_annotation_output, search_string=search_string, start_from=start_from, page_size=page_size, **kwargs)
+        """Deprecated - use AssetMaker.find_assets(search_string, metadata_element_type="SurveyReport"). Async version."""
+        self._warn_analysis_report("find_analysis_reports",
+                                   'AssetMaker.find_assets(search_string, metadata_element_type="SurveyReport")')
+        return await self._asset_maker_client()._async_find_assets(
+            search_string=search_string, metadata_element_type="SurveyReport", start_from=start_from,
+            page_size=page_size, **kwargs)
 
     def find_analysis_reports(self, search_string: str = "*", start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
-        """Find analysis reports."""
+        """Deprecated - use AssetMaker.find_assets(search_string, metadata_element_type="SurveyReport")."""
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(self._async_find_analysis_reports(search_string, start_from, page_size, **kwargs))
 
     @dynamic_catch
     async def _async_get_analysis_report_by_guid(self, guid: str, **kwargs) -> dict | str:
-        """Get analysis report by GUID. Async version."""
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/analysis-reports/{guid}/retrieve"
-        return await self._async_get_guid_request(url, _type="AnalysisReport", _gen_output=self._generate_annotation_output, **kwargs)
+        """Deprecated - use AssetMaker.get_asset_by_guid. Async version."""
+        self._warn_analysis_report("get_analysis_report_by_guid", "AssetMaker.get_asset_by_guid")
+        return await self._asset_maker_client()._async_get_asset_by_guid(guid, **kwargs)
 
     def get_analysis_report_by_guid(self, guid: str, **kwargs) -> dict | str:
-        """Get analysis report by GUID."""
+        """Deprecated - use AssetMaker.get_asset_by_guid."""
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(self._async_get_analysis_report_by_guid(guid, **kwargs))
 
     #
-    # Linking
+    # Linking (deprecated): a report is linked to its subject with the ReportSubject relationship.
     #
 
     @dynamic_catch
     async def _async_link_analysis_report_to_asset(self, analysis_report_guid: str, asset_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
-        """Link an analysis report to an asset. Async version."""
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/analysis-reports/{analysis_report_guid}/assets/{asset_guid}/attach"
-        await self._async_new_relationship_request(url, body=body)
+        """Deprecated - use AssetMaker.link_report_subject(asset_guid, report_guid). Async version."""
+        self._warn_analysis_report("link_analysis_report_to_asset", "AssetMaker.link_report_subject(asset_guid, report_guid)")
+        await self._asset_maker_client()._async_link_report_subject(asset_guid, analysis_report_guid, body)
 
     def link_analysis_report_to_asset(self, analysis_report_guid: str, asset_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
-        """Link an analysis report to an asset."""
+        """Deprecated - use AssetMaker.link_report_subject(asset_guid, report_guid)."""
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_link_analysis_report_to_asset(analysis_report_guid, asset_guid, body))
 
     @dynamic_catch
     async def _async_detach_analysis_report_from_asset(self, analysis_report_guid: str, asset_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
-        """Detach an analysis report from an asset. Async version."""
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/analysis-reports/{analysis_report_guid}/assets/{asset_guid}/detach"
-        await self._async_delete_relationship_request(url, body)
+        """Deprecated - use AssetMaker.unlink_report_subject(asset_guid, report_guid). Async version."""
+        self._warn_analysis_report("detach_analysis_report_from_asset", "AssetMaker.unlink_report_subject(asset_guid, report_guid)")
+        await self._asset_maker_client()._async_unlink_report_subject(asset_guid, analysis_report_guid, body)
 
     def detach_analysis_report_from_asset(self, analysis_report_guid: str, asset_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
-        """Detach an analysis report from an asset."""
+        """Deprecated - use AssetMaker.unlink_report_subject(asset_guid, report_guid)."""
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_detach_analysis_report_from_asset(analysis_report_guid, asset_guid, body))
 

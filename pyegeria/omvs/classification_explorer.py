@@ -12290,11 +12290,38 @@ class ClassificationExplorer(ServerClient):
             )
         )
 
+    # Egeria removed elements/{guid}/subject-area-member when SubjectArea became a Collection
+    # (Egeria 6a49a3e23f; ISSUE-165): membership is now the CollectionMembership relationship, which
+    # needs the subject area's GUID. These methods are deprecated; pass subject_area_guid to have
+    # them delegate, or call CollectionManager.add_to_collection / remove_from_collection directly.
+
+    def _collection_client(self):
+        from pyegeria.omvs.collection_manager import CollectionManager
+        client = getattr(self, "_collection_mgr", None)
+        if client is None:
+            client = CollectionManager(self.view_server, self.platform_url, self.user_id, self.user_pwd,
+                                       token=self.token, timeout=getattr(self, "timeout", None))
+            self._collection_mgr = client
+        return client
+
+    @staticmethod
+    def _subject_area_moved(name: str, use: str, subject_area_guid: Optional[str]) -> None:
+        import warnings
+        warnings.warn(f"ClassificationExplorer.{name} is deprecated; subject-area membership is now collection "
+                      f"membership - use CollectionManager.{use}(subject_area_guid, element_guid).",
+                      DeprecationWarning, stacklevel=3)
+        if not subject_area_guid:
+            raise PyegeriaInvalidParameterException(additional_info={
+                "reason": f"{name}: Egeria no longer has a subject-area-member classification. Pass "
+                          f"subject_area_guid (membership is CollectionMembership on the subject area) or call "
+                          f"CollectionManager.{use}(subject_area_guid, element_guid)."})
+
     async def _async_add_element_to_subject_area(
             self,
             element_guid: str,
             body: dict | NewClassificationRequestBody,
             timeout: int = default_timeout,
+            subject_area_guid: Optional[str] = None,
     ) -> None:
         """
         Classify the element to assert that the definitions it represents are part of a subject area definition.
@@ -12338,19 +12365,20 @@ class ClassificationExplorer(ServerClient):
         }
         """
 
-        url = (
-            f"{self.classification_command_root}/elements/{element_guid}/subject-area-member"
-        )
-
-        await self._async_new_classification_request(
-            url, prop=["SubjectAreaMemberProperties"], body=body
-        )
+        self._subject_area_moved("add_element_to_subject_area", "add_to_collection", subject_area_guid)
+        # The old body carried SubjectAreaMemberProperties (gone); membership takes no properties here.
+        rel_body = None
+        if isinstance(body, dict):
+            rel_body = {k: v for k, v in body.items() if k not in ("class", "properties")}
+            rel_body["class"] = "NewRelationshipRequestBody"
+        await self._collection_client()._async_add_to_collection(subject_area_guid, element_guid, rel_body)
 
     def add_element_to_subject_area(
             self,
             element_guid: str,
             body: dict | NewClassificationRequestBody,
             timeout: int = default_timeout,
+            subject_area_guid: Optional[str] = None,
     ) -> None:
         """
         Classify the element to assert that the definitions it represents are part of a subject area definition.
@@ -12399,6 +12427,7 @@ class ClassificationExplorer(ServerClient):
                 element_guid,
                 body,
                 timeout,
+                subject_area_guid,
             )
         )
 
@@ -12409,6 +12438,7 @@ class ClassificationExplorer(ServerClient):
             for_duplicate_processing: bool = False,
             effective_time: Optional[str] = None,
             timeout: int = default_timeout,
+            subject_area_guid: Optional[str] = None,
     ) -> None:
         """
         Remove the subject area designation from the identified element. Async version.
@@ -12444,15 +12474,10 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        url = (
-            f"{self.classification_command_root}/elements/{element_guid}/subject-area-member"
-            f"/remove"
-        )
-
-        body = {"class": "DeleteClassificationRequestBody", "effectiveTime": effective_time, "forLineage": for_lineage,
+        self._subject_area_moved("remove_element_from_subject_area", "remove_from_collection", subject_area_guid)
+        body = {"class": "DeleteRelationshipRequestBody", "effectiveTime": effective_time, "forLineage": for_lineage,
                 "forDuplicateProcessing": for_duplicate_processing}
-
-        await self._async_delete_classification_request(url, body)
+        await self._collection_client()._async_remove_from_collection(subject_area_guid, element_guid, body)
 
     def remove_element_from_subject_area(
             self,
@@ -12461,6 +12486,7 @@ class ClassificationExplorer(ServerClient):
             for_duplicate_processing: bool = False,
             effective_time: Optional[str] = None,
             timeout: int = default_timeout,
+            subject_area_guid: Optional[str] = None,
     ) -> None:
         """
         Remove the subject area designation from the identified element.
@@ -12506,6 +12532,7 @@ class ClassificationExplorer(ServerClient):
                 for_duplicate_processing,
                 effective_time,
                 timeout,
+                subject_area_guid,
             )
         )
 

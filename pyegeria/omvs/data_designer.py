@@ -3294,6 +3294,27 @@ class DataDesigner(ServerClient):
             self._async_get_data_value_specification_by_guid(
                 guid=guid, element_type=element_type or "DataGrain", body=body, output_format=output_format, report_spec=report_spec, **kwargs))
 
+    @staticmethod
+    def _warn_data_classification(name: str, use: str) -> None:
+        import warnings
+        warnings.warn(f"DataDesigner.{name} is deprecated; Egeria has no data-classification API - use {use} "
+                      "(data value specifications cover DataClass and DataGrain).", DeprecationWarning, stacklevel=3)
+
+    @staticmethod
+    def _as_data_class(body):
+        # DataClassificationProperties never existed in Egeria; the nearest type is DataClass.
+        if isinstance(body, dict) and isinstance(body.get("properties"), dict) \
+                and body["properties"].get("class") == "DataClassificationProperties":
+            body = {**body, "properties": {**body["properties"], "class": "DataClassProperties"}}
+        return body
+
+    @staticmethod
+    def _as_value_assignment(body):
+        if isinstance(body, dict) and isinstance(body.get("properties"), dict) \
+                and body["properties"].get("class") == "DataFieldClassificationProperties":
+            body = {**body, "properties": {**body["properties"], "class": "DataValueAssignmentProperties"}}
+        return body
+
     @dynamic_catch
     async def _async_create_data_classification(self, body: dict | NewElementRequestBody) -> str:
         """
@@ -3373,9 +3394,11 @@ class DataDesigner(ServerClient):
 
         """
 
-        url = f"{self.ref_data_designer_command_base}/data-classifications"
-
-        return await self._async_create_element_body_request(url, ["DataClassification"], body)
+        # Egeria has no data-classifications endpoints (never in 6.x Java; ISSUE-165). Per the Egeria team
+        # these were the old data-class operations, now data value specifications (the common root of
+        # DataClass and DataGrain) - a best-effort mapping, not confirmed against a live round trip.
+        self._warn_data_classification("create_data_classification", "create_data_value_specification")
+        return await self._async_create_data_value_specification(self._as_data_class(body))
 
     @dynamic_catch
     def create_data_classification(self, body: dict | NewElementRequestBody) -> str:
@@ -3525,9 +3548,11 @@ class DataDesigner(ServerClient):
 
         """
 
-        url = f"{self.ref_data_designer_command_base}/data-classifications/{data_classification_guid}/update"
-        await self._async_update_element_body_request(url, ["DataClassification"], body)
-        logger.info(f"Data classification {data_classification_guid} updated.")
+        # Egeria has no data-classifications endpoints (never in 6.x Java; ISSUE-165). Per the Egeria team
+        # these were the old data-class operations, now data value specifications (the common root of
+        # DataClass and DataGrain) - a best-effort mapping, not confirmed against a live round trip.
+        self._warn_data_classification("update_data_classification", "update_data_value_specification")
+        await self._async_update_data_value_specification(data_classification_guid, self._as_data_class(body))
 
     @dynamic_catch
     def update_data_classification(self, data_classification_guid: str, body: dict | UpdateElementRequestBody) -> None:
@@ -3646,10 +3671,12 @@ class DataDesigner(ServerClient):
 
         """
 
-        url = (f"{self.ref_data_designer_command_base}/data-classifications/{data_classification_guid}"
-               f"/data-fields/{data_field_guid}/attach")
-        await self._async_new_relationship_request(url, ["DataFieldClassificationProperties"], body)
-        logger.info(f"Data classification {data_classification_guid} linked to data field {data_field_guid}.")
+        # Egeria has no data-classifications endpoints (never in 6.x Java; ISSUE-165). Per the Egeria team
+        # these were the old data-class operations, now data value specifications (the common root of
+        # DataClass and DataGrain) - a best-effort mapping, not confirmed against a live round trip.
+        self._warn_data_classification("link_data_classification_to_data_field", "link_data_value_assignment(data_field_guid, spec_guid)")
+        await self._async_link_data_value_assignment(data_field_guid, data_classification_guid,
+                                                     self._as_value_assignment(body))
 
 
     @dynamic_catch
@@ -3751,11 +3778,11 @@ class DataDesigner(ServerClient):
 
         """
 
-        url = (f"{self.ref_data_designer_command_base}/data-classifications/{data_classification_guid}"
-               f"/data-fields/{data_field_guid}/detach")
-
-        await self._async_delete_relationship_request(url, body, cascade_delete)
-        logger.info(f"Data classification {data_classification_guid} detached from data field {data_field_guid}.")
+        # Egeria has no data-classifications endpoints (never in 6.x Java; ISSUE-165). Per the Egeria team
+        # these were the old data-class operations, now data value specifications (the common root of
+        # DataClass and DataGrain) - a best-effort mapping, not confirmed against a live round trip.
+        self._warn_data_classification("detach_data_classification_from_data_field", "detach_data_value_assignment(data_field_guid, spec_guid)")
+        await self._async_detach_data_value_assignment(data_field_guid, data_classification_guid, body)
 
 
     @dynamic_catch
