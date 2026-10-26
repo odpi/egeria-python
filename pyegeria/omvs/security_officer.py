@@ -15,6 +15,12 @@ from pyegeria.core._globals import NO_ELEMENTS_FOUND
 from pyegeria.core._exceptions import PyegeriaNotFoundException
 from pyegeria.models import (
     UserAccountRequestBody,
+    NewElementRequestBody,
+    TemplateRequestBody,
+    UpdateElementRequestBody,
+    DeleteElementRequestBody,
+    FilterRequestBody,
+    GetRequestBody,
     NewRelationshipRequestBody,
     DeleteRelationshipRequestBody,
     NewClassificationRequestBody,
@@ -781,3 +787,381 @@ class SecurityOfficer(ServerClient):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_clear_zone_membership_profile(governance_zone_guid, body))
 
+    #
+    # Statements of applicability - which controls from a standard (such as the
+    # Annex A controls of ISO/IEC 27001) apply to the organization, why, and how
+    # far each is implemented.  Added in Egeria 6.3.
+    #
+
+    @dynamic_catch
+    async def _async_create_statement_of_applicability(self, body: Optional[dict | NewElementRequestBody] = None) -> str:
+        """Create a statement of applicability. Async version.
+
+        Parameters
+        ----------
+        body : dict | NewElementRequestBody
+            Request body whose properties class is StatementOfApplicabilityProperties.
+
+        Returns
+        -------
+        str
+            The GUID of the new statement of applicability.
+        """
+        url = f"{self.security_officer_base_url}/statements-of-applicability"
+        return await self._async_create_element_body_request(url, ["StatementOfApplicabilityProperties"], body)
+
+    @dynamic_catch
+    def create_statement_of_applicability(self, body: Optional[dict | NewElementRequestBody] = None) -> str:
+        """Create a statement of applicability.
+
+        Parameters
+        ----------
+        body : dict | NewElementRequestBody
+            Request body whose properties class is StatementOfApplicabilityProperties.
+
+        Returns
+        -------
+        str
+            The GUID of the new statement of applicability.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_create_statement_of_applicability(body))
+
+    @dynamic_catch
+    async def _async_create_statement_of_applicability_from_template(self, body: dict | TemplateRequestBody) -> str:
+        """Create a statement of applicability using an existing one as a template. Async version."""
+        url = f"{self.security_officer_base_url}/statements-of-applicability/from-template"
+        return await self._async_create_element_from_template(url, body)
+
+    @dynamic_catch
+    def create_statement_of_applicability_from_template(self, body: dict | TemplateRequestBody) -> str:
+        """Create a statement of applicability using an existing one as a template."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_create_statement_of_applicability_from_template(body))
+
+    @dynamic_catch
+    async def _async_update_statement_of_applicability(self, soa_guid: str,
+                                                       body: dict | UpdateElementRequestBody) -> None:
+        """Update the properties of a statement of applicability - for example, to approve it. Async version."""
+        url = f"{self.security_officer_base_url}/statements-of-applicability/{soa_guid}/update"
+        await self._async_update_element_body_request(url, ["StatementOfApplicabilityProperties"], body)
+
+    @dynamic_catch
+    def update_statement_of_applicability(self, soa_guid: str, body: dict | UpdateElementRequestBody) -> None:
+        """Update the properties of a statement of applicability - for example, to approve it."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_update_statement_of_applicability(soa_guid, body))
+
+    @dynamic_catch
+    async def _async_delete_statement_of_applicability(self, soa_guid: str,
+                                                       body: Optional[dict | DeleteElementRequestBody] = None,
+                                                       cascade: bool = False) -> None:
+        """Delete a statement of applicability. Async version."""
+        url = f"{self.security_officer_base_url}/statements-of-applicability/{soa_guid}/delete"
+        await self._async_delete_element_request(url, body, cascade)
+
+    @dynamic_catch
+    def delete_statement_of_applicability(self, soa_guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
+                                          cascade: bool = False) -> None:
+        """Delete a statement of applicability."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_delete_statement_of_applicability(soa_guid, body, cascade))
+
+    def _generate_statement_of_applicability_output(
+        self,
+        elements: dict | list[dict],
+        search_string: Optional[str] = None,
+        element_type_name: Optional[str] = None,
+        output_format: str = "JSON",
+        report_spec: dict | str | None = None,
+        **kwargs
+    ) -> Any:
+        return self._generate_formatted_output(
+            elements=elements,
+            query_string=search_string,
+            entity_type=element_type_name or "StatementOfApplicability",
+            output_format=output_format,
+            extract_properties_func=self._extract_referenceable_properties,
+            report_spec=report_spec,
+            **kwargs
+        )
+
+    @dynamic_catch
+    async def _async_get_statements_of_applicability_by_name(
+        self,
+        filter_string: str | None = None,
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict | None = None,
+        body: Optional[dict | FilterRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Return the statements of applicability with a particular name. Async version."""
+        url = f"{self.security_officer_base_url}/statements-of-applicability/by-name"
+        return await self._async_get_name_request(
+            url,
+            _type="StatementOfApplicability",
+            _gen_output=self._generate_statement_of_applicability_output,
+            filter_string=filter_string,
+            metadata_element_subtypes=metadata_element_subtypes,
+            include_only_relationships=include_only_relationships,
+            skip_relationships=skip_relationships,
+            graph_query_depth=graph_query_depth,
+            start_from=start_from,
+            page_size=page_size,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+            **kwargs,
+        )
+
+    @dynamic_catch
+    def get_statements_of_applicability_by_name(
+        self,
+        filter_string: str | None = None,
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict | None = None,
+        body: Optional[dict | FilterRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Return the statements of applicability with a particular name."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_statements_of_applicability_by_name(
+                filter_string=filter_string,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
+            )
+        )
+
+    @dynamic_catch
+    async def _async_find_statements_of_applicability(
+        self,
+        search_string: str = "*",
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        metadata_element_type_name: str | None = None,
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        as_of_time: Optional[str] = None,
+        start_from: int = 0,
+        page_size: int = 100,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = None,
+        body: Optional[dict | SearchStringRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Return the statements of applicability that contain the search string. Async version."""
+        url = f"{self.security_officer_base_url}/statements-of-applicability/by-search-string"
+        return await self._async_find_request(
+            url,
+            _type="StatementOfApplicability",
+            _gen_output=self._generate_statement_of_applicability_output,
+            search_string=search_string,
+            starts_with=starts_with,
+            ends_with=ends_with,
+            ignore_case=ignore_case,
+            metadata_element_type=metadata_element_type_name,
+            metadata_element_subtypes=metadata_element_subtypes,
+            include_only_relationships=include_only_relationships,
+            skip_relationships=skip_relationships,
+            graph_query_depth=graph_query_depth,
+            as_of_time=as_of_time,
+            start_from=start_from,
+            page_size=page_size,
+            sequencing_order=sequencing_order,
+            sequencing_property=sequencing_property,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+            **kwargs,
+        )
+
+    @dynamic_catch
+    def find_statements_of_applicability(
+        self,
+        search_string: str = "*",
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        metadata_element_type_name: str | None = None,
+        metadata_element_subtypes: list[str] | None = None,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        as_of_time: Optional[str] = None,
+        start_from: int = 0,
+        page_size: int = 100,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = None,
+        body: Optional[dict | SearchStringRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Return the statements of applicability that contain the search string."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_find_statements_of_applicability(
+                search_string=search_string,
+                starts_with=starts_with,
+                ends_with=ends_with,
+                ignore_case=ignore_case,
+                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_subtypes=metadata_element_subtypes,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                as_of_time=as_of_time,
+                start_from=start_from,
+                page_size=page_size,
+                sequencing_order=sequencing_order,
+                sequencing_property=sequencing_property,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
+            )
+        )
+
+    @dynamic_catch
+    async def _async_get_statement_of_applicability_by_guid(
+        self,
+        soa_guid: str,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
+        report_spec: str | dict | None = None,
+        body: Optional[dict | GetRequestBody] = None,
+        **kwargs,
+    ) -> dict | str:
+        """Return a statement of applicability. Async version.
+
+        Each linked control, with its ControlApplicability relationship properties, is returned in the
+        element's otherRelatedElements list.
+        """
+        url = f"{self.security_officer_base_url}/statements-of-applicability/{soa_guid}/retrieve"
+        return await self._async_get_guid_request(
+            url,
+            _type="StatementOfApplicability",
+            _gen_output=self._generate_statement_of_applicability_output,
+            include_only_relationships=include_only_relationships,
+            skip_relationships=skip_relationships,
+            graph_query_depth=graph_query_depth,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+            **kwargs,
+        )
+
+    @dynamic_catch
+    def get_statement_of_applicability_by_guid(
+        self,
+        soa_guid: str,
+        include_only_relationships: list[str] | None = None,
+        skip_relationships: list[str] | None = None,
+        graph_query_depth: int = 3,
+        output_format: str = "JSON",
+        report_spec: str | dict | None = None,
+        body: Optional[dict | GetRequestBody] = None,
+        **kwargs,
+    ) -> dict | str:
+        """Return a statement of applicability.
+
+        Each linked control, with its ControlApplicability relationship properties, is returned in the
+        element's otherRelatedElements list.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_statement_of_applicability_by_guid(
+                soa_guid=soa_guid,
+                include_only_relationships=include_only_relationships,
+                skip_relationships=skip_relationships,
+                graph_query_depth=graph_query_depth,
+                output_format=output_format,
+                report_spec=report_spec,
+                body=body,
+                **kwargs,
+            )
+        )
+
+    @dynamic_catch
+    async def _async_link_control_applicability(self, soa_guid: str, control_guid: str,
+                                                body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Link a control to a statement of applicability (ControlApplicability relationship). Async version.
+
+        ControlApplicability is not multi-link: linking a control that is already linked updates the
+        properties of the existing relationship, so this is also how a control's applicability is updated.
+
+        Parameters
+        ----------
+        soa_guid : str
+            The statement of applicability.
+        control_guid : str
+            The governance definition (typically a GovernanceControl) being assessed.
+        body : dict | NewRelationshipRequestBody, optional
+            Request body whose properties class is ControlApplicabilityProperties.
+        """
+        url = (f"{self.security_officer_base_url}/statements-of-applicability/{soa_guid}"
+               f"/control-applicability/{control_guid}/attach")
+        await self._async_new_relationship_request(url, ["ControlApplicabilityProperties"], body)
+
+    @dynamic_catch
+    def link_control_applicability(self, soa_guid: str, control_guid: str,
+                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Link a control to a statement of applicability (ControlApplicability relationship).
+
+        ControlApplicability is not multi-link: linking a control that is already linked updates the
+        properties of the existing relationship, so this is also how a control's applicability is updated.
+
+        Parameters
+        ----------
+        soa_guid : str
+            The statement of applicability.
+        control_guid : str
+            The governance definition (typically a GovernanceControl) being assessed.
+        body : dict | NewRelationshipRequestBody, optional
+            Request body whose properties class is ControlApplicabilityProperties.
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_control_applicability(soa_guid, control_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_control_applicability(self, soa_guid: str, control_guid: str,
+                                                  body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Remove a control from a statement of applicability. Async version."""
+        url = (f"{self.security_officer_base_url}/statements-of-applicability/{soa_guid}"
+               f"/control-applicability/{control_guid}/detach")
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_control_applicability(self, soa_guid: str, control_guid: str,
+                                     body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Remove a control from a statement of applicability."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_control_applicability(soa_guid, control_guid, body))
