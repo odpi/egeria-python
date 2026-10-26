@@ -8,6 +8,7 @@ Copyright Contributors to the ODPi Egeria project.
 
 import asyncio
 import json
+import uuid
 from typing import Optional, Union, Any
 
 from pyegeria.core._server_client import ServerClient
@@ -26,6 +27,7 @@ from pyegeria.models import (
     NewClassificationRequestBody,
     DeleteClassificationRequestBody,
     SearchStringRequestBody,
+    ControlImplementationStatus,
 )
 from pyegeria.core.utils import dynamic_catch
 
@@ -1165,3 +1167,140 @@ class SecurityOfficer(ServerClient):
         """Remove a control from a statement of applicability."""
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_detach_control_applicability(soa_guid, control_guid, body))
+
+    @staticmethod
+    def _control_applicability_rows(soa: dict) -> list[dict]:
+        """Turn a statement of applicability's ControlApplicability relationships into one element per control.
+
+        Each row carries the control's header and properties, with the relationship properties merged in.
+        The relationship's description becomes `notes` so it does not hide the control's own description.
+        """
+        rows = []
+        for rel in soa.get("otherRelatedElements") or []:
+            rel_type = (rel.get("relationshipHeader") or {}).get("type", {}).get("typeName")
+            if rel_type != "ControlApplicability":
+                continue
+            control = rel.get("relatedElement") or {}
+            properties = dict(control.get("properties") or {})
+            for key, value in (rel.get("relationshipProperties") or {}).items():
+                if key in ("class", "typeName"):
+                    continue
+                properties["notes" if key == "description" else key] = value
+            # Egeria treats a control as applicable unless isApplicable is false.
+            properties.setdefault("isApplicable", True)
+            rows.append({"elementHeader": control.get("elementHeader", {}), "properties": properties})
+        rows.sort(key=lambda r: (str(r["properties"].get("label") or ""), str(r["properties"].get("displayName") or "")))
+        return rows
+
+    async def _async_resolve_statement_of_applicability(self, soa_guid: str,
+                                                        body: Optional[dict | GetRequestBody] = None) -> dict | str:
+        """Fetch a statement of applicability by GUID, or by qualified name when `soa_guid` is not a GUID."""
+        try:
+            uuid.UUID(str(soa_guid))
+        except ValueError:
+            matches = await self._async_get_statements_of_applicability_by_name(soa_guid)
+            if not isinstance(matches, list) or not matches:
+                return NO_ELEMENTS_FOUND
+            soa_guid = matches[0]["elementHeader"]["guid"]
+        return await self._async_get_statement_of_applicability_by_guid(soa_guid, body=body)
+
+    @dynamic_catch
+    async def _async_get_statement_of_applicability_controls(
+        self,
+        soa_guid: str,
+        output_format: str = "JSON",
+        report_spec: str | dict | None = None,
+        body: Optional[dict | GetRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Return the controls assessed in a statement of applicability, one row per control. Async version.
+
+        Each row has the control's properties plus its ControlApplicability properties (label, isApplicable,
+        justification, inclusionReasons, implementationStatus, implementationDescription, reviewDate, and the
+        relationship description as notes). This is the table an auditor asks for.
+
+        Parameters
+        ----------
+        soa_guid : str
+            The statement of applicability's GUID, or its qualified name.
+        output_format : str, default "JSON"
+            JSON returns the rows as element dicts; any other format is rendered with the report spec.
+        report_spec : str | dict, optional
+            Defaults to "Statement-of-Applicability-Controls".
+        body : dict | GetRequestBody, optional
+            Passed to get_statement_of_applicability_by_guid.
+
+        Returns
+        -------
+        list | str
+            The rows, or NO_ELEMENTS_FOUND when no controls are linked.
+        """
+        soa = await self._async_resolve_statement_of_applicability(soa_guid, body)
+        rows = self._control_applicability_rows(soa) if isinstance(soa, dict) else []
+        if not rows:
+            return NO_ELEMENTS_FOUND
+        return self._generate_formatted_output(
+            elements=rows,
+            entity_type="Statement-of-Applicability-Controls",
+            output_format=output_format,
+            extract_properties_func=self._extract_referenceable_properties,
+            report_spec=report_spec or "Statement-of-Applicability-Controls",
+            **kwargs,
+        )
+
+    @dynamic_catch
+    def get_statement_of_applicability_controls(
+        self,
+        soa_guid: str,
+        output_format: str = "JSON",
+        report_spec: str | dict | None = None,
+        body: Optional[dict | GetRequestBody] = None,
+        **kwargs,
+    ) -> list | str:
+        """Return the controls assessed in a statement of applicability, one row per control.
+
+        See _async_get_statement_of_applicability_controls.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_statement_of_applicability_controls(
+                soa_guid, output_format=output_format, report_spec=report_spec, body=body, **kwargs
+            )
+        )
+
+    @dynamic_catch
+    async def _async_get_control_implementation_summary(self, soa_guid: str,
+                                                        body: Optional[dict | GetRequestBody] = None) -> dict:
+        """Count the applicable controls in a statement of applicability by implementation status. Async version.
+
+        Every ControlImplementationStatus value is present, so a zero is a real count. A control with no
+        implementation status counts as NOT_STARTED, the enum's default. Controls marked not applicable are
+        left out of the status counts and reported separately.
+
+        Returns
+        -------
+        dict
+            {"byStatus": {status: count, ...}, "applicable": int, "notApplicable": int}
+        """
+        soa = await self._async_resolve_statement_of_applicability(soa_guid, body)
+        rows = self._control_applicability_rows(soa) if isinstance(soa, dict) else []
+        by_status = {status.value: 0 for status in ControlImplementationStatus}
+        not_applicable = 0
+        for row in rows:
+            props = row["properties"]
+            if props.get("isApplicable") is False:
+                not_applicable += 1
+                continue
+            status = props.get("implementationStatus") or ControlImplementationStatus.NOT_STARTED.value
+            by_status[status] = by_status.get(status, 0) + 1
+        return {"byStatus": by_status, "applicable": len(rows) - not_applicable, "notApplicable": not_applicable}
+
+    @dynamic_catch
+    def get_control_implementation_summary(self, soa_guid: str,
+                                           body: Optional[dict | GetRequestBody] = None) -> dict:
+        """Count the applicable controls in a statement of applicability by implementation status.
+
+        See _async_get_control_implementation_summary.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_control_implementation_summary(soa_guid, body))
