@@ -223,6 +223,72 @@ class StatementOfApplicabilityProperties(AuthoredReferenceableProperties):
     review_date: datetime | None = None
 
 
+class AnnotationProperties(AuthoredReferenceableProperties):
+    class_: Annotated[Literal["AnnotationProperties"], Field(alias="class")]
+    annotation_type: str | None = None
+    summary: str | None = None
+    sample_size: int | None = None
+    sample_percent: int | None = None
+    sampling_method: str | None = None
+    confidence: int | None = None
+    units: str | None = None
+    absolute_uncertainty: int | None = None
+    relative_uncertainty: int | None = None
+    expression: str | None = None
+    explanation: str | None = None
+    analysis_step: str | None = None
+    json_properties: str | None = None
+    user_defined_content_status: str | None = None
+
+
+class ResourceMeasureAnnotationProperties(AnnotationProperties):
+    class_: Annotated[Literal["ResourceMeasureAnnotationProperties"], Field(alias="class")]
+    resource_properties: dict[str, str] | None = None
+
+
+class SecurityFindingAnnotationProperties(AnnotationProperties):
+    """A security finding (Egeria 6.3, model 0665). Severity uses the CVSS ratings."""
+    class_: Annotated[Literal["SecurityFindingAnnotationProperties"], Field(alias="class")]
+    severity: Literal["None", "Low", "Medium", "High", "Critical"] | None = None
+    cvss_score: float | None = Field(default=None, ge=0.0, le=10.0)
+    cvss_vector: str | None = None
+    vulnerability_identifiers: list[str] | None = None
+    weakness_identifiers: list[str] | None = None
+    affected_location: str | None = None
+    evidence: str | None = None
+    remediation: str | None = None
+    exploit_available: bool | None = None
+
+
+class VulnerabilityAnnotationProperties(SecurityFindingAnnotationProperties):
+    """A known vulnerability in the software a resource uses, typically from a scan."""
+    class_: Annotated[Literal["VulnerabilityAnnotationProperties"], Field(alias="class")]
+    package_url: str | None = Field(default=None, alias="packageURL")
+    installed_version: str | None = None
+    fixed_version: str | None = None
+    patch_available: bool | None = None
+
+
+class PenetrationTestFindingAnnotationProperties(SecurityFindingAnnotationProperties):
+    """A weakness a penetration test was able to exploit."""
+    class_: Annotated[Literal["PenetrationTestFindingAnnotationProperties"], Field(alias="class")]
+    attack_vector: str | None = None
+    attack_techniques: list[str] | None = None
+    privileges_gained: str | None = None
+    compromised_resources: list[str] | None = None
+    reproduction_steps: str | None = None
+
+
+class SecurityPostureAnnotationProperties(ResourceMeasureAnnotationProperties):
+    """The summary of one security test run."""
+    class_: Annotated[Literal["SecurityPostureAnnotationProperties"], Field(alias="class")]
+    finding_counts_by_severity: dict[str, int] | None = None
+    resources_in_scope_count: int | None = None
+    resources_tested_count: int | None = None
+    new_finding_count: int | None = None
+    resolved_finding_count: int | None = None
+
+
 class ControlApplicabilityProperties(PyegeriaModel):
     class_: Annotated[Literal["ControlApplicabilityProperties"], Field(alias="class")]
     # Egeria treats a control as applicable unless this is false.
