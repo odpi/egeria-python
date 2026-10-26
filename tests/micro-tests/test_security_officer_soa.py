@@ -216,3 +216,83 @@ async def test_delete_annotation_body_is_optional(monkeypatch):
 
     assert calls[0]["method"] == "POST"
     assert calls[0]["url"].endswith("/data-discovery/annotations/annotation-guid/delete")
+
+
+# Shape taken from a live getStatementOfApplicabilityByGUID response (6.3).
+def _rel(rel_type, control_guid, control_props, rel_props):
+    return {
+        "class": "RelatedMetadataElementSummary",
+        "relationshipHeader": {"guid": f"rel-{control_guid}", "type": {"typeName": rel_type}},
+        "relationshipProperties": {"class": f"{rel_type}Properties", "typeName": rel_type, **rel_props},
+        "relatedElement": {"elementHeader": {"guid": control_guid, "type": {"typeName": "GovernanceControl"}},
+                           "properties": control_props},
+    }
+
+
+SOA_WITH_CONTROLS = {
+    "elementHeader": {"guid": "soa-guid", "type": {"typeName": "StatementOfApplicability"}},
+    "properties": SOA_PROPS,
+    "otherRelatedElements": [
+        _rel("ControlApplicability", "c-825", {"displayName": "Secure development", "description": "Control text"},
+             {"label": "8.25", "implementationStatus": "PLANNED"}),
+        _rel("ControlApplicability", "c-820", {"displayName": "Network security"},
+             {"label": "8.20", "description": "Plant network first", "isApplicable": True,
+              "implementationStatus": "IMPLEMENTED"}),
+        _rel("ControlApplicability", "c-501", {"displayName": "Policies"},
+             {"label": "5.1", "isApplicable": False, "justification": "Covered by group policy"}),
+        _rel("ControlApplicability", "c-600", {"displayName": "Screening"}, {"label": "6.1"}),
+        _rel("SomethingElse", "x-1", {"displayName": "Not a control"}, {}),
+    ],
+}
+
+
+def test_control_applicability_rows_flatten_one_row_per_control():
+    rows = SecurityOfficer._control_applicability_rows(SOA_WITH_CONTROLS)
+
+    assert [r["properties"]["label"] for r in rows] == ["5.1", "6.1", "8.20", "8.25"]
+    by_label = {r["properties"]["label"]: r for r in rows}
+    # The relationship description becomes notes; the control's own description is kept.
+    assert by_label["8.20"]["properties"]["notes"] == "Plant network first"
+    assert by_label["8.25"]["properties"]["description"] == "Control text"
+    # Unset isApplicable reads as applicable, as Egeria treats it.
+    assert by_label["6.1"]["properties"]["isApplicable"] is True
+    assert by_label["5.1"]["properties"]["isApplicable"] is False
+    assert by_label["8.20"]["elementHeader"]["guid"] == "c-820"
+    assert "typeName" not in by_label["8.20"]["properties"]
+
+
+@pytest.mark.asyncio
+async def test_control_implementation_summary_counts_applicable_controls(monkeypatch):
+    calls: list = []
+    client = _security_officer(calls, monkeypatch,
+                               {"class": "OpenMetadataRootElementResponse", "element": SOA_WITH_CONTROLS})
+
+    summary = await client._async_get_control_implementation_summary("8f7e6a1c-1111-4222-8333-944455556666")
+
+    # Every status is present, so zeros are real counts; 6.1 has no status and counts as NOT_STARTED.
+    assert summary["byStatus"] == {"NOT_STARTED": 1, "PLANNED": 1, "PARTIALLY_IMPLEMENTED": 0,
+                                   "IMPLEMENTED": 1, "OTHER": 0}
+    assert summary["applicable"] == 3
+    assert summary["notApplicable"] == 1
+
+
+@pytest.mark.asyncio
+async def test_statement_of_applicability_controls_accepts_qualified_name(monkeypatch):
+    calls: list = []
+    client = _security_officer(calls, monkeypatch)
+    responses = iter([
+        {"class": "OpenMetadataRootElementsResponse", "elements": [SOA_WITH_CONTROLS]},
+        {"class": "OpenMetadataRootElementResponse", "element": SOA_WITH_CONTROLS},
+    ])
+
+    async def fake_make_request(method, url, payload_body=None, *args, **kwargs):
+        calls.append(url)
+        return _Response(next(responses))
+
+    client._async_make_request = fake_make_request
+
+    rows = await client._async_get_statement_of_applicability_controls("StatementOfApplicability::Coco ISMS")
+
+    assert calls[0].endswith(f"{ROOT}/by-name")
+    assert calls[1].endswith(f"{ROOT}/soa-guid/retrieve")
+    assert len(rows) == 4
