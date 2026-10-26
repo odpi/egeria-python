@@ -2,7 +2,7 @@
 
 **Working title:** "Meeting Egeria Through My Profile — Callie Quartile, Data Scientist at Coco Pharmaceuticals — Video Blog"
 **Target length:** ~4 minutes (≈550 spoken words)
-**Format:** In-character video blog set at Coco Pharmaceuticals, in the same style as the Jules Keeper series. Talking head / voice-over, cutting to screen capture of `my_profile_app.py` running in a terminal.
+**Format:** In-character video blog set at Coco Pharmaceuticals, in the same style as the Jules Keeper series. Talking head / voice-over, cutting to screen capture of `my_egeria.py` running in a terminal.
 **Presenter persona:** Callie Quartile, data scientist at Coco Pharmaceuticals (swap in another Coco persona if you prefer; see the notes at the end).
 
 ---

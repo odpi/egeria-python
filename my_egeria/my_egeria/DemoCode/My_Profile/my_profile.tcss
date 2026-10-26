@@ -298,7 +298,10 @@ Input {
     width: auto;
     border: solid white;
 }
-#add_input_container .link_row Switch--slider {
-    color: chartreuse;
-    background: cornsilk;
+#add_input_container .link_row Switch > .switch--slider {
+    color: grey;            /* off knob */
+    background: cornsilk;   /* track */
+}
+#add_input_container .link_row Switch.-on > .switch--slider {
+    color: chartreuse;      /* on knob */
 }

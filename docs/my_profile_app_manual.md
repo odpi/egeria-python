@@ -75,9 +75,9 @@ From the app folder, inside the project's virtual environment:
 my_profile                 # installed console script, runs from any directory
 # or, from the app folder:
 cd my_egeria/my_egeria/DemoCode/My_Profile
-python my_profile_app.py
+python my_egeria.py
 # or, with the Textual developer console (needs textual-dev, a dev dependency):
-textual run --dev my_profile_app.py
+textual run --dev my_egeria.py
 ```
 
 Use Python 3.13: Textual currently fails on Python 3.14 (an assertion in `textual/rlock.py` at startup).

@@ -525,7 +525,7 @@ application, so it shows how the patterns from section 6 hold up at scale.
 
 ```bash
 cd my_egeria/my_egeria/DemoCode/My_Profile
-python my_profile_app.py
+python my_egeria.py
 ```
 
 When developing, run it under the Textual dev tools so you can see its log output. Start the
@@ -533,7 +533,7 @@ console in one terminal and the app in another:
 
 ```bash
 textual console                          # terminal 1: shows self.log(...) output
-textual run --dev my_profile_app.py      # terminal 2
+textual run --dev my_egeria.py      # terminal 2
 ```
 
 > **Pitfall:** make sure the `textual` command is the one from your project's `.venv`
@@ -557,7 +557,7 @@ All files are in
 
 | File(s) | Role |
 |---|---|
-| `my_profile_app.py` | The `App` subclass, `MyProfileApp`: startup, loading the profile, filling the main tables, and shared actions such as comments. |
+| `my_egeria.py` | The `App` subclass, `MyProfileApp`: startup, loading the profile, filling the main tables, and shared actions such as comments. |
 | `MainScreen.py` | The main dashboard screen: its layout, and keeping track of which table and row are selected. |
 | `*Screen.py`, `*Screens.py` | One class per screen or dialog: `SplashScreen`, `ShopForDataScreen`, `MyBookMarksScreen`, `AddCommentScreen`, the `Edit*`/`Add*` screens, and so on. |
 | `*_handler.py` | **Mixins**, each holding one feature area's logic: `shop_for_data_handler.py`, `tech_types_handler.py`, `team_roles_handler.py`, `elements_crud_handler.py`, `feedback_handler.py`, `bookmarks_handler.py`. |
@@ -565,7 +565,7 @@ All files are in
 | `my_profile.tcss` | All the Textual CSS for the app. |
 | `RETURN_CODES.md` | The catalogue of numeric codes that screens pass back through `dismiss()`. |
 
-Two design choices keep `my_profile_app.py` manageable.
+Two design choices keep `my_egeria.py` manageable.
 
 **Feature logic lives in mixins.** The app class is assembled from them:
 

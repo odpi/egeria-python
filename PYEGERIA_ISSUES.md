@@ -2879,7 +2879,7 @@ member) shipped as `site-packages/my_egeria/my_egeria/...`. The four console scr
 point at `my_egeria.main`, `my_egeria.serve`, `my_egeria.DemoCode...`, and the app's
 own code imports `from my_egeria.<module>`, so none of it resolved outside this repo's
 dev venv (where the workspace member is installed editable). The portal survived only
-because its own script launched `my_profile_app.py` by **file path**, found with a glob
+because its own script launched `my_egeria.py` by **file path**, found with a glob
 for the nested layout.
 
 **Fixed:** `where = [".", "my_egeria"]` with `namespaces = false`, so the inner

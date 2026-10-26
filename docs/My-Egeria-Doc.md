@@ -3,7 +3,7 @@
 
 # My Profile Application: Reference Guide
 
-This guide explains how the **My Profile Application** (`my_profile_app.py`) is put together: its screens, the handler mixins behind them, the Egeria calls each flow makes, and the codes screens use to talk to the app. To learn how to *use* the app (configuration, starting it, keys), see the [My Profile App User Manual](my_profile_app_manual.md).
+This guide explains how the **My Profile Application** (`my_egeria.py`) is put together: its screens, the handler mixins behind them, the Egeria calls each flow makes, and the codes screens use to talk to the app. To learn how to *use* the app (configuration, starting it, keys), see the [My Profile App User Manual](my_profile_app_manual.md).
 
 All source files named here are in `my_egeria/my_egeria/DemoCode/My_Profile/`.
 
@@ -13,7 +13,7 @@ All source files named here are in `my_egeria/my_egeria/DemoCode/My_Profile/`.
 
 | File | Contents |
 | :--- | :--- |
-| `my_profile_app.py` | `MyProfileApp`: startup, profile loading, table population, menu dispatch, comments-from-main |
+| `my_egeria.py` | `MyProfileApp`: startup, profile loading, table population, menu dispatch, comments-from-main |
 | `MainScreen.py` | The dashboard: tables, Other Functions menu, row-selection tracking |
 | `SplashScreen.py` | Welcome card and Change User |
 | `CreateProfileScreen.py` | First-time profile creation |

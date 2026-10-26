@@ -345,7 +345,7 @@ class AddProjectScreen(BaseAddScreen):
         ("project_start_date", "Start Date (YYYY-MM-DD)", False),
         ("project_end_date", "Planned End Date (YYYY-MM-DD)", False),
         ]
-    LINK_LABEL = "Add yourself to the project team?"
+    LINK_LABEL = "To not add the project team to your profile click on the switch to move it to the off position"
 
     def validate(self, values: dict[str, str]) -> str | None:
         kind = values["project_classification"]
@@ -384,7 +384,7 @@ class AddRoleScreen(BaseAddScreen):
         ("role_name", "Name of Role", True),
         ("role_description", "Description of Role", True),
         ]
-    LINK_LABEL = "Appoint yourself to this role?"
+    LINK_LABEL = "To not appoint yourself to this role click on the switch to turn it off"
 
     def create_element(self, client: Egeria, values: dict[str, str]) -> str:
         name = values["role_name"]
@@ -417,7 +417,7 @@ class AddTeamScreen(BaseAddScreen):
         ("team_name", "Name of Team", True),
         ("team_description", "Description of Team", True),
         ]
-    LINK_LABEL = "Join this team as a member?"
+    LINK_LABEL = "to not join this team click on the switch to turn it off"
 
     def create_element(self, client: Egeria, values: dict[str, str]) -> str:
         name = values["team_name"]
@@ -486,7 +486,7 @@ class AddUserIdentityScreen(BaseAddScreen):
         ("user_identity_display_name", "Display Name", False),
         ("user_identity_distinguished_name", "Distinguished Name", False),
         ]
-    LINK_LABEL = "Link this User Identity to your profile?"
+    LINK_LABEL = " To not link this User Identity to your profile click on the switch to turn it off"
 
     def create_element(self, client: Egeria, values: dict[str, str]) -> str:
         user_id = values["user_identity_user_id"]
