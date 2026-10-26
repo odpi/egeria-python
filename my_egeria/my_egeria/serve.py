@@ -32,7 +32,7 @@ _VALID_HOST = re.compile(r"^(\[[0-9A-Fa-f:.]+\]|[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Z
 APPS = {
     # name: (module run with `python -m`, port env var, default port, public URL env var)
     "My Egeria": ("my_egeria.main", "MY_EGERIA_PORT", "8021", "MY_EGERIA_PUBLIC_URL"),
-    "My Profile": ("my_egeria.DemoCode.My_Profile.my_profile_app", "MY_PROFILE_PORT", "8020", "MY_PROFILE_PUBLIC_URL"),
+    "My Profile": ("my_egeria.DemoCode.My_Profile.my_egeria", "MY_PROFILE_PORT", "8020", "MY_PROFILE_PUBLIC_URL"),
 }
 
 

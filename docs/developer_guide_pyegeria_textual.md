@@ -517,7 +517,7 @@ data"), subscribe to data products, comment on elements and leave feedback. It i
 application, so it shows how the patterns from section 6 hold up at scale.
 
 > **Source:** for what the app does from a user's point of view, see the
-> [My Profile App User Manual](my_profile_app_manual.md). For its architecture, workflows and
+> [My Profile App User Manual](my_egeria_manual.md). For its architecture, workflows and
 > sequence diagrams in more depth, see [Egeria User Guide: My Profile Application](My-Egeria-Doc.md).
 > This section picks out the patterns most useful to copy.
 
@@ -1032,7 +1032,7 @@ python examples/developer_guide/capture_screenshots.py
 |---|---|
 | [pyegeria Programming Guide](user_programming.md) | §3, §5 (summarised) |
 | [Output Formats and Report Specs](output-formats-and-report-specs.md) | §4 |
-| [My Profile App User Manual](my_profile_app_manual.md) | §7 |
+| [My Profile App User Manual](my_egeria_manual.md) | §7 |
 | [Egeria User Guide: My Profile Application](My-Egeria-Doc.md) | §7 |
 | [My Profile return codes](../my_egeria/my_egeria/DemoCode/My_Profile/RETURN_CODES.md) | §7.6 |
 | [My Profile tests](../tests/micro-tests/my_profile/README.md) | §10 |

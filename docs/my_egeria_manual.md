@@ -321,7 +321,7 @@ The full list is in `RETURN_CODES.md` in the app folder.
 
 ## Troubleshooting
 
-**The app exits immediately with code 430.** Your environment has an old pydantic, often because a globally installed `textual` was used. Activate the project's `.venv` and run `textual run --dev my_profile_app.py` or `python my_profile_app.py` from there.
+**The app exits immediately with code 430.** Your environment has an old pydantic, often because a globally installed `textual` was used. Activate the project's `.venv` and run `textual run --dev my_egeria.py` or `python my_egeria.py` from there.
 
 **The app exits with code 402.** The profile could not be retrieved. Check that:
 - `EGERIA_PLATFORM_URL` is correct and reachable (VPN and firewall included);

@@ -27,7 +27,7 @@
 
 ## 2. Launch and splash screen (0:40 – 1:00)
 
-**[VISUAL]** Terminal. Type `python my_profile_app.py`. The splash screen appears with *"Welcome to My_Profile for Egeria Users, callie!"* and the **Continue to App** / **Change User** buttons.
+**[VISUAL]** Terminal. Type `python my_egeria.py`. The splash screen appears with *"Welcome to My_Profile for Egeria Users, callie!"* and the **Continue to App** / **Change User** buttons.
 
 **CALLIE:**
 > My Profile is a terminal app built on pyegeria. While this welcome screen is showing, it's already loading my profile from Egeria in the background, so by the time I press Continue it's ready.

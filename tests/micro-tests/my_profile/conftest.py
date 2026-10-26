@@ -25,6 +25,11 @@ here = Path(__file__).resolve().parent
 if str(here) not in sys.path:
     sys.path.insert(0, str(here))
 
+# Import the my_egeria package before My_Profile goes on sys.path: the app module is
+# My_Profile/my_egeria.py, and once that folder is on the path a first `import my_egeria`
+# finds it ahead of the (editable-installed) package the tests import the app through.
+import my_egeria  # noqa: E402,F401
+
 profile_path = root_path / "my_egeria" / "my_egeria" / "DemoCode" / "My_Profile"
 if str(profile_path) not in sys.path:
     sys.path.insert(0, str(profile_path))
