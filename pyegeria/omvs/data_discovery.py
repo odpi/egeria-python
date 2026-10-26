@@ -809,7 +809,7 @@ class DataDiscovery(ServerClient):
 
     @dynamic_catch
     async def _async_delete_annotation(
-        self, annotation_guid: str, body: dict | DeleteElementRequestBody
+        self, annotation_guid: str, body: Optional[dict | DeleteElementRequestBody] = None
     ) -> None:
         """Delete an annotation. Async version.
 
@@ -817,7 +817,7 @@ class DataDiscovery(ServerClient):
         ----------
         annotation_guid : str
             The unique identifier of the annotation.
-        body : dict | DeleteElementRequestBody
+        body : dict | DeleteElementRequestBody, optional
             The request body for the delete operation.
 
         Returns
@@ -842,14 +842,14 @@ class DataDiscovery(ServerClient):
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/annotations/{annotation_guid}/delete"
         await self._async_delete_element_request(url, body)
 
-    def delete_annotation(self, annotation_guid: str, body: dict | DeleteElementRequestBody) -> None:
+    def delete_annotation(self, annotation_guid: str, body: Optional[dict | DeleteElementRequestBody] = None) -> None:
         """Delete an annotation.
 
         Parameters
         ----------
         annotation_guid : str
             The unique identifier of the annotation.
-        body : dict | DeleteElementRequestBody
+        body : dict | DeleteElementRequestBody, optional
             The request body for the delete operation.
 
         Returns

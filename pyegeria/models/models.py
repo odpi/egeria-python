@@ -53,6 +53,15 @@ class DeleteMethod(StrEnum):
     PURGE                   = "PURGE"
 
 
+class ControlImplementationStatus(StrEnum):
+    """How far a control assessed in a statement of applicability has been implemented."""
+    NOT_STARTED             = "NOT_STARTED"
+    PLANNED                 = "PLANNED"
+    PARTIALLY_IMPLEMENTED   = "PARTIALLY_IMPLEMENTED"
+    IMPLEMENTED             = "IMPLEMENTED"
+    OTHER                   = "OTHER"
+
+
 
 # Define the camelCase conversion function
 def to_camel_case(snake_str: str) -> str:
@@ -206,6 +215,27 @@ class AuthoredReferenceableProperties(ReferenceableProperties):
 
 class SolutionBlueprintProperties(AuthoredReferenceableProperties):
     class_: Annotated[Literal["SolutionBlueprintProperties"], Field(alias="class")]
+
+
+class StatementOfApplicabilityProperties(AuthoredReferenceableProperties):
+    class_: Annotated[Literal["StatementOfApplicabilityProperties"], Field(alias="class")]
+    scope: str | None = None
+    review_date: datetime | None = None
+
+
+class ControlApplicabilityProperties(PyegeriaModel):
+    class_: Annotated[Literal["ControlApplicabilityProperties"], Field(alias="class")]
+    # Egeria treats a control as applicable unless this is false.
+    is_applicable: bool | None = None
+    justification: str | None = None
+    inclusion_reasons: list[str] | None = None
+    implementation_status: ControlImplementationStatus | None = None
+    implementation_description: str | None = None
+    review_date: datetime | None = None
+    label: str | None = None
+    description: str | None = None
+    effective_from: datetime | None = None
+    effective_to: datetime | None = None
 
 
 class NestedDesignPatternProperties(PyegeriaModel):
