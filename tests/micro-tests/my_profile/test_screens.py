@@ -9,7 +9,7 @@ import uuid
 from unittest.mock import MagicMock, AsyncMock, patch
 import pytest
 from textual.app import App, ComposeResult
-from textual.widgets import Input, Button, Markdown, DataTable, Static, Tree
+from textual.widgets import Input, Button, Markdown, DataTable, Static, Switch, Tree
 
 from StatusScreen import StatusScreen
 from UserIdentitiesScreen import UserIdentitiesScreen
@@ -391,6 +391,23 @@ class TestBaseAddScreen:
             await pilot.pause()
             client.create_user_identity.assert_called_once()
             client.link_identity_to_profile.assert_not_called()
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("screen_cls", [AddRoleScreen, AddProjectScreen, AddTeamScreen,
+                                            AddUserIdentityScreen])
+    async def test_link_switch_is_visible_and_toggles(self, mock_egeria, screen_cls):
+        # Regression: the label used to take the whole row, clipping the Switch off its right
+        # edge, so users saw only the question and could never turn the link off
+        app = ScreenTestHostApp(lambda: screen_cls("a_table", "user-guid-123"))
+        async with app.run_test(size=(120, 40)) as pilot:
+            screen = app.target_screen
+            switch = screen.query_one("#link_to_profile", Switch)
+            row = switch.parent.region
+            assert row.x <= switch.region.x and switch.region.right <= row.right
+            assert screen.link_to_profile is True
+            await pilot.click("#link_to_profile")
+            await pilot.pause()
+            assert switch.value is False and screen.link_to_profile is False
 
     @pytest.mark.asyncio
     async def test_failed_create_keeps_form(self, mock_egeria):

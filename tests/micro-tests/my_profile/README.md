@@ -68,7 +68,7 @@ under test was mocked but something *adjacent* was not (entering
 client regardless of what the test itself patched). Those tests passed on a
 machine with a server running and behaved differently on one without.
 
-`stub_profile_client()` in `test_my_profile_app.py` is the helper for that
+`stub_profile_client()` in `test_my_egeria.py` is the helper for that
 specific case: any test that enters `app.run_test()` should call it.
 
 ## How the switch works

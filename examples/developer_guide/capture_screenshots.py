@@ -62,7 +62,7 @@ async def capture_examples() -> None:
 
 
 async def capture_my_profile() -> None:
-    from my_profile_app import MyProfileApp
+    from my_egeria.DemoCode.My_Profile.my_egeria import MyProfileApp
 
     app = MyProfileApp()
     async with app.run_test(size=SIZE) as pilot:

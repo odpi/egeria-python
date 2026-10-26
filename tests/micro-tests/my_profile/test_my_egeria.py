@@ -13,7 +13,7 @@ import pytest
 from textual.widgets import Button, OptionList, DataTable
 from textual.widgets._option_list import Option
 
-from my_profile_app import MyProfileApp
+from my_egeria.DemoCode.My_Profile.my_egeria import MyProfileApp
 from MainScreen import MainScreen
 from CreateProfileScreen import CreateProfileScreen
 from SplashScreen import SplashScreen
@@ -32,7 +32,7 @@ def stub_profile_client(backend, profile_data, identities, todos):
     under test is mocked. Live mode leaves the real client in place.
     """
     if backend.live:
-        return backend.patch("my_profile_app.MyProfile")
+        return backend.patch("my_egeria.DemoCode.My_Profile.my_egeria.MyProfile")
 
     mock_mp = MagicMock()
     mock_mp.create_egeria_bearer_token.return_value = "token"
@@ -45,8 +45,8 @@ def stub_profile_client(backend, profile_data, identities, todos):
     # The My Collections lookup goes through the Egeria facade, not MyProfile
     mock_egeria = MagicMock()
     mock_egeria.find_collections.return_value = SAMPLE_COLLECTIONS
-    backend.always_fake("my_profile_app.Egeria", returns=mock_egeria)
-    return backend.always_fake("my_profile_app.MyProfile", returns=mock_mp)
+    backend.always_fake("my_egeria.DemoCode.My_Profile.my_egeria.Egeria", returns=mock_egeria)
+    return backend.always_fake("my_egeria.DemoCode.My_Profile.my_egeria.MyProfile", returns=mock_mp)
 
 
 def _collection(guid, name, created_by, qualified_name=None):
@@ -125,7 +125,7 @@ class TestMyProfileAppLifecycle:
         mock_mp = MagicMock()
         mock_mp.create_egeria_bearer_token.return_value = "token"
         mock_mp._async_get_my_profile = AsyncMock(return_value=[])
-        backend.always_fake("my_profile_app.MyProfile", returns=mock_mp)
+        backend.always_fake("my_egeria.DemoCode.My_Profile.my_egeria.MyProfile", returns=mock_mp)
 
         app = MyProfileApp()
         async with app.run_test() as pilot:
@@ -157,7 +157,7 @@ class TestMyProfileAppLifecycle:
         mock_mp = MagicMock()
         mock_mp.create_egeria_bearer_token.return_value = "token"
         mock_mp._async_get_my_profile = AsyncMock(return_value=[])
-        backend.always_fake("my_profile_app.MyProfile", returns=mock_mp)
+        backend.always_fake("my_egeria.DemoCode.My_Profile.my_egeria.MyProfile", returns=mock_mp)
 
         app = MyProfileApp()
         async with app.run_test() as pilot:
@@ -179,7 +179,7 @@ class TestMyProfileAppLifecycle:
         mock_mp = MagicMock()
         mock_mp.create_egeria_bearer_token.return_value = "token"
         mock_mp._async_get_my_profile = AsyncMock(side_effect=PyegeriaException("Server error"))
-        backend.always_fake("my_profile_app.MyProfile", returns=mock_mp)
+        backend.always_fake("my_egeria.DemoCode.My_Profile.my_egeria.MyProfile", returns=mock_mp)
 
         app = MyProfileApp()
         app.exit = MagicMock()
@@ -332,14 +332,14 @@ class TestMyProfileAppActionsAndOptions:
     def test_add_comment_callback_ignores_cancel(self, returned):
         """Cancel/quit/no-selection returns are not errors and make no Egeria call."""
         app = MyProfileApp()
-        with patch("my_profile_app.Egeria") as mock_egeria:
+        with patch("my_egeria.DemoCode.My_Profile.my_egeria.Egeria") as mock_egeria:
             assert app.add_comment_callback(returned) is None
             mock_egeria.assert_not_called()
 
     def test_add_comment_callback_success(self):
         app = MyProfileApp()
         app.notify = MagicMock()
-        with patch("my_profile_app.Egeria") as mock_egeria:
+        with patch("my_egeria.DemoCode.My_Profile.my_egeria.Egeria") as mock_egeria:
             client = mock_egeria.return_value
             client.add_comment_to_element.return_value = "comment-guid-1"
             assert app.add_comment_callback(["Nice", "question", "elem-guid-1"]) == 200
@@ -432,7 +432,7 @@ class TestMyProfileAppActionsAndOptions:
             backend, sample_profile_data, sample_user_identities, sample_todos_data
         )
         mock_exec = backend.patch(
-            "my_profile_app.exec_report_spec",
+            "my_egeria.DemoCode.My_Profile.my_egeria.exec_report_spec",
             returns={
                 "kind": "data",
                 "data": [
@@ -466,7 +466,7 @@ class TestMyProfileAppActionsAndOptions:
         stub_profile_client(
             backend, sample_profile_data, sample_user_identities, sample_todos_data
         )
-        backend.always_fake("my_profile_app.exec_report_spec", returns={"kind": "empty", "data": []})
+        backend.always_fake("my_egeria.DemoCode.My_Profile.my_egeria.exec_report_spec", returns={"kind": "empty", "data": []})
         app = MyProfileApp()
         async with app.run_test():
             rc = app.get_data_product_catalog_table()

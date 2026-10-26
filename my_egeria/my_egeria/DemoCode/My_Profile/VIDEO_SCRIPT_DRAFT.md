@@ -2,7 +2,7 @@
 
 **Working title:** "Meeting Egeria Through My Profile — Callie Quartile, Data Scientist at Coco Pharmaceuticals — Video Blog"
 **Target length:** ~4 minutes (≈550 spoken words)
-**Format:** In-character video blog set at Coco Pharmaceuticals, in the same style as the Jules Keeper series. Talking head / voice-over, cutting to screen capture of `my_profile_app.py` running in a terminal.
+**Format:** In-character video blog set at Coco Pharmaceuticals, in the same style as the Jules Keeper series. Talking head / voice-over, cutting to screen capture of `my_egeria.py` running in a terminal.
 **Presenter persona:** Callie Quartile, data scientist at Coco Pharmaceuticals (swap in another Coco persona if you prefer; see the notes at the end).
 
 ---
@@ -27,7 +27,7 @@
 
 ## 2. Launch and splash screen (0:40 – 1:00)
 
-**[VISUAL]** Terminal. Type `python my_profile_app.py`. The splash screen appears with *"Welcome to My_Profile for Egeria Users, callie!"* and the **Continue to App** / **Change User** buttons.
+**[VISUAL]** Terminal. Type `python my_egeria.py`. The splash screen appears with *"Welcome to My_Profile for Egeria Users, callie!"* and the **Continue to App** / **Change User** buttons.
 
 **CALLIE:**
 > My Profile is a terminal app built on pyegeria. While this welcome screen is showing, it's already loading my profile from Egeria in the background, so by the time I press Continue it's ready.

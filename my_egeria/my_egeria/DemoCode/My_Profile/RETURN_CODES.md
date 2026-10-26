@@ -1,6 +1,6 @@
 # My Profile Application Return Codes Reference
 
-This document provides a comprehensive catalog of all return codes and screen dismiss codes used across the `my_profile_app.py` application and its supporting handlers and screens in `my_egeria/my_egeria/DemoCode/My_Profile/`.
+This document provides a comprehensive catalog of all return codes and screen dismiss codes used across the `my_egeria.py` application and its supporting handlers and screens in `my_egeria/my_egeria/DemoCode/My_Profile/`.
 
 In accordance with application conventions:
 - **200 Series**: Successful operations, normal navigation, user selections, and action triggers.
@@ -12,7 +12,7 @@ In accordance with application conventions:
 
 | Return Code | Name / Type | Description | Source Components |
 |---|---|---|---|
-| **`200`** | `SUCCESS_OK` / `DEFAULT_EXIT` | Standard success code. Used for successful operations, standard modal dismissal, backing out of dialogs, cancelling inputs without error, or quitting cleanly. | `my_profile_app.py`, `MainScreen.py`, `StatusScreen.py`, `CreateProfileScreen.py`, `EditElementsScreens.py`, `AddToElementsScreens.py`, `TechnologyTypeScreens.py`, `tech_types_handler.py`, `shop_for_data_handler.py`, `team_roles_handler.py`, `SelectionOverviewScreen.py`, `GenericDataViewScreen.py`, `MyBookMarksScreen.py`, `MyTeamScreen.py`, `SearchForTermScreen.py`, `ShowCommentScreen.py` |
+| **`200`** | `SUCCESS_OK` / `DEFAULT_EXIT` | Standard success code. Used for successful operations, standard modal dismissal, backing out of dialogs, cancelling inputs without error, or quitting cleanly. | `my_egeria.py`, `MainScreen.py`, `StatusScreen.py`, `CreateProfileScreen.py`, `EditElementsScreens.py`, `AddToElementsScreens.py`, `TechnologyTypeScreens.py`, `tech_types_handler.py`, `shop_for_data_handler.py`, `team_roles_handler.py`, `SelectionOverviewScreen.py`, `GenericDataViewScreen.py`, `MyBookMarksScreen.py`, `MyTeamScreen.py`, `SearchForTermScreen.py`, `ShowCommentScreen.py` |
 | **`201`** | `ALT_NAVIGATION` / `NO_MATCH` | Alternative navigation or fallback action code. In search/team screens, indicates no matching terms/roles found and triggers transition to data shopping or alternate view. In tech type selection, represents secondary navigation action. | `SearchForTermScreen.py`, `team_roles_handler.py`, `TechnologyTypeScreens.py`, `MyTeamScreen.py`, `ShopForDataScreen.py` |
 | **`210`** | `QUIT_TO_MAIN` | Exit/Quit action code from data shopping / data viewing screens to dismiss the view and return directly to the main menu screen. | `ShopForDataScreen.py`, `GenericDataViewScreen.py`, `SelectionOverviewScreen.py`, `shop_for_data_handler.py` |
 | **`211`** | `SUBSCRIBE_ACTION` | Action code indicating the user has requested to create a digital subscription for the selected data source, catalog product, or data element. | `ShopForDataScreen.py`, `GenericDataViewScreen.py`, `SelectionOverviewScreen.py`, `shop_for_data_handler.py` |
@@ -43,11 +43,11 @@ In accordance with application conventions:
 | **`418`** | `TECH_TYPE_TEMPLATE_CALLBACK_INVALID` / `SHOP_DATA_PAYLOAD_INVALID` | Invalid payload or missing required arguments received in technology type templates/processes callback; or invalid data payload returned from Shop for Data screen. | `tech_types_handler.py`, `shop_for_data_handler.py` |
 | **`419`** | `TECH_TYPE_PLACEHOLDER_NOT_DICT` | Technology type placeholder input data is not a dictionary structure as expected. | `tech_types_handler.py` |
 | **`420`** | `TECH_TYPE_CREATE_ELEMENT_FAIL` / `SHOP_DATA_RETRIEVAL_ERROR` | Exception raised during creation of metadata element from template via Automated Curation; or error retrieving details for glossary, catalog, or dictionary data elements. | `tech_types_handler.py`, `shop_for_data_handler.py` |
-| **`421`** | `APP_INITIALIZATION_FAIL` / `DOMAIN_DATA_RETRIEVAL_ERROR` | Failure to initialize main profile app / retrieve current user profile details; or error retrieving business domain details in Shop for Data. | `my_profile_app.py`, `shop_for_data_handler.py` |
+| **`421`** | `APP_INITIALIZATION_FAIL` / `DOMAIN_DATA_RETRIEVAL_ERROR` | Failure to initialize main profile app / retrieve current user profile details; or error retrieving business domain details in Shop for Data. | `my_egeria.py`, `shop_for_data_handler.py` |
 | **`422`** | `DATA_SPECIFICATION_RETRIEVAL_ERROR` | Error retrieving data specification details from Egeria in Shop for Data handler. | `shop_for_data_handler.py` |
 | **`423`** | `BUSINESS_DOMAIN_SPEC_ERROR` | Error executing BusinessCapabilities report specification in Shop for Data handler. | `shop_for_data_handler.py` |
 | **`429`** | `SAMPLE_DATA_RETRIEVAL_ERROR` | Failed to retrieve or parse sample data from Egeria Asset Catalog / Data Engine in Shop for Data handler. | `shop_for_data_handler.py` |
-| **`430`** | `INCOMPATIBLE_ENVIRONMENT` | App started under a Python whose pydantic is older than pyegeria requires, so request bodies would reach Egeria with their parameters silently missing. The app exits at startup with a message naming the interpreter and how to run from the project venv instead. | `my_profile_app.py`, `profile_utils.py` |
+| **`430`** | `INCOMPATIBLE_ENVIRONMENT` | App started under a Python whose pydantic is older than pyegeria requires, so request bodies would reach Egeria with their parameters silently missing. The app exits at startup with a message naming the interpreter and how to run from the project venv instead. | `my_egeria.py`, `profile_utils.py` |
 | **`440`** | `TEAM_ROLES_OR_GLOSSARY_ERROR` | Error communicating with Egeria or retrieving glossary term details. (A failed team members lookup is now shown as an error notification and does not exit the app.) | `team_roles_handler.py` |
 
 ---

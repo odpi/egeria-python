@@ -45,7 +45,7 @@ compose startup. For **freshstart** they must be set per logged-in user
 ## Compose service — quickstart
 
 Add one service per Textual app to `egeria-quickstart.yaml`.
-`my_profile_app` is the first; additional apps follow the same pattern.
+`my_egeria` (the My Profile app) is the first; additional apps follow the same pattern.
 
 ```yaml
   my-profile:

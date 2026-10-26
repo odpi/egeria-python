@@ -285,7 +285,7 @@ class ElementsCrudMixin:
                                callback=getattr(self, callback_name))
 
     def _after_add(self, kind: str, result: Any) -> None:
-        """Return to the main screen once an Add screen closes, and re-read the profile.
+        """ Return to the main screen once an Add screen closes, and re-read the profile.
 
         Popping back to main (rather than returning to the edit screen the Add screen
         was opened from) also drops that edit screen's now-stale copy of the rows.

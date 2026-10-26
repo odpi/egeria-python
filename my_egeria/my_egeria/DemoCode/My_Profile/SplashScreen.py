@@ -17,7 +17,7 @@ from pyegeria import Egeria, load_app_config, settings, PyegeriaException
 
 
 class SplashScreen(ModalScreen):
-    """ SplashScreen for my_profile_app """
+    """ SplashScreen for my_egeria """
 
     # Escape must dismiss (not pop) the screen, so that MyProfileApp.mainline still runs
     BINDINGS = [("escape", "continue_to_app", "Continue")]
@@ -27,7 +27,7 @@ class SplashScreen(ModalScreen):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.title = "Egeria"
-        self.subtitle = "Welcome to my_profile_app"
+        self.subtitle = "Welcome to my_egeria"
         load_app_config()
         app_config = settings.Environment
         app_user = settings.User_Profile

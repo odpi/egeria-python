@@ -284,3 +284,24 @@ Input {
 .empty {
         background: transparent; /* Invisible structural spacer */
     }
+/* "Link to my profile" row on the Add screens: without these the label takes the
+   full row width and the Switch is clipped off the right edge */
+#add_input_container .link_row {
+    height: auto;
+}
+
+#add_input_container .link_row Static {
+    width: 1fr;
+}
+
+#add_input_container .link_row Switch {
+    width: auto;
+    border: solid white;
+}
+#add_input_container .link_row Switch > .switch--slider {
+    color: grey;            /* off knob */
+    background: cornsilk;   /* track */
+}
+#add_input_container .link_row Switch.-on > .switch--slider {
+    color: chartreuse;      /* on knob */
+}

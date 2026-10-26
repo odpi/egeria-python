@@ -30,7 +30,7 @@ def check_request_serialization() -> str | None:
     return (f"This Python ({sys.executable}) has pydantic {pydantic.VERSION}, but pyegeria needs "
             f"pydantic >= {MIN_PYDANTIC_VERSION} - requests to Egeria would lose their parameters.\n"
             "Run the app from the project venv instead: `source .venv/bin/activate` in the egeria-python "
-            "folder (then `textual run my_profile_app.py --dev`), or `uv run python my_profile_app.py`.")
+            "folder (then `textual run my_egeria.py --dev`), or `uv run python my_egeria.py`.")
 
 
 def truncate_at_sequence(data: Any, target: str = "specificationMermaidGraph") -> tuple[Any, bool]:

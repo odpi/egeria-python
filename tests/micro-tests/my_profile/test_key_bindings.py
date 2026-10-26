@@ -6,7 +6,7 @@
      escape  back one level (every screen except Main)
      q       the only plain-letter key: Main Menu on sub-screens, Quit on Main.
              Left off text-entry forms, where it would be typed into the Input instead.
-     ctrl+*  every other action, one meaning per key (see docs/my_profile_app_manual.md)
+     ctrl+*  every other action, one meaning per key (see docs/my_egeria_manual.md)
 """
 
 import inspect
@@ -37,7 +37,7 @@ import StatusScreen
 import TechnologyTypeScreens
 import UserIdentitiesScreen
 import ViewSubscriptionsScreen
-from my_profile_app import MyProfileApp
+from my_egeria.DemoCode.My_Profile.my_egeria import MyProfileApp
 
 MODULES = [
     AddCommentScreen, AddToElementsScreens, CreateProfileScreen, CreateSubscriptionRequestScreen,

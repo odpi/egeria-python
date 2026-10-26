@@ -20,7 +20,7 @@ This package contains two Textual apps:
 - **My Profile** (`DemoCode/My_Profile/`) — the actively developed app, and the one
   the Egeria-Workspaces portal serves:
   ```bash
-  uv run my_profile            # or: python -m my_egeria.DemoCode.My_Profile.my_profile_app
+  uv run my_profile            # or: python -m my_egeria.DemoCode.My_Profile.my_egeria
   ```
 - **MyEgeria** — the original glossary/collection browser (not under active
   development; several of its secondary screens are incomplete):

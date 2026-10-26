@@ -3,7 +3,7 @@
 
 # My Profile Application: Reference Guide
 
-This guide explains how the **My Profile Application** (`my_profile_app.py`) is put together: its screens, the handler mixins behind them, the Egeria calls each flow makes, and the codes screens use to talk to the app. To learn how to *use* the app (configuration, starting it, keys), see the [My Profile App User Manual](my_profile_app_manual.md).
+This guide explains how the **My Profile Application** (`my_egeria.py`) is put together: its screens, the handler mixins behind them, the Egeria calls each flow makes, and the codes screens use to talk to the app. To learn how to *use* the app (configuration, starting it, keys), see the [My Profile App User Manual](my_egeria_manual.md).
 
 All source files named here are in `my_egeria/my_egeria/DemoCode/My_Profile/`.
 
@@ -13,7 +13,7 @@ All source files named here are in `my_egeria/my_egeria/DemoCode/My_Profile/`.
 
 | File | Contents |
 | :--- | :--- |
-| `my_profile_app.py` | `MyProfileApp`: startup, profile loading, table population, menu dispatch, comments-from-main |
+| `my_egeria.py` | `MyProfileApp`: startup, profile loading, table population, menu dispatch, comments-from-main |
 | `MainScreen.py` | The dashboard: tables, Other Functions menu, row-selection tracking |
 | `SplashScreen.py` | Welcome card and Change User |
 | `CreateProfileScreen.py` | First-time profile creation |
@@ -597,7 +597,7 @@ Screens tell the app what to do next through their `dismiss(...)` value:
 | `212` | Sample data |
 | `250` | Show responses to a comment |
 
-Failures use codes from the `4xx` range, and some of them exit the app. The [user manual](my_profile_app_manual.md#exit-and-return-codes) lists the common ones, and `RETURN_CODES.md` has the full list.
+Failures use codes from the `4xx` range, and some of them exit the app. The [user manual](my_egeria_manual.md#exit-and-return-codes) lists the common ones, and `RETURN_CODES.md` has the full list.
 
 ---
 
@@ -614,7 +614,7 @@ The suite in `tests/micro-tests/my_profile/` has one module per handler and scre
 
 **Running the whole app in a test.** Tests that run `MyProfileApp.run_test()` stub the profile client with `stub_profile_client()`.
 
-**My Network.** `test_network_handler.py` covers `NetworkMixin` and `MyNetworkScreen`, including the remove confirmation; `test_my_profile_app.py` checks the menu routing. The feature has also been tested by hand against a live server.
+**My Network.** `test_network_handler.py` covers `NetworkMixin` and `MyNetworkScreen`, including the remove confirmation; `test_my_egeria.py` checks the menu routing. The feature has also been tested by hand against a live server.
 
 **Add screens.** `test_screens.py::TestBaseAddScreen` covers the `BaseAddScreen` flow: required-field checks, create, link or no link, and keeping the form after a failed create.
 
@@ -622,7 +622,7 @@ The suite in `tests/micro-tests/my_profile/` has one module per handler and scre
 
 ## Known Gaps
 
-The user-visible limitations are listed in the [user manual](my_profile_app_manual.md#known-limitations). Other internal gaps:
+The user-visible limitations are listed in the [user manual](my_egeria_manual.md#known-limitations). Other internal gaps:
 
 - `get_data_product_catalog_table`, `get_guid_for_qualified_name`, `display_glossary_term_details`, `tech_type_processes_details`, `unpack_egeria_data` and `display_selected_data_specification` are defined but never called.
 - Bookmarks, My Collections, team joining, subscription links and starting processes have only been tested against fakes; they haven't yet been run against a live Egeria server.
