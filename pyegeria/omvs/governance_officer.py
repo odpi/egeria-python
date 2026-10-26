@@ -2355,30 +2355,17 @@ class GovernanceOfficer(ServerClient):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-            f"{self.url_marker}/governance-action-processes/"
-            f"by-search-string")
-
-        params = {
-            'graph_query_depth': graph_query_depth,
-            'search_string': search_string,
-            'body': body,
-            'starts_with': starts_with,
-            'ends_with': ends_with,
-            'ignore_case': ignore_case,
-            'start_from': start_from,
-            'page_size': page_size,
-            'output_format': output_format,
-            'report_spec': report_spec
-        }
-        params.update(kwargs)
-        params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
-
-        response = await self._async_find_request(url, _type="GovernanceActionProcess",
-                                                  _gen_output=self._generate_governance_definition_output, **params)
-
-        return response
+        # Egeria removed governance-action-processes/by-search-string when GovernanceActionProcess became a
+        # GovernanceDefinition (Egeria d299b120f4; ISSUE-165): search the definitions for that type instead.
+        import warnings
+        warnings.warn("GovernanceOfficer.find_governance_action_processes is deprecated; use "
+                      'find_governance_definitions(..., metadata_element_type="GovernanceActionProcess").',
+                      DeprecationWarning, stacklevel=2)
+        kwargs.setdefault("metadata_element_type", "GovernanceActionProcess")
+        return await self._async_find_governance_definitions(
+            search_string=search_string, body=body, starts_with=starts_with, ends_with=ends_with,
+            ignore_case=ignore_case, start_from=start_from, page_size=page_size,
+            graph_query_depth=graph_query_depth, output_format=output_format, report_spec=report_spec, **kwargs)
 
     @dynamic_catch
     def find_governance_action_processes(
@@ -2823,26 +2810,14 @@ class GovernanceOfficer(ServerClient):
         if guid is None and "definition_guid" in kwargs:
             guid = kwargs.pop("definition_guid")
 
-        url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-            f"{self.url_marker}/governance-definitions/{guid}/retrieve-context")
-        
-        element_type = element_type if element_type else "GovernanceDefinition"
-        
-        params = {
-            'graph_query_depth': graph_query_depth,
-            'output_format': output_format,
-            'report_spec': report_spec,
-            'body': body
-        }
-        params.update(kwargs)
-        params = {k: v for k, v in params.items() if v is not None}
-
-        response = await self._async_get_guid_request(url, _type=element_type,
-                                                      _gen_output=self._generate_governance_definition_output,
-                                                      **params)
-
-        return response
+        # Egeria removed governance-definitions/{guid}/retrieve-context (it never existed on 6.x): the
+        # OpenMetadataRootElement returned by retrieve now carries the context by default (ISSUE-165).
+        import warnings
+        warnings.warn("GovernanceOfficer.get_gov_def_in_context is deprecated; get_governance_definition_by_guid "
+                      "returns the context by default.", DeprecationWarning, stacklevel=2)
+        return await self._async_get_governance_definition_by_guid(
+            guid, element_type=element_type, body=body, graph_query_depth=graph_query_depth,
+            output_format=output_format, report_spec=report_spec, **kwargs)
 
     @dynamic_catch
     def get_gov_def_in_context(self, guid: str, 

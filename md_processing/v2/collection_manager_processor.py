@@ -386,6 +386,28 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
                     self.parsed_output["guid"] = rel_guid
                     new_rel_guids.append(rel_guid)
 
+            elif "Business Capability Dependency" in object_type:
+                # BusinessCapabilityDependency is UNI_LINK, so attach is an upsert.
+                body['properties'] = {
+                    "class": "BusinessCapabilityDependencyProperties",
+                    "label": attributes.get('Label', {}).get('value'),
+                    "description": attributes.get('Description', {}).get('value'),
+                }
+                await self.client._async_link_business_capability_dependency(
+                    attributes.get('Dependent Capability', {}).get('guid'),
+                    attributes.get('Supporting Capability', {}).get('guid'), body)
+
+            elif "Digital Support" in object_type:
+                # DigitalSupport is UNI_LINK, so attach is an upsert.
+                body['properties'] = {
+                    "class": "DigitalSupportProperties",
+                    "label": attributes.get('Label', {}).get('value'),
+                    "description": attributes.get('Description', {}).get('value'),
+                }
+                await self.client._async_link_digital_support(
+                    attributes.get('Supported Capability', {}).get('guid'),
+                    attributes.get('Digital Service', {}).get('guid'), body)
+
             elif "Attach Collection" in object_type:
                 guid_coll = attributes.get('Collection Id', {}).get('guid')
                 guid_res = attributes.get('Resource Id', {}).get('guid')
@@ -442,7 +464,8 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
             header += "### Link Properties\n"
             # Exclude standard command identifiers when dumping properties
             for k, v in attributes.items():
-                if k not in ["Collection Id", "Element Id", "Digital Product 1", "Digital Product 2", "Subscriber Id", "Subscription", "Resource Id", "Agreement Name", "Item Name", "Qualified Name", "Display Name"]:
+                if k not in ["Collection Id", "Element Id", "Digital Product 1", "Digital Product 2",
+                             "Dependent Capability", "Supporting Capability", "Supported Capability", "Digital Service", "Subscriber Id", "Subscription", "Resource Id", "Agreement Name", "Item Name", "Qualified Name", "Display Name"]:
                     val = v.get("value")
                     if val:
                         header += f"- **{k}**: {val}\n"
@@ -488,6 +511,14 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
                     await self.client._async_detach_digital_product_dependency_by_id(explicit_rel_guid, body)
                 else:
                     await self.client._async_detach_digital_product_dependency(attributes.get('Digital Product 1', {}).get('guid'), attributes.get('Digital Product 2', {}).get('guid'), body)
+            elif "Business Capability Dependency" in object_type:
+                await self.client._async_detach_business_capability_dependency(
+                    attributes.get('Dependent Capability', {}).get('guid'),
+                    attributes.get('Supporting Capability', {}).get('guid'), body)
+            elif "Digital Support" in object_type:
+                await self.client._async_detach_digital_support(
+                    attributes.get('Supported Capability', {}).get('guid'),
+                    attributes.get('Digital Service', {}).get('guid'), body)
             elif "Attach Collection" in object_type or "Resource List" in object_type:
                 await self.client._async_detach_collection(attributes.get('Resource Id', {}).get('guid'), attributes.get('Collection Id', {}).get('guid'), body)
             elif "Data Description" in object_type:

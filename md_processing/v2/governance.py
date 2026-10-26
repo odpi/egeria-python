@@ -772,7 +772,9 @@ class GovernanceContextProcessor(AsyncBaseCommandProcessor):
             return self.command.raw_block
             
         body = set_update_body(self.command.object_type, attributes)
-        struct = await self.client._async_get_gov_def_in_context(guid, body=body, output_format=output_format)
+        # get_governance_definition_by_guid returns the context by default; the old
+        # retrieve-context endpoint never existed on Egeria 6 (ISSUE-165).
+        struct = await self.client._async_get_governance_definition_by_guid(guid, body=body, output_format=output_format)
         
         if output_format.upper() == "DICT":
             return f"\n# Context Graph for {guid}\n\n```json\n{json.dumps(struct, indent=4)}\n```"

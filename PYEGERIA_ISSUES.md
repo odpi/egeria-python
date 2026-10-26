@@ -288,7 +288,7 @@ they're holding real port materialization until this exists server-side
 
 ### ISSUE-165: 19 SDK methods called endpoints Egeria doesn't serve: 13 removed upstream, 6 never existed (2 since repointed)
 
-**Layer:** Pyegeria · **Status:** open, documented, not changed (owner to decide: remove/deprecate, repoint, or raise with the Egeria team) · **Found:** 2026-10-23 by `scripts/omvs_audit.py` JAVA-MISSING (ISSUE-164).
+**Layer:** Pyegeria · **Status:** resolved: replacements implemented as deprecated wrappers and verified live (#485); `get_platform_organization` repointed (2026-10-24) · **Found:** 2026-10-23 by `scripts/omvs_audit.py` JAVA-MISSING (ISSUE-164).
 
 **Validation.** Each URL was checked three ways:
 1. **No Spring mapping** in Egeria `main` 4486d1a7f1 (2026-10-23), the checkout `omvs_audit.py` reads.
@@ -305,7 +305,7 @@ Three other JAVA-MISSING rows are served live, so they are Java-scan false posit
 | `data_discovery`: `create/update/delete_analysis_report`, `get_analysis_reports_by_name`, `find_analysis_reports`, `get_analysis_report_by_guid`, `link/detach_analysis_report_to/from_asset` (`data_discovery.py:1692-1773`, 8 methods) | `data-discovery/analysis-reports/...` | `e17cc09d44`, 2025-08-04 "Radical simplification of platform" | None as a CRUD API. Data Discovery now serves only `survey-reports/{g}/new-annotations[/{g}/attach\|detach]`; survey reports are produced by survey engines. The `AnalysisReportProperties` class these methods use doesn't exist either. |
 | `classification_explorer.add_element_to_subject_area` / `remove_element_from_subject_area` (`classification_explorer.py:12293/12405`) | `classification-explorer/elements/{g}/subject-area-member[/remove]` | `6a49a3e23f`, 2026-01-09, which also removed `elements/by-subject-area-membership` | Not confirmed. Likely collection membership on the subject area (`{urlMarker}/collections/{g}/members/{g}/attach\|detach`, served by the generic CollectionManager resource); ask the Egeria team. `SubjectAreaMemberProperties` doesn't exist either. |
 | `governance_officer.find_governance_action_processes` (`governance_officer.py:2310`) | `governance-officer/governance-action-processes/by-search-string` | `d299b120f4`, 2025-10-16, which removed all of Governance Officer's process create/update/publish/withdraw/remove/search endpoints | Not confirmed; a generic search by type `GovernanceActionProcess` is the likely route. `initiate` and `cancel` live on Automated Curation / Governance Engine (ISSUE-153). |
-| `platform_services.get_platform_organization` (`platform_services.py:1083`) | `GET platform-services/server-platform/organization-name` | `816076ab50`, 2026-06-05 "Improve OMAGServerPlatform properties…" | Not confirmed; presumably folded into the platform properties. `GET server-platform/origin` remains. |
+| `platform_services.get_platform_organization` (`platform_services.py:1083`) | `GET platform-services/server-platform/organization-name` | `816076ab50`, 2026-06-05 "Improve OMAGServerPlatform properties…" | **Fixed 2026-10-24:** Mandy Chessell confirmed the value is now the `organizationName` field of `GET /api/public/app/info`, and the method reads it from there. |
 
 **Never in Egeria's Java (the SDK URL was a guess):**
 
@@ -319,10 +319,30 @@ Three other JAVA-MISSING rows are served live, so they are Java-scan false posit
 
 **Every call above returns a 404 today.** Before ISSUE-164, pyegeria reported a 404 as "unable to connect to the Egeria platform", so a caller could not tell "this API is gone" from "the server is down".
 
+**Egeria team's answer (Mandy Chessell, 2026-10-23), and what pyegeria now does** (branch `fix/issue-165-replacements`). Each obsolete method is now a deprecated wrapper (`DeprecationWarning`) that delegates to the replacement, following the ISSUE-153 pattern; removal comes in a later release:
+
+| Obsolete | Why (Mandy) | Now delegates to |
+|---|---|---|
+| analysis-report create/update/delete/get/find | SurveyReport now inherits from Report, so it is an Asset | `AssetMaker.create_asset(["SurveyReportProperties"])` / `update_asset` / `delete_asset` / `get_asset_by_guid` / `get_assets_by_name` / `find_assets`, with type `SurveyReport`. A body naming `AnalysisReportProperties` is rewritten to `SurveyReportProperties`. |
+| `link/detach_analysis_report_to/from_asset` | use the ReportSubject relationship, `/elements/{subjectGUID}/reports/{reportGUID}/attach` | `AssetMaker.link_report_subject` / `unlink_report_subject(asset_guid, report_guid)` |
+| `add/remove_element_to/from_subject_area` | SubjectArea now inherits from Collection; use collection membership | `CollectionManager.add_to_collection` / `remove_from_collection(subject_area_guid, element_guid)`. The old methods never took the subject area, so they gain an optional `subject_area_guid`; without it they raise an error naming the replacement. |
+| `find_governance_action_processes` | GovernanceActionProcess now inherits from GovernanceDefinition | `find_governance_definitions(..., metadata_element_type="GovernanceActionProcess")` |
+| `get_gov_def_in_context` | no longer needed: OpenMetadataRootElement returns the context by default | `get_governance_definition_by_guid`. Dr.Egeria's `View Governance Definition Context` calls it directly. |
+| data-classification create/update/link/detach | "probably the old data class operations", now data value specifications (the common root of DataClass and DataGrain); **Mandy was not certain** | `create/update_data_value_specification` (a body naming `DataClassificationProperties` is rewritten to `DataClassProperties`) and `link/detach_data_value_assignment(data_field_guid, spec_guid)` (`DataValueAssignmentProperties`). A best-effort mapping. |
+
+`get_platform_organization` (removed in `816076ab50`): Mandy confirmed on 2026-10-24 that the same value is returned by `GET /api/public/app/info`. The method now returns that response's `organizationName`, not a deprecated wrapper, because its signature and meaning are unchanged. That response has no `relatedHTTPCode` envelope, so it is requested with `is_json=False`. Verified live: it returns `'Coco Pharmaceuticals'` on quickstart 9443. Tests: `tests/micro-tests/test_issue165_replacements.py` (9).
+
+**Live on quickstart 9443, 2026-10-24** (Egeria 81beb8e5 after the reset; one peer-cleared run as `peterprofile` with throwaway `pyeg-test::issue165::` elements, all 5 deleted and read back as NotFound by GUID, and the prefix find was empty afterwards). Each wrapper reached its replacement and the replacement had the intended effect:
+- `find_governance_action_processes("*")` returned 100 GovernanceActionProcess-family elements (GovernanceActionProcess plus its Provisioning/Deleting/Subscribing subtypes).
+- `get_gov_def_in_context` returned the same element as `get_governance_definition_by_guid`, including `relatedActions`, `associatedGovernanceActions` and `subscribers`, which confirms Mandy's point that the context now comes by default.
+- `add_element_to_subject_area` without `subject_area_guid` raised the guidance error. With it, the term was listed in the subject area's collection members; after `remove_element_from_subject_area` the subject area had no members.
+- `create_analysis_report` created a `SurveyReport`; `get_analysis_report_by_guid` and `find_analysis_reports` returned it. After `link_analysis_report_to_asset(report, term)` the report showed the term under `reportSubjects`; after the detach it didn't.
+- `create_data_classification` created a `DataClass`. After `link_data_classification_to_data_field` the field showed it under `assignedDataValueSpecifications`; after the detach it didn't.
+
 **Proposed (not made):**
 1. ~~Repoint `link/detach_subject_area_hierarchy`~~ (done).
-2. Mark the analysis-report, data-classification and `get_gov_def_in_context` methods deprecated, raising a clear "not supported by Egeria" error, before removing them in a later release. Dr.Egeria/CLI usage needs checking first.
-3. Ask the Egeria team for the intended replacements for subject-area membership, governance-action-process search and the platform organization name.
+2. ~~Mark the obsolete methods deprecated~~ (done, as delegating wrappers rather than errors, per the Egeria team's answer).
+3. ~~Ask the Egeria team for the intended replacements~~ (answered, except the platform organization name).
 
 ---
 
@@ -828,6 +848,8 @@ Checked at egeria-python `f1b06cdd`; the installed wheel in trellis has the same
 
 
 ### ISSUE-146: Deleting a journal entry fails with OMAG-REPOSITORY-HANDLER-400-008, and pyegeria's `remove_note` reaches the delete only through the generic Asset Maker service
+
+**Egeria reset 2026-10-23 ~21:10-23:54Z** (egeria-workspaces-fs, owner-approved): the quickstart database was wiped and Egeria recreated on build 81beb8e5 (odpi/egeria 4486d1a7), then Coco content was reloaded. Every GUID recorded before then is gone. The test JournalEntries `fef83ed5` and `8bec72e4` on Erin's profile no longer exist, so the pending `remove_note` re-test below needs a NEW entry made with `journal_my_activity` (and, for the 400-008 case, one owned by an external source). The 2026-10-18 Egeria analysis (works as designed; 400-008 is the provenance check) still applies.
 
 **Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: works as designed (Egeria).** Asset Maker's `deleteAsset` is the right call: a JournalEntry is a Notification, so an asset, and no separate note delete is needed. Egeria's new FVT creates entries with My Profile's `journal-my-activity` and deletes them with `deleteAsset`, with no external source; every case passes on in-memory and PostgreSQL repositories. **400-008 is the provenance check:** it refuses a change made without an external source to an element an external source owns. No external source → 400-008; a different external source → 400-007; the matching external source → success. So an entry that returns 400-008 was not created locally, and its delete needs that entry's `externalSourceGUID` and `externalSourceName`. If 400-008 appears on an entry created through My Profile, that is a bug and Egeria wants: (1) the full error message (it names the type, GUID, provenance and metadata collection of the refused instance); (2) how the entry was created (which request, and which external source if any). Also new: purge applies the same provenance check. **pyegeria:** the `remove_note` clean-up below stays (route + docstring). Re-test on `8bec72e4` against a platform with the fixes; if 400-008 recurs, capture the full message for Egeria, since that entry was created locally through `journal-my-activity`.
 
@@ -1811,6 +1833,8 @@ enough to track there too).
 ---
 
 ### ISSUE-147: Every valid-metadata clear call answers OPEN-METADATA-400-011 "not found", even after a successful delete; clear-map-value deletes nothing; clear-map-name leaves the map's value set behind
+
+**Egeria reset 2026-10-23 ~21:10-23:54Z** (egeria-workspaces-fs, owner-approved): the quickstart database was wiped and Egeria recreated on build 81beb8e5 (odpi/egeria 4486d1a7), then Coco content was reloaded. Every GUID recorded before then is gone. The leftover `pyegeriaClearRetest*` test elements described under "Leftovers on qs-view-server" are gone with it; nothing to clean up. The fix had already passed its 2026-10-19 re-test.
 
 **Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: fixed on Egeria's `oak2026` branch, pending its merge to `main`** (each fix has an FVT or unit test). Re-test once `oak2026` is merged and a platform is built from `main`. A successful clear now returns success; clear-map-value now uses the map name; clear-map-name also removes that map name's values. Egeria asks us to drop any workaround that treats 400-011 as success. **pyegeria:** there is none (checked 2026-10-18: no 400-011 handling in `md_processing/v2/reference_data.py` or `pyegeria/omvs/valid_metadata.py`), so the follow-on proposed below is withdrawn. Nothing to change; after the re-test, remove the leftover `pyegeriaClearRetest*` test elements on qs-view-server.
 

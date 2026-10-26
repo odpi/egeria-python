@@ -382,6 +382,10 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
     reg("Attach Collection to Resource", CollectionLinkProcessor)
     reg("Link Digital Subscriber", CollectionLinkProcessor)
     reg("Link Data Description", CollectionLinkProcessor)
+    reg("Link Business Capability Dependency", CollectionLinkProcessor)
+    reg("Detach Business Capability Dependency", CollectionLinkProcessor)
+    reg("Link Digital Support", CollectionLinkProcessor)
+    reg("Detach Digital Support", CollectionLinkProcessor)
 
     # Governance (spec-driven to keep coverage aligned with compact commands)
     register_governance_processors(reg)
