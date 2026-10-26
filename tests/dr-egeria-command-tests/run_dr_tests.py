@@ -48,6 +48,7 @@ TEST_FILES = [
     "dr_test_data_dictionary_0580.md",
     "dr_test_implemented_by.md",
     "dr_test_security_officer.md",
+    "dr_test_security_findings.md",
 ]
 
 
