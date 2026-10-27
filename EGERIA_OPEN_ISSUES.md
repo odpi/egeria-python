@@ -10,7 +10,7 @@ It replaces the 2026-10-05 snapshot `docs/egeria-open-bugs-2026-10-05.md` (delet
 
 | Group | Issues |
 |---|---|
-| **Open on the Egeria side** (full entries below) | ISSUE-147, ISSUE-143, ISSUE-130, ISSUE-128, ISSUE-108 |
+| **Open on the Egeria side** (full entries below) | ISSUE-166, ISSUE-147, ISSUE-143, ISSUE-130, ISSUE-128, ISSUE-108 |
 | **Awaiting re-test:** a fix landed (mostly Egeria `main`, odpi/egeria#9363, merged 2026-10-06), not yet verified live | ISSUE-125, ISSUE-124, ISSUE-117, ISSUE-112, ISSUE-95, ISSUE-90, ISSUE-89, ISSUE-79, ISSUE-38 |
 | **Egeria-side, but tracked as pyegeria items** (a pyegeria change waits on Egeria) | ISSUE-146, ISSUE-132 |
 
@@ -34,6 +34,36 @@ It replaces the 2026-10-05 snapshot `docs/egeria-open-bugs-2026-10-05.md` (delet
 - **ISSUE-132: `DeleteElementRequestBody` serializes the cascade flag as `cascadeDelete`; Egeria's field is `cascadedDelete` and unknown fields are ignored, so no pyegeria cascade delete has ever cascaded**: Egeria's DeleteOptions field is `cascadedDelete`; the pyegeria fix is on hold until Egeria's cascade-delete fix lands. Full entry in `PYEGERIA_ISSUES.md`.
 
 ## Open on the Egeria side
+
+### ISSUE-166: Security annotation properties are Java primitives, so an unset CVSS score, exploit/patch flag or posture count reads back as 0 / false
+
+**Layer:** Egeria Server (type model / properties classes) · **Status:** open, question for the Egeria team · **Found:** 2026-10-26, while adding the 6.3 security annotation types to pyegeria (odpi/egeria-workspaces#702 hand-off, step 3; PR #495).
+
+**What happens:** in `SecurityFindingAnnotationProperties`, `VulnerabilityAnnotationProperties` and `SecurityPostureAnnotationProperties` (`frameworks/open-metadata-framework/.../properties/surveyreports/`), these fields are Java primitives with a 0 / false default:
+
+| Class | Fields |
+|---|---|
+| `SecurityFindingAnnotationProperties` | `float cvssScore`, `boolean exploitAvailable` |
+| `VulnerabilityAnnotationProperties` | `boolean patchAvailable` |
+| `SecurityPostureAnnotationProperties` | `long resourcesInScopeCount`, `resourcesTestedCount`, `newFindingCount`, `resolvedFindingCount` |
+| `AnnotationProperties` (inherited by all four) | `long sampleSize`, `int samplePercent`, `int confidence`, `long absoluteUncertainty`, `relativeUncertainty` |
+
+So "never set" and "set to 0 / false" come back identical. Confirmed live on 2026-10-26 (egeria-platform:latest quickstart, as erinoverview on qs-view-server, throwaway `SecTest*` elements, since deleted and verified gone by GUID): a `VulnerabilityAnnotation` created with only `severity: "Medium"` read back with `cvssScore: 0.0`, `exploitAvailable: false` and `patchAvailable: false`. A `SecurityPostureAnnotation` created with only `findingCountsBySeverity` and `newFindingCount` read back with `resourcesInScopeCount: 0`, `resourcesTestedCount: 0` and `resolvedFindingCount: 0`.
+
+**Why it matters:** each of these values is a reassuring answer. A findings table that shows them as returned tells a reader "CVSS 0, no public exploit, no patch" about a finding nobody assessed, and "0 findings resolved" about a run that never recorded it. `exploitAvailable: false` is the most dangerous, since it is the field a triager sorts on.
+
+**Question for the Egeria team (Mandy):** could these become boxed types (`Float`, `Boolean`, `Long`, `Integer`) with a `null` default, so that an unset value is omitted from the response? `cvssScore` matters most: a CVSS score of 0.0 is a real rating (severity "None").
+
+**Addendum 2026-10-26 (later the same day): a merge update wipes these fields.** While live-testing the Dr.Egeria finding commands (step 4), a `PenetrationTestFindingAnnotation` created with `cvssScore: 8.6` and `exploitAvailable: true` was updated with `mergeUpdate: true` and only `reproductionSteps` in the properties. Afterwards it held `cvssScore: 0.0` and `exploitAvailable: false`. Egeria cannot tell a primitive that was left out of a merge update from one set to 0 / false, so it stores the default over the current value. So any merge update of a security annotation resets the CVSS score, the exploit and patch flags, and the posture counts it doesn't mention. This raises the question above from "an unset value reads as 0" to "an update loses data". **pyegeria workaround (step 4 PR):** Dr.Egeria's `SecurityFindingProcessor` copies those fields' current values into every merge update unless the command sets them (verified live: the same update then kept 8.6 / true). Callers of `DataDiscovery.update_annotation` must do the same until Egeria changes.
+
+**pyegeria workaround (PR #495, until then):** the security report rows (`DataDiscovery._security_row`, behind the `Security-Findings`, `Penetration-Test-Findings` and `Security-Posture` report specs) leave a value blank where a 0 or false would read as an answer nobody gave:
+- a CVSS score of 0.0 is shown only when the severity is "None";
+- `exploitAvailable` and `patchAvailable` are shown only when true;
+- 0 resources in scope means not recorded, so both resource counts are blank.
+
+`newFindingCount` / `resolvedFindingCount` of 0 cannot be told apart from unrecorded on the client at all, and the `Security-Posture` description says so. Once Egeria returns `null` for unset values, the workaround can go, apart from the "None" severity rule, which stays true either way.
+
+---
 
 ### ISSUE-147: Every valid-metadata clear call answers OPEN-METADATA-400-011 "not found", even after a successful delete; clear-map-value deletes nothing; clear-map-name leaves the map's value set behind
 

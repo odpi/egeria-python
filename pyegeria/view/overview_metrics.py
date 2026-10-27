@@ -1633,3 +1633,25 @@ def active_contributors(ce, as_of: Optional[str] = None) -> Dict[str, Any]:
         by_type[key] = len(users)
         all_users |= users
     return {"contributors": len(all_users), "byType": by_type}
+
+
+def control_implementation_summary(client, soa_guid: str) -> Dict[str, int]:
+    """
+    Count the applicable controls in a statement of applicability by
+    implementation status -- the input to an "Annex A control implementation
+    rate" style metric.
+
+    Every ControlImplementationStatus value is a key, so a zero is a real
+    count. A control with no implementation status counts as NOT_STARTED (the
+    enum's default); controls marked not applicable are left out.
+
+    Parameters
+    ----------
+    client : SecurityOfficer (or EgeriaTech)
+    soa_guid : the statement of applicability's GUID, or its qualified name
+
+    Returns
+    -------
+    dict -- {status: count}, one key per ControlImplementationStatus value
+    """
+    return client.get_control_implementation_summary(soa_guid)["byStatus"]

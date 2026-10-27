@@ -43,6 +43,8 @@ from md_processing.v2 import (
     ActionProcessStepLinkProcessor, ActionExecutorTargetLinkProcessor,
     CreateDashboardSheetProcessor, LinkReportToDashboardSheetProcessor,
     AddTextOnDashboardSheetProcessor, ReportProcessor,
+    StatementOfApplicabilityProcessor, ControlApplicabilityLinkProcessor,
+    SurveyReportProcessor, SecurityFindingProcessor,
     SavedQueryProcessor, SmartQueryLinkProcessor,
     CurationClassifyProcessor, CurationLinkProcessor, CLASSIFICATION_METHODS,
     ReferenceDataLinkProcessor, ValidMetadataValueProcessor, ReferenceDataElementProcessor, ValidValueLinkProcessor,
@@ -476,6 +478,19 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
     reg("View Report", ViewProcessor)
     reg("Create Report", ReportProcessor)
     reg("Update Report", ReportProcessor)
+
+    # Security Officer -- statements of applicability (Egeria 6.3)
+    reg("Create Statement of Applicability", StatementOfApplicabilityProcessor)
+    reg("Update Statement of Applicability", StatementOfApplicabilityProcessor)
+    for verb in ("Link", "Attach", "Add", "Unlink", "Detach", "Remove"):
+        reg(f"{verb} Control Applicability", ControlApplicabilityLinkProcessor)
+
+    # Security Officer -- security testing results (Egeria 6.3, model 0665)
+    for verb in ("Create", "Update"):
+        reg(f"{verb} Survey Report", SurveyReportProcessor)
+        for finding in ("Security Finding", "Vulnerability Finding", "Penetration Test Finding",
+                        "Security Posture Summary"):
+            reg(f"{verb} {finding}", SecurityFindingProcessor)
     reg("Create Saved Query", SavedQueryProcessor)
     reg("Update Saved Query", SavedQueryProcessor)
     reg("Link Saved Query to Results Set", SmartQueryLinkProcessor)

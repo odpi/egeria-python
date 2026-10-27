@@ -24,7 +24,7 @@ ___
 
 >	**Attribute Type**: Simple
 
->	**Description**: Date/time (ISO 8601) that work started on delivering the promised resource.
+>	**Description**: Date/time (ISO 8601) that the work started - for a promise, work on delivering the promised resource; for a report, the run that produced it.
 
 
 ### Due Time
@@ -48,7 +48,7 @@ ___
 
 >	**Attribute Type**: Simple
 
->	**Description**: Date/time (ISO 8601) that the promised resource was delivered.
+>	**Description**: Date/time (ISO 8601) that the work finished - for a promise, when the promised resource was delivered; for a report, when the run completed.
 
 
 ### Journal Entry

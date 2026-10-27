@@ -505,6 +505,19 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                                        "every snapshot (e.g. classifications for count_elements)."),
         ],
     ),
+    "control_implementation_summary": AnalyticFunctionSpec(
+        name="control_implementation_summary",
+        function="pyegeria.view.overview_metrics.control_implementation_summary",
+        description="Applicable controls in a statement of applicability, counted by implementation "
+                    "status (NOT_STARTED, PLANNED, PARTIALLY_IMPLEMENTED, IMPLEMENTED, OTHER).",
+        returns="dict ({status: count})",
+        generic=False,
+        binding_note="Fixed to the ControlApplicability relationships of one StatementOfApplicability.",
+        params=[
+            AnalyticParam(name="soa_guid", type="str", required=True,
+                          description="GUID of the statement of applicability."),
+        ],
+    ),
 }
 
 _RUNTIME_ANALYTIC_FUNCTIONS = AnalyticFunctionDict()
