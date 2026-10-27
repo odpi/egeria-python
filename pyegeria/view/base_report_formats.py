@@ -2255,8 +2255,8 @@ base_report_specs = FormatSetDict({
         target_type="SecurityFindingAnnotation",
         heading="Security Findings",
         description="Security findings from one survey report, or about one element, most severe first. "
-                    "A blank CVSS score, Exploit Available or Patch Available means not recorded: Egeria "
-                    "returns 0 or false for these when they were never set.",
+                    "A blank CVSS score, Exploit Available or Patch Available means not recorded. Findings "
+                    "written before Egeria 6.3 may show 0 or false for a value that was never set.",
         aliases=["Vulnerabilities", "Security Finding"],
         family="Security Officer",
         formats=[
@@ -2291,7 +2291,7 @@ base_report_specs = FormatSetDict({
         target_type="PenetrationTestFindingAnnotation",
         heading="Penetration Test Findings",
         description="The findings of a penetration test, most severe first - the view the tester hands back. "
-                    "A blank CVSS score means not recorded.",
+                    "A blank CVSS score means not recorded; before Egeria 6.3 it showed as 0.",
         aliases=["Pen Test Findings"],
         family="Security Officer",
         formats=[
@@ -2322,9 +2322,8 @@ base_report_specs = FormatSetDict({
         target_type="SecurityPostureAnnotation",
         heading="Security Posture",
         description="One row per security test run, oldest first, to show whether the estate is getting more "
-                    "secure. Blank severity counts mean the run recorded no counts; blank resource counts mean "
-                    "they were not recorded. New and resolved counts of 0 may also be unrecorded - Egeria cannot "
-                    "tell the two apart.",
+                    "secure. Blank severity counts mean the run recorded no counts; any other blank count was "
+                    "not recorded. Runs written before Egeria 6.3 may show 0 for a count that was never set.",
         aliases=["Security Posture History"],
         family="Security Officer",
         formats=[

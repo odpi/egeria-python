@@ -25,7 +25,7 @@ from pyegeria.core._exceptions import (
     PyegeriaNotFoundException, PyegeriaUnauthorizedException
 )
 from pyegeria.core._globals import enable_ssl_check, max_paging_size
-from pyegeria.core._base_platform_client import _apply_for_lineage_default
+from pyegeria.core._base_platform_client import _apply_for_lineage_default, _post_for_bearer_token
 from pyegeria.core._validators import (
     validate_name,
     validate_server_name,
@@ -272,27 +272,16 @@ class BaseServerClient:
         data = {"userId": user_id, "password": password}
         if new_password:
             data["newPassword"] = new_password
-        async with AsyncClient(verify=enable_ssl_check) as client:
-            try:
-                # Deliberately not self.headers: it may still carry a stale/expired
-                # Authorization header (that's exactly what we're refreshing), and
-                # this endpoint authenticates via the body credentials, not a bearer
-                # token - sending a bad Authorization header here gets this request
-                # itself rejected with 401, defeating the whole refresh.
-                response = await client.post(url, json=data, headers=self.json_header)
-                token = response.text
-            except httpx.HTTPError as e:
-                print(e)
-                return "FAILED"
-
-        if token:
-            self.token_src = "Egeria"
-            self.headers["Authorization"] = f"Bearer {token}"
-            self.text_headers["Authorization"] = f"Bearer {token}"
-            return token
-        else:
-            additional_info = {"reason": "No token returned - request issue?"}
-            raise PyegeriaInvalidParameterException(None, None, additional_info)
+        # Deliberately not self.headers: it may still carry a stale/expired
+        # Authorization header (that's exactly what we're refreshing), and
+        # this endpoint authenticates via the body credentials, not a bearer
+        # token - sending a bad Authorization header here gets this request
+        # itself rejected with 401, defeating the whole refresh.
+        token = await _post_for_bearer_token(url, data, self.json_header, user_id)
+        self.token_src = "Egeria"
+        self.headers["Authorization"] = f"Bearer {token}"
+        self.text_headers["Authorization"] = f"Bearer {token}"
+        return token
 
     def create_egeria_bearer_token(
             self, user_id: str = None, password: str = None, new_password: str = None
@@ -634,7 +623,7 @@ class BaseServerClient:
                     new_token = await self._async_create_egeria_bearer_token()
                 except Exception:
                     new_token = None
-                if new_token and new_token != "FAILED":
+                if new_token:
                     return await self._async_make_request(
                         request_type, endpoint, payload, is_json, params,
                         timeout=timeout, _retry_on_auth=False, as_text=as_text,

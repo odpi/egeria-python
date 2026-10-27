@@ -24,7 +24,8 @@ from loguru import logger
 from pyegeria.core.config import settings
 from pyegeria.core._exceptions import (
     PyegeriaAPIException, PyegeriaConnectionException, PyegeriaInvalidParameterException,
-    PyegeriaUnknownException, PyegeriaClientException, PyegeriaTimeoutException
+    PyegeriaUnknownException, PyegeriaClientException, PyegeriaTimeoutException,
+    PyegeriaUnauthorizedException
 )
 from pyegeria.core._globals import enable_ssl_check, max_paging_size
 from pyegeria.core._validators import (
@@ -53,6 +54,36 @@ def lineage_visible(enabled: bool = True):
         yield
     finally:
         _for_lineage_default.reset(token)
+
+
+async def _post_for_bearer_token(url: str, data: dict, headers: dict, user_id: str) -> str:
+    """POST credentials to an Egeria token endpoint and return the token, raising on any failure.
+
+    The endpoint answers a bad user id or password with a 401 whose body is error text, so the
+    status code has to be checked before the body is used as a token.
+    """
+    context = {"caller method": "create_egeria_bearer_token"}
+    try:
+        async with AsyncClient(verify=enable_ssl_check) as client:
+            response = await client.post(url, json=data, headers=headers)
+    except httpx.TimeoutException as e:
+        raise PyegeriaTimeoutException(context, {"endpoint": url, "error_kind": "timeout"}, e)
+    except httpx.HTTPError as e:
+        raise PyegeriaConnectionException(context, {"endpoint": url, "error_kind": "connection"}, e)
+
+    additional_info = {"userid": user_id, "reason": response.text}
+    if response.status_code in (401, 403):
+        raise PyegeriaUnauthorizedException(response, context, additional_info)
+    if response.status_code != 200:
+        raise PyegeriaClientException(response, context, additional_info)
+
+    token = response.text.strip()
+    if not token:
+        raise PyegeriaInvalidParameterException(None, context, {"reason": "No token returned - request issue?"})
+    if token.startswith("{"):
+        # An Egeria-wrapped error with HTTP 200; a token is never a JSON object.
+        raise PyegeriaInvalidParameterException(None, context, additional_info)
+    return token
 
 
 def _apply_for_lineage_default(payload: str | dict | None) -> str | dict | None:
@@ -309,27 +340,16 @@ class BasePlatformClient:
         data = {"userId": user_id, "password": password}
         if new_password:
             data["newPassword"] = new_password
-        async with AsyncClient(verify=enable_ssl_check) as client:
-            try:
-                # Deliberately not self.headers: it may still carry a stale/expired
-                # Authorization header (that's exactly what we're refreshing), and
-                # this endpoint authenticates via the body credentials, not a bearer
-                # token - sending a bad Authorization header here gets this request
-                # itself rejected with 401, defeating the whole refresh.
-                response = await client.post(url, json=data, headers=self.json_header)
-                token = response.text
-            except httpx.HTTPError as e:
-                print(e)
-                return "FAILED"
-
-        if token:
-            self.token_src = "Egeria"
-            self.headers["Authorization"] = f"Bearer {token}"
-            self.text_headers["Authorization"] = f"Bearer {token}"
-            return token
-        else:
-            additional_info = {"reason": "No token returned - request issue?"}
-            raise PyegeriaInvalidParameterException(None, None, additional_info)
+        # Deliberately not self.headers: it may still carry a stale/expired
+        # Authorization header (that's exactly what we're refreshing), and
+        # this endpoint authenticates via the body credentials, not a bearer
+        # token - sending a bad Authorization header here gets this request
+        # itself rejected with 401, defeating the whole refresh.
+        token = await _post_for_bearer_token(url, data, self.json_header, user_id)
+        self.token_src = "Egeria"
+        self.headers["Authorization"] = f"Bearer {token}"
+        self.text_headers["Authorization"] = f"Bearer {token}"
+        return token
 
     def create_egeria_bearer_token(
             self, user_id: str = None, password: str = None

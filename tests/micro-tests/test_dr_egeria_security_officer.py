@@ -194,8 +194,9 @@ class _UpdateClient:
 
 
 @pytest.mark.asyncio
-async def test_merge_update_carries_primitives_forward(monkeypatch):
-    # Egeria resets an omitted primitive to 0 / false on a merge update (ISSUE-166).
+async def test_merge_update_sends_only_what_the_command_sets(monkeypatch):
+    # From Egeria 6.3 (odpi/egeria#9389) a merge update keeps an omitted number or flag, so the
+    # current values are not copied into the update.
     monkeypatch.setattr("md_processing.v2.security_officer.update_element_dictionary", lambda *a, **k: None)
     client = _UpdateClient()
     proc = _finding_processor(client, {"Display Name": {"value": "SQL injection"},
@@ -206,9 +207,8 @@ async def test_merge_update_carries_primitives_forward(monkeypatch):
     await proc.apply_changes()
 
     props = client.updates[0][1]["properties"]
-    assert props["cvssScore"] == 8.6 and props["exploitAvailable"] is True
     assert props["reproductionSteps"] == "Search for ' OR 1=1"
-    assert "severity" not in props          # non-primitives merge correctly on their own
+    assert not {"cvssScore", "exploitAvailable", "severity"} & set(props)
 
 
 @pytest.mark.asyncio
