@@ -6,11 +6,11 @@ This module contains the Data Discovery View Service client.
 """
 
 import asyncio
-from typing import Annotated, Literal, Optional
-
-from pydantic import Field
+import uuid
+from typing import Optional
 
 from pyegeria.core._server_client import ServerClient
+from pyegeria.core._globals import NO_ELEMENTS_FOUND
 from pyegeria.models import (
     NewElementRequestBody,
     DeleteElementRequestBody,
@@ -22,7 +22,7 @@ from pyegeria.models import (
     GetRequestBody,
     NewRelationshipRequestBody,
     DeleteRelationshipRequestBody,
-    ReferenceableProperties,
+    AnnotationProperties,
 )
 from pyegeria.view.output_formatter import (
     generate_output,
@@ -32,15 +32,6 @@ from pyegeria.view.output_formatter import (
 from pyegeria.core.utils import dynamic_catch
 
 
-class AnnotationProperties(ReferenceableProperties):
-    class_: Annotated[Literal["AnnotationProperties"], Field(alias="class")]
-    annotation_type: Optional[str] = None
-    summary: Optional[str] = None
-    confidence_level: Optional[int] = None
-    expression: Optional[str] = None
-    explanation: Optional[str] = None
-    analysis_step: Optional[str] = None
-    json_properties: Optional[str] = None
 
 
 class DataDiscovery(ServerClient):
@@ -1682,6 +1673,248 @@ class DataDiscovery(ServerClient):
                 report_spec=report_spec,
                 **kwargs,
             )
+        )
+
+    #
+    # Security findings and posture (Egeria 6.3, model 0665).  A security test run is a SurveyReport;
+    # each finding is a SecurityFindingAnnotation (or its Vulnerability / PenetrationTestFinding subtypes)
+    # and the run's summary is a SecurityPostureAnnotation, all linked to the report with ReportedAnnotation.
+    #
+
+    SECURITY_FINDING_TYPES = ("SecurityFindingAnnotation", "VulnerabilityAnnotation",
+                              "PenetrationTestFindingAnnotation")
+    SEVERITY_RANK = {"None": 0, "Low": 1, "Medium": 2, "High": 3, "Critical": 4}
+
+    @staticmethod
+    def _report_of(annotation: dict) -> dict:
+        """Header and properties of the survey report an annotation is reported in, or {} if none is linked."""
+        for rel in annotation.get("fromSurveyReports") or []:
+            related = rel.get("relatedElement") or {}
+            return {"guid": (related.get("elementHeader") or {}).get("guid"), **(related.get("properties") or {})}
+        return {}
+
+    @classmethod
+    def _security_row(cls, annotation: dict) -> dict:
+        """One display row for a security finding or posture annotation.
+
+        Egeria stores cvssScore, exploitAvailable, patchAvailable and the posture counts as Java
+        primitives, so an unset value comes back as 0 or false and cannot be told apart from a real one.
+        Where that would read as an answer nobody gave, the row leaves the value blank instead:
+
+        - a CVSS score of 0.0 is only shown when the severity is "None", the rating a 0.0 score means;
+        - exploitAvailable and patchAvailable are only shown when true;
+        - a run with 0 resources in scope was not recorded, so both resource counts are blank.
+
+        Counts by severity are read from findingCountsBySeverity: a severity missing from a recorded
+        map is 0, and with no map at all every severity count is blank.
+        """
+        props = dict(annotation.get("properties") or {})
+        type_name = ((annotation.get("elementHeader") or {}).get("type") or {}).get("typeName")
+        props["findingType"] = (type_name or "").removesuffix("Annotation")
+
+        if props.get("cvssScore") in (0, 0.0) and props.get("severity") != "None":
+            props["cvssScore"] = None
+        for flag in ("exploitAvailable", "patchAvailable"):
+            if props.get(flag) is False:
+                props[flag] = None
+
+        if type_name == "SecurityPostureAnnotation":
+            counts = props.get("findingCountsBySeverity")
+            for severity in cls.SEVERITY_RANK:
+                props[f"{severity.lower()}Findings"] = (counts.get(severity, 0) if isinstance(counts, dict)
+                                                        else None)
+            if not props.get("resourcesInScopeCount"):
+                props["resourcesInScopeCount"] = None
+                if not props.get("resourcesTestedCount"):
+                    props["resourcesTestedCount"] = None
+
+        # Column keys are snake_case mapped to camelCase, which cannot produce packageURL.
+        if "packageURL" in props:
+            props["packageUrl"] = props["packageURL"]
+
+        report = cls._report_of(annotation)
+        props["reportName"] = report.get("displayName") or report.get("qualifiedName")
+        props["reportCompletionTime"] = report.get("completionTime")
+        props["reportStartTime"] = report.get("startTime")
+        return {"elementHeader": annotation.get("elementHeader", {}), "properties": props}
+
+    async def _async_resolve_guid(self, name_or_guid: str, type_name: str) -> str:
+        """`name_or_guid` itself if it is a GUID, otherwise the GUID of the element with that name."""
+        try:
+            uuid.UUID(str(name_or_guid))
+            return name_or_guid
+        except ValueError:
+            return await self._async_get_guid_for_name(name_or_guid, type_name=type_name)
+
+    def _generate_security_output(self, elements: list[dict], output_format: str,
+                                  report_spec: str | dict, **kwargs) -> list | str:
+        rows = [self._security_row(e) for e in elements]
+        return self._generate_formatted_output(
+            elements=rows,
+            entity_type="Annotation",
+            output_format=output_format,
+            extract_properties_func=self._extract_annotation_properties,
+            report_spec=report_spec,
+            **kwargs,
+        )
+
+    @dynamic_catch
+    async def _async_get_security_findings(
+        self,
+        report_guid: Optional[str] = None,
+        element_guid: Optional[str] = None,
+        min_severity: Optional[str] = None,
+        finding_types: Optional[list[str]] = None,
+        output_format: str = "JSON",
+        report_spec: str | dict | None = None,
+        **kwargs,
+    ) -> list | str:
+        """Return the security findings in one survey report, or about one element, most severe first. Async version.
+
+        Parameters
+        ----------
+        report_guid : str, optional
+            The survey report (GUID or qualified name) whose findings to return.
+        element_guid : str, optional
+            The element (GUID or qualified name) whose findings to return, through AssociatedAnnotation.
+            Give exactly one of report_guid and element_guid.
+        min_severity : str, optional
+            Only findings at least this severe: None, Low, Medium, High or Critical.
+        finding_types : list[str], optional
+            Annotation types to include. Defaults to SecurityFindingAnnotation and its Vulnerability and
+            PenetrationTestFinding subtypes.
+        output_format : str, default "JSON"
+            JSON returns the annotations as Egeria returned them; other formats use the report spec.
+        report_spec : str | dict, optional
+            Defaults to "Security-Findings".
+
+        Returns
+        -------
+        list | str
+            The findings sorted by CVSS score, highest first (findings with no recorded score after
+            those with one, by severity), or NO_ELEMENTS_FOUND.
+        """
+        if bool(report_guid) == bool(element_guid):
+            raise ValueError("Give exactly one of report_guid and element_guid.")
+        if min_severity is not None and min_severity not in self.SEVERITY_RANK:
+            raise ValueError(f"min_severity must be one of {', '.join(self.SEVERITY_RANK)}")
+
+        if report_guid:
+            guid = await self._async_resolve_guid(report_guid, "SurveyReport")
+            annotations = await self._async_get_new_annotations(guid, output_format="JSON")
+        else:
+            guid = await self._async_resolve_guid(element_guid, None)
+            annotations = await self._async_get_annotations_for_element(guid, output_format="JSON")
+        if not isinstance(annotations, list):
+            return NO_ELEMENTS_FOUND
+
+        wanted = set(finding_types or self.SECURITY_FINDING_TYPES)
+        floor = self.SEVERITY_RANK.get(min_severity, 0)
+        findings = [
+            a for a in annotations
+            if ((a.get("elementHeader") or {}).get("type") or {}).get("typeName") in wanted
+            and (min_severity is None
+                 or self.SEVERITY_RANK.get((a.get("properties") or {}).get("severity"), -1) >= floor)
+        ]
+        if not findings:
+            return NO_ELEMENTS_FOUND
+
+        def sort_key(a: dict):
+            props = self._security_row(a)["properties"]
+            score = props.get("cvssScore")
+            return (score is None, -(score or 0), -self.SEVERITY_RANK.get(props.get("severity"), -1))
+
+        findings.sort(key=sort_key)
+        if output_format.upper() == "JSON":
+            return findings
+        return self._generate_security_output(findings, output_format, report_spec or "Security-Findings", **kwargs)
+
+    @dynamic_catch
+    def get_security_findings(
+        self,
+        report_guid: Optional[str] = None,
+        element_guid: Optional[str] = None,
+        min_severity: Optional[str] = None,
+        finding_types: Optional[list[str]] = None,
+        output_format: str = "JSON",
+        report_spec: str | dict | None = None,
+        **kwargs,
+    ) -> list | str:
+        """Return the security findings in one survey report, or about one element, most severe first.
+
+        See _async_get_security_findings.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_security_findings(report_guid, element_guid, min_severity, finding_types,
+                                              output_format, report_spec, **kwargs)
+        )
+
+    @dynamic_catch
+    async def _async_get_security_posture_history(
+        self,
+        report_qualified_name_prefix: Optional[str] = None,
+        output_format: str = "JSON",
+        report_spec: str | dict | None = None,
+        **kwargs,
+    ) -> list | str:
+        """Return the security posture summaries, one per test run, oldest first. Async version.
+
+        Parameters
+        ----------
+        report_qualified_name_prefix : str, optional
+            Only runs whose survey report's qualified name starts with this - for example
+            "SurveyReport::Supplier Portal::" for one system's series of tests. All runs when omitted.
+        output_format : str, default "JSON"
+            JSON returns the posture annotations as Egeria returned them; other formats use the report spec.
+        report_spec : str | dict, optional
+            Defaults to "Security-Posture".
+
+        Returns
+        -------
+        list | str
+            Sorted by the report's completion time (then start time, then the annotation's creation
+            time), or NO_ELEMENTS_FOUND.
+        """
+        annotations = await self._async_find_annotations(
+            "*", metadata_element_type="SecurityPostureAnnotation", output_format="JSON", page_size=0)
+        if not isinstance(annotations, list):
+            return NO_ELEMENTS_FOUND
+        postures = [
+            a for a in annotations
+            if ((a.get("elementHeader") or {}).get("type") or {}).get("typeName") == "SecurityPostureAnnotation"
+            and (not report_qualified_name_prefix
+                 or str(self._report_of(a).get("qualifiedName") or "").startswith(report_qualified_name_prefix))
+        ]
+        if not postures:
+            return NO_ELEMENTS_FOUND
+
+        def run_time(a: dict) -> str:
+            report = self._report_of(a)
+            created = (((a.get("elementHeader") or {}).get("versions") or {}).get("createTime")) or ""
+            return str(report.get("completionTime") or report.get("startTime") or created)
+
+        postures.sort(key=run_time)
+        if output_format.upper() == "JSON":
+            return postures
+        return self._generate_security_output(postures, output_format, report_spec or "Security-Posture", **kwargs)
+
+    @dynamic_catch
+    def get_security_posture_history(
+        self,
+        report_qualified_name_prefix: Optional[str] = None,
+        output_format: str = "JSON",
+        report_spec: str | dict | None = None,
+        **kwargs,
+    ) -> list | str:
+        """Return the security posture summaries, one per test run, oldest first.
+
+        See _async_get_security_posture_history.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_security_posture_history(report_qualified_name_prefix, output_format,
+                                                     report_spec, **kwargs)
         )
 
     #
