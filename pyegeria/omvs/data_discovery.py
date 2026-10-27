@@ -1697,13 +1697,10 @@ class DataDiscovery(ServerClient):
     def _security_row(cls, annotation: dict) -> dict:
         """One display row for a security finding or posture annotation.
 
-        Egeria stores cvssScore, exploitAvailable, patchAvailable and the posture counts as Java
-        primitives, so an unset value comes back as 0 or false and cannot be told apart from a real one.
-        Where that would read as an answer nobody gave, the row leaves the value blank instead:
-
-        - a CVSS score of 0.0 is only shown when the severity is "None", the rating a 0.0 score means;
-        - exploitAvailable and patchAvailable are only shown when true;
-        - a run with 0 resources in scope was not recorded, so both resource counts are blank.
+        From Egeria 6.3 (odpi/egeria#9389) an unset cvssScore, exploitAvailable, patchAvailable or
+        posture count is left out of the response, so it shows blank, and a 0 or false that comes
+        back is a real answer. Annotations written by earlier servers may still hold a stored 0 or
+        false that nobody set (ISSUE-166).
 
         Counts by severity are read from findingCountsBySeverity: a severity missing from a recorded
         map is 0, and with no map at all every severity count is blank.
@@ -1712,21 +1709,11 @@ class DataDiscovery(ServerClient):
         type_name = ((annotation.get("elementHeader") or {}).get("type") or {}).get("typeName")
         props["findingType"] = (type_name or "").removesuffix("Annotation")
 
-        if props.get("cvssScore") in (0, 0.0) and props.get("severity") != "None":
-            props["cvssScore"] = None
-        for flag in ("exploitAvailable", "patchAvailable"):
-            if props.get(flag) is False:
-                props[flag] = None
-
         if type_name == "SecurityPostureAnnotation":
             counts = props.get("findingCountsBySeverity")
             for severity in cls.SEVERITY_RANK:
                 props[f"{severity.lower()}Findings"] = (counts.get(severity, 0) if isinstance(counts, dict)
                                                         else None)
-            if not props.get("resourcesInScopeCount"):
-                props["resourcesInScopeCount"] = None
-                if not props.get("resourcesTestedCount"):
-                    props["resourcesTestedCount"] = None
 
         # Column keys are snake_case mapped to camelCase, which cannot produce packageURL.
         if "packageURL" in props:

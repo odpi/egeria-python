@@ -2,8 +2,8 @@
 Security annotation models and the DataDiscovery security finding / posture views (Egeria 6.3, model 0665).
 No live server: the annotation lists are stubbed, in the shape a live 6.3 platform returns.
 
-Egeria stores cvssScore, exploitAvailable, patchAvailable and the posture counts as Java primitives, so an
-unset value comes back as 0 / false (confirmed live). The display rows must not present those as answers.
+From Egeria 6.3 (odpi/egeria#9389) an unset cvssScore, exploitAvailable, patchAvailable or posture count
+is left out of the response (confirmed live 2026-10-27), and a 0 / false that comes back is a real answer.
 """
 import pytest
 from pydantic import ValidationError
@@ -32,8 +32,10 @@ def _annotation(type_name, guid, props, report=None):
 
 
 # An unset vulnerability, as returned live: only severity was supplied.
-SPARSE = _annotation("VulnerabilityAnnotation", "sparse-1",
-                     {"severity": "Medium", "cvssScore": 0.0, "exploitAvailable": False, "patchAvailable": False})
+SPARSE = _annotation("VulnerabilityAnnotation", "sparse-1", {"severity": "Medium"})
+# Assessed: no exploit, no patch, scored 0.0.
+ASSESSED = _annotation("VulnerabilityAnnotation", "assessed-5",
+                       {"severity": "Low", "cvssScore": 0.0, "exploitAvailable": False, "patchAvailable": False})
 FULL = _annotation("VulnerabilityAnnotation", "full-2",
                    {"severity": "Critical", "cvssScore": 10.0, "exploitAvailable": True,
                     "packageURL": "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1"})
@@ -75,12 +77,17 @@ def test_annotation_properties_uses_egerias_confidence_field():
     assert a.model_dump(by_alias=True, exclude_none=True)["confidence"] == 80
 
 
-def test_unrecorded_primitives_are_blank_not_zero_or_false():
+def test_unrecorded_values_are_blank():
     row = DataDiscovery._security_row(SPARSE)["properties"]
-    assert row["cvssScore"] is None
-    assert row["exploitAvailable"] is None
-    assert row["patchAvailable"] is None
+    assert row.get("cvssScore") is None
+    assert row.get("exploitAvailable") is None
+    assert row.get("patchAvailable") is None
     assert row["findingType"] == "Vulnerability"
+
+
+def test_returned_zero_and_false_are_answers():
+    row = DataDiscovery._security_row(ASSESSED)["properties"]
+    assert (row["cvssScore"], row["exploitAvailable"], row["patchAvailable"]) == (0.0, False, False)
 
 
 def test_real_values_are_kept():
@@ -102,11 +109,10 @@ def test_posture_counts():
     assert row["resourcesTestedCount"] == 0          # real: in scope was recorded
     assert row["reportName"] == "Run 1"
 
-    unrecorded = _annotation("SecurityPostureAnnotation", "p-2",
-                             {"resourcesInScopeCount": 0, "resourcesTestedCount": 0})
+    unrecorded = _annotation("SecurityPostureAnnotation", "p-2", {})
     row = DataDiscovery._security_row(unrecorded)["properties"]
     assert row["highFindings"] is None
-    assert row["resourcesInScopeCount"] is None and row["resourcesTestedCount"] is None
+    assert row.get("resourcesInScopeCount") is None and row.get("resourcesTestedCount") is None
 
 
 def _client(monkeypatch, annotations):

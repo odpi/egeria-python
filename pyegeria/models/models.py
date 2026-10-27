@@ -159,7 +159,7 @@ class ReferenceableProperties(OpenMetadataRootProperties):
 
 class GovernanceControlProperties(ReferenceableProperties):
     class_: Annotated[Literal["GovernanceControlProperties"], Field(alias="class")]
-    domain_identifier: int | None = 0
+    domain_identifier: int | None = None
     document_identifier: str | None = None
     title: str | None = None
     summary: str | None = None
@@ -515,7 +515,7 @@ class ConnectionEndpointProperties(PyegeriaModel):
 
 class EmbeddedConnectionProperties(PyegeriaModel):
     class_: Annotated[Literal["EmbeddedConnectionProperties"], Field(alias="class")]
-    position: int | None = 0
+    position: int | None = None
     display_name: str | None = None
     arguments: dict | None = None
     effective_from: datetime | None = None

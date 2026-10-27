@@ -300,10 +300,6 @@ _ANNOTATION_FIELDS = {
 }
 
 
-# Egeria declares these as Java primitives, so a merge update that leaves one out stores
-# its 0 / false default over the current value (confirmed live, ISSUE-166).
-_PRIMITIVE_FIELDS = ("cvssScore", "exploitAvailable", "patchAvailable", "resourcesInScopeCount",
-                     "resourcesTestedCount", "newFindingCount", "resolvedFindingCount")
 _FLOAT_FIELDS = {"cvssScore"}
 _INT_FIELDS = {"resourcesInScopeCount", "resourcesTestedCount", "newFindingCount", "resolvedFindingCount"}
 
@@ -403,12 +399,6 @@ class SecurityFindingProcessor(AsyncBaseCommandProcessor):
 
         if self.as_is_element:
             guid = self.as_is_element["elementHeader"]["guid"]
-            if merge_update:
-                # Without this, the merge would reset any primitive the command leaves out.
-                current = self.as_is_element.get("properties") or {}
-                for key in _PRIMITIVE_FIELDS:
-                    if key not in props and current.get(key) is not None:
-                        props[key] = current[key]
             self.last_body = body = {
                 "class": "UpdateElementRequestBody",
                 "properties": self.filter_update_properties(props, merge_update),
