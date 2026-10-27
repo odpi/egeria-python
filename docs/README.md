@@ -11,7 +11,7 @@ contributors who need more depth than the top-level `README.md`/`CLAUDE.md`/
 |---|---|
 | `developer_guide_pyegeria_textual.md` | Developer Guide for Python programmers new to Egeria and Textual — step-by-step examples (`examples/developer_guide/`), then My Profile, Dr.Egeria and hey_egeria as case studies. Screenshots in `images/developer-guide/`. |
 | `dr_egeria_manual.md` | The Dr.Egeria user manual — command reference, markdown authoring conventions, attribute styles. |
-| `my_egeria_manual.md` | The My Profile App user manual — configuration, starting the app, change user, every screen and key, comments, feedback, return codes, known limitations, running the tests. |
+| `my_egeria_manual.md` | The My Profile App user manual — configuration, starting the app, change user, what happens when Egeria can't be reached, every screen and key, comments, feedback, return codes, known limitations, running the tests. |
 | `My-Egeria-Doc.md` | My Profile App reference guide — source layout, mixin structure, routing tables, Egeria calls and report specs per flow, flow and sequence diagrams. |
 | `output-formats-and-report-specs.md` | How `generate_output()`/report specs work: `FormatSet`/`Format`/`Column`/`ActionParameter` models, analytic functions, chart output formats. |
 | `reference-data-and-valid-metadata-mechanisms.md` | Reference data (business value lists) vs. valid metadata values (allowed values of Egeria's own properties): the types, pyegeria methods, Dr.Egeria Reference Data and Valid Metadata families, and live-verified behaviour. |

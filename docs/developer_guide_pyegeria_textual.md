@@ -629,6 +629,21 @@ list means the user switched identity, so the background load is cancelled and r
 profile exists, the app pushes `CreateProfileScreen`. This is the push → dismiss → callback
 pattern from Step 3, used to control the app's whole flow.
 
+The same pattern handles an Egeria that isn't there. Instead of exiting, a failed load records
+why in `self.load_error`, and the app pushes `ConnectionErrorScreen`. That screen retries on a
+timer (`set_interval`) and dismisses with a code the app's callback acts on: `200` when Egeria
+is back (reload the profile), `201` to change user, `402` to quit:
+
+```python
+    async def connection_error_callback(self, result: int) -> None:
+        if result == 200:
+            await self._load_or_create_profile()
+        elif result == 201:
+            await self.push_screen(ChangeUserScreen(), callback=self.change_user_callback)
+        else:
+            self.exit(402)
+```
+
 ### 7.4 Loading several tables in parallel with workers
 
 The Shop for Data screen shows five tables, each filled by a separate Egeria query:

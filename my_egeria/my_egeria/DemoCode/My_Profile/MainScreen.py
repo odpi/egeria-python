@@ -71,6 +71,7 @@ class MainScreen(Screen):
                 Option("[] Technology Types"),
                 Option("[] User Bookmarks"),
                 Option("[] My Network"),
+                Option("[] Change User"),
                 Option("[] Leave Feedback"),
                 Option("[] Feedback Log"),
                 id="other_function_list"

@@ -284,6 +284,38 @@ Input {
 .empty {
         background: transparent; /* Invisible structural spacer */
     }
+ConnectionErrorScreen, ChangeUserScreen {
+    align: center middle;
+    background: rgba(0, 0, 0, 0.6);
+}
+#connection_error_card, #change_user_card {
+    background: $panel;
+    border: thick $error;
+    padding: 1 2;
+    width: 90;
+    height: auto;
+}
+#change_user_card {
+    border: thick $accent;
+}
+#connection_error_reason {
+    color: $error;
+    margin: 1 0;
+}
+#connection_retry_status {
+    margin-bottom: 1;
+}
+#change_user_card Input {
+    margin-top: 1;
+}
+#connection_error_buttons, #change_user_buttons {
+    height: auto;
+    align: center middle;
+    margin-top: 1;
+}
+#connection_error_buttons Button, #change_user_buttons Button {
+    margin: 0 1;
+}
 /* "Link to my profile" row on the Add screens: without these the label takes the
    full row width and the Switch is clipped off the right edge */
 #add_input_container .link_row {

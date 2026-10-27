@@ -11,9 +11,10 @@ from textual import on
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen
-from textual.widgets import Header, Footer, Button, Label, Input, Static
+from textual.widgets import Header, Footer, Button, Label, Static
 
-from pyegeria import Egeria, load_app_config, settings, PyegeriaException
+from pyegeria import load_app_config, settings
+from ChangeUserScreen import ChangeUserScreen
 
 
 class SplashScreen(ModalScreen):
@@ -71,35 +72,10 @@ class SplashScreen(ModalScreen):
 
     @on(Button.Pressed, "#change_user")
     def handle_change_user(self):
-        self.query_one("#splash-card").remove_children()
-        self.query_one("#change_user").remove()
-        self.query_one("#splash-card").mount(
-            Input(placeholder="Enter new user name", id="new_user_name"),
-            Input(placeholder="Enter password for new user", id="new_user_password", password=True),
-            Button("Submit", id="submit_new_user", variant="success")
-        )
+        self.app.push_screen(ChangeUserScreen(), callback=self.change_user_callback)
 
-    @on(Button.Pressed, "#submit_new_user")
-    def handle_submit_new_user(self):
-        self.new_user = self.query_one("#new_user_name", Input).value
-        self.new_password = self.query_one("#new_user_password", Input).value
-        if not self.new_user or not self.new_password:
-            self.notify("Please enter both user name and password", severity="error", timeout=20)
-            return
-        # Validate new user credentials
-        eclient = None
-        try:
-            eclient = Egeria(
-                self.view_server,
-                self.platform_url,
-                self.new_user,
-                self.new_password,
-            )
-        except PyegeriaException as e:
-            self.notify(f"User credential validation failed: {e}", timeout=30, severity="error")
-            return
-        finally:
-            if eclient:
-                eclient.close_session()
-        self.dismiss([self.new_user, self.new_password])
+    def change_user_callback(self, result: Any) -> None:
+        """Pass validated [user, password] on to MyProfileApp.mainline; on cancel stay on the splash."""
+        if isinstance(result, list):
+            self.dismiss(result)
 

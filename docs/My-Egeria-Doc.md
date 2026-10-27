@@ -15,7 +15,9 @@ All source files named here are in `my_egeria/my_egeria/DemoCode/My_Profile/`.
 | :--- | :--- |
 | `my_egeria.py` | `MyProfileApp`: startup, profile loading, table population, menu dispatch, comments-from-main |
 | `MainScreen.py` | The dashboard: tables, Other Functions menu, row-selection tracking |
-| `SplashScreen.py` | Welcome card and Change User |
+| `SplashScreen.py` | Welcome card; its Change User button opens `ChangeUserScreen` |
+| `ChangeUserScreen.py` | Collects a new user and password and checks Egeria accepts them |
+| `ConnectionErrorScreen.py` | Shown when the profile can't be loaded; retries until Egeria accepts the credentials |
 | `CreateProfileScreen.py` | First-time profile creation |
 | `elements_crud_handler.py` | `ElementsCrudMixin`: add/edit/delete routing, comments screen routing |
 | `AddToElementsScreens.py` | `BaseAddScreen` and every Add screen |
@@ -31,7 +33,7 @@ All source files named here are in `my_egeria/my_egeria/DemoCode/My_Profile/`.
 | `network_handler.py`, `MyNetworkScreen.py` | `NetworkMixin` (peers linked by `Peer` relationships), `MyNetworkScreen` and `ConfirmRemovePeerScreen` |
 | `UserIdentitiesScreen.py` | Read-only user identity table |
 | `StatusScreen.py` | Result message with copy-GUID |
-| `profile_utils.py` | Environment check and data clean-up helpers |
+| `profile_utils.py` | Environment check, Egeria access check (`check_egeria_access`) and data clean-up helpers |
 | `my_profile.tcss` | Layout and theme |
 | `RETURN_CODES.md`, `catalog_api_calls.md` | Return-code list and Shop for Data API notes |
 
@@ -47,7 +49,10 @@ classDiagram
         BINDINGS: q, r, ctrl+f, f3
         on_mount()
         mainline(splash_return)
+        change_user() / change_user_callback()
+        connection_error_callback()
         _load_profile_and_populate()
+        _after_profile_load()
         _process_profile_data()
         _populate_tables()
         handle_option_selected()
@@ -103,15 +108,23 @@ flowchart TD
     PUSH_MAIN --> TASK["start task: _load_profile_and_populate()"]
     PUSH_MAIN --> SPLASH["push_screen('splash', callback=mainline)"]
     SPLASH -- "Continue to App: dismiss()" --> MAINLINE{"mainline(result)"}
-    SPLASH -- "Change User: dismiss([user, pwd])" --> MAINLINE
-    MAINLINE -- "list (user changed)" --> RELOAD["cancel task, set user,<br/>refresh_bindings(),<br/>_load_or_create_profile()"]
+    SPLASH -- "Change User → ChangeUserScreen:<br/>dismiss([user, pwd])" --> MAINLINE
+    MAINLINE -- "list (user changed)" --> RELOAD["cancel task,<br/>change_user(user, pwd)"]
     MAINLINE -- "None" --> AWAIT["await task"]
     TASK --> GET["MyProfile._async_get_my_profile('My-User-MD', DICT)"]
-    GET -- "PyegeriaException" --> EXIT402(["exit(402)"])
+    GET -- "PyegeriaConnectionException" --> ERR["set load_error,<br/>return False"]
+    GET -- "PyegeriaException" --> ACCESS["check_egeria_access()<br/>for the reason"] --> ERR
     GET --> PROC["_process_profile_data()<br/>• get_my_profile('User-Identities')<br/>• get_my_to_dos('My-User-ToDos')<br/>• resolve user GUID (fallback: 'Actor-Profiles')"]
     PROC --> POP["_populate_tables()"]
-    AWAIT --> FOUND{"Profile found?"}
-    RELOAD --> FOUND
+    AWAIT --> AFTER{"_after_profile_load()"}
+    RELOAD --> AFTER
+    AFTER -- "load_error set" --> CES["ConnectionErrorScreen(load_error)<br/>callback=connection_error_callback"]
+    CES -- "200 (Egeria accepts credentials)" --> RELOAD2["_load_or_create_profile()"] --> AFTER
+    CES -- "201 Change User" --> CUS["ChangeUserScreen<br/>callback=change_user_callback"]
+    CUS -- "[user, pwd]" --> RELOAD
+    CUS -- "200 (cancelled)" --> AFTER
+    CES -- "402 Quit" --> EXIT402(["exit(402)"])
+    AFTER -- "no error" --> FOUND{"Profile found?"}
     FOUND -- "Yes" --> DASH["Main dashboard"]
     FOUND -- "No" --> CPS["CreateProfileScreen<br/>callback=new_profile_return"]
     CPS -- "200" --> REREAD["re-read 'My-User-MD', populate"] --> DASH
@@ -120,8 +133,12 @@ flowchart TD
 
 - **Parallel loading.** The profile load starts as soon as the app mounts, while the splash screen is still showing. If the user switches account, the background task is cancelled and the load is repeated for the new user.
 - **Escape on the splash screen** dismisses it, the same as **Continue to App**. It must dismiss rather than `pop_screen`, because `pop_screen` discards the pushed screen's callback, so `mainline` (and the missing-profile check) would never run.
-- **Change User** also writes the new user and password into pyegeria's cached `settings.User_Profile`. Screens read the user from there, so every screen opened afterwards runs its Egeria calls as the new user.
-- **Change User check.** The splash screen builds an `Egeria` client from the new credentials and closes it again, but it does not request a token. Bad credentials are therefore only found when the profile load fails.
+- **Load failures don't exit.** `_load_profile_and_populate` catches the error, records a message in `self.load_error` and returns `False`. `_after_profile_load` (shared by the startup path and `_load_or_create_profile`) checks `load_error` *before* the missing-profile check, so an unreachable Egeria never sends the user to Create Profile. A `PyegeriaConnectionException` gives a fixed "Unable to connect to the Egeria platform at …" message; any other `PyegeriaException` calls `check_egeria_access` for the reason, because `str(e)` is often empty (for example on a 401).
+- **`ConnectionErrorScreen`** retries every `RETRY_INTERVAL` (10) seconds from a 1-second `set_interval` countdown, or on **Retry Now** (`r`). Each attempt calls `check_egeria_access` with the user in `settings.User_Profile`, and updates the reason shown if it changed. It dismisses with `200` once Egeria accepts the credentials, `201` for **Change User** (`u`) and `402` for **Quit** (`q`), stopping the timer each time. `connection_error_callback` reloads the profile on `200`, pushes `ChangeUserScreen` on `201`, and otherwise calls `exit(402)`.
+- **`check_egeria_access(view_server, platform_url, user, password)`** returns `None` if Egeria is reachable and accepts the credentials, otherwise a message. The `Egeria` constructor checks the platform answers; the token request then checks the credentials. A successful `create_egeria_bearer_token()` is not proof on its own: on a 401 it returns Egeria's JSON error body as if it were the token, so a token starting with `{` is treated as a rejection and its `exceptionErrorMessage` is reported.
+- **Change User** is reached three ways: the splash screen's button, the **Change User** menu option, and the connection error screen. All three push `ChangeUserScreen`, which validates the new credentials with `check_egeria_access` before dismissing with `[user, password]`; on a failure it shows the reason and stays open. It dismisses with `200` on Cancel or `Escape`. From the splash screen, a cancel leaves the splash showing; a list is passed on through the splash's own `dismiss` to `mainline`.
+- **`change_user(user, pwd)`** does the switch. It sets the app's user and password, writes them into pyegeria's cached `settings.User_Profile` (screens read the user from there, so every screen opened afterwards runs its Egeria calls as the new user), and exports `EGERIA_USER` / `EGERIA_USER_PASSWORD` so pyegeria clients, commands and subprocesses started from the app use them too. It then sets the main screen's subtitle to `User: <user>`, clears `my_profile_data`, calls `refresh_bindings()` (the feedback-log binding depends on the user) and runs `_load_or_create_profile()`.
+- **`change_user_callback`** handles the menu and connection-error routes. If `ChangeUserScreen` is cancelled while `load_error` is set, it calls `_after_profile_load(False)`, which puts the connection error screen back; otherwise a cancel does nothing.
 - **What `_process_profile_data` extracts** from the first `My-User-MD` record:
   - Contribution Record, which supplies the Karma Points;
   - Projects, Teams, Communities and Roles;
@@ -166,6 +183,7 @@ It returns `200` on success and `401` on failure.
 | Technology Types | `handle_technology_types_option()` |
 | User Bookmarks | `show_my_bookmarks()` |
 | My Network | `show_my_network()` |
+| Change User | `ChangeUserScreen()`, callback `change_user_callback` |
 | Leave Feedback | `action_feedback()` |
 | Feedback Log | `action_view_feedback_log()` (owner only) |
 
@@ -591,7 +609,7 @@ Screens tell the app what to do next through their `dismiss(...)` value:
 | Code | Meaning |
 | :--- | :--- |
 | `200` | Done / back |
-| `201` | Alternative navigation |
+| `201` | Alternative navigation (Change User, from the connection error screen) |
 | `210` | Quit to main |
 | `211` | Subscribe |
 | `212` | Sample data |
@@ -615,6 +633,8 @@ The suite in `tests/micro-tests/my_profile/` has one module per handler and scre
 **Running the whole app in a test.** Tests that run `MyProfileApp.run_test()` stub the profile client with `stub_profile_client()`.
 
 **My Network.** `test_network_handler.py` covers `NetworkMixin` and `MyNetworkScreen`, including the remove confirmation; `test_my_egeria.py` checks the menu routing. The feature has also been tested by hand against a live server.
+
+**Connection errors and Change User.** `test_connection_and_change_user.py` covers `check_egeria_access` (good credentials, unreachable platform, a 401 body returned as the token), `ConnectionErrorScreen` (retry, countdown, buttons), `ChangeUserScreen`, the splash screen's Change User button, and the app's callbacks: reload when Egeria comes back, change user from the error screen and the menu, cancel back to the error screen, and quit with `402`. `test_my_egeria.py` checks that a failed profile load shows the connection error screen instead of exiting, and that `change_user` updates `settings`, the environment and the main screen subtitle.
 
 **Add screens.** `test_screens.py::TestBaseAddScreen` covers the `BaseAddScreen` flow: required-field checks, create, link or no link, and keeping the form after a failed create.
 
