@@ -2251,6 +2251,107 @@ base_report_specs = FormatSetDict({
         )
     ),
 
+    "Security-Findings": FormatSet(
+        target_type="SecurityFindingAnnotation",
+        heading="Security Findings",
+        description="Security findings from one survey report, or about one element, most severe first. "
+                    "A blank CVSS score, Exploit Available or Patch Available means not recorded: Egeria "
+                    "returns 0 or false for these when they were never set.",
+        aliases=["Vulnerabilities", "Security Finding"],
+        family="Security Officer",
+        formats=[
+            Format(
+                types=["ALL"],
+                attributes=[
+                    Column(name="Finding", key="display_name"),
+                    Column(name="Type", key="finding_type"),
+                    Column(name="Severity", key="severity"),
+                    Column(name="CVSS Score", key="cvss_score"),
+                    Column(name="Vulnerabilities", key="vulnerability_identifiers"),
+                    Column(name="Weaknesses", key="weakness_identifiers"),
+                    Column(name="Affected Location", key="affected_location"),
+                    Column(name="Exploit Available", key="exploit_available"),
+                    Column(name="Package URL", key="package_url"),
+                    Column(name="Installed Version", key="installed_version"),
+                    Column(name="Fixed Version", key="fixed_version"),
+                    Column(name="Patch Available", key="patch_available"),
+                    Column(name="Identifier", key="identifier"),
+                    Column(name="Report", key="report_name"),
+                    Column(name="GUID", key="GUID"),
+                ],
+            ),
+        ],
+        action=ActionParameter(
+            function="DataDiscovery.get_security_findings",
+            optional_params=["report_guid", "element_guid", "min_severity", "finding_types"],
+            spec_params={"output_format": "DICT"},
+        ),
+    ),
+    "Penetration-Test-Findings": FormatSet(
+        target_type="PenetrationTestFindingAnnotation",
+        heading="Penetration Test Findings",
+        description="The findings of a penetration test, most severe first - the view the tester hands back. "
+                    "A blank CVSS score means not recorded.",
+        aliases=["Pen Test Findings"],
+        family="Security Officer",
+        formats=[
+            Format(
+                types=["ALL"],
+                attributes=[
+                    Column(name="Finding", key="display_name"),
+                    Column(name="Severity", key="severity"),
+                    Column(name="CVSS Score", key="cvss_score"),
+                    Column(name="Attack Vector", key="attack_vector"),
+                    Column(name="ATT&CK Techniques", key="attack_techniques"),
+                    Column(name="Privileges Gained", key="privileges_gained"),
+                    Column(name="Compromised Resources", key="compromised_resources"),
+                    Column(name="Remediation", key="remediation"),
+                    Column(name="Reproduction Steps", key="reproduction_steps"),
+                    Column(name="Report", key="report_name"),
+                    Column(name="GUID", key="GUID"),
+                ],
+            ),
+        ],
+        action=ActionParameter(
+            function="DataDiscovery.get_security_findings",
+            optional_params=["report_guid", "element_guid", "min_severity"],
+            spec_params={"output_format": "DICT", "finding_types": ["PenetrationTestFindingAnnotation"]},
+        ),
+    ),
+    "Security-Posture": FormatSet(
+        target_type="SecurityPostureAnnotation",
+        heading="Security Posture",
+        description="One row per security test run, oldest first, to show whether the estate is getting more "
+                    "secure. Blank severity counts mean the run recorded no counts; blank resource counts mean "
+                    "they were not recorded. New and resolved counts of 0 may also be unrecorded - Egeria cannot "
+                    "tell the two apart.",
+        aliases=["Security Posture History"],
+        family="Security Officer",
+        formats=[
+            Format(
+                types=["ALL"],
+                attributes=[
+                    Column(name="Report", key="report_name"),
+                    Column(name="Completed", key="report_completion_time"),
+                    Column(name="Critical", key="critical_findings"),
+                    Column(name="High", key="high_findings"),
+                    Column(name="Medium", key="medium_findings"),
+                    Column(name="Low", key="low_findings"),
+                    Column(name="None", key="none_findings"),
+                    Column(name="Resources In Scope", key="resources_in_scope_count"),
+                    Column(name="Resources Tested", key="resources_tested_count"),
+                    Column(name="New Findings", key="new_finding_count"),
+                    Column(name="Resolved Findings", key="resolved_finding_count"),
+                    Column(name="GUID", key="GUID"),
+                ],
+            ),
+        ],
+        action=ActionParameter(
+            function="DataDiscovery.get_security_posture_history",
+            optional_params=["report_qualified_name_prefix"],
+            spec_params={"output_format": "DICT"},
+        ),
+    ),
     "Statement-of-Applicability-Controls": FormatSet(
         target_type="ControlApplicability",
         heading="Statement of Applicability Controls",
