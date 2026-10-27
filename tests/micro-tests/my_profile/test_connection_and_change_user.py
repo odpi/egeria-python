@@ -15,12 +15,15 @@ from ChangeUserScreen import ChangeUserScreen
 from ConnectionErrorScreen import ConnectionErrorScreen, RETRY_INTERVAL
 from SplashScreen import SplashScreen
 from profile_utils import check_egeria_access
-from pyegeria import PyegeriaConnectionException
+import httpx
+from pyegeria import (PyegeriaConnectionException, PyegeriaTimeoutException, PyegeriaUnauthorizedException,
+                      PyegeriaClientException)
 
-BAD_CREDENTIALS_BODY = (
-    '{"class":"FFDCResponseBase","relatedHTTPCode":401,'
-    '"exceptionErrorMessage":"User authentication failed for user: garygeeke - Bad credentials"}'
-)
+TOKEN_URL = "https://localhost:9443/api/token"
+
+
+def _token_response(status: int, text: str) -> httpx.Response:
+    return httpx.Response(status, text=text, request=httpx.Request("POST", TOKEN_URL))
 
 
 class HostApp(App):
@@ -57,10 +60,28 @@ class TestCheckEgeriaAccess:
         assert error == "Unable to connect to the Egeria platform at https://localhost:9443."
 
     @patch("pyegeria.Egeria")
-    def test_bad_credentials_body_is_not_a_token(self, mock_egeria):
-        mock_egeria.return_value.create_egeria_bearer_token.return_value = BAD_CREDENTIALS_BODY
+    def test_token_request_timeout_counts_as_unreachable(self, mock_egeria):
+        mock_egeria.return_value.create_egeria_bearer_token.side_effect = PyegeriaTimeoutException(
+            None, None, httpx.ReadTimeout("timed out"))
+        error = check_egeria_access("qs-view-server", "https://localhost:9443", "garygeeke", "secret")
+        assert error == "Unable to connect to the Egeria platform at https://localhost:9443."
+        mock_egeria.return_value.close_session.assert_called_once()
+
+    @patch("pyegeria.Egeria")
+    def test_bad_credentials(self, mock_egeria):
+        mock_egeria.return_value.create_egeria_bearer_token.side_effect = PyegeriaUnauthorizedException(
+            _token_response(401, "Unauthorized: invalid user id or password"), None, {"userid": "garygeeke"})
         error = check_egeria_access("qs-view-server", "https://localhost:9443", "garygeeke", "wrong")
-        assert "Bad credentials" in error
+        assert error == "Egeria rejected the credentials for user garygeeke."
+        mock_egeria.return_value.close_session.assert_called_once()
+
+    @patch("pyegeria.Egeria")
+    def test_other_error_is_one_line(self, mock_egeria):
+        mock_egeria.return_value.create_egeria_bearer_token.side_effect = PyegeriaClientException(
+            _token_response(500, "boom"), None, {"userid": "garygeeke"})
+        error = check_egeria_access("qs-view-server", "https://localhost:9443", "garygeeke", "secret")
+        assert error.startswith("Egeria at https://localhost:9443 returned an error: ")
+        assert "\n" not in error
 
 
 class TestConnectionErrorScreen:

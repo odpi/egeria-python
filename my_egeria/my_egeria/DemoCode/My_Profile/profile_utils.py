@@ -5,7 +5,6 @@
    Utility and data transformation functions for My Profile Textual App.
 """
 
-import json
 import re
 import sys
 from typing import Any
@@ -37,33 +36,27 @@ def check_request_serialization() -> str | None:
 def check_egeria_access(view_server: str, platform_url: str, user_name: str, user_password: str) -> str | None:
     """Return None if Egeria is reachable and accepts the credentials, otherwise a message saying why not.
 
-    A successful create_egeria_bearer_token() is not proof the credentials are good:
-    on a 401 it hands back Egeria's JSON error body as if it were the token, so that
-    case is detected here instead.
+    The client constructor checks that the platform answers, and the token request
+    checks the credentials: create_egeria_bearer_token() raises on a 401/403.
+    The messages are kept to one line, as they are shown on a screen; str() of a
+    pyegeria exception is a multi-line diagnostic dump.
     """
-    from pyegeria import Egeria, PyegeriaConnectionException, PyegeriaException
+    from pyegeria import (Egeria, PyegeriaConnectionException, PyegeriaException,
+                          PyegeriaTimeoutException, PyegeriaUnauthorizedException)
 
     eclient = None
     try:
-        # The client constructor checks that the platform answers
         eclient = Egeria(view_server, platform_url, user_name, user_password)
-        token = eclient.create_egeria_bearer_token(user_name, user_password)
-    except PyegeriaConnectionException:
+        eclient.create_egeria_bearer_token(user_name, user_password)
+    except (PyegeriaConnectionException, PyegeriaTimeoutException):
         return f"Unable to connect to the Egeria platform at {platform_url}."
+    except PyegeriaUnauthorizedException:
+        return f"Egeria rejected the credentials for user {user_name}."
     except PyegeriaException as e:
-        return f"Egeria at {platform_url} returned an error: {e!s}"
+        return f"Egeria at {platform_url} returned an error: {getattr(e, 'message', '') or type(e).__name__}"
     finally:
         if eclient:
             eclient.close_session()
-
-    if not token or token == "FAILED":
-        return f"Unable to connect to the Egeria platform at {platform_url}."
-    if token.lstrip().startswith("{"):
-        try:
-            reason = json.loads(token).get("exceptionErrorMessage")
-        except ValueError:
-            reason = None
-        return reason or f"Egeria rejected the credentials for user {user_name}."
     return None
 
 
