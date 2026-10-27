@@ -777,6 +777,7 @@ class AsyncBaseCommandProcessor(ABC):
                 if self.command.verb in ["Create", "Define", "Register", "Add", "Upsert"]:
                     logger.info(f"Rewriting '{self.command.verb} {self.command.object_type}' to 'Update' as it already exists.")
                     self.command.verb = "Update"
+                    self._drop_create_defaults()
 
                 self.parsed_output["exists"] = True
                 header = self.as_is_element.get('elementHeader', {})
@@ -1953,6 +1954,22 @@ class AsyncBaseCommandProcessor(ABC):
                     results["errors"].append(f"Remove {guid}: {e}")
                 
         return results
+
+    # Control flags rather than element properties: keep their defaults on an update.
+    _KEEP_DEFAULTS_ON_UPDATE = {"Merge Update"}
+
+    def _drop_create_defaults(self) -> None:
+        """Remove spec defaults the parser filled in for a Create that has become an Update.
+
+        The parser applies defaults only for create-like verbs, so a Create rewritten to Update
+        still carries them, and a merge update would send them over the stored values (e.g.
+        isNullable: true over a stored false). Egeria 6.3 keeps an omitted number or flag
+        (odpi/egeria#9389), so leaving them out is what preserves the current value.
+        """
+        attributes = self.parsed_output.get("attributes") or {}
+        for name in [n for n, d in attributes.items()
+                     if isinstance(d, dict) and d.get("is_default") and n not in self._KEEP_DEFAULTS_ON_UPDATE]:
+            del attributes[name]
 
     def filter_update_properties(self, properties: Dict[str, Any], merge_update: bool) -> Dict[str, Any]:
         """

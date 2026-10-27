@@ -1835,7 +1835,9 @@ enough to track there too).
 
 ### ISSUE-166: Security annotation properties are Java primitives, so an unset CVSS score, exploit/patch flag or posture count reads back as 0 / false
 
-**Layer:** Egeria Server (type model / properties classes) · **Status:** open, question for the Egeria team · **Found:** 2026-10-26, while adding the 6.3 security annotation types to pyegeria (odpi/egeria-workspaces#702 hand-off, step 3; PR #495).
+**Layer:** Egeria Server (type model / properties classes) · **Status:** fixed (Egeria 6.3, odpi/egeria#9389) · **Found:** 2026-10-26, while adding the 6.3 security annotation types to pyegeria (odpi/egeria-workspaces#702 hand-off, step 3; PR #495).
+
+**FIXED 2026-10-27: odpi/egeria#9389, merged as 12b1aaae.** Verified live the same day on egeria-platform c2ca054c (throwaway VulnerabilityAnnotation ed152edb, deleted, NotFound by GUID): unset cvssScore/exploitAvailable/patchAvailable were omitted; a merge update that left out 8.6 / true / false kept them; an explicit false came back. The pyegeria workarounds below are removed on branch `feature/boxed-properties-audit`. It boxes 217 number and flag fields across 86 property beans, not only the security ones. An unset value is no longer stored and is left out of the response, and a merge update keeps a value it does not mention. Defaults move to `OpenMetadataProperty.defaultValue`, published in the Core Content Pack as `additionalProperties.defaultValue` on each property's valid metadata value. `allowsDuplicateValues` now defaults to true everywhere, including SchemaAttribute (was false). The PR does not migrate stored data: elements written by earlier servers keep the 0 / false they were stored with. **pyegeria:** fixes that work with either server are on branch `feature/boxed-properties-audit`. The client-side workarounds stay until the PR merges and pyegeria targets that server.
 
 **What happens:** in `SecurityFindingAnnotationProperties`, `VulnerabilityAnnotationProperties` and `SecurityPostureAnnotationProperties` (`frameworks/open-metadata-framework/.../properties/surveyreports/`), these fields are Java primitives with a 0 / false default:
 

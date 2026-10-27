@@ -13607,9 +13607,8 @@ class ClassificationExplorer(ServerClient):
                                            body: dict | UpdateClassificationRequestBody) -> None:
         """Update the properties of an element's UsageActivity classification. Async version.
 
-        Send every count, even with "mergeUpdate": true. Egeria's count fields are primitive longs,
-        so an omitted count arrives as 0 and overwrites the stored value (seen live: explicitGetCount
-        1 -> 0 on a findCount-only merge update). Profile maps that are omitted are kept. Sample body:
+        With "mergeUpdate": true, omitted counts and profile maps keep their stored values. Before
+        Egeria 6.3 (odpi/egeria#9389) an omitted count was reset to 0, so send every count to older servers. Sample body:
 
         {
            "class" : "UpdateClassificationRequestBody",
@@ -13707,9 +13706,8 @@ class ClassificationExplorer(ServerClient):
                                                       body: dict | UpdateClassificationRequestBody) -> None:
         """Update the properties of an element's MemberPopularityProfile classification. Async version.
 
-        Send every count, even with "mergeUpdate": true. Egeria's count fields are primitive longs,
-        so an omitted count arrives as 0 and overwrites the stored value (seen live: explicitGetCount
-        1 -> 0 on a findCount-only merge update). Profile maps that are omitted are kept. Sample body:
+        With "mergeUpdate": true, omitted counts and profile maps keep their stored values. Before
+        Egeria 6.3 (odpi/egeria#9389) an omitted count was reset to 0, so send every count to older servers. Sample body:
 
         {
            "class" : "UpdateClassificationRequestBody",
