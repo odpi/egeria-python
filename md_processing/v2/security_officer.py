@@ -3,7 +3,9 @@ Security Officer Processors for Dr.Egeria v2.
 
 Handles statements of applicability (Egeria 6.3): `Create/Update Statement of
 Applicability` and `Link/Unlink Control Applicability`, built on the
-SecurityOfficer OMVS client.
+SecurityOfficer OMVS client; and security testing results: `Create/Update
+Survey Report` (Asset Maker) and the security finding and posture summary
+commands (Data Discovery) -- see the section further down.
 
 A statement records which controls from a standard (for example the Annex A
 controls of ISO/IEC 27001) apply to the organization, why, and how far each is
@@ -71,6 +73,16 @@ def _plain_rel_body(attributes: Dict[str, Any]) -> Dict[str, Any]:
     body = set_rel_request_body("", attributes)
     body.pop("properties", None)
     return body_slimmer(body)
+
+
+def _report_sync(processor: AsyncBaseCommandProcessor, label: str, res: Dict[str, Any]) -> None:
+    """Record a sync_members result as related results on the command's output."""
+    for g in res.get("added", []):
+        processor.add_related_result(label, g)
+    for g in res.get("removed", []):
+        processor.add_related_result(label, g, message="removed")
+    if res.get("errors"):
+        processor.add_related_result(label, status="failure", message="; ".join(res["errors"]))
 
 
 class StatementOfApplicabilityProcessor(AsyncBaseCommandProcessor):
@@ -142,7 +154,7 @@ class StatementOfApplicabilityProcessor(AsyncBaseCommandProcessor):
                     guid, g, body_slimmer(set_delete_rel_request_body("GovernedBy", attributes))),
                 replace_all=replace_all,
             )
-            self._report_sync("Certification Standard", res)
+            _report_sync(self, "Certification Standard", res)
 
         if attributes.get("Scoped By", {}).get("value"):
             to_be = set(attributes["Scoped By"].get("guid_list") or [])
@@ -157,15 +169,7 @@ class StatementOfApplicabilityProcessor(AsyncBaseCommandProcessor):
                     body=body_slimmer(set_delete_rel_request_body("ScopedBy", attributes))),
                 replace_all=replace_all,
             )
-            self._report_sync("Scoped By", res)
-
-    def _report_sync(self, label: str, res: Dict[str, Any]) -> None:
-        for g in res.get("added", []):
-            self.add_related_result(label, g)
-        for g in res.get("removed", []):
-            self.add_related_result(label, g, message="removed")
-        if res.get("errors"):
-            self.add_related_result(label, status="failure", message="; ".join(res["errors"]))
+            _report_sync(self, "Scoped By", res)
 
 
 class ControlApplicabilityLinkProcessor(AsyncBaseCommandProcessor):
@@ -252,3 +256,232 @@ class ControlApplicabilityLinkProcessor(AsyncBaseCommandProcessor):
                 return {k: v for k, v in (rel.get("relationshipProperties") or {}).items()
                         if k not in ("class", "typeName")}
         return {}
+
+
+#
+# Security testing results (Egeria 6.3, model 0665). Each test run is a SurveyReport asset;
+# each finding is a SecurityFindingAnnotation (or its Vulnerability / PenetrationTestFinding
+# subtypes) and the run's summary a SecurityPostureAnnotation, linked to the report with
+# ReportedAnnotation:
+#
+#   SurveyReport --ReportSubject--> asset that was tested
+#   SurveyReport --ReportedAnnotation--> finding / posture summary
+#   affected element --AssociatedAnnotation--> finding
+#   finding from the previous run --AnnotationExtension--> the same finding in this run
+#   finding --ReferenceValueAssignment--> vulnerability type (reference data value)
+#
+
+# Dr.Egeria attribute -> Egeria property, for the annotation types' own properties.
+_ANNOTATION_FIELDS = {
+    "Summary": "summary",
+    "Severity": "severity",
+    "CVSS Score": "cvssScore",
+    "CVSS Vector": "cvssVector",
+    "Vulnerability Identifiers": "vulnerabilityIdentifiers",
+    "Weakness Identifiers": "weaknessIdentifiers",
+    "Affected Location": "affectedLocation",
+    "Evidence": "evidence",
+    "Remediation": "remediation",
+    "Exploit Available": "exploitAvailable",
+    "Package URL": "packageURL",
+    "Installed Version": "installedVersion",
+    "Fixed Version": "fixedVersion",
+    "Patch Available": "patchAvailable",
+    "Attack Vector": "attackVector",
+    "Attack Techniques": "attackTechniques",
+    "Privileges Gained": "privilegesGained",
+    "Compromised Resources": "compromisedResources",
+    "Reproduction Steps": "reproductionSteps",
+    "Finding Counts By Severity": "findingCountsBySeverity",
+    "Resources In Scope Count": "resourcesInScopeCount",
+    "Resources Tested Count": "resourcesTestedCount",
+    "New Finding Count": "newFindingCount",
+    "Resolved Finding Count": "resolvedFindingCount",
+}
+
+
+# Egeria declares these as Java primitives, so a merge update that leaves one out stores
+# its 0 / false default over the current value (confirmed live, ISSUE-166).
+_PRIMITIVE_FIELDS = ("cvssScore", "exploitAvailable", "patchAvailable", "resourcesInScopeCount",
+                     "resourcesTestedCount", "newFindingCount", "resolvedFindingCount")
+_FLOAT_FIELDS = {"cvssScore"}
+_INT_FIELDS = {"resourcesInScopeCount", "resourcesTestedCount", "newFindingCount", "resolvedFindingCount"}
+
+
+def _annotation_properties(om_type: str, qualified_name: str, attributes: Dict[str, Any]) -> Dict[str, Any]:
+    """The properties body for a security finding or posture annotation of type `om_type`."""
+    props = set_element_prop_body(om_type, qualified_name, attributes)
+    for attr_name, key in _ANNOTATION_FIELDS.items():
+        value = attributes.get(attr_name, {}).get("value")
+        if value is None or value == "" or value == []:
+            continue
+        try:
+            if key in _FLOAT_FIELDS:
+                value = float(value)
+            elif key in _INT_FIELDS:
+                value = int(value)
+        except (TypeError, ValueError):
+            raise ValueError(f"'{attr_name}' needs a number; got {value!r}") from None
+        if key == "findingCountsBySeverity" and isinstance(value, dict):
+            try:
+                value = {str(k): int(v) for k, v in value.items()}
+            except ValueError:
+                raise ValueError(f"'{attr_name}' needs a whole-number count per severity, one "
+                                 f"'severity: count' pair per line; got {value}") from None
+        props[key] = value
+    return props
+
+
+class SurveyReportProcessor(AsyncBaseCommandProcessor):
+    """Processor for Create Survey Report (and its Update transition).
+
+    A SurveyReport is an Asset, so it is created through Asset Maker; Report Subjects
+    are synced as ReportSubject relationships.
+    """
+
+    async def apply_changes(self) -> str:
+        attributes = self.parsed_output["attributes"]
+        qualified_name = self.parsed_output.get("qualified_name") or self.derive_qualified_name(attributes)
+        display_name = attributes.get("Display Name", {}).get("value") or qualified_name
+        merge_update = attributes.get("Merge Update", {}).get("value", True)
+
+        props = set_element_prop_body("SurveyReport", qualified_name, attributes)
+        props["purpose"] = attributes.get("Purpose", {}).get("value")
+        props["startTime"] = attributes.get("Start Time", {}).get("value")
+        props["completionTime"] = attributes.get("Completion Time", {}).get("value")
+
+        if self.as_is_element:
+            guid = self.as_is_element["elementHeader"]["guid"]
+            self.last_body = body = {
+                "class": "UpdateElementRequestBody",
+                "properties": self.filter_update_properties(props, merge_update),
+                "mergeUpdate": merge_update,
+            }
+            await self.client._async_update_asset(guid, body_slimmer(body))
+            verb_word = "Updated"
+        else:
+            self.last_body = body = set_create_body("SurveyReport", attributes)
+            body["properties"] = props
+            raw_guid = await self.client._async_create_asset(["SurveyReportProperties"], body_slimmer(body))
+            guid = self.extract_guid_or_raise(raw_guid, "Create Survey Report")
+            verb_word = "Created"
+
+        self.parsed_output["guid"] = guid
+        if attributes.get("Report Subjects", {}).get("value"):
+            res = await self.sync_members(
+                _related_guids(self.as_is_element, "ReportSubject"),
+                set(attributes["Report Subjects"].get("guid_list") or []),
+                lambda g: self.client._async_link_report_subject(g, guid, _plain_rel_body(attributes)),
+                lambda g: self.client._async_unlink_report_subject(
+                    g, guid, body_slimmer(set_delete_rel_request_body("ReportSubject", attributes))),
+                replace_all=not merge_update,
+            )
+            _report_sync(self, "Report Subjects", res)
+
+        update_element_dictionary(qualified_name, {"guid": guid, "display_name": display_name})
+        logger.success(f"{verb_word} Survey Report '{display_name}' with GUID {guid}")
+        return await self.render_result_markdown(guid)
+
+
+class SecurityFindingProcessor(AsyncBaseCommandProcessor):
+    """Processor for Create Security Finding / Vulnerability Finding / Penetration Test Finding
+    and Create Security Posture Summary (and their Update transitions).
+
+    A new annotation is created under its Survey Report (ReportedAnnotation, anchored to the
+    report). Affected Elements, Previous Finding and Vulnerability Type are synced as
+    AssociatedAnnotation, AnnotationExtension and ReferenceValueAssignment relationships.
+    """
+
+    async def apply_changes(self) -> str:
+        attributes = self.parsed_output["attributes"]
+        qualified_name = self.parsed_output.get("qualified_name") or self.derive_qualified_name(attributes)
+        display_name = attributes.get("Display Name", {}).get("value") or qualified_name
+        merge_update = attributes.get("Merge Update", {}).get("value", True)
+        om_type = self.get_command_spec().get("OM_TYPE")
+
+        props = _annotation_properties(om_type, qualified_name, attributes)
+
+        if self.as_is_element:
+            guid = self.as_is_element["elementHeader"]["guid"]
+            if merge_update:
+                # Without this, the merge would reset any primitive the command leaves out.
+                current = self.as_is_element.get("properties") or {}
+                for key in _PRIMITIVE_FIELDS:
+                    if key not in props and current.get(key) is not None:
+                        props[key] = current[key]
+            self.last_body = body = {
+                "class": "UpdateElementRequestBody",
+                "properties": self.filter_update_properties(props, merge_update),
+                "mergeUpdate": merge_update,
+            }
+            await self.client._async_update_annotation(guid, body_slimmer(body))
+            verb_word = "Updated"
+        else:
+            report_guid = attributes.get("Survey Report", {}).get("guid")
+            if not report_guid:
+                raise ValueError("Cannot create the finding: 'Survey Report' did not resolve to a survey report.")
+            body = set_create_body(om_type, attributes)
+            body.update({
+                "anchorGUID": report_guid,
+                "isOwnAnchor": False,
+                "parentGUID": report_guid,
+                "parentRelationshipTypeName": "ReportedAnnotation",
+                "parentAtEnd1": True,
+                "properties": props,
+            })
+            self.last_body = body = body_slimmer(body)
+            raw_guid = await self.client._async_create_annotation(body)
+            guid = self.extract_guid_or_raise(raw_guid, f"Create {self.command.object_type}")
+            verb_word = "Created"
+
+        self.parsed_output["guid"] = guid
+        await self._sync_relationships(guid, attributes, replace_all=not merge_update)
+        update_element_dictionary(qualified_name, {"guid": guid, "display_name": display_name})
+        logger.success(f"{verb_word} {self.command.object_type} '{display_name}' with GUID {guid}")
+        return await self.render_result_markdown(guid)
+
+    async def _sync_relationships(self, guid: str, attributes: Dict[str, Any], replace_all: bool) -> None:
+        """Bring the finding's relationships in line with the command.
+
+        As for statements of applicability, an attribute left out of the command
+        leaves its relationships alone, and only a replacing update removes links.
+        """
+        as_is = self.as_is_element
+        delete_body = lambda rel: body_slimmer(set_delete_rel_request_body(rel, attributes))
+
+        if attributes.get("Affected Elements", {}).get("value"):
+            res = await self.sync_members(
+                _related_guids(as_is, "AssociatedAnnotation"),
+                set(attributes["Affected Elements"].get("guid_list") or []),
+                lambda g: self.client._async_link_annotation_to_described_element(
+                    guid, g, _plain_rel_body(attributes)),
+                lambda g: self.client._async_detach_annotation_from_described_element(
+                    guid, g, delete_body("AssociatedAnnotation")),
+                replace_all=replace_all,
+            )
+            _report_sync(self, "Affected Elements", res)
+
+        if attributes.get("Previous Finding", {}).get("value"):
+            previous = attributes["Previous Finding"].get("guid")
+            res = await self.sync_members(
+                _related_guids(as_is, "AnnotationExtension") - {guid},
+                {previous} if previous else set(),
+                lambda g: self.client._async_link_annotation_to_its_predecessor(
+                    guid, g, _plain_rel_body(attributes)),
+                lambda g: self.client._async_detach_annotation_from_its_predecessor(
+                    guid, g, delete_body("AnnotationExtension")),
+                replace_all=replace_all,
+            )
+            _report_sync(self, "Previous Finding", res)
+
+        if attributes.get("Vulnerability Type", {}).get("value"):
+            vuln_type = attributes["Vulnerability Type"].get("guid")
+            res = await self.sync_members(
+                _related_guids(as_is, "ReferenceValueAssignment"),
+                {vuln_type} if vuln_type else set(),
+                lambda g: self.client._async_link_reference_value_assignment(guid, g, _plain_rel_body(attributes)),
+                lambda g: self.client._async_detach_reference_value_assignment(
+                    guid, g, delete_body("ReferenceValueAssignment")),
+                replace_all=replace_all,
+            )
+            _report_sync(self, "Vulnerability Type", res)
