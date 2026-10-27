@@ -148,7 +148,7 @@ content was changed. The numbered section list above describes the
 
 # Open Issues
 
-**At a glance** — 7 open pyegeria items, 7 awaiting re-test, 7 open Egeria Server issues.
+**At a glance** — 7 open pyegeria items, 7 awaiting re-test, 8 open Egeria Server issues.
 
 **Egeria team note, 2026-10-18 (Mandy Chessell).** Saved verbatim at
 `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`. Each entry below has a dated
@@ -188,6 +188,7 @@ between sections yet, so the lists here still show the 2026-10-12 layout.
 - ISSUE-38 (PY-18): `count_relationships_between_elements("Exception")` (276) disagrees with `ClassificationExplorer.get_relationships("Exception")` (55)
 
 **Open Egeria Server issues**
+- ISSUE-166: Security annotation properties are Java primitives, so an unset CVSS score, exploit/patch flag or posture count reads back as 0 / false
 - ISSUE-147: Every valid-metadata clear call answers OPEN-METADATA-400-011 "not found", even after a successful delete; clear-map-value deletes nothing; clear-map-name leaves the map's value set behind
 - ISSUE-143: `includeOnlyRelationships: ["PersonRoleAppointment"]` returns no relationships for a Person, although the unfiltered read has its role appointments
 - ISSUE-130: The YAML secrets store's user directory caches a user forever, so editing an existing user needs a platform restart
@@ -1829,6 +1830,34 @@ repo. Where an entry has a known pyegeria/Dr.Egeria follow-on once the
 Egeria side lands, it's noted inline (also cross-referenced from the
 "Open pyegeria items" section below where the follow-on is substantial
 enough to track there too).
+
+---
+
+### ISSUE-166: Security annotation properties are Java primitives, so an unset CVSS score, exploit/patch flag or posture count reads back as 0 / false
+
+**Layer:** Egeria Server (type model / properties classes) · **Status:** open, question for the Egeria team · **Found:** 2026-10-26, while adding the 6.3 security annotation types to pyegeria (odpi/egeria-workspaces#702 hand-off, step 3; PR #495).
+
+**What happens:** in `SecurityFindingAnnotationProperties`, `VulnerabilityAnnotationProperties` and `SecurityPostureAnnotationProperties` (`frameworks/open-metadata-framework/.../properties/surveyreports/`), these fields are Java primitives with a 0 / false default:
+
+| Class | Fields |
+|---|---|
+| `SecurityFindingAnnotationProperties` | `float cvssScore`, `boolean exploitAvailable` |
+| `VulnerabilityAnnotationProperties` | `boolean patchAvailable` |
+| `SecurityPostureAnnotationProperties` | `long resourcesInScopeCount`, `resourcesTestedCount`, `newFindingCount`, `resolvedFindingCount` |
+| `AnnotationProperties` (inherited by all four) | `long sampleSize`, `int samplePercent`, `int confidence`, `long absoluteUncertainty`, `relativeUncertainty` |
+
+So "never set" and "set to 0 / false" come back identical. Confirmed live on 2026-10-26 (egeria-platform:latest quickstart, as erinoverview on qs-view-server, throwaway `SecTest*` elements, since deleted and verified gone by GUID): a `VulnerabilityAnnotation` created with only `severity: "Medium"` read back with `cvssScore: 0.0`, `exploitAvailable: false` and `patchAvailable: false`. A `SecurityPostureAnnotation` created with only `findingCountsBySeverity` and `newFindingCount` read back with `resourcesInScopeCount: 0`, `resourcesTestedCount: 0` and `resolvedFindingCount: 0`.
+
+**Why it matters:** each of these values is a reassuring answer. A findings table that shows them as returned tells a reader "CVSS 0, no public exploit, no patch" about a finding nobody assessed, and "0 findings resolved" about a run that never recorded it. `exploitAvailable: false` is the most dangerous, since it is the field a triager sorts on.
+
+**Question for the Egeria team (Mandy):** could these become boxed types (`Float`, `Boolean`, `Long`, `Integer`) with a `null` default, so that an unset value is omitted from the response? `cvssScore` matters most: a CVSS score of 0.0 is a real rating (severity "None").
+
+**pyegeria workaround (PR #495, until then):** the security report rows (`DataDiscovery._security_row`, behind the `Security-Findings`, `Penetration-Test-Findings` and `Security-Posture` report specs) leave a value blank where a 0 or false would read as an answer nobody gave:
+- a CVSS score of 0.0 is shown only when the severity is "None";
+- `exploitAvailable` and `patchAvailable` are shown only when true;
+- 0 resources in scope means not recorded, so both resource counts are blank.
+
+`newFindingCount` / `resolvedFindingCount` of 0 cannot be told apart from unrecorded on the client at all, and the `Security-Posture` description says so. Once Egeria returns `null` for unset values, the workaround can go, apart from the "None" severity rule, which stays true either way.
 
 ---
 
