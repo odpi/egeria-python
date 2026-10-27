@@ -15,17 +15,18 @@ The app's source is in `my_egeria/my_egeria/DemoCode/My_Profile/`.
 2. [Configuration](#configuration)
 3. [Starting the App](#starting-the-app)
 4. [The Splash Screen and Changing User](#the-splash-screen-and-changing-user)
-5. [Creating Your Profile](#creating-your-profile)
-6. [The Main Screen](#the-main-screen)
-7. [Adding and Deleting Elements](#adding-and-deleting-elements)
-8. [Comments and Threaded Responses](#comments-and-threaded-responses)
-9. [Leaving Feedback](#leaving-feedback)
-10. [Other Functions Menu](#other-functions-menu)
-11. [Keyboard Reference](#keyboard-reference)
-12. [Exit and Return Codes](#exit-and-return-codes)
-13. [Troubleshooting](#troubleshooting)
-14. [Known Limitations](#known-limitations)
-15. [Running the Tests](#running-the-tests)
+5. [When Egeria Can't Be Reached](#when-egeria-cant-be-reached)
+6. [Creating Your Profile](#creating-your-profile)
+7. [The Main Screen](#the-main-screen)
+8. [Adding and Deleting Elements](#adding-and-deleting-elements)
+9. [Comments and Threaded Responses](#comments-and-threaded-responses)
+10. [Leaving Feedback](#leaving-feedback)
+11. [Other Functions Menu](#other-functions-menu)
+12. [Keyboard Reference](#keyboard-reference)
+13. [Exit and Return Codes](#exit-and-return-codes)
+14. [Troubleshooting](#troubleshooting)
+15. [Known Limitations](#known-limitations)
+16. [Running the Tests](#running-the-tests)
 
 ---
 
@@ -95,7 +96,33 @@ Behind a reverse proxy, set `MY_PROFILE_PUBLIC_URL` (or `MY_EGERIA_PUBLIC_URL`) 
 When the app starts it shows a welcome card ("Welcome to My_Profile for Egeria Users, *user*!") while your profile loads from Egeria in the background.
 
 - **Continue to App** (or `Escape`) closes the splash screen. If your profile was found, the main screen is already populated; if not, the app offers to create one (see below).
-- **Change User** replaces the card with *User Name* and *Password* fields and a **Submit** button. Both fields are required. On submit the app discards the profile it was loading and reloads everything for the new user. Every screen opened afterwards uses the new user.
+- **Change User** opens the **Change User** screen (below). If you cancel it you are back on the splash screen.
+
+### The Change User screen
+
+You can switch to a different Egeria user at any time: from the splash screen's **Change User** button, from **Change User** in the main screen's Other Functions menu, or from the [connection error screen](#when-egeria-cant-be-reached).
+
+The screen shows who you are logged in as, with *User Name* and *Password* fields. Press `Enter` in the user name field to move to the password; `Enter` in the password field (or **Submit**) submits. Both fields are required.
+
+Before switching, the app asks Egeria to log in with the new user and password. If Egeria can't be reached or rejects them, a message says why and you stay on the screen to correct them. Once Egeria accepts them, the app discards the current profile and reloads everything for the new user; the main screen's subtitle shows the new user ID. Every screen opened afterwards, and any pyegeria command started from the app, runs as the new user.
+
+**Cancel** (or `Escape`) closes the screen without changing anything.
+
+## When Egeria Can't Be Reached
+
+If the app can't load your profile at startup, because the Egeria platform isn't running or doesn't answer, or because it rejects your user ID and password, it doesn't exit. It shows a **connection error screen** instead, with:
+
+- the platform URL, view server and user it tried;
+- the reason, in red (for example *Unable to connect to the Egeria platform at https://localhost:9443.*, or Egeria's own message when the credentials are rejected);
+- a countdown to the next attempt and the number of attempts so far.
+
+The app tries again every 10 seconds. As soon as Egeria accepts your credentials, the screen closes and your profile loads; if you have no profile yet, the app offers to create one. So you can start the app first and your Egeria instance afterwards.
+
+| Button | Key | Action |
+| :--- | :--- | :--- |
+| **Retry Now** | `r` | Try again straight away |
+| **Change User** | `u` | Open the [Change User screen](#the-change-user-screen). If you cancel it, you return to the connection error screen |
+| **Quit** | `q` | Exit the app (code `402`) |
 
 ## Creating Your Profile
 
@@ -262,6 +289,9 @@ Your network is the people linked to your profile in Egeria. The screen lists th
 
 Each person in your network is linked to your profile with a `Peer` relationship. The nickname and description are stored on that relationship.
 
+### Change User
+Log in as a different Egeria user and reload the app for them. See [The Change User screen](#the-change-user-screen).
+
 ### Leave Feedback / Feedback Log
 See [Leaving Feedback](#leaving-feedback).
 
@@ -275,7 +305,8 @@ Every screen follows the same rules:
 
 | Key | Action | Where |
 | :--- | :--- | :--- |
-| `Escape` | Back | Every screen except Main; continue on the splash screen; cancel on confirm dialogs |
+| `Escape` | Back | Every screen except Main; continue on the splash screen; cancel on confirm dialogs and Change User |
+| `r` / `u` / `q` | Retry now / Change User / Quit | Connection error screen |
 | `q` | Main menu / quit the app | Every list screen / Main screen |
 | `Enter` | Select the highlighted row; continue | Tables and trees; Status screen |
 | `ctrl+s` | Save / submit the form | Add screens, Add Comment, Create Subscription, Create/Edit Profile, Feedback |
@@ -310,7 +341,7 @@ When the app exits it returns a code; screens also use codes to talk to the app.
 | `212` | Sample data request |
 | `250` | Show responses to a comment |
 | `400` / `401` | Generic failure / profile action failed |
-| `402` | Profile could not be loaded at startup |
+| `402` | Egeria could not be reached (or rejected the credentials) and you chose **Quit** on the connection error screen |
 | `403` | Profile creation cancelled or failed |
 | `412` / `413` | Error / empty result reloading a newly created profile |
 | `416` | Technology types could not be fetched |
@@ -323,14 +354,14 @@ The full list is in `RETURN_CODES.md` in the app folder.
 
 **The app exits immediately with code 430.** Your environment has an old pydantic, often because a globally installed `textual` was used. Activate the project's `.venv` and run `textual run --dev my_egeria.py` or `python my_egeria.py` from there.
 
-**The app exits with code 402.** The profile could not be retrieved. Check that:
-- `EGERIA_PLATFORM_URL` is correct and reachable (VPN and firewall included);
+**The connection error screen keeps retrying.** The profile could not be retrieved (`402` if you then quit). The red message says why. Check that:
+- `EGERIA_PLATFORM_URL` is correct and reachable (VPN and firewall included) – the screen shows the URL being tried;
 - the view server named by `EGERIA_VIEW_SERVER` is running;
-- `EGERIA_USER` and `EGERIA_USER_PASSWORD` are correct, and the user is allowed to use the view server.
+- `EGERIA_USER` and `EGERIA_USER_PASSWORD` are correct, and the user is allowed to use the view server. If the credentials are the problem, press **Change User** rather than restarting the app.
 
 **Something I added doesn't appear.** Press `ctrl+r` on the main screen. Communities you create are not linked to you yet (see Known Limitations), so they don't appear in User Associations.
 
-**The app quit unexpectedly.** The app only exits by itself in a few cases: a startup problem (codes `402`, `403`, `430`), a failure fetching technology types (`416`), or an error looking up a glossary term (`440`). A failed team lookup is reported as a message instead.
+**The app quit unexpectedly.** The app only exits by itself in a few cases: a startup problem (codes `403`, `430`; `402` only when you press Quit on the connection error screen), a failure fetching technology types (`416`), or an error looking up a glossary term (`440`). A failed team lookup is reported as a message instead.
 
 ## Known Limitations
 

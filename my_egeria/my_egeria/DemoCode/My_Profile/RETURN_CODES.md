@@ -26,6 +26,7 @@ In accordance with application conventions:
 |---|---|---|---|
 | **`400`** | `GENERIC_ERROR` / `BAD_RESULT` | General error code or user cancellation with bad result. Used in StatusScreen when copying GUID fails or user indicates bad status, and in edit elements when invalid operations occur. | `StatusScreen.py`, `EditElementsScreens.py`, `ShowCommentsScreen.py` |
 | **`401`** | `PROFILE_ACTION_FAILED` | Profile creation or profile element editing cancelled, rejected, or failed. | `CreateProfileScreen.py`, `EditElementsScreens.py` |
+| **`402`** | `EGERIA_UNAVAILABLE_QUIT` | The profile could not be loaded (Egeria unreachable, or the credentials rejected) and the user chose Quit on the connection error screen. That screen dismisses with 200 once Egeria accepts the current credentials (the app then reloads the profile), or 201 for Change User. | `my_egeria.py`, `ConnectionErrorScreen.py` |
 | **`404`** | `TECH_TYPE_NO_PROCESS_FALLBACK_FAIL` | Failed to mount empty processes option list when fallback handler encountered an unexpected error. | `TechnologyTypeScreens.py` |
 | **`405`** | `TECH_TYPE_NO_PROCESS_CREATE_FAIL` | Failed to create empty processes option list during initial widget mount. | `TechnologyTypeScreens.py` |
 | **`406`** | `TECH_TYPE_PROCESS_CREATE_FAIL` | Error creating technology type governance action processes option list widget. | `TechnologyTypeScreens.py` |

@@ -5,6 +5,7 @@
    Utility and data transformation functions for My Profile Textual App.
 """
 
+import json
 import re
 import sys
 from typing import Any
@@ -31,6 +32,39 @@ def check_request_serialization() -> str | None:
             f"pydantic >= {MIN_PYDANTIC_VERSION} - requests to Egeria would lose their parameters.\n"
             "Run the app from the project venv instead: `source .venv/bin/activate` in the egeria-python "
             "folder (then `textual run my_egeria.py --dev`), or `uv run python my_egeria.py`.")
+
+
+def check_egeria_access(view_server: str, platform_url: str, user_name: str, user_password: str) -> str | None:
+    """Return None if Egeria is reachable and accepts the credentials, otherwise a message saying why not.
+
+    A successful create_egeria_bearer_token() is not proof the credentials are good:
+    on a 401 it hands back Egeria's JSON error body as if it were the token, so that
+    case is detected here instead.
+    """
+    from pyegeria import Egeria, PyegeriaConnectionException, PyegeriaException
+
+    eclient = None
+    try:
+        # The client constructor checks that the platform answers
+        eclient = Egeria(view_server, platform_url, user_name, user_password)
+        token = eclient.create_egeria_bearer_token(user_name, user_password)
+    except PyegeriaConnectionException:
+        return f"Unable to connect to the Egeria platform at {platform_url}."
+    except PyegeriaException as e:
+        return f"Egeria at {platform_url} returned an error: {e!s}"
+    finally:
+        if eclient:
+            eclient.close_session()
+
+    if not token or token == "FAILED":
+        return f"Unable to connect to the Egeria platform at {platform_url}."
+    if token.lstrip().startswith("{"):
+        try:
+            reason = json.loads(token).get("exceptionErrorMessage")
+        except ValueError:
+            reason = None
+        return reason or f"Egeria rejected the credentials for user {user_name}."
+    return None
 
 
 def truncate_at_sequence(data: Any, target: str = "specificationMermaidGraph") -> tuple[Any, bool]:

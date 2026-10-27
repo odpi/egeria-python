@@ -8,6 +8,7 @@
    Egeria view server when PYEG_LIVE_EGERIA=1 is set.
 """
 
+import os
 from unittest.mock import MagicMock, AsyncMock, patch, PropertyMock
 import pytest
 from textual.widgets import Button, OptionList, DataTable
@@ -17,6 +18,7 @@ from my_egeria.DemoCode.My_Profile.my_egeria import MyProfileApp
 from MainScreen import MainScreen
 from CreateProfileScreen import CreateProfileScreen
 from SplashScreen import SplashScreen
+from ConnectionErrorScreen import ConnectionErrorScreen
 from UserIdentitiesScreen import UserIdentitiesScreen
 from EditElementsScreens import EditProfileScreen
 from egeria_backend import at_least, is_int, nonempty_str
@@ -174,17 +176,23 @@ class TestMyProfileAppLifecycle:
             assert isinstance(app.screen, CreateProfileScreen)
 
     @pytest.mark.asyncio
-    async def test_app_load_profile_exception_exits_402(self, backend):
+    async def test_app_load_profile_exception_shows_connection_error(self, backend):
         # Always faked: exercises the app's error handling, not the server's.
         mock_mp = MagicMock()
         mock_mp.create_egeria_bearer_token.return_value = "token"
         mock_mp._async_get_my_profile = AsyncMock(side_effect=PyegeriaException("Server error"))
         backend.always_fake("my_egeria.DemoCode.My_Profile.my_egeria.MyProfile", returns=mock_mp)
+        backend.always_fake("my_egeria.DemoCode.My_Profile.my_egeria.check_egeria_access", returns="Bad credentials")
 
         app = MyProfileApp()
         app.exit = MagicMock()
+        app.push_screen = AsyncMock()
         await app._load_or_create_profile()
-        app.exit.assert_called_once_with(402)
+        app.exit.assert_not_called()
+        assert app.load_error == f"Error retrieving the profile for {app.user_name}: Bad credentials"
+        screen = app.push_screen.call_args[0][0]
+        assert isinstance(screen, ConnectionErrorScreen)
+        assert app.push_screen.call_args.kwargs["callback"] == app.connection_error_callback
 
     def test_new_profile_return_error_code(self):
         app = MyProfileApp()
@@ -275,10 +283,13 @@ class TestMyProfileAppActionsAndOptions:
         app.show_main_screen.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_change_user_updates_settings_for_screens(self):
+    async def test_change_user_updates_settings_for_screens(self, monkeypatch):
         """After Change User, screens that read pyegeria settings must see the new user."""
         from pyegeria import settings
         from AddToElementsScreens import AddTodoScreen
+        # change_user exports the new credentials; monkeypatch puts the environment back afterwards
+        monkeypatch.setenv("EGERIA_USER", "unchanged")
+        monkeypatch.setenv("EGERIA_USER_PASSWORD", "unchanged")
         saved = (settings.User_Profile.user_name, settings.User_Profile.user_pwd)
         app = MyProfileApp()
         app._load_or_create_profile = AsyncMock()
@@ -288,6 +299,8 @@ class TestMyProfileAppActionsAndOptions:
             assert (app.user_name, app.user_password) == ("erinoverview", "erin-pwd")
             screen = AddTodoScreen("todos_table", "user-guid-123")
             assert (screen.user_name, screen.user_password) == ("erinoverview", "erin-pwd")
+            assert (os.environ["EGERIA_USER"], os.environ["EGERIA_USER_PASSWORD"]) == ("erinoverview", "erin-pwd")
+            assert app.get_screen("main").sub_title == "User: erinoverview"
             app._load_or_create_profile.assert_awaited_once()
         finally:
             settings.User_Profile.user_name, settings.User_Profile.user_pwd = saved

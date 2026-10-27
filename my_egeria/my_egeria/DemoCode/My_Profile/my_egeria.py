@@ -5,6 +5,7 @@
    This file provides the main entry point and core lifecycle for the My Profile Textual App.
 """
 
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -24,6 +25,7 @@ from pyegeria import (
     settings,
     MyProfile,
     PyegeriaException,
+    PyegeriaConnectionException,
     print_basic_exception,
     exec_report_spec, Egeria,
 )
@@ -32,6 +34,8 @@ from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.widgets import DataTable, OptionList, Header, Footer
 from SplashScreen import SplashScreen
+from ConnectionErrorScreen import ConnectionErrorScreen
+from ChangeUserScreen import ChangeUserScreen
 from CreateProfileScreen import CreateProfileScreen
 from EditElementsScreens import (
     EditProfileScreen,
@@ -79,6 +83,7 @@ from profile_utils import (
     bools_to_strings,
     extract_glossary_terms,
     check_request_serialization,
+    check_egeria_access,
     element_summary,
 )
 from tech_types_handler import TechTypesMixin
@@ -205,6 +210,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         self.user_data = {}
         self.user_identities = []
         self.user_identity = []
+        self.load_error: str | None = None  # why the last profile load could not reach Egeria
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
@@ -232,14 +238,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         if isinstance(splash_return, list):
             if hasattr(self, "_load_task") and not self._load_task.done():
                 self._load_task.cancel()
-            self.user_name = splash_return[0]
-            self.user_password = splash_return[1]
-            # Screens read the user from pyegeria's (cached) settings, so record the
-            # switch there too, or their Egeria calls would still run as the old user
-            settings.User_Profile.user_name = self.user_name
-            settings.User_Profile.user_pwd = self.user_password
-            self.refresh_bindings()
-            await self._load_or_create_profile()
+            await self.change_user(splash_return[0], splash_return[1])
         else:
             # Splash screen finished (timeout or dismissed)
             if hasattr(self, "_load_task"):
@@ -250,22 +249,47 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                 except Exception as e:
                     self.log(f"Error in parallel initial load: {e}")
                     profile_found = False
+                await self._after_profile_load(profile_found)
 
-                if not profile_found and (not hasattr(self, "my_profile_data") or not self.my_profile_data):
-                    self.log("No profile found. Prompting to create one...")
-                    await self.push_screen(
-                        CreateProfileScreen(
-                            user=self.user_name,
-                            password=self.user_password,
-                            view_server=self.view_server,
-                            platform_url=self.platform_url,
-                        ),
-                        callback=self.new_profile_return,
-                    )
+    async def change_user(self, user_name: str, user_password: str) -> None:
+        """Switch the app to new (already validated) credentials and reload the profile for that user."""
+        self.log(f"Changing user from {self.user_name} to {user_name}")
+        self.user_name = user_name
+        self.user_password = user_password
+        # Screens read the user from pyegeria's (cached) settings, so record the
+        # switch there too, or their Egeria calls would still run as the old user
+        settings.User_Profile.user_name = user_name
+        settings.User_Profile.user_pwd = user_password
+        # ...and pyegeria clients, commands and subprocesses started from this app read the environment
+        os.environ["EGERIA_USER"] = user_name
+        os.environ["EGERIA_USER_PASSWORD"] = user_password
+        self.get_screen("main").sub_title = f"User: {user_name}"
+        self.my_profile_data = None
+        self.refresh_bindings()
+        await self._load_or_create_profile()
+
+    async def change_user_callback(self, result: Any) -> None:
+        """Return from the Change User screen: a [user, password] list, or 200 if cancelled."""
+        if isinstance(result, list):
+            await self.change_user(result[0], result[1])
+        elif self.load_error:
+            # Change User was chosen from the connection error screen; go back to waiting for Egeria
+            await self._after_profile_load(False)
+
+    async def connection_error_callback(self, result: int) -> None:
+        """Return from the connection error screen: 200 Egeria is back, 201 change user, otherwise quit."""
+        self.log(f"Connection error screen returned: {result}")
+        if result == 200:
+            await self._load_or_create_profile()
+        elif result == 201:
+            await self.push_screen(ChangeUserScreen(), callback=self.change_user_callback)
+        else:
+            self.exit(402)
 
     async def _load_profile_and_populate(self) -> bool:
         """Retrieve the user's profile and populate UI tables in parallel.
         Returns True if profile exists and tables were populated, False if profile is missing."""
+        self.load_error = None
         try:
             self.my_profile_inst = MyProfile(self.view_server, self.platform_url, self.user_name, self.user_password)
             self.my_profile_inst.create_egeria_bearer_token(self.user_name, self.user_password)
@@ -278,10 +302,17 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                 if isinstance(self.my_profile_raw, dict) else self.my_profile_raw
             )
             self.log(f"retrieve profile result: {self.my_profile_data}")
+        except PyegeriaConnectionException as e:
+            self.log(f"Unable to connect to Egeria: {e!s}")
+            self.load_error = f"Unable to connect to the Egeria platform at {self.platform_url}."
+            return False
         except PyegeriaException as e:
             self.log(f"Error retrieving profile: {e!s}")
             print_basic_exception(e)
-            self.exit(402)
+            # str(e) is often empty (e.g. on a 401), so ask Egeria directly what is wrong
+            reason = (check_egeria_access(self.view_server, self.platform_url, self.user_name, self.user_password)
+                      or str(e) or type(e).__name__)
+            self.load_error = f"Error retrieving the profile for {self.user_name}: {reason}"
             return False
 
         if not self.my_profile_data:
@@ -295,6 +326,14 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
     async def _load_or_create_profile(self) -> None:
         """Load user profile; if missing, prompt to create it."""
         profile_found = await self._load_profile_and_populate()
+        await self._after_profile_load(profile_found)
+
+    async def _after_profile_load(self, profile_found: bool) -> None:
+        """Wait for Egeria if the load could not reach it; otherwise offer to create a missing profile."""
+        if self.load_error:
+            self.log(f"Profile load failed: {self.load_error}")
+            await self.push_screen(ConnectionErrorScreen(self.load_error), callback=self.connection_error_callback)
+            return
         if not profile_found and (not hasattr(self, "my_profile_data") or not self.my_profile_data):
             self.log("No profile found. Prompting to create one...")
             await self.push_screen(
@@ -681,6 +720,8 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
             self.show_my_bookmarks()
         elif selected_option == "My Network":
             self.show_my_network()
+        elif selected_option == "Change User":
+            await self.push_screen(ChangeUserScreen(), callback=self.change_user_callback)
         elif selected_option == "Subscriptions":
             await self.push_screen(ViewSubscriptionsScreen(), callback=self.view_subscriptions_callback)
         elif selected_option == "Leave Feedback":
