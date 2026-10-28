@@ -96,7 +96,11 @@ MERMAID_ATTRIBUTE_KEYS = {
     "localLineageGraph",
     "rootHierarchyMermaidGraph",
     "edgeMermaidGraph",
-    "iscimplementationGraph",
+    "iscImplementationMermaidGraph",
+    "iscDataMeshMermaidGraph",
+    "iscSystemFabricMermaidGraph",
+    "iscDataFabricMermaidGraph",
+    "iscDataMappingMermaidGraph",
     "specificationMermaidGraph",
     "solutionBlueprintMermaidGraph",
     "solutionSubcomponentMermaidGraph",
@@ -255,9 +259,28 @@ def _extract_selected_mermaid_fields(element: dict, columns_struct: Optional[dic
     for attribute in selected_fields:
         key = attribute.get("key")
         value = _get_element_value(element, key)
+        if value is None:
+            value = _get_mermaid_graph_value(element, key)
         result.append(_format_mermaid_value(value))
 
     return result
+
+
+def _get_mermaid_graph_value(element: dict, key: str | None) -> Any:
+    """Look up a top-level mermaid graph key case-insensitively.
+
+    Servers before Egeria 6.3 wrote 'iscimplementationMermaidGraph' (Jackson lower-cased the
+    leading 'ISC'); from 6.3 it is 'iscImplementationMermaidGraph'. Exact match wins.
+    """
+    if not isinstance(element, dict) or not key:
+        return None
+    if key in element:
+        return element[key]
+    key_lower = key.lower()
+    for element_key, value in element.items():
+        if isinstance(element_key, str) and element_key.lower() == key_lower:
+            return value
+    return None
 
 
 def _extract_referenceable_properties(element: dict[str, Any]) -> dict[str, Any]:
@@ -401,7 +424,7 @@ def markdown_to_html(markdown_text: str) -> str:
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Egeria Report</title>
-        <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
         <script>
             mermaid.initialize({{ startOnLoad: true }});
         </script>
@@ -1818,7 +1841,7 @@ def populate_common_columns(
             column['value'] = mermaid_val
             continue
         if key in MERMAID_GRAPHS and mermaid_dest_key not in MERMAID_GRAPHS:
-            column['value'] = element.get(key, '')
+            column['value'] = _get_mermaid_graph_value(element, key) or ''
             continue
     
     # --- Auto-generate Vega graphs for categorical counts if requested by the columns_struct ---

@@ -133,3 +133,49 @@ def test_resolve_normalize_mermaid_flag_reads_from_app_config(monkeypatch):
     assert of._resolve_normalize_mermaid_flag(default=True) is False
 
 
+
+
+def test_isc_6_3_graph_keys_render_as_mermaid():
+    elements = [{
+        "iscImplementationMermaidGraph": "flowchart TD\\n  I-->J",
+        "iscDataMeshMermaidGraph": "flowchart LR\\n  P-->Q",
+        "iscDataMappingMermaidGraph": "flowchart LR\\n  C-->D",
+    }]
+    columns_struct = {
+        "formats": {
+            "attributes": [
+                {"name": "ISC Implementation Graph", "key": "iscImplementationMermaidGraph"},
+                {"name": "ISC Data Mesh Graph", "key": "iscDataMeshMermaidGraph"},
+                {"name": "ISC Data Mapping Graph", "key": "iscDataMappingMermaidGraph"},
+            ]
+        }
+    }
+
+    result = of.extract_mermaid_only(elements, columns_struct)
+
+    assert result.count("```mermaid") == 3
+    assert "I-->J" in result and "P-->Q" in result and "C-->D" in result
+
+
+def test_isc_implementation_graph_matches_pre_6_3_lower_case_key():
+    # Servers before Egeria 6.3 wrote the key with a lower-cased 'ISC'.
+    element = {"iscimplementationMermaidGraph": "flowchart TD\\n  A-->B"}
+    columns_struct = {
+        "formats": {
+            "attributes": [
+                {"name": "ISC Implementation Graph", "key": "iscImplementationMermaidGraph"},
+            ]
+        }
+    }
+
+    assert of._get_mermaid_graph_value(element, "iscImplementationMermaidGraph") == element["iscimplementationMermaidGraph"]
+    result = of.extract_mermaid_only([element], columns_struct)
+    assert "```mermaid" in result
+    assert "A-->B" in result
+
+
+def test_mermaid_graph_titles_stay_aligned_with_keys():
+    from pyegeria.core._globals import MERMAID_GRAPH_TITLES, MERMAID_GRAPHS
+
+    assert len(MERMAID_GRAPHS) == len(MERMAID_GRAPH_TITLES)
+    assert MERMAID_GRAPH_TITLES[MERMAID_GRAPHS.index("iscDataFabricMermaidGraph")] == "ISC Data Fabric Graph"
