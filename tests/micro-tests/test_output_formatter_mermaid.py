@@ -179,3 +179,15 @@ def test_mermaid_graph_titles_stay_aligned_with_keys():
 
     assert len(MERMAID_GRAPHS) == len(MERMAID_GRAPH_TITLES)
     assert MERMAID_GRAPH_TITLES[MERMAID_GRAPHS.index("iscDataFabricMermaidGraph")] == "ISC Data Fabric Graph"
+
+
+def test_isc_graph_heading_keeps_acronym():
+    from pyegeria.core.utils import camel_to_title_case
+
+    assert camel_to_title_case("ISC Data Mesh Graph") == "ISC Data Mesh Graph"
+    assert camel_to_title_case("iscDataMeshMermaidGraph") == "ISC Data Mesh Mermaid Graph"
+
+    heading = of.make_md_attribute("ISC Data Mesh Graph", "flowchart LR\\n  P-->Q", "REPORT",
+                                   attribute_key="iscDataMeshMermaidGraph")
+    assert heading.startswith("### ISC Data Mesh Graph")
+    assert "```mermaid" in heading

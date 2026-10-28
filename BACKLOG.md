@@ -20,19 +20,6 @@ Add a micro-test either way.
 
 ---
 
-## 🟢 Low Priority — ISC graph headings render as "Isc …" in REPORT output
-
-**Status:** open
-**Added:** 2026-10-28
-
-Cosmetic. In REPORT output (e.g. `report_spec="Common-Mermaid"` on `find_information_supply_chains`), the section headings for the ISC graphs added in #503 read "### Isc Implementation Graph", "### Isc Data Mesh Graph", and so on, instead of matching the Column names ("ISC …"). The graphs themselves render correctly. Reported by the egeria-workspaces session on 6.2.14.
-
-Cause: `make_md_attribute` in `pyegeria/view/output_formatter.py` builds the heading with `camel_to_title_case(name)` (`pyegeria/core/utils.py`). That keeps a word upper-case only if it is in `REPORT_ACRONYMS` (`pyegeria/core/_globals.py`: GUID, ID, QN, API, UI), and "ISC" isn't listed. `camel_to_title_case("ISC Data Mesh Graph")` returns `'Isc Data Mesh Graph'`.
-
-Likely fix: add `"ISC"` to `REPORT_ACRONYMS`, and check that nothing relies on the title-cased form. `_is_mermaid_attribute`'s name-based fallback compares a title-cased name against `MERMAID_GRAPH_TITLES`, which already spell it "ISC …", so the fix also makes that fallback match. Add a micro-test.
-
----
-
 ## 🟡 Medium Priority — Wrap Mandy's new engine-host View Server endpoints
 
 **Status:** open, waiting on Egeria (expected "in a few days" from 2026-10-14)
