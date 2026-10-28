@@ -83,7 +83,7 @@ jobs:
         # for this action's "stable" channel, updated more often than a
         # versioned release. Pinned to its tip as of 2026-08-29; Dependabot
         # (see .github/dependabot.yml) will open a PR to re-pin as it moves.
-        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # release/v1
+        uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # release/v1
         # attestations: true is the action's own default (PEP 740, via
         # Trusted Publishing -- already in effect here through id-token:
         # write above) -- no extra input needed for Signed-Releases.
