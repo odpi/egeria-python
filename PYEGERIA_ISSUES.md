@@ -1929,7 +1929,7 @@ So "never set" and "set to 0 / false" come back identical. Confirmed live on 202
 
 ### ISSUE-165: 19 SDK methods called endpoints Egeria doesn't serve: 13 removed upstream, 6 never existed (2 since repointed)
 
-**Layer:** Pyegeria · **Status:** resolved: replacements implemented as deprecated wrappers and verified live (#485); `get_platform_organization` repointed (2026-10-24) · **Found:** 2026-10-23 by `scripts/omvs_audit.py` JAVA-MISSING (ISSUE-164).
+**Layer:** Pyegeria · **Status:** resolved: replacements implemented as deprecated wrappers and verified live (#485, released in 6.2.11); `get_platform_organization` repointed (2026-10-24) · **Found:** 2026-10-23 by `scripts/omvs_audit.py` JAVA-MISSING (ISSUE-164).
 
 **Validation.** Each URL was checked three ways:
 1. **No Spring mapping** in Egeria `main` 4486d1a7f1 (2026-10-23), the checkout `omvs_audit.py` reads.
