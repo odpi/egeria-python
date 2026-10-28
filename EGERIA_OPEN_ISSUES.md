@@ -2,7 +2,7 @@
 
 A standalone extract of the **Egeria-Server-side** issues in [`PYEGERIA_ISSUES.md`](PYEGERIA_ISSUES.md), for whoever owns the Egeria side. None of them can be fixed by editing this repo: each needs a server-side fix, an upstream bug report, or a deployment change.
 
-**`PYEGERIA_ISSUES.md` is the source of record.** This file was **re-derived from it on 2026-10-13** (its "Open Egeria Server issues" and "Awaiting re-test" index lists, plus the Egeria-side entries filed under pyegeria items). Don't edit the two independently. When an entry changes status, change it in `PYEGERIA_ISSUES.md`, then re-derive this file.
+**`PYEGERIA_ISSUES.md` is the source of record.** This file was **re-derived from it on 2026-10-13**, and updated on 2026-10-28 after the re-sort (ISSUE-166 removed as fixed in Egeria 6.3; ISSUE-79 and ISSUE-38 moved out of *Awaiting re-test*, matching their 2026-10-18 Egeria-team status) (its "Open Egeria Server issues" and "Awaiting re-test" index lists, plus the Egeria-side entries filed under pyegeria items). Don't edit the two independently. When an entry changes status, change it in `PYEGERIA_ISSUES.md`, then re-derive this file.
 
 It replaces the 2026-10-05 snapshot `docs/egeria-open-bugs-2026-10-05.md` (deleted; it's in git history). That snapshot's Egeria-team verdicts and fix evidence are now in the individual `PYEGERIA_ISSUES.md` entries.
 
@@ -11,8 +11,8 @@ It replaces the 2026-10-05 snapshot `docs/egeria-open-bugs-2026-10-05.md` (delet
 | Group | Issues |
 |---|---|
 | **Open on the Egeria side** (full entries below) | ISSUE-147, ISSUE-143, ISSUE-130, ISSUE-128, ISSUE-108 |
-| **Awaiting re-test:** a fix landed (mostly Egeria `main`, odpi/egeria#9363, merged 2026-10-06), not yet verified live | ISSUE-125, ISSUE-124, ISSUE-117, ISSUE-112, ISSUE-95, ISSUE-90, ISSUE-89, ISSUE-79, ISSUE-38 |
-| **Egeria-side, but tracked as pyegeria items** (a pyegeria change waits on Egeria) | ISSUE-146, ISSUE-132 |
+| **Awaiting re-test:** a fix landed (mostly Egeria `main`, odpi/egeria#9363, merged 2026-10-06), not yet verified live | ISSUE-125, ISSUE-124, ISSUE-117, ISSUE-112, ISSUE-95, ISSUE-90, ISSUE-89 |
+| **Egeria-side, but tracked as pyegeria items** (a pyegeria change waits on Egeria, or Egeria needs information from us) | ISSUE-146, ISSUE-132, ISSUE-79, ISSUE-38 |
 
 ## Awaiting re-test
 
@@ -25,47 +25,15 @@ It replaces the 2026-10-05 snapshot `docs/egeria-open-bugs-2026-10-05.md` (delet
 | ISSUE-95: No catalog template registered for the "Apache Kafka Server" technology type — `Create Kafka Server Element` (Asset Maker) fails with a 400 on `qs-view-server` | awaiting re-test (addressed on the Egeria side, confirmed live 2026-10-05) |
 | ISSUE-90: [fixed?] `qs-engine-host` retries `startMissedEngineActions` forever when one incomplete engine action's anchor is unreadable by the engine-host user | open |
 | ISSUE-89: No configurable bearer-token lifetime in `application.properties` — platform tokens are fixed at 3600 s, and the signing key is random per restart | awaiting re-test (addressed in Egeria source 2026-09-19; not verified on the dev platform) |
-| ISSUE-79: native survey against a template-created `FileFolder` asset fails server-side — `assetConnector` is null in `BasicFolderConnector.getFile()` | open (Egeria Server), reproduced live 2026-08-27, **re-checked |
-| ISSUE-38 (PY-18): `count_relationships_between_elements("Exception")` (276) disagrees with `ClassificationExplorer.get_relationships("Exception")` (55) | re-confirmed 2026-08-18, byte-for-byte identical to the |
 
 ## Egeria-side issues tracked as pyegeria items
 
 - **ISSUE-146: Deleting a journal entry fails with OMAG-REPOSITORY-HANDLER-400-008, and pyegeria's `remove_note` reaches the delete only through the generic Asset Maker service**: Egeria has no note/action delete, and the only route (the asset delete) fails with 400-008 for journal entries; awaiting Egeria's delete fixes. Full entry in `PYEGERIA_ISSUES.md`.
 - **ISSUE-132: `DeleteElementRequestBody` serializes the cascade flag as `cascadeDelete`; Egeria's field is `cascadedDelete` and unknown fields are ignored, so no pyegeria cascade delete has ever cascaded**: Egeria's DeleteOptions field is `cascadedDelete`; the pyegeria fix is on hold until Egeria's cascade-delete fix lands. Full entry in `PYEGERIA_ISSUES.md`.
+- **ISSUE-79: native survey against a template-created `FileFolder` asset fails server-side — `assetConnector` is null in `BasicFolderConnector.getFile()`**: Egeria cannot reproduce it and needs information from us (Egeria team, 2026-10-18; checklist in the entry). Full entry in `PYEGERIA_ISSUES.md`.
+- **ISSUE-38 (PY-18): `count_relationships_between_elements("Exception")` (276) disagrees with `ClassificationExplorer.get_relationships("Exception")` (55)**: fixed on Egeria's `oak2026` branch, pending its merge to `main` (Egeria team, 2026-10-18). Full entry in `PYEGERIA_ISSUES.md`.
 
 ## Open on the Egeria side
-
-### ISSUE-166: Security annotation properties are Java primitives, so an unset CVSS score, exploit/patch flag or posture count reads back as 0 / false
-
-**Layer:** Egeria Server (type model / properties classes) · **Status:** fixed (Egeria 6.3, odpi/egeria#9389) · **Found:** 2026-10-26, while adding the 6.3 security annotation types to pyegeria (odpi/egeria-workspaces#702 hand-off, step 3; PR #495).
-
-**FIXED 2026-10-27: odpi/egeria#9389, merged as 12b1aaae.** Verified live the same day on egeria-platform c2ca054c (throwaway VulnerabilityAnnotation ed152edb, deleted, NotFound by GUID): unset cvssScore/exploitAvailable/patchAvailable were omitted; a merge update that left out 8.6 / true / false kept them; an explicit false came back. The pyegeria workarounds below are removed on branch `feature/boxed-properties-audit`. It boxes 217 number and flag fields across 86 property beans, not only the security ones. An unset value is no longer stored and is left out of the response, and a merge update keeps a value it does not mention. Defaults move to `OpenMetadataProperty.defaultValue`, published in the Core Content Pack as `additionalProperties.defaultValue` on each property's valid metadata value. `allowsDuplicateValues` now defaults to true everywhere, including SchemaAttribute (was false). The PR does not migrate stored data: elements written by earlier servers keep the 0 / false they were stored with. **pyegeria:** fixes that work with either server are on branch `feature/boxed-properties-audit`. The client-side workarounds stay until the PR merges and pyegeria targets that server.
-
-**What happens:** in `SecurityFindingAnnotationProperties`, `VulnerabilityAnnotationProperties` and `SecurityPostureAnnotationProperties` (`frameworks/open-metadata-framework/.../properties/surveyreports/`), these fields are Java primitives with a 0 / false default:
-
-| Class | Fields |
-|---|---|
-| `SecurityFindingAnnotationProperties` | `float cvssScore`, `boolean exploitAvailable` |
-| `VulnerabilityAnnotationProperties` | `boolean patchAvailable` |
-| `SecurityPostureAnnotationProperties` | `long resourcesInScopeCount`, `resourcesTestedCount`, `newFindingCount`, `resolvedFindingCount` |
-| `AnnotationProperties` (inherited by all four) | `long sampleSize`, `int samplePercent`, `int confidence`, `long absoluteUncertainty`, `relativeUncertainty` |
-
-So "never set" and "set to 0 / false" come back identical. Confirmed live on 2026-10-26 (egeria-platform:latest quickstart, as erinoverview on qs-view-server, throwaway `SecTest*` elements, since deleted and verified gone by GUID): a `VulnerabilityAnnotation` created with only `severity: "Medium"` read back with `cvssScore: 0.0`, `exploitAvailable: false` and `patchAvailable: false`. A `SecurityPostureAnnotation` created with only `findingCountsBySeverity` and `newFindingCount` read back with `resourcesInScopeCount: 0`, `resourcesTestedCount: 0` and `resolvedFindingCount: 0`.
-
-**Why it matters:** each of these values is a reassuring answer. A findings table that shows them as returned tells a reader "CVSS 0, no public exploit, no patch" about a finding nobody assessed, and "0 findings resolved" about a run that never recorded it. `exploitAvailable: false` is the most dangerous, since it is the field a triager sorts on.
-
-**Question for the Egeria team (Mandy):** could these become boxed types (`Float`, `Boolean`, `Long`, `Integer`) with a `null` default, so that an unset value is omitted from the response? `cvssScore` matters most: a CVSS score of 0.0 is a real rating (severity "None").
-
-**Addendum 2026-10-26 (later the same day): a merge update wipes these fields.** While live-testing the Dr.Egeria finding commands (step 4), a `PenetrationTestFindingAnnotation` created with `cvssScore: 8.6` and `exploitAvailable: true` was updated with `mergeUpdate: true` and only `reproductionSteps` in the properties. Afterwards it held `cvssScore: 0.0` and `exploitAvailable: false`. Egeria cannot tell a primitive that was left out of a merge update from one set to 0 / false, so it stores the default over the current value. So any merge update of a security annotation resets the CVSS score, the exploit and patch flags, and the posture counts it doesn't mention. This raises the question above from "an unset value reads as 0" to "an update loses data". **pyegeria workaround (step 4 PR):** Dr.Egeria's `SecurityFindingProcessor` copies those fields' current values into every merge update unless the command sets them (verified live: the same update then kept 8.6 / true). Callers of `DataDiscovery.update_annotation` must do the same until Egeria changes.
-
-**pyegeria workaround (PR #495, until then):** the security report rows (`DataDiscovery._security_row`, behind the `Security-Findings`, `Penetration-Test-Findings` and `Security-Posture` report specs) leave a value blank where a 0 or false would read as an answer nobody gave:
-- a CVSS score of 0.0 is shown only when the severity is "None";
-- `exploitAvailable` and `patchAvailable` are shown only when true;
-- 0 resources in scope means not recorded, so both resource counts are blank.
-
-`newFindingCount` / `resolvedFindingCount` of 0 cannot be told apart from unrecorded on the client at all, and the `Security-Posture` description says so. Once Egeria returns `null` for unset values, the workaround can go, apart from the "None" severity rule, which stays true either way.
-
----
 
 ### ISSUE-147: Every valid-metadata clear call answers OPEN-METADATA-400-011 "not found", even after a successful delete; clear-map-value deletes nothing; clear-map-name leaves the map's value set behind
 
