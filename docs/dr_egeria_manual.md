@@ -737,6 +737,8 @@ Converts command definitions into "FormatSets" used by the Egeria reporting engi
     - The tool scans the specified directory for compact command JSON files.
     - The `--merge` flag updates the built-in report specs in `pyegeria/view/base_report_formats.py`.
     - Use `--emit code` to generate a standalone Python module.
+    - Each Create command produces `<Display-Name>-DrE-Basic` and `-DrE-Advanced` specs, for example `Information-Supply-Chain-DrE-Basic`. Always use the full name with the usage-level suffix; the bare `...-DrE` name doesn't resolve.
+    - Columns come from the command's attributes, which are inputs. To show values the server returns but nobody authors, such as mermaid graphs, add them to `GENERATED_EXTRA_COLUMNS` in `commands/tech/gen_report_specs.py`, keyed by command display name. They are appended to the spec's ALL format and offered as a MERMAID format, and `refresh_specs` keeps them. `Information Supply Chain` uses this for the five Egeria 6.3 ISC graphs. Don't add them as compact-spec attributes: that turns them into authorable template fields.
 
 ### Spec Validation (`validate_compact_specs`)
 
