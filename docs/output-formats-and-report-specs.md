@@ -445,7 +445,11 @@ The `name` field has no effect on detection for pie chart or custom graph column
 | `actionMermaidGraph` | Governance action graph |
 | `localLineageGraph` | Local lineage |
 | `edgeMermaidGraph` | Edge graph |
-| `iscImplementationGraph` | ISC implementation graph |
+| `iscImplementationMermaidGraph` | ISC implementation graph (context, solution-component design, implementation status). Servers before Egeria 6.3 sent `iscimplementationMermaidGraph`; it is matched case-insensitively |
+| `iscDataMeshMermaidGraph` | ISC data mesh graph: digital products and their dependencies (Egeria 6.3+) |
+| `iscSystemFabricMermaidGraph` | ISC system fabric graph: IT infrastructure and software capabilities (Egeria 6.3+) |
+| `iscDataFabricMermaidGraph` | ISC data fabric graph: data assets, processes and actions linked by lineage, control flow and action-requester relationships (Egeria 6.3+) |
+| `iscDataMappingMermaidGraph` | ISC data mapping graph: elements linked by data mappings, with their anchors (Egeria 6.3+) |
 | `specificationMermaidGraph` | Specification graph |
 | `solutionBlueprintMermaidGraph` | Solution blueprint |
 | `solutionSubcomponentMermaidGraph` | Solution sub-components |

@@ -245643,6 +245643,46 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "ISC Implementation Graph",
+            "key": "iscImplementationMermaidGraph",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "ISC Data Mesh Graph",
+            "key": "iscDataMeshMermaidGraph",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "ISC System Fabric Graph",
+            "key": "iscSystemFabricMermaidGraph",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "ISC Data Fabric Graph",
+            "key": "iscDataFabricMermaidGraph",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "ISC Data Mapping Graph",
+            "key": "iscDataMappingMermaidGraph",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ],
         "columns": [
@@ -245790,6 +245830,135 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "ISC Implementation Graph",
+            "key": "iscImplementationMermaidGraph",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "ISC Data Mesh Graph",
+            "key": "iscDataMeshMermaidGraph",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "ISC System Fabric Graph",
+            "key": "iscSystemFabricMermaidGraph",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "ISC Data Fabric Graph",
+            "key": "iscDataFabricMermaidGraph",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "ISC Data Mapping Graph",
+            "key": "iscDataMappingMermaidGraph",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          }
+        ]
+      },
+      {
+        "types": [
+          "MERMAID"
+        ],
+        "attributes": [
+          {
+            "name": "ISC Implementation Graph",
+            "key": "iscImplementationMermaidGraph",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "ISC Data Mesh Graph",
+            "key": "iscDataMeshMermaidGraph",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "ISC System Fabric Graph",
+            "key": "iscSystemFabricMermaidGraph",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "ISC Data Fabric Graph",
+            "key": "iscDataFabricMermaidGraph",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "ISC Data Mapping Graph",
+            "key": "iscDataMappingMermaidGraph",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          }
+        ],
+        "columns": [
+          {
+            "name": "ISC Implementation Graph",
+            "key": "iscImplementationMermaidGraph",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "ISC Data Mesh Graph",
+            "key": "iscDataMeshMermaidGraph",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "ISC System Fabric Graph",
+            "key": "iscSystemFabricMermaidGraph",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "ISC Data Fabric Graph",
+            "key": "iscDataFabricMermaidGraph",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "ISC Data Mapping Graph",
+            "key": "iscDataMappingMermaidGraph",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ]
       }
@@ -246898,6 +247067,46 @@
             "format": false,
             "detail_spec": null,
             "valid_values": null
+          },
+          {
+            "name": "ISC Implementation Graph",
+            "key": "iscImplementationMermaidGraph",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "ISC Data Mesh Graph",
+            "key": "iscDataMeshMermaidGraph",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "ISC System Fabric Graph",
+            "key": "iscSystemFabricMermaidGraph",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "ISC Data Fabric Graph",
+            "key": "iscDataFabricMermaidGraph",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "ISC Data Mapping Graph",
+            "key": "iscDataMappingMermaidGraph",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ],
         "columns": [
@@ -247254,6 +247463,135 @@
           {
             "name": "Supplementary Properties",
             "key": "supplementary_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "ISC Implementation Graph",
+            "key": "iscImplementationMermaidGraph",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "ISC Data Mesh Graph",
+            "key": "iscDataMeshMermaidGraph",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "ISC System Fabric Graph",
+            "key": "iscSystemFabricMermaidGraph",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "ISC Data Fabric Graph",
+            "key": "iscDataFabricMermaidGraph",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "ISC Data Mapping Graph",
+            "key": "iscDataMappingMermaidGraph",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          }
+        ]
+      },
+      {
+        "types": [
+          "MERMAID"
+        ],
+        "attributes": [
+          {
+            "name": "ISC Implementation Graph",
+            "key": "iscImplementationMermaidGraph",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "ISC Data Mesh Graph",
+            "key": "iscDataMeshMermaidGraph",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "ISC System Fabric Graph",
+            "key": "iscSystemFabricMermaidGraph",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "ISC Data Fabric Graph",
+            "key": "iscDataFabricMermaidGraph",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "ISC Data Mapping Graph",
+            "key": "iscDataMappingMermaidGraph",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          }
+        ],
+        "columns": [
+          {
+            "name": "ISC Implementation Graph",
+            "key": "iscImplementationMermaidGraph",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "ISC Data Mesh Graph",
+            "key": "iscDataMeshMermaidGraph",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "ISC System Fabric Graph",
+            "key": "iscSystemFabricMermaidGraph",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "ISC Data Fabric Graph",
+            "key": "iscDataFabricMermaidGraph",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
+            "name": "ISC Data Mapping Graph",
+            "key": "iscDataMappingMermaidGraph",
             "value": null,
             "format": false,
             "detail_spec": null,

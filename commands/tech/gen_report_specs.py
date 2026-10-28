@@ -95,6 +95,22 @@ LIST_EXCLUDED_KEYS = {
     "url",
 }
 
+# Display-only columns appended to a generated spec's ALL format and offered as
+# a MERMAID format, keyed by command display_name. These are values the server
+# returns (e.g. mermaid graphs), not command inputs, so they can't come from the
+# compact spec's Attributes without turning into authorable template fields.
+GENERATED_EXTRA_COLUMNS: dict[str, list[Column]] = {
+    # Egeria 6.3: find_information_supply_chains (add_implementation=True) returns
+    # up to five graphs, each present only if it has content.
+    "Information Supply Chain": [
+        Column(name="ISC Implementation Graph", key="iscImplementationMermaidGraph"),
+        Column(name="ISC Data Mesh Graph", key="iscDataMeshMermaidGraph"),
+        Column(name="ISC System Fabric Graph", key="iscSystemFabricMermaidGraph"),
+        Column(name="ISC Data Fabric Graph", key="iscDataFabricMermaidGraph"),
+        Column(name="ISC Data Mapping Graph", key="iscDataMappingMermaidGraph"),
+    ],
+}
+
 
 def _clone_column(col: Column) -> Column:
     if hasattr(col, "model_dump"):
@@ -260,19 +276,24 @@ def _extract_columns_from_attributes(attributes: Iterable[dict], usage_level: st
     return cols
 
 
-def _build_generated_formats(columns: List[Column], default_types: Optional[List[str]] = None) -> List[Format]:
+def _build_generated_formats(columns: List[Column], default_types: Optional[List[str]] = None,
+                             extra_columns: Optional[List[Column]] = None) -> List[Format]:
     filtered_columns = _filter_generated_columns(columns)
     if not filtered_columns:
         return []
 
+    extra_columns = [_clone_column(col) for col in extra_columns or []]
     if default_types is not None:
-        return [Format(types=default_types, attributes=filtered_columns)]
+        return [Format(types=default_types, attributes=filtered_columns + extra_columns)]
 
     list_columns = _order_list_columns(_filter_list_columns(filtered_columns))
-    return [
+    formats = [
         Format(types=["LIST"], attributes=list_columns),
-        Format(types=["ALL"], attributes=filtered_columns),
+        Format(types=["ALL"], attributes=filtered_columns + extra_columns),
     ]
+    if extra_columns:
+        formats.append(Format(types=["MERMAID"], attributes=[_clone_column(col) for col in extra_columns]))
+    return formats
 
 
 def _derive_target_type(cmd_key: str, cmd_obj: dict) -> str:
@@ -391,7 +412,8 @@ def build_format_sets_from_commands(
                     analytic_spec_params=(extra_constraints or {}) if extra_find else {},
                 )
 
-            formats = _build_generated_formats(columns, default_types=default_types)
+            formats = _build_generated_formats(columns, default_types=default_types,
+                                               extra_columns=GENERATED_EXTRA_COLUMNS.get(display_name))
             if not formats:
                 logger.debug(f"Skip {set_name}-{lvl}: no remaining attributes after generated filtering")
                 continue

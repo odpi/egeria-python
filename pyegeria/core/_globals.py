@@ -128,10 +128,14 @@ NO_MEMBERS_FOUND = "No members found"
 
 MERMAID_GRAPHS: list[str] = ["anchorMermaidGraph", "informationSupplyChainMermaidGraph","fieldLevelLineageGraph",
                   "actionMermaidGraph", "localLineageGraph", "edgeMermaidGraph", "iscImplementationMermaidGraph",
+                  "iscDataMeshMermaidGraph", "iscSystemFabricMermaidGraph", "iscDataFabricMermaidGraph",
+                  "iscDataMappingMermaidGraph",
                   "specificationMermaidGraph", "solutionBlueprintMermaidGraph","mermaidGraph",
                   "solutionSubcomponentMermaidGraph", "governanceActionProcessMermaidGraph"]
 MERMAID_GRAPH_TITLES = ["Anchor Mermaid Graph", "Information Supply Chain Mermaid Graph","Field Level Lineage Graph",
                   "Action Mermaid Graph", "Local Lineage Graph", "Edge Mermaid Graph", "ISC Implementation Mermaid Graph",
+                  "ISC Data Mesh Graph", "ISC System Fabric Graph", "ISC Data Fabric Graph",
+                  "ISC Data Mapping Graph",
                   "Specification Mermaid Graph", "Solution Blueprint Mermaid Graph","Mermaid Graph",
                   "Solution Subcomponent Mermaid Graph","Governance Action Process Mermaid Graph" ]
 TERM_STATUS = ["DRAFT", "PREPARED","PROPOSED","APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "DELETED", "OTHER"]

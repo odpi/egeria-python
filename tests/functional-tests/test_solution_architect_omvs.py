@@ -132,7 +132,7 @@ class TestSolutionArchitect:
             if type(response) is list:
                 print(f"Found {len(response)} information supply chains")
                 print("\n\n" + json.dumps(response, indent=4))
-                print(response[0].get("iscimplementationMermaidGraph"))
+                print(response[0].get("iscImplementationMermaidGraph"))
             elif type(response) is str:
                 print("\n\nResponse: " + response)
             assert True

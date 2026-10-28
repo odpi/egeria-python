@@ -147,3 +147,32 @@ def test_generated_report_specs_preserve_explicit_default_types_override(tmp_pat
         "display_name",
     ]
 
+
+
+def test_generated_information_supply_chain_spec_adds_isc_graph_columns(tmp_path):
+    payload = _make_compact_payload()
+    widget = payload["commands"].pop("Create Widget")
+    payload["commands"]["Create Information Supply Chain"] = {
+        **widget, "display_name": "Information Supply Chain",
+        "find_method": "SolutionArchitect.find_information_supply_chains",
+    }
+    file_path = tmp_path / "commands_testing_compact.json"
+    file_path.write_text(json.dumps(payload), encoding="utf-8")
+
+    fs = build_format_sets_from_commands(file_path)["Information-Supply-Chain-DrE-Basic"]
+    graph_keys = [
+        "iscImplementationMermaidGraph",
+        "iscDataMeshMermaidGraph",
+        "iscSystemFabricMermaidGraph",
+        "iscDataFabricMermaidGraph",
+        "iscDataMappingMermaidGraph",
+    ]
+
+    all_keys = [col["key"] for col in _get_format(fs, "REPORT")["attributes"]]
+    list_keys = [col["key"] for col in _get_format(fs, "LIST")["attributes"]]
+    mermaid_format = _get_format(fs, "MERMAID")
+
+    assert all_keys[-5:] == graph_keys
+    assert not set(graph_keys) & set(list_keys)
+    assert mermaid_format["types"] == ["MERMAID"]
+    assert [col["key"] for col in mermaid_format["attributes"]] == graph_keys
