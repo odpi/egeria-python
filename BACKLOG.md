@@ -5,6 +5,21 @@ Status: `open` · `in-progress` · `done` · `deferred`
 
 ---
 
+## 🟢 Low Priority — Bare `...-DrE` report spec name falls back to the default report
+
+**Status:** open
+**Added:** 2026-10-28
+
+Generated report specs are always named `<Display-Name>-DrE-Basic` or `-DrE-Advanced`. A caller that passes the bare name, for example `find_information_supply_chains(..., output_format="REPORT", report_spec="Information-Supply-Chain-DrE")`, gets no error. The lookup misses, and output falls back to "Reporting on Default Base Attributes - Perhaps couldn't find a valid combination of report_spec and output_format?" with an "Any Metadata Element" report. Reported by the egeria-workspaces session while checking 6.2.14. The full `-DrE-Basic` name works from `SolutionArchitect` directly.
+
+Options:
+- make `_select_from_registry` (behind `select_report_spec`/`select_report_format` in `pyegeria/view/base_report_formats.py`) resolve a bare `...-DrE` name to `-DrE-Basic`, or to the level given by `EGERIA_USAGE_LEVEL`;
+- or make the fallback message name the closest matching specs, so the missing suffix is obvious.
+
+Add a micro-test either way.
+
+---
+
 ## 🟡 Medium Priority — Wrap Mandy's new engine-host View Server endpoints
 
 **Status:** open, waiting on Egeria (expected "in a few days" from 2026-10-14)
