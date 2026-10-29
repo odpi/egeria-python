@@ -1894,6 +1894,16 @@ Sorted newest-first by `ISSUE-#` (2026-10-12). ISSUE-91 has two entries
 
 ---
 
+### ISSUE-167: The 401 auto-retry re-authenticated a caller-supplied bearer token as the client's own user
+
+**Layer:** Pyegeria · **Status:** fixed on branch `fix/external-token-no-auth-retry`, for 6.2.15 · **Found:** 2026-10-28, by the egeria-workspaces-fs portal session (Lineage Explorer queries made by a user logged in as Peter ran as erinoverview).
+
+**What happened:** on a bare 401, `BaseServerClient._async_make_request` minted a new token with `self.user_id` / `self.user_pwd` and retried. It did that whatever token was in the headers, including one the caller had set with `set_bearer_token()` for a different user. So an expired or invalid token quietly became a token for the client's user, and the request succeeded as that user with no error. `user_pwd` falls back to `settings.User_Profile.user_pwd`, so a client built without a password was exposed too. Repro on 6.2.14: `MyProfile(view, url, "erinoverview", "secret")`, then `set_bearer_token(<expired token>)`, then `get_my_profile()` returned Erin's profile. `exec_report_spec(token=..., user=..., user_pass=...)` had the same exposure.
+
+**Fix:** the client records the user it minted its current token for (`_token_minted_for`; `None` for a token from the constructor or `set_bearer_token`). The retry runs only when there is no token or the token was minted for `self.user_id`. A caller-supplied token that expires now raises `PyegeriaUnauthorizedException`. `EgeriaTech` and `Egeria` pass the minting user to their sub-clients, including ones created later, so their own tokens still renew. Tests: `tests/micro-tests/test_external_token_no_auth_retry.py`.
+
+---
+
 ### ISSUE-166: Security annotation properties are Java primitives, so an unset CVSS score, exploit/patch flag or posture count reads back as 0 / false
 
 **Layer:** Egeria Server (type model / properties classes) · **Status:** fixed (Egeria 6.3, odpi/egeria#9389); pyegeria adapted in #498, released in 6.2.13 · **Found:** 2026-10-26, while adding the 6.3 security annotation types to pyegeria (odpi/egeria-workspaces#702 hand-off, step 3; PR #495).

@@ -1918,6 +1918,7 @@ class DataDiscovery(ServerClient):
         if client is None:
             client = AssetMaker(self.view_server, self.platform_url, self.user_id, self.user_pwd,
                                 token=self.token, timeout=getattr(self, "timeout", None))
+            client._token_minted_for = self._token_minted_for
             self._asset_maker = client
         return client
 
