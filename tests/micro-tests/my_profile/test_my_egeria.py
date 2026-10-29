@@ -273,6 +273,15 @@ class TestMyProfileAppActionsAndOptions:
         await app.handle_option_selected(event)
         app.show_my_network.assert_called_once_with()
 
+    @pytest.mark.asyncio
+    async def test_work_with_communities_option_shows_communities(self):
+        app = MyProfileApp()
+        app.show_communities = MagicMock()
+        event = MagicMock()
+        event.option.prompt = "[] Work with Communities"
+        await app.handle_option_selected(event)
+        app.show_communities.assert_called_once_with()
+
     def test_status_callback(self):
         """Closing a status screen returns to the main screen; it must not end the app."""
         app = MyProfileApp()

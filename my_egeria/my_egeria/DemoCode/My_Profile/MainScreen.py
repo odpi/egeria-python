@@ -71,6 +71,7 @@ class MainScreen(Screen):
                 Option("[] Technology Types"),
                 Option("[] User Bookmarks"),
                 Option("[] My Network"),
+                Option("[] Work with Communities"),
                 Option("[] Change User"),
                 Option("[] Leave Feedback"),
                 Option("[] Feedback Log"),

@@ -289,6 +289,26 @@ Your network is the people linked to your profile in Egeria. The screen lists th
 
 Each person in your network is linked to your profile with a `Peer` relationship. The nickname and description are stored on that relationship.
 
+### Work with Communities
+The screen lists the communities you belong to (name, assignment type, what links you to it, description and GUID), lets you find others to join, and opens a community to show its members, blog and comments. If your profile has not finished loading, the app tells you to wait and does not open the screen.
+
+- **Linked Through** is **Your profile** if you joined the community yourself, or **Role: _name_** if you belong through a role you hold. A community you reach both ways is listed once.
+- **Open a community:** highlight a community in either list and press `Enter`, `ctrl+o` or **Open Community**. See [A community](#a-community) below.
+- **Find and join:** type a search term in the search field (`*` for all) and press `Enter`. Communities you already belong to are left out. Choose **Contributor** or **Observer**, highlight a community and press `ctrl+n` (or **Join Community**). Leaders and administrators are assigned by the people who manage the community, not chosen here.
+- **Leave:** highlight one of your communities and press `ctrl+d` (or **Leave Community**), then confirm with **Leave**. **Cancel** or `Escape` keeps you in it. Only the link between you and the community is removed. You can't leave a community you belong to through a role; ask whoever manages that role.
+- `Escape` or `q` returns to the main screen.
+
+Membership is an `AssignmentScope` relationship from your profile (or a role) to the community, and the assignment type is stored on that relationship.
+
+#### A community
+Opening a community shows three lists: its **latest blog posts** (the 20 newest, with title, author and date; the highlighted post's text is shown underneath), its **members** (people or roles) and the **comments** on it, newest first. You don't have to be a member to read or add to them.
+
+- **New blog post:** press `ctrl+n` (or **New Blog Post**), enter a title and the text, then press `ctrl+s` (or **Post**). **Cancel** or `Escape` discards it.
+- **Add a comment:** select the comments list and press `ctrl+n` (or press **Add Comment**), choose a comment type (Standard Comment, Question, Answer, Suggestion, Usage Experience, Requirement or Other), enter the comment and press `ctrl+s` (or **Add Comment**).
+- `Escape` returns to the communities list; `q` returns to the main screen.
+
+The community's blog is a note log attached to the community, created when the first post is made; each post is a `BlogEntry` in it. Comments are attached to the community itself.
+
 ### Change User
 Log in as a different Egeria user and reload the app for them. See [The Change User screen](#the-change-user-screen).
 
@@ -300,7 +320,7 @@ See [Leaving Feedback](#leaving-feedback).
 Every screen follows the same rules:
 
 - `Escape` goes back one level, on every screen except the main screen.
-- `q` returns to the main screen, or quits the app when you are on the main screen. Screens that are mostly text fields (Add screens, Add Comment, Create Subscription, Create/Edit Profile, Search for Term, Feedback, Template and Process forms) have no `q`, because it would be typed into the field; use `Escape`.
+- `q` returns to the main screen, or quits the app when you are on the main screen. Screens that are mostly text fields (Add screens, Add Comment, Create Subscription, Create/Edit Profile, Search for Term, Feedback, New Blog Post, Template and Process forms) have no `q`, because it would be typed into the field; use `Escape`.
 - Every other action is a `ctrl` key, and a key means the same thing wherever it appears. `ctrl` keys work even while a text field has focus.
 
 | Key | Action | Where |
@@ -309,10 +329,10 @@ Every screen follows the same rules:
 | `r` / `u` / `q` | Retry now / Change User / Quit | Connection error screen |
 | `q` | Main menu / quit the app | Every list screen / Main screen |
 | `Enter` | Select the highlighted row; continue | Tables and trees; Status screen |
-| `ctrl+s` | Save / submit the form | Add screens, Add Comment, Create Subscription, Create/Edit Profile, Feedback |
-| `ctrl+n` | Add a new item | Edit screens (row), Bookmarks, Comments, Main screen (comment) |
-| `ctrl+d` | Delete / remove the highlighted item | Edit screens, Bookmarks, My Network |
-| `ctrl+o` | Open the highlighted item | Main screen (comments), Comments (responses), My Network (person details) |
+| `ctrl+s` | Save / submit the form | Add screens, Add Comment, Create Subscription, Create/Edit Profile, Feedback, New Blog Post |
+| `ctrl+n` | Add a new item | Edit screens (row), Bookmarks, Comments, Main screen (comment), Communities (join), a community (blog post or comment) |
+| `ctrl+d` | Delete / remove the highlighted item | Edit screens, Bookmarks, My Network, Communities (leave) |
+| `ctrl+o` | Open the highlighted item | Main screen (comments), Comments (responses), My Network (person details), Communities (open a community) |
 | `ctrl+t` | Edit the selected table | Main screen |
 | `ctrl+k` | Bookmark the highlighted row | Main screen, Shop for Data |
 | `ctrl+b` | Bookmarks, with the highlighted row's GUID ready to add | Main screen, Shop for Data |
@@ -359,16 +379,17 @@ The full list is in `RETURN_CODES.md` in the app folder.
 - the view server named by `EGERIA_VIEW_SERVER` is running;
 - `EGERIA_USER` and `EGERIA_USER_PASSWORD` are correct, and the user is allowed to use the view server. If the credentials are the problem, press **Change User** rather than restarting the app.
 
-**Something I added doesn't appear.** Press `ctrl+r` on the main screen. Communities you create are not linked to you yet (see Known Limitations), so they don't appear in User Associations.
+**Something I added doesn't appear.** Press `ctrl+r` on the main screen. Communities you create are not linked to you (see Known Limitations), so they don't appear in User Associations until you join them from **Work with Communities**.
 
 **The app quit unexpectedly.** The app only exits by itself in a few cases: a startup problem (codes `403`, `430`; `402` only when you press Quit on the connection error screen), a failure fetching technology types (`416`), or an error looking up a glossary term (`440`). A failed team lookup is reported as a message instead.
 
 ## Known Limitations
 
-As of 2026-10-01, these features are incomplete or don't work as described elsewhere:
+As of 2026-10-28, these features are incomplete or don't work as described elsewhere:
 
-- **Communities you add** are not linked to you. pyegeria has no call for community membership, so the community is created but won't appear in User Associations.
+- **Communities you add** are not linked to you automatically. The community is created but won't appear in User Associations until you join it from **Work with Communities**.
 - **Not yet verified against a live Egeria server:** bookmarks, My Collections, joining a team, subscription links and starting processes. The test server was unavailable when they were added, so they have only been tested against fakes.
+- **Work with Communities** has only partly been tried against a live server. Reading and adding blog posts and comments works there; the rest (listing, finding, joining and leaving communities, and the screens themselves) has so far only been tested against fakes.
 
 ## Running the Tests
 

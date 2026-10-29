@@ -19,6 +19,8 @@ from textual.widgets import Input
 
 import AddCommentScreen
 import AddToElementsScreens
+import CommunitiesScreen
+import CommunityScreen
 import CreateProfileScreen
 import CreateSubscriptionRequestScreen
 import EditElementsScreens
@@ -40,7 +42,7 @@ import ViewSubscriptionsScreen
 from my_egeria.DemoCode.My_Profile.my_egeria import MyProfileApp
 
 MODULES = [
-    AddCommentScreen, AddToElementsScreens, CreateProfileScreen, CreateSubscriptionRequestScreen,
+    AddCommentScreen, AddToElementsScreens, CommunitiesScreen, CommunityScreen, CreateProfileScreen, CreateSubscriptionRequestScreen,
     EditElementsScreens, FeedbackScreens, GenericDataViewScreen, MainScreen, MyBookMarksScreen,
     MyNetworkScreen, MyTeamScreen, SearchForTermScreen, SelectionOverviewScreen, ShopForDataScreen,
     ShowCommentsScreen, SplashScreen, StatusScreen, TechnologyTypeScreens, UserIdentitiesScreen,
