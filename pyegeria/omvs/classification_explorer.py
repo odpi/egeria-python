@@ -8874,8 +8874,10 @@ class ClassificationExplorer(ServerClient):
             f"{self.classification_command_root}/elements/{element_guid}/retention"
         )
 
+        # Egeria renamed the class RetentionProperties (main, 2026-10); it still accepts the old name,
+        # which is the only one older servers know, so accept both (ISSUE-154).
         await self._async_new_classification_request(
-            url, prop=["RetentionClassificationProperties"], body=body
+            url, prop=["RetentionClassificationProperties", "RetentionProperties"], body=body
         )
 
     def set_retention_classification(

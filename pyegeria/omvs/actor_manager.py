@@ -3614,7 +3614,10 @@ class ActorManager(ServerClient):
         """
 
         url = (f"{self.command_root}/user-identities/{user_identity_guid}/security-group-memberships/classify")
-        await self._async_new_classification_request(url, ["SecurityGroupMembershipProperties"], body)
+        # Egeria renamed the class SecurityListMembershipProperties (main, 2026-10); it still accepts the
+        # old name, which is the only one older servers know, so accept both (ISSUE-154).
+        await self._async_new_classification_request(
+            url, ["SecurityGroupMembershipProperties", "SecurityListMembershipProperties"], body)
         logger.debug(f"Classifying User Identity {user_identity_guid} with Security Groups  {security_groups}")
 
     @dynamic_catch
@@ -4773,7 +4776,7 @@ class ActorManager(ServerClient):
         example:
         {
           "class" : "DeleteElementRequestBody",
-          "cascadeDelete" : false,
+          "cascadedDelete" : false,
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime" : "{{$isoTimestamp}}",
@@ -4814,7 +4817,7 @@ class ActorManager(ServerClient):
         example:
         {
           "class" : "DeleteElementRequestBody",
-          "cascadeDelete" : false,
+          "cascadedDelete" : false,
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime" : "{{$isoTimestamp}}",
@@ -5767,7 +5770,7 @@ class ActorManager(ServerClient):
         example:
         {
           "class" : "DeleteElementRequestBody",
-          "cascadeDelete" : false,
+          "cascadedDelete" : false,
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime" : "{{$isoTimestamp}}",
@@ -5808,7 +5811,7 @@ class ActorManager(ServerClient):
         example:
         {
           "class" : "DeleteElementRequestBody",
-          "cascadeDelete" : false,
+          "cascadedDelete" : false,
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime" : "{{$isoTimestamp}}",
@@ -6761,7 +6764,7 @@ class ActorManager(ServerClient):
         example:
         {
           "class" : "DeleteElementRequestBody",
-          "cascadeDelete" : false,
+          "cascadedDelete" : false,
           "deleteMethod" : "LOOK_FOR_LINEAGE",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
@@ -6803,7 +6806,7 @@ class ActorManager(ServerClient):
         example:
         {
           "class" : "DeleteElementRequestBody",
-          "cascadeDelete" : false,
+          "cascadedDelete" : false,
           "deleteMethod" : "LOOK_FOR_LINEAGE",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
@@ -7567,7 +7570,7 @@ class ActorManager(ServerClient):
         example:
         {
           "class" : "DeleteElementRequestBody",
-          "cascadeDelete" : false,
+          "cascadedDelete" : false,
           "deleteMethod" : "LOOK_FOR_LINEAGE",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
@@ -7609,7 +7612,7 @@ class ActorManager(ServerClient):
         example:
         {
           "class" : "DeleteElementRequestBody",
-          "cascadeDelete" : false,
+          "cascadedDelete" : false,
           "deleteMethod" : "LOOK_FOR_LINEAGE",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",

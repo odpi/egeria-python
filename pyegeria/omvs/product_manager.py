@@ -322,7 +322,7 @@ class ProductManager(CollectionManager):
         ```json
         {
           "class": "DeleteElementRequestBody",
-          "cascadeDelete": false
+          "cascadedDelete": false
         }
         ```
         """
@@ -364,7 +364,7 @@ class ProductManager(CollectionManager):
         ```json
         {
           "class": "DeleteElementRequestBody",
-          "cascadeDelete": false
+          "cascadedDelete": false
         }
         ```
         """

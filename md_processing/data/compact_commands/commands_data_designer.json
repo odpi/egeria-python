@@ -3946,7 +3946,9 @@
       "bundle": "Data Value Assignment Base",
       "custom_attributes": [
         "Data Value Specification",
-        "Element Id"
+        "Element Id",
+        "Label",
+        "Description"
       ],
       "Journal Entry": ""
     },

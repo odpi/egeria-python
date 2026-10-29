@@ -413,22 +413,14 @@ class DeleteElementRequestBody(RequestBody):
     # DeleteElementRequestBody bodies carry "deleteMethod" consistently --
     # no spelling ambiguity found for this field.
     delete_method: Optional[DeleteMethod] = None
-    # cascadeDelete: ground-truth .http files are genuinely split roughly
-    # 50/50 between "cascadeDelete" and "cascadedDelete" for this same class
-    # -- even within a single file (Egeria-api-actor-manager.http uses
-    # both). Not resolved here; "cascadeDelete" was chosen as the
-    # OUTGOING/serialized name because it's what this repo's own code has
-    # already been trying to send since before this fix
-    # (validate_delete_element_request's no-body-provided branch). Both
-    # spellings are accepted on input via validation_alias so a
-    # caller-supplied dict using either one still populates correctly.
-    # Flagged in PYEGERIA_ISSUES.md ISSUE-62 for live verification -- if a
-    # given delete endpoint actually expects "cascadedDelete" instead, this
-    # choice would need revisiting for that specific endpoint.
+    # cascadedDelete is Egeria's field (DeleteOptions.java). pyegeria sent "cascadeDelete" from the
+    # .http files until 6.2.15; Egeria ignored it until odpi/egeria#9365 added it as a @JsonAlias, so
+    # no cascade reached an older server (ISSUE-132). Sending cascadedDelete works on old and new
+    # servers (ISSUE-154 item 1). Both spellings are accepted on input.
     cascade_delete: Optional[bool] = Field(
         default=None,
         validation_alias=AliasChoices("cascadeDelete", "cascadedDelete"),
-        serialization_alias="cascadeDelete",
+        serialization_alias="cascadedDelete",
     )
     archive_date: datetime | None = None
     archive_process: str | None = None

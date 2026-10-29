@@ -51,6 +51,24 @@ ___
 >	**Description**: Threshold  for assignment.
 
 
+### Label
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: A label used to identify or categorise a relationship link.
+
+>	**Alternative Labels**: Wire Label
+
+
+### Description
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: A description.
+
+
 ### Confidence
 >	**Input Required**: False
 

@@ -25,7 +25,7 @@ from pyegeria.models import NewElementRequestBody, TemplateRequestBody, UpdateEl
     NestedDesignPatternProperties, SpecializedDesignPatternProperties, \
     RelatedDesignPatternProperties, SolutionDesignProperties, \
     SolutionComponentActorProperties, SolutionLinkingWireProperties, GetRequestBody, \
-    UpdateRelationshipRequestBody
+    UpdateRelationshipRequestBody, FilterRequestBody
 from pyegeria.view.output_formatter import extract_mermaid_only, \
     populate_common_columns
 from pyegeria.core.utils import body_slimmer, dynamic_catch
@@ -6919,6 +6919,146 @@ class SolutionArchitect(ServerClient):
         """Detach a concept bead extension."""
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_detach_concept_bead_extension(concept_bead_guid, extension_concept_bead_guid, body))
+
+    #
+    #   Solution ports (ISSUE-85; Egeria added these endpoints 2026-09-06)
+    #
+    @dynamic_catch
+    async def _async_create_solution_port(self, body: dict | NewElementRequestBody) -> str:
+        """Create a solution port, with SolutionPortProperties (which adds `direction`: IN, OUT,
+        INOUT, OUTIN or OTHER to the design model element properties). Attach it to its component
+        with link_solution_component_port. Async version."""
+        url = f"{self.solution_architect_command_root}/solution-ports"
+        return await self._async_create_element_body_request(url, ["SolutionPortProperties"], body)
+
+    @dynamic_catch
+    def create_solution_port(self, body: dict | NewElementRequestBody) -> str:
+        """Create a solution port, with SolutionPortProperties (which adds `direction`: IN, OUT,
+        INOUT, OUTIN or OTHER to the design model element properties). Attach it to its component
+        with link_solution_component_port."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_create_solution_port(body))
+
+    @dynamic_catch
+    async def _async_create_solution_port_from_template(self, body: dict | TemplateRequestBody) -> str:
+        """Create a solution port from a template. Async version."""
+        url = f"{self.solution_architect_command_root}/solution-ports/from-template"
+        return await self._async_create_element_from_template(url, body)
+
+    @dynamic_catch
+    def create_solution_port_from_template(self, body: dict | TemplateRequestBody) -> str:
+        """Create a solution port from a template."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_create_solution_port_from_template(body))
+
+    @dynamic_catch
+    async def _async_update_solution_port(self, solution_port_guid: str,
+                                          body: dict | UpdateElementRequestBody) -> None:
+        """Update the properties of a solution port. Async version."""
+        url = f"{self.solution_architect_command_root}/solution-ports/{solution_port_guid}/update"
+        await self._async_update_element_body_request(url, ["SolutionPortProperties"], body)
+
+    @dynamic_catch
+    def update_solution_port(self, solution_port_guid: str, body: dict | UpdateElementRequestBody) -> None:
+        """Update the properties of a solution port."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_update_solution_port(solution_port_guid, body))
+
+    @dynamic_catch
+    async def _async_delete_solution_port(self, solution_port_guid: str, cascade_delete: bool = False,
+                                          body: Optional[dict | DeleteElementRequestBody] = None) -> None:
+        """Delete a solution port. Async version."""
+        url = f"{self.solution_architect_command_root}/solution-ports/{solution_port_guid}/delete"
+        await self._async_delete_element_request(url, body, cascade_delete=cascade_delete)
+
+    @dynamic_catch
+    def delete_solution_port(self, solution_port_guid: str, cascade_delete: bool = False,
+                             body: Optional[dict | DeleteElementRequestBody] = None) -> None:
+        """Delete a solution port."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_delete_solution_port(solution_port_guid, cascade_delete, body))
+
+    @dynamic_catch
+    async def _async_find_solution_ports(self, search_string: str = "*",
+                                         body: Optional[dict | SearchStringRequestBody] = None,
+                                         starts_with: bool = True, ends_with: bool = False,
+                                         ignore_case: bool = False, start_from: int = 0,
+                                         page_size: int = 100, graph_query_depth: int = 3,
+                                         output_format: str = "JSON", report_spec: str | dict = None,
+                                         **kwargs) -> list[dict] | str:
+        """Retrieve the solution ports whose properties contain the search string. Async version."""
+        url = f"{self.solution_architect_command_root}/solution-ports/by-search-string"
+        return await self._async_find_request(url, _type="SolutionPort",
+                                              _gen_output=self._generate_referenceable_output,
+                                              search_string=search_string, body=body,
+                                              starts_with=starts_with, ends_with=ends_with,
+                                              ignore_case=ignore_case, start_from=start_from,
+                                              page_size=page_size, graph_query_depth=graph_query_depth,
+                                              output_format=output_format, report_spec=report_spec, **kwargs)
+
+    @dynamic_catch
+    def find_solution_ports(self, search_string: str = "*",
+                            body: Optional[dict | SearchStringRequestBody] = None,
+                            starts_with: bool = True, ends_with: bool = False,
+                            ignore_case: bool = False, start_from: int = 0,
+                            page_size: int = 100, graph_query_depth: int = 3,
+                            output_format: str = "JSON", report_spec: str | dict = None,
+                            **kwargs) -> list[dict] | str:
+        """Retrieve the solution ports whose properties contain the search string."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_find_solution_ports(search_string, body, starts_with, ends_with, ignore_case,
+                                            start_from, page_size, graph_query_depth, output_format,
+                                            report_spec, **kwargs))
+
+    @dynamic_catch
+    async def _async_get_solution_ports_by_name(self, name: str | None = None,
+                                                body: Optional[dict | FilterRequestBody] = None,
+                                                start_from: int = 0, page_size: int = 0,
+                                                graph_query_depth: int = 3, output_format: str = "JSON",
+                                                report_spec: str | dict = None, **kwargs) -> list | str:
+        """Retrieve the solution ports with a particular name. Async version."""
+        url = f"{self.solution_architect_command_root}/solution-ports/by-name"
+        return await self._async_get_name_request(url, _type="SolutionPort",
+                                                  _gen_output=self._generate_referenceable_output,
+                                                  filter_string=name, graph_query_depth=graph_query_depth,
+                                                  start_from=start_from, page_size=page_size,
+                                                  output_format=output_format, report_spec=report_spec,
+                                                  body=body, **kwargs)
+
+    @dynamic_catch
+    def get_solution_ports_by_name(self, name: str | None = None,
+                                   body: Optional[dict | FilterRequestBody] = None,
+                                   start_from: int = 0, page_size: int = 0,
+                                   graph_query_depth: int = 3, output_format: str = "JSON",
+                                   report_spec: str | dict = None, **kwargs) -> list | str:
+        """Retrieve the solution ports with a particular name."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_solution_ports_by_name(name, body, start_from, page_size, graph_query_depth,
+                                                   output_format, report_spec, **kwargs))
+
+    @dynamic_catch
+    async def _async_get_solution_port_by_guid(self, solution_port_guid: str, body: Optional[dict] = None,
+                                               graph_query_depth: int = 3, output_format: str = "JSON",
+                                               report_spec: str | dict = None, **kwargs) -> dict | str:
+        """Return the properties of a specific solution port. Async version."""
+        url = f"{self.solution_architect_command_root}/solution-ports/{solution_port_guid}/retrieve"
+        return await self._async_get_guid_request(url, _type="SolutionPort",
+                                                  _gen_output=self._generate_referenceable_output,
+                                                  graph_query_depth=graph_query_depth,
+                                                  output_format=output_format, report_spec=report_spec,
+                                                  body=body, **kwargs)
+
+    @dynamic_catch
+    def get_solution_port_by_guid(self, solution_port_guid: str, body: Optional[dict] = None,
+                                  graph_query_depth: int = 3, output_format: str = "JSON",
+                                  report_spec: str | dict = None, **kwargs) -> dict | str:
+        """Return the properties of a specific solution port."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_solution_port_by_guid(solution_port_guid, body, graph_query_depth,
+                                                  output_format, report_spec, **kwargs))
 
     @dynamic_catch
     async def _async_link_solution_component_port(self, solution_component_guid: str, solution_port_guid: str,

@@ -34,17 +34,26 @@ from pyegeria.models import (GetRequestBody, SearchStringRequestBody, FilterRequ
                              NewClassificationRequestBody, DeleteClassificationRequestBody)
 from pyegeria.core.utils import dynamic_catch
 
-GOV_DEF_PROPERTIES_LIST = ["GovernanceDefinitionProperties", "GovernanceStrategyProperties", "RegulationProperties",
-                           "GovernanceControlProperties", "SecurityAccessControlProperties", "NamingStandardRuleProperties",
-                           "CertificationTypeProperties", "LicenseTypeProperties", "GovernanceApproachProperties",
-                            "DataProcessingPurposeProperties","RegulationProperties","GovernanceControlProperties",
-                           "BusinessImperativeProperties", "RegulationArticleProperties", "ThreatProperties",
-                           "DataLensProperties","NotificationTypeProperties", "ServiceAccessControlProperties",
-                           "GovernanceZoneProperties", "GovernancePolicyProperties", "GovernancePrincipleProperties",
-                           "GovernanceObligationProperties", "GovernanceApproachProperties", "RequirementProperties",
-                           "GovernanceActionProcessProperties", "GovernanceActionTypeProperties","ResearchQuestionProperties",
-                           "TermsAndConditionsProperties", "GovernanceRuleProperties","GovernanceMetricProperties",
-                           "ServiceLevelObjectiveProperties", "MethodologyProperties"]
+# GovernanceDefinitionProperties and every subclass in its @JsonSubTypes tree, from Egeria main
+# (8de9572c, 2026-10-26). Regenerate from the Java when Egeria adds a type; a hand-kept list missed
+# DataQualityRuleProperties and others, so update_governance_definition refused them (ISSUE-158).
+GOV_DEF_PROPERTIES_LIST = [
+    "AnalyticalActionProcessProperties", "BusinessImperativeProperties", "CataloguingActionProcessProperties",
+    "CertificationTypeProperties", "DataLensProperties", "DataProcessingPurposeProperties",
+    "DataQualityRuleProperties", "DeletingActionProcessProperties", "ExceptionTypeProperties",
+    "ExploringActionProcessProperties", "GovernanceActionProcessProperties", "GovernanceActionProcessStepProperties",
+    "GovernanceActionProperties", "GovernanceActionTypeProperties", "GovernanceApproachProperties",
+    "GovernanceControlProperties", "GovernanceDefinitionProperties", "GovernanceDriverProperties",
+    "GovernanceMetricProperties", "GovernanceObligationProperties", "GovernancePolicyProperties",
+    "GovernancePrincipleProperties", "GovernanceProcedureProperties", "GovernanceResponsibilityProperties",
+    "GovernanceRuleProperties", "GovernanceStrategyProperties", "GovernanceZoneProperties",
+    "LicenseTypeProperties", "MethodologyProperties", "NamingStandardRuleProperties",
+    "NotificationTypeProperties", "ProvisioningActionProcessProperties", "RegulationArticleProperties",
+    "RegulationProperties", "RequirementProperties", "ResearchQuestionProperties",
+    "RiskProperties", "SecurityAccessControlProperties", "ServiceAccessControlProperties",
+    "ServiceLevelObjectiveProperties", "SubscribingActionProcessProperties", "SurveyingActionProcessProperties",
+    "TermsAndConditionsProperties", "ThreatProperties",
+]
 
 GOV_BASIC_TYPES = ["BusinessImperative", "RegulationArticle", "Threat", "GovernancePrinciple", "GovernanceObligation",
                    "GovernanceApproach", "GovernanceProcessingPurpose"]
