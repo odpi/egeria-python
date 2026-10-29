@@ -103,11 +103,98 @@ MyNetworkScreen {
     max-height: 12;
 }
 
+/* Title row, then my communities + find side by side */
+CommunitiesScreen {
+    grid-rows: auto 1fr;
+    background: $background;
+}
+
+#my_communities_container {
+    column-span: 2;
+    width: 100%;
+    height: 100%;
+}
+
+#find_communities_container {
+    width: 100%;
+    height: 100%;
+}
+
+#my_communities_table {
+    width: 100%;
+    height: 1fr;
+}
+
+#my_communities_buttons,
+#found_communities_buttons {
+    height: auto;
+}
+
+#join_assignment_type {
+    width: 20;
+}
+
+#communities_found_table {
+    height: auto;
+    max-height: 12;
+}
+
+/* Title row, then the blog + members side by side, then the comments */
+CommunityScreen {
+    grid-rows: auto 1fr 1fr;
+    background: $background;
+}
+
+#community_blog_container {
+    column-span: 2;
+    width: 100%;
+    height: 100%;
+}
+
+#community_members_container {
+    width: 100%;
+    height: 100%;
+}
+
+#community_comments_container {
+    column-span: 3;
+    width: 100%;
+    height: 100%;
+}
+
+#community_posts_table,
+#community_members_table,
+#community_comments_table {
+    height: auto;
+    max-height: 12;
+}
+
+#community_post_text {
+    padding: 1 0;
+}
+
+NewBlogPostScreen, AddCommunityCommentScreen {
+    grid-rows: auto 1fr;
+    background: $background;
+}
+
+#new_blog_post_container, #add_community_comment_container {
+    column-span: 3;
+}
+
+#new_blog_post_container Horizontal, #add_community_comment_container Horizontal {
+    height: auto;
+}
+
+#blog_post_text, #community_comment_text {
+    height: 10;
+}
+
 ModalScreen > Header, ModalScreen > Footer {
     column-span: 3;
 }
 
-#my_network_title, #confirm_remove_peer_title, #edit_profile_title, #create_profile_title, #edit_teams_title, #edit_roles_title, #edit_communities_title, #edit_identities_title, #status_title, #generic_data_view_title, #feedback_title, #feedback_log_title, .span-3 {
+#communities_title, #community_title, #new_blog_post_title, #add_community_comment_title, #confirm_leave_community_title, #my_network_title, #confirm_remove_peer_title, #edit_profile_title, #create_profile_title, #edit_teams_title, #edit_roles_title, #edit_communities_title, #edit_identities_title, #status_title, #generic_data_view_title, #feedback_title, #feedback_log_title, .span-3 {
     column-span: 3;
     text-align: center;
     background: darkblue;

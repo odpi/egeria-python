@@ -31,6 +31,8 @@ All source files named here are in `my_egeria/my_egeria/DemoCode/My_Profile/`.
 | `team_roles_handler.py`, `MyTeamScreen.py` | `TeamRolesMixin` and the team roster screen |
 | `bookmarks_handler.py`, `MyBookMarksScreen.py` | `BookmarksMixin` (bookmarks kept in a personal collection) and the bookmarks screen |
 | `network_handler.py`, `MyNetworkScreen.py` | `NetworkMixin` (peers linked by `Peer` relationships), `MyNetworkScreen` and `ConfirmRemovePeerScreen` |
+| `community_handler.py`, `CommunitiesScreen.py` | `CommunitiesMixin` (community membership through `AssignmentScope` relationships), `CommunitiesScreen` and `ConfirmLeaveCommunityScreen` |
+| `CommunityScreen.py` | `CommunityScreen` (one community's members, blog and comments), `NewBlogPostScreen` and `AddCommunityCommentScreen` |
 | `UserIdentitiesScreen.py` | Read-only user identity table |
 | `StatusScreen.py` | Result message with copy-GUID |
 | `profile_utils.py` | Environment check, Egeria access check (`check_egeria_access`) and data clean-up helpers |
@@ -77,6 +79,15 @@ classDiagram
         link_peer() / unlink_peer()
         get_peer_details()
     }
+    class CommunitiesMixin {
+        show_communities()
+        list_my_communities()
+        search_communities()
+        get_community_members()
+        join_community() / leave_community()
+        get_community_blog_posts() / add_community_blog_post()
+        get_community_comments() / add_community_comment()
+    }
     App <|-- MyProfileApp
     TechTypesMixin <|-- MyProfileApp
     ShopForDataMixin <|-- MyProfileApp
@@ -85,6 +96,7 @@ classDiagram
     FeedbackMixin <|-- MyProfileApp
     BookmarksMixin <|-- MyProfileApp
     NetworkMixin <|-- MyProfileApp
+    CommunitiesMixin <|-- MyProfileApp
 ```
 
 - **App bindings:**
@@ -183,6 +195,7 @@ It returns `200` on success and `401` on failure.
 | Technology Types | `handle_technology_types_option()` |
 | User Bookmarks | `show_my_bookmarks()` |
 | My Network | `show_my_network()` |
+| Work with Communities | `show_communities()` |
 | Change User | `ChangeUserScreen()`, callback `change_user_callback` |
 | Leave Feedback | `action_feedback()` |
 | Feedback Log | `action_view_feedback_log()` (owner only) |
@@ -256,7 +269,7 @@ The screen stays open for repeated adds and dismisses with `200`.
 
 `BaseAddScreen.validate(values)` lets a subclass reject values before any Egeria call. To-Do checks that its priority is a whole number; Project checks its kind and its `YYYY-MM-DD` dates.
 
-Team membership in Egeria is a `TeamMember` role (a PersonRole subtype) appointed to the person and scoped to the team by an `AssignmentScope` relationship. This is the same model Dr.Egeria's `Link Team Membership` uses. `link_element()` can read the form values through `self.last_values`. Communities have no "link to me" step, because pyegeria has no community-membership call.
+Team membership in Egeria is a `TeamMember` role (a PersonRole subtype) appointed to the person and scoped to the team by an `AssignmentScope` relationship. This is the same model Dr.Egeria's `Link Team Membership` uses. `link_element()` can read the form values through `self.last_values`. Communities have no "link to me" step; the user joins a community separately from [Work with Communities](#work-with-communities).
 
 When any Add screen closes, its `add_*_callback` calls `_after_add()`. That pops back to the main screen, which drops the edit screen's stale rows, and schedules `action_refresh()` so the new element appears.
 
@@ -564,6 +577,98 @@ sequenceDiagram
 
 ---
 
+## Work with Communities
+
+A user belongs to a community when an actor is linked to it by an `AssignmentScope` relationship, whose `assignmentType` says how they take part. The actor is either the user's own profile or a role they are appointed to. A community's blog is a `NoteLog` attached to it holding `BlogEntry` notes, and comments are attached to the community directly. `CommunitiesMixin` (`community_handler.py`) makes the Egeria calls; `CommunitiesScreen` and `CommunityScreen` only drive it through `self.app`. Each call builds a fresh `Egeria` client with a bearer token (`_community_client()`) and closes its session afterwards.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    participant App as CommunitiesMixin
+    participant CS as CommunitiesScreen
+    participant Confirm as ConfirmLeaveCommunityScreen
+    participant EG as Egeria
+
+    User->>App: Other Functions → Work with Communities
+    App->>EG: get_my_profile(JSON)
+    App->>CS: push(my community rows)
+    CS->>App: search_communities("*")
+    App->>EG: find_communities(JSON, graph_query_depth=0)
+    opt open a community (Enter / ctrl+o) — see the next diagram
+        CS->>CS: push CommunityScreen(GUID, name)
+    end
+    opt join (ctrl+n)
+        CS->>App: join_community(GUID, assignment type)
+        App->>EG: link_assignment_scope(GUID, user_GUID, AssignmentScopeProperties)
+        CS->>App: list_my_communities() and search again
+    end
+    opt leave (ctrl+d)
+        CS->>Confirm: push(community name)
+        Confirm-->>CS: True / False
+        CS->>App: leave_community(GUID)
+        App->>EG: detach_assignment_scope(GUID, user_GUID)
+        CS->>App: list_my_communities() and search again
+    end
+```
+
+| Function | What it does |
+| :--- | :--- |
+| `show_communities()` | Refuses (with a notice) if `user_GUID` isn't set yet; otherwise pushes `CommunitiesScreen(list_my_communities())` |
+| `list_my_communities()` | `get_my_profile(JSON)`, then reads the profile's own `assignmentScope` links and each `performsRoles` appointment's `nestedElements`, keeping only `Community` elements. Returns one `(name, assignment types, linked through, description, GUID)` row per community; "linked through" is `Your profile` and/or `Role: <name>`. `None` if Egeria can't be reached |
+| `search_communities(search_string)` | `find_communities(..., ignore_case=True, graph_query_depth=0)` → `(name, description, qualified name, GUID)` rows. The screen drops communities the user already belongs to |
+| `join_community(guid, assignment_type)` | `link_assignment_scope(guid, user_GUID, NewRelationshipRequestBody)` with `AssignmentScopeProperties`. The screen offers only `Contributor` and `Observer` |
+| `leave_community(guid)` | `detach_assignment_scope(guid, user_GUID, DeleteRelationshipRequestBody)`, using the same GUID order as `link_assignment_scope` (scope first, actor second) |
+
+- **Leaving only unlinks the profile.** The screen refuses to leave a community reached only through a role, because the role may be shared and belongs to whoever manages it.
+- **Refresh.** After a successful join or leave the screen re-reads the user's communities and repeats the last search.
+- **Errors.** Every Egeria failure is reported with `notify(...)` and the screen stays open; none of them exit the app.
+- **Return code.** `CommunitiesScreen` dismisses with `200` on `q`; `communities_callback` just logs it.
+
+### A community: members, blog and comments
+
+`CommunityScreen(guid, name)` loads the three lists when it mounts and reloads a list after a successful add. `ctrl+n` opens `AddCommunityCommentScreen` when the comments table has focus, otherwise `NewBlogPostScreen`; each form dismisses with a dict, or `None` on cancel.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    participant CoS as CommunityScreen
+    participant App as CommunitiesMixin
+    participant EG as Egeria
+
+    CoS->>App: get_community_members(GUID)
+    App->>EG: get_community_by_guid(JSON, graph_query_depth=1)
+    CoS->>App: get_community_blog_posts(GUID)
+    App->>EG: get_attached_note_logs(GUID)
+    App->>EG: get_notes_for_note_log(log, "BlogEntry") for each log
+    CoS->>App: get_community_comments(GUID)
+    App->>EG: get_attached_comments(GUID)
+    opt new blog post (NewBlogPostScreen)
+        CoS->>App: add_community_blog_post(GUID, name, title, text)
+        App->>EG: get_attached_note_logs(GUID)
+        App->>EG: create_note_log(GUID, NewAttachmentRequestBody) if the blog doesn't exist
+        App->>EG: create_note(log, BlogEntryProperties)
+    end
+    opt add comment (AddCommunityCommentScreen)
+        CoS->>App: add_community_comment(GUID, text, type)
+        App->>EG: add_comment_to_element(GUID, text, type)
+    end
+```
+
+| Function | What it does |
+| :--- | :--- |
+| `get_community_members(guid)` | `get_community_by_guid(guid, JSON, graph_query_depth=1)`, reading `assignedActors` → `(name, actor type, assignment type, qualified name, GUID)` rows |
+| `get_community_blog_posts(guid)` | Reads the `BlogEntry` notes from every note log attached to the community, so posts written by other tools are included and the notifications some sample communities' logs hold are not. Returns the `LATEST_POSTS` (20) newest as `(title, author, posted, text, GUID)` rows; author and time come from the element header's `versions` |
+| `add_community_blog_post(guid, name, title, text)` | Finds the note log with qualified name `NoteLog::<guid>::CommunityBlog` among those attached to the community, creating it (attached, display name "_name_ Blog") on the first post, then `create_note(log, BlogEntryProperties)` |
+| `get_community_comments(guid)` | `get_attached_comments(guid, graph_query_depth=0)` → `(comment, type, author, posted, GUID)` rows, newest first |
+| `add_community_comment(guid, text, type)` | `add_comment_to_element(guid, text, type)`; the form offers pyegeria's `COMMENT_TYPES` |
+
+- **Return codes.** `CommunityScreen` dismisses with `200` on `Escape` (back to the communities list) and `210` on `q`; on `210` `CommunitiesScreen` dismisses itself too, so `q` reaches the main screen.
+- **Membership isn't checked.** Anyone can read and add to a community's blog and comments; Egeria's quickstart deployment enforces no access rules here either.
+
+---
+
 ## Status Screen
 
 `StatusScreen(message)` shows a read-only message:
@@ -593,7 +698,7 @@ The app's `status_callback` then returns to the main screen.
 | Client | Used for |
 | :--- | :--- |
 | `MyProfile` | Profile, identities, to-dos, `add_my_profile` |
-| `Egeria` | Element create, link and delete; comments from main; bookmarks; My Network; feedback note logs; tabular data; `update_actor_profile`; `find_collections` |
+| `Egeria` | Element create, link and delete; comments from main; bookmarks; My Network; communities; feedback note logs; tabular data; `update_actor_profile`; `find_collections` |
 | `EgeriaTech` | Comments screen |
 | `AutomatedCuration` | Technology types |
 | `ProductManager` | Digital subscriptions |
@@ -634,6 +739,8 @@ The suite in `tests/micro-tests/my_profile/` has one module per handler and scre
 
 **My Network.** `test_network_handler.py` covers `NetworkMixin` and `MyNetworkScreen`, including the remove confirmation; `test_my_egeria.py` checks the menu routing. The feature has also been tested by hand against a live server.
 
+**Work with Communities.** `test_community_handler.py` covers `CommunitiesMixin`, `CommunitiesScreen` and `CommunityScreen`, including memberships through roles, the leave confirmation, refusing to leave a role membership, creating the blog on the first post and reusing it afterwards, and the post and comment forms; `test_my_egeria.py` checks the menu routing. The blog and comment functions have also been run against a live server (2026-10-28); the screens themselves have not been tried by hand there yet.
+
 **Connection errors and Change User.** `test_connection_and_change_user.py` covers `check_egeria_access` (good credentials, unreachable platform, a 401 body returned as the token), `ConnectionErrorScreen` (retry, countdown, buttons), `ChangeUserScreen`, the splash screen's Change User button, and the app's callbacks: reload when Egeria comes back, change user from the error screen and the menu, cancel back to the error screen, and quit with `402`. `test_my_egeria.py` checks that a failed profile load shows the connection error screen instead of exiting, and that `change_user` updates `settings`, the environment and the main screen subtitle.
 
 **Add screens.** `test_screens.py::TestBaseAddScreen` covers the `BaseAddScreen` flow: required-field checks, create, link or no link, and keeping the form after a failed create.
@@ -646,6 +753,7 @@ The user-visible limitations are listed in the [user manual](my_egeria_manual.md
 
 - `get_data_product_catalog_table`, `get_guid_for_qualified_name`, `display_glossary_term_details`, `tech_type_processes_details`, `unpack_egeria_data` and `display_selected_data_specification` are defined but never called.
 - Bookmarks, My Collections, team joining, subscription links and starting processes have only been tested against fakes; they haven't yet been run against a live Egeria server.
+- Work with Communities: the blog and comment functions have been run against a live server, but `list_my_communities`, `search_communities`, `get_community_members`, `join_community`, `leave_community` and the screens have only been tested against fakes.
 
 ---
 License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/),
