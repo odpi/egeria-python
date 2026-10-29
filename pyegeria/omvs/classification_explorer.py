@@ -12301,6 +12301,7 @@ class ClassificationExplorer(ServerClient):
         if client is None:
             client = CollectionManager(self.view_server, self.platform_url, self.user_id, self.user_pwd,
                                        token=self.token, timeout=getattr(self, "timeout", None))
+            client._token_minted_for = self._token_minted_for
             self._collection_mgr = client
         return client
 

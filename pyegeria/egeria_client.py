@@ -74,6 +74,8 @@ class Egeria:
         self.user_id = user_id or settings.User_Profile.user_name
         self.user_pwd = user_pwd or settings.User_Profile.user_pwd
         self.token = token
+        # See BaseServerClient._token_minted_for: None means caller-supplied.
+        self._token_minted_for = None
         self.timeout = timeout
 
         self._subclient_map = {
@@ -150,6 +152,7 @@ class Egeria:
                 self.token,
                 timeout=self.timeout,
             )
+            self._instantiated_clients[attr_name]._token_minted_for = self._token_minted_for
         return self._instantiated_clients[attr_name]
 
     def __getattr__(self, name):
@@ -170,13 +173,19 @@ class Egeria:
         # Use server_ops as a reliable helper for token generation
         helper = self._get_subclient("server_ops")
         token_val = helper.create_egeria_bearer_token(user_id, user_pwd)
-        self.set_bearer_token(token_val)
+        self._share_token(token_val, user_id or helper.user_id)
         return token_val
 
     def set_bearer_token(self, token: str) -> None:
+        self._share_token(token, None)
+
+    def _share_token(self, token: str, minted_for: str | None) -> None:
+        """Install a token on this client and every active sub-client, keeping who it was minted for."""
         self.token = token
+        self._token_minted_for = minted_for
         for sub in self._instantiated_clients.values():
             sub.set_bearer_token(token)
+            sub._token_minted_for = minted_for
 
     def get_token(self) -> str:
         if self.token: return self.token

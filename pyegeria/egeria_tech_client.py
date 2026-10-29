@@ -84,6 +84,8 @@ class EgeriaTech:
         self.user_id = user_id or settings.User_Profile.user_name
         self.user_pwd = user_pwd or settings.User_Profile.user_pwd
         self.token = token
+        # See BaseServerClient._token_minted_for: None means caller-supplied.
+        self._token_minted_for = None
         self.timeout = timeout
 
         # Mapping of attribute names to their classes for lazy loading
@@ -166,6 +168,7 @@ class EgeriaTech:
                 self.token,
                 timeout=self.timeout,
             )
+            self._instantiated_clients[attr_name]._token_minted_for = self._token_minted_for
         return self._instantiated_clients[attr_name]
 
     def __getattr__(self, name):
@@ -196,7 +199,7 @@ class EgeriaTech:
         # Use a reliable sub-client to generate the token (e.g., collections)
         helper = self._get_subclient("collections")
         token_val = await helper._async_create_egeria_bearer_token(user_id, password, new_password)
-        self.set_bearer_token(token_val)
+        self._share_token(token_val, user_id or helper.user_id)
         return token_val
 
     def create_egeria_bearer_token(self, user_id: str = None, password: str = None, new_password: str = None) -> str:
@@ -204,14 +207,20 @@ class EgeriaTech:
         # Use a reliable sub-client to generate the token (e.g., collections)
         helper = self._get_subclient("collections")
         token_val = helper.create_egeria_bearer_token(user_id, password, new_password)
-        self.set_bearer_token(token_val)
+        self._share_token(token_val, user_id or helper.user_id)
         return token_val
 
     def set_bearer_token(self, token: str) -> None:
         """Update token for the tech client and all active sub-clients."""
+        self._share_token(token, None)
+
+    def _share_token(self, token: str, minted_for: str | None) -> None:
+        """Install a token on this client and every active sub-client, keeping who it was minted for."""
         self.token = token
+        self._token_minted_for = minted_for
         for sub in self._instantiated_clients.values():
             sub.set_bearer_token(token)
+            sub._token_minted_for = minted_for
 
     def get_token(self) -> str:
         """Retrieve the current token from state or an active sub-client."""

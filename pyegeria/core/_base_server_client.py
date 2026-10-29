@@ -112,6 +112,11 @@ class BaseServerClient:
         self.page_size = page_size or max_paging_size
         self.token_src = token_src
         self.token = token
+        # The user a bearer token was minted for by this client, or None for a token
+        # supplied by the caller (constructor or set_bearer_token), whose owner we can't know.
+        # The 401 auto-retry only re-mints for a token this client minted for its own user;
+        # re-minting over someone else's token would silently switch the request's identity.
+        self._token_minted_for = None
         self.local_qualifier = local_qualifier or settings.User_Profile.egeria_local_qualifier
         self.organization_name = organization_name or settings.Environment.organization_name
         
@@ -281,6 +286,7 @@ class BaseServerClient:
         self.token_src = "Egeria"
         self.headers["Authorization"] = f"Bearer {token}"
         self.text_headers["Authorization"] = f"Bearer {token}"
+        self._token_minted_for = user_id
         return token
 
     def create_egeria_bearer_token(
@@ -389,11 +395,25 @@ class BaseServerClient:
         ------
         PyegeriaInvalidParameterException
             If the token is invalid.
+
+        Notes
+        -----
+        A token set here is never silently replaced: when it expires, requests raise
+        PyegeriaUnauthorizedException rather than re-authenticating as this client's
+        user_id, which may not be the user the token belongs to.
         """
         validate_name(token)
         self.token_src = source
         self.headers["Authorization"] = f"Bearer {token}"
         self.text_headers["Authorization"] = f"Bearer {token}"
+        self._token_minted_for = None
+
+    def _owns_token(self) -> bool:
+        """True if there is no bearer token, or this client minted it for its own user_id."""
+        return (
+            "Authorization" not in self.headers
+            or self._token_minted_for == self.user_id
+        )
 
     def get_token(self) -> str:
         """Retrieve and return the current bearer token.
@@ -617,8 +637,13 @@ class BaseServerClient:
             # feasible fix, since the response carries no signal to distinguish
             # "expired" from "wrong credentials"/"insufficient permission".
             # _retry_on_auth=False on the recursive call guarantees at most one
-            # retry ever happens.
-            if status_code_from_error == 401 and _retry_on_auth and self.user_pwd:
+            # retry ever happens. Only when the current token (if any) was minted
+            # here for self.user_id - a caller-supplied token may belong to another
+            # user, and re-minting would quietly run the request as self.user_id.
+            if (
+                status_code_from_error == 401 and _retry_on_auth and self.user_pwd
+                and self._owns_token()
+            ):
                 try:
                     new_token = await self._async_create_egeria_bearer_token()
                 except Exception:

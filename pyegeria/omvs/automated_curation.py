@@ -2540,6 +2540,7 @@ class AutomatedCuration(ServerClient):
             client = GovernanceEngine(self.view_server, self.platform_url, self.user_id, self.user_pwd,
                                       token=self.token, timeout=getattr(self, "timeout", None),
                                       legacy_fallback=True)
+            client._token_minted_for = self._token_minted_for
             self._gov_engine_client = client
         return client
 
