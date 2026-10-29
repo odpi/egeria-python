@@ -274,7 +274,7 @@ Changes to `pyegeria/` (SDK API, config, report formatting) can break both.
 - `format_set_executor.py`: `exec_report_spec()` — runs either path; `SERIES`/`BAR`/`PIE` output formats wrap an analytic function's result as a Vega-Lite chart (dispatched before normal Format-row lookup, so no `FormatSet` needs to declare those as a `Format` row).
 - `analytic_registry.py` / `analytic_demo_specs.py`: the catalog of analytic functions (`AnalyticFunctionSpec.generic` marks whether what it counts is a parameter or hardcoded) and one real, executable demo `FormatSet` per registered function.
 - `_output_dashboard_sheet_models.py`: `DashboardSheet`/`Placement` — a local (not yet Egeria-native) model for user-authored dashboards, built via Dr.Egeria's `Create Dashboard Sheet`/`Link Report to Dashboard Sheet`/`Add Text on Dashboard Sheet` (`md_processing/v2/dashboard_sheet.py`).
-- Generated report specs follow `{Type}-DrE-{Basic|Advanced}` naming; carry an optional `family` string for discovery.
+- Generated report specs follow `{Type}-DrE-{Basic|Advanced}` naming; carry an optional `family` string for discovery. Columns are the Create command's (input) attributes; display-only server-returned columns (e.g. the ISC mermaid graphs) go in `GENERATED_EXTRA_COLUMNS` in `commands/tech/gen_report_specs.py`, never in the compact spec.
 
 ---
 
