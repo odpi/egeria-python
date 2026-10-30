@@ -65,6 +65,31 @@ async def test_exceptions_propagate_from_background_loop():
         run_sync(boom())
 
 
+# --- context variables (lineage_visible) reach the coroutine on every path --------------------
+
+async def _lineage_flag():
+    from pyegeria.core._base_platform_client import _for_lineage_default
+    await asyncio.sleep(0)
+    return _for_lineage_default.get()
+
+
+def test_lineage_visible_reaches_the_no_loop_path():
+    from pyegeria import lineage_visible
+    with lineage_visible():
+        assert run_sync(_lineage_flag()) is True
+
+
+async def test_lineage_visible_reaches_the_background_and_nested_paths():
+    from pyegeria import lineage_visible
+
+    async def outer():
+        return run_sync(_lineage_flag())  # nested: a sync call from a coroutine on the background loop
+
+    with lineage_visible():
+        assert run_sync(_lineage_flag()) is True
+        assert run_sync(outer()) is True
+    assert run_sync(_lineage_flag()) is False
+
 # --- the per-thread httpx session follows the event loop -------------------------------------
 
 def _client(monkeypatch):

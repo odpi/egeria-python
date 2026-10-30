@@ -20,6 +20,7 @@ used it, so every thread gets one persistent loop instead of a fresh loop per ca
 """
 
 import asyncio
+import contextvars
 import threading
 from typing import Any, Coroutine, TypeVar
 
@@ -57,7 +58,9 @@ def _run_on_new_thread(coro: Coroutine[Any, Any, T]) -> T:
         except BaseException as exc:  # re-raised in the calling thread
             outcome["error"] = exc
 
-    worker = threading.Thread(target=target, name="pyegeria-sync-runner-nested")
+    # A new thread starts with an empty context; carry the caller's (e.g. lineage_visible()).
+    worker = threading.Thread(target=contextvars.copy_context().run, args=(target,),
+                              name="pyegeria-sync-runner-nested")
     worker.start()
     worker.join()
     if "error" in outcome:
