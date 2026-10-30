@@ -13,6 +13,7 @@ from textual.containers import ScrollableContainer, Horizontal
 from textual.screen import ModalScreen
 from textual.widgets import Header, Footer, Static, Input, Placeholder, Button, Markdown
 from pyegeria import load_app_config, settings, PyegeriaException, exec_report_spec
+from profile_utils import set_screen_heading
 
 
 class SearchForTermScreen(ModalScreen):
@@ -42,8 +43,7 @@ class SearchForTermScreen(ModalScreen):
         self.platform_url = platform_url or app_config.egeria_platform_url or "https://127.0.0.1:9443"
 
     def on_mount(self):
-        self.title = "Egeria"
-        self.sub_title = "Search for Term"
+        set_screen_heading(self, "Search for Term")
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)

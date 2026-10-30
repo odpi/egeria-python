@@ -15,6 +15,7 @@ from textual.containers import ScrollableContainer
 from textual.events import Action
 from textual.screen import Screen
 from textual.widgets import DataTable, Header, Static, Footer
+from profile_utils import set_screen_heading
 
 
 class ShopForDataScreen(Screen):
@@ -107,6 +108,7 @@ class ShopForDataScreen(Screen):
 
 
     def on_mount(self) -> None:
+        set_screen_heading(self, "Shop for Data")
         self.header = f"Egeria Data Sources for user {self.user_name}"
         self.sub_header = "Shop for Data"
 

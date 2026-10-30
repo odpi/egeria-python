@@ -12,6 +12,7 @@ from textual.screen import ModalScreen
 from textual.widgets import Header, Static, Footer, Input, Button, DataTable
 
 from pyegeria import load_app_config, settings
+from profile_utils import set_screen_heading
 
 
 class AddCommentScreen(ModalScreen):
@@ -39,8 +40,7 @@ class AddCommentScreen(ModalScreen):
         self.comment_type = ""
 
     def on_mount(self):
-        self.title = "Egeria - My Profile"
-        self.subtitle = "Add a comment to an element in Egeria"
+        set_screen_heading(self, "Add Comment")
         if self.element_guid == None:
             self.notify(f"A row must be selected from a table on the main screen before adding a comment")
             self.dismiss(400)

@@ -15,6 +15,7 @@ from textual.screen import ModalScreen
 from textual.widgets import DataTable, Header, Static, Footer, Input, Button
 
 from pyegeria import PyegeriaException, EgeriaTech, exec_report_spec, load_app_config, settings
+from profile_utils import set_screen_heading
 
 
 class ShowCommentsScreen(ModalScreen):
@@ -62,8 +63,7 @@ class ShowCommentsScreen(ModalScreen):
 
     def on_mount(self):
         """On mount, find the GUID for the Row """
-        self.title = "Egeria - My Profile"
-        self.sub_title = "Show Comments"
+        set_screen_heading(self, "Show Comments")
         self.dt_row_selected = None
         self.show_comments_datatable.add_columns("Comment", "GUID", "Qualified Name", "Name")
         if self.selected_comment_guid:

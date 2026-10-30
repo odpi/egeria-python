@@ -11,6 +11,7 @@ from textual.app import ComposeResult
 from textual.containers import ScrollableContainer
 from textual.screen import ModalScreen
 from textual.widgets import Header, Static, Input, Footer
+from profile_utils import set_screen_heading
 
 
 class CreateSubscriptionRequestScreen(ModalScreen):
@@ -60,8 +61,7 @@ class CreateSubscriptionRequestScreen(ModalScreen):
         yield Footer()
 
     def on_mount(self) -> None:
-        self.title = "Create Subscription Request"
-        self.subtitle = "Enter details for the subscription request"
+        set_screen_heading(self, "Create Subscription Request")
 
     def action_quit(self):
         # self.log("Quitting Create Subscription Request screen")

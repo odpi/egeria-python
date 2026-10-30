@@ -12,7 +12,7 @@ from textual.screen import ModalScreen
 from textual.widgets import DataTable, Header, Static, Footer
 
 from pyegeria import Egeria, PyegeriaException, load_app_config, settings, print_basic_exception
-from profile_utils import element_summary
+from profile_utils import element_summary, set_screen_heading
 
 
 class ViewSubscriptionsScreen(ModalScreen):
@@ -45,6 +45,7 @@ class ViewSubscriptionsScreen(ModalScreen):
         yield Footer()
 
     def on_mount(self):
+        set_screen_heading(self, "My Subscriptions")
         table = self.query_one("#subscriptions_table", DataTable)
         table.add_columns("Name", "Status", "Description", "GUID")
         for row in self.get_my_subscriptions():

@@ -10,6 +10,7 @@ from textual.app import ComposeResult
 from textual.containers import ScrollableContainer, Container, Horizontal
 from textual.screen import ModalScreen
 from textual.widgets import DataTable, Header, Static, Footer, Input, Button
+from profile_utils import set_screen_heading
 
 
 class ConfirmRemovePeerScreen(ModalScreen[bool]):
@@ -41,8 +42,7 @@ class ConfirmRemovePeerScreen(ModalScreen[bool]):
         yield Footer()
 
     def on_mount(self) -> None:
-        self.title = "Egeria - my_profile"
-        self.sub_title = "Confirm Removal - My Network"
+        set_screen_heading(self, "My Network - Confirm Removal")
 
     @on(Button.Pressed, "#confirm_remove_peer_btn")
     def handle_confirm_button(self, event: Button.Pressed) -> None:
@@ -74,8 +74,6 @@ class MyNetworkScreen(ModalScreen):
 
     def __init__(self, my_peers, *args, **kwargs):
         super().__init__(id="my_network_screen", *args, **kwargs)
-        self.title = "Egeria"
-        self.sub_title = "My Network"
         # Rows of (qualified name, display name, full name, pronouns, GUID, description)
         self.my_peers_data = list(my_peers or [])
         # (display name, GUID) of the person picked from the search results to add
@@ -114,6 +112,7 @@ class MyNetworkScreen(ModalScreen):
         yield Footer()
 
     def on_mount(self) -> None:
+        set_screen_heading(self, "My Network")
         self.query_one("#my_network_table", DataTable).add_columns(
             "Qualified Name", "Display Name", "Full Name", "Pronouns", "GUID", "Description")
         self.query_one("#people_found_table", DataTable).add_columns("Name", "GUID", "Qualified Name")

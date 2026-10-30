@@ -14,6 +14,7 @@ from textual.app import ComposeResult
 from textual.containers import ScrollableContainer
 from textual.screen import ModalScreen
 from textual.widgets import Header, TextArea, Footer, Static
+from profile_utils import set_screen_heading
 
 
 class StatusScreen(ModalScreen):
@@ -31,6 +32,9 @@ class StatusScreen(ModalScreen):
         """Initialize the StatusScreen screen."""
         super().__init__()
         self.status_message = status_message
+
+    def on_mount(self) -> None:
+        set_screen_heading(self, "Status")
 
     def compose(self) -> ComposeResult:
         """ Compose the UI components for the StatusScreen screen."""

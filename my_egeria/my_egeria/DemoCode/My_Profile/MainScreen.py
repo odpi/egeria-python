@@ -14,6 +14,7 @@ from textual.widgets import DataTable, OptionList, Header, Static, Footer
 from textual.widgets._option_list import Option
 
 from pyegeria import load_app_config, settings
+from profile_utils import set_screen_heading
 
 
 class MainScreen(Screen):
@@ -39,11 +40,11 @@ class MainScreen(Screen):
         load_app_config()
         app_user = settings.User_Profile
         self.user_name = app_user.user_name or "garygeeke"
-        self.sub_title = f"User: {self.user_name}"
 
     def on_mount(self) -> None:
+        # The app sets the heading again once the profile, and so the karma points, have loaded
+        set_screen_heading(self)
         # self.log needs a running app, so it can't be called from __init__
-        pass
         # self.log(f"Application Config: {settings.Environment}")
         # self.log(f"User Profile: {settings.User_Profile}")
 

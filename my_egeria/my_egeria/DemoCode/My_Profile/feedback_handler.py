@@ -49,7 +49,8 @@ class FeedbackMixin:
         if isinstance(current, (FeedbackScreen, FeedbackLogScreen)):
             return
         screen_name = type(current).__name__
-        screen_title = str(getattr(current, "sub_title", "") or "")
+        # The title names the screen; every sub_title is just "User: <name>"
+        screen_title = str(getattr(current, "title", "") or "")
         await self.push_screen(FeedbackScreen(screen_name, screen_title), callback=self.feedback_callback)
 
     async def feedback_callback(self, feedback: Any) -> None:

@@ -9,20 +9,90 @@ from textual import on
 from textual.app import ComposeResult
 from textual.containers import ScrollableContainer, Horizontal
 from textual.screen import ModalScreen
-from textual.widgets import DataTable, Header, Static, Footer, Input, Button, Select
+from textual.widgets import DataTable, Header, Static, Footer, Input, Button, Select, TextArea
 
 from CommunityScreen import CommunityScreen
+from profile_utils import set_screen_heading
 
 # The "Linked Through" value of a membership held by the user's own profile, which they can leave
 DIRECT_LINK = "Your profile"
 # Assignment types a user can give themselves when joining. Leaders and administrators are
 # assigned by the people who manage the community (https://egeria-project.org/concepts/community/)
 JOIN_ASSIGNMENT_TYPES = ["Contributor", "Observer"]
+# Whoever creates a community manages it, so they may also lead it
+CREATOR_ASSIGNMENT_TYPES = ["Leader"] + JOIN_ASSIGNMENT_TYPES
+# The "Your part in it" choice for a creator who doesn't join their new community
+NOT_JOINING = ""
 
 
 def is_direct_membership(row) -> bool:
     """True if a my-communities row includes a link from the user's own profile."""
     return DIRECT_LINK in row[2].split("; ")
+
+
+class CreateCommunityScreen(ModalScreen):
+    """Collect the details of a new community, and the part the user will take in it.
+
+    Dismisses with {"name", "description", "mission", "assignment_type"}, where an empty
+    assignment_type means the user doesn't join, or None if cancelled.
+    """
+
+    BINDINGS = [
+        ("escape", "cancel", "Back"),
+        ("ctrl+s", "submit", "Create"),
+    ]
+
+    CSS_PATH = "my_profile.tcss"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs, id="create_community_screen")
+
+    def compose(self) -> ComposeResult:
+        yield Header(show_clock=True)
+        yield Static("Create Community", classes="span-3", id="create_community_title")
+        yield ScrollableContainer(
+            Static("Name *"),
+            Input(placeholder="Name of the community", id="community_name_input"),
+            Static("Description *"),
+            Input(placeholder="What the community is about", id="community_description_input"),
+            Static("Mission"),
+            TextArea(id="community_mission_text"),
+            Static("Your part in it"),
+            Select([(t, t) for t in CREATOR_ASSIGNMENT_TYPES] + [("Don't join", NOT_JOINING)],
+                   value=CREATOR_ASSIGNMENT_TYPES[0], allow_blank=False, id="creator_assignment_type"),
+            Horizontal(
+                Button("Create", id="submit_create_community_btn", variant="primary"),
+                Button("Cancel", id="cancel_create_community_btn", variant="warning"),
+            ),
+            id="create_community_container",
+        )
+        yield Footer()
+
+    def on_mount(self) -> None:
+        set_screen_heading(self, "Communities - Create Community")
+        self.query_one("#community_name_input", Input).focus()
+
+    def action_submit(self) -> None:
+        name = self.query_one("#community_name_input", Input).value.strip()
+        description = self.query_one("#community_description_input", Input).value.strip()
+        if not name or not description:
+            self.notify("Please enter both a name and a description for the community", timeout=5,
+                        severity="warning")
+            return
+        self.dismiss({"name": name, "description": description,
+                      "mission": self.query_one("#community_mission_text", TextArea).text.strip(),
+                      "assignment_type": self.query_one("#creator_assignment_type", Select).value})
+
+    def action_cancel(self) -> None:
+        self.dismiss(None)
+
+    @on(Button.Pressed, "#submit_create_community_btn")
+    def handle_submit_button(self, event: Button.Pressed) -> None:
+        self.action_submit()
+
+    @on(Button.Pressed, "#cancel_create_community_btn")
+    def handle_cancel_button(self, event: Button.Pressed) -> None:
+        self.action_cancel()
 
 
 class ConfirmLeaveCommunityScreen(ModalScreen[bool]):
@@ -54,8 +124,7 @@ class ConfirmLeaveCommunityScreen(ModalScreen[bool]):
         yield Footer()
 
     def on_mount(self) -> None:
-        self.title = "Egeria - my_profile"
-        self.sub_title = "Confirm Leaving - Communities"
+        set_screen_heading(self, "Communities - Confirm Leaving")
 
     @on(Button.Pressed, "#confirm_leave_community_btn")
     def handle_confirm_button(self, event: Button.Pressed) -> None:
@@ -71,10 +140,11 @@ class ConfirmLeaveCommunityScreen(ModalScreen[bool]):
 
 class CommunitiesScreen(ModalScreen):
     """List the communities the current user belongs to, find others to join, open a
-    community (members, blog and comments) and leave a community.
+    community (members, blog and comments), create a new community and leave a community.
 
     The Egeria work is done by the app's CommunitiesMixin (list_my_communities,
-    search_communities, join_community, leave_community); this screen only drives it.
+    search_communities, create_community, join_community, leave_community); this
+    screen only drives it.
     """
 
     BINDINGS = [
@@ -82,6 +152,7 @@ class CommunitiesScreen(ModalScreen):
         ("q", "quit", "Main Menu"),
         ("ctrl+o", "open_community", "Open Community"),
         ("ctrl+n", "join_community", "Join Community"),
+        ("ctrl+t", "create_community", "Create Community"),
         ("ctrl+d", "leave_community", "Leave Community"),
     ]
 
@@ -89,8 +160,6 @@ class CommunitiesScreen(ModalScreen):
 
     def __init__(self, my_communities, *args, **kwargs):
         super().__init__(id="communities_screen", *args, **kwargs)
-        self.title = "Egeria"
-        self.sub_title = "Communities"
         # Rows of (name, assignment type, linked through, description, GUID)
         self.my_communities_data = list(my_communities or [])
         # The last search, repeated after joining or leaving so the found list stays current
@@ -101,10 +170,11 @@ class CommunitiesScreen(ModalScreen):
         yield Static("Communities", classes="span-3", id="communities_title")
         yield ScrollableContainer(
             Static("The communities you belong to. Enter or ctrl+o opens one (members, blog and comments); "
-                   "ctrl+d leaves."),
+                   "ctrl+d leaves; ctrl+t creates a new community."),
             DataTable(id="my_communities_table", zebra_stripes=True, cursor_type="row"),
             Horizontal(
                 Button("Open Community", id="open_my_community_btn", variant="primary"),
+                Button("Create Community", id="create_community_btn", variant="primary"),
                 Button("Leave Community", id="leave_community_btn", variant="error"),
                 id="my_communities_buttons",
             ),
@@ -126,6 +196,7 @@ class CommunitiesScreen(ModalScreen):
         yield Footer()
 
     def on_mount(self) -> None:
+        set_screen_heading(self, "Communities")
         self.query_one("#my_communities_table", DataTable).add_columns(
             "Name", "Assignment Type", "Linked Through", "Description", "GUID")
         self.query_one("#communities_found_table", DataTable).add_columns(
@@ -244,6 +315,32 @@ class CommunitiesScreen(ModalScreen):
         assignment_type = self.query_one("#join_assignment_type", Select).value
         if self.app.join_community(row[3], assignment_type):
             self._reload()
+
+    # --- creating -------------------------------------------------------------
+
+    @on(Button.Pressed, "#create_community_btn")
+    def handle_create_button(self, event: Button.Pressed) -> None:
+        self.action_create_community()
+
+    def action_create_community(self) -> None:
+        """ The user creates a new community, joining it unless they chose not to """
+        def on_details(details: dict | None) -> None:
+            if not details:
+                return
+            community_guid = self.app.create_community(details["name"], details["description"],
+                                                       details["mission"], details["assignment_type"])
+            if not community_guid:
+                return
+            self._reload()
+            # Highlight the new community in whichever list it now appears in
+            for table_id in ("#my_communities_table", "#communities_found_table"):
+                table = self.query_one(table_id, DataTable)
+                if community_guid in table.rows:
+                    table.move_cursor(row=table.get_row_index(community_guid))
+                    table.focus()
+                    break
+
+        self.app.push_screen(CreateCommunityScreen(), callback=on_details)
 
     # --- leaving -------------------------------------------------------------
 

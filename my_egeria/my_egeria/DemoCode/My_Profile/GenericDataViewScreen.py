@@ -15,6 +15,7 @@ from textual.containers import ScrollableContainer, Container
 from textual.screen import ModalScreen
 from textual.widgets import DataTable, Header, Footer, Static, Label, Button
 from pyegeria import load_app_config, settings
+from profile_utils import set_screen_heading
 
 
 class GenericDataViewScreen(ModalScreen):
@@ -80,8 +81,6 @@ class GenericDataViewScreen(ModalScreen):
 
     def compose(self) -> ComposeResult:
         """Compose UI components for the Generic Data View screen."""
-        self.title = "Shop for Data - Sample Data View"
-        self.sub_title = self.data_element_name
 
         yield Header(show_clock=True)
         yield Static(
@@ -101,6 +100,7 @@ class GenericDataViewScreen(ModalScreen):
 
     def on_mount(self) -> None:
         """Populate the data table with Key and Value rows up to max_rows."""
+        set_screen_heading(self, f"Shop for Data - Sample Data View: {self.data_element_name}")
         self.data_table.cursor_type = "row"
         self.data_table.zebra_stripes = True
         self.data_table.add_columns("Key", "Value")

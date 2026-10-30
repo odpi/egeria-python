@@ -14,6 +14,7 @@ from textual.screen import ModalScreen
 from textual.widgets import DataTable, Header, Static, Footer, Input, Button, Select, TextArea
 
 from pyegeria import COMMENT_TYPES
+from profile_utils import set_screen_heading
 
 
 def comment_type_label(comment_type: str) -> str:
@@ -56,8 +57,7 @@ class NewBlogPostScreen(ModalScreen):
         yield Footer()
 
     def on_mount(self) -> None:
-        self.title = "Egeria - my_profile"
-        self.sub_title = "New Blog Post - Communities"
+        set_screen_heading(self, "Communities - New Blog Post")
         self.query_one("#blog_post_title_input", Input).focus()
 
     def action_submit(self) -> None:
@@ -116,8 +116,7 @@ class AddCommunityCommentScreen(ModalScreen):
         yield Footer()
 
     def on_mount(self) -> None:
-        self.title = "Egeria - my_profile"
-        self.sub_title = "Add Comment - Communities"
+        set_screen_heading(self, "Communities - Add Comment")
         self.query_one("#community_comment_text", TextArea).focus()
 
     def action_submit(self) -> None:
@@ -159,8 +158,6 @@ class CommunityScreen(ModalScreen):
 
     def __init__(self, community_guid: str, community_name: str, *args, **kwargs):
         super().__init__(id="community_screen", *args, **kwargs)
-        self.title = "Egeria"
-        self.sub_title = f"Community - {community_name}"
         self.community_guid = community_guid
         self.community_name = community_name
         # Full text of each blog post, by GUID, shown below the posts table
@@ -177,7 +174,7 @@ class CommunityScreen(ModalScreen):
             id="community_blog_container",
         )
         yield ScrollableContainer(
-            Static("[b]Members[/b]  [dim](an actor may be a person or a role)[/dim]"),
+            Static("[b]Members[/b]  [dim](people linked to the community, directly or through a role they hold)[/dim]"),
             DataTable(id="community_members_table", zebra_stripes=True, cursor_type="row"),
             id="community_members_container",
         )
@@ -190,9 +187,10 @@ class CommunityScreen(ModalScreen):
         yield Footer()
 
     def on_mount(self) -> None:
+        set_screen_heading(self, f"Community - {self.community_name}")
         self.query_one("#community_posts_table", DataTable).add_columns("Title", "Author", "Posted", "GUID")
         self.query_one("#community_members_table", DataTable).add_columns(
-            "Name", "Actor Type", "Assignment Type", "Qualified Name", "GUID")
+            "Name", "Assignment Type", "Member Through", "Qualified Name", "GUID")
         self.query_one("#community_comments_table", DataTable).add_columns(
             "Comment", "Type", "Author", "Posted", "GUID")
         self._load_members()

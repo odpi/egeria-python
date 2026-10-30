@@ -12,6 +12,7 @@ from textual.app import ComposeResult
 from textual.containers import ScrollableContainer
 from textual.screen import ModalScreen
 from textual.widgets import Header, Static, Input, Button, Footer
+from profile_utils import set_screen_heading
 
 
 class CreateProfileScreen(ModalScreen[int]):
@@ -41,8 +42,7 @@ class CreateProfileScreen(ModalScreen[int]):
         print("View Server:", self.view_server)
 
     def on_mount(self) -> None:
-        self.title = f"User: {self.user_name}, Karma Points: {self.karma_points}"
-        self.sub_title = f"Create Egeria Profile for user: {self.user_name}"
+        set_screen_heading(self, "Create Profile")
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)

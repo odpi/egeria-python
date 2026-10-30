@@ -112,7 +112,16 @@ suitable data: `live_my_profile`, `live_team_role_name`, `live_tech_type_name`,
 5. If the path is an injected error or an empty result, use
    `backend.always_fake(...)` and leave the `live_capable` marker off.
 6. If the test enters `MyProfileApp.run_test()`, call `stub_profile_client(...)`
-   so `on_mount`'s profile load is mocked too.
+   so `on_mount`'s profile load is mocked too, and `await app._load_task` before
+   checking anything the load sets. A live load takes several seconds, and a
+   single `pilot.pause()` sees it only part done. The SDK's sync calls run nested
+   event loops, so the test can see, for example, the Karma Points set but not
+   yet the user GUID or the roles.
+7. Don't make a live check depend on data a real user might not have. A user
+   needn't hold any roles, for example on a new system, so check
+   `at_least(0)` rather than `at_least(1)`. If a test genuinely needs such data,
+   get it from a live-discovery fixture that skips when it's missing, as
+   `live_team_role_name` does.
 
 The network guard will tell you if you miss one.
 

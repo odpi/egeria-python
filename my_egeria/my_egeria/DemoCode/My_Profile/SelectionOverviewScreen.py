@@ -17,6 +17,7 @@ from textual.screen import Screen, ModalScreen
 from textual.widgets import Tree, Header, Static, Placeholder, Footer, TextArea, Markdown
 
 from StatusScreen import StatusScreen
+from profile_utils import set_screen_heading
 
 
 class SelectionOverviewScreen(ModalScreen):
@@ -69,10 +70,11 @@ class SelectionOverviewScreen(ModalScreen):
         if self.data_tree is None:
             self.data_tree = Tree(f"{self.category.capitalize()} Details")
 
+    def on_mount(self) -> None:
+        set_screen_heading(self, f"Shop for Data - Category: {self.category}")
+
     def compose(self) -> ComposeResult:
         """ Compose the UI components for the SelectionOverviewScreen screen."""
-        self.title = f"Shopping for Data, Data Selection:"
-        self.sub_title = f"Category: {self.category}"
         yield Header(show_clock=True)
         yield Static("Please select an item from the tree [blink]:[/]", id="instruction_static")
         yield ScrollableContainer(

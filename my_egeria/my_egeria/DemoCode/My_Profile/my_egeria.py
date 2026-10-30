@@ -85,6 +85,7 @@ from profile_utils import (
     check_request_serialization,
     check_egeria_access,
     element_summary,
+    set_screen_heading,
 )
 from tech_types_handler import TechTypesMixin
 from shop_for_data_handler import ShopForDataMixin
@@ -264,7 +265,9 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         # ...and pyegeria clients, commands and subprocesses started from this app read the environment
         os.environ["EGERIA_USER"] = user_name
         os.environ["EGERIA_USER_PASSWORD"] = user_password
-        self.get_screen("main").sub_title = f"User: {user_name}"
+        # The old user's karma points no longer apply; the new user's arrive with their profile
+        self.karma_points = 0
+        set_screen_heading(self.get_screen("main"), app=self)
         self.my_profile_data = None
         self.refresh_bindings()
         await self._load_or_create_profile()
@@ -363,6 +366,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
             self.karma_points = self.contribution_record.get("Karma Points") or 0
         else:
             self.karma_points = 0
+        set_screen_heading(self.get_screen("main"), app=self)
         self.my_projects_data = self.user_profile.get("Projects") or []
         self.my_teams_data = self.user_profile.get("Teams") or []
         self.my_communities_data = self.user_profile.get("Communities") or []

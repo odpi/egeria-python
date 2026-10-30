@@ -187,3 +187,20 @@ def row_identity(table: Any, row_key: Any) -> tuple[str, str]:
         elif not qualified_name and label == "Qualified Name":
             qualified_name = str(values[index] or "").strip()
     return guid, qualified_name
+
+
+def set_screen_heading(screen: Any, context: str = "", app: Any = None) -> None:
+    """Give a screen the same header as the main screen: "Egeria - <context>",
+    sub-titled "User: <name>, Karma Points: <points>".
+
+    The user and karma points are the app's (the points are 0 until the profile has
+    loaded). A screen calls this from on_mount, where screen.app is the running app;
+    the app itself passes app=self.
+    """
+    from pyegeria import settings
+
+    app = app or screen.app
+    screen.title = f"Egeria - {context}" if context else "Egeria"
+    user_name = getattr(app, "user_name", None) or settings.User_Profile.user_name
+    karma_points = getattr(app, "karma_points", None) or 0
+    screen.sub_title = f"User: {user_name}, Karma Points: {karma_points}"

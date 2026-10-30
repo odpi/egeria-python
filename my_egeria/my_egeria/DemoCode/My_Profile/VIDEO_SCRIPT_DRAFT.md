@@ -41,7 +41,7 @@
 
 ## 3. The main dashboard (1:00 – 1:45)
 
-**[VISUAL]** Main screen. Slowly pan or highlight each panel as it's mentioned. The header shows "Egeria — My Profile" and the clock.
+**[VISUAL]** Main screen. Slowly pan or highlight each panel as it's mentioned. The header shows "Egeria — User: calliequartile, Karma Points: …" and the clock; every screen has the same header.
 
 **CALLIE:**
 > This is my home screen. Everything here comes live from Egeria.

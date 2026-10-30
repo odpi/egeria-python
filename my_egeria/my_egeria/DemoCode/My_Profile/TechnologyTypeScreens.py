@@ -17,6 +17,7 @@ from textual.css.query import NoMatches
 from textual.screen import ModalScreen
 from textual.widgets import Header, Static, OptionList, Button, Footer, Input, Tree, TextArea
 from textual.widgets._option_list import Option
+from profile_utils import set_screen_heading
 
 
 class TechnologyTypeOptionsScreen(ModalScreen):
@@ -88,8 +89,7 @@ class TechnologyTypeOptionsScreen(ModalScreen):
 
     async def on_mount(self) -> int:
         """Mount the TechnologyTypeOptions screen."""
-        self.title =  f"User: {self.user_name}, Karma Points: {self.karma_points}"
-        self.sub_title = f"Technology Type: {self.tech_type_name}, Description: {self.tech_type_description}"
+        set_screen_heading(self, f"Technology Type: {self.tech_type_name}")
         # self.log(f"Technology Type: {self.tech_type_name}, Description: {self.tech_type_description}")
 
         for widget in self.query():
@@ -296,8 +296,7 @@ class TechnologyTypeProcessesScreen(ModalScreen[Any]):
 
     async def on_mount(self) -> None:
         """ On Mount function of the Technology_Type_Templatess screen."""
-        self.title = f"User: {self.user_name}, Karma Points: {self.karma_points}"
-        self.sub_title = f"Technology Type: {self.tech_type_name}, Description: {self.tech_type_description}"
+        set_screen_heading(self, f"Technology Type Processes: {self.tech_type_name}")
 
         if self.selected_t_option == "process":
             # self.log(f"Processing processes, with data: {self.selected_t_option_selected}")
@@ -438,8 +437,7 @@ class TechnologyTypesScreen(ModalScreen):
         self.node_status = "expanded"
 
     def on_mount(self) -> None:
-        self.title = f"User: {self.user_name}"
-        self.sub_title = "Select a technology type"
+        set_screen_heading(self, "Technology Types")
 
     def compose(self) -> ComposeResult:
         """ Compose and display the technology type screen"""
@@ -574,8 +572,7 @@ class TechnologyTypeTemplatesScreen(ModalScreen[Any]):
 
     async def on_mount(self) -> None:
         """ On Mount function of the Technology_Type_Templatess screen."""
-        self.title = f"User: {self.user_name}, Karma Points: {self.karma_points}"
-        self.sub_title = f"Technology Type: {self.tech_type_name}, Description: {self.tech_type_description}"
+        set_screen_heading(self, f"Technology Type Templates: {self.tech_type_name}")
 
         if self.selected_t_option == "template":
             # self.log(f"Processing templates, with data: {self.selected_t_option_selected}")

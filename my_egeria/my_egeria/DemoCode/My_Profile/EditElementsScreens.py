@@ -15,6 +15,7 @@ from textual.screen import ModalScreen
 from textual.widgets import Header, Footer, DataTable, Static, Placeholder, Input, Button
 
 from pyegeria import PyegeriaException, Egeria, load_app_config, settings
+from profile_utils import set_screen_heading
 
 
 class ConfirmDeleteScreen(ModalScreen[bool]):
@@ -51,8 +52,7 @@ class ConfirmDeleteScreen(ModalScreen[bool]):
         yield Footer()
 
     def on_mount(self) -> None:
-        self.title = "Egeria - my_profile"
-        self.sub_title = f"Confirm Deletion{f' - {self.context}' if self.context else ''}"
+        set_screen_heading(self, f"Confirm Deletion{f' - {self.context}' if self.context else ''}")
 
     @on(Button.Pressed, "#confirm_delete_btn")
     def handle_confirm_button(self, event: Button.Pressed) -> None:
@@ -129,8 +129,7 @@ class BaseEditScreen(ModalScreen):
         yield Footer()
 
     async def on_mount(self) -> None:
-        self.title = "Egeria - my_profile"
-        self.sub_title = self.TITLE_TEXT
+        set_screen_heading(self, self.TITLE_TEXT)
 
         if (not self.columns or not self.rows_with_keys) and self.SOURCE_TABLE:
             try:
@@ -399,8 +398,7 @@ class EditProfileScreen(ModalScreen[Any]):
             self.user_GUID = getattr(self.app, "user_GUID", "")
         if self.karma_points == 0 and hasattr(self, "app"):
             self.karma_points = getattr(self.app, "karma_points", 0)
-        self.title = f"User: {self.user_name}, Karma Points: {self.karma_points}"
-        self.sub_title = f"Edit Egeria Profile for user: {self.user_name}"
+        set_screen_heading(self, "Edit Profile")
         # retrieve person profile details
 
     def compose(self) -> ComposeResult:
