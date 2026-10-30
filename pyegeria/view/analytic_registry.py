@@ -38,8 +38,9 @@ Python's own TypeError.
 from __future__ import annotations
 
 import os
+from importlib.metadata import entry_points
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
 from loguru import logger
 from pydantic import BaseModel, Field, field_validator
@@ -51,6 +52,9 @@ __all__ = [
     'KNOWN_ANALYTIC_SOURCES',
     'AnalyticRegistryCollision',
     'refresh_analytic_functions',
+    'ANALYTIC_ENTRY_POINT_GROUP',
+    'ANALYTIC_ENTRY_POINT_ALIASES',
+    'analytic_entry_point_errors',
     'get_analytic_registry',
     'analytic_registry_payload',
     'register_analytic_functions',
@@ -523,6 +527,17 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
 _RUNTIME_ANALYTIC_FUNCTIONS = AnalyticFunctionDict()
 _CONFIG_ANALYTIC_FUNCTIONS = AnalyticFunctionDict()
 
+# Installed packages register analytic functions and steps through this entry-point
+# group (ISSUE-172). trellis-analytics' group is read as an alias during the library
+# split. An entry point names an AnalyticFunctionSpec (or subclass), a list of them, or
+# a callable returning either. Read lazily on first use of the registry; only the
+# manifests are loaded then -- a function's own module is imported on its first run,
+# by format_set_executor._resolve_analytic_function.
+ANALYTIC_ENTRY_POINT_GROUP = "pyegeria.analytics"
+ANALYTIC_ENTRY_POINT_ALIASES = ("trellis.analytics",)
+_ENTRY_POINT_ANALYTIC_FUNCTIONS: Optional[AnalyticFunctionDict] = None  # None = not read yet
+_ENTRY_POINT_ERRORS: Dict[str, str] = {}
+
 
 class AnalyticRegistryCollision(ValueError):
     """Raised when two analytic-registry sources define the same function name."""
@@ -553,9 +568,11 @@ def refresh_analytic_functions() -> None:
       - PYEGERIA_ANALYTIC_FUNCTIONS_MODULES: comma-separated module callables
         (pkg.mod:func or pkg.mod.func) returning a dict/AnalyticFunctionDict
     Collisions across sources (including against BUILTINS) raise AnalyticRegistryCollision.
+    Also forgets the installed (entry-point) tier, so it is re-read on next use.
     """
-    global _CONFIG_ANALYTIC_FUNCTIONS
+    global _CONFIG_ANALYTIC_FUNCTIONS, _ENTRY_POINT_ANALYTIC_FUNCTIONS
     _CONFIG_ANALYTIC_FUNCTIONS = AnalyticFunctionDict()
+    _ENTRY_POINT_ANALYTIC_FUNCTIONS = None  # installed packages are re-read on next use
 
     json_paths = os.getenv("PYEGERIA_ANALYTIC_FUNCTIONS_JSON", "").strip()
     if json_paths:
@@ -584,12 +601,65 @@ def refresh_analytic_functions() -> None:
             _add_with_collision_check(_CONFIG_ANALYTIC_FUNCTIONS, loaded, source=f"MODULE:{m}")
 
 
+def _read_entry_points() -> Tuple[AnalyticFunctionDict, Dict[str, str]]:
+    """Load every manifest in the entry-point groups. A broken entry point is recorded
+    in the returned errors, naming it, and the rest still load."""
+    found = AnalyticFunctionDict()
+    errors: Dict[str, str] = {}
+    for group in (ANALYTIC_ENTRY_POINT_GROUP, *ANALYTIC_ENTRY_POINT_ALIASES):
+        for ep in entry_points(group=group):
+            label = f"{group}:{ep.name}"
+            try:
+                obj = ep.load()
+                if callable(obj) and not isinstance(obj, AnalyticFunctionSpec):
+                    obj = obj()
+                items = obj if isinstance(obj, (list, tuple)) else [obj]
+                for spec in items:
+                    if not isinstance(spec, AnalyticFunctionSpec):
+                        raise TypeError(f"{type(spec).__name__} is not an AnalyticFunctionSpec")
+                    prior = found.get(spec.name)
+                    if prior is not None and prior.function != spec.function:
+                        raise AnalyticRegistryCollision(
+                            f"'{spec.name}' is already provided by another entry point as {prior.function}")
+                    found[spec.name] = spec
+            except Exception as exc:  # noqa: BLE001 -- one broken package must not hide the others
+                errors[label] = f"entry point {label} ({ep.value}) could not be loaded: {exc}"
+                logger.warning(errors[label])
+    return found, errors
+
+
+def _entry_point_functions() -> AnalyticFunctionDict:
+    global _ENTRY_POINT_ANALYTIC_FUNCTIONS, _ENTRY_POINT_ERRORS
+    if _ENTRY_POINT_ANALYTIC_FUNCTIONS is None:
+        _ENTRY_POINT_ANALYTIC_FUNCTIONS, _ENTRY_POINT_ERRORS = _read_entry_points()
+    return _ENTRY_POINT_ANALYTIC_FUNCTIONS
+
+
+def analytic_entry_point_errors() -> Dict[str, str]:
+    """Entry points that are installed but could not be loaded, each with a sentence
+    naming it and the error (empty when every one loaded, or none is installed)."""
+    _entry_point_functions()
+    return dict(_ENTRY_POINT_ERRORS)
+
+
 def get_analytic_registry() -> AnalyticFunctionDict:
-    """Combine built-ins, config-loaded, and runtime-registered analytic functions.
-    Enforce no duplicate names across all sources."""
+    """Combine built-ins, config-loaded, installed (entry-point) and runtime-registered
+    analytic functions. Enforce no duplicate names across all sources, except that an
+    installed function whose name is already a built-in or config entry is skipped and
+    reported by analytic_entry_point_errors(), so an installed package can't break the
+    registry for everyone."""
     combined = AnalyticFunctionDict()
     _add_with_collision_check(combined, _BUILTINS, source="BUILTINS")
     _add_with_collision_check(combined, _CONFIG_ANALYTIC_FUNCTIONS, source="CONFIG")
+    for name, spec in _entry_point_functions().items():
+        if name in combined:
+            label = f"entry point function '{name}'"
+            if label not in _ENTRY_POINT_ERRORS:
+                _ENTRY_POINT_ERRORS[label] = (f"{label} ({spec.function}) was skipped: the name is already "
+                                              f"defined by a built-in or config entry")
+                logger.warning(_ENTRY_POINT_ERRORS[label])
+            continue
+        combined[name] = spec
     _add_with_collision_check(combined, _RUNTIME_ANALYTIC_FUNCTIONS, source="RUNTIME")
     return combined
 
@@ -601,6 +671,7 @@ def analytic_registry_payload() -> dict:
     return {
         "total": len(registry),
         "functions": {name: spec.dict() for name, spec in registry.items()},
+        "entry_point_errors": analytic_entry_point_errors(),
     }
 
 
