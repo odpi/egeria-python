@@ -6925,16 +6925,16 @@ class SolutionArchitect(ServerClient):
     #
     @dynamic_catch
     async def _async_create_solution_port(self, body: dict | NewElementRequestBody) -> str:
-        """Create a solution port, with SolutionPortProperties (which adds `direction`: IN, OUT,
-        INOUT, OUTIN or OTHER to the design model element properties). Attach it to its component
+        """Create a solution port, with SolutionPortProperties (which adds `direction`: UNKNOWN,
+        INPUT, OUTPUT or INOUT to the design model element properties). Attach it to its component
         with link_solution_component_port. Async version."""
         url = f"{self.solution_architect_command_root}/solution-ports"
         return await self._async_create_element_body_request(url, ["SolutionPortProperties"], body)
 
     @dynamic_catch
     def create_solution_port(self, body: dict | NewElementRequestBody) -> str:
-        """Create a solution port, with SolutionPortProperties (which adds `direction`: IN, OUT,
-        INOUT, OUTIN or OTHER to the design model element properties). Attach it to its component
+        """Create a solution port, with SolutionPortProperties (which adds `direction`: UNKNOWN,
+        INPUT, OUTPUT or INOUT to the design model element properties). Attach it to its component
         with link_solution_component_port."""
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(self._async_create_solution_port(body))

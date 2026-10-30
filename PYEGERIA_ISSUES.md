@@ -148,7 +148,7 @@ content was changed. The numbered section list above describes the
 
 # Open Issues
 
-**At a glance** — 2 open pyegeria items, 11 awaiting re-test, 7 open Egeria Server issues (checked against merged PRs and the code 2026-10-29).
+**At a glance** — 2 open pyegeria items, 8 awaiting re-test, 7 open Egeria Server issues (checked against merged PRs and the code 2026-10-29; ISSUE-159, 132 and 85 live-verified the same day).
 
 **Egeria team note, 2026-10-18 (Mandy Chessell).** Saved verbatim at
 `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`. Each entry below has a dated
@@ -156,7 +156,7 @@ content was changed. The numbered section list above describes the
 were re-sorted: fixes released since 6.2.2 moved to the Appendix, and the
 re-test candidates moved into *Awaiting re-test* below the open sections.
 - **Fixed on Egeria's `oak2026` branch, pending merge to `main`:** ISSUE-147,
-  143, 130, 132, 128, 38. Re-test once it is merged and a platform is built
+  143, 130, 128, 38 (ISSUE-132 verified live and closed 2026-10-29). Re-test once it is merged and a platform is built
   from `main`.
 - **Fixed on Egeria `main`, re-test against a platform built from `main`:**
   ISSUE-125, 124, 117, 112, 95, 90, 89.
@@ -176,9 +176,7 @@ re-test candidates moved into *Awaiting re-test* below the open sections.
 - ISSUE-150: Dr.Egeria commands for an Analytic Function's Egeria declaration: a GovernanceActionType that Resource Explorer runs as an engine host, plus a synchronous path that bypasses Egeria
 
 **Awaiting re-test**
-- ISSUE-159: no archive wrappers on the project or collection managers, and no restore wrapper at all, although Egeria offers both
 - ISSUE-146: Deleting a journal entry fails with OMAG-REPOSITORY-HANDLER-400-008, and pyegeria's `remove_note` reaches the delete only through the generic Asset Maker service
-- ISSUE-132: `DeleteElementRequestBody` serializes the cascade flag as `cascadeDelete`; Egeria's field is `cascadedDelete` and unknown fields are ignored, so no pyegeria cascade delete has ever cascaded
 - ISSUE-125: `deleteEnumDef` answers 500 "unknown TypeDef" for an enum the server lists -- an enum added through the API cannot be removed
 - ISSUE-124: `updateTypeDef` (Metadata Expert `open-metadata-types/update`) can never succeed -- the server builds the patch without `updatedBy`, which the repository services require
 - ISSUE-117: Cascade delete that takes the soft-delete (Memento) path fails partway with `OMAG-REPOSITORY-HANDLER-400-010` unless `forLineage=true` — leaves the asset live and an anchored element already soft-deleted
@@ -186,7 +184,6 @@ re-test candidates moved into *Awaiting re-test* below the open sections.
 - ISSUE-90: [fixed?] `qs-engine-host` retries `startMissedEngineActions` forever when one incomplete engine action's anchor is unreadable by the engine-host user
 - ISSUE-95: No catalog template registered for the "Apache Kafka Server" technology type — `Create Kafka Server Element` (Asset Maker) fails with a 400 on `qs-view-server`
 - ISSUE-89: No configurable bearer-token lifetime in `application.properties` — platform tokens are fixed at 3600 s, and the signing key is random per restart
-- ISSUE-85: No REST endpoint exists to create a `SolutionPort` element — only attach/detach/delegation relationships are exposed
 
 **Open Egeria Server issues**
 - ISSUE-147: Every valid-metadata clear call answers OPEN-METADATA-400-011 "not found", even after a successful delete; clear-map-value deletes nothing; clear-map-name leaves the map's value set behind
@@ -1124,32 +1121,6 @@ sessions first.
 ---
 
 
-### ISSUE-159: no archive wrappers on the project or collection managers, and no restore wrapper at all, although Egeria offers both
-
-**Status 2026-10-29: item 2 done on branch `fix/issues-154-158-159-85-tracker-cleanup`, for 6.2.15; item 3 (live test) still to do.** `ProjectManager.archive_project` and `CollectionManager.archive_collection` send each manager's existing delete endpoint with `deleteMethod: ARCHIVE` (shared helper `ServerClient._archive_delete_body`). Traced in Egeria main 8de9572c: `ProjectHandler.deleteProject` and `CollectionHandler.deleteCollection` both pass the `DeleteOptions` to `openMetadataClient.deleteMetadataElementInStore`, and the store routes ARCHIVE to `archiveMetadataElementInStore`. Restore: `MetadataExpert.restore_metadata_element`.
-
-**Layer:** Pyegeria · **Status:** open, logged only (no fix without the owner's word) · **Found:** 2026-10-20, raised by the Resource Explorer expansion-architecture session: RE's investigation-delete ruling needs a Project archived through the project manager and restored by GUID. Facts confirmed here against Egeria `origin/main` 05a5e982 and pyegeria upstream `main`, read-only.
-
-**Egeria:** `OpenMetadataAPIGenericHandler.java` (common-services/generic-handlers):
-- `archiveBeanInRepository` (`:3289`) classifies the element Memento, renames each affected Referenceable's qualifiedName to `<qn>_archivedOn_<date>` (marker `archivedQualifiedNameMarker = "_archivedOn_"`, `:51`), and records one `lastOperationId` per operation.
-- `restoreBeanInRepository` (`:4170`) restores an element and everything the same delete or archive changed, given any GUID that operation touched.
-
-The OMF store's delete (`OpenMetadataStoreRESTServices`, around `:4118`) also routes `deleteMethod: ARCHIVE` to `archiveMetadataElementInStore`, and resolves `LOOK_FOR_LINEAGE` to ARCHIVE when lineage relationships exist.
-
-**pyegeria:**
-- Archive exists only as `MetadataExpert.archive_metadata_element` (`metadata-expert/metadata-elements/{guid}/archive`).
-- There is no `archive_project`, `archive_collection` or other manager-level archive.
-- There is no `restore_*` method anywhere. ISSUE-155 item 5 already lists Metadata Expert `metadata-elements/{guid}/restore` and `related-elements/{guid}/restore` as missing.
-
-**Possible route today (unverified):** `ProjectManager.delete_project(guid, body={"class": "DeleteElementRequestBody", "deleteMethod": "ARCHIVE"})`. pyegeria passes `deleteMethod` through, but whether the project-manager delete path honours ARCHIVE as the OMF store delete does was not traced.
-
-**Proposed (not made):**
-1. ~~Add `MetadataExpert.restore_metadata_element` / `restore_related_elements` (and undo), per ISSUE-155 item 5.~~ Done 2026-10-23 (branch `fix/role-appointment-class-names`). Items 2 and 3 are still open.
-2. Add `ProjectManager.archive_project` and `CollectionManager.archive_collection`. These can be thin wrappers that send `deleteMethod: ARCHIVE` once that path is confirmed live, or call Metadata Expert archive.
-3. Live-test archive then restore of a throwaway Project, including the `_archivedOn_` rename and its reversal.
-
----
-
 ### ISSUE-146: Deleting a journal entry fails with OMAG-REPOSITORY-HANDLER-400-008, and pyegeria's `remove_note` reaches the delete only through the generic Asset Maker service
 
 **Status 2026-10-29: the pyegeria part (`remove_note` routing) was fixed in #451, released in 6.2.3; Egeria says the 400-008 is the provenance check working as designed.** What's left is the `remove_note` re-test on a NEW journal entry (below).
@@ -1240,45 +1211,6 @@ above, this is a clarity change, not a fix for 400-008.
 published, re-test `remove_note` on `8bec72e4` (plain delete, then `ARCHIVE` if
 needed). Tell the egeria-workspaces-fs session before deleting anything on
 Erin's profile. `fef83ed5` stays.
-
----
-
-### ISSUE-132: `DeleteElementRequestBody` serializes the cascade flag as `cascadeDelete`; Egeria's field is `cascadedDelete` and unknown fields are ignored, so no pyegeria cascade delete has ever cascaded
-
-**Status 2026-10-29: pyegeria side fixed on branch `fix/issues-154-158-159-85-tracker-cleanup`, for 6.2.15 (ISSUE-154 item 1): cascade deletes now send `cascadedDelete`, which every Egeria version reads.** What's left is a live cascade test on a platform built from Egeria main.
-
-**Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: fixed on Egeria's `oak2026` branch, pending its merge to `main`** (each fix has an FVT or unit test). Re-test once `oak2026` is merged and a platform is built from `main`. `cascadeDelete` is now accepted as an alias for `cascadedDelete`, so existing pyegeria requests will start to cascade; Egeria still recommends switching to `cascadedDelete`. **Risk check, 2026-10-18:** no production caller in `pyegeria/`, `md_processing/` or `commands/` passes cascade `True`; every `cascade`/`cascade_delete` default is `False`; `commands/tech/element_actions.py`'s `--cascade` flag (default True) is not forwarded. Live functional/scenario tests that pass `cascade=True` (collection, glossary, governance officer, `remove_note_log`) will now really cascade, which is what they intend. **pyegeria (proposed, not done):** change `DeleteElementRequestBody`'s serialization alias to `cascadedDelete` (keep both accepted on input) and the ~25 `"cascadeDelete"` literals (`_server_client.py`, `models.py`, `actor_manager.py`, `metadata_expert.py`, `product_manager.py`, `reference_data.py`, `valid_metadata.py`), then live-test one cascade and re-test ISSUE-127. No longer urgent, since the old spelling now works.
-
-**Re-test 2026-10-19 (quickstart recreated 13:02Z on Egeria `main` 05a5e982, image 6.3-SNAPSHOT built 2026-10-18 16:13Z; as erinoverview on qs-view-server; throwaways named `pyeg_rt_*`, each deleted and verified gone by GUID; peers cleared first):** **PASS (alias).** A throwaway DataStructure with a linked member DataField, deleted with `delete_data_structure(guid, cascade_delete=True)` (pyegeria still sends `cascadeDelete`), succeeded. Both elements were gone by GUID before any cleanup, so the cascade reached the server. The ISSUE-154 item 1 rename to `cascadedDelete` is still recommended but no longer urgent.
-
-**Layer:** pyegeria · **Status:** open, on hold: an Egeria fix for cascade delete is coming (owner, 2026-10-10). Egeria `main` checked 2026-10-10 (head `af400039c2`, 2026-10-06): no cascade change yet. Wait
-for it, live-test cascade delete against it, then decide the pyegeria change; the fix below may change once the
-Egeria side lands. Confirmed from Egeria source, not yet live-tested · **Found:**
-2026-10-10, while checking ISSUE-129's server contract against Egeria source instead of the `.http` files.
-
-**What:** `pyegeria/models/models.py` `DeleteElementRequestBody.cascade_delete` accepts both spellings on input but
-serializes as `serialization_alias="cascadeDelete"`. The comment there records that the `.http` files were split
-about 50/50 and that the choice was unverified (ISSUE-62). Egeria source settles it (`egeria-v6/egeria` at
-`af400039c2`, 2026-10-06): `DeleteElementRequestBody` -> `DeleteRequestBody` -> `DeleteOptions`
-(`open-metadata-framework/.../search/DeleteOptions.java`), whose field is `cascadedDelete` with
-`getCascadedDelete()`/`setCascadedDelete()`. It is unchanged since 2025-08-04. The class is
-`@JsonAutoDetect(getterVisibility=PUBLIC_ONLY, fieldVisibility=NONE)` and `@JsonIgnoreProperties(ignoreUnknown=true)`,
-with no `@JsonProperty`/`@JsonAlias`, so the JSON name is `cascadedDelete` and `cascadeDelete` is silently ignored.
-
-**Effect:** every pyegeria delete that uses `DeleteElementRequestBody` with cascade on (the ISSUE-62 fix,
-`validate_delete_element_request`, ISSUE-127's fix in #429, `MetadataExpert.delete_metadata_element(cascade_delete=True)`)
-sends a flag Egeria discards, so it deletes without cascading. A caller-supplied dict using the correct
-`cascadedDelete` key is also re-serialized as `cascadeDelete`, so even that does not work. The models module's own
-`DeleteRequestBody.cascaded_delete` already uses the right name.
-
-**Fix (not made):** change the serialization alias to `cascadedDelete` (keep both spellings accepted on input), and
-fix the 19 `"cascadeDelete"` references in `_server_client.py`, `product_manager.py`, `actor_manager.py`,
-`valid_metadata.py`, `metadata_expert.py` and `reference_data.py` (several are docstring samples). Then live-test one
-cascade delete, and re-test ISSUE-127's `DataStructure` refusal. The `.http` files using `cascadedDelete` are correct;
-the ones using `cascadeDelete` are the ones in error (worth reporting to Egeria).
-
-**Lesson:** where the `.http` files disagree with each other, read the Java DTO (getter/setter names plus Jackson
-annotations); do not choose by majority or by what the code already sends.
 
 ---
 
@@ -1662,76 +1594,6 @@ valid unexpired one. Full draft issue text: trellis session scratch `egeria-issu
 
 ---
 
-
-### ISSUE-85: No REST endpoint exists to create a `SolutionPort` element — only attach/detach/delegation relationships are exposed
-
-**Status 2026-10-29: SDK wrappers added on branch `fix/issues-154-158-159-85-tracker-cleanup`, for 6.2.15; awaiting a live test.** `SolutionArchitect` now has `create_solution_port`, `create_solution_port_from_template`, `update_solution_port`, `delete_solution_port`, `find_solution_ports`, `get_solution_ports_by_name` and `get_solution_port_by_guid`, matching `SolutionArchitectResource.java` on Egeria main (endpoints and body classes; `omvs_audit` Java check passes). Not done: a Dr.Egeria `Create Solution Port` command.
-
-**Status:** open, now a pyegeria gap (Egeria added the endpoints 2026-09-06) 
-consumer (trellis/Resource Explorer, designing a `PortMaterializer` for
-architecture-recovery proposals) hitting the same shape of gap ISSUE-84
-turned out not to be: this time the `.http` ground truth's absence really
-does match the live server, not a stale/incomplete `.http` file.
-
-**Confirmed at every layer:**
-- `pyegeria/omvs/solution_architect.py`: `link_solution_component_port`
-  (attach an *existing* port to a component), `link_solution_port_delegation`
-  (port-to-port delegation), and both detach counterparts exist. No
-  `create_solution_port`/`_async_create_solution_port` anywhere.
-- `Egeria-api-solution-architect.http`: only `.../solution-components/
-  {guid}/solution-ports/{guid}/attach|detach` and `.../solution-ports/
-  {guid}/port-delegations/{guid}/attach|detach`. No `POST .../solution-ports`
-  create path.
-- `md_processing/data/compact_commands/commands_solution_architect_compact.json`:
-  only `Link Solution Component Port`/`Link Solution Port Delegation`. No
-  `Create Solution Port` command.
-- `pyegeria/models/models.py`: no `SolutionPortProperties` model at all —
-  so even the generic fallback route has nothing typed to build a body
-  against.
-
-**Live-verified not just a stale-`.http`-file case** (the precedent this
-repo already has for that shape of false alarm — see the multi-link audit
-above, where 3 of 4 similarly-unwrapped relationship types turned out to
-have zero real endpoint on live-server inspection while others did):
-`dwolfson-1b`/trellis fetched the full live OpenAPI spec directly
-(`GET /v3/api-docs`, 2.39MB) and searched every path containing "port" —
-30 POST paths matched, every one of them attach/detach (component-port,
-port-delegation, even a generic process-ports attach under a different
-`{urlMarker}` service). Zero creation endpoints anywhere in the spec.
-This confirms the `.http` ground truth exactly; not a documentation gap.
-
-**The generic fallback exists but isn't usable without guessing:**
-`/servers/{serverName}/api/open-metadata/{urlMarker}/metadata-elements`
-(`MetadataExpert.create_metadata_element`,
-`NewOpenMetadataElementRequestBody`) is real and live-confirmed present,
-with a top-level `type_name` field that could carry `"SolutionPort"`. But
-per this file's own `pyegeria/models/models.py` gotcha, that endpoint's
-`properties` field needs the verbose nested `ElementProperties`/
-`propertyValueMap` shape server-side, not the flat dict every bespoke
-wrapper uses — and with no `SolutionPortProperties` model to check
-property names against, building that body means hand-guessing what
-properties a `SolutionPort` actually takes. Consistent with this repo's
-established practice (see the multi-link audit's "left unbuilt rather
-than guessing at undocumented URLs or building against the awkward
-generic path speculatively") — not attempted.
-
-**Nothing to fix in pyegeria until Egeria adds a real create endpoint.**
-Once one exists, the follow-on work is small and well-precedented: a
-`create_solution_port`/`_async_create_solution_port` wrapper in
-`SolutionArchitect` following the exact pattern ISSUE-84 just corrected
-(`NewElementRequestBody` + `contentStatus` inside `properties`, no
-fictional separate request-body class), plus a `Create Solution Port`
-Dr.Egeria compact command — the family's registration plumbing in
-`register_solution_architect_processors()` (`md_processing/dr_egeria.py`)
-already handles this shape of addition with no new routing logic needed.
-
-**Not blocking anything urgent** on the trellis/Resource Explorer side —
-they're holding real port materialization until this exists server-side
-(tracked as their own Backlog item 8), or until a workaround surfaces.
-
-
-**Egeria side addressed (2026-10-05 check, carried over from the retired `docs/egeria-open-bugs-2026-10-05.md`):** at `449ad06894`, Solution Architect has `createSolutionPort` and `createSolutionPortFromTemplate`, with endpoints `POST /solution-ports`, `/solution-ports/from-template`, `/solution-ports/{guid}/update`, `.../delete`, `/by-name`, `/by-search-string` and `.../retrieve`. They first appear in commit `571034df11` (2026-09-06). The running platform answers `POST /solution-ports/by-name` with 200. **Remaining (pyegeria):** the `.http` snapshot lists none of these, and `pyegeria/omvs/solution_architect.py` has no `create_solution_port` (or update, delete, find). Add them, ideally with Dr.Egeria support.
----
 
 # Quick reference: which OMVS client class for which purpose
 
@@ -2143,6 +2005,34 @@ Builders with no hard-coded keys (`create_elem_from_template`, Dr.Egeria's "Plac
 
 ---
 
+
+### ISSUE-159: no archive wrappers on the project or collection managers, and no restore wrapper at all, although Egeria offers both
+
+**Live-verified 2026-10-29 (Egeria `main` 8de9572c quickstart, qs-view-server, as peterprofile; throwaways prefixed `b2-live-509::`, deleted and verified gone by search and by GUID; peers cleared first): PASS.** `archive_project` and `archive_collection` each left the element hidden from normal reads but readable with `forLineage`, and `restore_metadata_element` brought both back live. Fixed in #509, for 6.2.15.
+
+**Status 2026-10-29: item 2 done on branch `fix/issues-154-158-159-85-tracker-cleanup`, for 6.2.15; item 3 (live test) still to do.** `ProjectManager.archive_project` and `CollectionManager.archive_collection` send each manager's existing delete endpoint with `deleteMethod: ARCHIVE` (shared helper `ServerClient._archive_delete_body`). Traced in Egeria main 8de9572c: `ProjectHandler.deleteProject` and `CollectionHandler.deleteCollection` both pass the `DeleteOptions` to `openMetadataClient.deleteMetadataElementInStore`, and the store routes ARCHIVE to `archiveMetadataElementInStore`. Restore: `MetadataExpert.restore_metadata_element`.
+
+**Layer:** Pyegeria · **Status:** open, logged only (no fix without the owner's word) · **Found:** 2026-10-20, raised by the Resource Explorer expansion-architecture session: RE's investigation-delete ruling needs a Project archived through the project manager and restored by GUID. Facts confirmed here against Egeria `origin/main` 05a5e982 and pyegeria upstream `main`, read-only.
+
+**Egeria:** `OpenMetadataAPIGenericHandler.java` (common-services/generic-handlers):
+- `archiveBeanInRepository` (`:3289`) classifies the element Memento, renames each affected Referenceable's qualifiedName to `<qn>_archivedOn_<date>` (marker `archivedQualifiedNameMarker = "_archivedOn_"`, `:51`), and records one `lastOperationId` per operation.
+- `restoreBeanInRepository` (`:4170`) restores an element and everything the same delete or archive changed, given any GUID that operation touched.
+
+The OMF store's delete (`OpenMetadataStoreRESTServices`, around `:4118`) also routes `deleteMethod: ARCHIVE` to `archiveMetadataElementInStore`, and resolves `LOOK_FOR_LINEAGE` to ARCHIVE when lineage relationships exist.
+
+**pyegeria:**
+- Archive exists only as `MetadataExpert.archive_metadata_element` (`metadata-expert/metadata-elements/{guid}/archive`).
+- There is no `archive_project`, `archive_collection` or other manager-level archive.
+- There is no `restore_*` method anywhere. ISSUE-155 item 5 already lists Metadata Expert `metadata-elements/{guid}/restore` and `related-elements/{guid}/restore` as missing.
+
+**Possible route today (unverified):** `ProjectManager.delete_project(guid, body={"class": "DeleteElementRequestBody", "deleteMethod": "ARCHIVE"})`. pyegeria passes `deleteMethod` through, but whether the project-manager delete path honours ARCHIVE as the OMF store delete does was not traced.
+
+**Proposed (not made):**
+1. ~~Add `MetadataExpert.restore_metadata_element` / `restore_related_elements` (and undo), per ISSUE-155 item 5.~~ Done 2026-10-23 (branch `fix/role-appointment-class-names`). Items 2 and 3 are still open.
+2. Add `ProjectManager.archive_project` and `CollectionManager.archive_collection`. These can be thin wrappers that send `deleteMethod: ARCHIVE` once that path is confirmed live, or call Metadata Expert archive.
+3. Live-test archive then restore of a throwaway Project, including the `_archivedOn_` rename and its reversal.
+
+---
 
 ### ISSUE-158: `GOV_DEF_PROPERTIES_LIST` lacks `DataQualityRuleProperties`, and Dr.Egeria's governance create fallback silently drops every type-specific attribute
 
@@ -2714,6 +2604,47 @@ Java archive builders, not in any REST response. A caller reading `subComponents
 
 **Fixed in #439:** `governance_officer.py` reads `nestedSolutionComponents` (through `relatedElement`), and the
 three dead `subComponents` fallbacks are removed. Micro-tests in `tests/micro-tests/test_issue_131_133.py`.
+
+---
+
+### ISSUE-132: `DeleteElementRequestBody` serializes the cascade flag as `cascadeDelete`; Egeria's field is `cascadedDelete` and unknown fields are ignored, so no pyegeria cascade delete has ever cascaded
+
+**Live-verified 2026-10-29 (Egeria `main` 8de9572c quickstart, qs-view-server, as peterprofile; peers cleared first): PASS.** A throwaway Collection with an anchored member Collection: `delete_collection(cascade=False)` was refused with `OMAG-GENERIC-HANDLERS-403-005` ("not permitted because it still has a dependent Collection element … use the cascaded delete option"); `delete_collection(cascade=True)`, now sending `cascadedDelete`, removed both. Fixed in #509, for 6.2.15.
+
+**Status 2026-10-29: pyegeria side fixed on branch `fix/issues-154-158-159-85-tracker-cleanup`, for 6.2.15 (ISSUE-154 item 1): cascade deletes now send `cascadedDelete`, which every Egeria version reads.** What's left is a live cascade test on a platform built from Egeria main.
+
+**Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: fixed on Egeria's `oak2026` branch, pending its merge to `main`** (each fix has an FVT or unit test). Re-test once `oak2026` is merged and a platform is built from `main`. `cascadeDelete` is now accepted as an alias for `cascadedDelete`, so existing pyegeria requests will start to cascade; Egeria still recommends switching to `cascadedDelete`. **Risk check, 2026-10-18:** no production caller in `pyegeria/`, `md_processing/` or `commands/` passes cascade `True`; every `cascade`/`cascade_delete` default is `False`; `commands/tech/element_actions.py`'s `--cascade` flag (default True) is not forwarded. Live functional/scenario tests that pass `cascade=True` (collection, glossary, governance officer, `remove_note_log`) will now really cascade, which is what they intend. **pyegeria (proposed, not done):** change `DeleteElementRequestBody`'s serialization alias to `cascadedDelete` (keep both accepted on input) and the ~25 `"cascadeDelete"` literals (`_server_client.py`, `models.py`, `actor_manager.py`, `metadata_expert.py`, `product_manager.py`, `reference_data.py`, `valid_metadata.py`), then live-test one cascade and re-test ISSUE-127. No longer urgent, since the old spelling now works.
+
+**Re-test 2026-10-19 (quickstart recreated 13:02Z on Egeria `main` 05a5e982, image 6.3-SNAPSHOT built 2026-10-18 16:13Z; as erinoverview on qs-view-server; throwaways named `pyeg_rt_*`, each deleted and verified gone by GUID; peers cleared first):** **PASS (alias).** A throwaway DataStructure with a linked member DataField, deleted with `delete_data_structure(guid, cascade_delete=True)` (pyegeria still sends `cascadeDelete`), succeeded. Both elements were gone by GUID before any cleanup, so the cascade reached the server. The ISSUE-154 item 1 rename to `cascadedDelete` is still recommended but no longer urgent.
+
+**Layer:** pyegeria · **Status:** open, on hold: an Egeria fix for cascade delete is coming (owner, 2026-10-10). Egeria `main` checked 2026-10-10 (head `af400039c2`, 2026-10-06): no cascade change yet. Wait
+for it, live-test cascade delete against it, then decide the pyegeria change; the fix below may change once the
+Egeria side lands. Confirmed from Egeria source, not yet live-tested · **Found:**
+2026-10-10, while checking ISSUE-129's server contract against Egeria source instead of the `.http` files.
+
+**What:** `pyegeria/models/models.py` `DeleteElementRequestBody.cascade_delete` accepts both spellings on input but
+serializes as `serialization_alias="cascadeDelete"`. The comment there records that the `.http` files were split
+about 50/50 and that the choice was unverified (ISSUE-62). Egeria source settles it (`egeria-v6/egeria` at
+`af400039c2`, 2026-10-06): `DeleteElementRequestBody` -> `DeleteRequestBody` -> `DeleteOptions`
+(`open-metadata-framework/.../search/DeleteOptions.java`), whose field is `cascadedDelete` with
+`getCascadedDelete()`/`setCascadedDelete()`. It is unchanged since 2025-08-04. The class is
+`@JsonAutoDetect(getterVisibility=PUBLIC_ONLY, fieldVisibility=NONE)` and `@JsonIgnoreProperties(ignoreUnknown=true)`,
+with no `@JsonProperty`/`@JsonAlias`, so the JSON name is `cascadedDelete` and `cascadeDelete` is silently ignored.
+
+**Effect:** every pyegeria delete that uses `DeleteElementRequestBody` with cascade on (the ISSUE-62 fix,
+`validate_delete_element_request`, ISSUE-127's fix in #429, `MetadataExpert.delete_metadata_element(cascade_delete=True)`)
+sends a flag Egeria discards, so it deletes without cascading. A caller-supplied dict using the correct
+`cascadedDelete` key is also re-serialized as `cascadeDelete`, so even that does not work. The models module's own
+`DeleteRequestBody.cascaded_delete` already uses the right name.
+
+**Fix (not made):** change the serialization alias to `cascadedDelete` (keep both spellings accepted on input), and
+fix the 19 `"cascadeDelete"` references in `_server_client.py`, `product_manager.py`, `actor_manager.py`,
+`valid_metadata.py`, `metadata_expert.py` and `reference_data.py` (several are docstring samples). Then live-test one
+cascade delete, and re-test ISSUE-127's `DataStructure` refusal. The `.http` files using `cascadedDelete` are correct;
+the ones using `cascadeDelete` are the ones in error (worth reporting to Egeria).
+
+**Lesson:** where the `.http` files disagree with each other, read the Java DTO (getter/setter names plus Jackson
+annotations); do not choose by majority or by what the code already sends.
 
 ---
 
@@ -4927,6 +4858,79 @@ person who ran the report (`advisor/report_pipeline.py`, search "ISSUE-86").
 and thread it to the two builders; when given, `set_bearer_token(token)` instead of
 `create_egeria_bearer_token()`. Same for `run_report`/`describe_report` on the MCP side if they share
 the builder. Backward compatible: `user`/`user_pass` keep working when no token is given.
+
+---
+
+### ISSUE-85: No REST endpoint exists to create a `SolutionPort` element — only attach/detach/delegation relationships are exposed
+
+**Live-verified 2026-10-29 (Egeria `main` 8de9572c quickstart, qs-view-server, as peterprofile; throwaways prefixed `b2-live-509::`, deleted and verified gone; peers cleared first): PASS.** A port created anchored to a SolutionComponent (parent relationship `SolutionComponentPort`), updated, found by search string and by name, read by GUID, seen from the component, copied with create-from-template, and deleted. The live test caught wrong `direction` values in the new docstrings (they said IN/OUT/OUTIN/OTHER; Egeria's `SolutionPortDirection` is UNKNOWN, INPUT, OUTPUT, INOUT, and `IN` is a 400); corrected before merge. Fixed in #509, for 6.2.15. Still not done: a Dr.Egeria `Create Solution Port` command.
+
+**Status 2026-10-29: SDK wrappers added on branch `fix/issues-154-158-159-85-tracker-cleanup`, for 6.2.15; awaiting a live test.** `SolutionArchitect` now has `create_solution_port`, `create_solution_port_from_template`, `update_solution_port`, `delete_solution_port`, `find_solution_ports`, `get_solution_ports_by_name` and `get_solution_port_by_guid`, matching `SolutionArchitectResource.java` on Egeria main (endpoints and body classes; `omvs_audit` Java check passes). Not done: a Dr.Egeria `Create Solution Port` command.
+
+**Status:** open, now a pyegeria gap (Egeria added the endpoints 2026-09-06) 
+consumer (trellis/Resource Explorer, designing a `PortMaterializer` for
+architecture-recovery proposals) hitting the same shape of gap ISSUE-84
+turned out not to be: this time the `.http` ground truth's absence really
+does match the live server, not a stale/incomplete `.http` file.
+
+**Confirmed at every layer:**
+- `pyegeria/omvs/solution_architect.py`: `link_solution_component_port`
+  (attach an *existing* port to a component), `link_solution_port_delegation`
+  (port-to-port delegation), and both detach counterparts exist. No
+  `create_solution_port`/`_async_create_solution_port` anywhere.
+- `Egeria-api-solution-architect.http`: only `.../solution-components/
+  {guid}/solution-ports/{guid}/attach|detach` and `.../solution-ports/
+  {guid}/port-delegations/{guid}/attach|detach`. No `POST .../solution-ports`
+  create path.
+- `md_processing/data/compact_commands/commands_solution_architect_compact.json`:
+  only `Link Solution Component Port`/`Link Solution Port Delegation`. No
+  `Create Solution Port` command.
+- `pyegeria/models/models.py`: no `SolutionPortProperties` model at all —
+  so even the generic fallback route has nothing typed to build a body
+  against.
+
+**Live-verified not just a stale-`.http`-file case** (the precedent this
+repo already has for that shape of false alarm — see the multi-link audit
+above, where 3 of 4 similarly-unwrapped relationship types turned out to
+have zero real endpoint on live-server inspection while others did):
+`dwolfson-1b`/trellis fetched the full live OpenAPI spec directly
+(`GET /v3/api-docs`, 2.39MB) and searched every path containing "port" —
+30 POST paths matched, every one of them attach/detach (component-port,
+port-delegation, even a generic process-ports attach under a different
+`{urlMarker}` service). Zero creation endpoints anywhere in the spec.
+This confirms the `.http` ground truth exactly; not a documentation gap.
+
+**The generic fallback exists but isn't usable without guessing:**
+`/servers/{serverName}/api/open-metadata/{urlMarker}/metadata-elements`
+(`MetadataExpert.create_metadata_element`,
+`NewOpenMetadataElementRequestBody`) is real and live-confirmed present,
+with a top-level `type_name` field that could carry `"SolutionPort"`. But
+per this file's own `pyegeria/models/models.py` gotcha, that endpoint's
+`properties` field needs the verbose nested `ElementProperties`/
+`propertyValueMap` shape server-side, not the flat dict every bespoke
+wrapper uses — and with no `SolutionPortProperties` model to check
+property names against, building that body means hand-guessing what
+properties a `SolutionPort` actually takes. Consistent with this repo's
+established practice (see the multi-link audit's "left unbuilt rather
+than guessing at undocumented URLs or building against the awkward
+generic path speculatively") — not attempted.
+
+**Nothing to fix in pyegeria until Egeria adds a real create endpoint.**
+Once one exists, the follow-on work is small and well-precedented: a
+`create_solution_port`/`_async_create_solution_port` wrapper in
+`SolutionArchitect` following the exact pattern ISSUE-84 just corrected
+(`NewElementRequestBody` + `contentStatus` inside `properties`, no
+fictional separate request-body class), plus a `Create Solution Port`
+Dr.Egeria compact command — the family's registration plumbing in
+`register_solution_architect_processors()` (`md_processing/dr_egeria.py`)
+already handles this shape of addition with no new routing logic needed.
+
+**Not blocking anything urgent** on the trellis/Resource Explorer side —
+they're holding real port materialization until this exists server-side
+(tracked as their own Backlog item 8), or until a workaround surfaces.
+
+
+**Egeria side addressed (2026-10-05 check, carried over from the retired `docs/egeria-open-bugs-2026-10-05.md`):** at `449ad06894`, Solution Architect has `createSolutionPort` and `createSolutionPortFromTemplate`, with endpoints `POST /solution-ports`, `/solution-ports/from-template`, `/solution-ports/{guid}/update`, `.../delete`, `/by-name`, `/by-search-string` and `.../retrieve`. They first appear in commit `571034df11` (2026-09-06). The running platform answers `POST /solution-ports/by-name` with 200. **Remaining (pyegeria):** the `.http` snapshot lists none of these, and `pyegeria/omvs/solution_architect.py` has no `create_solution_port` (or update, delete, find). Add them, ideally with Dr.Egeria support.
 
 ---
 

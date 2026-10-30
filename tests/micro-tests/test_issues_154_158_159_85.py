@@ -49,12 +49,12 @@ async def test_create_solution_port(monkeypatch):
     client, calls = _capture(SolutionArchitect, monkeypatch)
     guid = await client._async_create_solution_port({
         "class": "NewElementRequestBody",
-        "properties": {"class": "SolutionPortProperties", "qualifiedName": "SolutionPort::p", "direction": "IN"},
+        "properties": {"class": "SolutionPortProperties", "qualifiedName": "SolutionPort::p", "direction": "INPUT"},
     })
     assert guid == "new-guid"
     assert calls[0]["url"].endswith(f"{SA_ROOT}/solution-ports")
     assert calls[0]["body"]["properties"]["class"] == "SolutionPortProperties"
-    assert calls[0]["body"]["properties"]["direction"] == "IN"
+    assert calls[0]["body"]["properties"]["direction"] == "INPUT"
 
 
 @pytest.mark.parametrize("method, args, tail, body_class", [
@@ -63,7 +63,7 @@ async def test_create_solution_port(monkeypatch):
      "TemplateRequestBody"),
     ("_async_update_solution_port",
      ("p1", {"class": "UpdateElementRequestBody",
-             "properties": {"class": "SolutionPortProperties", "direction": "OUT"}}),
+             "properties": {"class": "SolutionPortProperties", "direction": "OUTPUT"}}),
      "/solution-ports/p1/update", "UpdateElementRequestBody"),
     ("_async_delete_solution_port", ("p1",), "/solution-ports/p1/delete", "DeleteElementRequestBody"),
     ("_async_get_solution_ports_by_name", ("port",), "/solution-ports/by-name", "FilterRequestBody"),
