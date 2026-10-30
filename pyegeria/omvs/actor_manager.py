@@ -35,6 +35,7 @@ ACTOR_ROLE_PROPERTIES_LIST = ["ActorRoleProperties", "PersonRoleProperties", "Te
                               "ITProfileRoleProperties", "GovernanceRoleProperties","SolutionActorRoleProperties"]
 
 from pyegeria.core._server_client import ServerClient
+from pyegeria.core.async_runner import run_sync
 
 
 class ActorManager(ServerClient):
@@ -189,7 +190,7 @@ class ActorManager(ServerClient):
 
            """
 
-        return asyncio.get_event_loop().run_until_complete(self._async_create_actor_profile(body))
+        return run_sync(self._async_create_actor_profile(body))
 
     #######
 
@@ -306,8 +307,7 @@ class ActorManager(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_create_actor_profile_from_template(body))
+        resp = run_sync(self._async_create_actor_profile_from_template(body))
         return resp
 
     @dynamic_catch
@@ -428,7 +428,7 @@ class ActorManager(ServerClient):
         }
         """
 
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_update_actor_profile(actor_profile_guid, body))
 
     @dynamic_catch
@@ -534,8 +534,7 @@ class ActorManager(ServerClient):
             }
 
             """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_asset_to_profile(asset_guid, it_profile_guid, body))
+        run_sync(self._async_link_asset_to_profile(asset_guid, it_profile_guid, body))
 
     @dynamic_catch
     async def _async_detach_asset_from_profile(self, asset_guid: str, it_profile_guid: str,
@@ -623,8 +622,7 @@ class ActorManager(ServerClient):
               "forDuplicateProcessing": false
             }
             """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_asset_from_profile(asset_guid, it_profile_guid, body))
+        run_sync(self._async_detach_asset_from_profile(asset_guid, it_profile_guid, body))
 
     @dynamic_catch
     async def _async_delete_actor_profile(self, actor_profile_guid: str,
@@ -715,8 +713,7 @@ class ActorManager(ServerClient):
            "forDuplicateProcessing": false
          }
          """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_actor_profile(actor_profile_guid, body, cascade))
+        run_sync(self._async_delete_actor_profile(actor_profile_guid, body, cascade))
 
     @dynamic_catch
     async def _async_find_actor_profiles(
@@ -879,8 +876,7 @@ class ActorManager(ServerClient):
         -------
         list | str
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_actor_profiles(
                 search_string=search_string,
                 starts_with=starts_with,
@@ -1020,8 +1016,7 @@ class ActorManager(ServerClient):
         -------
         list | str
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_actor_profiles_by_name(
                 name=name,
                 metadata_element_type_name=metadata_element_type_name,
@@ -1126,8 +1121,7 @@ class ActorManager(ServerClient):
         -------
         dict | str
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_actor_profile_by_guid(
                 guid=guid,
                 include_only_relationships=include_only_relationships,
@@ -1370,7 +1364,7 @@ class ActorManager(ServerClient):
 
            """
 
-        return asyncio.get_event_loop().run_until_complete(self._async_create_actor_role(body))
+        return run_sync(self._async_create_actor_role(body))
 
     @dynamic_catch
     async def _async_create_actor_role_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
@@ -1485,8 +1479,7 @@ class ActorManager(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_create_actor_role_from_template(body))
+        resp = run_sync(self._async_create_actor_role_from_template(body))
         return resp
 
     @dynamic_catch
@@ -1607,7 +1600,7 @@ class ActorManager(ServerClient):
         }
         """
 
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_update_actor_role(actor_role_guid, body))
 
     @dynamic_catch
@@ -1707,8 +1700,7 @@ class ActorManager(ServerClient):
             }
 
             """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_person_role_to_profile(person_role_guid, person_profile_guid, body))
+        run_sync(self._async_link_person_role_to_profile(person_role_guid, person_profile_guid, body))
 
     @dynamic_catch
     async def _async_detach_person_role_from_profile(self, person_role_guid: str, person_profile_guid: str,
@@ -1797,8 +1789,7 @@ class ActorManager(ServerClient):
               "forDuplicateProcessing": false
             }
             """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_person_role_from_profile(person_role_guid, person_profile_guid, body))
 
     #
@@ -1899,8 +1890,7 @@ class ActorManager(ServerClient):
             }
 
             """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_team_role_to_profile(team_role_guid, team_profile_guid, body))
+        run_sync(self._async_link_team_role_to_profile(team_role_guid, team_profile_guid, body))
 
     @dynamic_catch
     async def _async_detach_team_role_from_profile(self, team_role_guid: str, team_profile_guid: str,
@@ -1988,8 +1978,7 @@ class ActorManager(ServerClient):
               "forDuplicateProcessing": false
             }
             """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_team_role_from_profile(team_role_guid, team_profile_guid, body))
+        run_sync(self._async_detach_team_role_from_profile(team_role_guid, team_profile_guid, body))
 
     #
     @dynamic_catch
@@ -2089,8 +2078,7 @@ class ActorManager(ServerClient):
             }
 
             """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_link_it_profile_role_to_it_profile(it_profile_role_guid, it_profile_guid, body))
 
     @dynamic_catch
@@ -2180,8 +2168,7 @@ class ActorManager(ServerClient):
               "forDuplicateProcessing": false
             }
             """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_it_profile_role_from_it_profile(it_profile_role_guid, it_profile_guid, body))
 
     #
@@ -2276,8 +2263,7 @@ class ActorManager(ServerClient):
            "forDuplicateProcessing": false
          }
          """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_actor_role(actor_role_guid, body, cascade))
+        run_sync(self._async_delete_actor_role(actor_role_guid, body, cascade))
 
     @dynamic_catch
     async def _async_find_actor_roles(
@@ -2440,8 +2426,7 @@ class ActorManager(ServerClient):
         -------
         list | str
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_actor_roles(
                 search_string=search_string,
                 starts_with=starts_with,
@@ -2581,8 +2566,7 @@ class ActorManager(ServerClient):
         -------
         list | str
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_actor_roles_by_name(
                 name=name,
                 metadata_element_type_name=metadata_element_type_name,
@@ -2687,8 +2671,7 @@ class ActorManager(ServerClient):
         -------
         dict | str
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_actor_role_by_guid(
                 guid=guid,
                 include_only_relationships=include_only_relationships,
@@ -2944,7 +2927,7 @@ class ActorManager(ServerClient):
 
             """
 
-        return asyncio.get_event_loop().run_until_complete(self._async_create_user_identity(body))
+        return run_sync(self._async_create_user_identity(body))
 
     @dynamic_catch
     async def _async_create_user_identity_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
@@ -3057,8 +3040,7 @@ class ActorManager(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_create_user_identity_from_template(body))
+        resp = run_sync(self._async_create_user_identity_from_template(body))
         return resp
 
     @dynamic_catch
@@ -3181,7 +3163,7 @@ class ActorManager(ServerClient):
         }
         """
 
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_update_user_identity(user_identity_guid, body))
 
     @dynamic_catch
@@ -3282,8 +3264,7 @@ class ActorManager(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_identity_to_profile(user_identity_guid, actor_profile_guid, body))
+        run_sync(self._async_link_identity_to_profile(user_identity_guid, actor_profile_guid, body))
 
     @dynamic_catch
     async def _async_detach_identity_from_profile(self, user_identity_guid: str, actor_profile_guid: str,
@@ -3372,8 +3353,7 @@ class ActorManager(ServerClient):
               "forDuplicateProcessing": false
             }
             """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_identity_from_profile(user_identity_guid, actor_profile_guid, body))
+        run_sync(self._async_detach_identity_from_profile(user_identity_guid, actor_profile_guid, body))
 
     @dynamic_catch
     async def _async_link_assignment_scope(self, scope_element_guid: str, actor_guid: str,
@@ -3474,8 +3454,7 @@ class ActorManager(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_assignment_scope(scope_element_guid, actor_guid, body))
+        run_sync(self._async_link_assignment_scope(scope_element_guid, actor_guid, body))
 
     @dynamic_catch
     async def _async_detach_assignment_scope(self, scope_element_guid: str, actor_guid: str,
@@ -3562,8 +3541,7 @@ class ActorManager(ServerClient):
           "forDuplicateProcessing" : false
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_assignment_scope(scope_element_guid, actor_guid, body))
+        run_sync(self._async_detach_assignment_scope(scope_element_guid, actor_guid, body))
 
     @dynamic_catch
     async def _async_add_security_group_membership(self, user_identity_guid: str, security_groups: list[str] = [""],
@@ -3667,8 +3645,7 @@ class ActorManager(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_add_security_group_membership(user_identity_guid, security_groups, body))
+        run_sync(self._async_add_security_group_membership(user_identity_guid, security_groups, body))
 
     @dynamic_catch
     async def _async_update_security_group_membership(self, user_identity_guid: str,
@@ -3765,8 +3742,7 @@ class ActorManager(ServerClient):
               "forDuplicateProcessing" : false
             }
             """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_security_group_membership(user_identity_guid, body))
+        run_sync(self._async_update_security_group_membership(user_identity_guid, body))
 
     @dynamic_catch
     async def _async_remove_all_security_group_memberships(self, user_identity_guid: str,
@@ -3851,8 +3827,7 @@ class ActorManager(ServerClient):
               "forDuplicateProcessing": false
             }
             """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_identity_from_profile(user_identity_guid, body))
+        run_sync(self._async_detach_identity_from_profile(user_identity_guid, body))
 
     #
     # do deletes etc
@@ -3947,8 +3922,7 @@ class ActorManager(ServerClient):
            "forDuplicateProcessing": false
          }
          """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_user_identity(user_identity_guid, body, cascade))
+        run_sync(self._async_delete_user_identity(user_identity_guid, body, cascade))
 
     @dynamic_catch
     async def _async_find_user_identities(
@@ -4111,8 +4085,7 @@ class ActorManager(ServerClient):
         -------
         list | str
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_user_identities(
                 search_string=search_string,
                 starts_with=starts_with,
@@ -4264,8 +4237,7 @@ class ActorManager(ServerClient):
         -------
         list | str
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_user_identities_by_name(
                 name=name,
                 metadata_element_type_name=metadata_element_type_name,
@@ -4371,8 +4343,7 @@ class ActorManager(ServerClient):
         -------
         dict | str
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_user_identity_by_guid(
                 guid=guid,
                 include_only_relationships=include_only_relationships,
@@ -4956,8 +4927,7 @@ class ActorManager(ServerClient):
         -------
         list | str
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_contribution_records_by_name(
                 name=name,
                 metadata_element_type_name=metadata_element_type_name,
@@ -5134,8 +5104,7 @@ class ActorManager(ServerClient):
         -------
         list | str
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_contribution_records(
                 search_string=search_string,
                 starts_with=starts_with,
@@ -5219,8 +5188,7 @@ class ActorManager(ServerClient):
         -------
         list | str
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_all_contribution_records(
                 start_from=start_from,
                 page_size=page_size,
@@ -5319,8 +5287,7 @@ class ActorManager(ServerClient):
         -------
         dict | str
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_contribution_record_by_guid(
                 guid=guid,
                 include_only_relationships=include_only_relationships,
@@ -5918,8 +5885,7 @@ class ActorManager(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_contact_details(element_guid, contact_details_guid, body))
+        run_sync(self._async_link_contact_details(element_guid, contact_details_guid, body))
 
     @dynamic_catch
     async def _async_detach_contact_details(self, element_guid: str, contact_details_guid: str,
@@ -6008,8 +5974,7 @@ class ActorManager(ServerClient):
           "forDuplicateProcessing" : false
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_contact_details(element_guid, contact_details_guid, body))
+        run_sync(self._async_detach_contact_details(element_guid, contact_details_guid, body))
 
     @dynamic_catch
     async def _async_get_contact_details_by_name(
@@ -6140,8 +6105,7 @@ class ActorManager(ServerClient):
         -------
         list | str
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_contact_details_by_name(
                 name=name,
                 metadata_element_type_name=metadata_element_type_name,
@@ -6318,8 +6282,7 @@ class ActorManager(ServerClient):
         -------
         list | str
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_contact_details(
                 search_string=search_string,
                 starts_with=starts_with,
@@ -6431,8 +6394,7 @@ class ActorManager(ServerClient):
         -------
         dict | str
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_contact_details_by_guid(
                 guid=guid,
                 include_only_relationships=include_only_relationships,
@@ -6946,8 +6908,7 @@ class ActorManager(ServerClient):
         -------
         list | str
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_perspectives_by_name(
                 name=name,
                 metadata_element_type_name=metadata_element_type_name,
@@ -7124,8 +7085,7 @@ class ActorManager(ServerClient):
         -------
         list | str
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_perspectives(
                 search_string=search_string,
                 starts_with=starts_with,
@@ -7237,8 +7197,7 @@ class ActorManager(ServerClient):
         -------
         dict | str
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_perspective_by_guid(
                 guid=guid,
                 include_only_relationships=include_only_relationships,
@@ -7752,8 +7711,7 @@ class ActorManager(ServerClient):
         -------
         list | str
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_skills_by_name(
                 name=name,
                 metadata_element_type_name=metadata_element_type_name,
@@ -7930,8 +7888,7 @@ class ActorManager(ServerClient):
         -------
         list | str
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_skills(
                 search_string=search_string,
                 starts_with=starts_with,
@@ -8043,8 +8000,7 @@ class ActorManager(ServerClient):
         -------
         dict | str
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_skill_by_guid(
                 guid=guid,
                 include_only_relationships=include_only_relationships,

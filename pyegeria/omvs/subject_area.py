@@ -29,6 +29,7 @@ from pyegeria.view.output_formatter import (
     overlay_additional_values,
 )
 from pyegeria.core.utils import dynamic_catch
+from pyegeria.core.async_runner import run_sync
 
 
 class SubjectAreaProperties(ReferenceableProperties):
@@ -176,8 +177,7 @@ class SubjectArea(ServerClient):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_subject_area(body))
+        return run_sync(self._async_create_subject_area(body))
 
     @dynamic_catch
     async def _async_create_subject_area_from_template(self, body: dict | TemplateRequestBody) -> str:
@@ -259,8 +259,7 @@ class SubjectArea(ServerClient):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_subject_area_from_template(body))
+        return run_sync(self._async_create_subject_area_from_template(body))
 
     @dynamic_catch
     async def _async_update_subject_area(
@@ -334,8 +333,7 @@ class SubjectArea(ServerClient):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_subject_area(subject_area_guid, body))
+        run_sync(self._async_update_subject_area(subject_area_guid, body))
 
     @dynamic_catch
     async def _async_delete_subject_area(
@@ -401,8 +399,7 @@ class SubjectArea(ServerClient):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_subject_area(subject_area_guid, body))
+        run_sync(self._async_delete_subject_area(subject_area_guid, body))
 
     @dynamic_catch
     async def _async_link_subject_area_hierarchy(
@@ -484,8 +481,7 @@ class SubjectArea(ServerClient):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_link_subject_area_hierarchy(
                 parent_subject_area_guid, nested_subject_area_guid, body
             )
@@ -565,8 +561,7 @@ class SubjectArea(ServerClient):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_subject_area_hierarchy(
                 parent_subject_area_guid, nested_subject_area_guid, body
             )
@@ -722,8 +717,7 @@ class SubjectArea(ServerClient):
         if name is None and body is None:
             name = "*"
 
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_subject_areas_by_name(
                 name=name,
                 metadata_element_type_name=metadata_element_type_name,
@@ -901,8 +895,7 @@ class SubjectArea(ServerClient):
         -------
         list | str
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_subject_areas(
                 search_string=search_string,
                 starts_with=starts_with,
@@ -1025,8 +1018,7 @@ class SubjectArea(ServerClient):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_subject_area_by_guid(
                 guid=guid,
                 include_only_relationships=include_only_relationships,
@@ -1056,8 +1048,7 @@ class SubjectArea(ServerClient):
     def link_subject_areas(self, parent_subject_area_guid: str, nested_subject_area_guid: str,
                            body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Attach a nested subject area to its parent subject area (SubjectAreaHierarchy relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_subject_areas(parent_subject_area_guid, nested_subject_area_guid, body))
+        run_sync(self._async_link_subject_areas(parent_subject_area_guid, nested_subject_area_guid, body))
 
     @dynamic_catch
     async def _async_detach_subject_areas(self, parent_subject_area_guid: str, nested_subject_area_guid: str,
@@ -1070,5 +1061,4 @@ class SubjectArea(ServerClient):
     def detach_subject_areas(self, parent_subject_area_guid: str, nested_subject_area_guid: str,
                              body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """Detach a nested subject area from its parent subject area."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_subject_areas(parent_subject_area_guid, nested_subject_area_guid, body))
+        run_sync(self._async_detach_subject_areas(parent_subject_area_guid, nested_subject_area_guid, body))

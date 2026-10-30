@@ -25,6 +25,7 @@ from pyegeria.models import (
 from pyegeria.core._globals import NO_ELEMENTS_FOUND
 from pyegeria.core.utils import dynamic_catch, body_slimmer
 from loguru import logger
+from pyegeria.core.async_runner import run_sync
 
 
 class ProductManager(CollectionManager):
@@ -203,8 +204,7 @@ class ProductManager(CollectionManager):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_digital_product(body))
+        return run_sync(self._async_create_digital_product(body))
 
     @dynamic_catch
     async def _async_update_digital_product(
@@ -284,8 +284,7 @@ class ProductManager(CollectionManager):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_update_digital_product(digital_product_guid, body)
         )
 
@@ -368,8 +367,7 @@ class ProductManager(CollectionManager):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_delete_digital_product(digital_product_guid, body, cascade)
         )
 
@@ -466,8 +464,7 @@ class ProductManager(CollectionManager):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_digital_product_by_guid(
                 graph_query_depth=graph_query_depth,
                 guid=guid, body=body, output_format=output_format, report_spec=report_spec, **kwargs
@@ -567,8 +564,7 @@ class ProductManager(CollectionManager):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_digital_products_by_name(
                 graph_query_depth=graph_query_depth,
                 name=name, classification_names=classification_names, body=body, start_from=start_from, page_size=page_size, output_format=output_format, report_spec=report_spec, **kwargs
@@ -762,8 +758,7 @@ class ProductManager(CollectionManager):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_digital_products(
                 search_string=search_string,
                 graph_query_depth=graph_query_depth,
@@ -882,8 +877,7 @@ class ProductManager(CollectionManager):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_link_digital_product_dependency(
                 consumer_product_guid, consumed_product_guid, body
             )
@@ -967,8 +961,7 @@ class ProductManager(CollectionManager):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_digital_product_dependency(
                 consumer_product_guid, consumed_product_guid, body
             )
@@ -1066,8 +1059,7 @@ class ProductManager(CollectionManager):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_link_product_manager(
                 digital_product_guid, product_manager_role_guid, body
             )
@@ -1151,8 +1143,7 @@ class ProductManager(CollectionManager):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_product_manager(
                 digital_product_guid, product_manager_role_guid, body
             )
@@ -1241,8 +1232,7 @@ class ProductManager(CollectionManager):
             If there are issues in communications, message format, or Egeria errors.
         """
         body = self._prepare_body(body)
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_digital_product_catalog(body))
+        return run_sync(self._async_create_digital_product_catalog(body))
 
     @dynamic_catch
     async def _async_update_digital_product_catalog(
@@ -1303,8 +1293,7 @@ class ProductManager(CollectionManager):
         """
         digital_product_catalog_guid = str(digital_product_catalog_guid)
         body = self._prepare_body(body)
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_update_digital_product_catalog(digital_product_catalog_guid, body)
         )
 
@@ -1375,8 +1364,7 @@ class ProductManager(CollectionManager):
         if body is not None:
             body = self._prepare_body(body)
         cascade = bool(cascade)
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_delete_digital_product_catalog(digital_product_catalog_guid, body, cascade)
         )
 
@@ -1466,8 +1454,7 @@ class ProductManager(CollectionManager):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_digital_product_catalog_by_guid(
                 graph_query_depth=graph_query_depth,
                 guid=guid, body=body, output_format=output_format, report_spec=report_spec, **kwargs
@@ -1566,8 +1553,7 @@ class ProductManager(CollectionManager):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_digital_product_catalogs_by_name(
                 graph_query_depth=graph_query_depth,
                 name=name, classification_names=classification_names, body=body, start_from=start_from, page_size=page_size, output_format=output_format, report_spec=report_spec, **kwargs
@@ -1754,8 +1740,7 @@ class ProductManager(CollectionManager):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_digital_product_catalogs(
                 search_string=search_string,
                 graph_query_depth=graph_query_depth,
@@ -1787,8 +1772,7 @@ class ProductManager(CollectionManager):
     def update_digital_product_dependency(self, digital_product_dependency_relationship_guid: str,
                                           body: Optional[dict | UpdateRelationshipRequestBody] = None) -> None:
         """Update the properties of a DigitalProductDependency relationship, identified by its own relationship GUID."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_digital_product_dependency(digital_product_dependency_relationship_guid, body))
+        run_sync(self._async_update_digital_product_dependency(digital_product_dependency_relationship_guid, body))
 
     @dynamic_catch
     async def _async_detach_digital_product_dependency_by_id(self, digital_product_dependency_relationship_guid: str,
@@ -1801,8 +1785,7 @@ class ProductManager(CollectionManager):
     def detach_digital_product_dependency_by_id(self, digital_product_dependency_relationship_guid: str,
                                                  body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """Detach one specific DigitalProductDependency relationship, identified by its own relationship GUID."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_digital_product_dependency_by_id(digital_product_dependency_relationship_guid, body))
+        run_sync(self._async_detach_digital_product_dependency_by_id(digital_product_dependency_relationship_guid, body))
 
     #
     # Subscription types, and Open Data Contract / Product Standard (ODCS / ODPS) documents.
@@ -1867,8 +1850,7 @@ class ProductManager(CollectionManager):
     ) -> Optional[str]:
         """Add a one-time subscription type to a digital product. Returns the GUID of the governance action
         process that creates a subscription of this type."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_one_time_subscription(digital_product_guid, body))
+        return run_sync(self._async_create_one_time_subscription(digital_product_guid, body))
 
     @dynamic_catch
     async def _async_create_periodic_subscription(
@@ -1904,8 +1886,7 @@ class ProductManager(CollectionManager):
     ) -> Optional[str]:
         """Add a periodic subscription type to a digital product. Returns the GUID of the governance action
         process that creates a subscription of this type."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_periodic_subscription(digital_product_guid, body))
+        return run_sync(self._async_create_periodic_subscription(digital_product_guid, body))
 
     @dynamic_catch
     async def _async_create_ongoing_update_subscription(
@@ -1943,8 +1924,7 @@ class ProductManager(CollectionManager):
     ) -> Optional[str]:
         """Add an ongoing-update subscription type to a digital product. Returns the GUID of the governance
         action process that creates a subscription of this type."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_ongoing_update_subscription(digital_product_guid, body))
+        return run_sync(self._async_create_ongoing_update_subscription(digital_product_guid, body))
 
     async def _async_post_document(self, url: str, document: str | dict) -> Optional[str]:
         """POST a data contract / data product document and return the "guid" the server answers with, if any.
@@ -1969,8 +1949,7 @@ class ProductManager(CollectionManager):
     @dynamic_catch
     def publish_data_contract_string(self, integration_daemon_guid: str, document: str) -> None:
         """Send an ODCS data contract (YAML or JSON text) to an integration daemon for its Bitol listeners."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_publish_data_contract_string(integration_daemon_guid, document))
+        return run_sync(self._async_publish_data_contract_string(integration_daemon_guid, document))
 
     @dynamic_catch
     async def _async_publish_data_product_string(self, integration_daemon_guid: str, document: str) -> None:
@@ -1983,8 +1962,7 @@ class ProductManager(CollectionManager):
     @dynamic_catch
     def publish_data_product_string(self, integration_daemon_guid: str, document: str) -> None:
         """Send an ODPS data product (YAML or JSON text) to an integration daemon for its Bitol listeners."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_publish_data_product_string(integration_daemon_guid, document))
+        return run_sync(self._async_publish_data_product_string(integration_daemon_guid, document))
 
     @dynamic_catch
     async def _async_import_data_contract_string(self, document: str) -> Optional[str]:
@@ -1996,8 +1974,7 @@ class ProductManager(CollectionManager):
     @dynamic_catch
     def import_data_contract_string(self, document: str) -> Optional[str]:
         """Catalog an ODCS data contract (YAML or JSON text) as a DataSharingAgreement. Returns its GUID."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_import_data_contract_string(document))
+        return run_sync(self._async_import_data_contract_string(document))
 
     @dynamic_catch
     async def _async_import_data_contract(self, data_contract: dict) -> Optional[str]:
@@ -2010,8 +1987,7 @@ class ProductManager(CollectionManager):
     @dynamic_catch
     def import_data_contract(self, data_contract: dict) -> Optional[str]:
         """Catalog an ODCS data contract bean as a DataSharingAgreement. Returns its GUID."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_import_data_contract(data_contract))
+        return run_sync(self._async_import_data_contract(data_contract))
 
     @dynamic_catch
     async def _async_import_data_product_string(self, document: str) -> Optional[str]:
@@ -2023,8 +1999,7 @@ class ProductManager(CollectionManager):
     @dynamic_catch
     def import_data_product_string(self, document: str) -> Optional[str]:
         """Catalog an ODPS data product (YAML or JSON text) as a DigitalProduct. Returns its GUID."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_import_data_product_string(document))
+        return run_sync(self._async_import_data_product_string(document))
 
     @dynamic_catch
     async def _async_import_data_product(self, data_product: dict) -> Optional[str]:
@@ -2036,8 +2011,7 @@ class ProductManager(CollectionManager):
     @dynamic_catch
     def import_data_product(self, data_product: dict) -> Optional[str]:
         """Catalog an ODPS data product bean as a DigitalProduct. Returns its GUID."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_import_data_product(data_product))
+        return run_sync(self._async_import_data_product(data_product))
 
     @dynamic_catch
     async def _async_generate_data_contract(self, agreement_guid: str) -> dict | str:
@@ -2050,8 +2024,7 @@ class ProductManager(CollectionManager):
     @dynamic_catch
     def generate_data_contract(self, agreement_guid: str) -> dict | str:
         """Generate the ODCS document that describes an agreement."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_generate_data_contract(agreement_guid))
+        return run_sync(self._async_generate_data_contract(agreement_guid))
 
     @dynamic_catch
     async def _async_generate_data_product(self, digital_product_guid: str) -> dict | str:
@@ -2064,8 +2037,7 @@ class ProductManager(CollectionManager):
     @dynamic_catch
     def generate_data_product(self, digital_product_guid: str) -> dict | str:
         """Generate the ODPS document that describes a digital product."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_generate_data_product(digital_product_guid))
+        return run_sync(self._async_generate_data_product(digital_product_guid))
 
     @dynamic_catch
     async def _async_get_governance_action_processes_by_name(
@@ -2125,7 +2097,6 @@ class ProductManager(CollectionManager):
     ) -> list | str:
         """Retrieve the governance action processes with a matching qualified or display name (for example a
         digital product's subscription types)."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_get_governance_action_processes_by_name(
+        return run_sync(self._async_get_governance_action_processes_by_name(
             name, body=body, start_from=start_from, page_size=page_size, output_format=output_format,
             report_spec=report_spec, **kwargs))

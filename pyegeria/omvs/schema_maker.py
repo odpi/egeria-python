@@ -32,6 +32,7 @@ from pyegeria.view.output_formatter import (
     overlay_additional_values,
 )
 from pyegeria.core.utils import dynamic_catch
+from pyegeria.core.async_runner import run_sync
 
 
 class SchemaTypeProperties(ReferenceableProperties):
@@ -120,8 +121,7 @@ class SchemaMaker(ServerClient):
         return await self._async_create_element_body_request(url, "SchemaTypeProperties", body)
 
     def create_schema_type(self, body: dict | NewElementRequestBody) -> str:
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_schema_type(body))
+        return run_sync(self._async_create_schema_type(body))
 
     @dynamic_catch
     async def _async_update_schema_type(
@@ -131,8 +131,7 @@ class SchemaMaker(ServerClient):
         await self._async_update_element_body_request(url, body=body)
 
     def update_schema_type(self, schema_type_guid: str, body: dict | UpdateElementRequestBody) -> None:
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_schema_type(schema_type_guid, body))
+        run_sync(self._async_update_schema_type(schema_type_guid, body))
 
     @dynamic_catch
     async def _async_delete_schema_type(
@@ -152,8 +151,7 @@ class SchemaMaker(ServerClient):
 
     def delete_schema_type(self, schema_type_guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
                            cascade_delete: bool = False) -> None:
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_schema_type(schema_type_guid, body, cascade_delete))
+        run_sync(self._async_delete_schema_type(schema_type_guid, body, cascade_delete))
 
     # Schema Attributes
 
@@ -163,8 +161,7 @@ class SchemaMaker(ServerClient):
         return await self._async_create_element_body_request(url, "SchemaAttributeProperties", body)
 
     def create_schema_attribute(self, body: dict | NewElementRequestBody) -> str:
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_schema_attribute(body))
+        return run_sync(self._async_create_schema_attribute(body))
 
     @dynamic_catch
     async def _async_update_schema_attribute(
@@ -176,8 +173,7 @@ class SchemaMaker(ServerClient):
     def update_schema_attribute(
         self, schema_attribute_guid: str, body: dict | UpdateElementRequestBody
     ) -> None:
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_schema_attribute(schema_attribute_guid, body))
+        run_sync(self._async_update_schema_attribute(schema_attribute_guid, body))
 
     @dynamic_catch
     async def _async_delete_schema_attribute(
@@ -193,8 +189,7 @@ class SchemaMaker(ServerClient):
         self, schema_attribute_guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
         cascade_delete: bool = False
     ) -> None:
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_schema_attribute(schema_attribute_guid, body, cascade_delete))
+        run_sync(self._async_delete_schema_attribute(schema_attribute_guid, body, cascade_delete))
 
     @dynamic_catch
     async def _async_find_schema_types(
@@ -393,8 +388,7 @@ class SchemaMaker(ServerClient):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_schema_types(
                 search_string=search_string,
                 graph_query_depth=graph_query_depth,
@@ -451,8 +445,7 @@ class SchemaMaker(ServerClient):
         report_spec: str | dict = "SchemaTypes",
         **kwargs,
     ) -> dict | str:
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_schema_type_by_guid(
                 graph_query_depth=graph_query_depth,
                 guid=guid, element_type=element_type, body=body, output_format=output_format, report_spec=report_spec,
@@ -468,8 +461,7 @@ class SchemaMaker(ServerClient):
 
     def create_schema_type_from_template(self, body: dict | TemplateRequestBody) -> str:
         """Create a schema type from a template."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_schema_type_from_template(body))
+        return run_sync(self._async_create_schema_type_from_template(body))
 
     @dynamic_catch
     async def _async_create_schema_attribute_from_template(self, body: dict | TemplateRequestBody) -> str:
@@ -479,8 +471,7 @@ class SchemaMaker(ServerClient):
 
     def create_schema_attribute_from_template(self, body: dict | TemplateRequestBody) -> str:
         """Create a schema attribute from a template."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_schema_attribute_from_template(body))
+        return run_sync(self._async_create_schema_attribute_from_template(body))
 
     @dynamic_catch
     async def _async_get_schema_types_by_name(self, name: str | None = None, start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
@@ -490,8 +481,7 @@ class SchemaMaker(ServerClient):
 
     def get_schema_types_by_name(self, name: str | None = None, start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
         """Get schema types by name."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_get_schema_types_by_name(name, start_from, page_size, **kwargs))
+        return run_sync(self._async_get_schema_types_by_name(name, start_from, page_size, **kwargs))
 
     @dynamic_catch
     async def _async_get_schema_attributes_by_name(self, name: str | None = None, start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
@@ -501,8 +491,7 @@ class SchemaMaker(ServerClient):
 
     def get_schema_attributes_by_name(self, name: str | None = None, start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
         """Get schema attributes by name."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_get_schema_attributes_by_name(name, start_from, page_size, **kwargs))
+        return run_sync(self._async_get_schema_attributes_by_name(name, start_from, page_size, **kwargs))
 
     @dynamic_catch
     async def _async_find_schema_attributes(self, search_string: str = "*", start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
@@ -512,8 +501,7 @@ class SchemaMaker(ServerClient):
 
     def find_schema_attributes(self, search_string: str = "*", start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
         """Find schema attributes."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_find_schema_attributes(search_string, start_from, page_size, **kwargs))
+        return run_sync(self._async_find_schema_attributes(search_string, start_from, page_size, **kwargs))
 
     @dynamic_catch
     async def _async_get_schema_attribute_by_guid(self, guid: str, **kwargs) -> dict | str:
@@ -523,8 +511,7 @@ class SchemaMaker(ServerClient):
 
     def get_schema_attribute_by_guid(self, guid: str, **kwargs) -> dict | str:
         """Get schema attribute by GUID."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_get_schema_attribute_by_guid(guid, **kwargs))
+        return run_sync(self._async_get_schema_attribute_by_guid(guid, **kwargs))
 
     #
     # Relationship and classification maintenance - added to close the gap
@@ -546,8 +533,7 @@ class SchemaMaker(ServerClient):
     def link_nested_schema_attribute(self, schema_attribute_guid: str, nested_schema_attribute_guid: str,
                                      body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Attach a nested schema attribute to its parent schema attribute (NestedSchemaAttribute relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_nested_schema_attribute(schema_attribute_guid, nested_schema_attribute_guid, body))
+        run_sync(self._async_link_nested_schema_attribute(schema_attribute_guid, nested_schema_attribute_guid, body))
 
     @dynamic_catch
     async def _async_detach_nested_schema_attribute(self, schema_attribute_guid: str, nested_schema_attribute_guid: str,
@@ -564,8 +550,7 @@ class SchemaMaker(ServerClient):
                                        body: Optional[dict | DeleteRelationshipRequestBody] = None,
                                        cascade_delete: bool = False) -> None:
         """Detach a nested schema attribute from its parent schema attribute."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_nested_schema_attribute(
+        run_sync(self._async_detach_nested_schema_attribute(
             schema_attribute_guid, nested_schema_attribute_guid, body, cascade_delete))
 
     @dynamic_catch
@@ -581,8 +566,7 @@ class SchemaMaker(ServerClient):
     def link_attribute_for_schema(self, schema_type_guid: str, schema_attribute_guid: str,
                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Attach a schema attribute to the schema type that it belongs to (AttributeForSchema relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_attribute_for_schema(schema_type_guid, schema_attribute_guid, body))
+        run_sync(self._async_link_attribute_for_schema(schema_type_guid, schema_attribute_guid, body))
 
     @dynamic_catch
     async def _async_detach_attribute_for_schema(self, schema_type_guid: str, schema_attribute_guid: str,
@@ -599,8 +583,7 @@ class SchemaMaker(ServerClient):
                                     body: Optional[dict | DeleteRelationshipRequestBody] = None,
                                     cascade_delete: bool = False) -> None:
         """Detach a schema attribute from the schema type that it belongs to."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_attribute_for_schema(
+        run_sync(self._async_detach_attribute_for_schema(
             schema_type_guid, schema_attribute_guid, body, cascade_delete))
 
     @dynamic_catch
@@ -616,8 +599,7 @@ class SchemaMaker(ServerClient):
     def link_foreign_key(self, primary_key_column_guid: str, foreign_key_column_guid: str,
                          body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Attach a foreign key column to the primary key column that it refers to (ForeignKey relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_foreign_key(primary_key_column_guid, foreign_key_column_guid, body))
+        run_sync(self._async_link_foreign_key(primary_key_column_guid, foreign_key_column_guid, body))
 
     @dynamic_catch
     async def _async_detach_foreign_key(self, primary_key_column_guid: str, foreign_key_column_guid: str,
@@ -634,8 +616,7 @@ class SchemaMaker(ServerClient):
                            body: Optional[dict | DeleteRelationshipRequestBody] = None,
                            cascade_delete: bool = False) -> None:
         """Detach a foreign key column from the primary key column that it refers to."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_foreign_key(
+        run_sync(self._async_detach_foreign_key(
             primary_key_column_guid, foreign_key_column_guid, body, cascade_delete))
 
     @dynamic_catch
@@ -651,8 +632,7 @@ class SchemaMaker(ServerClient):
     def link_external_schema_type(self, schema_element_guid: str, schema_type_guid: str,
                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Attach a schema element to a reusable, externally-defined schema type (LinkedExternalSchemaType relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_external_schema_type(schema_element_guid, schema_type_guid, body))
+        run_sync(self._async_link_external_schema_type(schema_element_guid, schema_type_guid, body))
 
     @dynamic_catch
     async def _async_detach_external_schema_type(self, schema_element_guid: str, schema_type_guid: str,
@@ -669,8 +649,7 @@ class SchemaMaker(ServerClient):
                                     body: Optional[dict | DeleteRelationshipRequestBody] = None,
                                     cascade_delete: bool = False) -> None:
         """Detach a schema element from a reusable, externally-defined schema type."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_external_schema_type(
+        run_sync(self._async_detach_external_schema_type(
             schema_element_guid, schema_type_guid, body, cascade_delete))
 
     @dynamic_catch
@@ -686,8 +665,7 @@ class SchemaMaker(ServerClient):
     def link_map_from_schema_type(self, schema_element_guid: str, schema_type_guid: str,
                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Attach the 'from' end of a map schema type (MapFromElementType relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_map_from_schema_type(schema_element_guid, schema_type_guid, body))
+        run_sync(self._async_link_map_from_schema_type(schema_element_guid, schema_type_guid, body))
 
     @dynamic_catch
     async def _async_detach_map_from_schema_type(self, schema_element_guid: str, schema_type_guid: str,
@@ -704,8 +682,7 @@ class SchemaMaker(ServerClient):
                                     body: Optional[dict | DeleteRelationshipRequestBody] = None,
                                     cascade_delete: bool = False) -> None:
         """Detach the 'from' end of a map schema type."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_map_from_schema_type(
+        run_sync(self._async_detach_map_from_schema_type(
             schema_element_guid, schema_type_guid, body, cascade_delete))
 
     @dynamic_catch
@@ -721,8 +698,7 @@ class SchemaMaker(ServerClient):
     def link_map_to_schema_type(self, schema_element_guid: str, schema_type_guid: str,
                                 body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Attach the 'to' end of a map schema type (MapToElementType relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_map_to_schema_type(schema_element_guid, schema_type_guid, body))
+        run_sync(self._async_link_map_to_schema_type(schema_element_guid, schema_type_guid, body))
 
     @dynamic_catch
     async def _async_detach_map_to_schema_type(self, schema_element_guid: str, schema_type_guid: str,
@@ -739,8 +715,7 @@ class SchemaMaker(ServerClient):
                                   body: Optional[dict | DeleteRelationshipRequestBody] = None,
                                   cascade_delete: bool = False) -> None:
         """Detach the 'to' end of a map schema type."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_map_to_schema_type(
+        run_sync(self._async_detach_map_to_schema_type(
             schema_element_guid, schema_type_guid, body, cascade_delete))
 
     @dynamic_catch
@@ -756,8 +731,7 @@ class SchemaMaker(ServerClient):
     def link_graph_edge(self, graph_edge_guid: str, graph_vertex_guid: str,
                         body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Attach a graph edge to one of the vertices it connects (GraphEdgeLink relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_graph_edge(graph_edge_guid, graph_vertex_guid, body))
+        run_sync(self._async_link_graph_edge(graph_edge_guid, graph_vertex_guid, body))
 
     @dynamic_catch
     async def _async_detach_graph_edge(self, graph_edge_guid: str, graph_vertex_guid: str,
@@ -774,8 +748,7 @@ class SchemaMaker(ServerClient):
                           body: Optional[dict | DeleteRelationshipRequestBody] = None,
                           cascade_delete: bool = False) -> None:
         """Detach a graph edge from one of the vertices it connects."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_graph_edge(
+        run_sync(self._async_detach_graph_edge(
             graph_edge_guid, graph_vertex_guid, body, cascade_delete))
 
     @dynamic_catch
@@ -791,8 +764,7 @@ class SchemaMaker(ServerClient):
     def link_query_target(self, schema_element_guid: str, query_target_schema_element_guid: str,
                           body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Attach a query target to a derived schema element (DerivedSchemaTypeQueryTarget relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_query_target(schema_element_guid, query_target_schema_element_guid, body))
+        run_sync(self._async_link_query_target(schema_element_guid, query_target_schema_element_guid, body))
 
     @dynamic_catch
     async def _async_detach_query_target(self, schema_element_guid: str, query_target_schema_element_guid: str,
@@ -809,8 +781,7 @@ class SchemaMaker(ServerClient):
                             body: Optional[dict | DeleteRelationshipRequestBody] = None,
                             cascade_delete: bool = False) -> None:
         """Detach a query target from a derived schema element."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_query_target(
+        run_sync(self._async_detach_query_target(
             schema_element_guid, query_target_schema_element_guid, body, cascade_delete))
 
     @dynamic_catch
@@ -826,8 +797,7 @@ class SchemaMaker(ServerClient):
     def link_schema(self, element_guid: str, schema_type_guid: str,
                     body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Attach a schema type to the element it describes (SchemaTypeAssociation relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_schema(element_guid, schema_type_guid, body))
+        run_sync(self._async_link_schema(element_guid, schema_type_guid, body))
 
     @dynamic_catch
     async def _async_detach_schema(self, element_guid: str, schema_type_guid: str,
@@ -844,8 +814,7 @@ class SchemaMaker(ServerClient):
                       body: Optional[dict | DeleteRelationshipRequestBody] = None,
                       cascade_delete: bool = False) -> None:
         """Detach a schema type from the element it describes."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_schema(
+        run_sync(self._async_detach_schema(
             element_guid, schema_type_guid, body, cascade_delete))
 
     @dynamic_catch
@@ -861,8 +830,7 @@ class SchemaMaker(ServerClient):
     def link_relational_db_schema(self, database_schema_type_list_guid: str, relational_db_schema_type_guid: str,
                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Attach a relational database schema to the schema type list it belongs to (RelationalDBSchema relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_relational_db_schema(
+        run_sync(self._async_link_relational_db_schema(
             database_schema_type_list_guid, relational_db_schema_type_guid, body))
 
     @dynamic_catch
@@ -880,8 +848,7 @@ class SchemaMaker(ServerClient):
                                     body: Optional[dict | DeleteRelationshipRequestBody] = None,
                                     cascade_delete: bool = False) -> None:
         """Detach a relational database schema from the schema type list it belongs to."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_relational_db_schema(
+        run_sync(self._async_detach_relational_db_schema(
             database_schema_type_list_guid, relational_db_schema_type_guid, body, cascade_delete))
 
     @dynamic_catch
@@ -897,8 +864,7 @@ class SchemaMaker(ServerClient):
     def link_api_operations(self, api_schema_type_guid: str, api_operation_guid: str,
                             body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Attach an API operation to the API schema type it belongs to (APIOperations relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_api_operations(api_schema_type_guid, api_operation_guid, body))
+        run_sync(self._async_link_api_operations(api_schema_type_guid, api_operation_guid, body))
 
     @dynamic_catch
     async def _async_detach_api_operations(self, api_schema_type_guid: str, api_operation_guid: str,
@@ -915,8 +881,7 @@ class SchemaMaker(ServerClient):
                               body: Optional[dict | DeleteRelationshipRequestBody] = None,
                               cascade_delete: bool = False) -> None:
         """Detach an API operation from the API schema type it belongs to."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_api_operations(
+        run_sync(self._async_detach_api_operations(
             api_schema_type_guid, api_operation_guid, body, cascade_delete))
 
     @dynamic_catch
@@ -932,8 +897,7 @@ class SchemaMaker(ServerClient):
     def link_api_header(self, api_operation_guid: str, schema_type_guid: str,
                         body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Attach a schema type as the header for an API operation (APIHeader relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_api_header(api_operation_guid, schema_type_guid, body))
+        run_sync(self._async_link_api_header(api_operation_guid, schema_type_guid, body))
 
     @dynamic_catch
     async def _async_detach_api_header(self, api_operation_guid: str, schema_type_guid: str,
@@ -950,8 +914,7 @@ class SchemaMaker(ServerClient):
                           body: Optional[dict | DeleteRelationshipRequestBody] = None,
                           cascade_delete: bool = False) -> None:
         """Detach a schema type as the header for an API operation."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_api_header(
+        run_sync(self._async_detach_api_header(
             api_operation_guid, schema_type_guid, body, cascade_delete))
 
     @dynamic_catch
@@ -967,8 +930,7 @@ class SchemaMaker(ServerClient):
     def link_api_request(self, api_operation_guid: str, schema_type_guid: str,
                          body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Attach a schema type as the request for an API operation (APIRequest relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_api_request(api_operation_guid, schema_type_guid, body))
+        run_sync(self._async_link_api_request(api_operation_guid, schema_type_guid, body))
 
     @dynamic_catch
     async def _async_detach_api_request(self, api_operation_guid: str, schema_type_guid: str,
@@ -985,8 +947,7 @@ class SchemaMaker(ServerClient):
                            body: Optional[dict | DeleteRelationshipRequestBody] = None,
                            cascade_delete: bool = False) -> None:
         """Detach a schema type as the request for an API operation."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_api_request(
+        run_sync(self._async_detach_api_request(
             api_operation_guid, schema_type_guid, body, cascade_delete))
 
     @dynamic_catch
@@ -1002,8 +963,7 @@ class SchemaMaker(ServerClient):
     def link_api_response(self, api_operation_guid: str, schema_type_guid: str,
                           body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Attach a schema type as the response for an API operation (APIResponse relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_api_response(api_operation_guid, schema_type_guid, body))
+        run_sync(self._async_link_api_response(api_operation_guid, schema_type_guid, body))
 
     @dynamic_catch
     async def _async_detach_api_response(self, api_operation_guid: str, schema_type_guid: str,
@@ -1020,8 +980,7 @@ class SchemaMaker(ServerClient):
                             body: Optional[dict | DeleteRelationshipRequestBody] = None,
                             cascade_delete: bool = False) -> None:
         """Detach a schema type as the response for an API operation."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_api_response(
+        run_sync(self._async_detach_api_response(
             api_operation_guid, schema_type_guid, body, cascade_delete))
 
     @dynamic_catch
@@ -1037,8 +996,7 @@ class SchemaMaker(ServerClient):
     def link_schema_type_option(self, schema_element_guid: str, schema_type_guid: str,
                                 body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Attach an optional schema type to a schema element (SchemaTypeOption relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_schema_type_option(schema_element_guid, schema_type_guid, body))
+        run_sync(self._async_link_schema_type_option(schema_element_guid, schema_type_guid, body))
 
     @dynamic_catch
     async def _async_detach_schema_type_option(self, schema_element_guid: str, schema_type_guid: str,
@@ -1055,8 +1013,7 @@ class SchemaMaker(ServerClient):
                                   body: Optional[dict | DeleteRelationshipRequestBody] = None,
                                   cascade_delete: bool = False) -> None:
         """Detach an optional schema type from a schema element."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_schema_type_option(
+        run_sync(self._async_detach_schema_type_option(
             schema_element_guid, schema_type_guid, body, cascade_delete))
 
     @dynamic_catch
@@ -1074,8 +1031,7 @@ class SchemaMaker(ServerClient):
     def add_primary_key_classification(self, relational_column_guid: str,
                                        body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify a relational column as a primary key."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_add_primary_key_classification(relational_column_guid, body))
+        run_sync(self._async_add_primary_key_classification(relational_column_guid, body))
 
     @dynamic_catch
     async def _async_remove_primary_key_classification(self, relational_column_guid: str,
@@ -1092,8 +1048,7 @@ class SchemaMaker(ServerClient):
                                           body: Optional[dict | DeleteClassificationRequestBody] = None,
                                           cascade_delete: bool = False) -> None:
         """Remove the PrimaryKey classification from a relational column."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_remove_primary_key_classification(
+        run_sync(self._async_remove_primary_key_classification(
             relational_column_guid, body, cascade_delete))
 
     @dynamic_catch
@@ -1111,8 +1066,7 @@ class SchemaMaker(ServerClient):
     def add_type_embedded_attribute(self, schema_attribute_guid: str,
                                     body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify a schema attribute as having its type embedded rather than linked (TypeEmbeddedAttribute)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_add_type_embedded_attribute(schema_attribute_guid, body))
+        run_sync(self._async_add_type_embedded_attribute(schema_attribute_guid, body))
 
     @dynamic_catch
     async def _async_remove_type_embedded_attribute(self, schema_attribute_guid: str,
@@ -1129,8 +1083,7 @@ class SchemaMaker(ServerClient):
                                        body: Optional[dict | DeleteClassificationRequestBody] = None,
                                        cascade_delete: bool = False) -> None:
         """Remove the TypeEmbeddedAttribute classification from a schema attribute."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_remove_type_embedded_attribute(
+        run_sync(self._async_remove_type_embedded_attribute(
             schema_attribute_guid, body, cascade_delete))
 
     @dynamic_catch
@@ -1148,8 +1101,7 @@ class SchemaMaker(ServerClient):
     def add_calculated_value(self, schema_attribute_guid: str,
                              body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify a schema attribute as holding a calculated (derived) value."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_add_calculated_value(schema_attribute_guid, body))
+        run_sync(self._async_add_calculated_value(schema_attribute_guid, body))
 
     @dynamic_catch
     async def _async_remove_calculated_value(self, schema_attribute_guid: str,
@@ -1166,6 +1118,5 @@ class SchemaMaker(ServerClient):
                                 body: Optional[dict | DeleteClassificationRequestBody] = None,
                                 cascade_delete: bool = False) -> None:
         """Remove the CalculatedValue classification from a schema attribute."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_remove_calculated_value(
+        run_sync(self._async_remove_calculated_value(
             schema_attribute_guid, body, cascade_delete))

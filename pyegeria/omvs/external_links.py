@@ -37,6 +37,7 @@ EXTERNAL_ID_PROPS = ["ExternalIdProperties"]
 EXTERNAL_ID_LINK_PROPS = ["ExternalIdLinkProperties"]
 
 from pyegeria.core._server_client import ServerClient
+from pyegeria.core.async_runner import run_sync
 
 
 class ExternalReferences(ServerClient):
@@ -284,7 +285,7 @@ class ExternalReferences(ServerClient):
 
       """
 
-        return asyncio.get_event_loop().run_until_complete(self._async_create_external_reference(body))
+        return run_sync(self._async_create_external_reference(body))
 
     #######
 
@@ -409,8 +410,7 @@ class ExternalReferences(ServerClient):
           }
         }
         """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_create_external_reference_from_template(body))
+        resp = run_sync(self._async_create_external_reference_from_template(body))
         return resp
 
         #
@@ -530,7 +530,7 @@ class ExternalReferences(ServerClient):
         }
         """
 
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_update_external_reference(external_reference_guid, body))
 
     @dynamic_catch
@@ -637,8 +637,7 @@ class ExternalReferences(ServerClient):
               }
             }
             """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_link_external_reference(element_guid, ext_ref_guid, body))
+        return run_sync(self._async_link_external_reference(element_guid, ext_ref_guid, body))
 
     @dynamic_catch
     async def _async_detach_external_reference(self, element_guid: str, ext_ref_guid: str,
@@ -721,8 +720,7 @@ class ExternalReferences(ServerClient):
           "forDuplicateProcessing": false
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_external_reference(element_guid, ext_ref_guid, body))
+        run_sync(self._async_detach_external_reference(element_guid, ext_ref_guid, body))
 
     @dynamic_catch
     async def _async_link_media_reference(self, element_guid: str, media_ref_guid: str,
@@ -831,8 +829,7 @@ class ExternalReferences(ServerClient):
               }
             }
             """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_link_media_reference(element_guid, media_ref_guid, body))
+        return run_sync(self._async_link_media_reference(element_guid, media_ref_guid, body))
 
     @dynamic_catch
     async def _async_detach_media_reference(self, element_guid: str, media_ref_guid: str,
@@ -917,8 +914,7 @@ class ExternalReferences(ServerClient):
           "forDuplicateProcessing": false
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_media_reference(element_guid, media_ref_guid, body))
+        run_sync(self._async_detach_media_reference(element_guid, media_ref_guid, body))
 
     @dynamic_catch
     async def _async_link_cited_document(self, element_guid: str, cited_doc_guid: str,
@@ -1020,8 +1016,7 @@ class ExternalReferences(ServerClient):
                   }
              }
             """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_link_cited_document(element_guid, cited_doc_guid, body))
+        return run_sync(self._async_link_cited_document(element_guid, cited_doc_guid, body))
 
     @dynamic_catch
     async def _async_detach_cited_document(self, element_guid: str, cited_doc_guid: str,
@@ -1105,8 +1100,7 @@ class ExternalReferences(ServerClient):
           "forDuplicateProcessing": false
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_cited_document(element_guid, cited_doc_guid, body))
+        run_sync(self._async_detach_cited_document(element_guid, cited_doc_guid, body))
 
     #
     # do deletes etc
@@ -1199,8 +1193,7 @@ class ExternalReferences(ServerClient):
           "forDuplicateProcessing" : false
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_external_reference(ext_ref_guid, body, cascade))
+        run_sync(self._async_delete_external_reference(ext_ref_guid, body, cascade))
 
     @dynamic_catch
     async def _async_find_external_references(
@@ -1399,8 +1392,7 @@ class ExternalReferences(ServerClient):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_external_references(
                 search_string=search_string,
                 graph_query_depth=graph_query_depth,
@@ -1521,7 +1513,7 @@ class ExternalReferences(ServerClient):
         PyegeriaException
 
         """
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_get_external_references_by_name(name=name, classification_names=classification_names,
                                                         graph_query_depth=graph_query_depth,
                                                         body=body, start_from=start_from, page_size=page_size,
@@ -1646,7 +1638,7 @@ class ExternalReferences(ServerClient):
               "forDuplicateProcessing": false
             }
         """
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_get_external_reference_by_guid(guid=guid, element_type=element_type, body=body,
                                                        graph_query_depth=graph_query_depth,
                                                        output_format=output_format, report_spec=report_spec,
@@ -1844,7 +1836,7 @@ class ExternalReferences(ServerClient):
           The principle specified by the user_id does not have authorization for the requested action
         """
 
-        return asyncio.get_event_loop().run_until_complete(self._async_add_external_identifier(element_guid, body))
+        return run_sync(self._async_add_external_identifier(element_guid, body))
 
     @dynamic_catch
     async def _async_update_external_identifier(self, external_id_guid: str,
@@ -1933,7 +1925,7 @@ class ExternalReferences(ServerClient):
           The principle specified by the user_id does not have authorization for the requested action
         """
 
-        return asyncio.get_event_loop().run_until_complete(self._async_update_external_identifier(external_id_guid, body))
+        return run_sync(self._async_update_external_identifier(external_id_guid, body))
 
     @dynamic_catch
     async def _async_delete_external_identifier(self, external_id_guid: str,
@@ -2005,7 +1997,7 @@ class ExternalReferences(ServerClient):
           The principle specified by the user_id does not have authorization for the requested action
         """
 
-        return asyncio.get_event_loop().run_until_complete(self._async_delete_external_identifier(external_id_guid, body))
+        return run_sync(self._async_delete_external_identifier(external_id_guid, body))
 
     @dynamic_catch
     async def _async_confirm_synchronization(self, external_id_link_guid: str,
@@ -2076,7 +2068,7 @@ class ExternalReferences(ServerClient):
           The principle specified by the user_id does not have authorization for the requested action
         """
 
-        return asyncio.get_event_loop().run_until_complete(self._async_confirm_synchronization(external_id_link_guid, body))
+        return run_sync(self._async_confirm_synchronization(external_id_link_guid, body))
 
     @dynamic_catch
     async def _async_get_external_identifiers_by_name(self, name: str = "*",
@@ -2177,7 +2169,7 @@ class ExternalReferences(ServerClient):
         Any - list of matching metadata elements or formatted output
         """
 
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_get_external_identifiers_by_name(name, body, start_from, page_size, output_format, report_spec, **kwargs))
 
     @dynamic_catch
@@ -2302,7 +2294,7 @@ class ExternalReferences(ServerClient):
         Any - list of matching metadata elements or formatted output
         """
 
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_find_external_identifiers(search_string, body, starts_with, ends_with, ignore_case, start_from,
                                                   page_size, output_format, report_spec, **kwargs))
 
@@ -2384,7 +2376,7 @@ class ExternalReferences(ServerClient):
         Any - the matching metadata element or formatted output
         """
 
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_get_external_identifiers_by_guid(guid, body, output_format, report_spec, **kwargs))
 
     def _extract_external_identifier_properties(self, element: dict, columns_struct: dict) -> dict:
@@ -2464,8 +2456,7 @@ class ExternalReferences(ServerClient):
     def link_external_id_to_element(self, element_guid: str, external_id_guid: str,
                                     body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Attach an external identifier to the element it identifies (ExternalIdLink relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_external_id_to_element(element_guid, external_id_guid, body))
+        run_sync(self._async_link_external_id_to_element(element_guid, external_id_guid, body))
 
     @dynamic_catch
     async def _async_detach_external_id_from_element(self, element_guid: str, external_id_guid: str,
@@ -2479,8 +2470,7 @@ class ExternalReferences(ServerClient):
     def detach_external_id_from_element(self, element_guid: str, external_id_guid: str,
                                         body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """Detach an external identifier from an element."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_external_id_from_element(element_guid, external_id_guid, body))
+        run_sync(self._async_detach_external_id_from_element(element_guid, external_id_guid, body))
 
     @dynamic_catch
     async def _async_update_cited_document_reference(self, cited_document_link_relationship_guid: str,
@@ -2494,8 +2484,7 @@ class ExternalReferences(ServerClient):
     def update_cited_document_reference(self, cited_document_link_relationship_guid: str,
                                         body: Optional[dict | UpdateRelationshipRequestBody] = None) -> None:
         """Update the properties of a CitedDocumentLink relationship, identified by its own relationship GUID."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_cited_document_reference(cited_document_link_relationship_guid, body))
+        run_sync(self._async_update_cited_document_reference(cited_document_link_relationship_guid, body))
 
     @dynamic_catch
     async def _async_detach_cited_document_reference_by_id(self, cited_document_link_relationship_guid: str,
@@ -2509,8 +2498,7 @@ class ExternalReferences(ServerClient):
     def detach_cited_document_reference_by_id(self, cited_document_link_relationship_guid: str,
                                               body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """Detach one specific CitedDocumentLink relationship, identified by its own relationship GUID."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_cited_document_reference_by_id(cited_document_link_relationship_guid, body))
+        run_sync(self._async_detach_cited_document_reference_by_id(cited_document_link_relationship_guid, body))
 
     @dynamic_catch
     async def _async_update_external_reference_link(self, external_reference_link_relationship_guid: str,
@@ -2524,8 +2512,7 @@ class ExternalReferences(ServerClient):
     def update_external_reference_link(self, external_reference_link_relationship_guid: str,
                                        body: Optional[dict | UpdateRelationshipRequestBody] = None) -> None:
         """Update the properties of an ExternalReferenceLink relationship, identified by its own relationship GUID."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_external_reference_link(external_reference_link_relationship_guid, body))
+        run_sync(self._async_update_external_reference_link(external_reference_link_relationship_guid, body))
 
     @dynamic_catch
     async def _async_detach_external_reference_by_id(self, external_reference_link_relationship_guid: str,
@@ -2539,8 +2526,7 @@ class ExternalReferences(ServerClient):
     def detach_external_reference_by_id(self, external_reference_link_relationship_guid: str,
                                         body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """Detach one specific ExternalReferenceLink relationship, identified by its own relationship GUID."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_external_reference_by_id(external_reference_link_relationship_guid, body))
+        run_sync(self._async_detach_external_reference_by_id(external_reference_link_relationship_guid, body))
 
     @dynamic_catch
     async def _async_update_media_reference(self, media_reference_relationship_guid: str,
@@ -2554,8 +2540,7 @@ class ExternalReferences(ServerClient):
     def update_media_reference(self, media_reference_relationship_guid: str,
                                body: Optional[dict | UpdateRelationshipRequestBody] = None) -> None:
         """Update the properties of a MediaReference relationship, identified by its own relationship GUID."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_media_reference(media_reference_relationship_guid, body))
+        run_sync(self._async_update_media_reference(media_reference_relationship_guid, body))
 
     @dynamic_catch
     async def _async_detach_media_reference_by_id(self, media_reference_relationship_guid: str,
@@ -2569,8 +2554,7 @@ class ExternalReferences(ServerClient):
     def detach_media_reference_by_id(self, media_reference_relationship_guid: str,
                                      body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """Detach one specific MediaReference relationship, identified by its own relationship GUID."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_media_reference_by_id(media_reference_relationship_guid, body))
+        run_sync(self._async_detach_media_reference_by_id(media_reference_relationship_guid, body))
 
 from typing import Union, Dict, List, Optional
 

@@ -21,6 +21,7 @@ from pyegeria.models.models import (
 )
 from typing import Optional, List, Union, Any
 import asyncio
+from pyegeria.core.async_runner import run_sync
 
 
 class ConnectionMaker(ServerClient):
@@ -46,32 +47,28 @@ class ConnectionMaker(ServerClient):
         return await self._async_create_element_body_request(url, ["ConnectionProperties"], body)
 
     def create_connection(self, body: Union[NewElementRequestBody, dict]) -> str:
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_connection(body))
+        return run_sync(self._async_create_connection(body))
 
     async def _async_create_connection_from_template(self, body: Union[TemplateRequestBody, dict]) -> str:
         url = f"{self.base_url}/connections/from-template"
         return await self._async_create_element_from_template(url, body)
 
     def create_connection_from_template(self, body: Union[TemplateRequestBody, dict]) -> str:
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_connection_from_template(body))
+        return run_sync(self._async_create_connection_from_template(body))
 
     async def _async_update_connection(self, connection_guid: str, body: Union[UpdateElementRequestBody, dict]):
         url = f"{self.base_url}/connections/{connection_guid}/update"
         await self._async_update_element_body_request(url, ["ConnectionProperties"], body)
 
     def update_connection(self, connection_guid: str, body: Union[UpdateElementRequestBody, dict]):
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_update_connection(connection_guid, body))
+        return run_sync(self._async_update_connection(connection_guid, body))
 
     async def _async_delete_connection(self, connection_guid: str, body: Union[DeleteElementRequestBody, dict] = None):
         url = f"{self.base_url}/connections/{connection_guid}/delete"
         await self._async_delete_element_request(url, body)
 
     def delete_connection(self, connection_guid: str, body: Union[DeleteElementRequestBody, dict] = None):
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_delete_connection(connection_guid, body))
+        return run_sync(self._async_delete_connection(connection_guid, body))
 
     async def _async_get_connection_by_guid(
         self,
@@ -109,8 +106,7 @@ class ConnectionMaker(ServerClient):
         body: Union[GetRequestBody, dict] = None,
         **kwargs,
     ) -> dict | list | str:
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_connection_by_guid(
                 guid=guid,
                 include_only_relationships=include_only_relationships,
@@ -169,8 +165,7 @@ class ConnectionMaker(ServerClient):
         body: Union[FilterRequestBody, dict] = None,
         **kwargs,
     ) -> dict | list | str:
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_connections_by_name(
                 name=name,
                 metadata_element_subtypes=metadata_element_subtypes,
@@ -253,8 +248,7 @@ class ConnectionMaker(ServerClient):
         body: Union[SearchStringRequestBody, dict] = None,
         **kwargs,
     ) -> dict | list | str:
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_connections(
                 search_string=search_string,
                 starts_with=starts_with,
@@ -284,32 +278,28 @@ class ConnectionMaker(ServerClient):
         return await self._async_create_element_body_request(url, ["ConnectorTypeProperties"], body)
 
     def create_connector_type(self, body: Union[NewElementRequestBody, dict]) -> str:
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_connector_type(body))
+        return run_sync(self._async_create_connector_type(body))
 
     async def _async_create_connector_type_from_template(self, body: Union[TemplateRequestBody, dict]) -> str:
         url = f"{self.base_url}/connector-types/from-template"
         return await self._async_create_element_from_template(url, body)
 
     def create_connector_type_from_template(self, body: Union[TemplateRequestBody, dict]) -> str:
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_connector_type_from_template(body))
+        return run_sync(self._async_create_connector_type_from_template(body))
 
     async def _async_update_connector_type(self, connector_type_guid: str, body: Union[UpdateElementRequestBody, dict]):
         url = f"{self.base_url}/connector-types/{connector_type_guid}/update"
         await self._async_update_element_body_request(url, ["ConnectorTypeProperties"], body)
 
     def update_connector_type(self, connector_type_guid: str, body: Union[UpdateElementRequestBody, dict]):
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_update_connector_type(connector_type_guid, body))
+        return run_sync(self._async_update_connector_type(connector_type_guid, body))
 
     async def _async_delete_connector_type(self, connector_type_guid: str, body: Union[DeleteElementRequestBody, dict] = None):
         url = f"{self.base_url}/connector-types/{connector_type_guid}/delete"
         await self._async_delete_element_request(url, body)
 
     def delete_connector_type(self, connector_type_guid: str, body: Union[DeleteElementRequestBody, dict] = None):
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_delete_connector_type(connector_type_guid, body))
+        return run_sync(self._async_delete_connector_type(connector_type_guid, body))
 
     async def _async_get_connector_type_by_guid(
         self,
@@ -347,8 +337,7 @@ class ConnectionMaker(ServerClient):
         body: Union[GetRequestBody, dict] = None,
         **kwargs,
     ) -> dict | list | str:
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_connector_type_by_guid(
                 guid=guid,
                 include_only_relationships=include_only_relationships,
@@ -407,8 +396,7 @@ class ConnectionMaker(ServerClient):
         body: Union[FilterRequestBody, dict] = None,
         **kwargs,
     ) -> dict | list | str:
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_connector_types_by_name(
                 name=name,
                 metadata_element_subtypes=metadata_element_subtypes,
@@ -470,8 +458,7 @@ class ConnectionMaker(ServerClient):
         body: Union[FilterRequestBody, dict] = None,
         **kwargs,
     ) -> dict | list | str:
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_connector_types_by_connector_provider_class_name(
                 connector_provider_class_name=connector_provider_class_name,
                 metadata_element_subtypes=metadata_element_subtypes,
@@ -554,8 +541,7 @@ class ConnectionMaker(ServerClient):
         body: Union[SearchStringRequestBody, dict] = None,
         **kwargs,
     ) -> dict | list | str:
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_connector_types(
                 search_string=search_string,
                 starts_with=starts_with,
@@ -585,32 +571,28 @@ class ConnectionMaker(ServerClient):
         return await self._async_create_element_body_request(url, ["EndpointProperties"], body)
 
     def create_endpoint(self, body: Union[NewElementRequestBody, dict]) -> str:
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_endpoint(body))
+        return run_sync(self._async_create_endpoint(body))
 
     async def _async_create_endpoint_from_template(self, body: Union[TemplateRequestBody, dict]) -> str:
         url = f"{self.base_url}/endpoints/from-template"
         return await self._async_create_element_from_template(url, body)
 
     def create_endpoint_from_template(self, body: Union[TemplateRequestBody, dict]) -> str:
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_endpoint_from_template(body))
+        return run_sync(self._async_create_endpoint_from_template(body))
 
     async def _async_update_endpoint(self, endpoint_guid: str, body: Union[UpdateElementRequestBody, dict]):
         url = f"{self.base_url}/endpoints/{endpoint_guid}/update"
         await self._async_update_element_body_request(url, ["EndpointProperties"], body)
 
     def update_endpoint(self, endpoint_guid: str, body: Union[UpdateElementRequestBody, dict]):
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_update_endpoint(endpoint_guid, body))
+        return run_sync(self._async_update_endpoint(endpoint_guid, body))
 
     async def _async_delete_endpoint(self, endpoint_guid: str, body: Union[DeleteElementRequestBody, dict] = None):
         url = f"{self.base_url}/endpoints/{endpoint_guid}/delete"
         await self._async_delete_element_request(url, body)
 
     def delete_endpoint(self, endpoint_guid: str, body: Union[DeleteElementRequestBody, dict] = None):
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_delete_endpoint(endpoint_guid, body))
+        return run_sync(self._async_delete_endpoint(endpoint_guid, body))
 
     async def _async_get_endpoint_by_guid(
         self,
@@ -648,8 +630,7 @@ class ConnectionMaker(ServerClient):
         body: Union[GetRequestBody, dict] = None,
         **kwargs,
     ) -> dict | list | str:
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_endpoint_by_guid(
                 guid=guid,
                 include_only_relationships=include_only_relationships,
@@ -708,8 +689,7 @@ class ConnectionMaker(ServerClient):
         body: Union[FilterRequestBody, dict] = None,
         **kwargs,
     ) -> dict | list | str:
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_endpoints_by_name(
                 name=name,
                 metadata_element_subtypes=metadata_element_subtypes,
@@ -771,8 +751,7 @@ class ConnectionMaker(ServerClient):
         body: Union[FilterRequestBody, dict] = None,
         **kwargs,
     ) -> dict | list | str:
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_endpoints_by_network_address(
                 network_address=network_address,
                 metadata_element_subtypes=metadata_element_subtypes,
@@ -855,8 +834,7 @@ class ConnectionMaker(ServerClient):
         body: Union[SearchStringRequestBody, dict] = None,
         **kwargs,
     ) -> dict | list | str:
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_endpoints(
                 search_string=search_string,
                 starts_with=starts_with,
@@ -927,8 +905,7 @@ class ConnectionMaker(ServerClient):
         body: Union[FilterRequestBody, dict] = None,
         **kwargs,
     ) -> dict | list | str:
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_endpoints_for_asset(
                 asset_guid=asset_guid,
                 name=name,
@@ -953,64 +930,56 @@ class ConnectionMaker(ServerClient):
         await self._async_new_relationship_request(url, ["ConnectionConnectorTypeProperties"], body)
 
     def link_connection_connector_type(self, connection_guid: str, connector_type_guid: str, body: Union[NewRelationshipRequestBody, dict] = None):
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_link_connection_connector_type(connection_guid, connector_type_guid, body))
+        return run_sync(self._async_link_connection_connector_type(connection_guid, connector_type_guid, body))
 
     async def _async_detach_connection_connector_type(self, connection_guid: str, connector_type_guid: str, body: Union[DeleteRelationshipRequestBody, dict] = None):
         url = f"{self.base_url}/connections/{connection_guid}/connector-types/{connector_type_guid}/detach"
         await self._async_delete_relationship_request(url, body)
 
     def detach_connection_connector_type(self, connection_guid: str, connector_type_guid: str, body: Union[DeleteRelationshipRequestBody, dict] = None):
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_detach_connection_connector_type(connection_guid, connector_type_guid, body))
+        return run_sync(self._async_detach_connection_connector_type(connection_guid, connector_type_guid, body))
 
     async def _async_link_connection_endpoint(self, connection_guid: str, endpoint_guid: str, body: Union[NewRelationshipRequestBody, dict] = None):
         url = f"{self.base_url}/connections/{connection_guid}/endpoints/{endpoint_guid}/attach"
         await self._async_new_relationship_request(url, ["ConnectToEndpointProperties"], body)
 
     def link_connection_endpoint(self, connection_guid: str, endpoint_guid: str, body: Union[NewRelationshipRequestBody, dict] = None):
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_link_connection_endpoint(connection_guid, endpoint_guid, body))
+        return run_sync(self._async_link_connection_endpoint(connection_guid, endpoint_guid, body))
 
     async def _async_detach_connection_endpoint(self, connection_guid: str, endpoint_guid: str, body: Union[DeleteRelationshipRequestBody, dict] = None):
         url = f"{self.base_url}/connections/{connection_guid}/endpoints/{endpoint_guid}/detach"
         await self._async_delete_relationship_request(url, body)
 
     def detach_connection_endpoint(self, connection_guid: str, endpoint_guid: str, body: Union[DeleteRelationshipRequestBody, dict] = None):
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_detach_connection_endpoint(connection_guid, endpoint_guid, body))
+        return run_sync(self._async_detach_connection_endpoint(connection_guid, endpoint_guid, body))
 
     async def _async_link_embedded_connection(self, connection_guid: str, embedded_connection_guid: str, body: Union[NewRelationshipRequestBody, dict] = None):
         url = f"{self.base_url}/connections/{connection_guid}/embedded-connections/{embedded_connection_guid}/attach"
         await self._async_new_relationship_request(url, ["EmbeddedConnectionProperties"], body)
 
     def link_embedded_connection(self, connection_guid: str, embedded_connection_guid: str, body: Union[NewRelationshipRequestBody, dict] = None):
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_link_embedded_connection(connection_guid, embedded_connection_guid, body))
+        return run_sync(self._async_link_embedded_connection(connection_guid, embedded_connection_guid, body))
 
     async def _async_detach_embedded_connection(self, connection_guid: str, embedded_connection_guid: str, body: Union[DeleteRelationshipRequestBody, dict] = None):
         url = f"{self.base_url}/connections/{connection_guid}/embedded-connections/{embedded_connection_guid}/detach"
         await self._async_delete_relationship_request(url, body)
 
     def detach_embedded_connection(self, connection_guid: str, embedded_connection_guid: str, body: Union[DeleteRelationshipRequestBody, dict] = None):
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_detach_embedded_connection(connection_guid, embedded_connection_guid, body))
+        return run_sync(self._async_detach_embedded_connection(connection_guid, embedded_connection_guid, body))
 
     async def _async_link_asset_to_connection(self, asset_guid: str, connection_guid: str, body: Union[NewRelationshipRequestBody, dict] = None):
         url = f"{self.base_url}/assets/{asset_guid}/connections/{connection_guid}/attach"
         await self._async_new_relationship_request(url, ["ResourceConnectionProperties"], body)
 
     def link_asset_to_connection(self, asset_guid: str, connection_guid: str, body: Union[NewRelationshipRequestBody, dict] = None):
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_link_asset_to_connection(asset_guid, connection_guid, body))
+        return run_sync(self._async_link_asset_to_connection(asset_guid, connection_guid, body))
 
     async def _async_detach_asset_from_connection(self, asset_guid: str, connection_guid: str, body: Union[DeleteRelationshipRequestBody, dict] = None):
         url = f"{self.base_url}/assets/{asset_guid}/connections/{connection_guid}/detach"
         await self._async_delete_relationship_request(url, body)
 
     def detach_asset_from_connection(self, asset_guid: str, connection_guid: str, body: Union[DeleteRelationshipRequestBody, dict] = None):
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_detach_asset_from_connection(asset_guid, connection_guid, body))
+        return run_sync(self._async_detach_asset_from_connection(asset_guid, connection_guid, body))
 
     # Generalisation of link_asset_to_connection / detach_asset_from_connection: any element that has a digital
     # resource (not only an asset) can be attached to the connection that accesses that resource.
@@ -1037,8 +1006,7 @@ class ConnectionMaker(ServerClient):
     @dynamic_catch
     def link_resource_to_connection(self, element_guid: str, connection_guid: str, body: Union[NewRelationshipRequestBody, dict] = None):
         """Attach an element to the connection that accesses its digital resource."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_link_resource_to_connection(element_guid, connection_guid, body))
+        return run_sync(self._async_link_resource_to_connection(element_guid, connection_guid, body))
 
     @dynamic_catch
     async def _async_detach_resource_from_connection(self, element_guid: str, connection_guid: str, body: Union[DeleteRelationshipRequestBody, dict] = None):
@@ -1049,21 +1017,18 @@ class ConnectionMaker(ServerClient):
     @dynamic_catch
     def detach_resource_from_connection(self, element_guid: str, connection_guid: str, body: Union[DeleteRelationshipRequestBody, dict] = None):
         """Detach an element from the connection that accesses its digital resource."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_detach_resource_from_connection(element_guid, connection_guid, body))
+        return run_sync(self._async_detach_resource_from_connection(element_guid, connection_guid, body))
 
     async def _async_link_endpoint_to_it_asset(self, asset_guid: str, endpoint_guid: str, body: Union[NewRelationshipRequestBody, dict] = None):
         url = f"{self.base_url}/assets/{asset_guid}/endpoints/{endpoint_guid}/attach"
         await self._async_new_relationship_request(url, ["ServerEndpointProperties"], body)
 
     def link_endpoint_to_it_asset(self, asset_guid: str, endpoint_guid: str, body: Union[NewRelationshipRequestBody, dict] = None):
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_link_endpoint_to_it_asset(asset_guid, endpoint_guid, body))
+        return run_sync(self._async_link_endpoint_to_it_asset(asset_guid, endpoint_guid, body))
 
     async def _async_detach_endpoint_from_it_asset(self, asset_guid: str, endpoint_guid: str, body: Union[DeleteRelationshipRequestBody, dict] = None):
         url = f"{self.base_url}/assets/{asset_guid}/endpoints/{endpoint_guid}/detach"
         await self._async_delete_relationship_request(url, body)
 
     def detach_endpoint_from_it_asset(self, asset_guid: str, endpoint_guid: str, body: Union[DeleteRelationshipRequestBody, dict] = None):
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_detach_endpoint_from_it_asset(asset_guid, endpoint_guid, body))
+        return run_sync(self._async_detach_endpoint_from_it_asset(asset_guid, endpoint_guid, body))

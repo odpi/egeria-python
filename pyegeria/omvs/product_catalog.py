@@ -14,6 +14,7 @@ from typing import Optional
 from pyegeria.core.utils import dynamic_catch
 from pyegeria.models import SearchStringRequestBody
 from pyegeria.omvs.collection_manager import CollectionManager
+from pyegeria.core.async_runner import run_sync
 
 
 class ProductCatalog(CollectionManager):
@@ -105,7 +106,6 @@ class ProductCatalog(CollectionManager):
     ) -> list | str:
         """Find digital product catalogs, or the products in them ("DigitalProduct"), through the
         product-catalog view service. See _async_find_digital_product_catalogs for the parameters."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_find_digital_product_catalogs(
+        return run_sync(self._async_find_digital_product_catalogs(
             search_string, metadata_element_type_name, starts_with, ends_with, ignore_case,
             start_from, page_size, output_format, report_spec, body, **kwargs))

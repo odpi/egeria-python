@@ -1,0 +1,96 @@
+"""
+ISSUE-168: run_sync replaces get_event_loop().run_until_complete + nest_asyncio, so sync wrappers
+work with no running loop, inside a running loop (Jupyter, Textual), and nested, on Python 3.12-3.14.
+"""
+import asyncio
+import threading
+
+import pytest
+
+from pyegeria.core.async_runner import run_sync
+
+
+async def _whoami():
+    await asyncio.sleep(0)
+    assert asyncio.current_task() is not None
+    return threading.current_thread().name, id(asyncio.get_running_loop())
+
+
+def test_no_running_loop_reuses_one_loop_per_thread():
+    name1, loop1 = run_sync(_whoami())
+    name2, loop2 = run_sync(_whoami())
+    assert name1 == name2 == threading.current_thread().name
+    assert loop1 == loop2  # the per-thread httpx session stays on one loop
+
+
+def test_each_thread_gets_its_own_loop():
+    loops = []
+    workers = [threading.Thread(target=lambda: loops.append(run_sync(_whoami())[1])) for _ in range(2)]
+    for w in workers:
+        w.start()
+    for w in workers:
+        w.join()
+    assert len(set(loops)) == 2
+
+
+async def test_inside_running_loop_uses_background_loop():
+    # What a notebook cell or a Textual app does: call a sync wrapper while a loop is running.
+    name, loop = run_sync(_whoami())
+    assert name == "pyegeria-sync-runner"
+    assert loop != id(asyncio.get_running_loop())
+    assert run_sync(_whoami())[1] == loop  # the same background loop every time
+
+
+async def test_nested_sync_call_from_the_background_loop_does_not_deadlock():
+    async def outer():
+        return run_sync(_whoami())  # a sync wrapper called from a coroutine running on the background loop
+
+    name, _ = run_sync(outer())
+    assert name == "pyegeria-sync-runner-nested"
+
+
+def test_exceptions_propagate():
+    async def boom():
+        raise ValueError("boom")
+
+    with pytest.raises(ValueError, match="boom"):
+        run_sync(boom())
+
+
+async def test_exceptions_propagate_from_background_loop():
+    async def boom():
+        raise KeyError("x")
+
+    with pytest.raises(KeyError):
+        run_sync(boom())
+
+
+# --- the per-thread httpx session follows the event loop -------------------------------------
+
+def _client(monkeypatch):
+    from pyegeria.core._base_server_client import BaseServerClient
+    monkeypatch.setattr(BaseServerClient, "check_connection", lambda self: "test")
+    return BaseServerClient("view-server", "https://localhost:1", user_id="u", user_pwd="p")
+
+
+def test_session_is_renewed_when_the_thread_switches_loops(monkeypatch):
+    client = _client(monkeypatch)
+
+    async def current():
+        return client.session
+
+    first = run_sync(current())
+    assert run_sync(current()) is first          # same thread, same runner loop: reused
+    assert asyncio.run(current()) is not first   # asyncio.run is a different loop: new session
+
+
+def test_explicitly_set_session_is_kept(monkeypatch):
+    client = _client(monkeypatch)
+    sentinel = object()
+    client.session = sentinel
+
+    async def current():
+        return client.session
+
+    assert run_sync(current()) is sentinel
+    assert asyncio.run(current()) is sentinel

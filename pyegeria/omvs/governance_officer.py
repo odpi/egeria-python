@@ -33,6 +33,7 @@ from pyegeria.models import (GetRequestBody, SearchStringRequestBody, FilterRequ
                              UpdateRelationshipRequestBody, ResultsRequestBody,
                              NewClassificationRequestBody, DeleteClassificationRequestBody)
 from pyegeria.core.utils import dynamic_catch
+from pyegeria.core.async_runner import run_sync
 
 # GovernanceDefinitionProperties and every subclass in its @JsonSubTypes tree, from Egeria main
 # (8de9572c, 2026-10-26). Regenerate from the Java when Egeria adds a type; a hand-kept list missed
@@ -558,8 +559,7 @@ class GovernanceOfficer(ServerClient):
 
        """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_create_governance_definition(body))
+        response = run_sync(self._async_create_governance_definition(body))
         return response
 
     @dynamic_catch
@@ -728,8 +728,7 @@ class GovernanceOfficer(ServerClient):
         }
         """
 
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_data_lens(body))
+        return run_sync(self._async_create_data_lens(body))
 
     @dynamic_catch
     async def _async_create_governance_definition_from_template(self, body: dict | TemplateRequestBody) -> str:
@@ -893,8 +892,7 @@ class GovernanceOfficer(ServerClient):
 
        """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_create_governance_definition_from_template(body))
+        response = run_sync(self._async_create_governance_definition_from_template(body))
         return response
 
     @dynamic_catch
@@ -1021,8 +1019,7 @@ class GovernanceOfficer(ServerClient):
           }
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_governance_definition(guid, body))
+        run_sync(self._async_update_governance_definition(guid, body))
 
     @dynamic_catch
     async def _async_delete_governance_definition(self, definition_guid: str,
@@ -1112,8 +1109,7 @@ class GovernanceOfficer(ServerClient):
           "forDuplicateProcessing" : false
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_governance_definition(definition_guid, body, cascade))
+        run_sync(self._async_delete_governance_definition(definition_guid, body, cascade))
 
     @dynamic_catch
     async def _async_link_peer_definitions(self, definition_guid1: str, relationship_type: str, definition_guid2: str,
@@ -1233,8 +1229,7 @@ class GovernanceOfficer(ServerClient):
           }
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_link_peer_definitions(definition_guid1, relationship_type, definition_guid2, body))
 
     @dynamic_catch
@@ -1330,8 +1325,7 @@ class GovernanceOfficer(ServerClient):
           "forDuplicateProcessing": false
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_peer_definitions(definition_guid1, relationship_type, definition_guid2, body))
 
     @dynamic_catch
@@ -1454,8 +1448,7 @@ class GovernanceOfficer(ServerClient):
           }
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_attach_supporting_definitions(definition_guid1, relationship_type, definition_guid2, body))
 
     @dynamic_catch
@@ -1553,8 +1546,7 @@ class GovernanceOfficer(ServerClient):
           "forDuplicateProcessing" : false
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_supporting_definitions(definition_guid1, relationship_type, definition_guid2, body))
 
 
@@ -1649,8 +1641,7 @@ class GovernanceOfficer(ServerClient):
            "effectiveTime" : "{{$isoTimestamp}}"
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_attach_governed_by_definition(element_guid, definition_guid, body))
 
     @dynamic_catch
@@ -1742,8 +1733,7 @@ class GovernanceOfficer(ServerClient):
           "forDuplicateProcessing" : false
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_governed_by_definition(element_guid, definition_guid, body))
 
     @dynamic_catch
@@ -1874,8 +1864,7 @@ class GovernanceOfficer(ServerClient):
            "effectiveTime" : "{{$isoTimestamp}}"
         }
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_license_element(element_guid, license_type_guid, body))
 
     @dynamic_catch
@@ -2000,8 +1989,7 @@ class GovernanceOfficer(ServerClient):
            "effectiveTime" : "{{$isoTimestamp}}"
         }
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_certify_element(element_guid, certification_type_guid, body))
 
 
@@ -2298,8 +2286,7 @@ class GovernanceOfficer(ServerClient):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_governance_definitions(
                 search_string=search_string,
                 graph_query_depth=graph_query_depth,
@@ -2391,8 +2378,7 @@ class GovernanceOfficer(ServerClient):
         **kwargs
     ) -> list | str:
         """ Retrieve the list of governance action process metadata elements that contain the search string."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_governance_action_processes(
                 search_string=search_string,
                 body=body,
@@ -2455,8 +2441,7 @@ class GovernanceOfficer(ServerClient):
     def link_approved_purpose(self, element_guid: str, data_processing_purpose_guid: str,
                               body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """ Attach an element to an approved purpose."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_approved_purpose(element_guid, data_processing_purpose_guid, body))
+        run_sync(self._async_link_approved_purpose(element_guid, data_processing_purpose_guid, body))
 
     @dynamic_catch
     async def _async_detach_approved_purpose(self, element_guid: str, data_processing_purpose_guid: str,
@@ -2490,8 +2475,7 @@ class GovernanceOfficer(ServerClient):
     def detach_approved_purpose(self, element_guid: str, data_processing_purpose_guid: str,
                                 body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Detach an element from an approved purpose."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_approved_purpose(element_guid, data_processing_purpose_guid, body))
+        run_sync(self._async_detach_approved_purpose(element_guid, data_processing_purpose_guid, body))
 
     @dynamic_catch
     async def _async_get_governance_definitions_by_name(self, name: Optional[str] = None,
@@ -2635,8 +2619,7 @@ class GovernanceOfficer(ServerClient):
             }
 
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_governance_definitions_by_name(name=name, classification_names=classification_names, body=body,
                                                            graph_query_depth=graph_query_depth,
                                                            start_from=start_from, page_size=page_size, output_format=output_format, report_spec=report_spec,
@@ -2781,8 +2764,7 @@ class GovernanceOfficer(ServerClient):
             "forDuplicateProcessing" : false
             }
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_governance_definition_by_guid(guid=guid, element_type=element_type, body=body,
                                                             graph_query_depth=graph_query_depth,
                                                             output_format=output_format, report_spec=report_spec,
@@ -2854,8 +2836,7 @@ class GovernanceOfficer(ServerClient):
                 REPORT - output markdown with a preamble for a report
                 MERMAID - output mermaid markdown
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_gov_def_in_context(guid=guid, element_type=element_type, body=body,
                                                 graph_query_depth=graph_query_depth,
                                                 output_format=output_format, report_spec=report_spec,
@@ -2978,8 +2959,7 @@ class GovernanceOfficer(ServerClient):
 
        """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_governance_action_process_graph(guid, element_type, body,
+        response = run_sync(self._async_get_governance_action_process_graph(guid, element_type, body,
                                                                                          output_format,
                                                                                          report_spec, **kwargs))
         return response
@@ -3055,8 +3035,7 @@ class GovernanceOfficer(ServerClient):
         dict | list | str
             The governance action process.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_governance_action_process(
                 guid, element_type, output_format, report_spec, body, **kwargs
             )
@@ -3171,8 +3150,7 @@ class GovernanceOfficer(ServerClient):
           }
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_design_to_implementation(design_desc_guid, implementation_guid, body))
+        run_sync(self._async_link_design_to_implementation(design_desc_guid, implementation_guid, body))
 
     @dynamic_catch
     async def _async_detach_design_from_implementation(self, design_desc_guid: str, implementation_guid: str,
@@ -3260,8 +3238,7 @@ class GovernanceOfficer(ServerClient):
           "effectiveTime": "2025-06-13T15:13:31.339Z"
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_design_from_implementation(design_desc_guid, implementation_guid, body))
 
     @dynamic_catch
@@ -3374,8 +3351,7 @@ class GovernanceOfficer(ServerClient):
           }
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_implementation_resource(design_desc_guid, implementation_guid, body))
+        run_sync(self._async_link_implementation_resource(design_desc_guid, implementation_guid, body))
 
     @dynamic_catch
     async def _async_detach_implementation_resource(self, design_desc_guid: str, implementation_guid: str,
@@ -3465,8 +3441,7 @@ class GovernanceOfficer(ServerClient):
           "effectiveTime": "2025-06-13T15:13:31.339Z"
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_implementation_resource(design_desc_guid, implementation_guid, body))
+        run_sync(self._async_detach_implementation_resource(design_desc_guid, implementation_guid, body))
 
 
     @dynamic_catch
@@ -3565,8 +3540,7 @@ class GovernanceOfficer(ServerClient):
           "forDuplicateProcessing" : false
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_governance_results(gov_metric_guid, data_asset_guid, body))
+        run_sync(self._async_link_governance_results(gov_metric_guid, data_asset_guid, body))
 
     @dynamic_catch
     async def _async_detach_governance_results(self, gov_metric_guid: str, data_asset_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
@@ -3647,8 +3621,7 @@ class GovernanceOfficer(ServerClient):
            "effectiveTime": "2025-06-13T15:13:31.339Z"
          }
          """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_governance_results(gov_metric_guid, data_asset_guid, body))
+        run_sync(self._async_detach_governance_results(gov_metric_guid, data_asset_guid, body))
     @dynamic_catch
     async def _async_add_regulator_to_regulation(self, regulation_guid: str, regulator_guid,
                                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
@@ -3751,8 +3724,7 @@ class GovernanceOfficer(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_add_regulator_to_regulation(regulation_guid, regulator_guid, body))
+        run_sync(self._async_add_regulator_to_regulation(regulation_guid, regulator_guid, body))
 
     @dynamic_catch
     async def _async_detach_regulator_from_regulation(self, regulation_guid: str, regulator_guid, body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
@@ -3833,8 +3805,7 @@ class GovernanceOfficer(ServerClient):
           "forDuplicateProcessing" : false
         }
          """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_regulator_from_regulation(regulation_guid, regulator_guid, body))
+        run_sync(self._async_detach_regulator_from_regulation(regulation_guid, regulator_guid, body))
 
 
 
@@ -3861,8 +3832,7 @@ class GovernanceOfficer(ServerClient):
     def link_exception(self, element_guid: str, exception_type_guid: str,
                        body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Attach an exception to the element it was raised against (Exception relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_exception(element_guid, exception_type_guid, body))
+        run_sync(self._async_link_exception(element_guid, exception_type_guid, body))
 
     @dynamic_catch
     async def _async_update_exception(self, exception_guid: str,
@@ -3876,8 +3846,7 @@ class GovernanceOfficer(ServerClient):
     def update_exception(self, exception_guid: str,
                          body: Optional[dict | UpdateRelationshipRequestBody] = None) -> None:
         """Update the properties of an Exception relationship."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_exception(exception_guid, body))
+        run_sync(self._async_update_exception(exception_guid, body))
 
     @dynamic_catch
     async def _async_detach_exception(self, exception_guid: str,
@@ -3891,8 +3860,7 @@ class GovernanceOfficer(ServerClient):
     def detach_exception(self, exception_guid: str,
                          body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """Detach (delete) an Exception relationship."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_exception(exception_guid, body))
+        run_sync(self._async_detach_exception(exception_guid, body))
 
     @dynamic_catch
     async def _async_link_regulation_certification_type(self, regulation_guid: str, certification_type_guid: str,
@@ -3906,8 +3874,7 @@ class GovernanceOfficer(ServerClient):
     def link_regulation_certification_type(self, regulation_guid: str, certification_type_guid: str,
                                             body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Attach a certification type that demonstrates compliance with a regulation (RegulationCertificationType relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_regulation_certification_type(regulation_guid, certification_type_guid, body))
+        run_sync(self._async_link_regulation_certification_type(regulation_guid, certification_type_guid, body))
 
     @dynamic_catch
     async def _async_detach_regulation_certification_type(self, regulation_guid: str, certification_type_guid: str,
@@ -3921,8 +3888,7 @@ class GovernanceOfficer(ServerClient):
     def detach_regulation_certification_type(self, regulation_guid: str, certification_type_guid: str,
                                               body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """Detach a certification type from a regulation."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_regulation_certification_type(regulation_guid, certification_type_guid, body))
+        run_sync(self._async_detach_regulation_certification_type(regulation_guid, certification_type_guid, body))
 
     @dynamic_catch
     async def _async_set_control_point(self, element_guid: str,
@@ -3938,8 +3904,7 @@ class GovernanceOfficer(ServerClient):
     def set_control_point(self, element_guid: str,
                     body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify an element as a ControlPoint."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_control_point(element_guid, body))
+        run_sync(self._async_set_control_point(element_guid, body))
 
     @dynamic_catch
     async def _async_clear_control_point(self, element_guid: str,
@@ -3953,8 +3918,7 @@ class GovernanceOfficer(ServerClient):
     def clear_control_point(self, element_guid: str,
                       body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the ControlPoint classification from an element."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_control_point(element_guid, body))
+        run_sync(self._async_clear_control_point(element_guid, body))
 
     @dynamic_catch
     async def _async_set_verification_point(self, element_guid: str,
@@ -3970,8 +3934,7 @@ class GovernanceOfficer(ServerClient):
     def set_verification_point(self, element_guid: str,
                     body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify an element as a VerificationPoint."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_verification_point(element_guid, body))
+        run_sync(self._async_set_verification_point(element_guid, body))
 
     @dynamic_catch
     async def _async_clear_verification_point(self, element_guid: str,
@@ -3985,8 +3948,7 @@ class GovernanceOfficer(ServerClient):
     def clear_verification_point(self, element_guid: str,
                       body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the VerificationPoint classification from an element."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_verification_point(element_guid, body))
+        run_sync(self._async_clear_verification_point(element_guid, body))
 
     @dynamic_catch
     async def _async_set_enforcement_point(self, element_guid: str,
@@ -4002,8 +3964,7 @@ class GovernanceOfficer(ServerClient):
     def set_enforcement_point(self, element_guid: str,
                     body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify an element as a EnforcementPoint."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_enforcement_point(element_guid, body))
+        run_sync(self._async_set_enforcement_point(element_guid, body))
 
     @dynamic_catch
     async def _async_clear_enforcement_point(self, element_guid: str,
@@ -4017,8 +3978,7 @@ class GovernanceOfficer(ServerClient):
     def clear_enforcement_point(self, element_guid: str,
                       body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the EnforcementPoint classification from an element."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_enforcement_point(element_guid, body))
+        run_sync(self._async_clear_enforcement_point(element_guid, body))
 
     @dynamic_catch
     async def _async_set_execution_point(self, element_guid: str,
@@ -4034,8 +3994,7 @@ class GovernanceOfficer(ServerClient):
     def set_execution_point(self, element_guid: str,
                     body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify an element as a ExecutionPoint."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_execution_point(element_guid, body))
+        run_sync(self._async_set_execution_point(element_guid, body))
 
     @dynamic_catch
     async def _async_clear_execution_point(self, element_guid: str,
@@ -4049,8 +4008,7 @@ class GovernanceOfficer(ServerClient):
     def clear_execution_point(self, element_guid: str,
                       body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the ExecutionPoint classification from an element."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_execution_point(element_guid, body))
+        run_sync(self._async_clear_execution_point(element_guid, body))
 
     @dynamic_catch
     async def _async_set_policy_administration_point(self, element_guid: str,
@@ -4066,8 +4024,7 @@ class GovernanceOfficer(ServerClient):
     def set_policy_administration_point(self, element_guid: str,
                     body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify an element as a PolicyAdministrationPoint."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_policy_administration_point(element_guid, body))
+        run_sync(self._async_set_policy_administration_point(element_guid, body))
 
     @dynamic_catch
     async def _async_clear_policy_administration_point(self, element_guid: str,
@@ -4081,8 +4038,7 @@ class GovernanceOfficer(ServerClient):
     def clear_policy_administration_point(self, element_guid: str,
                       body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the PolicyAdministrationPoint classification from an element."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_policy_administration_point(element_guid, body))
+        run_sync(self._async_clear_policy_administration_point(element_guid, body))
 
     @dynamic_catch
     async def _async_set_policy_decision_point(self, element_guid: str,
@@ -4098,8 +4054,7 @@ class GovernanceOfficer(ServerClient):
     def set_policy_decision_point(self, element_guid: str,
                     body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify an element as a PolicyDecisionPoint."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_policy_decision_point(element_guid, body))
+        run_sync(self._async_set_policy_decision_point(element_guid, body))
 
     @dynamic_catch
     async def _async_clear_policy_decision_point(self, element_guid: str,
@@ -4113,8 +4068,7 @@ class GovernanceOfficer(ServerClient):
     def clear_policy_decision_point(self, element_guid: str,
                       body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the PolicyDecisionPoint classification from an element."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_policy_decision_point(element_guid, body))
+        run_sync(self._async_clear_policy_decision_point(element_guid, body))
 
     @dynamic_catch
     async def _async_set_policy_enforcement_point(self, element_guid: str,
@@ -4130,8 +4084,7 @@ class GovernanceOfficer(ServerClient):
     def set_policy_enforcement_point(self, element_guid: str,
                     body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify an element as a PolicyEnforcementPoint."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_policy_enforcement_point(element_guid, body))
+        run_sync(self._async_set_policy_enforcement_point(element_guid, body))
 
     @dynamic_catch
     async def _async_clear_policy_enforcement_point(self, element_guid: str,
@@ -4145,8 +4098,7 @@ class GovernanceOfficer(ServerClient):
     def clear_policy_enforcement_point(self, element_guid: str,
                       body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the PolicyEnforcementPoint classification from an element."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_policy_enforcement_point(element_guid, body))
+        run_sync(self._async_clear_policy_enforcement_point(element_guid, body))
 
     @dynamic_catch
     async def _async_set_policy_information_point(self, element_guid: str,
@@ -4162,8 +4114,7 @@ class GovernanceOfficer(ServerClient):
     def set_policy_information_point(self, element_guid: str,
                     body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify an element as a PolicyInformationPoint."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_policy_information_point(element_guid, body))
+        run_sync(self._async_set_policy_information_point(element_guid, body))
 
     @dynamic_catch
     async def _async_clear_policy_information_point(self, element_guid: str,
@@ -4177,8 +4128,7 @@ class GovernanceOfficer(ServerClient):
     def clear_policy_information_point(self, element_guid: str,
                       body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the PolicyInformationPoint classification from an element."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_policy_information_point(element_guid, body))
+        run_sync(self._async_clear_policy_information_point(element_guid, body))
 
     @dynamic_catch
     async def _async_set_policy_management_point(self, element_guid: str,
@@ -4194,8 +4144,7 @@ class GovernanceOfficer(ServerClient):
     def set_policy_management_point(self, element_guid: str,
                     body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify an element as a PolicyManagementPoint."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_policy_management_point(element_guid, body))
+        run_sync(self._async_set_policy_management_point(element_guid, body))
 
     @dynamic_catch
     async def _async_clear_policy_management_point(self, element_guid: str,
@@ -4209,8 +4158,7 @@ class GovernanceOfficer(ServerClient):
     def clear_policy_management_point(self, element_guid: str,
                       body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the PolicyManagementPoint classification from an element."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_policy_management_point(element_guid, body))
+        run_sync(self._async_clear_policy_management_point(element_guid, body))
 
     @dynamic_catch
     async def _async_set_policy_retrieval_point(self, element_guid: str,
@@ -4226,8 +4174,7 @@ class GovernanceOfficer(ServerClient):
     def set_policy_retrieval_point(self, element_guid: str,
                     body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify an element as a PolicyRetrievalPoint."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_policy_retrieval_point(element_guid, body))
+        run_sync(self._async_set_policy_retrieval_point(element_guid, body))
 
     @dynamic_catch
     async def _async_clear_policy_retrieval_point(self, element_guid: str,
@@ -4241,8 +4188,7 @@ class GovernanceOfficer(ServerClient):
     def clear_policy_retrieval_point(self, element_guid: str,
                       body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the PolicyRetrievalPoint classification from an element."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_policy_retrieval_point(element_guid, body))
+        run_sync(self._async_clear_policy_retrieval_point(element_guid, body))
 
 
 if __name__ == "__main__":

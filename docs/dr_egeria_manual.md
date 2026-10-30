@@ -701,7 +701,7 @@ await process_md_file_v2(
 )
 ```
 
-> **Note**: Jupyter kernels run their own event loop, so `asyncio.run()` will raise a `RuntimeError` inside a notebook cell. Use `await` directly (as shown above) or install `nest_asyncio` and call `nest_asyncio.apply()` once at the top of your notebook if you need to keep `asyncio.run()` calls.
+> **Note**: Jupyter kernels run their own event loop, so `asyncio.run()` will raise a `RuntimeError` inside a notebook cell. Use `await` directly (as shown above) or, on Python 3.13 or older only, install `nest_asyncio` and call `nest_asyncio.apply()` once at the top of your notebook if you need to keep `asyncio.run()` calls (it breaks asyncio on 3.14). pyegeria's own sync methods work in a notebook without it.
 
 ---
 

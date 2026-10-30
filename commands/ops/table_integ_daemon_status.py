@@ -12,7 +12,6 @@ import os
 import time
 from typing import Union
 
-import nest_asyncio
 from rich import box
 from rich.table import Table
 from textual.widgets import DataTable
@@ -122,7 +121,6 @@ def display_integration_daemon_status(
     """
 
     s_client = EgeriaTech(view_server, view_url, user, user_pass)
-    nest_asyncio.apply()
 
     def generate_table() -> Table:
         """Make a new table."""

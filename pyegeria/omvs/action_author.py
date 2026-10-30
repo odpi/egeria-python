@@ -20,6 +20,7 @@ from pyegeria.models import (
     GetRequestBody,
 )
 from pyegeria.core.utils import dynamic_catch
+from pyegeria.core.async_runner import run_sync
 
 
 class GovernanceActionExecutorProperties(RelationshipBeanProperties):
@@ -176,8 +177,7 @@ class ActionAuthor(ServerClient):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_link_governance_action_executor(
                 governance_action_type_guid, governance_engine_guid, body
             )
@@ -199,8 +199,7 @@ class ActionAuthor(ServerClient):
         governance_engine_guid: str,
         body: dict | DeleteRelationshipRequestBody,
     ) -> None:
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_governance_action_executor(
                 governance_action_type_guid, governance_engine_guid, body
             )
@@ -222,8 +221,7 @@ class ActionAuthor(ServerClient):
         element_guid: str,
         body: dict | NewRelationshipRequestBody,
     ) -> None:
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_link_target_for_governance_action(governance_action_guid, element_guid, body)
         )
 
@@ -243,8 +241,7 @@ class ActionAuthor(ServerClient):
         element_guid: str,
         body: dict | DeleteRelationshipRequestBody,
     ) -> None:
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_target_for_governance_action(
                 governance_action_guid, element_guid, body
             )
@@ -266,8 +263,7 @@ class ActionAuthor(ServerClient):
         process_step_guid: str,
         body: dict | NewRelationshipRequestBody,
     ) -> None:
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_setup_first_action_process_step(process_guid, process_step_guid, body)
         )
 
@@ -285,8 +281,7 @@ class ActionAuthor(ServerClient):
         process_guid: str,
         first_process_step_guid: str,
     ) -> None:
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_remove_first_action_process_step(process_guid, first_process_step_guid)
         )
 
@@ -311,8 +306,7 @@ class ActionAuthor(ServerClient):
         next_process_step_guid: str,
         body: dict | NewRelationshipRequestBody,
     ) -> Optional[str]:
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_setup_next_action_process_step(
                 process_step_guid, next_process_step_guid, body
             )
@@ -332,8 +326,7 @@ class ActionAuthor(ServerClient):
         relationship_guid: str,
         body: dict | UpdateRelationshipRequestBody,
     ) -> None:
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_update_next_action_process_step(relationship_guid, body)
         )
 
@@ -349,8 +342,7 @@ class ActionAuthor(ServerClient):
         self,
         relationship_guid: str,
     ) -> None:
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_remove_next_action_process_step(relationship_guid))
+        run_sync(self._async_remove_next_action_process_step(relationship_guid))
 
     @dynamic_catch
     async def _async_get_governance_action_process(
@@ -416,8 +408,7 @@ class ActionAuthor(ServerClient):
         dict | list | str
             The governance action process.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_governance_action_process(
                 process_guid, output_format, report_spec, body, **kwargs
             )
@@ -489,8 +480,7 @@ class ActionAuthor(ServerClient):
         dict | list | str
             The governance action process graph.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_governance_action_process_graph(
                 process_guid, output_format, report_spec, body, **kwargs
             )

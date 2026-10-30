@@ -20,6 +20,7 @@ from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequ
 from pyegeria.view.output_formatter import (extract_mermaid_only, extract_basic_dict, populate_common_columns)
 from pyegeria.core.utils import dynamic_catch
 from typing import Any, Optional
+from pyegeria.core.async_runner import run_sync
 
 
 class DataDesigner(ServerClient):
@@ -163,8 +164,7 @@ class DataDesigner(ServerClient):
         list | str
             The search results.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_data_value_specifications(
                 search_string,
                 graph_query_depth=graph_query_depth,
@@ -235,8 +235,7 @@ class DataDesigner(ServerClient):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_specialized_data_value_specification(spec_guid, grain_guid, body))
+        run_sync(self._async_link_specialized_data_value_specification(spec_guid, grain_guid, body))
 
     @dynamic_catch
     async def _async_detach_specialized_data_value_specification(
@@ -298,8 +297,7 @@ class DataDesigner(ServerClient):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_specialized_data_value_specification(spec_guid, grain_guid, body, cascade_delete)
         )
 
@@ -354,8 +352,7 @@ class DataDesigner(ServerClient):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_data_value_specification(guid, body, cascade_delete))
+        run_sync(self._async_delete_data_value_specification(guid, body, cascade_delete))
 
     @dynamic_catch
     async def _async_create_data_value_specification(self, body: dict | NewElementRequestBody) -> str:
@@ -400,8 +397,7 @@ class DataDesigner(ServerClient):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_data_value_specification(body))
+        return run_sync(self._async_create_data_value_specification(body))
 
     @dynamic_catch
     async def _async_create_data_value_specification_from_template(
@@ -452,8 +448,7 @@ class DataDesigner(ServerClient):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_data_value_specification_from_template(body))
+        return run_sync(self._async_create_data_value_specification_from_template(body))
 
     @dynamic_catch
     async def _async_create_data_grain(self, body: dict | NewElementRequestBody) -> str:
@@ -498,8 +493,7 @@ class DataDesigner(ServerClient):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_data_grain(body))
+        return run_sync(self._async_create_data_grain(body))
     #
     # DataDesigner is a class that extends the Client class. The Data Designer OMVS provides APIs for
     # building specifications for data. This includes common data fields in a data dictionary, data specifications
@@ -539,8 +533,7 @@ class DataDesigner(ServerClient):
         str
             The GUID of the element - or "No element found"
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_data_class(body))
+        return run_sync(self._async_create_data_class(body))
 
     @dynamic_catch
     async def _async_delete_data_class(self, data_class_guid: str, body: dict = None,
@@ -603,8 +596,7 @@ class DataDesigner(ServerClient):
         PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_data_class(data_class_guid, body, cascade_delete))
+        run_sync(self._async_delete_data_class(data_class_guid, body, cascade_delete))
 
     #
     #    Data Structures
@@ -749,8 +741,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_create_data_structure(body))
         return response
 
@@ -899,8 +890,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_create_data_structure_from_template(body))
+        response = run_sync(self._async_create_data_structure_from_template(body))
         return response
 
     @dynamic_catch
@@ -963,8 +953,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_find_all_data_structures(output_format=output_format,
+        return run_sync(self._async_find_all_data_structures(output_format=output_format,
                                                                            report_spec=report_spec))
 
     @dynamic_catch
@@ -1133,8 +1122,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_find_data_structures(
                 search_string=search_string,
                 graph_query_depth=graph_query_depth,
@@ -1264,8 +1252,7 @@ class DataDesigner(ServerClient):
 
     """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_data_structures_by_name(name=name, classification_names=classification_names, body=body, start_from=start_from, page_size=page_size,
                                                     graph_query_depth=graph_query_depth,
                                                     output_format=output_format, report_spec=report_spec, **kwargs))
@@ -1387,8 +1374,7 @@ class DataDesigner(ServerClient):
 
     """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_data_structure_by_guid(guid=guid, element_type=element_type, body=body, graph_query_depth=graph_query_depth, output_format=output_format, report_spec=report_spec, **kwargs))
         return response
 
@@ -1916,8 +1902,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_create_data_field(body))
+        response = run_sync(self._async_create_data_field(body))
         return response
 
     @dynamic_catch
@@ -1979,8 +1964,7 @@ class DataDesigner(ServerClient):
         PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_data_field(data_field_guid, body, cascade_delete))
+        run_sync(self._async_delete_data_field(data_field_guid, body, cascade_delete))
 
     @dynamic_catch
     async def _async_create_data_field_from_template(self, body: dict | TemplateRequestBody) -> str:
@@ -2126,8 +2110,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_create_data_field_from_template(body))
+        response = run_sync(self._async_create_data_field_from_template(body))
         return response
 
     @dynamic_catch
@@ -2238,8 +2221,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_update_data_structure(data_struct_guid, body))
 
     @dynamic_catch
@@ -2351,8 +2333,7 @@ class DataDesigner(ServerClient):
 
          """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_link_member_data_field(parent_data_struct_guid, member_data_field_guid, body))
 
     @dynamic_catch
@@ -2457,8 +2438,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_member_data_field(parent_data_struct_guid, member_data_field_guid, body, cascade_delete))
 
 
@@ -2475,8 +2455,7 @@ class DataDesigner(ServerClient):
     def link_nested_data_field(self, parent_data_field_guid: str, nested_data_field_guid: str,
                                body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Link a nested data field to a parent data field (NestedDataField relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_nested_data_field(parent_data_field_guid, nested_data_field_guid, body))
+        run_sync(self._async_link_nested_data_field(parent_data_field_guid, nested_data_field_guid, body))
 
     @dynamic_catch
     async def _async_detach_nested_data_field(self, parent_data_field_guid: str, nested_data_field_guid: str,
@@ -2491,8 +2470,7 @@ class DataDesigner(ServerClient):
     def detach_nested_data_field(self, parent_data_field_guid: str, nested_data_field_guid: str,
                                   body: Optional[dict] = None, cascade_delete: bool = False) -> None:
         """Detach a nested data field from its parent data field."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_nested_data_field(
+        run_sync(self._async_detach_nested_data_field(
             parent_data_field_guid, nested_data_field_guid, body, cascade_delete))
 
     @dynamic_catch
@@ -2593,8 +2571,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_data_structure(data_struct_guid, body, cascade_delete))
+        run_sync(self._async_delete_data_structure(data_struct_guid, body, cascade_delete))
 
     @dynamic_catch
     async def _async_find_all_data_fields(self, graph_query_depth: int = 3, output_format: str = 'JSON',
@@ -2663,8 +2640,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_find_all_data_fields(graph_query_depth, output_format, report_spec, body))
         return response
 
@@ -2874,8 +2850,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_find_data_fields(
                 search_string,
                 body=body,
@@ -2994,8 +2969,7 @@ class DataDesigner(ServerClient):
 
     """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_data_fields_by_name(filter_string=filter_string, classification_names=classification_names, body=body, start_from=start_from, page_size=page_size,
                                                 graph_query_depth=graph_query_depth,
                                                 output_format=output_format, report_spec=report_spec, **kwargs))
@@ -3020,8 +2994,7 @@ class DataDesigner(ServerClient):
                                 body: Optional[dict] = None,
                                 graph_query_depth: int = 3, output_format: str = 'JSON', report_spec: str | dict = None, **kwargs) -> list | str:
         """Get a data field by its GUID."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_data_field_by_guid(guid, element_type, body, graph_query_depth, output_format, report_spec, **kwargs))
 
     @dynamic_catch
@@ -3128,8 +3101,7 @@ class DataDesigner(ServerClient):
 
     """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_data_value_specifications_by_name(filter_string, classification_names, body, start_from, page_size,
                                                              graph_query_depth,
                                                              output_format, report_spec, **kwargs))
@@ -3242,8 +3214,7 @@ class DataDesigner(ServerClient):
 
     """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_data_value_specification_by_guid(guid, element_type, body, graph_query_depth, output_format, report_spec, **kwargs))
         return response
 
@@ -3279,8 +3250,7 @@ class DataDesigner(ServerClient):
                                 graph_query_depth: int = 3, output_format: str = 'JSON', report_spec: str | dict = None,
                                 **kwargs) -> list | str:
         """Get a data class by its GUID."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_data_class_by_guid(guid=guid, element_type=element_type, body=body, graph_query_depth=graph_query_depth, output_format=output_format, report_spec=report_spec, **kwargs))
 
     @dynamic_catch
@@ -3289,8 +3259,7 @@ class DataDesigner(ServerClient):
                                 graph_query_depth: int = 3, output_format: str = 'JSON', report_spec: str | dict = None,
                                 **kwargs) -> list | str:
         """Get a data grain by its GUID. Alias for get_data_value_specification_by_guid with DataGrain type."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_data_value_specification_by_guid(
                 guid=guid, element_type=element_type or "DataGrain", body=body, output_format=output_format, report_spec=report_spec, **kwargs))
 
@@ -3480,8 +3449,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_create_data_classification(body))
+        response = run_sync(self._async_create_data_classification(body))
         return response
 
     @dynamic_catch
@@ -3619,8 +3587,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_data_classification(data_classification_guid, body))
+        run_sync(self._async_update_data_classification(data_classification_guid, body))
 
     @dynamic_catch
     async def _async_link_data_classification_to_data_field(self, data_classification_guid: str, data_field_guid: str,
@@ -3728,8 +3695,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_link_data_classification_to_data_field(data_classification_guid, data_field_guid, body))
 
     @dynamic_catch
@@ -3830,8 +3796,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_data_classification_from_data_field(data_classification_guid, data_field_guid, body, cascade_delete))
 
     ###
@@ -3937,8 +3902,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_data_class_definition(data_definition_guid, data_class_guid, body))
+        run_sync(self._async_link_data_class_definition(data_definition_guid, data_class_guid, body))
 
     @dynamic_catch
     async def _async_detach_data_class_definition(self, data_definition_guid: str, data_class_guid: str,
@@ -4037,8 +4001,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_data_class_definition(data_definition_guid, data_class_guid, body, cascade_delete))
 
 
@@ -4055,8 +4018,7 @@ class DataDesigner(ServerClient):
     def link_nested_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
                                body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Link a child data class to a parent via DataClassComposition relationship."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_nested_data_class(parent_data_class_guid, child_data_class_guid, body))
+        run_sync(self._async_link_nested_data_class(parent_data_class_guid, child_data_class_guid, body))
 
     @dynamic_catch
     async def _async_detach_nested_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
@@ -4071,8 +4033,7 @@ class DataDesigner(ServerClient):
     def detach_nested_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
                                   body: Optional[dict] = None, cascade_delete: bool = False) -> None:
         """Detach a child data class from its parent (DataClassComposition)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_nested_data_class(
+        run_sync(self._async_detach_nested_data_class(
             parent_data_class_guid, child_data_class_guid, body, cascade_delete))
 
     @dynamic_catch
@@ -4173,8 +4134,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_semantic_definition(data_definition_guid, glossary_term_guid, body))
+        run_sync(self._async_link_semantic_definition(data_definition_guid, glossary_term_guid, body))
 
     @dynamic_catch
     async def _async_detach_semantic_definition(self, data_definition_guid: str, glossary_term_guid: str,
@@ -4272,8 +4232,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_semantic_definition(data_definition_guid, glossary_term_guid, body, cascade_delete))
 
 
@@ -4381,8 +4340,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_link_certification_type_to_data_structure(certification_type_guid, data_structure_guid, body))
 
     async def _async_detach_certification_type_from_data_structure(self, certification_type_guid: str,
@@ -4478,8 +4436,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_certification_type_from_data_structure(certification_type_guid, data_structure_guid,
                                                                       body, cascade_delete))
 
@@ -4853,8 +4810,7 @@ class DataDesigner(ServerClient):
         """
         Link a Data Value Specification to an element (DataValueAssignment relationship). Sync version.
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_data_value_assignment(element_guid, spec_guid, body))
+        run_sync(self._async_link_data_value_assignment(element_guid, spec_guid, body))
 
     @dynamic_catch
     async def _async_detach_data_value_assignment(self, element_guid: str, spec_guid: str, body: dict = None) -> None:
@@ -4870,8 +4826,7 @@ class DataDesigner(ServerClient):
         """
         Detach a Data Value Specification from an element (DataValueAssignment relationship). Sync version.
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_data_value_assignment(element_guid, spec_guid, body))
+        run_sync(self._async_detach_data_value_assignment(element_guid, spec_guid, body))
 
     @dynamic_catch
     async def _async_update_data_field(self, data_field_guid: str, body: dict | UpdateElementRequestBody) -> None:
@@ -4892,8 +4847,7 @@ class DataDesigner(ServerClient):
     @dynamic_catch
     def update_data_field(self, data_field_guid: str, body: dict | UpdateElementRequestBody) -> None:
         """Update the properties of a data field."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_data_field(data_field_guid, body))
+        run_sync(self._async_update_data_field(data_field_guid, body))
 
     @dynamic_catch
     async def _async_update_data_value_specification(self, guid: str, body: dict | UpdateElementRequestBody) -> None:
@@ -4926,8 +4880,7 @@ class DataDesigner(ServerClient):
         -------
         None
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_data_value_specification(guid, body))
+        run_sync(self._async_update_data_value_specification(guid, body))
 
     #
     # Additional relationship maintenance - added to close the gap found by
@@ -4948,8 +4901,7 @@ class DataDesigner(ServerClient):
     def link_linked_data_field(self, data_field_one_guid: str, data_field_two_guid: str,
                                body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Attach two related data fields (LinkedDataField relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_linked_data_field(data_field_one_guid, data_field_two_guid, body))
+        run_sync(self._async_link_linked_data_field(data_field_one_guid, data_field_two_guid, body))
 
     @dynamic_catch
     async def _async_detach_linked_data_field(self, data_field_one_guid: str, data_field_two_guid: str,
@@ -4965,8 +4917,7 @@ class DataDesigner(ServerClient):
                                  body: Optional[dict | DeleteRelationshipRequestBody] = None,
                                  cascade_delete: bool = False) -> None:
         """Detach two related data fields."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_linked_data_field(
+        run_sync(self._async_detach_linked_data_field(
             data_field_one_guid, data_field_two_guid, body, cascade_delete))
 
     @dynamic_catch
@@ -4981,8 +4932,7 @@ class DataDesigner(ServerClient):
     def link_schema_attribute_definition(self, data_field_guid: str, schema_attribute_guid: str,
                                          body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Attach a data field to the schema attribute that defines it (SchemaAttributeDefinition relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_schema_attribute_definition(data_field_guid, schema_attribute_guid, body))
+        run_sync(self._async_link_schema_attribute_definition(data_field_guid, schema_attribute_guid, body))
 
     @dynamic_catch
     async def _async_detach_schema_attribute_definition(self, data_field_guid: str, schema_attribute_guid: str,
@@ -4998,8 +4948,7 @@ class DataDesigner(ServerClient):
                                            body: Optional[dict | DeleteRelationshipRequestBody] = None,
                                            cascade_delete: bool = False) -> None:
         """Detach a data field from the schema attribute that defines it."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_schema_attribute_definition(
+        run_sync(self._async_detach_schema_attribute_definition(
             data_field_guid, schema_attribute_guid, body, cascade_delete))
 
     @dynamic_catch
@@ -5014,8 +4963,7 @@ class DataDesigner(ServerClient):
     def link_schema_type_definition(self, data_structure_guid: str, schema_type_guid: str,
                                     body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Attach a data structure to the schema type that defines it (SchemaTypeDefinition relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_schema_type_definition(data_structure_guid, schema_type_guid, body))
+        run_sync(self._async_link_schema_type_definition(data_structure_guid, schema_type_guid, body))
 
     @dynamic_catch
     async def _async_detach_schema_type_definition(self, data_structure_guid: str, schema_type_guid: str,
@@ -5031,8 +4979,7 @@ class DataDesigner(ServerClient):
                                       body: Optional[dict | DeleteRelationshipRequestBody] = None,
                                       cascade_delete: bool = False) -> None:
         """Detach a data structure from the schema type that defines it."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_schema_type_definition(
+        run_sync(self._async_detach_schema_type_definition(
             data_structure_guid, schema_type_guid, body, cascade_delete))
 
 

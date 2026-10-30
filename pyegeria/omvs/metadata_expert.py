@@ -22,6 +22,7 @@ from pyegeria.models import (NewOpenMetadataElementRequestBody, TemplateRequestB
 from pyegeria.core.utils import body_slimmer, dynamic_catch
 from pyegeria.core._server_client import ServerClient, max_paging_size
 from pyegeria.core._globals import default_timeout, NO_ELEMENTS_FOUND
+from pyegeria.core.async_runner import run_sync
 
 def base_path(client: ServerClient, view_server: str):
     return f"{client.platform_url}/servers/{view_server}/api/open-metadata/metadata-expert"
@@ -151,8 +152,7 @@ class MetadataExpert(ServerClient):
         """
         Create a new metadata element in the metadata store.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_metadata_element(body))
+        return run_sync(self._async_create_metadata_element(body))
 
 
     @dynamic_catch
@@ -212,8 +212,7 @@ class MetadataExpert(ServerClient):
         """
         Create a new metadata element in the metadata store using a template.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_metadata_element_from_template(body))
+        return run_sync(self._async_create_metadata_element_from_template(body))
 
 
     @dynamic_catch
@@ -259,8 +258,7 @@ class MetadataExpert(ServerClient):
         """
         Update the properties of a specific metadata element.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_update_metadata_element_properties(metadata_element_guid, body))
+        return run_sync(self._async_update_metadata_element_properties(metadata_element_guid, body))
 
     @dynamic_catch
     async def _async_reidentify_metadata_element(self, metadata_element_guid: str, body: Optional[dict | ReIdentifyRequestBody] = None) -> None:
@@ -297,8 +295,7 @@ class MetadataExpert(ServerClient):
         """
         Change the unique identifier of a metadata element.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_reidentify_metadata_element(metadata_element_guid, body))
+        return run_sync(self._async_reidentify_metadata_element(metadata_element_guid, body))
 
     @dynamic_catch
     async def _async_retype_metadata_element(self, metadata_element_guid: str, body: Optional[dict | ReTypeRequestBody] = None) -> None:
@@ -335,8 +332,7 @@ class MetadataExpert(ServerClient):
         """
         Change the type of a metadata element.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_retype_metadata_element(metadata_element_guid, body))
+        return run_sync(self._async_retype_metadata_element(metadata_element_guid, body))
 
     @dynamic_catch
     async def _async_rehome_metadata_element(self, metadata_element_guid: str, body: Optional[dict | ReHomeRequestBody] = None) -> None:
@@ -374,8 +370,7 @@ class MetadataExpert(ServerClient):
         """
         Change the home repository of a metadata element.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_rehome_metadata_element(metadata_element_guid, body))
+        return run_sync(self._async_rehome_metadata_element(metadata_element_guid, body))
 
     @dynamic_catch
     async def _async_publish_metadata_element(self, metadata_element_guid: str, body: Optional[dict | MetadataSourceRequestBody] = None) -> None:
@@ -409,8 +404,7 @@ class MetadataExpert(ServerClient):
         """
         Update the zone membership to increase its visibility.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_publish_metadata_element(metadata_element_guid, body))
+        return run_sync(self._async_publish_metadata_element(metadata_element_guid, body))
 
     @dynamic_catch
     async def _async_withdraw_metadata_element(self, metadata_element_guid: str, body: Optional[dict | MetadataSourceRequestBody] = None) -> None:
@@ -444,8 +438,7 @@ class MetadataExpert(ServerClient):
         """
         Update the zone membership to decrease its visibility.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_withdraw_metadata_element(metadata_element_guid, body))
+        return run_sync(self._async_withdraw_metadata_element(metadata_element_guid, body))
 
     @dynamic_catch
     async def _async_update_metadata_element_effectivity(self, metadata_element_guid: str, body: Optional[dict | UpdateEffectivityDatesRequestBody] = None) -> None:
@@ -481,8 +474,7 @@ class MetadataExpert(ServerClient):
         """
         Update the effectivity dates for a specific metadata element.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_update_metadata_element_effectivity(metadata_element_guid, body))
+        return run_sync(self._async_update_metadata_element_effectivity(metadata_element_guid, body))
 
     @dynamic_catch
     async def _async_delete_metadata_element(self, metadata_element_guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
@@ -532,8 +524,7 @@ class MetadataExpert(ServerClient):
         """
         Delete a specific metadata element.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_delete_metadata_element(metadata_element_guid, body, cascade_delete))
+        return run_sync(self._async_delete_metadata_element(metadata_element_guid, body, cascade_delete))
 
     @dynamic_catch
     async def _async_archive_metadata_element(self, metadata_element_guid: str, body: Optional[dict | DeleteElementRequestBody] = None) -> None:
@@ -598,8 +589,7 @@ class MetadataExpert(ServerClient):
           "effectiveTime": "{{$isoTimestamp}}"
         }
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_archive_metadata_element(metadata_element_guid, body))
+        return run_sync(self._async_archive_metadata_element(metadata_element_guid, body))
 
     @dynamic_catch
     async def _async_undo_metadata_element_update(self, metadata_element_guid: str, body: Optional[dict | MetadataSourceRequestBody] = None) -> None:
@@ -644,8 +634,7 @@ class MetadataExpert(ServerClient):
         body : dict | MetadataSourceRequestBody, optional
             Request options; see the async version for a sample.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_undo_metadata_element_update(metadata_element_guid, body))
+        return run_sync(self._async_undo_metadata_element_update(metadata_element_guid, body))
 
     @dynamic_catch
     async def _async_restore_metadata_element(self, metadata_element_guid: str, body: Optional[dict | MetadataSourceRequestBody] = None) -> None:
@@ -692,8 +681,7 @@ class MetadataExpert(ServerClient):
         body : dict | MetadataSourceRequestBody, optional
             Request options; see the async version for a sample.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_restore_metadata_element(metadata_element_guid, body))
+        return run_sync(self._async_restore_metadata_element(metadata_element_guid, body))
 
     @dynamic_catch
     async def _async_classify_metadata_element(self, metadata_element_guid: str, classification_name: str, body: Optional[dict | NewClassificationRequestBody] = None) -> None:
@@ -729,8 +717,7 @@ class MetadataExpert(ServerClient):
         """
         Add a new classification to the metadata element.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_classify_metadata_element(metadata_element_guid, classification_name, body))
+        return run_sync(self._async_classify_metadata_element(metadata_element_guid, classification_name, body))
 
     @dynamic_catch
     async def _async_reclassify_metadata_element(self, metadata_element_guid: str, classification_name: str, body: Optional[dict | UpdatePropertiesRequestBody] = None) -> None:
@@ -766,8 +753,7 @@ class MetadataExpert(ServerClient):
         """
         Update the properties of a classification that is currently attached to a specific metadata element.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_reclassify_metadata_element(metadata_element_guid, classification_name, body))
+        return run_sync(self._async_reclassify_metadata_element(metadata_element_guid, classification_name, body))
 
     @dynamic_catch
     async def _async_update_classification_effectivity(self, metadata_element_guid: str, classification_name: str, body: Optional[dict | UpdateEffectivityDatesRequestBody] = None) -> None:
@@ -805,8 +791,7 @@ class MetadataExpert(ServerClient):
         """
         Update the effectivity dates of a specific classification attached to a metadata element.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_update_classification_effectivity(metadata_element_guid, classification_name, body))
+        return run_sync(self._async_update_classification_effectivity(metadata_element_guid, classification_name, body))
 
     @dynamic_catch
     async def _async_declassify_metadata_element(self, metadata_element_guid: str, classification_name: str, body: Optional[dict | MetadataSourceRequestBody] = None) -> None:
@@ -842,8 +827,7 @@ class MetadataExpert(ServerClient):
         """
         Remove the named classification from a specific metadata element.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_declassify_metadata_element(metadata_element_guid, classification_name, body))
+        return run_sync(self._async_declassify_metadata_element(metadata_element_guid, classification_name, body))
 
     @dynamic_catch
     async def _async_create_related_elements(self, body: Optional[dict | NewRelatedElementsRequestBody] = None) -> str:
@@ -897,8 +881,7 @@ class MetadataExpert(ServerClient):
         """
         Create a relationship between two metadata elements.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_related_elements(body))
+        return run_sync(self._async_create_related_elements(body))
 
     @dynamic_catch
     async def _async_update_related_elements_properties(self, relationship_guid: str, body: Optional[dict | UpdatePropertiesRequestBody] = None) -> None:
@@ -932,8 +915,7 @@ class MetadataExpert(ServerClient):
         """
         Update the properties associated with a relationship.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_update_related_elements_properties(relationship_guid, body))
+        return run_sync(self._async_update_related_elements_properties(relationship_guid, body))
 
     @dynamic_catch
     async def _async_reidentify_related_elements(self, relationship_guid: str, body: Optional[dict | ReIdentifyRequestBody] = None) -> None:
@@ -970,8 +952,7 @@ class MetadataExpert(ServerClient):
         """
         Change the unique identifier of a relationship.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_reidentify_related_elements(relationship_guid, body))
+        return run_sync(self._async_reidentify_related_elements(relationship_guid, body))
 
     @dynamic_catch
     async def _async_retype_related_elements(self, relationship_guid: str, body: Optional[dict | ReTypeRequestBody] = None) -> None:
@@ -1008,8 +989,7 @@ class MetadataExpert(ServerClient):
         """
         Change the type of a relationship.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_retype_related_elements(relationship_guid, body))
+        return run_sync(self._async_retype_related_elements(relationship_guid, body))
 
     @dynamic_catch
     async def _async_rehome_related_elements(self, relationship_guid: str, body: Optional[dict | ReHomeRequestBody] = None) -> None:
@@ -1047,8 +1027,7 @@ class MetadataExpert(ServerClient):
         """
         Change the home repository of a relationship.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_rehome_related_elements(relationship_guid, body))
+        return run_sync(self._async_rehome_related_elements(relationship_guid, body))
 
     @dynamic_catch
     async def _async_update_related_elements_effectivity(self, relationship_guid: str, body: Optional[dict | UpdateEffectivityDatesRequestBody] = None) -> None:
@@ -1084,8 +1063,7 @@ class MetadataExpert(ServerClient):
         """
         Update the effectivity dates of a specific relationship between metadata elements.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_update_related_elements_effectivity(relationship_guid, body))
+        return run_sync(self._async_update_related_elements_effectivity(relationship_guid, body))
 
     @dynamic_catch
     async def _async_delete_related_elements(self, relationship_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
@@ -1131,8 +1109,7 @@ class MetadataExpert(ServerClient):
         """
         Delete a relationship between two metadata elements.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_delete_related_elements(relationship_guid, body))
+        return run_sync(self._async_delete_related_elements(relationship_guid, body))
 
     @dynamic_catch
     async def _async_undo_related_elements_update(self, relationship_guid: str, body: Optional[dict | MetadataSourceRequestBody] = None) -> None:
@@ -1177,8 +1154,7 @@ class MetadataExpert(ServerClient):
         body : dict | MetadataSourceRequestBody, optional
             Request options; see the async version for a sample.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_undo_related_elements_update(relationship_guid, body))
+        return run_sync(self._async_undo_related_elements_update(relationship_guid, body))
 
     @dynamic_catch
     async def _async_restore_related_elements(self, relationship_guid: str, body: Optional[dict | MetadataSourceRequestBody] = None) -> None:
@@ -1223,8 +1199,7 @@ class MetadataExpert(ServerClient):
         body : dict | MetadataSourceRequestBody, optional
             Request options; see the async version for a sample.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_restore_related_elements(relationship_guid, body))
+        return run_sync(self._async_restore_related_elements(relationship_guid, body))
 
     @dynamic_catch
     async def _async_detach_related_elements_in_store(
@@ -1308,8 +1283,7 @@ class MetadataExpert(ServerClient):
           "effectiveTime" : "2024-01-01T00:00:00.000+00:00"
         }
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_detach_related_elements_in_store(
                 metadata_element_1_guid, relationship_type_name, metadata_element_2_guid, body
             )
@@ -1443,8 +1417,7 @@ class MetadataExpert(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_metadata_guid_by_unique_name(
                 name=name, property_name=property_name, as_of_time=as_of_time, body=body, **kwargs
             )
@@ -1555,8 +1528,7 @@ class MetadataExpert(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_metadata_element_by_guid(
                 graph_query_depth=graph_query_depth,
                 output_format=output_format,
@@ -1682,8 +1654,7 @@ class MetadataExpert(ServerClient):
 
             """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_anchored_element_graph(
                 guid=guid, as_of_time=as_of_time, mermaid_only=mermaid_only, body=body, **kwargs
             )
@@ -1810,8 +1781,7 @@ class MetadataExpert(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_metadata_element_by_unique_name(
                 name=name, property_name=property_name, body=body, **kwargs
             )
@@ -1970,8 +1940,7 @@ class MetadataExpert(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_element_history(
                 guid=guid, oldest_first=oldest_first, from_time=from_time, to_time=to_time,
                 start_from=start_from, page_size=page_size, body=body, **kwargs
@@ -2029,8 +1998,7 @@ class MetadataExpert(ServerClient):
         **kwargs,
     ) -> list | str:
         """Retrieve the history of a metadata element."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_metadata_element_history(metadata_element_guid, effective_time, oldest_first, body, **kwargs)
         )
 
@@ -2195,8 +2163,7 @@ class MetadataExpert(ServerClient):
         }
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_classification_history(
                 guid=guid, classification_name=classification_name, oldest_first=oldest_first,
                 from_time=from_time, to_time=to_time, start_from=start_from, page_size=page_size,
@@ -2370,8 +2337,7 @@ class MetadataExpert(ServerClient):
             list | str: Returns the search results as a list of metadata elements, or as a string in cases
                 where the output is serialized in text format.
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_find_metadata_elements_with_string(
                 search_string=search_string, starts_with=starts_with, ends_with=ends_with,
                 ignore_case=ignore_case, anchor_domain=anchor_domain, zone_filter=zone_filter,
@@ -2552,8 +2518,7 @@ class MetadataExpert(ServerClient):
                     list | str: Returns the search results as a list of metadata elements, or as a string in cases
                         where the output is serialized in text format.
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_find_elements_for_anchor(
                 guid=guid, search_string=search_string, starts_with=starts_with, ends_with=ends_with,
                 ignore_case=ignore_case, anchor_domain=anchor_domain, zone_filter=zone_filter,
@@ -2733,8 +2698,7 @@ class MetadataExpert(ServerClient):
                     list | str: Returns the search results as a list of metadata elements, or as a string in cases
                         where the output is serialized in text format.
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_find_elements_in_anchor_domain(
                 search_string=search_string, starts_with=starts_with, ends_with=ends_with,
                 ignore_case=ignore_case, anchor_domain=anchor_domain, zone_filter=zone_filter,
@@ -2919,8 +2883,7 @@ class MetadataExpert(ServerClient):
                     list | str: Returns the search results as a list of metadata elements, or as a string in cases
                         where the output is serialized in text format.
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_find_elements_in_anchor_scope(
                 guid=guid, search_string=search_string, starts_with=starts_with, ends_with=ends_with,
                 ignore_case=ignore_case, anchor_domain=anchor_domain, zone_filter=zone_filter,
@@ -3074,8 +3037,7 @@ class MetadataExpert(ServerClient):
               "sequencingProperty": ""
             }
     """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_all_related_elements(
                 guid=guid, starting_at_end=starting_at_end, start_from=start_from, page_size=page_size,
                 graph_query_depth=graph_query_depth, relationships_page_size=relationships_page_size,
@@ -3236,8 +3198,7 @@ class MetadataExpert(ServerClient):
                 }
 
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_related_metadata_elements(
                 guid,
                 relationship_type,
@@ -3410,8 +3371,7 @@ class MetadataExpert(ServerClient):
                 }
 
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_all_metadata_element_relationships(
                 end1_guid,
                 end2_guid,
@@ -3590,8 +3550,7 @@ class MetadataExpert(ServerClient):
                 }
 
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_metadata_element_relationships(
                 end1_guid,
                 end2_guid,
@@ -3855,8 +3814,7 @@ class MetadataExpert(ServerClient):
                 }
 
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_find_metadata_elements(body, timeout=timeout, **kwargs)
         )
         return response
@@ -3965,8 +3923,7 @@ class MetadataExpert(ServerClient):
         PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_count_metadata_elements(body, push_down=push_down, timeout=timeout, **kwargs)
         )
 
@@ -4160,8 +4117,7 @@ class MetadataExpert(ServerClient):
                 }
 
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_find_relationships_between_elements(
                 body,
                 graph_query_depth=graph_query_depth,
@@ -4287,8 +4243,7 @@ class MetadataExpert(ServerClient):
         PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_count_relationships_between_elements(body, push_down=push_down, timeout=timeout, **kwargs)
         )
 
@@ -4388,8 +4343,7 @@ class MetadataExpert(ServerClient):
             the requesting user is not authorized to issue this request.
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_relationship_by_guid(
                 guid=guid,
                 as_of_time=as_of_time,
@@ -4541,8 +4495,7 @@ class MetadataExpert(ServerClient):
              the requesting user is not authorized to issue this request.
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_relationship_history(
                 guid,
                 oldest_first=oldest_first,
@@ -4571,8 +4524,7 @@ class MetadataExpert(ServerClient):
     @dynamic_catch
     def get_match_criteria_list(self) -> list:
         """Retrieve the list of valid match criteria."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_get_match_criteria_list())
+        return run_sync(self._async_get_match_criteria_list())
 
     @dynamic_catch
     async def _async_get_property_comparison_operator_list(self) -> list:
@@ -4584,8 +4536,7 @@ class MetadataExpert(ServerClient):
     @dynamic_catch
     def get_property_comparison_operator_list(self) -> list:
         """Retrieve the list of valid property comparison operators."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_get_property_comparison_operator_list())
+        return run_sync(self._async_get_property_comparison_operator_list())
 
     #
     # Maintain the open metadata types that are defined through the API. These are validated against the types
@@ -4650,8 +4601,7 @@ class MetadataExpert(ServerClient):
     def add_enum_def(self, body: dict | OpenMetadataEnumDef) -> str | dict:
         """Add a new enum definition, which can then be used as the type of attributes in new type definitions.
         Note: it cannot be removed again through the API (ISSUE-125); see the async version's warning."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_add_enum_def(body))
+        return run_sync(self._async_add_enum_def(body))
 
     @dynamic_catch
     async def _async_add_type_def(self, body: dict | OpenMetadataTypeDef) -> str | dict:
@@ -4698,8 +4648,7 @@ class MetadataExpert(ServerClient):
     @dynamic_catch
     def add_type_def(self, body: dict | OpenMetadataTypeDef) -> str | dict:
         """Add a new type definition for an entity, relationship or classification."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_add_type_def(body))
+        return run_sync(self._async_add_type_def(body))
 
     @dynamic_catch
     async def _async_update_type_def(self, body: dict | OpenMetadataTypeDefPatch) -> None:
@@ -4740,8 +4689,7 @@ class MetadataExpert(ServerClient):
     @dynamic_catch
     def update_type_def(self, body: dict | OpenMetadataTypeDefPatch) -> None:
         """Update a type definition that was added through the API."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_update_type_def(body))
+        return run_sync(self._async_update_type_def(body))
 
     @dynamic_catch
     async def _async_delete_type_def(self, type_def_guid: str, type_def_name: str) -> None:
@@ -4762,8 +4710,7 @@ class MetadataExpert(ServerClient):
     @dynamic_catch
     def delete_type_def(self, type_def_guid: str, type_def_name: str) -> None:
         """Delete a type definition that was added through the API."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_delete_type_def(type_def_guid, type_def_name))
+        return run_sync(self._async_delete_type_def(type_def_guid, type_def_name))
 
     @dynamic_catch
     async def _async_delete_enum_def(self, enum_def_guid: str, enum_def_name: str) -> None:
@@ -4790,5 +4737,4 @@ class MetadataExpert(ServerClient):
     @dynamic_catch
     def delete_enum_def(self, enum_def_guid: str, enum_def_name: str) -> None:
         """Delete an enum definition that was added through the API."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_delete_enum_def(enum_def_guid, enum_def_name))
+        return run_sync(self._async_delete_enum_def(enum_def_guid, enum_def_name))

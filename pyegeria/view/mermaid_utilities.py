@@ -15,9 +15,6 @@ import os
 import time
 import uuid
 
-import nest_asyncio
-
-nest_asyncio.apply()
 from IPython.display import HTML, display
 from rich.console import Console
 

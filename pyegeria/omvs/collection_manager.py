@@ -27,6 +27,7 @@ from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequ
 from pyegeria.view.output_formatter import (generate_output,
                                             populate_common_columns)
 from pyegeria.core.utils import body_slimmer, dynamic_catch
+from pyegeria.core.async_runner import run_sync
 
 COLLECTION_PROPERTIES_LIST = ["CollectionProperties", "DataDictionaryProperties",
                               "DataSpecProperties", "DigitalProductProperties",
@@ -359,7 +360,7 @@ class CollectionManager(ServerClient):
         }
 
         """
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_get_attached_collections(parent_guid, start_from, page_size,
                                                  body, output_format, report_spec))
 
@@ -535,8 +536,7 @@ class CollectionManager(ServerClient):
         NotAuthorizedException
             The principle specified by the user_id does not have authorization for the requested action.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_collections(
                 search_string=search_string,
                 starts_with=starts_with,
@@ -687,8 +687,7 @@ class CollectionManager(ServerClient):
         """
         Returns the list of digital products matching the search string and optional deployment status. Sync version.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_digital_products(
                 search_string=search_string,
                 starts_with=starts_with,
@@ -804,7 +803,7 @@ class CollectionManager(ServerClient):
 
         See _async_get_digital_products_by_category for more details.
         """
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_get_digital_products_by_category(
                 category,
                 deployment_status_list,
@@ -881,8 +880,7 @@ class CollectionManager(ServerClient):
         **kwargs,
     ) -> list | str:
         """Returns the list of collections matching the search string."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_collections_by_name(
                 name=name,
                 metadata_element_type_name=metadata_element_type_name,
@@ -931,7 +929,7 @@ class CollectionManager(ServerClient):
         PyegeriaException
 
         """
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_get_collections_by_name(filter_string, classification_names, body, start_from, page_size,
                                                 output_format, report_spec))
 
@@ -1061,7 +1059,7 @@ class CollectionManager(ServerClient):
 
         """
 
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_get_collections_by_category(category, classification_names, body, start_from, page_size,
                                                 output_format, report_spec))
 
@@ -1115,8 +1113,7 @@ class CollectionManager(ServerClient):
         **kwargs,
     ) -> dict | str:
         """Return the properties of a specific collection."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_collection_by_guid(
                 guid=guid,
                 include_only_relationships=include_only_relationships,
@@ -1266,8 +1263,7 @@ class CollectionManager(ServerClient):
         }
 
     """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
+        resp = run_sync(
             self._async_get_collection_members(collection_guid, collection_name, collection_qname, body, start_from,
                                                page_size, output_format, report_spec, **kwargs))
 
@@ -1390,7 +1386,7 @@ class CollectionManager(ServerClient):
               "sequencingProperty": ""
             }
         """
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_get_collection_hierarchy(collection_guid, body, start_from, page_size,
                                              output_format, report_spec))
 
@@ -1651,7 +1647,7 @@ class CollectionManager(ServerClient):
 
              """
 
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_create_collection(display_name, description,category,
                                                  initial_classifications,  prop,  body))
 
@@ -1691,7 +1687,7 @@ class CollectionManager(ServerClient):
         """
         prop = "RootCollection"
 
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_create_collection(display_name=display_name, description=description, category=category,
                                          initial_classifications = [], prop = [prop], body=body))
 
@@ -1730,7 +1726,7 @@ class CollectionManager(ServerClient):
         """
         prop = "CollectionFolder"
 
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_create_collection(display_name=display_name, description=description, category=category,
                                           initial_classifications=[], prop=[prop], body=body))
     @dynamic_catch
@@ -1767,7 +1763,7 @@ class CollectionManager(ServerClient):
         """
         prop = "Folio"
 
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_create_collection(display_name=display_name, description=description, category=category,
                                           initial_classifications=[], prop=[prop], body=body))
 
@@ -1806,7 +1802,7 @@ class CollectionManager(ServerClient):
         """
         prop = "SubjectArea"
 
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_create_collection(display_name=display_name, description=description, category=category,
                                           initial_classifications=[], prop=[prop], body=body))
 
@@ -1844,7 +1840,7 @@ class CollectionManager(ServerClient):
 
         """
 
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_create_collection(display_name, description, category,
                                           ["ReferenceList"], body))
 
@@ -1882,7 +1878,7 @@ class CollectionManager(ServerClient):
 
         """
 
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_create_collection(display_name, description, category,
                                           ["ContextEvent"], body))
 
@@ -2161,7 +2157,7 @@ class CollectionManager(ServerClient):
 
              """
 
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_create_data_spec_collection(display_name, description,category,
                                                  classification_name, body))
 
@@ -2368,7 +2364,7 @@ class CollectionManager(ServerClient):
 
              """
 
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_create_report_type_collection(display_name, description,category,
                                                  classification_name, body))
 
@@ -2445,7 +2441,7 @@ class CollectionManager(ServerClient):
         -------
         str - guid of the created CollectionFolder
         """
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_create_question_spec_folder(display_name, description, category, body))
 
     @dynamic_catch
@@ -2609,7 +2605,7 @@ class CollectionManager(ServerClient):
         }
              """
 
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_create_security_list(display_name, description,category,
                                                  classification_name, prop,
                                              distinguished_name, body))
@@ -2669,7 +2665,7 @@ class CollectionManager(ServerClient):
               The principle specified by the user_id does not have authorization for the requested action
 
         """
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_create_security_list(display_name, description, category,
                                              classification_name, "SecurityGroup",
                                              distinguished_name, body))
@@ -2727,7 +2723,7 @@ class CollectionManager(ServerClient):
               The principle specified by the user_id does not have authorization for the requested action
 
         """
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_create_security_list(display_name, description, category,
                                              classification_name, "SecurityRole",
                                              distinguished_name, body))
@@ -2982,7 +2978,7 @@ class CollectionManager(ServerClient):
 
              """
 
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_create_data_dictionary_collection(display_name, description,category,
                                                  classification_name, body))
 
@@ -3138,7 +3134,7 @@ class CollectionManager(ServerClient):
 
         """
 
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_create_skill_set_collection(display_name, description, category,
                                                     classification_name, body))
 
@@ -3291,7 +3287,7 @@ class CollectionManager(ServerClient):
 
         """
 
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_create_reference_list_collection(display_name, description, category,
                                                          classification_name, body))
 
@@ -3384,7 +3380,7 @@ class CollectionManager(ServerClient):
           }
         }
         """
-        asyncio.get_event_loop().run_until_complete(
+        run_sync(
             self._async_link_associated_skill_set(actor_guid, skill_set_guid, body))
 
     @dynamic_catch
@@ -3466,7 +3462,7 @@ class CollectionManager(ServerClient):
           "forDuplicateProcessing" : false
         }
         """
-        asyncio.get_event_loop().run_until_complete(
+        run_sync(
             self._async_detach_associated_skill_set(actor_guid, skill_set_guid, body))
 
 
@@ -3599,8 +3595,7 @@ class CollectionManager(ServerClient):
           }
         }
         """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_create_collection_from_template(body))
+        resp = run_sync(self._async_create_collection_from_template(body))
         return resp
 
         #
@@ -3720,7 +3715,7 @@ class CollectionManager(ServerClient):
         }
         """
 
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_update_collection(collection_guid, body))
 
 
@@ -3818,8 +3813,7 @@ class CollectionManager(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_set_editing_collection(collection_guid, body))
 
     @dynamic_catch
@@ -3904,8 +3898,7 @@ class CollectionManager(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_clear_editing_collection(collection_guid, body))
 
     @dynamic_catch
@@ -4000,8 +3993,7 @@ class CollectionManager(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_set_scoping_collection(collection_guid, body))
 
     @dynamic_catch
@@ -4086,8 +4078,7 @@ class CollectionManager(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_clear_scoping_collection(collection_guid, body))
 
     @dynamic_catch
@@ -4182,8 +4173,7 @@ class CollectionManager(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_set_staging_collection(collection_guid, body))
 
     @dynamic_catch
@@ -4268,8 +4258,7 @@ class CollectionManager(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_clear_staging_collection(collection_guid, body))
 
 
@@ -4410,7 +4399,7 @@ class CollectionManager(ServerClient):
             default to ACTIVE.
             """
 
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_create_digital_product(body))
 
 
@@ -4508,7 +4497,7 @@ class CollectionManager(ServerClient):
             DEPRECATED, OBSOLETE or OTHER (with OTHER, also set `userDefinedContentStatus`).
             """
 
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_create_digital_product_catalog(body))
 
 
@@ -4643,7 +4632,7 @@ class CollectionManager(ServerClient):
         }
         """
 
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_update_digital_product(collection_guid, body))
 
 
@@ -4771,7 +4760,7 @@ class CollectionManager(ServerClient):
             DEPRECATED, OBSOLETE or OTHER (with OTHER, also set `userDefinedContentStatus`).
             """
 
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_create_agreement(body))
 
     #
@@ -5015,7 +5004,7 @@ class CollectionManager(ServerClient):
             }
             """
 
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_update_agreement(agreement_guid, body))
 
 
@@ -5131,8 +5120,7 @@ class CollectionManager(ServerClient):
           }
 
           """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_link_agreement_actor(agreement_guid, actor_guid, body))
 
 
@@ -5224,8 +5212,7 @@ class CollectionManager(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_agreement_actor(agreement_actor_relationship_guid,
                                                         body))
 
@@ -5368,8 +5355,7 @@ class CollectionManager(ServerClient):
                }
 
                """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_link_agreement_item(agreement_guid, agreement_item_guid, body))
+        return run_sync(self._async_link_agreement_item(agreement_guid, agreement_item_guid, body))
 
 
     @dynamic_catch
@@ -5456,8 +5442,7 @@ class CollectionManager(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_agreement_item(agreement_guid, agreement_item_guid, body))
+        run_sync(self._async_detach_agreement_item(agreement_guid, agreement_item_guid, body))
 
 
     @dynamic_catch
@@ -5566,8 +5551,7 @@ class CollectionManager(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_contract(agreement_guid, external_ref_guid, body))
+        run_sync(self._async_link_contract(agreement_guid, external_ref_guid, body))
 
 
     @dynamic_catch
@@ -5653,8 +5637,7 @@ class CollectionManager(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_contract(agreement_guid, external_ref_guid, body))
+        run_sync(self._async_detach_contract(agreement_guid, external_ref_guid, body))
 
         #
         # Digital Subscriptions
@@ -5831,8 +5814,7 @@ class CollectionManager(ServerClient):
            "forDuplicateProcessing" : false
         }
         """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_create_digital_subscription(body))
+        resp = run_sync(self._async_create_digital_subscription(body))
         return resp
 
 
@@ -5945,8 +5927,7 @@ class CollectionManager(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_update_digital_subscription(digital_subscription_guid, body))
 
 
@@ -6053,8 +6034,7 @@ class CollectionManager(ServerClient):
           }
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_subscriber(subscriber_guid, subscription_guid, body))
+        run_sync(self._async_link_subscriber(subscriber_guid, subscription_guid, body))
 
 
     @dynamic_catch
@@ -6141,8 +6121,7 @@ class CollectionManager(ServerClient):
           "forDuplicateProcessing": false
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_subscriber(subscriber_guid, subscription_guid, body))
+        run_sync(self._async_detach_subscriber(subscriber_guid, subscription_guid, body))
 
         #
         #
@@ -6234,8 +6213,7 @@ class CollectionManager(ServerClient):
     def attach_data_description(self, element_guid: str, collection_guid: str,
                                 body: dict | NewRelationshipRequestBody = None):
         """Attach a data description collection to an element (DataDescription relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_attach_data_description(element_guid, collection_guid, body))
+        run_sync(self._async_attach_data_description(element_guid, collection_guid, body))
 
     @dynamic_catch
     async def _async_detach_data_description(self, element_guid: str, collection_guid: str,
@@ -6262,8 +6240,7 @@ class CollectionManager(ServerClient):
     def detach_data_description(self, element_guid: str, collection_guid: str,
                                 body: Optional[dict | DeleteRelationshipRequestBody] = None):
         """Detach a data description collection from an element (DataDescription relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_data_description(element_guid, collection_guid, body))
+        run_sync(self._async_detach_data_description(element_guid, collection_guid, body))
 
     @dynamic_catch
     async def _async_attach_smart_query(self, results_set_guid: str, saved_query_guid: str,
@@ -6319,8 +6296,7 @@ class CollectionManager(ServerClient):
     def attach_smart_query(self, results_set_guid: str, saved_query_guid: str,
                            body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Connect a SavedQuery to a ResultsSet via the collection-manager-native SmartQuery attach endpoint."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_attach_smart_query(results_set_guid, saved_query_guid, body))
+        run_sync(self._async_attach_smart_query(results_set_guid, saved_query_guid, body))
 
     @dynamic_catch
     async def _async_detach_smart_query(self, results_set_guid: str, saved_query_guid: str,
@@ -6357,8 +6333,7 @@ class CollectionManager(ServerClient):
     def detach_smart_query(self, results_set_guid: str, saved_query_guid: str,
                            body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """Disconnect a SavedQuery from a ResultsSet via the collection-manager-native SmartQuery detach endpoint."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_smart_query(results_set_guid, saved_query_guid, body))
+        run_sync(self._async_detach_smart_query(results_set_guid, saved_query_guid, body))
 
     @dynamic_catch
     def attach_collection(self, parent_guid: str, collection_guid: str,
@@ -6412,8 +6387,7 @@ class CollectionManager(ServerClient):
               "forDuplicateProcessing" : false
             }
             """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_attach_collection(parent_guid, collection_guid, body))
+        run_sync(self._async_attach_collection(parent_guid, collection_guid, body))
 
 
     @dynamic_catch
@@ -6506,8 +6480,7 @@ class CollectionManager(ServerClient):
             "forDuplicateProcessing": false
           }
           """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_collection(parent_guid, collection_guid, body))
+        run_sync(self._async_detach_collection(parent_guid, collection_guid, body))
 
 
     @dynamic_catch
@@ -6599,8 +6572,7 @@ class CollectionManager(ServerClient):
 
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_collection(collection_guid, body, cascade))
+        run_sync(self._async_delete_collection(collection_guid, body, cascade))
 
     @dynamic_catch
     async def _async_archive_collection(self, collection_guid: str,
@@ -6636,8 +6608,7 @@ class CollectionManager(ServerClient):
         body: dict | DeleteElementRequestBody, optional
             May set archiveDate, archiveProcess and archiveProperties; deleteMethod is always ARCHIVE.
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_archive_collection(collection_guid, body))
+        run_sync(self._async_archive_collection(collection_guid, body))
 
 
     @dynamic_catch
@@ -6759,14 +6730,12 @@ class CollectionManager(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_add_to_collection( collection_guid, element_guid, body))
+        run_sync(self._async_add_to_collection( collection_guid, element_guid, body))
 
     def add_term_to_folder(self, folder_guid: str, term_guid: str,
                              body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Add a term to a category.  The request body is optional."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_add_to_collection(folder_guid, term_guid, body))
+        run_sync(self._async_add_to_collection(folder_guid, term_guid, body))
 
 
     @dynamic_catch
@@ -6888,8 +6857,7 @@ class CollectionManager(ServerClient):
           "forDuplicateProcessing" : false
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_update_collection_membership(collection_guid, element_guid, body))
 
 
@@ -7026,8 +6994,7 @@ class CollectionManager(ServerClient):
         str
             The unique identifier (GUID) of the newly created SmartQuery relationship.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_link_saved_query_to_results_set(results_set_guid, saved_query_guid, body))
 
     @dynamic_catch
@@ -7086,8 +7053,7 @@ class CollectionManager(ServerClient):
         -------
         None
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_saved_query_from_results_set(relationship_guid, body))
+        run_sync(self._async_detach_saved_query_from_results_set(relationship_guid, body))
 
 
     def remove_from_collection(self, collection_guid: str, element_guid: str,
@@ -7129,8 +7095,7 @@ class CollectionManager(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_remove_from_collection(collection_guid, element_guid, body))
+        run_sync(self._async_remove_from_collection(collection_guid, element_guid, body))
 
         #
         #
@@ -7168,8 +7133,7 @@ class CollectionManager(ServerClient):
         -----
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_remove_from_collection(folder_guid, term_guid, body))
+        run_sync(self._async_remove_from_collection(folder_guid, term_guid, body))
 
         #
         #
@@ -7254,8 +7218,7 @@ class CollectionManager(ServerClient):
             If the root_collection_name does not have exactly one root collection.
 
         """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
+        resp = run_sync(
             self._async_get_member_list(collection_guid, collection_name, collection_qname))
         return resp
 
@@ -7402,8 +7365,7 @@ class CollectionManager(ServerClient):
     def update_agreement_item(self, agreement_item_relationship_guid: str,
                               body: Optional[dict | UpdateRelationshipRequestBody] = None) -> None:
         """Update the properties of an AgreementItem relationship, identified by its own relationship GUID."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_agreement_item(agreement_item_relationship_guid, body))
+        run_sync(self._async_update_agreement_item(agreement_item_relationship_guid, body))
 
     @dynamic_catch
     async def _async_detach_agreement_item_by_id(self, agreement_item_relationship_guid: str,
@@ -7416,8 +7378,7 @@ class CollectionManager(ServerClient):
     def detach_agreement_item_by_id(self, agreement_item_relationship_guid: str,
                                     body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """Detach one specific AgreementItem relationship, identified by its own relationship GUID."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_agreement_item_by_id(agreement_item_relationship_guid, body))
+        run_sync(self._async_detach_agreement_item_by_id(agreement_item_relationship_guid, body))
 
     @dynamic_catch
     async def _async_set_collection_kind(self, collection_guid: str,
@@ -7432,8 +7393,7 @@ class CollectionManager(ServerClient):
     def set_collection_kind(self, collection_guid: str,
                             body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify a collection with its collection kind."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_collection_kind(collection_guid, body))
+        run_sync(self._async_set_collection_kind(collection_guid, body))
 
     @dynamic_catch
     async def _async_clear_collection_kind(self, collection_guid: str,
@@ -7446,8 +7406,7 @@ class CollectionManager(ServerClient):
     def clear_collection_kind(self, collection_guid: str,
                               body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the CollectionKind classification from a collection."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_collection_kind(collection_guid, body))
+        run_sync(self._async_clear_collection_kind(collection_guid, body))
 
 
 if __name__ == "__main__":
