@@ -79,7 +79,7 @@ class FeedbackScreen(ModalScreen):
             "category": self.category,
             "text": feedback_text,
         }
-        self.log(f"Feedback data: {feedback_data} being returned from screen")
+        # self.log(f"Feedback data: {feedback_data} being returned from screen")
         self.dismiss(feedback_data)
 
     def action_cancel(self):

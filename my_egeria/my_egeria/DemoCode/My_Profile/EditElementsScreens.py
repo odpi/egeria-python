@@ -149,7 +149,8 @@ class BaseEditScreen(ModalScreen):
                     if not self.rows_with_keys:
                         self.rows_with_keys = [(row_key.value, main_table.get_row(row_key)) for row_key in main_table.rows]
             except Exception as e:
-                self.log(f"Error querying source table #{self.SOURCE_TABLE}: {e}")
+                pass
+                # self.log(f"Error querying source table #{self.SOURCE_TABLE}: {e}")
 
         self.table.clear(columns=True)
         if self.columns:
@@ -167,7 +168,7 @@ class BaseEditScreen(ModalScreen):
             self.focus()
             self.call_after_refresh(self.table.focus)
         except NoMatches as e:
-            self.log(f"Container #{self.CONTAINER_ID} not found: {e}")
+            # self.log(f"Container #{self.CONTAINER_ID} not found: {e}")
             self.dismiss(400)
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
@@ -205,7 +206,7 @@ class BaseEditScreen(ModalScreen):
         try:
             row = self.table.get_row(self.row_key)
         except Exception as e:  # row removed, or key no longer valid
-            self.log(f"Could not read row {self.row_key}: {e}")
+            # self.log(f"Could not read row {self.row_key}: {e}")
             self.notify("Could not read the selected row.", timeout=5, severity="error")
             return None
 
@@ -249,7 +250,8 @@ class BaseEditScreen(ModalScreen):
             try:
                 self.table.remove_row(row_key)
             except Exception as e:
-                self.log(f"Row {row_key} already gone from the display: {e}")
+                pass
+                # self.log(f"Row {row_key} already gone from the display: {e}")
             self.table.refresh()
             if self.container is not None:
                 self.container.refresh(layout=True)
@@ -409,25 +411,25 @@ class EditProfileScreen(ModalScreen[Any]):
         if self.karma_points == 0 and hasattr(self, "app"):
             self.karma_points = getattr(self.app, "karma_points", 0)
         self.job_title = str(self.user_profile.get("jobTitle", self.user_profile.get("Job Title", "")))
-        self.log(f"Job Title: {self.job_title}")
+        # self.log(f"Job Title: {self.job_title}")
         self.given_names = str(self.user_profile.get("givenNames", ""))
-        self.log(f"Given Names: {self.given_names}")
+        # self.log(f"Given Names: {self.given_names}")
         self.surname = str(self.user_profile.get("surname", ""))
-        self.log(f"Surname: {self.surname}")
+        # self.log(f"Surname: {self.surname}")
         self.display_name = str(self.user_profile.get("displayName", ""))
-        self.log(f"Display Name: {self.display_name}")
+        # self.log(f"Display Name: {self.display_name}")
         self.pronouns = str(self.user_profile.get("pronouns", ""))
-        self.log(f"Pronouns: {self.pronouns}")
+        # self.log(f"Pronouns: {self.pronouns}")
         self.description = str(self.user_profile.get("description", ""))
-        self.log(f"Description: {self.description}")
+        # self.log(f"Description: {self.description}")
         self.employee_id = str(self.user_profile.get("employeeNumber", self.user_profile.get("employeeId", self.user_profile.get("Employee Number", ""))))
-        self.log(f"Employee ID: {self.employee_id}")
+        # self.log(f"Employee ID: {self.employee_id}")
         self.preferred_language = str(self.user_profile.get("preferredLanguage", ""))
-        self.log(f"Preferred Language: {self.preferred_language}")
+        # self.log(f"Preferred Language: {self.preferred_language}")
         self.resident_country = str(self.user_profile.get("residentCountry", ""))
-        self.log(f"Resident Country: {self.resident_country}")
+        # self.log(f"Resident Country: {self.resident_country}")
         self.time_zone = str(self.user_profile.get("timeZone", ""))
-        self.log(f"Time Zone: {self.time_zone}")
+        # self.log(f"Time Zone: {self.time_zone}")
         self.courtesy_title = str(self.user_profile.get("courtesyTitle", ""))
 
         yield Header(show_clock=True)
@@ -511,14 +513,14 @@ class EditProfileScreen(ModalScreen[Any]):
 
         input_desc = self.query_one("#user_description", Input).value
 
-        self.log(f"Input q_name:{input_q_name}")
-        self.log(f"Input d_name:{input_d_name}")
-        self.log(f"Input j_title:{input_j_title}")
-        self.log(f"Input e_num:{input_e_num}")
-        self.log(f"Input p_lang:{input_p_lang}")
-        self.log(f"Input r_country:{input_r_country}")
-        self.log(f"Input t_z:{input_t_z}")
-        self.log(f"Input desc:{input_desc}")
+        # self.log(f"Input q_name:{input_q_name}")
+        # self.log(f"Input d_name:{input_d_name}")
+        # self.log(f"Input j_title:{input_j_title}")
+        # self.log(f"Input e_num:{input_e_num}")
+        # self.log(f"Input p_lang:{input_p_lang}")
+        # self.log(f"Input r_country:{input_r_country}")
+        # self.log(f"Input t_z:{input_t_z}")
+        # self.log(f"Input desc:{input_desc}")
 
         props: dict = {}
         props.update({"class": "PersonProperties"})
@@ -549,7 +551,7 @@ class EditProfileScreen(ModalScreen[Any]):
         if input_desc:
             props.update({"description": input_desc})
 
-        self.log(f"Props: {props}")
+        # self.log(f"Props: {props}")
 
         self.update_element_request_body: dict = {"class": "UpdateElementRequestBody",
                                                  "isOwnAnchor": True,
@@ -559,11 +561,11 @@ class EditProfileScreen(ModalScreen[Any]):
             new_profile_inst = Egeria(self.view_server, self.platform_url, self.user_name, self.user_password)
             new_profile_inst.create_egeria_bearer_token(self.user_name, self.user_password)
             new_profile_inst.update_actor_profile(self.user_GUID, self.update_element_request_body)
-            self.log(f"Profile updated for GUID: {self.user_GUID}")
+            # self.log(f"Profile updated for GUID: {self.user_GUID}")
             self.dismiss(200)
             return (200)
         except PyegeriaException as e:
-            self.log(f"Error creating profile: {e!s} | request={self.update_element_request_body}")
+            # self.log(f"Error creating profile: {e!s} | request={self.update_element_request_body}")
             self.dismiss(401)
             return (401)
 

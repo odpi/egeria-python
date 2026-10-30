@@ -52,13 +52,13 @@ class NetworkMixin:
                                                 relationship_type=PEER_RELATIONSHIP,
                                                 body=body)
         except PyegeriaException as e:
-            self.log(f"Retrieving peers failed: {e}")
+            # self.log(f"Retrieving peers failed: {e}")
             self.notify(f"Could not retrieve your network: {e}", timeout=10, severity="error")
             return None
         finally:
             if client:
                 client.close_session()
-        self.log(f"Peers: {peers}")
+        # self.log(f"Peers: {peers}")
         rows = []
         # "No elements found" is returned, rather than an exception, when the user has no peers
         for peer in peers if isinstance(peers, list) else []:
@@ -90,7 +90,8 @@ class NetworkMixin:
         self.push_screen(MyNetworkScreen(peers), callback=self.my_network_callback)
 
     def my_network_callback(self, result: Any) -> None:
-        self.log(f"My Network screen returned: {result}")
+        pass
+        # self.log(f"My Network screen returned: {result}")
 
     def search_people(self, search_string: str) -> list[tuple[str, str, str]] | None:
         """People whose profile matches search_string, as (display name, GUID, qualified name) rows,
@@ -102,13 +103,13 @@ class NetworkMixin:
                                                output_format="DICT", report_spec="User-Identities",
                                                query_depth=0, page_size=10)
         except PyegeriaException as e:
-            self.log(f"Searching for {search_string} failed: {e}")
+            # self.log(f"Searching for {search_string} failed: {e}")
             self.notify(f"Searching for people failed: {e}", timeout=10, severity="error")
             return None
         finally:
             if client:
                 client.close_session()
-        self.log(f"People found for {search_string}: {found}")
+        # self.log(f"People found for {search_string}: {found}")
         if isinstance(found, dict):
             found = [found]
         rows = []
@@ -138,7 +139,7 @@ class NetworkMixin:
             self.notify("Added to your network", timeout=10, severity="information")
             return True
         except PyegeriaException as e:
-            self.log(f"Linking peer {peer_guid} failed: {e}")
+            # self.log(f"Linking peer {peer_guid} failed: {e}")
             self.notify(f"Adding to your network failed: {e}", timeout=10, severity="error")
             return False
         finally:
@@ -155,7 +156,7 @@ class NetworkMixin:
             self.notify("Removed from your network", timeout=10, severity="information")
             return True
         except PyegeriaException as e:
-            self.log(f"Unlinking peer {peer_guid} failed: {e}")
+            # self.log(f"Unlinking peer {peer_guid} failed: {e}")
             self.notify(f"Removing from your network failed: {e}", timeout=10, severity="error")
             return False
         finally:
@@ -171,13 +172,13 @@ class NetworkMixin:
             # My-User's detail specs are My-User-Contact-Detail / My-User-Communities-Detail
             details = client._generate_my_profile_output(profile, output_format="DICT", report_spec="My-User")
         except PyegeriaException as e:
-            self.log(f"Retrieving details for peer {peer_guid} failed: {e}")
+            # self.log(f"Retrieving details for peer {peer_guid} failed: {e}")
             self.notify(f"Could not retrieve the details: {e}", timeout=10, severity="error")
             return None
         finally:
             if client:
                 client.close_session()
-        self.log(f"Peer details: {details}")
+        # self.log(f"Peer details: {details}")
         if isinstance(details, list) and details:
             details = details[0]
         if not isinstance(details, dict):

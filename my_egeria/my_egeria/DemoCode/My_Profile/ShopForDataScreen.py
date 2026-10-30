@@ -146,20 +146,20 @@ class ShopForDataScreen(Screen):
         row_display_name = row_values[0]
         row_description = row_values[1]
         row_qualified_name = row_values[2]
-        self.log(f"Row selected: {row_selected}, values: {row_values}, display name: {row_display_name}, description: {row_description}, qualified name: {row_qualified_name}")
+        # self.log(f"Row selected: {row_selected}, values: {row_values}, display name: {row_display_name}, description: {row_description}, qualified name: {row_qualified_name}")
         self.dismiss (["glossary", row_qualified_name, row_display_name])
 
     @on(DataTable.RowSelected, "#digital_product_catalog_table")
     def handle_digital_product_catalog_table_selection(self, event: DataTable.RowSelected):
         row_selected = event.row_key
-        self.log(f"Digital product row selected: {row_selected}, event: {event}")
+        # self.log(f"Digital product row selected: {row_selected}, event: {event}")
         row_values = self.query_one("#digital_product_catalog_table", DataTable).get_row(event.row_key)
-        self.log(f"Digital product row values: {row_values}")
+        # self.log(f"Digital product row values: {row_values}")
         row_display_name = row_values[0]
         row_description = row_values[1]
         row_qualified_name = row_values[2]
         row_guid = row_values[3] if len(row_values) > 3 else None
-        self.log(f"Row selected: {row_selected}, values: {row_values}, display name: {row_display_name}, description: {row_description}, qualified name: {row_qualified_name}, guid: {row_guid}")
+        # self.log(f"Row selected: {row_selected}, values: {row_values}, display name: {row_display_name}, description: {row_description}, qualified name: {row_qualified_name}, guid: {row_guid}")
         self.dismiss(["catalog", row_qualified_name, row_display_name, row_guid])
 
     @on(DataTable.RowSelected, "#data_dictionary_table")
@@ -169,7 +169,7 @@ class ShopForDataScreen(Screen):
         row_display_name = row_values[0]
         row_description = row_values[1]
         row_qualified_name = row_values[2]
-        self.log(f"Row selected: {row_selected}, values: {row_values}, display name: {row_display_name}, description: {row_description}, qualified name: {row_qualified_name}")
+        # self.log(f"Row selected: {row_selected}, values: {row_values}, display name: {row_display_name}, description: {row_description}, qualified name: {row_qualified_name}")
         self.dismiss (["dictionary", row_qualified_name, row_display_name])
 
     @on(DataTable.RowSelected, "#business_domain_table")
@@ -179,7 +179,7 @@ class ShopForDataScreen(Screen):
         row_qualified_name = row_values[0]
         row_type_name = row_values[1]
         row_guid = row_values[2]
-        self.log(f"Row selected: {row_selected}, values: {row_values}, qualified name: {row_qualified_name}, type name: {row_type_name}, guid: {row_guid}")
+        # self.log(f"Row selected: {row_selected}, values: {row_values}, qualified name: {row_qualified_name}, type name: {row_type_name}, guid: {row_guid}")
         self.dismiss (["domain", row_qualified_name, row_type_name])
 
     @on (DataTable.RowSelected, "#root_collection_table")
@@ -189,7 +189,7 @@ class ShopForDataScreen(Screen):
         row_qualified_name = row_values[0]
         row_description = row_values[1]
         row_GUID = row_values[2]
-        self.log(f"Row selected: {row_selected}, values: {row_values}, qualified name: {row_qualified_name}, description: {row_description}, GUID: {row_GUID}")
+        # self.log(f"Row selected: {row_selected}, values: {row_values}, qualified name: {row_qualified_name}, description: {row_description}, GUID: {row_GUID}")
         self.dismiss (["collection", row_qualified_name, row_description])
 
     @on(DataTable.RowHighlighted)
@@ -198,7 +198,7 @@ class ShopForDataScreen(Screen):
         self.row_highlighted = event.row_key
         self.cursor_row_highlighted = event.cursor_row
         self.data_table_highlighted = event.data_table.id
-        self.log(f"Table {self.data_table_highlighted} Row highlighted: {self.row_highlighted}, cursor: {self.cursor_row_highlighted}")
+        # self.log(f"Table {self.data_table_highlighted} Row highlighted: {self.row_highlighted}, cursor: {self.cursor_row_highlighted}")
 
     def _highlighted_table_and_row(self) -> tuple[DataTable | None, Any]:
         """ The focused (or last highlighted) table and the row under its cursor, if any """
@@ -286,7 +286,8 @@ class ShopForDataScreen(Screen):
                 else:
                     row_data = list(target_table.get_row_at(0))
             except Exception as e:
-                self.log(f"Error getting row data from table: {e}")
+                pass
+                # self.log(f"Error getting row data from table: {e}")
 
         self.dismiss([
             212,
@@ -347,7 +348,8 @@ class ShopForDataScreen(Screen):
                 else:
                     row_data = list(target_table.get_row_at(0))
             except Exception as e:
-                self.log(f"Error getting row data from table: {e}")
+                pass
+                # self.log(f"Error getting row data from table: {e}")
 
         self.dismiss([
             211,

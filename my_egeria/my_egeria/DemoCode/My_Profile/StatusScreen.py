@@ -55,11 +55,11 @@ class StatusScreen(ModalScreen):
         """ The copy GUID to clipboard option in the footer has been selected. Copy the GUID to the clipboard."""
         # The GUID is between single ' marks in the status_message when a good result is recorded.
         match = re.search(r"'(.*?)'", self.status_message)
-        self.log(f"Match: {match}")
+        # self.log(f"Match: {match}")
         if match:
             guid = match.group(1)
             copy_to_clipboard(guid)
-            self.log(f"Copied GUID to clipboard: {guid}")
+            # self.log(f"Copied GUID to clipboard: {guid}")
         else:
             self.dismiss(400)
         self.dismiss(200)

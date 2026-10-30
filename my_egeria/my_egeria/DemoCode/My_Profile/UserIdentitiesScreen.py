@@ -49,8 +49,8 @@ class UserIdentitiesScreen(ModalScreen):
             self.karma_points = getattr(self.app, "karma_points", 0)
         self.title = "My_Egeria User Identities Screen"
         self.sub_title = f"User Identities for {self.user_name}, Karma Points: {self.karma_points}"
-        self.log(f"UserIdentitiesScreen mounted for user: {self.user_name}, Karma Points: {self.karma_points}")
-        self.log(f"User identity input: {self.user_identities}")
+        # self.log(f"UserIdentitiesScreen mounted for user: {self.user_name}, Karma Points: {self.karma_points}")
+        # self.log(f"User identity input: {self.user_identities}")
         try:
             self.user_identity_datatable = self.query_one("#user_identity_datatable", DataTable)
             self.user_identity_datatable.clear(columns=False)
@@ -73,7 +73,7 @@ class UserIdentitiesScreen(ModalScreen):
                                                      )
         if self.user_identities:
             for identity in self.user_identities:
-                self.log(f"User identity: {identity}")
+                # self.log(f"User identity: {identity}")
                 display_name = identity.get('Display Name', 'Unknown')
                 qualified_name = identity.get('Qualified Name', 'Unknown')
                 category = identity.get('Category', 'Unknown')

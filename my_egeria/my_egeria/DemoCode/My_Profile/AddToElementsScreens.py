@@ -127,7 +127,7 @@ class BaseAddScreen(ModalScreen):
             client.create_egeria_bearer_token(self.user_name, self.user_password)
             guid = self.create_element(client, values)
             self.created_guids.append(guid)
-            self.log(f"Created {self.ELEMENT_NAME}: {guid}")
+            # self.log(f"Created {self.ELEMENT_NAME}: {guid}")
             self.notify(f"Created {self.ELEMENT_NAME}: {guid}", timeout=10, severity="information")
             if self.link_to_profile:
                 if not self.user_guid:
@@ -402,8 +402,8 @@ class AddRoleScreen(BaseAddScreen):
         return client.create_actor_role(body=body)
 
     def link_element(self, client: Egeria, guid: str) -> None:
-        self.log(f"link person role, GUID: {guid}")
-        self.log(f"link person role, user GUID: {self.user_guid}")
+        # self.log(f"link person role, GUID: {guid}")
+        # self.log(f"link person role, user GUID: {self.user_guid}")
         client.link_person_role_to_profile(person_role_guid=guid, person_profile_guid=self.user_guid)
 
 

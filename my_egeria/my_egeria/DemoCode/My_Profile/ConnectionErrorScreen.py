@@ -90,7 +90,7 @@ class ConnectionErrorScreen(ModalScreen):
         self.attempts += 1
         self.query_one("#connection_retry_status", Static).update("Trying to connect to Egeria...")
         error = check_egeria_access(self.view_server, self.platform_url, self.user_name, self.user_password)
-        self.log(f"Connection attempt {self.attempts}: {error or 'connected'}")
+        # self.log(f"Connection attempt {self.attempts}: {error or 'connected'}")
         if error is None:
             self.retry_timer.stop()
             self.dismiss(200)

@@ -111,7 +111,7 @@ class ElementsCrudMixin:
             main_screen = self.get_screen("main")
             return main_screen.query_one(f"#{table_id}", DataTable)
         except Exception as e:
-            self.log(f"Table #{table_id} not available on the main screen: {e}")
+            # self.log(f"Table #{table_id} not available on the main screen: {e}")
             return None
 
     def _write_back_rows(self, table_id: str, rows_with_keys: Any) -> None:
@@ -146,8 +146,8 @@ class ElementsCrudMixin:
             if return_c == 200:
                 self._show_main_screen()
             else:
-                self.log(f"Error returned from EditProfileScreen: {return_c}")
-                self.log("Returning to main screen")
+                # self.log(f"Error returned from EditProfileScreen: {return_c}")
+                # self.log("Returning to main screen")
                 self._show_main_screen()
         elif isinstance(return_c, str):
             if return_c == "identity":
@@ -159,15 +159,16 @@ class ElementsCrudMixin:
             elif return_c == "team":
                 self.push_screen(EditTeamsScreen(), callback=self.edit_teams_callback)
         else:
-            self.log(f"Unexpected return type from EditProfileScreen: {type(return_c)}")
+            # self.log(f"Unexpected return type from EditProfileScreen: {type(return_c)}")
             self._show_main_screen()
 
     def edit_tables(self, table_name: str, row_k: Any) -> None:
         """Push the edit screen for the selected table, populated with its live rows."""
-        self.log(f"Editing table: {table_name}, row: {row_k}")
+        # self.log(f"Editing table: {table_name}, row: {row_k}")
         route = EDIT_TABLE_ROUTES.get(table_name)
         if route is None:
             self.log(f"Unexpected table name: {table_name}")
+            self.notify(f"Unexpected table name: {table_name}", severity="warning")
             return
 
         screen_cls, callback_name = route
@@ -211,13 +212,13 @@ class ElementsCrudMixin:
         Returns True only if Egeria accepted the delete, so the caller can leave
         the row on display when it didn't.
         """
-        self.log(f"Deleting element {guid} on behalf of table {source_table}")
+        # self.log(f"Deleting element {guid} on behalf of table {source_table}")
         if not guid:
             return False
 
         route = DELETE_METHODS.get(source_table)
         if route is None:
-            self.log(f"No delete is defined for table: {source_table}")
+            # self.log(f"No delete is defined for table: {source_table}")
             self.notify(f"Deleting rows from {source_table} isn't supported.",
                         timeout=6, severity="warning")
             return False
@@ -228,10 +229,10 @@ class ElementsCrudMixin:
         try:
             client.create_egeria_bearer_token(self.user_name, self.user_password)
             getattr(client, method_name)(guid, **kwargs)
-            self.log(f"{method_name}({guid}) succeeded")
+            # self.log(f"{method_name}({guid}) succeeded")
             return True
         except PyegeriaException as e:
-            self.log(f"{method_name}({guid}) failed: {e}")
+            # self.log(f"{method_name}({guid}) failed: {e}")
             self.notify(f"Delete failed: {e}", timeout=10, severity="error")
             return False
         finally:
@@ -244,7 +245,7 @@ class ElementsCrudMixin:
         When selected_comment_guid is given, the screen shows the comments attached to that
         comment (its responses) and Ctrl+N adds a new response to it.
         """
-        self.log(f"Showing comments for table: {table_name}, row: {row_k}, comment: {selected_comment_guid}")
+        # self.log(f"Showing comments for table: {table_name}, row: {row_k}, comment: {selected_comment_guid}")
         self.push_screen(
             ShowCommentsScreen(
                 table_name=table_name,
@@ -256,9 +257,9 @@ class ElementsCrudMixin:
 
     def show_comments_callback(self, return_c: Any) -> None:
         """Callback for ShowCommentsScreen."""
-        self.log(f"Return from ShowCommentsScreen: {return_c}")
+        # self.log(f"Return from ShowCommentsScreen: {return_c}")
         if return_c is None:
-            self.log("No return from ShowCommentsScreen")
+            # self.log("No return from ShowCommentsScreen")
             self._show_main_screen()
         elif isinstance(return_c, list) and len(return_c) == 2 and return_c[0] == 250:
             # User asked to respond to a comment: reopen the screen focused on that comment
@@ -266,18 +267,19 @@ class ElementsCrudMixin:
         elif return_c == 200:
             self._show_main_screen()
         else:
-            self.log(f"Unexpected return type from ShowCommentsScreen: {type(return_c)}")
+            # self.log(f"Unexpected return type from ShowCommentsScreen: {type(return_c)}")
             self._show_main_screen()
 
     async def add_to_tables(self, selected_table: str, selected_row: Any) -> None:
         """Called from main screen when user selects to add a row to a table."""
-        self.log(f"Adding row {selected_row} to table {selected_table}")
+        # self.log(f"Adding row {selected_row} to table {selected_table}")
         self.selected_table = selected_table
         self.selected_row = selected_row
 
         route = ADD_TABLE_ROUTES.get(self.selected_table)
         if route is None:
             self.log(f"Unexpected table name: {self.selected_table}")
+            self.notify(f"Unexpected table name: {self.selected_table}", severity="warning")
             return
 
         screen_cls, callback_name = route
@@ -290,13 +292,13 @@ class ElementsCrudMixin:
         Popping back to main (rather than returning to the edit screen the Add screen
         was opened from) also drops that edit screen's now-stale copy of the rows.
         """
-        self.log(f"Add {kind} screen closed with: {result}")
+        # self.log(f"Add {kind} screen closed with: {result}")
         self._show_main_screen()
         self.call_later(self.action_refresh)
 
     def add_association_callback(self, result: Any) -> None:
         """Called from AddAssociationScreen with the kind of association to add."""
-        self.log(f"Add association chose: {result}")
+        # self.log(f"Add association chose: {result}")
         if result == "project":
             self.push_screen(AddProjectScreen("projects_table", self.user_GUID),
                              callback=self.add_project_callback)

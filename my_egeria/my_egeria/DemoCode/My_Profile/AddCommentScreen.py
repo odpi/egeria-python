@@ -73,13 +73,13 @@ class AddCommentScreen(ModalScreen):
     def action_add_comment(self):
         if self.comment and self.comment_type:
             self.comment_data = [self.comment, self.comment_type, self.element_guid]
-            self.log(f"Comment data: {self.comment_data} being returned from screen")
+            # self.log(f"Comment data: {self.comment_data} being returned from screen")
             self.dismiss(self.comment_data)
         else:
             self.notify("Please enter both a comment and comment type, before submitting")
 
     def on_input_changed(self, event: Input.Changed):
-        self.log(f"Input detected: {event.input.id}, {event.input.value}")
+        # self.log(f"Input detected: {event.input.id}, {event.input.value}")
         if  event.input.id == "add_comment_input":
                 self.comment = event.value
         elif event.input.id == "add_comment_type_input":

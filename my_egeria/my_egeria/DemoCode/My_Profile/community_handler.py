@@ -84,7 +84,7 @@ class CommunitiesMixin:
             client = self._community_client()
             profile = client.get_my_profile(output_format="JSON")
         except PyegeriaException as e:
-            self.log(f"Retrieving my communities failed: {e}")
+            # self.log(f"Retrieving my communities failed: {e}")
             self.notify(f"Could not retrieve your communities: {e}", timeout=10, severity="error")
             return None
         finally:
@@ -130,7 +130,8 @@ class CommunitiesMixin:
         self.push_screen(CommunitiesScreen(communities), callback=self.communities_callback)
 
     def communities_callback(self, result: Any) -> None:
-        self.log(f"Communities screen returned: {result}")
+        pass
+        # self.log(f"Communities screen returned: {result}")
 
     def search_communities(self, search_string: str) -> list[tuple[str, str, str, str]] | None:
         """Communities matching search_string ('*' for all) as (name, description, qualified name, GUID) rows,
@@ -142,13 +143,13 @@ class CommunitiesMixin:
             found = client.find_communities(search_string=search_string or "*", ignore_case=True,
                                             output_format="JSON", graph_query_depth=0)
         except PyegeriaException as e:
-            self.log(f"Searching for communities matching {search_string} failed: {e}")
+            # self.log(f"Searching for communities matching {search_string} failed: {e}")
             self.notify(f"Searching for communities failed: {e}", timeout=10, severity="error")
             return None
         finally:
             if client:
                 client.close_session()
-        self.log(f"Communities found for {search_string}: {found}")
+        # self.log(f"Communities found for {search_string}: {found}")
         rows = []
         # "No elements found" is returned, rather than an exception, when nothing matches
         for community in found if isinstance(found, list) else []:
@@ -168,13 +169,13 @@ class CommunitiesMixin:
             client = self._community_client()
             community = client.get_community_by_guid(community_guid, output_format="JSON", graph_query_depth=1)
         except PyegeriaException as e:
-            self.log(f"Retrieving members of community {community_guid} failed: {e}")
+            # self.log(f"Retrieving members of community {community_guid} failed: {e}")
             self.notify(f"Could not retrieve the community's members: {e}", timeout=10, severity="error")
             return None
         finally:
             if client:
                 client.close_session()
-        self.log(f"Community {community_guid}: {community}")
+        # self.log(f"Community {community_guid}: {community}")
         rows = []
         for link in (community.get("assignedActors") if isinstance(community, dict) else None) or []:
             actor = link.get("relatedElement") or {}
@@ -198,7 +199,7 @@ class CommunitiesMixin:
                                                         graph_query_depth=0)
                 posts += entries if isinstance(entries, list) else []
         except PyegeriaException as e:
-            self.log(f"Retrieving the blog of community {community_guid} failed: {e}")
+            # self.log(f"Retrieving the blog of community {community_guid} failed: {e}")
             self.notify(f"Could not retrieve the community's blog: {e}", timeout=10, severity="error")
             return None
         finally:
@@ -231,7 +232,7 @@ class CommunitiesMixin:
             }
         }
         log_guid = client.create_note_log(element_guid=community_guid, body=body)
-        self.log(f"Created blog for community {community_guid}: {log_guid}")
+        # self.log(f"Created blog for community {community_guid}: {log_guid}")
         return log_guid
 
     def add_community_blog_post(self, community_guid: str, community_name: str, title: str, text: str) -> bool:
@@ -248,12 +249,12 @@ class CommunitiesMixin:
                 "description": text,
             }
             post_guid = client.create_note(log_guid, body=properties)
-            self.log(f"Posted to the blog of community {community_guid}: {post_guid}")
+            # self.log(f"Posted to the blog of community {community_guid}: {post_guid}")
             self.notify(f"Your post '{title}' has been added to the {community_name} blog", timeout=10,
                         severity="information")
             return True
         except PyegeriaException as e:
-            self.log(f"Posting to the blog of community {community_guid} failed: {e}")
+            # self.log(f"Posting to the blog of community {community_guid} failed: {e}")
             self.notify(f"Posting to the community's blog failed: {e}", timeout=10, severity="error")
             return False
         finally:
@@ -268,7 +269,7 @@ class CommunitiesMixin:
             client = self._community_client()
             comments = client.get_attached_comments(community_guid, graph_query_depth=0)
         except PyegeriaException as e:
-            self.log(f"Retrieving the comments on community {community_guid} failed: {e}")
+            # self.log(f"Retrieving the comments on community {community_guid} failed: {e}")
             self.notify(f"Could not retrieve the community's comments: {e}", timeout=10, severity="error")
             return None
         finally:
@@ -291,11 +292,11 @@ class CommunitiesMixin:
         try:
             client = self._community_client()
             response = client.add_comment_to_element(community_guid, text, comment_type)
-            self.log(f"Commented on community {community_guid}: {response}")
+            # self.log(f"Commented on community {community_guid}: {response}")
             self.notify("Your comment has been added", timeout=10, severity="information")
             return True
         except PyegeriaException as e:
-            self.log(f"Commenting on community {community_guid} failed: {e}")
+            # self.log(f"Commenting on community {community_guid} failed: {e}")
             self.notify(f"Adding the comment failed: {e}", timeout=10, severity="error")
             return False
         finally:
@@ -319,7 +320,7 @@ class CommunitiesMixin:
                         severity="information")
             return True
         except PyegeriaException as e:
-            self.log(f"Joining community {community_guid} failed: {e}")
+            # self.log(f"Joining community {community_guid} failed: {e}")
             self.notify(f"Joining the community failed: {e}", timeout=10, severity="error")
             return False
         finally:
@@ -336,7 +337,7 @@ class CommunitiesMixin:
             self.notify("You have left the community", timeout=10, severity="information")
             return True
         except PyegeriaException as e:
-            self.log(f"Leaving community {community_guid} failed: {e}")
+            # self.log(f"Leaving community {community_guid} failed: {e}")
             self.notify(f"Leaving the community failed: {e}", timeout=10, severity="error")
             return False
         finally:

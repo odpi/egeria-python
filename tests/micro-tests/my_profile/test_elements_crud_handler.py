@@ -42,6 +42,7 @@ class DummyApp(ElementsCrudMixin):
         self.switched_screens = []
         self.shown_main_screen = False
         self.log_messages = []
+        self.notifications = []
         self.user_GUID = "test-user-guid"
         self.view_server = "qs-view-server"
         self.platform_url = "https://127.0.0.1:9443"
@@ -51,6 +52,9 @@ class DummyApp(ElementsCrudMixin):
 
     def log(self, msg, *args, **kwargs):
         self.log_messages.append(str(msg))
+
+    def notify(self, msg, *args, **kwargs):
+        self.notifications.append(str(msg))
 
     def _show_main_screen(self):
         self.shown_main_screen = True
@@ -203,6 +207,7 @@ class TestElementsCrudMixinEditTables:
         app.edit_tables("unknown_table", 0)
         assert len(app.pushed_screens) == 0
         assert any("Unexpected table name" in msg for msg in app.log_messages)
+        assert any("Unexpected table name" in msg for msg in app.notifications)
 
     def test_empty_edit_callbacks(self):
         app = DummyApp()
@@ -246,6 +251,7 @@ class TestElementsCrudMixinAddAndComments:
         await app.add_to_tables("unknown_table", 0)
         assert app.push_screen.call_count == 0
         assert any("Unexpected table name" in msg for msg in app.log_messages)
+        assert any("Unexpected table name" in msg for msg in app.notifications)
 
     @pytest.mark.parametrize(
         "callback_name",

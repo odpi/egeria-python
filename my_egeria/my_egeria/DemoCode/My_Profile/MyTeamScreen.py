@@ -62,7 +62,7 @@ class MyTeam(ModalScreen):
                 for member in self.my_team:
                     self.team_table.add_row(member[0], member[1], member[2])
         else:
-            self.log(f"No team member data for MyTeam Screen", { "my_team": self.my_team})
+            # self.log(f"No team member data for MyTeam Screen", { "my_team": self.my_team})
             self.team_table.add_column("Error")
             self.team_table.add_column("Description")
             self.team_table.add_row("No team members found", "No team members returned from Egeria for this team")

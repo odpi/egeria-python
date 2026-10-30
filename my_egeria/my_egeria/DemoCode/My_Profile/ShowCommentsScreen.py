@@ -72,7 +72,7 @@ class ShowCommentsScreen(ModalScreen):
         else:
             # Extract the correct string identifier
             backend_id = self.extract_backend_identifier(self.table, self.row)
-            self.log(f"Backend identifier: {backend_id} extracted")
+            # self.log(f"Backend identifier: {backend_id} extracted")
         if not backend_id:
             self.notify("Selected table does not contain valid GUID or Qualified Name columns.", severity="error")
             return
@@ -97,21 +97,21 @@ class ShowCommentsScreen(ModalScreen):
             self.notify(f"No comments found: {str(e)}", severity="warning")
             return
 
-        self.log(f"comments_list: {comments_list}")
+        # self.log(f"comments_list: {comments_list}")
         comment_table = self.show_comments_datatable
         if isinstance(comments_list, dict):
             if comments_list.get("kind") == "json":
                 comments_list_ext = comments_list.get("data") or []
-                self.log(f"comments_list_ext: {comments_list_ext}, len: {len(comments_list_ext)}")
+                # self.log(f"comments_list_ext: {comments_list_ext}, len: {len(comments_list_ext)}")
                 for comment in comments_list_ext:
-                    self.log(f"processing value: {comment}")
+                    # self.log(f"processing value: {comment}")
                     comment_table.add_row(comment.get('Description'), comment.get('Comment Guid'),
                                           comment.get('Qualified Name'), comment.get('Display Name'))
         elif isinstance(comments_list, str):
-            self.log(f"processing str comment: {comments_list}")
+            # self.log(f"processing str comment: {comments_list}")
             comment_table.add_row(comments_list, "", "", "")
         elif comments_list:
-            self.log(f"processing list of: {len(comments_list)} comments")
+            # self.log(f"processing list of: {len(comments_list)} comments")
             for comment in comments_list:
                 comment_table.add_row(str(comment), "", "", "")
 
@@ -142,12 +142,12 @@ class ShowCommentsScreen(ModalScreen):
                 # Fallback to current screen
                 table_addr = self.app.screen.query_one(f"#{table_name}", DataTable)
             except NoMatches:
-                self.log(f"Table {table_name} not found on any relevant screen")
+                # self.log(f"Table {table_name} not found on any relevant screen")
                 return None
 
         # Map the clean string representation of column labels to their index positions
         column_mapping = {col.label.plain.strip(): idx for idx, col in enumerate(table_addr.columns.values())}
-        self.log(f"Column mapping for table {table_name}: {column_mapping}")
+        # self.log(f"Column mapping for table {table_name}: {column_mapping}")
 
         # Case-insensitive check for target columns
         upper_mapping = {k.upper(): v for k, v in column_mapping.items()}
@@ -161,22 +161,22 @@ class ShowCommentsScreen(ModalScreen):
                                                    params=({"search_string":upper_mapping["QUALIFIED NAME"]}))
             backend_id = comment_attributes["GUID"]
             idx = backend_id
-        self.log(f"Target column idx value: {idx}")
+        # self.log(f"Target column idx value: {idx}")
         if idx is None:
-            self.log(f"Target columns GUID or Qualified Name not found in {list(column_mapping.keys())}")
+            # self.log(f"Target columns GUID or Qualified Name not found in {list(column_mapping.keys())}")
             return None
 
         self.selected_row = idx
-        self.log(f"Selected row index: {self.selected_row}")
+        # self.log(f"Selected row index: {self.selected_row}")
 
         try:
             # handle if row_key is RowKey object or string
             actual_row_key = row_key
             row_data = table_addr.get_row(actual_row_key)
-            self.log(f"Row data: {row_data}")
+            # self.log(f"Row data: {row_data}")
             return str(row_data[idx])
         except Exception as e:
-            self.log(f"Error retrieving row {row_key} from table {table_name}: {e}")
+            # self.log(f"Error retrieving row {row_key} from table {table_name}: {e}")
             return None
 
 
@@ -196,7 +196,7 @@ class ShowCommentsScreen(ModalScreen):
     def action_add_comment(self):
         """ Add an attached Comment to the selected row """
         if self.backend_id:
-            self.log(f"Selected row: {self.backend_id}")
+            # self.log(f"Selected row: {self.backend_id}")
             container = (self.query_one("#show_comments_container", ScrollableContainer))
             container.remove_children()
             container.mount(Static(f"[b]Add Comment[/b]"))
@@ -210,29 +210,29 @@ class ShowCommentsScreen(ModalScreen):
     def action_add_response(self):
         """ Reopen this screen focused on the highlighted comment, to view/add responses to it """
         if self.highlighted_comment_guid:
-            self.log(f"Add response to comment: Selected row: {self.highlighted_comment_guid}")
+            # self.log(f"Add response to comment: Selected row: {self.highlighted_comment_guid}")
             self.dismiss([250, self.highlighted_comment_guid])
         else:
             self.notify("Highlight a comment in the table first, to respond to it", severity="warning")
 
     def on_input_changed(self, event: Input.Changed):
-        self.log(f"Input detected: {event.input.id}, {event.input.value}")
+        # self.log(f"Input detected: {event.input.id}, {event.input.value}")
         if event.input.id == "add_comment_input":
-            self.log(f"Input changed: {event.input.value}")
+            # self.log(f"Input changed: {event.input.value}")
             self.comment_text = str(event.input.value)
         elif event.input.id == "add_comment_type_input":
-            self.log(f"Input changed: {event.input.value}")
+            # self.log(f"Input changed: {event.input.value}")
             self.comment_type = str(event.input.value)
         else:
             self.notify("Input not recognized! Please try again")
             return
-        self.log(f"Comment text: {self.comment_text}, Comment type: {self.comment_type}")
+        # self.log(f"Comment text: {self.comment_text}, Comment type: {self.comment_type}")
 
     @on(Button.Pressed, "#add_comment_button")
     def handle_button_pressed(self, event: Button.Pressed):
         """ Handle user request to add a comment to the selected element """
-        self.log(f"Button pressed: {event.button.id}")
-        self.log(f"Comment text: {self.comment_text}, Comment type: {self.comment_type}")
+        # self.log(f"Button pressed: {event.button.id}")
+        # self.log(f"Comment text: {self.comment_text}, Comment type: {self.comment_type}")
         if self.comment_text and self.comment_type:
             # add_comment dismisses the screen itself on success, and stays open on failure
             self.add_comment()
@@ -261,30 +261,30 @@ class ShowCommentsScreen(ModalScreen):
         try:
             # Add comment to selected element
             self.comment_type = self.comment_type.strip().upper().replace(" ", "_")
-            self.log(f"Adding comment to element: {self.backend_id}, values: {self.comment_text}, {self.comment_type}")
+            # self.log(f"Adding comment to element: {self.backend_id}, values: {self.comment_text}, {self.comment_type}")
             response = egeria_tech.add_comment_to_element(
                 element_guid=self.backend_id,
                 comment=self.comment_text,
                 comment_type=self.comment_type
             )
-            self.log(f"Comment successfully added! New Comment GUID: {response}")
+            # self.log(f"Comment successfully added! New Comment GUID: {response}")
             self.notify(f"Comment successfully added! New Comment GUID: {response}")
             container = (self.query_one("#show_comments_container", ScrollableContainer))
             container.remove_children()
         except Exception as e:
-            self.log(f"Failed to add comment: {e}")
+            # self.log(f"Failed to add comment: {e}")
             self.notify(f"Failed to add comment: {e} \n Please try again.")
             return
         self.dismiss(200)
 
     @on(DataTable.RowHighlighted, "#show_comments_dt")
     def on_row_highlighted(self, event: DataTable.RowHighlighted):
-        self.log(f"Row highlighted: {event.row_key}")
+        # self.log(f"Row highlighted: {event.row_key}")
         self._track_comment_row(event.row_key)
 
     @on(DataTable.RowSelected, "#show_comments_dt")
     def on_row_selected(self, event: DataTable.RowSelected):
-        self.log(f"Row selected: {event.row_key}")
+        # self.log(f"Row selected: {event.row_key}")
         self._track_comment_row(event.row_key)
 
     def _track_comment_row(self, row_key) -> None:
@@ -293,7 +293,7 @@ class ShowCommentsScreen(ModalScreen):
         try:
             row_data = self.show_comments_datatable.get_row(row_key)
         except Exception as e:
-            self.log(f"Unable to read comment row {row_key}: {e}")
+            # self.log(f"Unable to read comment row {row_key}: {e}")
             self.highlighted_comment_guid = None
             return
         self.highlighted_comment_guid = row_data[1] or None

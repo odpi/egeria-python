@@ -64,7 +64,7 @@ class CreateSubscriptionRequestScreen(ModalScreen):
         self.subtitle = "Enter details for the subscription request"
 
     def action_quit(self):
-        self.log("Quitting Create Subscription Request screen")
+        # self.log("Quitting Create Subscription Request screen")
         self.dismiss(200)
 
     @on(Input.Changed, "#sub_display_name")
@@ -86,7 +86,7 @@ class CreateSubscriptionRequestScreen(ModalScreen):
         self.identifier = event.value
 
     def action_create_subscription(self):
-        self.log("Creating subscription request")
+        # self.log("Creating subscription request")
         self.response: dict = {}
         if self.selected_item:
             self.response["externalSourceGUID"] = self.selected_item
