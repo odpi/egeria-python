@@ -59,6 +59,7 @@ from md_processing.v2 import (
 
 from pyegeria import settings, EgeriaTech, PyegeriaException, print_basic_exception, print_validation_error
 from pyegeria.core.config import settings, resolve_egeria_credentials
+from pyegeria.core.async_runner import run_sync
 
 # Configure logging - module level default
 log_format = "{time} | {level} | {function} | {line} | {message} | {extra}"
@@ -908,8 +909,8 @@ def process_md_file(input_file: str, output_folder: str, directive: str, server:
         set_usage_level(usage_level)
     client = EgeriaTech(server, url, user_id=userid)
     client.create_egeria_bearer_token(userid, user_pass)
-    asyncio.run(process_md_file_v2(input_file, output_folder, directive, client, parse_summary, attribute_logs,
-                                   usage_level, summary_only, debug=debug))
+    run_sync(process_md_file_v2(input_file, output_folder, directive, client, parse_summary, attribute_logs,
+                                usage_level, summary_only, debug=debug))
 
 if __name__ == "__main__":
     import argparse

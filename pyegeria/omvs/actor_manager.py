@@ -4594,7 +4594,7 @@ class ActorManager(ServerClient):
           }
         }
         """
-        return asyncio.run(self._async_create_contribution_record(actor_profile_guid, body))
+        return run_sync(self._async_create_contribution_record(actor_profile_guid, body))
 
     @dynamic_catch
     async def _async_update_contribution_record(self, contribution_record_guid: str, body: Optional[dict | UpdateElementRequestBody] = None) -> None:
@@ -4715,7 +4715,7 @@ class ActorManager(ServerClient):
           "forDuplicateProcessing" : false
         }
         """
-        return asyncio.run(self._async_update_contribution_record(contribution_record_guid, body))
+        return run_sync(self._async_update_contribution_record(contribution_record_guid, body))
 
     @dynamic_catch
     async def _async_delete_contribution_record(self, contribution_record_guid: str, body: Optional[dict | DeleteElementRequestBody] = None) -> None:
@@ -4796,7 +4796,7 @@ class ActorManager(ServerClient):
           "forDuplicateProcessing" : false
         }
         """
-        return asyncio.run(self._async_delete_contribution_record(contribution_record_guid, body))
+        return run_sync(self._async_delete_contribution_record(contribution_record_guid, body))
 
     @dynamic_catch
     async def _async_get_contribution_records_by_name(
@@ -5445,7 +5445,7 @@ class ActorManager(ServerClient):
           }
         }
         """
-        return asyncio.run(self._async_create_contact_details(body))
+        return run_sync(self._async_create_contact_details(body))
 
     @dynamic_catch
     async def _async_create_contact_details_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
@@ -5582,7 +5582,7 @@ class ActorManager(ServerClient):
           }
         }
         """
-        return asyncio.run(self._async_create_contact_details_from_template(body))
+        return run_sync(self._async_create_contact_details_from_template(body))
 
     @dynamic_catch
     async def _async_update_contact_details(self, contact_details_guid: str, body: Optional[dict | UpdateElementRequestBody] = None) -> None:
@@ -5705,7 +5705,7 @@ class ActorManager(ServerClient):
           "forDuplicateProcessing" : false
         }
         """
-        return asyncio.run(self._async_update_contact_details(contact_details_guid, body))
+        return run_sync(self._async_update_contact_details(contact_details_guid, body))
 
     @dynamic_catch
     async def _async_delete_contact_details(self, contact_details_guid: str, body: Optional[dict | DeleteElementRequestBody] = None) -> None:
@@ -5786,7 +5786,7 @@ class ActorManager(ServerClient):
           "forDuplicateProcessing" : false
         }
         """
-        return asyncio.run(self._async_delete_contact_details(contact_details_guid, body))
+        return run_sync(self._async_delete_contact_details(contact_details_guid, body))
 
     @dynamic_catch
     async def _async_link_contact_details(self, element_guid: str, contact_details_guid: str,
@@ -6497,7 +6497,7 @@ class ActorManager(ServerClient):
           }
         }
         """
-        return asyncio.run(self._async_create_perspective(body))
+        return run_sync(self._async_create_perspective(body))
 
     @dynamic_catch
     async def _async_create_perspective_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
@@ -6595,7 +6595,7 @@ class ActorManager(ServerClient):
           }
         }
         """
-        return asyncio.run(self._async_create_perspective_from_template(body))
+        return run_sync(self._async_create_perspective_from_template(body))
 
     @dynamic_catch
     async def _async_update_perspective(self, perspective_guid: str, body: Optional[dict | UpdateElementRequestBody] = None) -> None:
@@ -6694,7 +6694,7 @@ class ActorManager(ServerClient):
           }
         }
         """
-        return asyncio.run(self._async_update_perspective(perspective_guid, body))
+        return run_sync(self._async_update_perspective(perspective_guid, body))
 
     @dynamic_catch
     async def _async_delete_perspective(self, perspective_guid: str, body: Optional[dict | DeleteElementRequestBody] = None) -> None:
@@ -6777,7 +6777,7 @@ class ActorManager(ServerClient):
           "forDuplicateProcessing" : false
         }
         """
-        return asyncio.run(self._async_delete_perspective(perspective_guid, body))
+        return run_sync(self._async_delete_perspective(perspective_guid, body))
 
     @dynamic_catch
     async def _async_get_perspectives_by_name(
@@ -7300,7 +7300,7 @@ class ActorManager(ServerClient):
           }
         }
         """
-        return asyncio.run(self._async_create_skill(body))
+        return run_sync(self._async_create_skill(body))
 
     @dynamic_catch
     async def _async_create_skill_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
@@ -7398,7 +7398,7 @@ class ActorManager(ServerClient):
           }
         }
         """
-        return asyncio.run(self._async_create_skill_from_template(body))
+        return run_sync(self._async_create_skill_from_template(body))
 
     @dynamic_catch
     async def _async_update_skill(self, skill_guid: str, body: Optional[dict | UpdateElementRequestBody] = None) -> None:
@@ -7497,7 +7497,7 @@ class ActorManager(ServerClient):
           }
         }
         """
-        return asyncio.run(self._async_update_skill(skill_guid, body))
+        return run_sync(self._async_update_skill(skill_guid, body))
 
     @dynamic_catch
     async def _async_delete_skill(self, skill_guid: str, body: Optional[dict | DeleteElementRequestBody] = None) -> None:
@@ -7580,7 +7580,7 @@ class ActorManager(ServerClient):
           "forDuplicateProcessing" : false
         }
         """
-        return asyncio.run(self._async_delete_skill(skill_guid, body))
+        return run_sync(self._async_delete_skill(skill_guid, body))
 
     @dynamic_catch
     async def _async_get_skills_by_name(

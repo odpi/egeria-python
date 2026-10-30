@@ -229,7 +229,7 @@ class BaseServerClient:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.session.aclose()
+        run_sync(self.session.aclose())
         if exc_type is not None:
             self.exc_type = exc_type
             self.exc_val = exc_val

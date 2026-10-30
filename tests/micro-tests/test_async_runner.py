@@ -94,3 +94,30 @@ def test_explicitly_set_session_is_kept(monkeypatch):
 
     assert run_sync(current()) is sentinel
     assert asyncio.run(current()) is sentinel
+
+
+# --- no sync wrapper bypasses run_sync ---------------------------------------------------------
+
+def test_library_code_does_not_start_its_own_event_loop():
+    # asyncio.run() and get_event_loop() fail inside a running loop (Jupyter, Textual) unless
+    # nest_asyncio is applied, which pyegeria no longer does. CLI entry points under
+    # `if __name__ == "__main__":` may still use asyncio.run().
+    import ast
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[2]
+    banned = {"run", "get_event_loop", "new_event_loop"}
+    found = []
+    for package in ("pyegeria", "md_processing"):
+        for path in (root / package).rglob("*.py"):
+            if path.name == "async_runner.py":
+                continue
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+            main_blocks = [n for n in ast.walk(tree) if isinstance(n, ast.If) and "__main__" in ast.unparse(n.test)]
+            skip = {id(n) for block in main_blocks for n in ast.walk(block)}
+            for node in ast.walk(tree):
+                if (isinstance(node, ast.Call) and id(node) not in skip and isinstance(node.func, ast.Attribute)
+                        and node.func.attr in banned and isinstance(node.func.value, ast.Name)
+                        and node.func.value.id == "asyncio"):
+                    found.append(f"{path.relative_to(root)}:{node.lineno} asyncio.{node.func.attr}")
+    assert not found, "use pyegeria.core.async_runner.run_sync instead:\n" + "\n".join(found)

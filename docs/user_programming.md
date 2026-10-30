@@ -177,24 +177,111 @@ from pyegeria.omvs.glossary_manager import GlossaryManager
 glossary_client = GlossaryManager()
 ```
 
-### Async API
+### Sync and async
 
-Most methods have an underlying asynchronous implementation (prefixed with `_async_`). While the public API is generally synchronous for ease of use in scripts and notebooks, you can use the async versions if building an asynchronous application:
+Every public method comes in two forms with the same arguments and the same result:
+
+- `client.find_glossaries("*")`: synchronous. It returns when the request is done.
+- `await client._async_find_glossaries("*")`: a coroutine, for code that already runs on an event loop.
+
+The sync form works everywhere: in a script, in a Jupyter cell, inside a running event loop, and in worker threads. You don't need `nest_asyncio`. Releases up to 6.2.15 relied on it, and it breaks asyncio on Python 3.14.
+
+#### Which form to use
+
+| Where your code runs | Use | Why |
+| :--- | :--- | :--- |
+| A script, CLI command or scheduled job | sync | Simplest. pyegeria keeps one event loop and one connection pool per thread for you. |
+| A Jupyter notebook | either | Sync calls work in a cell, and so does a top-level `await`. |
+| An async application (FastAPI, Textual, aiohttp, an MCP server) | async | A sync call works there, but it blocks the application's event loop until Egeria answers. |
+| Many independent requests | async with `asyncio.gather` | The requests run at the same time instead of one after another. |
+| Worker threads (`ThreadPoolExecutor`) | sync | Each thread gets its own event loop and connections. |
+
+#### A script: use the sync form
+
+```python
+from pyegeria import EgeriaTech
+
+client = EgeriaTech("qs-view-server", "https://localhost:9443", "erinoverview", "secret")
+client.create_egeria_bearer_token()
+
+glossaries = client.find_glossaries("*", page_size=10)
+print(glossaries if isinstance(glossaries, str) else len(glossaries))
+client.close_session()
+```
+
+#### A Jupyter notebook: either form
+
+Jupyter cells already run on an event loop. Both forms work in a cell, so pick whichever reads better:
+
+```python
+client = EgeriaTech("qs-view-server", "https://localhost:9443", "erinoverview", "secret")
+client.create_egeria_bearer_token()
+
+glossaries = client.find_glossaries("*")                # sync works in a cell
+collections = await client._async_find_collections("*") # so does a top-level await
+```
+
+Don't call `asyncio.run(...)` in a cell, because a loop is already running there; use `await` instead. If an older notebook calls `asyncio.get_event_loop().run_until_complete(client._async_x(...))`, replace it with the sync method `client.x(...)`. If it calls `nest_asyncio.apply()`, that still works on Python 3.13 or older, but remove it before you move the notebook to Python 3.14.
+
+#### An async application: await the `_async_` form
+
+In a coroutine, await the async form for the token, the calls and the close:
 
 ```python
 import asyncio
 from pyegeria import EgeriaTech
 
 async def main():
-    client = EgeriaTech()
-    client.create_egeria_bearer_token()
-    
-    # Use the async variant
-    assets = await client._async_find_in_asset_domain("*")
-    print(assets)
+    client = EgeriaTech("qs-view-server", "https://localhost:9443", "erinoverview", "secret")
+    await client._async_create_egeria_bearer_token()
+    try:
+        glossaries = await client._async_find_glossaries("*", page_size=10)
+        ...
+    finally:
+        await client._async_close_session()
 
 asyncio.run(main())
 ```
+
+A sync call inside a coroutine still works: pyegeria runs it on a background thread and waits. But while it waits, nothing else on your event loop runs. Against a local quickstart, one `find_glossaries` call made from a coroutine held up the loop for about 3 seconds. In a web server that means every other request waits too. In a Textual app the screen freezes.
+
+#### Many requests at once: `asyncio.gather`
+
+This is where the async form pays off even outside an async application. Independent requests overlap instead of queuing:
+
+```python
+async def overview(client):
+    glossaries, collections, assets = await asyncio.gather(
+        client._async_find_glossaries("*", page_size=10),
+        client._async_find_collections("*", page_size=10),
+        client._async_find_in_asset_domain("Coco", page_size=10),
+    )
+    return glossaries, collections, assets
+```
+
+Against a local quickstart, these three queries took about 4 seconds with `gather` and about 7.5 seconds one after another. Each client opens at most 10 connections per event loop, so with more than 10 requests in flight the extra ones wait for a free connection.
+
+#### Worker threads: use the sync form
+
+One client can be shared by several threads. Each thread gets its own event loop and connection pool:
+
+```python
+from concurrent.futures import ThreadPoolExecutor
+
+with ThreadPoolExecutor(max_workers=4) as pool:
+    results = list(pool.map(lambda s: client.find_glossaries(s), ["Coco*", "Clinical*", "*"]))
+```
+
+#### What happens underneath
+
+Each sync method calls `pyegeria.core.async_runner.run_sync()` on its `_async_` method:
+
+- **No event loop running in the thread** (scripts, worker threads): the coroutine runs on that thread's own long-lived event loop.
+- **An event loop is already running** (Jupyter, FastAPI, Textual): the coroutine runs on a shared background thread named `pyegeria-sync-runner`, and the calling thread waits for the result.
+
+The client's HTTP connection pool belongs to one thread and one event loop. If a thread switches loops, for example a sync call followed by `asyncio.run(...)` in the same script, the client opens a new pool for the new loop. Mixing the two forms in this way works, but keeping to one form per thread reuses connections best.
+
+When you are finished, close the client: `client.close_session()` in sync code, or `await client._async_close_session()` in a coroutine.
 
 ### Long-Running Sessions
 
@@ -229,11 +316,9 @@ client2.set_bearer_token(my_token)
 # When my_token expires, call set_bearer_token() again with a fresh one
 ```
 
-#### Async applications — avoid `create_egeria_bearer_token()` inside coroutines
+#### Async applications: create the token with the async form
 
-The sync `create_egeria_bearer_token()` method calls `asyncio.get_event_loop().run_until_complete(...)` internally. Calling it from within a running async context (FastAPI route, async Jupyter cell, etc.) raises `RuntimeError: This event loop is already running`.
-
-Use the async variant instead:
+In a coroutine (a FastAPI route, a Textual handler), use `await client._async_create_egeria_bearer_token()`. The sync `create_egeria_bearer_token()` also works there, but it blocks the event loop while it waits for Egeria (see [Sync and async](#sync-and-async)).
 
 ```python
 # In a FastAPI route or any async function:

@@ -231,6 +231,16 @@ class EgeriaTech:
                 return sub.get_token()
         return self.token
 
+    async def _async_close_session(self) -> None:
+        """Close sessions for all sub-clients that were instantiated (Async). Use from a running loop."""
+        for sub in self._instantiated_clients.values():
+            if hasattr(sub, "_async_close_session"):
+                try:
+                    await sub._async_close_session()
+                except Exception:
+                    pass
+        self._instantiated_clients.clear()
+
     def close_session(self) -> None:
         """Close sessions for all sub-clients that were instantiated."""
         for sub in self._instantiated_clients.values():
