@@ -148,7 +148,7 @@ content was changed. The numbered section list above describes the
 
 # Open Issues
 
-**At a glance** — 2 open pyegeria items, 1 awaiting re-test, 2 open Egeria Server issues (2026-10-29: ISSUE-159, 132 and 85 live-verified; 12 Egeria-side fixes re-confirmed or closed on earlier passes and moved to the Appendix).
+**At a glance** — 2 open pyegeria items, 0 awaiting re-test, 0 open Egeria Server issues (2026-10-30: ISSUE-146's `remove_note` re-test passed, ISSUE-79's folder survey completes, ISSUE-108 did not reproduce at 200 links; all three moved to the Appendix. 2026-10-29: ISSUE-159, 132 and 85 live-verified; 12 Egeria-side fixes re-confirmed or closed on earlier passes and moved to the Appendix).
 
 **Egeria team note, 2026-10-18 (Mandy Chessell).** Saved verbatim at
 `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`. Each entry below has a dated
@@ -160,9 +160,10 @@ re-test candidates moved into *Awaiting re-test* below the open sections.
   where cheap and read-only or throwaway; otherwise closed on the 2026-10-19/20
   passes recorded in each entry).
 - **Works as designed:** ISSUE-146 (400-008 is the provenance check; the
-  pyegeria `remove_note` clean-up stays open).
-- **Egeria needs information from us:** ISSUE-108, ISSUE-79 (checklists
-  copied into each entry).
+  pyegeria `remove_note` re-test passed 2026-10-30, closed).
+- **Egeria needed information from us:** ISSUE-108, ISSUE-79. Answered from
+  a re-run on 2026-10-30, recorded in each entry: 79's survey completes and
+  108 did not reproduce; both closed.
 - **pyegeria follow-ons** (class renames, `cascadedDelete`, `pushDown`
   default, new `DataValueAssignment`/`CrowdSourcingRole` values, view-service
   fixes that pyegeria worked around): ISSUE-154, fixed 2026-10-29 for 6.2.15.
@@ -175,11 +176,10 @@ re-test candidates moved into *Awaiting re-test* below the open sections.
 - ISSUE-150: Dr.Egeria commands for an Analytic Function's Egeria declaration: a GovernanceActionType that Resource Explorer runs as an engine host, plus a synchronous path that bypasses Egeria
 
 **Awaiting re-test**
-- ISSUE-146: Deleting a journal entry fails with OMAG-REPOSITORY-HANDLER-400-008, and pyegeria's `remove_note` reaches the delete only through the generic Asset Maker service
+- None (2026-10-30).
 
 **Open Egeria Server issues**
-- ISSUE-108: newly created relationships stay invisible to related-element queries for up to ~20 minutes after creation
-- ISSUE-79: native survey against a template-created `FileFolder` asset fails server-side — `assetConnector` is null in `BasicFolderConnector.getFile()`
+- None (2026-10-30). ISSUE-108 and 79 closed after the re-run recorded in each entry.
 
 ---
 
@@ -313,404 +313,7 @@ Egeria side lands, it's noted inline (also cross-referenced from the
 "Open pyegeria items" section below where the follow-on is substantial
 enough to track there too).
 
----
-
-### ISSUE-108: newly created relationships stay invisible to related-element queries for up to ~20 minutes after creation
-
-**Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: needs information from us.** Egeria cannot reproduce it, and the new FVT does not show it. Their best lead is still timing: a related-element query hides a relationship whose `effectiveFrom` is later than the server's current time. For one link still missing about 12 minutes after a bulk load, they ask for:
-- [ ] The relationship's GUID, `effectiveFrom` and `createTime`, and the server clock at that moment.
-- [ ] Whether the link is returned when fetched directly by its GUID while it is missing from the related-element query.
-- [ ] Whether the loader (Dr.Egeria or pyegeria) sets `effectiveFrom` or `effectiveTime` on that run.
-- [ ] A timed run with `MemberDataField` links at 200 or more, polling every minute, to show whether the delay grows with load size or stays fixed.
-
-**pyegeria:** Dr.Egeria's body builders send `effectiveFrom` only when the author supplies `Effective From` (`common_md_utils.py:342` and siblings), so a default load sets none; still confirm `effectiveTime` is not stamped from the client clock on link requests (a client clock ahead of the server would explain the delay). The timed run needs Egeria writes, so it needs the owner's go-ahead.
-
-**Layer:** Egeria Server · **Status:** open · **Found:** 2026-09-20, reported by
-the user from a Dr.Egeria bulk load session (1,027 expected field-link
-relationships).
-
-**What:** a catalog walk run immediately after a load found only 876 of 1,027
-expected field links. A second walk 12 minutes later still showed 82
-structures short. A third walk, 20 minutes after the load, showed every link
-present. No errors were raised at any point in the load itself — the
-relationships were created successfully, they simply did not show up in
-related-element queries for a long window afterward, then all became visible
-at once with no further action taken.
-
-**Not yet root-caused.** This looks like the same family of symptom as the
-2026-08-15 Postgres-checkpoint/background-connector-load entry above (server
-falling behind under load, catching up later) rather than a paging defect
-like ISSUE-54 (which would not self-heal purely by waiting — ISSUE-54's
-bug is about tie-ordering across separately-executed pages, not about data
-not existing yet). But this has not been directly correlated with connector
-log activity or checkpoint timing the way that entry was — this is a fresh
-report, not yet independently reproduced or diagnosed by a pyegeria session.
-
-**Impact:** any workflow that verifies a bulk write immediately after
-issuing it (a post-load catalog walk, an integration test, an automated
-Dr.Egeria "did it work" check) can get a false-negative "missing" result
-that resolves itself given enough time — worth knowing before treating an
-immediate post-write verification gap as evidence of a real data-loss bug.
-
-**Candidate next step (not yet done):** reproduce with a smaller, timed
-sample (e.g. create N relationships, poll related-element queries at 1-minute
-intervals, log when each becomes visible) to get a real latency
-distribution instead of the three anecdotal checkpoints here, and check
-whether it correlates with the same background-connector/checkpoint load
-already documented above. Worth raising with the Egeria team directly, per
-the original report.
-
-**Update 2026-09-20 (peer check, no upstream issue filed yet):** checked
-`odpi/egeria`'s issue tracker directly — nothing filed for this symptom, so
-no response from the Egeria team via GitHub. Asked three peer sessions
-working against the same dev Egeria server:
-- **egeria-workspaces-fs-4a:** hasn't seen this specific symptom, no word
-  from the Egeria team either. Raised a speculative, explicitly-unconfirmed
-  lead worth checking: a chronic, still-open issue on `egeria-shared-kafka`
-  where the `GroupCoordinator` repeatedly times out writing to
-  `__consumer_offsets` (5000ms) and triggers a consumer-group rebalance
-  roughly every 90s (confirmed via broker logs 2026-09-03; root cause still
-  open, CPU/GC/Postgres-restarts/virtiofs I/O already ruled out; historically
-  "Information" severity, self-heals within seconds, not chased further
-  since it wasn't visibly causing downstream harm). If `qs-view-server`'s
-  related-element queries are backed by Kafka-driven indexing/event
-  propagation rather than a direct repository read, a chronic rebalance
-  storm could plausibly manifest as exactly this "relationship exists but
-  isn't visible to queries yet" lag. **Explicitly not a confirmed
-  correlation** — the timescales don't obviously line up (a recurring ~90s
-  self-healing blip vs. a one-shot ~20-minute resolution) — and the peer
-  offered to check Kafka broker logs around the original bulk-load window
-  for the same rebalance pattern if useful.
-- **Resource Explorer experimental UI:** no direct evidence either way —
-  today's two live writes against the same server (a Governance Action
-  Process Step upsert, and a native-survey `SurveyReport` lookup) both
-  checked either *immediately* after the write or only *after* polling to a
-  terminal status, never in the 1-20 minute gap this entry describes, so
-  neither confirms nor rules it out. Flagged that a background agent on
-  their side doing a related connection-refresh fix will trigger fresh
-  engine actions/relationships shortly and will report back if it surfaces
-  the same lag.
-- **Egeria-trellis backlog review:** also nothing from the Egeria team (no
-  channel to them; checked RE docs/Backlog/design notes for this exact
-  shape first — a checked "no", not a guess). Offered a different, measured
-  precedent on this same platform as a *pattern* to distinguish causes, not
-  a diagnosis: `packages/resource-explorer/docs/investigation-classification-and-zoning-design.md`
-  (~line 830) documents a privately-zoned element still readable by a
-  non-owner *six minutes* after the control was written (denial began at
-  seven), caused by the security connector's `refreshTimeInterval` (10 min)
-  reload — "read it back immediately, so it must be fine" was exactly the
-  misleading evidence there too. Their key diagnostic point: a
-  **fixed-wall-clock cause** (everything becomes visible at once, at a time
-  unrelated to load size — test with 50 links instead of 1,027 and see if
-  the delay is still ~20 min) and a **volume-proportional cause** (async
-  indexing/event-driven materialisation catching up, arriving in a stream)
-  look identical from a single observation but have different fixes; the
-  876→945(implied)→1,027 partial-recovery-at-12-minutes data point *mildly*
-  favours volume-proportional, but "two points don't make a curve." Also
-  worth checking directly: fetch one of the missing links by its own GUID
-  during the window — if that resolves but the relationship is still absent
-  from the related-element query, the write landed fine and only the
-  traversal/index path lags, narrowing which service is actually behind. If
-  this gets filed upstream, the volume-vs-fixed measurement is what turns
-  it into a real bug report instead of getting bounced as "eventual
-  consistency, working as intended."
-
-Two independent, unconfirmed leads now on record (Kafka rebalance storms;
-a refresh-interval-style cache) alongside a concrete diagnostic method
-(fixed-wall-clock vs. volume-proportional, plus the direct-GUID-fetch
-isolation check) for telling them apart before assuming either. Next real
-step is still reproducing with a smaller, timed, instrumented load using
-that method — not yet done.
-
-**Reproduction attempt, 2026-09-20 (small end of the curve, not reproduced):**
-after clearing with all 5 live peer sessions first (per `coordinate-shared-writes`),
-ran a timed, instrumented small-scale reproduction against `qs-view-server`:
-20 throwaway `Collection` elements created and each linked to a parent via
-`CollectionMembership` (not the original `MemberDataField`/"field link" type
-— a different relationship type, noted as a limitation below), polling
-`get_collection_members` every 30s for up to 20 minutes, with a direct-GUID
-isolation check ready for anything still missing at the deadline.
-
-**Result: all 20 relationships were visible on the very first poll, ~1.1s
-after the last one was created — no lag at all.** Cleanup (delete all 21
-fixture elements) verified two independent ways: a direct-GUID fetch on
-each (`404`/`OMAG-REPOSITORY-HANDLER-404-007`, confirmed real soft-delete,
-not an ISSUE-63-style silent no-op) and a broad `find_collections` search
-for the `test-fixture-issue108` prefix (0 results). The script itself was
-run from an ephemeral per-session scratch directory, not committed anywhere
-— reproduce via the same approach (create N Collections linked to a parent
-via `_async_add_to_collection`, poll `_async_get_collection_members`) if
-needed later; the approach, not the script file, is what's worth keeping.
-
-**Per Egeria-trellis backlog review's own framework, this is one point on
-the curve, not a refutation.** It's consistent with either "no bug under
-current load" or "the lag is genuinely volume-proportional and 20 elements
-is nowhere near the ~1,027-link scale that surfaced it originally" — the
-one data point this run *can't* distinguish those two. Also a real
-methodology gap versus the original report: this used `CollectionMembership`
-on plain `Collection` elements, not the `MemberDataField` "field link"
-relationship the original 1,027-link load actually exercised (ISSUE-102 is
-in the same `MemberDataField` neighborhood, worth checking together). Server
-load conditions also weren't recorded this run (no `ListAgents`/`:8810`
-snapshot taken alongside the timings, despite the earlier plan to do so —
-an execution gap, not a design one).
-
-**Candidate next step, still open:** a same-relationship-type
-(`MemberDataField`), same-order-of-magnitude (~200+) run, following the
-same peer-clearance and independent-verification discipline, is what would
-actually test the volume-proportional hypothesis — this run didn't attempt
-that scale on its own initiative, since committing to it wasn't part of
-what peers were asked to clear.
-
-**Egeria team response, relayed 2026-10-05 (source `oak2026` fb3d6fce53; **fixes are in two unmerged PRs, so no build contains them, and nothing was tested against a live platform**):** not validated; no cache found. Best lead: a client clock ahead of the server's, with `effectiveFrom` set from it (related-element queries silently hide a relationship whose `effectiveFrom` is later than the server's "now"). They need, for one link still missing at ~12 minutes: its `effectiveFrom` and `createTime`, the server clock then, and whether the loader sets `effectiveFrom`. **Our facts:** pyegeria sets no `effectiveFrom`/`effectiveTo`/`effectiveTime` by default (model defaults are `None`; no clock call is tied to any `effective*` field; Dr.Egeria forwards an "Effective From" only if typed). Host and container clocks agree within 1 s on 2026-10-05; the 2026-09-20 load's values are unavailable.
-
-**Update 2026-10-10:** the `oak2026` source (`fb3d6fce53`) the team examined is now in Egeria `main` (merged 2026-10-06, odpi/egeria#9363). No fix was made for this issue; the team's questions above still stand.
-
----
-
-
-
-
-### ISSUE-79: native survey against a template-created `FileFolder` asset fails server-side — `assetConnector` is null in `BasicFolderConnector.getFile()`
-
-**Status 2026-10-29: moved to the Egeria Server section; Egeria needs information from us (checklist below).**
-
-**Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: needs information from us.** Egeria cannot reproduce it. The error is now a clear "no asset connector" message, not a NullPointerException. Cause: the surveyed FileFolder had no ResourceConnection; the likely route is that the template create returned an existing FileFolder with the same qualified name (template create allows an existing element to be returned). They ask for:
-- [ ] The request used to create the FileFolder: its template GUID and placeholder values, and whether `deepCopy` or `allowRetrieve` was set.
-- [ ] The GUID of the surveyed asset, and whether that GUID existed before the create call.
-- [ ] Whether that asset has a ResourceConnection, and which process first catalogued it (for example a files integration connector).
-
-**pyegeria:** this fits the 2026-10-06 live check below (with `deepCopy` no longer sent, the new folder has a ResourceConnection). `create_folder_element_from_template` hardcodes `"allowRetrieve": True` (`pyegeria/omvs/automated_curation.py:1081`), so a create whose qualified name already exists returns the old, possibly connection-less folder, which matches Egeria's theory. Proposed (not done): let callers pass `allow_retrieve`, or log when the returned GUID was pre-existing. The answers above can come from the 2026-10-06 `live_79.py` run's request plus a read-only lookup of the original surveyed GUID.
-
-**Live check 2026-10-06 (about 02:00Z, current pyegeria 6.1.29 code, rebuilt platform): the `deepCopy:false` default WAS the cause of the missing connection.** `create_folder_element_from_template` now sends a request with no `deepCopy` key (keys sent: allowRetrieve, class, forDuplicateProcessing, forLineage, isOwnAnchor, parentAtEnd1, placeholderPropertyValues, templateGUID, templateSubstitute), and the new folder read back through the classification explorer **has 1 connection** (`ResourceConnection` present). Folder deleted (cascade) and verified gone by GUID. **Not run: the survey itself** (a survey creates elements owned by the survey identity that an ordinary user may not be able to delete), so "the survey now completes" is still unproven; the original `assetConnector`-null failure was the symptom of no connection, which is now shown not to occur. Whether the Egeria-side repair (`e01426db86`) also matters is untested. Script: `live_79.py` stage A (stage B `--survey` is opt-in).
-
-**Update 2026-08-30, from the Egeria team (Mandy Chessell).** The entry
-stays in "Open Egeria Server issues" — the reported failure is not
-explained and not fixed. What has changed is that the cause recorded in
-this entry, and in Resource Explorer's `re-as-engine-host-plan.md`, is now
-known to be wrong, and the error it produces has been made legible.
-
-**Status: still open (Egeria Server)** — but the recorded cause is
-disproved, and this entry and `re-as-engine-host-plan.md` should both be
-corrected. Investigated 2026-08-30 from the Egeria side, including a new
-FVT suite built to run this exact scenario.
-
-**The premise is false.** This entry, and the design doc's hold, rest on
-"template-based asset creation never wires up a working Connection." That
-is not true, in either environment it was checked against:
-
-- **On the quickstart that produced the report.** Every element created
-  from a template that itself carries a `ResourceConnection` got one — 10
-  of 10. Every `FileFolder` in that repository has one, including all
-  three that were created from a template (`/deployments/content-packs`,
-  `/deployments/loading-bay/sample-data`, `/deployments/secrets`).
-- **In a clean environment built from the current archives.** A folder
-  catalogued through `FileGovernance::create-file-folder` came back with a
-  `ResourceConnection` attached.
-- **The `FilesContentPack` template itself is also well formed:**
-  `FileFolder` template `fbdd8efd-...` carries an `Anchors`-classified
-  `Connection` with both a `ConnectToEndpoint` and a
-  `ConnectionConnectorType`.
-
-**The folder survey works.** A new `files-fvt` suite runs the reported
-scenario end to end — catalogue a folder from the `FileFolder` template,
-then survey it natively — and it passes:
-```
-OMES-SURVEY-ACTION-0019 The survey action service folder-survey-service has completed the
-analysis of asset 7050dc50-... with request type survey-folder in 1927 milliseconds; the
-results are stored in survey report 7e7892e2-...
-```
-The report carried six annotations. The test asserts the survey
-*completed*, not merely that it ran: a survey that dies on a null
-connector still produces an engine action, and the waiter throws on any
-terminal status other than `COMPLETED`.
-
-**A second hypothesis was also eliminated.** While investigating, a real
-defect was found in the PostgreSQL repository: a `TypeDefPatch` that
-reparents a type does not update the denormalised supertype chain stored
-on existing rows, so instances written before the patch become invisible
-to searches for the new supertype. That would have hidden connections
-exactly as reported, since `AssetConnection` was reparented under
-`ResourceConnection` on 2026-08-27. It is fixed — but it was never the
-cause here: the quickstart repository stores 202 rows as
-`:ResourceConnection:LabeledRelationship:` and none as
-`:AssetConnection:`, because it was reloaded after the type change.
-
-**What has been fixed, and what it does and does not buy.** The NPE
-itself is now a clean error. `getConnectorForAsset()` returns `null` by
-contract when an asset has no connection; `FolderSurveyService` cast that
-null and dereferenced it, and the framework's own
-`performCheckAssetAnalysisStep()` had the same hole on its error path.
-Both now report `OPEN-SURVEY-400-008` / `OPEN-SURVEY-0009`
-(`NO_ASSET_CONNECTOR`), naming the asset.
-
-This does not make such a survey succeed — an asset with no connection
-describes a resource nothing can open. It makes the failure say *which*
-asset, which is what the original report was missing: the NPE named
-`BasicFolderConnector`, a class the caller had never heard of, and pointed
-away from the asset.
-
-**Why that matters for how this entry reads.** Four further defects were
-found in the same connectors, all on paths nothing else exercises: both
-file survey services failed on every invocation (annotations created
-without a qualified name, in three places), the CSV survey dereferenced a
-null root schema type, wrote a relationship property to an entity, and
-produced colliding annotation qualified names. The file survey path had,
-on this evidence, never run to completion. Someone hitting an NPE in this
-family had every reason to suspect the asset — the errors never named
-anything else. That is context for the original diagnosis, not a
-criticism of it.
-
-**The naming trap, which is directly actionable on the pyegeria side.**
-This entry already records that `initiate_file_folder_survey`'s default
-(`FileSurveys:survey-folder`) and the `.http` example
-(`AssetSurvey:survey-folder`) are both wrong. Confirmed and now
-understood: a governance action type is registered under
-`<governanceEngineName>::<requestType>` — two colons — so the real name is
-`FileSurvey::survey-folder`. `AssetSurvey` is not an engine that exists at
-all. The `.http` examples have been corrected upstream
-(`FileSurvey::survey-folder`, `ApacheKafkaSurvey::survey-kafka-server`,
-`PostgreSQLSurvey::survey-postgres-server`,
-`PostgreSQLSurvey::survey-postgres-database`) with a note stating the
-shape, because the error a wrong name produces —
-`OMAG-GENERIC-HANDLERS-400-013`, "the name is not recognized" — does not
-say what it wanted instead. `initiate_file_folder_survey`'s default still
-needs fixing in pyegeria.
-
-**What is left, and what would settle it.** The remaining candidate is
-the deployment rather than the cataloguing or the survey: which server
-and userId the engine host's connected-asset client resolves
-`SurveyAssetStore.getConnectorToAsset()` against. That cannot be tested
-from the Egeria side — it needs the engine host that produced the
-failure. Suggested, in order:
-
-1. Re-run the original repro against a build carrying the NPE fix. If the
-   asset genuinely has no connection the run now fails with
-   `OPEN-SURVEY-400-008` naming it, which turns the question from "why is
-   this connector null" into "why does this asset have no connection that
-   this userId can see". If instead the survey completes, the deployment
-   has moved on and this entry can be closed.
-2. Check the folder asset at the moment of failure for a
-   `ResourceConnection`, using the same userId the engine host runs as —
-   not an admin one. If the relationship is there but the survey cannot
-   see it, that is a visibility or server-routing problem, and the userId
-   is where to look next.
-3. Compare against `files-fvt`, which is a known-good baseline for this
-   exact scenario. Pointing the same two actions at a
-   differently-configured engine host isolates the variable.
-
-Also worth correcting: this entry's earlier note about leftover probe
-elements (`FileFolder::localhost:/tmp/re-e1-probe-*`,
-`FileFolder::localhost:/tmp/re-issue79-recheck-*`) is out of date — the
-quickstart repository has been reloaded since and holds none of them, so
-that evidence is gone.
-
-**Status:** open (Egeria Server), reproduced live 2026-08-27, **re-checked
-2026-08-28 — still reproduces, identical failure.** Same class/method
-(`BasicFolderConnector.getFile()`, `assetConnector` null), same error IDs
-(`OMES-SURVEY-ACTION-0018`/`OPEN-SURVEY-500-001`), same
-`java.lang.NullPointerException`, against a freshly created `FileFolder`
-and a fresh survey run — not a one-off. Filed by content, not by number —
-see "why this entry exists" below.
-
-**Layer:** Egeria Server (survey action framework / `BasicFolderConnector`),
-not pyegeria. `create_folder_element_from_template` and the survey-initiate
-call both succeed and are correctly formed; the failure happens entirely
-inside the server's survey action service.
-
-**Why this entry exists.** Resource Explorer's `re-as-engine-host-plan.md`
-is ON HOLD citing this exact symptom ("connector is null" on a native
-survey against a template-created asset) under the name `PYEGERIA_ISSUES.md`
-**ISSUE-51** — but this file was renumbered on 2026-08-15, and today's
-ISSUE-51 is an unrelated, already-fixed `fetch_element()` shape problem.
-The blocker's own content had no surviving entry anywhere in this file.
-Investigated fresh rather than guessed at, per the plan's own citation
-being untrustworthy.
-
-**Two candidate bugs were in play, and they are not the same bug:**
-
-1. **Resource Explorer's superseded tracker, entry E1** (`packages/
-   resource-explorer/docs/egeria-pyegeria-issues.md`) describes a *different*
-   symptom: a 500 from the PostgreSQL repository connector on
-   `createMetadataElementFromTemplate` (`metadata_collection_guid` null
-   while saving a classification) — a failure to *create* the element at
-   all. **Re-tested live 2026-08-27 and does not reproduce**:
-   `create_folder_element_from_template(path_name=..., folder_name=...,
-   file_system="localhost")` against `qs-view-server` returned a real GUID
-   with no error. Whatever this was, it looks fixed.
-2. **The design doc's actual blocker** — a template-created asset surveyed
-   natively fails with a null connector — **does still reproduce**, and is
-   what this entry tracks.
-
-**Reproduction** (against `qs-view-server`, no pyegeria bug involved):
-```python
-from pyegeria import AutomatedCuration
-c = AutomatedCuration("qs-view-server", "https://localhost:9443", "erinoverview", "secret")
-c.create_egeria_bearer_token()
-
-folder_guid = c.create_folder_element_from_template(
-    path_name="/tmp/some-new-path", folder_name="probe-folder", file_system="localhost")
-
-# Note: initiate_file_folder_survey's own default survey_name
-# ("FileSurveys:survey-folder") and the .http ground truth's example
-# ("AssetSurvey:survey-folder") are BOTH wrong on this server -- neither
-# GovernanceActionType is registered (OMAG-GENERIC-HANDLERS-400-013). The
-# real registered qualifiedName, confirmed via
-# `EgeriaTech.get_elements("GovernanceActionType")`, is "FileSurvey::survey-folder".
-action_guid = c.initiate_file_folder_survey(folder_guid, survey_name="FileSurvey::survey-folder")
-```
-
-Poll the resulting `EngineAction` (`EgeriaTech.get_elements("EngineAction")`,
-match on `elementHeader.guid`) — it completes (fast, ~1s) with
-`activityStatus: "FAILED"` and `completionGuards: ["survey-failed"]`. Full
-`completionMessage`:
-```
-OMES-SURVEY-ACTION-0018 The survey action service folder-survey-service
-threw a org.odpi.openmetadata.frameworks.connectors.ffdc.ConnectorCheckedException
-exception during the generation of survey report ... for asset
-<folder-guid> during request type survey-folder in survey action engine
-FileSurvey (guid=4168abb9-6c60-46fb-b9c0-b44180d19500). The error message
-was OPEN-SURVEY-500-001 Unexpected exception in survey action service
-folder-survey-service of type java.lang.NullPointerException detected by
-method start. The error message was Cannot invoke
-"org.odpi.openmetadata.adapters.connectors.datastore.basicfile.BasicFolderConnector.getFile()"
-because "assetConnector" is null
-```
-
-**Analysis.** `create_folder_element_from_template` creates the `FileFolder`
-element and it looks entirely normal (confirmed via `get_elements`: proper
-`pathName`, `resourceName`, `Anchors` classification) — but no working
-`Connection`/`Connector` got wired to it, so when `folder-survey-service`
-tries to open the asset via `BasicFolderConnector.getFile()`, the
-connector reference is null and the survey action service crashes with an
-NPE rather than a clean error. This matches the design doc's
-characterization exactly ("template-based asset creation never wires up a
-working Connection, so any native survey against a template-created asset
-fails server-side with a NullPointerException") — just with the precise
-class/method now on record, which the design doc didn't have.
-
-**Impact:** blocks Resource Explorer's engine-host participation design
-(`re-as-engine-host-plan.md`, cases 1/2/4 — anything needing a native
-survey to actually *complete*, not just be triggered; case 3, RE-local
-surveying, is unaffected). The hold should be re-evaluated against this
-entry specifically, not against the old ISSUE-51 number. As of 2026-08-28
-this is confirmed the *only* thing still blocking that work on the
-pyegeria side — ISSUE-78's engine-host method trio shipped in 6.1.5 and RE
-has upgraded and verified it end to end, and the two other gaps
-identified alongside it (no REST way to create a `GovernanceEngine`/
-`GovernanceService` element; no per-engine "claimable work" listing,
-`get_active_engine_actions()` filtered client-side is the only option) are
-both genuine server-side gaps, not pyegeria ones. This entry is the real
-holdup.
-
-**Leftover from this investigation:** probe `FileFolder` elements
-(`qualifiedName: "FileFolder::localhost:/tmp/re-e1-probe-*"` from
-2026-08-27, `"FileFolder::localhost:/tmp/re-issue79-recheck-*"` from the
-2026-08-28 re-check) on `qs-metadata-store`, plus their failed
-`SurveyReport`/`EngineAction` pairs, left in place as reproduction
-evidence for both dates — not yet deleted.
-
-**Update 2026-10-05 -- probably a pyegeria bug, fixed on our side:** the Egeria team asked us to check that pyegeria did not send `deepCopy:false`. It did: `TemplateRequestBody.deep_copy` defaulted to `False` from 2026-01-09 until fixed on 2026-09-29 (#399, first released in v6.1.23), the model is serialised with `exclude_none` (which keeps `False`), and `create_folder_element_from_template` builds its body without `deepCopy`. Egeria then copies only the top-level element and none of the template's anchored attachments, so no `ResourceConnection`, which is exactly a null `assetConnector`. The Egeria team also points to `e01426db86` (2026-08-30, PostgreSQL supertype-chain repair after the 08-27 `ResourceConnection` re-parenting). **To confirm:** create a folder from the template with current pyegeria, check it has a `ResourceConnection`, then survey it.
+**2026-10-30:** none open. ISSUE-108 (not reproduced at 200 links) and ISSUE-79 (survey completes) closed after a re-run and moved to the Appendix.
 
 ---
 
@@ -727,103 +330,10 @@ contains odpi/egeria#9363, so these can be re-tested there. Several re-tests
 create and delete elements in the shared Egeria: check with the other
 sessions first.
 
----
-
-
-### ISSUE-146: Deleting a journal entry fails with OMAG-REPOSITORY-HANDLER-400-008, and pyegeria's `remove_note` reaches the delete only through the generic Asset Maker service
-
-**2026-10-29: re-test not run.** Two peer sessions held it: the owner's standing instruction is never to call `remove_note`, because an earlier call reached a UserIdentity instead of the note, and the test would run on Erin's own profile. Waiting for the owner's decision on whether, and how, to re-test it.
-
-**Status 2026-10-29: the pyegeria part (`remove_note` routing) was fixed in #451, released in 6.2.3; Egeria says the 400-008 is the provenance check working as designed.** What's left is the `remove_note` re-test on a NEW journal entry (below).
-
-**Egeria reset 2026-10-23 ~21:10-23:54Z** (egeria-workspaces-fs, owner-approved): the quickstart database was wiped and Egeria recreated on build 81beb8e5 (odpi/egeria 4486d1a7), then Coco content was reloaded. Every GUID recorded before then is gone. The test JournalEntries `fef83ed5` and `8bec72e4` on Erin's profile no longer exist, so the pending `remove_note` re-test below needs a NEW entry made with `journal_my_activity` (and, for the 400-008 case, one owned by an external source). The 2026-10-18 Egeria analysis (works as designed; 400-008 is the provenance check) still applies.
-
-**Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: works as designed (Egeria).** Asset Maker's `deleteAsset` is the right call: a JournalEntry is a Notification, so an asset, and no separate note delete is needed. Egeria's new FVT creates entries with My Profile's `journal-my-activity` and deletes them with `deleteAsset`, with no external source; every case passes on in-memory and PostgreSQL repositories. **400-008 is the provenance check:** it refuses a change made without an external source to an element an external source owns. No external source → 400-008; a different external source → 400-007; the matching external source → success. So an entry that returns 400-008 was not created locally, and its delete needs that entry's `externalSourceGUID` and `externalSourceName`. If 400-008 appears on an entry created through My Profile, that is a bug and Egeria wants: (1) the full error message (it names the type, GUID, provenance and metadata collection of the refused instance); (2) how the entry was created (which request, and which external source if any). Also new: purge applies the same provenance check. **pyegeria:** the `remove_note` clean-up below stays (route + docstring). Re-test on `8bec72e4` against a platform with the fixes; if 400-008 recurs, capture the full message for Egeria, since that entry was created locally through `journal-my-activity`.
-
-**Layer:** Egeria Server (pyegeria clean-up) · **Status:** open · **Found:** 2026-10-13, reported by the egeria-workspaces-fs Resource Browser session from a live private-journal test.
-
-**What:** as erinoverview, `_async_remove_note` (`pyegeria/core/_server_client.py`)
-was called on a JournalEntry created by `MyProfile.journal_my_activity`. It
-failed with `OMAG-REPOSITORY-HANDLER-400-008` (`LOCAL_CANNOT_CHANGE_EXTERNAL`):
-`deleteMetadataElementInStore` cannot modify Erin's UserIdentity (`ff983b64`),
-which has Content Pack provenance ("Coco Pharmaceuticals Combination"). The
-peer verified that nothing was removed. The entry keeps its `actionSource` and
-`presentInNoteLogs` relationships, and Erin's Person still has 1 identity,
-1 contact detail, 8 roles and 15 scopes. Test entry `fef83ed5` is still on
-Erin's profile, waiting for the owner's decision.
-
-**The route is right:** in 6.2, notes are Actions. The type chain is
-JournalEntry → Notification → Action → Process → Asset. Egeria main
-(`af400039c2`) has no note, notification or action delete endpoint.
-`AssetHandler.createNoteLogEntry` has no matching remove, and My Profile has
-`journal-my-activity` with no matching remove. The only delete for an Action is
-the generic `/assets/{assetGUID}/delete` (`AssetMakerResource`), which is what
-`remove_note`'s `feedback-manager/assets/{guid}/delete` reaches, because
-generic view services answer under any URL marker. Feedback Manager can only
-remove a whole note log (`note-logs/{noteLogGUID}/remove`).
-
-**Why it fails (likely, not verified):** `AssetHandler.createAction` anchors the
-entry to its action source, linked by `ActionRequester`. For a journal entry
-that is the caller's profile. Deleting an anchored element updates its anchor,
-and Erin's identity is owned by the content pack, so the local delete is
-refused. If so, no journal entry for a content-pack user can be deleted. That
-is for the Egeria team.
-
-**Anchor read (peer, read-only):** JournalEntry `fef83ed5` has anchorGUID
-`10dc7da9`, Erin's Person profile. Its `actionSource` is ActionRequester →
-Person `10dc7da9`, and `presentInNoteLogs` is AttachedNoteLogEntry → NoteLog
-`f780511a` (MyJournal). No relationship from the entry reaches UserIdentity
-`ff983b64`, which the error names. That identity is anchored to the same
-Person. So the refusal comes from the delete touching the anchor's graph, most
-likely the LatestChange update on the anchor, or a provenance check across
-elements that share the anchor, not from a direct link.
-
-**Delete-path trace (2026-10-13, Egeria source, read-only):** the asset delete
-(`AssetMakerResource.deleteAsset` → `AssetHandler.deleteAsset`) and the Metadata
-Expert delete (`MetadataExpertResource` → `MetadataExpertRESTServices`) both call
-`OpenMetadataClient.deleteMetadataElementInStore`, then the same
-`MetadataElementHandler` → `OpenMetadataAPIGenericHandler.deleteBeanInRepository`
-code. Neither does any extra checking, so switching routes cannot avoid 400-008.
-The error is thrown only by `RepositoryErrorHandler.validateProvenance`, when
-the delete removes an entity or relationship whose provenance is not
-LOCAL_COHORT and the request carries no `externalSourceGUID`. That happens in
-`removeRelationship` for each relationship on the note and in `removeEntity`
-for the note itself. No anchor (LatestChange) update was found on the delete
-path, which corrects "Why it fails" above. But the error names UserIdentity
-`ff983b64`, which is not linked to the note, so the exact instance is still
-unexplained. Untried options are to pass the content pack's metadata-collection
-id as `externalSourceGUID`, or to use `deleteMethod: ARCHIVE`, which goes
-through a different handler.
-
-**Note-privacy findings (egeria-workspaces-fs session, 2026-10-13, with owner
-approval):** a second test JournalEntry, `8bec72e4-6da6-40a4-943e-d81e2173ec9b`,
-was created on Erin's profile (`10dc7da9`) and cannot be deleted either until a
-working delete exists.
-- `POST my-profile/journal-my-activity` ignores `initialClassifications` and
-  stamps only ZoneMembership `['erinoverview']`.
-- `POST classification-explorer/elements/{guid}/zone-membership` with
-  `['resource-explorer-private','erinoverview']` makes the entry private.
-  erinoverview can read it. peterprofile and garygeeke get 403
-  `OPEN-METADATA-SECURITY-403-020` by GUID, and 0 hits from
-  `feedback-manager/assets/by-search-string`.
-- The journal's NoteLog (`f780511a`) stays at `['erinoverview']`, so other
-  users can see that the log exists but not the hidden entries.
-- The owner chose a temporary workaround for the Resource Locator: call
-  `add_zone_membership(['resource-explorer-private', user])` straight after
-  `journal-my-activity`. Review it once Egeria's journal fix lands.
-
-**pyegeria clean-up:** make the `remove_note` route explicit and describe it as
-an Action delete in the docstring. The owner chose the Metadata Expert delete
-(`metadata-expert/metadata-elements/{guid}/delete`) for now. Per the trace
-above, this is a clarity change, not a fix for 400-008.
-
-**Re-test after Egeria's delete fixes are published:** the owner said
-(2026-10-13) that Egeria is working on delete issues now. Once that work is
-published, re-test `remove_note` on `8bec72e4` (plain delete, then `ARCHIVE` if
-needed). Tell the egeria-workspaces-fs session before deleting anything on
-Erin's profile. `fef83ed5` stays.
+**2026-10-30:** none waiting. ISSUE-146, the last one, passed and moved to the Appendix.
 
 ---
+
 
 # Quick reference: which OMVS client class for which purpose
 
@@ -859,11 +369,13 @@ Sorted newest-first by `ISSUE-#` (2026-10-12). ISSUE-91 has two entries
 
 ### ISSUE-167: The 401 auto-retry re-authenticated a caller-supplied bearer token as the client's own user
 
-**Layer:** Pyegeria · **Status:** fixed on branch `fix/external-token-no-auth-retry`, for 6.2.15 · **Found:** 2026-10-28, by the egeria-workspaces-fs portal session (Lineage Explorer queries made by a user logged in as Peter ran as erinoverview).
+**Layer:** Pyegeria · **Status:** fixed in #508, released in 6.2.15, live-verified · **Found:** 2026-10-28, by the egeria-workspaces-fs portal session (Lineage Explorer queries made by a user logged in as Peter ran as erinoverview).
 
 **What happened:** on a bare 401, `BaseServerClient._async_make_request` minted a new token with `self.user_id` / `self.user_pwd` and retried. It did that whatever token was in the headers, including one the caller had set with `set_bearer_token()` for a different user. So an expired or invalid token quietly became a token for the client's user, and the request succeeded as that user with no error. `user_pwd` falls back to `settings.User_Profile.user_pwd`, so a client built without a password was exposed too. Repro on 6.2.14: `MyProfile(view, url, "erinoverview", "secret")`, then `set_bearer_token(<expired token>)`, then `get_my_profile()` returned Erin's profile. `exec_report_spec(token=..., user=..., user_pass=...)` had the same exposure.
 
 **Fix:** the client records the user it minted its current token for (`_token_minted_for`; `None` for a token from the constructor or `set_bearer_token`). The retry runs only when there is no token or the token was minted for `self.user_id`. A caller-supplied token that expires now raises `PyegeriaUnauthorizedException`. `EgeriaTech` and `Egeria` pass the minting user to their sub-clients, including ones created later, so their own tokens still renew. Tests: `tests/micro-tests/test_external_token_no_auth_retry.py`.
+
+**Live-verified 2026-10-29** by the egeria-workspaces-fs session on its containers rebuilt with 6.2.15: after `set_bearer_token(<invalid token>)`, a request raises `PyegeriaUnauthorizedException` instead of running as the client's user.
 
 ---
 
@@ -1453,6 +965,103 @@ Request ids: `ec9052e7` and `3975182d` (alpha), `38759736` (beta), `475e68f1` (m
 **Leftovers on qs-view-server:** the map value set "mapOne" with member v1 under `pyegeriaClearRetestMap`/`Asset`, plus whatever per-property container elements setup creates (`Egeria:ValidMetadataValue::pyegeriaClearRetest-Asset` and `...pyegeriaClearRetestMap-Asset`). These are test elements, not content-pack elements. RE's blueprint materializer treats `Egeria:ValidMetadataValue:` qualifiedNames as content-pack origin, but only for SolutionComponents, so they don't affect it.
 
 **pyegeria follow-on (not done, needs the owner's go-ahead):** Dr.Egeria's clear processor could treat 400-011 from `clear-value`/`clear-map-name` as success when a follow-up read confirms the value is gone. Otherwise, wait for the Egeria fix and re-test (see the BACKLOG.md delete re-test item).
+
+---
+
+### ISSUE-146: Deleting a journal entry fails with OMAG-REPOSITORY-HANDLER-400-008, and pyegeria's `remove_note` reaches the delete only through the generic Asset Maker service
+
+**CLOSED 2026-10-30: the `remove_note` re-test PASSED.** The owner approved one call, run once in a quiet window agreed with the other sessions. A new JournalEntry `92606c0a` was made on Erin's profile with `journal_my_activity`, and its type was checked to be JournalEntry before the call. A request guard let through only `POST .../metadata-expert/metadata-elements/92606c0a.../delete`; that was the only request sent, and it succeeded with no 400-008. Erin's Person `10dc7da9` and UserIdentity `ff983b64` were snapshotted before and after (type, status, versions, properties, classifications) and are unchanged. The entry is gone: a `b2rt146` search returns nothing, a lookup by GUID returns InvalidParameterException (unknown GUID), and Erin's profile still lists `ff983b64` and no entry. Script: `win_146.py` (session scratchpad).
+
+**2026-10-29: re-test not run.** Two peer sessions held it: the owner's standing instruction is never to call `remove_note`, because an earlier call reached a UserIdentity instead of the note, and the test would run on Erin's own profile. Waiting for the owner's decision on whether, and how, to re-test it.
+
+**Status 2026-10-29: the pyegeria part (`remove_note` routing) was fixed in #451, released in 6.2.3; Egeria says the 400-008 is the provenance check working as designed.** What's left is the `remove_note` re-test on a NEW journal entry (below).
+
+**Egeria reset 2026-10-23 ~21:10-23:54Z** (egeria-workspaces-fs, owner-approved): the quickstart database was wiped and Egeria recreated on build 81beb8e5 (odpi/egeria 4486d1a7), then Coco content was reloaded. Every GUID recorded before then is gone. The test JournalEntries `fef83ed5` and `8bec72e4` on Erin's profile no longer exist, so the pending `remove_note` re-test below needs a NEW entry made with `journal_my_activity` (and, for the 400-008 case, one owned by an external source). The 2026-10-18 Egeria analysis (works as designed; 400-008 is the provenance check) still applies.
+
+**Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: works as designed (Egeria).** Asset Maker's `deleteAsset` is the right call: a JournalEntry is a Notification, so an asset, and no separate note delete is needed. Egeria's new FVT creates entries with My Profile's `journal-my-activity` and deletes them with `deleteAsset`, with no external source; every case passes on in-memory and PostgreSQL repositories. **400-008 is the provenance check:** it refuses a change made without an external source to an element an external source owns. No external source → 400-008; a different external source → 400-007; the matching external source → success. So an entry that returns 400-008 was not created locally, and its delete needs that entry's `externalSourceGUID` and `externalSourceName`. If 400-008 appears on an entry created through My Profile, that is a bug and Egeria wants: (1) the full error message (it names the type, GUID, provenance and metadata collection of the refused instance); (2) how the entry was created (which request, and which external source if any). Also new: purge applies the same provenance check. **pyegeria:** the `remove_note` clean-up below stays (route + docstring). Re-test on `8bec72e4` against a platform with the fixes; if 400-008 recurs, capture the full message for Egeria, since that entry was created locally through `journal-my-activity`.
+
+**Layer:** Egeria Server (pyegeria clean-up) · **Status:** closed 2026-10-30 · **Found:** 2026-10-13, reported by the egeria-workspaces-fs Resource Browser session from a live private-journal test.
+
+**What:** as erinoverview, `_async_remove_note` (`pyegeria/core/_server_client.py`)
+was called on a JournalEntry created by `MyProfile.journal_my_activity`. It
+failed with `OMAG-REPOSITORY-HANDLER-400-008` (`LOCAL_CANNOT_CHANGE_EXTERNAL`):
+`deleteMetadataElementInStore` cannot modify Erin's UserIdentity (`ff983b64`),
+which has Content Pack provenance ("Coco Pharmaceuticals Combination"). The
+peer verified that nothing was removed. The entry keeps its `actionSource` and
+`presentInNoteLogs` relationships, and Erin's Person still has 1 identity,
+1 contact detail, 8 roles and 15 scopes. Test entry `fef83ed5` is still on
+Erin's profile, waiting for the owner's decision.
+
+**The route is right:** in 6.2, notes are Actions. The type chain is
+JournalEntry → Notification → Action → Process → Asset. Egeria main
+(`af400039c2`) has no note, notification or action delete endpoint.
+`AssetHandler.createNoteLogEntry` has no matching remove, and My Profile has
+`journal-my-activity` with no matching remove. The only delete for an Action is
+the generic `/assets/{assetGUID}/delete` (`AssetMakerResource`), which is what
+`remove_note`'s `feedback-manager/assets/{guid}/delete` reaches, because
+generic view services answer under any URL marker. Feedback Manager can only
+remove a whole note log (`note-logs/{noteLogGUID}/remove`).
+
+**Why it fails (likely, not verified):** `AssetHandler.createAction` anchors the
+entry to its action source, linked by `ActionRequester`. For a journal entry
+that is the caller's profile. Deleting an anchored element updates its anchor,
+and Erin's identity is owned by the content pack, so the local delete is
+refused. If so, no journal entry for a content-pack user can be deleted. That
+is for the Egeria team.
+
+**Anchor read (peer, read-only):** JournalEntry `fef83ed5` has anchorGUID
+`10dc7da9`, Erin's Person profile. Its `actionSource` is ActionRequester →
+Person `10dc7da9`, and `presentInNoteLogs` is AttachedNoteLogEntry → NoteLog
+`f780511a` (MyJournal). No relationship from the entry reaches UserIdentity
+`ff983b64`, which the error names. That identity is anchored to the same
+Person. So the refusal comes from the delete touching the anchor's graph, most
+likely the LatestChange update on the anchor, or a provenance check across
+elements that share the anchor, not from a direct link.
+
+**Delete-path trace (2026-10-13, Egeria source, read-only):** the asset delete
+(`AssetMakerResource.deleteAsset` → `AssetHandler.deleteAsset`) and the Metadata
+Expert delete (`MetadataExpertResource` → `MetadataExpertRESTServices`) both call
+`OpenMetadataClient.deleteMetadataElementInStore`, then the same
+`MetadataElementHandler` → `OpenMetadataAPIGenericHandler.deleteBeanInRepository`
+code. Neither does any extra checking, so switching routes cannot avoid 400-008.
+The error is thrown only by `RepositoryErrorHandler.validateProvenance`, when
+the delete removes an entity or relationship whose provenance is not
+LOCAL_COHORT and the request carries no `externalSourceGUID`. That happens in
+`removeRelationship` for each relationship on the note and in `removeEntity`
+for the note itself. No anchor (LatestChange) update was found on the delete
+path, which corrects "Why it fails" above. But the error names UserIdentity
+`ff983b64`, which is not linked to the note, so the exact instance is still
+unexplained. Untried options are to pass the content pack's metadata-collection
+id as `externalSourceGUID`, or to use `deleteMethod: ARCHIVE`, which goes
+through a different handler.
+
+**Note-privacy findings (egeria-workspaces-fs session, 2026-10-13, with owner
+approval):** a second test JournalEntry, `8bec72e4-6da6-40a4-943e-d81e2173ec9b`,
+was created on Erin's profile (`10dc7da9`) and cannot be deleted either until a
+working delete exists.
+- `POST my-profile/journal-my-activity` ignores `initialClassifications` and
+  stamps only ZoneMembership `['erinoverview']`.
+- `POST classification-explorer/elements/{guid}/zone-membership` with
+  `['resource-explorer-private','erinoverview']` makes the entry private.
+  erinoverview can read it. peterprofile and garygeeke get 403
+  `OPEN-METADATA-SECURITY-403-020` by GUID, and 0 hits from
+  `feedback-manager/assets/by-search-string`.
+- The journal's NoteLog (`f780511a`) stays at `['erinoverview']`, so other
+  users can see that the log exists but not the hidden entries.
+- The owner chose a temporary workaround for the Resource Locator: call
+  `add_zone_membership(['resource-explorer-private', user])` straight after
+  `journal-my-activity`. Review it once Egeria's journal fix lands.
+
+**pyegeria clean-up:** make the `remove_note` route explicit and describe it as
+an Action delete in the docstring. The owner chose the Metadata Expert delete
+(`metadata-expert/metadata-elements/{guid}/delete`) for now. Per the trace
+above, this is a clarity change, not a fix for 400-008.
+
+**Re-test after Egeria's delete fixes are published:** the owner said
+(2026-10-13) that Egeria is working on delete issues now. Once that work is
+published, re-test `remove_note` on `8bec72e4` (plain delete, then `ARCHIVE` if
+needed). Tell the egeria-workspaces-fs session before deleting anything on
+Erin's profile. `fef83ed5` stays.
 
 ---
 
@@ -3106,6 +2715,161 @@ new test,
 `test_link_product_dependency_sends_isc_qualified_name` in
 `tests/micro-tests/test_collection_link_multilink_guid.py`. Full
 `tests/micro-tests/` suite re-verified green.
+
+---
+
+### ISSUE-108: newly created relationships stay invisible to related-element queries for up to ~20 minutes after creation
+
+**CLOSED 2026-10-30: not reproduced at 200 links.** The timed run Egeria asked for, run once in an agreed quiet window: 1 DataStructure `11262635` and 200 DataFields anchored to it, then 200 separate `link_member_data_field` calls with no `effectiveFrom` or `effectiveTime`, all done in 18 s. A paged `get_related_metadata_elements(structure, "MemberDataField")` returned all 200 at t+0 and at t+1 min. The server clock (`date -u` in the platform container) matched the client to the second. Sample relationship `1a6664cb`: createTime 04:30:58Z, `relationshipProperties` null, so no `effectiveFrom`. Checklist answers: no link was ever missing, so there is nothing to fetch by GUID; the loader sets no `effectiveFrom`/`effectiveTime`; the delay does not appear at 200 links. The original report was a 1,027-link Dr.Egeria load; reopen with timings if a load of that size shows it again. Clean-up: one cascaded delete of the structure; all 201 GUIDs unknown afterwards, `b2rt108` search empty. Script: `win_108.py`.
+
+**Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: needs information from us.** Egeria cannot reproduce it, and the new FVT does not show it. Their best lead is still timing: a related-element query hides a relationship whose `effectiveFrom` is later than the server's current time. For one link still missing about 12 minutes after a bulk load, they ask for:
+- [ ] The relationship's GUID, `effectiveFrom` and `createTime`, and the server clock at that moment.
+- [ ] Whether the link is returned when fetched directly by its GUID while it is missing from the related-element query.
+- [ ] Whether the loader (Dr.Egeria or pyegeria) sets `effectiveFrom` or `effectiveTime` on that run.
+- [ ] A timed run with `MemberDataField` links at 200 or more, polling every minute, to show whether the delay grows with load size or stays fixed.
+
+**pyegeria:** Dr.Egeria's body builders send `effectiveFrom` only when the author supplies `Effective From` (`common_md_utils.py:342` and siblings), so a default load sets none; still confirm `effectiveTime` is not stamped from the client clock on link requests (a client clock ahead of the server would explain the delay). The timed run needs Egeria writes, so it needs the owner's go-ahead.
+
+**Layer:** Egeria Server · **Status:** closed 2026-10-30 · **Found:** 2026-09-20, reported by
+the user from a Dr.Egeria bulk load session (1,027 expected field-link
+relationships).
+
+**What:** a catalog walk run immediately after a load found only 876 of 1,027
+expected field links. A second walk 12 minutes later still showed 82
+structures short. A third walk, 20 minutes after the load, showed every link
+present. No errors were raised at any point in the load itself — the
+relationships were created successfully, they simply did not show up in
+related-element queries for a long window afterward, then all became visible
+at once with no further action taken.
+
+**Not yet root-caused.** This looks like the same family of symptom as the
+2026-08-15 Postgres-checkpoint/background-connector-load entry above (server
+falling behind under load, catching up later) rather than a paging defect
+like ISSUE-54 (which would not self-heal purely by waiting — ISSUE-54's
+bug is about tie-ordering across separately-executed pages, not about data
+not existing yet). But this has not been directly correlated with connector
+log activity or checkpoint timing the way that entry was — this is a fresh
+report, not yet independently reproduced or diagnosed by a pyegeria session.
+
+**Impact:** any workflow that verifies a bulk write immediately after
+issuing it (a post-load catalog walk, an integration test, an automated
+Dr.Egeria "did it work" check) can get a false-negative "missing" result
+that resolves itself given enough time — worth knowing before treating an
+immediate post-write verification gap as evidence of a real data-loss bug.
+
+**Candidate next step (not yet done):** reproduce with a smaller, timed
+sample (e.g. create N relationships, poll related-element queries at 1-minute
+intervals, log when each becomes visible) to get a real latency
+distribution instead of the three anecdotal checkpoints here, and check
+whether it correlates with the same background-connector/checkpoint load
+already documented above. Worth raising with the Egeria team directly, per
+the original report.
+
+**Update 2026-09-20 (peer check, no upstream issue filed yet):** checked
+`odpi/egeria`'s issue tracker directly — nothing filed for this symptom, so
+no response from the Egeria team via GitHub. Asked three peer sessions
+working against the same dev Egeria server:
+- **egeria-workspaces-fs-4a:** hasn't seen this specific symptom, no word
+  from the Egeria team either. Raised a speculative, explicitly-unconfirmed
+  lead worth checking: a chronic, still-open issue on `egeria-shared-kafka`
+  where the `GroupCoordinator` repeatedly times out writing to
+  `__consumer_offsets` (5000ms) and triggers a consumer-group rebalance
+  roughly every 90s (confirmed via broker logs 2026-09-03; root cause still
+  open, CPU/GC/Postgres-restarts/virtiofs I/O already ruled out; historically
+  "Information" severity, self-heals within seconds, not chased further
+  since it wasn't visibly causing downstream harm). If `qs-view-server`'s
+  related-element queries are backed by Kafka-driven indexing/event
+  propagation rather than a direct repository read, a chronic rebalance
+  storm could plausibly manifest as exactly this "relationship exists but
+  isn't visible to queries yet" lag. **Explicitly not a confirmed
+  correlation** — the timescales don't obviously line up (a recurring ~90s
+  self-healing blip vs. a one-shot ~20-minute resolution) — and the peer
+  offered to check Kafka broker logs around the original bulk-load window
+  for the same rebalance pattern if useful.
+- **Resource Explorer experimental UI:** no direct evidence either way —
+  today's two live writes against the same server (a Governance Action
+  Process Step upsert, and a native-survey `SurveyReport` lookup) both
+  checked either *immediately* after the write or only *after* polling to a
+  terminal status, never in the 1-20 minute gap this entry describes, so
+  neither confirms nor rules it out. Flagged that a background agent on
+  their side doing a related connection-refresh fix will trigger fresh
+  engine actions/relationships shortly and will report back if it surfaces
+  the same lag.
+- **Egeria-trellis backlog review:** also nothing from the Egeria team (no
+  channel to them; checked RE docs/Backlog/design notes for this exact
+  shape first — a checked "no", not a guess). Offered a different, measured
+  precedent on this same platform as a *pattern* to distinguish causes, not
+  a diagnosis: `packages/resource-explorer/docs/investigation-classification-and-zoning-design.md`
+  (~line 830) documents a privately-zoned element still readable by a
+  non-owner *six minutes* after the control was written (denial began at
+  seven), caused by the security connector's `refreshTimeInterval` (10 min)
+  reload — "read it back immediately, so it must be fine" was exactly the
+  misleading evidence there too. Their key diagnostic point: a
+  **fixed-wall-clock cause** (everything becomes visible at once, at a time
+  unrelated to load size — test with 50 links instead of 1,027 and see if
+  the delay is still ~20 min) and a **volume-proportional cause** (async
+  indexing/event-driven materialisation catching up, arriving in a stream)
+  look identical from a single observation but have different fixes; the
+  876→945(implied)→1,027 partial-recovery-at-12-minutes data point *mildly*
+  favours volume-proportional, but "two points don't make a curve." Also
+  worth checking directly: fetch one of the missing links by its own GUID
+  during the window — if that resolves but the relationship is still absent
+  from the related-element query, the write landed fine and only the
+  traversal/index path lags, narrowing which service is actually behind. If
+  this gets filed upstream, the volume-vs-fixed measurement is what turns
+  it into a real bug report instead of getting bounced as "eventual
+  consistency, working as intended."
+
+Two independent, unconfirmed leads now on record (Kafka rebalance storms;
+a refresh-interval-style cache) alongside a concrete diagnostic method
+(fixed-wall-clock vs. volume-proportional, plus the direct-GUID-fetch
+isolation check) for telling them apart before assuming either. Next real
+step is still reproducing with a smaller, timed, instrumented load using
+that method — not yet done.
+
+**Reproduction attempt, 2026-09-20 (small end of the curve, not reproduced):**
+after clearing with all 5 live peer sessions first (per `coordinate-shared-writes`),
+ran a timed, instrumented small-scale reproduction against `qs-view-server`:
+20 throwaway `Collection` elements created and each linked to a parent via
+`CollectionMembership` (not the original `MemberDataField`/"field link" type
+— a different relationship type, noted as a limitation below), polling
+`get_collection_members` every 30s for up to 20 minutes, with a direct-GUID
+isolation check ready for anything still missing at the deadline.
+
+**Result: all 20 relationships were visible on the very first poll, ~1.1s
+after the last one was created — no lag at all.** Cleanup (delete all 21
+fixture elements) verified two independent ways: a direct-GUID fetch on
+each (`404`/`OMAG-REPOSITORY-HANDLER-404-007`, confirmed real soft-delete,
+not an ISSUE-63-style silent no-op) and a broad `find_collections` search
+for the `test-fixture-issue108` prefix (0 results). The script itself was
+run from an ephemeral per-session scratch directory, not committed anywhere
+— reproduce via the same approach (create N Collections linked to a parent
+via `_async_add_to_collection`, poll `_async_get_collection_members`) if
+needed later; the approach, not the script file, is what's worth keeping.
+
+**Per Egeria-trellis backlog review's own framework, this is one point on
+the curve, not a refutation.** It's consistent with either "no bug under
+current load" or "the lag is genuinely volume-proportional and 20 elements
+is nowhere near the ~1,027-link scale that surfaced it originally" — the
+one data point this run *can't* distinguish those two. Also a real
+methodology gap versus the original report: this used `CollectionMembership`
+on plain `Collection` elements, not the `MemberDataField` "field link"
+relationship the original 1,027-link load actually exercised (ISSUE-102 is
+in the same `MemberDataField` neighborhood, worth checking together). Server
+load conditions also weren't recorded this run (no `ListAgents`/`:8810`
+snapshot taken alongside the timings, despite the earlier plan to do so —
+an execution gap, not a design one).
+
+**Candidate next step, still open:** a same-relationship-type
+(`MemberDataField`), same-order-of-magnitude (~200+) run, following the
+same peer-clearance and independent-verification discipline, is what would
+actually test the volume-proportional hypothesis — this run didn't attempt
+that scale on its own initiative, since committing to it wasn't part of
+what peers were asked to clear.
+
+**Egeria team response, relayed 2026-10-05 (source `oak2026` fb3d6fce53; **fixes are in two unmerged PRs, so no build contains them, and nothing was tested against a live platform**):** not validated; no cache found. Best lead: a client clock ahead of the server's, with `effectiveFrom` set from it (related-element queries silently hide a relationship whose `effectiveFrom` is later than the server's "now"). They need, for one link still missing at ~12 minutes: its `effectiveFrom` and `createTime`, the server clock then, and whether the loader sets `effectiveFrom`. **Our facts:** pyegeria sets no `effectiveFrom`/`effectiveTo`/`effectiveTime` by default (model defaults are `None`; no clock call is tied to any `effective*` field; Dr.Egeria forwards an "Effective From" only if typed). Host and container clocks agree within 1 s on 2026-10-05; the 2026-09-20 load's values are unavailable.
+
+**Update 2026-10-10:** the `oak2026` source (`fb3d6fce53`) the team examined is now in Egeria `main` (merged 2026-10-06, odpi/egeria#9363). No fix was made for this issue; the team's questions above still stand.
 
 ---
 
@@ -5176,6 +4940,251 @@ alongside the existing `find_report_specs` tool the MCP server already
 wires at startup via `load_egeria_report_specs`) and/or as a
 `hey_egeria cat show` subcommand. Low risk — additive, no changes needed
 to the functions themselves.
+
+---
+
+### ISSUE-79: native survey against a template-created `FileFolder` asset fails server-side — `assetConnector` is null in `BasicFolderConnector.getFile()`
+
+**CLOSED 2026-10-30: the native folder survey completes** on the current quickstart with pyegeria 6.2.15, run once in an agreed quiet window. Answers to the Egeria checklist: the create went to `automated-curation/catalog-templates/new-element` with template `fbdd8efd-1b69-474c-bb6d-0a304b394146`, placeholders `directoryPathName`/`directoryAddress` `/tmp/b2rt79`, `directoryName` `b2rt79`, `fileSystemName` `localhost`, `allowRetrieve: true`, and no `deepCopy`. The returned FileFolder `fd06d2a0` was new (no `b2rt79` element existed before the call) and came with a ResourceConnection `624ccfd9` and an Endpoint `d7b4b48b`, both anchored to it. `initiate_file_folder_survey(folder, survey_name="FileSurvey::survey-folder")` started EngineAction `8ae99bcb`, which was COMPLETED about 3 s later (`OMES-SURVEY-ACTION-0019`) with SurveyReport `d03d7b0c`, also anchored to the folder. This fits Egeria's explanation: the original failure was a folder with no connection, from the old `deepCopy:false` default or returned by `allowRetrieve`. Clean-up: one cascaded delete of the folder removed the connection, endpoint and survey report (all unknown-GUID afterwards; `b2rt79` search empty); the EngineAction is kept as history. Still not done, optional: an `allow_retrieve` parameter on `create_folder_element_from_template`, or a log line when the returned GUID already existed. Script: `win_79.py`.
+
+**Status 2026-10-29: moved to the Egeria Server section; Egeria needs information from us (checklist below).**
+
+**Egeria team, 2026-10-18 (Mandy Chessell, note saved at `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`):** **Status now: needs information from us.** Egeria cannot reproduce it. The error is now a clear "no asset connector" message, not a NullPointerException. Cause: the surveyed FileFolder had no ResourceConnection; the likely route is that the template create returned an existing FileFolder with the same qualified name (template create allows an existing element to be returned). They ask for:
+- [ ] The request used to create the FileFolder: its template GUID and placeholder values, and whether `deepCopy` or `allowRetrieve` was set.
+- [ ] The GUID of the surveyed asset, and whether that GUID existed before the create call.
+- [ ] Whether that asset has a ResourceConnection, and which process first catalogued it (for example a files integration connector).
+
+**pyegeria:** this fits the 2026-10-06 live check below (with `deepCopy` no longer sent, the new folder has a ResourceConnection). `create_folder_element_from_template` hardcodes `"allowRetrieve": True` (`pyegeria/omvs/automated_curation.py:1081`), so a create whose qualified name already exists returns the old, possibly connection-less folder, which matches Egeria's theory. Proposed (not done): let callers pass `allow_retrieve`, or log when the returned GUID was pre-existing. The answers above can come from the 2026-10-06 `live_79.py` run's request plus a read-only lookup of the original surveyed GUID.
+
+**Live check 2026-10-06 (about 02:00Z, current pyegeria 6.1.29 code, rebuilt platform): the `deepCopy:false` default WAS the cause of the missing connection.** `create_folder_element_from_template` now sends a request with no `deepCopy` key (keys sent: allowRetrieve, class, forDuplicateProcessing, forLineage, isOwnAnchor, parentAtEnd1, placeholderPropertyValues, templateGUID, templateSubstitute), and the new folder read back through the classification explorer **has 1 connection** (`ResourceConnection` present). Folder deleted (cascade) and verified gone by GUID. **Not run: the survey itself** (a survey creates elements owned by the survey identity that an ordinary user may not be able to delete), so "the survey now completes" is still unproven; the original `assetConnector`-null failure was the symptom of no connection, which is now shown not to occur. Whether the Egeria-side repair (`e01426db86`) also matters is untested. Script: `live_79.py` stage A (stage B `--survey` is opt-in).
+
+**Update 2026-08-30, from the Egeria team (Mandy Chessell).** The entry
+stays in "Open Egeria Server issues" — the reported failure is not
+explained and not fixed. What has changed is that the cause recorded in
+this entry, and in Resource Explorer's `re-as-engine-host-plan.md`, is now
+known to be wrong, and the error it produces has been made legible.
+
+**Status: still open (Egeria Server)** — but the recorded cause is
+disproved, and this entry and `re-as-engine-host-plan.md` should both be
+corrected. Investigated 2026-08-30 from the Egeria side, including a new
+FVT suite built to run this exact scenario.
+
+**The premise is false.** This entry, and the design doc's hold, rest on
+"template-based asset creation never wires up a working Connection." That
+is not true, in either environment it was checked against:
+
+- **On the quickstart that produced the report.** Every element created
+  from a template that itself carries a `ResourceConnection` got one — 10
+  of 10. Every `FileFolder` in that repository has one, including all
+  three that were created from a template (`/deployments/content-packs`,
+  `/deployments/loading-bay/sample-data`, `/deployments/secrets`).
+- **In a clean environment built from the current archives.** A folder
+  catalogued through `FileGovernance::create-file-folder` came back with a
+  `ResourceConnection` attached.
+- **The `FilesContentPack` template itself is also well formed:**
+  `FileFolder` template `fbdd8efd-...` carries an `Anchors`-classified
+  `Connection` with both a `ConnectToEndpoint` and a
+  `ConnectionConnectorType`.
+
+**The folder survey works.** A new `files-fvt` suite runs the reported
+scenario end to end — catalogue a folder from the `FileFolder` template,
+then survey it natively — and it passes:
+```
+OMES-SURVEY-ACTION-0019 The survey action service folder-survey-service has completed the
+analysis of asset 7050dc50-... with request type survey-folder in 1927 milliseconds; the
+results are stored in survey report 7e7892e2-...
+```
+The report carried six annotations. The test asserts the survey
+*completed*, not merely that it ran: a survey that dies on a null
+connector still produces an engine action, and the waiter throws on any
+terminal status other than `COMPLETED`.
+
+**A second hypothesis was also eliminated.** While investigating, a real
+defect was found in the PostgreSQL repository: a `TypeDefPatch` that
+reparents a type does not update the denormalised supertype chain stored
+on existing rows, so instances written before the patch become invisible
+to searches for the new supertype. That would have hidden connections
+exactly as reported, since `AssetConnection` was reparented under
+`ResourceConnection` on 2026-08-27. It is fixed — but it was never the
+cause here: the quickstart repository stores 202 rows as
+`:ResourceConnection:LabeledRelationship:` and none as
+`:AssetConnection:`, because it was reloaded after the type change.
+
+**What has been fixed, and what it does and does not buy.** The NPE
+itself is now a clean error. `getConnectorForAsset()` returns `null` by
+contract when an asset has no connection; `FolderSurveyService` cast that
+null and dereferenced it, and the framework's own
+`performCheckAssetAnalysisStep()` had the same hole on its error path.
+Both now report `OPEN-SURVEY-400-008` / `OPEN-SURVEY-0009`
+(`NO_ASSET_CONNECTOR`), naming the asset.
+
+This does not make such a survey succeed — an asset with no connection
+describes a resource nothing can open. It makes the failure say *which*
+asset, which is what the original report was missing: the NPE named
+`BasicFolderConnector`, a class the caller had never heard of, and pointed
+away from the asset.
+
+**Why that matters for how this entry reads.** Four further defects were
+found in the same connectors, all on paths nothing else exercises: both
+file survey services failed on every invocation (annotations created
+without a qualified name, in three places), the CSV survey dereferenced a
+null root schema type, wrote a relationship property to an entity, and
+produced colliding annotation qualified names. The file survey path had,
+on this evidence, never run to completion. Someone hitting an NPE in this
+family had every reason to suspect the asset — the errors never named
+anything else. That is context for the original diagnosis, not a
+criticism of it.
+
+**The naming trap, which is directly actionable on the pyegeria side.**
+This entry already records that `initiate_file_folder_survey`'s default
+(`FileSurveys:survey-folder`) and the `.http` example
+(`AssetSurvey:survey-folder`) are both wrong. Confirmed and now
+understood: a governance action type is registered under
+`<governanceEngineName>::<requestType>` — two colons — so the real name is
+`FileSurvey::survey-folder`. `AssetSurvey` is not an engine that exists at
+all. The `.http` examples have been corrected upstream
+(`FileSurvey::survey-folder`, `ApacheKafkaSurvey::survey-kafka-server`,
+`PostgreSQLSurvey::survey-postgres-server`,
+`PostgreSQLSurvey::survey-postgres-database`) with a note stating the
+shape, because the error a wrong name produces —
+`OMAG-GENERIC-HANDLERS-400-013`, "the name is not recognized" — does not
+say what it wanted instead. `initiate_file_folder_survey`'s default still
+needs fixing in pyegeria.
+
+**What is left, and what would settle it.** The remaining candidate is
+the deployment rather than the cataloguing or the survey: which server
+and userId the engine host's connected-asset client resolves
+`SurveyAssetStore.getConnectorToAsset()` against. That cannot be tested
+from the Egeria side — it needs the engine host that produced the
+failure. Suggested, in order:
+
+1. Re-run the original repro against a build carrying the NPE fix. If the
+   asset genuinely has no connection the run now fails with
+   `OPEN-SURVEY-400-008` naming it, which turns the question from "why is
+   this connector null" into "why does this asset have no connection that
+   this userId can see". If instead the survey completes, the deployment
+   has moved on and this entry can be closed.
+2. Check the folder asset at the moment of failure for a
+   `ResourceConnection`, using the same userId the engine host runs as —
+   not an admin one. If the relationship is there but the survey cannot
+   see it, that is a visibility or server-routing problem, and the userId
+   is where to look next.
+3. Compare against `files-fvt`, which is a known-good baseline for this
+   exact scenario. Pointing the same two actions at a
+   differently-configured engine host isolates the variable.
+
+Also worth correcting: this entry's earlier note about leftover probe
+elements (`FileFolder::localhost:/tmp/re-e1-probe-*`,
+`FileFolder::localhost:/tmp/re-issue79-recheck-*`) is out of date — the
+quickstart repository has been reloaded since and holds none of them, so
+that evidence is gone.
+
+**Status:** closed 2026-10-30 (Egeria Server), reproduced live 2026-08-27, **re-checked
+2026-08-28 — still reproduces, identical failure.** Same class/method
+(`BasicFolderConnector.getFile()`, `assetConnector` null), same error IDs
+(`OMES-SURVEY-ACTION-0018`/`OPEN-SURVEY-500-001`), same
+`java.lang.NullPointerException`, against a freshly created `FileFolder`
+and a fresh survey run — not a one-off. Filed by content, not by number —
+see "why this entry exists" below.
+
+**Layer:** Egeria Server (survey action framework / `BasicFolderConnector`),
+not pyegeria. `create_folder_element_from_template` and the survey-initiate
+call both succeed and are correctly formed; the failure happens entirely
+inside the server's survey action service.
+
+**Why this entry exists.** Resource Explorer's `re-as-engine-host-plan.md`
+is ON HOLD citing this exact symptom ("connector is null" on a native
+survey against a template-created asset) under the name `PYEGERIA_ISSUES.md`
+**ISSUE-51** — but this file was renumbered on 2026-08-15, and today's
+ISSUE-51 is an unrelated, already-fixed `fetch_element()` shape problem.
+The blocker's own content had no surviving entry anywhere in this file.
+Investigated fresh rather than guessed at, per the plan's own citation
+being untrustworthy.
+
+**Two candidate bugs were in play, and they are not the same bug:**
+
+1. **Resource Explorer's superseded tracker, entry E1** (`packages/
+   resource-explorer/docs/egeria-pyegeria-issues.md`) describes a *different*
+   symptom: a 500 from the PostgreSQL repository connector on
+   `createMetadataElementFromTemplate` (`metadata_collection_guid` null
+   while saving a classification) — a failure to *create* the element at
+   all. **Re-tested live 2026-08-27 and does not reproduce**:
+   `create_folder_element_from_template(path_name=..., folder_name=...,
+   file_system="localhost")` against `qs-view-server` returned a real GUID
+   with no error. Whatever this was, it looks fixed.
+2. **The design doc's actual blocker** — a template-created asset surveyed
+   natively fails with a null connector — **does still reproduce**, and is
+   what this entry tracks.
+
+**Reproduction** (against `qs-view-server`, no pyegeria bug involved):
+```python
+from pyegeria import AutomatedCuration
+c = AutomatedCuration("qs-view-server", "https://localhost:9443", "erinoverview", "secret")
+c.create_egeria_bearer_token()
+
+folder_guid = c.create_folder_element_from_template(
+    path_name="/tmp/some-new-path", folder_name="probe-folder", file_system="localhost")
+
+# Note: initiate_file_folder_survey's own default survey_name
+# ("FileSurveys:survey-folder") and the .http ground truth's example
+# ("AssetSurvey:survey-folder") are BOTH wrong on this server -- neither
+# GovernanceActionType is registered (OMAG-GENERIC-HANDLERS-400-013). The
+# real registered qualifiedName, confirmed via
+# `EgeriaTech.get_elements("GovernanceActionType")`, is "FileSurvey::survey-folder".
+action_guid = c.initiate_file_folder_survey(folder_guid, survey_name="FileSurvey::survey-folder")
+```
+
+Poll the resulting `EngineAction` (`EgeriaTech.get_elements("EngineAction")`,
+match on `elementHeader.guid`) — it completes (fast, ~1s) with
+`activityStatus: "FAILED"` and `completionGuards: ["survey-failed"]`. Full
+`completionMessage`:
+```
+OMES-SURVEY-ACTION-0018 The survey action service folder-survey-service
+threw a org.odpi.openmetadata.frameworks.connectors.ffdc.ConnectorCheckedException
+exception during the generation of survey report ... for asset
+<folder-guid> during request type survey-folder in survey action engine
+FileSurvey (guid=4168abb9-6c60-46fb-b9c0-b44180d19500). The error message
+was OPEN-SURVEY-500-001 Unexpected exception in survey action service
+folder-survey-service of type java.lang.NullPointerException detected by
+method start. The error message was Cannot invoke
+"org.odpi.openmetadata.adapters.connectors.datastore.basicfile.BasicFolderConnector.getFile()"
+because "assetConnector" is null
+```
+
+**Analysis.** `create_folder_element_from_template` creates the `FileFolder`
+element and it looks entirely normal (confirmed via `get_elements`: proper
+`pathName`, `resourceName`, `Anchors` classification) — but no working
+`Connection`/`Connector` got wired to it, so when `folder-survey-service`
+tries to open the asset via `BasicFolderConnector.getFile()`, the
+connector reference is null and the survey action service crashes with an
+NPE rather than a clean error. This matches the design doc's
+characterization exactly ("template-based asset creation never wires up a
+working Connection, so any native survey against a template-created asset
+fails server-side with a NullPointerException") — just with the precise
+class/method now on record, which the design doc didn't have.
+
+**Impact:** blocks Resource Explorer's engine-host participation design
+(`re-as-engine-host-plan.md`, cases 1/2/4 — anything needing a native
+survey to actually *complete*, not just be triggered; case 3, RE-local
+surveying, is unaffected). The hold should be re-evaluated against this
+entry specifically, not against the old ISSUE-51 number. As of 2026-08-28
+this is confirmed the *only* thing still blocking that work on the
+pyegeria side — ISSUE-78's engine-host method trio shipped in 6.1.5 and RE
+has upgraded and verified it end to end, and the two other gaps
+identified alongside it (no REST way to create a `GovernanceEngine`/
+`GovernanceService` element; no per-engine "claimable work" listing,
+`get_active_engine_actions()` filtered client-side is the only option) are
+both genuine server-side gaps, not pyegeria ones. This entry is the real
+holdup.
+
+**Leftover from this investigation:** probe `FileFolder` elements
+(`qualifiedName: "FileFolder::localhost:/tmp/re-e1-probe-*"` from
+2026-08-27, `"FileFolder::localhost:/tmp/re-issue79-recheck-*"` from the
+2026-08-28 re-check) on `qs-metadata-store`, plus their failed
+`SurveyReport`/`EngineAction` pairs, left in place as reproduction
+evidence for both dates — not yet deleted.
+
+**Update 2026-10-05 -- probably a pyegeria bug, fixed on our side:** the Egeria team asked us to check that pyegeria did not send `deepCopy:false`. It did: `TemplateRequestBody.deep_copy` defaulted to `False` from 2026-01-09 until fixed on 2026-09-29 (#399, first released in v6.1.23), the model is serialised with `exclude_none` (which keeps `False`), and `create_folder_element_from_template` builds its body without `deepCopy`. Egeria then copies only the top-level element and none of the template's anchored attachments, so no `ResourceConnection`, which is exactly a null `assetConnector`. The Egeria team also points to `e01426db86` (2026-08-30, PostgreSQL supertype-chain repair after the 08-27 `ResourceConnection` re-parenting). **To confirm:** create a folder from the template with current pyegeria, check it has a `ResourceConnection`, then survey it.
 
 ---
 
