@@ -572,7 +572,7 @@ process_md_file(
 )
 ```
 
-This is the simplest entry point. It creates the `EgeriaTech` client internally from the connection parameters you supply, then runs the async v2 engine synchronously via `asyncio.run()`.
+This is the simplest entry point. It creates the `EgeriaTech` client internally from the connection parameters you supply, then runs the async v2 engine and waits for it to finish. It works in a script and in a Jupyter cell.
 
 **Example — validate a file (reading connection details from config):**
 
@@ -701,7 +701,7 @@ await process_md_file_v2(
 )
 ```
 
-> **Note**: Jupyter kernels run their own event loop, so `asyncio.run()` will raise a `RuntimeError` inside a notebook cell. Use `await` directly (as shown above) or install `nest_asyncio` and call `nest_asyncio.apply()` once at the top of your notebook if you need to keep `asyncio.run()` calls.
+> **Note**: Jupyter kernels run their own event loop, so `asyncio.run()` raises a `RuntimeError` inside a notebook cell. Use `await` directly (as shown above), or call the sync `process_md_file(...)`, which works in a cell. Don't add `nest_asyncio` for this: it breaks asyncio on Python 3.14, and pyegeria no longer needs it. See [Sync and async](user_programming.md#sync-and-async) in the programming guide.
 
 ---
 

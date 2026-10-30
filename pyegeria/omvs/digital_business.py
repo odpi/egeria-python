@@ -25,6 +25,7 @@ from pyegeria.models import (
 )
 
 from pyegeria.core.utils import dynamic_catch, body_slimmer
+from pyegeria.core.async_runner import run_sync
 
 
 class DigitalBusiness(CollectionManager):
@@ -184,8 +185,7 @@ class DigitalBusiness(CollectionManager):
             If there are issues in communications, message format, or Egeria errors.
         """
         body = self._prepare_body(body)
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_business_capability(body))
+        return run_sync(self._async_create_business_capability(body))
 
     @dynamic_catch
     async def _async_update_business_capability(
@@ -243,8 +243,7 @@ class DigitalBusiness(CollectionManager):
         """
         business_capability_guid = str(business_capability_guid)
         body = self._prepare_body(body)
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_update_business_capability(business_capability_guid, body)
         )
 
@@ -311,8 +310,7 @@ class DigitalBusiness(CollectionManager):
         business_capability_guid = str(business_capability_guid)
         body = self._prepare_body(body)
         cascade = bool(cascade)
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_delete_business_capability(business_capability_guid, body, cascade)
         )
 
@@ -400,8 +398,7 @@ class DigitalBusiness(CollectionManager):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_business_capability_by_guid(
                 guid=guid,
                 graph_query_depth=graph_query_depth,
@@ -551,8 +548,7 @@ class DigitalBusiness(CollectionManager):
         if name is None and body is None:
             name = "*"
 
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_business_capabilities_by_name(
                 name=name,
                 metadata_element_type_name=metadata_element_type_name,
@@ -730,8 +726,7 @@ class DigitalBusiness(CollectionManager):
         -------
         list | str
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_business_capabilities(
                 search_string=search_string,
                 starts_with=starts_with,
@@ -821,8 +816,7 @@ class DigitalBusiness(CollectionManager):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_link_business_capability_dependency(
                 business_capability_guid, supporting_capability_guid, body
             )
@@ -893,8 +887,7 @@ class DigitalBusiness(CollectionManager):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_business_capability_dependency(business_capability_guid, supporting_capability_guid,
                                                               body, cascade)
         )
@@ -962,8 +955,7 @@ class DigitalBusiness(CollectionManager):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_link_digital_support(business_capability_guid, element_guid, body)
         )
 
@@ -1036,8 +1028,7 @@ class DigitalBusiness(CollectionManager):
         Args:
             cascade ():
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_digital_support(business_capability_guid, element_guid, body, cascade)
         )
 
@@ -1095,8 +1086,7 @@ class DigitalBusiness(CollectionManager):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_business_significant(element_guid, body))
+        run_sync(self._async_set_business_significant(element_guid, body))
 
     @dynamic_catch
     async def _async_clear_business_significance(
@@ -1148,8 +1138,7 @@ class DigitalBusiness(CollectionManager):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_business_significance(element_guid, body))
+        run_sync(self._async_clear_business_significance(element_guid, body))
     #
     # Additional classification maintenance - added to close the gap found
     # by scripts/omvs_audit.py against the digital-business .http ground
@@ -1169,8 +1158,7 @@ class DigitalBusiness(CollectionManager):
     def set_agreement_as_data_sharing_agreement(self, agreement_guid: str,
                                                 body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify an agreement as a data sharing agreement."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_agreement_as_data_sharing_agreement(agreement_guid, body))
+        run_sync(self._async_set_agreement_as_data_sharing_agreement(agreement_guid, body))
 
     @dynamic_catch
     async def _async_clear_agreement_as_data_sharing_agreement(self, agreement_guid: str,
@@ -1183,5 +1171,4 @@ class DigitalBusiness(CollectionManager):
     def clear_agreement_as_data_sharing_agreement(self, agreement_guid: str,
                                                    body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the DataSharingAgreement classification from an agreement."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_agreement_as_data_sharing_agreement(agreement_guid, body))
+        run_sync(self._async_clear_agreement_as_data_sharing_agreement(agreement_guid, body))

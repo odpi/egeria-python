@@ -20,6 +20,7 @@ from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequ
 from pyegeria.view.output_formatter import populate_common_columns
 from pyegeria.core.utils import dynamic_catch
 from loguru import logger
+from pyegeria.core.async_runner import run_sync
 
 
 class ReferenceDataManager(ServerClient):
@@ -274,8 +275,7 @@ class ReferenceDataManager(ServerClient):
         ValidationError
 
         """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
+        resp = run_sync(
             self._async_find_valid_value_definitions(
                 search_string=search_string,
                 graph_query_depth=graph_query_depth,
@@ -334,8 +334,7 @@ class ReferenceDataManager(ServerClient):
             report_spec: str | dict = None,
             **kwargs) -> list | str:
 
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
+        resp = run_sync(
             self._async_get_valid_value_definitions_by_name(
                 name=name,
                 classification_names=classification_names,
@@ -462,8 +461,7 @@ class ReferenceDataManager(ServerClient):
               "forDuplicateProcessing": false
             }
             """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
+        resp = run_sync(
             self._async_get_valid_value_definition_by_guid(guid=guid, element_type=element_type, body=body,
                                                            graph_query_depth=graph_query_depth,
                                                            output_format=output_format, report_spec=report_spec,
@@ -628,8 +626,7 @@ class ReferenceDataManager(ServerClient):
           "forDuplicateProcessing" : false
         }
         """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
+        resp = run_sync(
             self._async_create_valid_value_definition(body)
         )
         return resp
@@ -776,8 +773,7 @@ class ReferenceDataManager(ServerClient):
 
            """
 
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_create_valid_value_definition_from_template(body))
+        resp = run_sync(self._async_create_valid_value_definition_from_template(body))
         return resp
 
     #
@@ -914,8 +910,7 @@ class ReferenceDataManager(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_update_valid_value_definition(vv_def_guid, body))
 
     @dynamic_catch
@@ -1010,8 +1005,7 @@ class ReferenceDataManager(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_valid_value_member(vv_set_guid, vv_member_guid, body))
+        run_sync(self._async_link_valid_value_member(vv_set_guid, vv_member_guid, body))
 
     @dynamic_catch
     async def _async_detach_valid_value_member(self, vv_set_guid: str, vv_member_guid: str,
@@ -1100,8 +1094,7 @@ class ReferenceDataManager(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_valid_value_member(vv_set_guid, vv_member_guid, body, cascade_delete))
 
     @dynamic_catch
@@ -1192,8 +1185,7 @@ class ReferenceDataManager(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_valid_values_assignment(element_guid, vv_def_guid, body))
+        run_sync(self._async_link_valid_values_assignment(element_guid, vv_def_guid, body))
 
     @dynamic_catch
     async def _async_detach_valid_values_assignment(
@@ -1281,8 +1273,7 @@ class ReferenceDataManager(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_valid_values_assignment(element_guid, vv_def_guid, body, cascade_delete))
 
     @dynamic_catch
@@ -1381,8 +1372,7 @@ class ReferenceDataManager(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_reference_value_assignment(element_guid, vv_def_guid, body))
+        run_sync(self._async_link_reference_value_assignment(element_guid, vv_def_guid, body))
 
     @dynamic_catch
     async def _async_detach_reference_value_assignment(
@@ -1470,8 +1460,7 @@ class ReferenceDataManager(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_reference_value_assignment(element_guid, vv_def_guid, body, cascade_delete))
 
     @dynamic_catch
@@ -1577,8 +1566,7 @@ class ReferenceDataManager(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_link_valid_value_implementation(vv_def_guid, element_guid, body))
+        return run_sync(self._async_link_valid_value_implementation(vv_def_guid, element_guid, body))
 
     @dynamic_catch
     async def _async_detach_valid_value_implementation(
@@ -1666,8 +1654,7 @@ class ReferenceDataManager(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_valid_value_implementation(vv_def_guid, element_guid, body, cascade_delete))
 
     @dynamic_catch
@@ -1762,8 +1749,7 @@ class ReferenceDataManager(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_associated_valid_values(vv_def_one_guid, vv_def_two_guid, body))
+        run_sync(self._async_link_associated_valid_values(vv_def_one_guid, vv_def_two_guid, body))
 
     @dynamic_catch
     async def _async_detach_associated_valid_values(
@@ -1853,8 +1839,7 @@ class ReferenceDataManager(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_associated_valid_values(vv_def_one_guid, vv_def_two_guid, body, cascade_delete))
 
     @dynamic_catch
@@ -1941,8 +1926,7 @@ class ReferenceDataManager(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_consistent_valid_values(vv_def_one_guid, vv_def_two_guid, body))
+        run_sync(self._async_link_consistent_valid_values(vv_def_one_guid, vv_def_two_guid, body))
 
     @dynamic_catch
     async def _async_detach_consistent_valid_values(
@@ -2032,8 +2016,7 @@ class ReferenceDataManager(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_consistent_valid_values(vv_def_one_guid, vv_def_two_guid, body, cascade_delete))
 
     @dynamic_catch
@@ -2136,8 +2119,7 @@ class ReferenceDataManager(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_mapped_valid_values(vv_def_one_guid, vv_def_two_guid, body))
+        run_sync(self._async_link_mapped_valid_values(vv_def_one_guid, vv_def_two_guid, body))
 
     @dynamic_catch
     async def _async_detach_mapped_valid_values(
@@ -2227,8 +2209,7 @@ class ReferenceDataManager(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_mapped_valid_values(vv_def_one_guid, vv_def_two_guid, body, cascade_delete))
 
     @dynamic_catch
@@ -2313,8 +2294,7 @@ class ReferenceDataManager(ServerClient):
             }
 
             """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_valid_value_definition(vv_def_guid, cascade_delete, body))
+        run_sync(self._async_delete_valid_value_definition(vv_def_guid, cascade_delete, body))
 
 
 
@@ -2336,8 +2316,7 @@ class ReferenceDataManager(ServerClient):
     def update_valid_value_implementation(self, valid_values_implementation_relationship_guid: str,
                                           body: Optional[dict | UpdateRelationshipRequestBody] = None) -> None:
         """Update the properties of a ValidValuesImplementation relationship, identified by its own relationship GUID."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_valid_value_implementation(valid_values_implementation_relationship_guid, body))
+        run_sync(self._async_update_valid_value_implementation(valid_values_implementation_relationship_guid, body))
 
     @dynamic_catch
     async def _async_detach_valid_value_implementation_by_id(self, valid_values_implementation_relationship_guid: str,
@@ -2350,8 +2329,7 @@ class ReferenceDataManager(ServerClient):
     def detach_valid_value_implementation_by_id(self, valid_values_implementation_relationship_guid: str,
                                                  body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """Detach one specific ValidValuesImplementation relationship, identified by its own relationship GUID."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_valid_value_implementation_by_id(valid_values_implementation_relationship_guid, body))
+        run_sync(self._async_detach_valid_value_implementation_by_id(valid_values_implementation_relationship_guid, body))
 
 
 if __name__ == "__main__":

@@ -27,6 +27,17 @@ We use `uv` for dependency management. To set up your environment:
 ### Sync and Async
 Every new OMVS method should provide both an `async` version (prefixed with `_async_`) and a synchronous wrapper. This ensures compatibility with both high-performance applications and interactive Jupyter notebooks.
 
+The wrapper calls `run_sync` from `pyegeria.core.async_runner`:
+
+```python
+@dynamic_catch
+def find_widgets(self, search_string: str = "*", ...) -> list | str:
+    """Find widgets. See `_async_find_widgets`."""
+    return run_sync(self._async_find_widgets(search_string, ...))
+```
+
+Don't use `asyncio.run(...)` or `asyncio.get_event_loop().run_until_complete(...)`. Both fail when the caller already has a running event loop (Jupyter, Textual, FastAPI), and `tests/micro-tests/test_async_runner.py` fails if either appears in `pyegeria/` or `md_processing/`. See [Sync and async](docs/user_programming.md#sync-and-async) for how callers choose between the two forms.
+
 ### Docstrings
 We use the NumPy/SciPy docstring format. Ensure every public method has clear parameter descriptions and a "Notes" section with a sample JSON body where applicable.
 

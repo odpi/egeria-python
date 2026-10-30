@@ -12,6 +12,7 @@ from requests import Response
 from typing import Any, Optional
 from pyegeria.omvs.platform_services import Platform
 from pyegeria.core._validators import validate_name
+from pyegeria.core.async_runner import run_sync
 
 
 class ServerOps(Platform):
@@ -82,8 +83,7 @@ class ServerOps(Platform):
         Returns configuration if server is active; InvalidParameter exception thrown otherwise
 
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_active_configuration(server))
+        response = run_sync(self._async_get_active_configuration(server))
         return response
 
     #
@@ -136,8 +136,7 @@ class ServerOps(Platform):
         Response object.  Also throws exceptions if no viable server or endpoint errors
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_add_archive_file(archive_file, server, timeout)
         )
 
@@ -190,8 +189,7 @@ class ServerOps(Platform):
         Response object.  Also throws exceptions if no viable server or endpoint errors
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_add_archive(archive_connection, server)
         )
 
@@ -249,8 +247,7 @@ class ServerOps(Platform):
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_active_server_status(server))
+        response = run_sync(self._async_get_active_server_status(server))
         return response.json()
 
     async def _async_get_active_service_list_for_server(
@@ -292,8 +289,7 @@ class ServerOps(Platform):
         Response object. Also throws exceptions if no viable endpoint or errors
 
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_active_service_list_for_server(server)
         )
         return response
@@ -339,8 +335,7 @@ class ServerOps(Platform):
             The response object containing the governance engine summaries.
 
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_governance_engine_summaries(server)
         )
         return response
@@ -362,8 +357,7 @@ class ServerOps(Platform):
 
     def get_integration_daemon_status(self, server: str = None) -> dict | str:
         """Get the current status of the integration daemon. Async version."""
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_integration_daemon_status(server)
         )
         return response
@@ -391,8 +385,7 @@ class ServerOps(Platform):
         """Retrieve the configuration properties of the named integration connector running in the integration
         daemon"""
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_connector_config(connector_name, server)
         )
         return response
@@ -423,8 +416,7 @@ class ServerOps(Platform):
         self, connector_name: str, server: str = None
     ) -> str:
         """Restart the integration Connector specified by connector_name or all if not specified"""
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_restart_integration_connector(connector_name, server)
         )
         return response
@@ -455,8 +447,7 @@ class ServerOps(Platform):
         self, connector_name: str, server: Optional[str] = None, timeout: int = 60
     ) -> None:
         """Restart the integration Connector specified by connector_name"""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_refresh_integration_connectors(connector_name, server, timeout)
         )
 

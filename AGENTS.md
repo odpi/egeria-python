@@ -22,8 +22,10 @@
 - `pyegeria/core/_base_platform_client.py` → `_base_server_client.py` → `_server_client.py`: layered transport/auth/GUID-resolution stack used by all OMVS clients.
   - **httpx session** (`_base_platform_client.py`): `AsyncClient` is created with `keepalive_expiry=20 s`, `connect` timeout 10 s, and pool limits (`max_connections=10`, `max_keepalive_connections=5`). These settings are load-bearing for long-running sessions behind reverse proxies — do not remove them.
   - **401 auto-refresh**: `_async_make_request` checks for a 401/403 before calling `raise_for_status()` and, if `token_src == "Egeria"`, calls `_async_refresh_egeria_bearer_token()` and retries once (`_retrying=True` guards against loops). Externally-supplied tokens (via `set_bearer_token`) are not auto-refreshed.
-  - **`__exit__` is async-aware**: uses `loop.run_until_complete(self.session.aclose())` — `aclose()` is a coroutine and must be awaited. Never revert to a bare `self.session.aclose()` call.
-  - **Async context rule**: `create_egeria_bearer_token()` (sync) calls `run_until_complete` internally and raises `RuntimeError` if called from a running event loop. Always use `await client._async_create_egeria_bearer_token()` inside async routes or coroutines.
+  - **Sync wrappers use `run_sync`** (`pyegeria/core/async_runner.py`, ISSUE-168): with no loop running it uses a per-thread persistent loop; inside a running loop it runs the coroutine on the `pyegeria-sync-runner` background thread and blocks. So sync methods work in Jupyter and async apps without `nest_asyncio` (which pyegeria no longer applies; it breaks asyncio on Python 3.14). Never use `asyncio.run` or `get_event_loop().run_until_complete` in library code; `tests/micro-tests/test_async_runner.py` enforces this.
+  - **The httpx session is per thread and per loop**: the `session` property opens a new `AsyncClient` when the calling thread's running loop changes, unless a session was set explicitly (pinned).
+  - **`__exit__` is async-aware**: uses `run_sync(self.session.aclose())` — `aclose()` is a coroutine and must be awaited. Never revert to a bare `self.session.aclose()` call.
+  - **Async context rule**: inside coroutines and async routes, `await client._async_*` (including `_async_create_egeria_bearer_token()` and `_async_close_session()`). The sync forms work there but block the event loop until Egeria answers.
 - `pyegeria/core/config.py`: Pydantic-settings–based config; precedence = explicit args > OS env > `.env` > `config.json` > defaults.
 - `pyegeria/egeria_tech_client.py`: lazy facade (`__getattr__`) across OMVS subclients; token propagation happens via `set_bearer_token()`.
 - `pyegeria/egeria_client.py` (`Egeria`) / `pyegeria/egeria_cat_client.py` (`EgeriaCat`): additional role-based facades; `EgeriaCat` uses MI over `ProjectManager`, `GlossaryManager`, `AssetCatalog`, `MyProfile`.
@@ -72,7 +74,7 @@
 - See `High-signal rules` for async-wrapper, snake_case param, and lazy-loading requirements.
 
 ## High-signal rules (verbatim)
-- [HIGH SIGNAL] New OMVS operations should follow async-core + sync-wrapper pattern (`_async_*` + public sync method).
+- [HIGH SIGNAL] New OMVS operations should follow async-core + sync-wrapper pattern (`_async_*` + public sync method); the wrapper calls `run_sync(self._async_*(...))`.
 - [HIGH SIGNAL] Keep CLI/report params in snake_case (`page_size`, `start_from`); adapters handle wire camelCase.
 - [HIGH SIGNAL] Preserve lazy-loading behavior in facade clients; do not eagerly instantiate all subclients unless clearly justified.
 - [HIGH SIGNAL] For config-sensitive changes, respect precedence: explicit args > env vars > `.env` > JSON config > defaults.

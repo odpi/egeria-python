@@ -8,7 +8,6 @@
 
 """
 
-import asyncio
 import os
 import time
 from typing import Any, Callable, Optional, Tuple
@@ -95,12 +94,6 @@ class EgeriaTechClientManager:
         _register_manager(self)
 
     def get_client(self) -> Any:
-        # Set a standard loop policy to avoid deadlocks with nest_asyncio + run_coroutine_threadsafe
-        try:
-            asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy())
-        except Exception:
-            pass
-
         # Import pyegeria lazily to avoid import-time config validation during test collection
         try:
             from pyegeria import EgeriaTech

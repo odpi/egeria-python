@@ -30,6 +30,7 @@ from pyegeria.view.output_formatter import (
     overlay_additional_values,
 )
 from pyegeria.core.utils import dynamic_catch
+from pyegeria.core.async_runner import run_sync
 
 
 class ContextEventProperties(ReferenceableProperties):
@@ -216,8 +217,7 @@ class TimeKeeper(ServerClient):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_context_event(body))
+        return run_sync(self._async_create_context_event(body))
 
     @dynamic_catch
     async def _async_create_context_event_from_template(self, body: dict | TemplateRequestBody) -> str:
@@ -299,8 +299,7 @@ class TimeKeeper(ServerClient):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_context_event_from_template(body))
+        return run_sync(self._async_create_context_event_from_template(body))
 
     @dynamic_catch
     async def _async_update_context_event(
@@ -374,8 +373,7 @@ class TimeKeeper(ServerClient):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_context_event(context_event_guid, body))
+        run_sync(self._async_update_context_event(context_event_guid, body))
 
     @dynamic_catch
     async def _async_delete_context_event(
@@ -443,8 +441,7 @@ class TimeKeeper(ServerClient):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_context_event(context_event_guid, body))
+        run_sync(self._async_delete_context_event(context_event_guid, body))
 
     @dynamic_catch
     async def _async_link_dependent_context_events(
@@ -530,8 +527,7 @@ class TimeKeeper(ServerClient):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_link_dependent_context_events(
                 parent_context_event_guid, child_context_event_guid, body
             )
@@ -615,8 +611,7 @@ class TimeKeeper(ServerClient):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_dependent_context_events(
                 parent_context_event_guid, child_context_event_guid, body
             )
@@ -706,8 +701,7 @@ class TimeKeeper(ServerClient):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_link_related_context_events(context_event_one_guid, context_event_two_guid, body)
         )
 
@@ -789,8 +783,7 @@ class TimeKeeper(ServerClient):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_related_context_events(context_event_one_guid, context_event_two_guid, body)
         )
 
@@ -872,8 +865,7 @@ class TimeKeeper(ServerClient):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_link_context_event_evidence(context_event_guid, evidence_guid, body)
         )
 
@@ -949,8 +941,7 @@ class TimeKeeper(ServerClient):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_context_event_evidence(context_event_guid, evidence_guid, body)
         )
 
@@ -1032,8 +1023,7 @@ class TimeKeeper(ServerClient):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_link_context_event_impact(context_event_guid, impacted_element_guid, body)
         )
 
@@ -1109,8 +1099,7 @@ class TimeKeeper(ServerClient):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_context_event_impact(context_event_guid, impacted_element_guid, body)
         )
 
@@ -1198,8 +1187,7 @@ class TimeKeeper(ServerClient):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_link_context_event_timeline_effect(
                 timeline_affected_element_guid, context_event_guid, body
             )
@@ -1283,8 +1271,7 @@ class TimeKeeper(ServerClient):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_context_event_timeline_effect(
                 timeline_affected_element_guid, context_event_guid, body
             )
@@ -1440,8 +1427,7 @@ class TimeKeeper(ServerClient):
         if name is None and body is None:
             name = "*"
 
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_context_events_by_name(
                 name=name,
                 metadata_element_type_name=metadata_element_type_name,
@@ -1619,8 +1605,7 @@ class TimeKeeper(ServerClient):
         -------
         List | str
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_context_events(
                 search_string=search_string,
                 starts_with=starts_with,
@@ -1743,8 +1728,7 @@ class TimeKeeper(ServerClient):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_context_event_by_guid(
                 guid=guid,
                 include_only_relationships=include_only_relationships,

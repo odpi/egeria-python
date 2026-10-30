@@ -17,6 +17,7 @@ from pyegeria.models import (
     RelationshipBeanProperties,
 )
 from pyegeria.core.utils import dynamic_catch
+from pyegeria.core.async_runner import run_sync
 
 
 class TeamStructureProperties(RelationshipBeanProperties):
@@ -139,8 +140,7 @@ class PeopleOrganizer(ServerClient):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_link_peer_person(person_one_guid, person_two_guid, body)
         )
 
@@ -220,8 +220,7 @@ class PeopleOrganizer(ServerClient):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_unlink_peer_person(person_one_guid, person_two_guid, body)
         )
 
@@ -261,8 +260,7 @@ class PeopleOrganizer(ServerClient):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_unlink_peer_person(person_one_guid, person_two_guid, body)
         )
 
@@ -348,8 +346,7 @@ class PeopleOrganizer(ServerClient):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_link_team_structure(super_team_guid, subteam_guid, body)
         )
 
@@ -429,7 +426,6 @@ class PeopleOrganizer(ServerClient):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_team_structure(super_team_guid, subteam_guid, body)
         )

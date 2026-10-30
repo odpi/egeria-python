@@ -32,6 +32,7 @@ from pyegeria.view.output_formatter import (
     populate_columns_from_properties,
     get_required_relationships,
 )
+from pyegeria.core.async_runner import run_sync
 settings.Logging.console_logging_level = "ERROR"
 
 
@@ -668,8 +669,7 @@ class AutomatedCuration(ServerClient):
                "effectiveTime" : ""
              }
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_create_elem_from_template(body)
         )
         return response
@@ -846,8 +846,7 @@ class AutomatedCuration(ServerClient):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_create_secrets_store_element_from_template(
                 file_path_name, file_name, description, version_identifier,
                 file_system_name, file_type, file_extension, file_encoding,
@@ -944,8 +943,7 @@ class AutomatedCuration(ServerClient):
         str
             The GUID of the Kafka server element.
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_create_kafka_server_element_from_template(
                 kafka_server, host_name, port, description,
 
@@ -1053,8 +1051,7 @@ class AutomatedCuration(ServerClient):
         str
             The GUID of the CSV File element.
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_create_csv_data_file_element_from_template(
                 file_name, file_type, file_path_name, version_identifier,
                 file_encoding, file_extension, file_system_name, description
@@ -1169,8 +1166,7 @@ class AutomatedCuration(ServerClient):
         str
             The GUID of the CSV File element.
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_create_csv_data_file_element_from_template(
                 file_name,
                 file_type,
@@ -1315,8 +1311,7 @@ class AutomatedCuration(ServerClient):
         str
             The GUID of the Postgres server element.
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_create_postgres_server_element_from_template(
                 postgres_server, host_name, port, db_user, db_pwd, description,
 
@@ -1450,8 +1445,7 @@ class AutomatedCuration(ServerClient):
         str
             The GUID of the Postgres database element.
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_create_postgres_database_element_from_template(
                 postgres_database,
                 server_name,
@@ -1579,8 +1573,7 @@ class AutomatedCuration(ServerClient):
         str
             The GUID of the File Folder element.
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_create_folder_element_from_template(
                 path_name, folder_name, file_system, description, version, is_own_anchor, initial_classifications
             )
@@ -1680,8 +1673,7 @@ class AutomatedCuration(ServerClient):
         str
             The GUID of the File Folder element.
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_create_uc_server_element_from_template(
                 server_name, host_url, port, description, version,
 
@@ -1774,8 +1766,7 @@ class AutomatedCuration(ServerClient):
         str
             The GUID of the File Folder element.
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_create_uc_catalog_element_from_template(
                 uc_catalog, network_address, description, version,
 
@@ -1870,8 +1861,7 @@ class AutomatedCuration(ServerClient):
         str
             The GUID of the File Folder element.
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_create_uc_schema_element_from_template(
                 uc_catalog, uc_schema, network_address, description, version
             )
@@ -2001,8 +1991,7 @@ class AutomatedCuration(ServerClient):
         str
             The GUID of the File Folder element.
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_create_uc_table_element_from_template(
                 uc_catalog,
                 uc_schema,
@@ -2121,8 +2110,7 @@ class AutomatedCuration(ServerClient):
         str
             The GUID of the File Folder element.
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_create_uc_function_element_from_template(
                 uc_catalog,
                 uc_schema,
@@ -2262,8 +2250,7 @@ class AutomatedCuration(ServerClient):
         str
             The GUID of the File Folder element.
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_create_uc_volume_element_from_template(
                 uc_catalog,
                 uc_schema,
@@ -2400,8 +2387,7 @@ class AutomatedCuration(ServerClient):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_save_client_side_secret(secrets_store_guid, body))
+        run_sync(self._async_save_client_side_secret(secrets_store_guid, body))
 
     async def _async_delete_client_side_secret(
         self,
@@ -2463,8 +2449,7 @@ class AutomatedCuration(ServerClient):
         -----
         See: https://egeria-project.org/concepts/client-side-secret
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_client_side_secret(secrets_store_guid, secret_name))
+        run_sync(self._async_delete_client_side_secret(secrets_store_guid, secret_name))
 
     #
     # Engine Actions
@@ -2522,8 +2507,7 @@ class AutomatedCuration(ServerClient):
         -----
         For more information see: https://egeria-project.org/concepts/engine-action
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_cancel_engine_action(engine_action_guid))
+        run_sync(self._async_cancel_engine_action(engine_action_guid))
         return
 
     # The operations below moved to the Governance Engine view service in Egeria odpi/egeria#9371. These
@@ -2559,8 +2543,7 @@ class AutomatedCuration(ServerClient):
 
     def claim_engine_action(self, engine_action_guid: str) -> None:
         """Deprecated - use GovernanceEngine. Claim an engine action for the caller."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_claim_engine_action(engine_action_guid))
+        run_sync(self._async_claim_engine_action(engine_action_guid))
 
     async def _async_update_engine_action_status(self, engine_action_guid: str, status: str,
                                                  body: Optional[dict] = None) -> None:
@@ -2572,8 +2555,7 @@ class AutomatedCuration(ServerClient):
     def update_engine_action_status(self, engine_action_guid: str, status: str,
                                     body: Optional[dict] = None) -> None:
         """Deprecated - use GovernanceEngine. Update the status of an engine action."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_engine_action_status(engine_action_guid, status, body))
+        run_sync(self._async_update_engine_action_status(engine_action_guid, status, body))
 
     async def _async_update_action_target_status(
             self, action_target_guid: str, status: str,
@@ -2589,8 +2571,7 @@ class AutomatedCuration(ServerClient):
             start_date: Optional[str] = None, completion_date: Optional[str] = None,
             completion_message: Optional[str] = None, body: Optional[dict] = None) -> None:
         """Deprecated - use GovernanceEngine. Update the status of an action target."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_action_target_status(
+        run_sync(self._async_update_action_target_status(
             action_target_guid, status, start_date, completion_date, completion_message, body))
 
     async def _async_record_completion_status(
@@ -2610,8 +2591,7 @@ class AutomatedCuration(ServerClient):
             new_action_targets: Optional[list[dict]] = None, completion_message: Optional[str] = None,
             body: Optional[dict] = None) -> None:
         """Deprecated - use GovernanceEngine. Record the completion status of an engine action."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_record_completion_status(
+        run_sync(self._async_record_completion_status(
             engine_action_guid, status, request_parameters, output_guards, new_action_targets,
             completion_message, body))
 
@@ -2625,8 +2605,7 @@ class AutomatedCuration(ServerClient):
     def get_active_claimed_engine_actions(
             self, governance_engine_guid: str, start_from: int = 0, page_size: int = 0) -> list | str:
         """Deprecated - use GovernanceEngine. Engine actions in process claimed by this caller."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_get_active_claimed_engine_actions(
+        return run_sync(self._async_get_active_claimed_engine_actions(
             governance_engine_guid, start_from, page_size))
 
     @dynamic_catch
@@ -2653,8 +2632,7 @@ class AutomatedCuration(ServerClient):
 
     def cancel_governance_action_process(self, process_instance_guid: str) -> None:
         """Request that a running governance action process instance is cancelled."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_cancel_governance_action_process(process_instance_guid))
+        run_sync(self._async_cancel_governance_action_process(process_instance_guid))
 
     async def _async_get_active_engine_actions(
             self,
@@ -2753,8 +2731,7 @@ class AutomatedCuration(ServerClient):
         For more information see: https://egeria-project.org/concepts/engine-action
 
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_active_engine_actions(
                 start_from,
                 page_size,
@@ -2916,8 +2893,7 @@ class AutomatedCuration(ServerClient):
         -----
         For more information see: https://egeria-project.org/concepts/engine-action
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_engine_actions_by_name(
                 name=name,
                 metadata_element_type_name=metadata_element_type_name,
@@ -3101,8 +3077,7 @@ class AutomatedCuration(ServerClient):
         NotAuthorizedException
             The principle specified by the user_id does not have authorization for the requested action.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_engine_actions(
                 search_string=search_string,
                 starts_with=starts_with,
@@ -3229,8 +3204,7 @@ class AutomatedCuration(ServerClient):
         str
             The GUID of the newly started governance engine process, or "Action not initiated".
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_initiate_gov_action_process(
                 action_type_qualified_name=action_type_qualified_name,
                 request_source_guids=request_source_guids,
@@ -3345,8 +3319,7 @@ class AutomatedCuration(ServerClient):
         str
             The GUID of the newly started governance engine process, or "Action not initiated".
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_initiate_gov_action_type(
                 action_type_qualified_name=action_type_qualified_name,
                 request_source_guids=request_source_guids,
@@ -3448,8 +3421,7 @@ class AutomatedCuration(ServerClient):
             self, postgres_database_guid: str, request_parameters: dict = None
     ) -> str:
         """Initiate a postgres database survey"""
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_initiate_survey(
                 "PostgreSQLSurvey::survey-postgres-database",
                 postgres_database_guid,
@@ -3462,8 +3434,7 @@ class AutomatedCuration(ServerClient):
             self, postgres_server_guid: str, request_parameters: dict = None
     ) -> str:
         """Initiate a postgres server survey"""
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_initiate_survey(
                 "PostgreSQLSurvey::survey-postgres-server",
                 postgres_server_guid,
@@ -3519,8 +3490,7 @@ class AutomatedCuration(ServerClient):
 
 
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_initiate_survey(
                 survey_name,
                 file_folder_guid,
@@ -3531,8 +3501,7 @@ class AutomatedCuration(ServerClient):
 
     def initiate_file_survey(self, file_guid: str, request_parameters: dict = None) -> str:
         """Initiate a file survey"""
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_initiate_survey(
                 "FileSurvey::survey-data-file", file_guid, request_parameters
             )
@@ -3555,8 +3524,7 @@ class AutomatedCuration(ServerClient):
             The GUID of the initiated action or "Action not initiated" if the action was not initiated.
 
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_initiate_survey(
                 "ApacheKafkaSurvey::survey-kafka-server",
                 kafka_server_guid,
@@ -3581,8 +3549,7 @@ class AutomatedCuration(ServerClient):
             The GUID of the initiated action or "Action not initiated" if the action was not initiated.
 
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_initiate_survey(
                 "UnityCatalogSurvey::survey-unity-catalog-server",
                 uc_server_guid,
@@ -3608,8 +3575,7 @@ class AutomatedCuration(ServerClient):
             The GUID of the initiated action or "Action not initiated" if the action was not initiated.
 
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_initiate_survey(
                 "UnityCatalogSurvey::survey-unity-catalog-schema",
                 uc_schema_guid,
@@ -3919,8 +3885,7 @@ class AutomatedCuration(ServerClient):
         str
             The GUID of the initiated action, or "Action not initiated".
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_initiate_engine_action(
                 governance_engine_name=governance_engine_name,
                 qualified_name=qualified_name,
@@ -4037,8 +4002,7 @@ class AutomatedCuration(ServerClient):
             List of catalog targets.
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_catalog_targets(
                 integ_connector_guid=integ_connector_guid,
                 start_from=start_from,
@@ -4138,8 +4102,7 @@ class AutomatedCuration(ServerClient):
             JSON structure of the catalog target.
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_catalog_target(
                 relationship_guid=relationship_guid,
                 output_format=output_format,
@@ -4280,8 +4243,7 @@ class AutomatedCuration(ServerClient):
             The GUID of the relationship created.
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_add_catalog_target(
                 integ_connector_guid=integ_connector_guid,
                 metadata_element_guid=metadata_element_guid,
@@ -4397,8 +4359,7 @@ class AutomatedCuration(ServerClient):
         None
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_update_catalog_target(
                 relationship_guid=relationship_guid,
                 catalog_target_name=catalog_target_name,
@@ -4453,8 +4414,7 @@ class AutomatedCuration(ServerClient):
         -------
         None
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_remove_catalog_target(relationship_guid))
+        run_sync(self._async_remove_catalog_target(relationship_guid))
 
     #
     #   Get information about technologies
@@ -4555,8 +4515,7 @@ class AutomatedCuration(ServerClient):
         list | str
             List of technology types.
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_tech_types_for_open_metadata_type(
                 type_name=type_name,
                 tech_name=tech_name,
@@ -4661,8 +4620,7 @@ class AutomatedCuration(ServerClient):
             Detailed information for the specified technology type, or "no type found".
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_tech_type_detail(
                 filter_string=filter_string,
                 body=body,
@@ -4769,8 +4727,7 @@ class AutomatedCuration(ServerClient):
             The hierarchy of technology types, or "no type found".
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_tech_type_hierarchy(
                 filter_string=filter_string,
                 body=body,
@@ -4832,8 +4789,7 @@ class AutomatedCuration(ServerClient):
         str
             The GUID of the template, or None if not found.
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_template_guid_for_technology_type(type_name, **kwargs)
         )
         return response
@@ -5003,8 +4959,7 @@ class AutomatedCuration(ServerClient):
         list | str
             List of technology types in the requested format.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_technology_types(
                 search_string=search_string,
                 starts_with=starts_with,
@@ -5183,8 +5138,7 @@ class AutomatedCuration(ServerClient):
         -----
         For more information see: https://egeria-project.org/concepts/deployed-implementation-type
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_technology_types_body(
                 search_string=search_string,
                 starts_with=starts_with,
@@ -5469,8 +5423,7 @@ class AutomatedCuration(ServerClient):
         -----
         For more information see: https://egeria-project.org/concepts/deployed-implementation-type
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_technology_type_elements(
                 filter_string=filter_string,
                 effective_time=effective_time,

@@ -37,6 +37,7 @@ from pyegeria.models import (
 )
 from pyegeria.core.utils import dynamic_catch
 from pyegeria.view.base_report_formats import select_report_spec, get_report_spec_match
+from pyegeria.core.async_runner import run_sync
 
 class AssetProperties(ReferenceableProperties):
     """Properties for Asset elements"""
@@ -733,8 +734,7 @@ class AssetMaker(ServerClient):
           "sequencingProperty" : "qualifiedName"
         }
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_assets_by_name(filter_string=filter_string,
                                            metadata_element_type_name=metadata_element_type_name,
                                            metadata_element_subtypes=metadata_element_subtypes,
@@ -1073,8 +1073,7 @@ class AssetMaker(ServerClient):
           "forDuplicateProcessing" : false
         }
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_asset_by_guid(
                 guid=guid,
                 include_only_relationships=include_only_relationships,
@@ -1210,8 +1209,7 @@ class AssetMaker(ServerClient):
           }
         }
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_add_catalog_target(
                 integration_connector_guid, metadata_element_guid, body
             )
@@ -1326,8 +1324,7 @@ class AssetMaker(ServerClient):
           "forDuplicateProcessing" : false
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_update_catalog_target(relationship_guid, body)
         )
 
@@ -1424,8 +1421,7 @@ class AssetMaker(ServerClient):
         -----
         See: https://egeria-project.org/concepts/integration-connector/
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_catalog_target(guid=guid, graph_query_depth=graph_query_depth,
                                            output_format=output_format, report_spec=report_spec,
                                            body=body, **kwargs)
@@ -1542,8 +1538,7 @@ class AssetMaker(ServerClient):
         -----
         See: https://egeria-project.org/concepts/integration-connector/
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_catalog_targets(
                 integration_connector_guid=integration_connector_guid,
                 graph_query_depth=graph_query_depth,
@@ -1617,8 +1612,7 @@ class AssetMaker(ServerClient):
         -----
         See: https://egeria-project.org/concepts/integration-connector/
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_remove_catalog_target(relationship_guid, body)
         )
 
@@ -1704,8 +1698,7 @@ class AssetMaker(ServerClient):
 
         See _async_link_supported_governance_service for parameter and return details.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_link_supported_governance_service(
                 governance_engine_guid, governance_service_guid, body
             )
@@ -1776,8 +1769,7 @@ class AssetMaker(ServerClient):
 
         See _async_update_supported_governance_service for parameter details.
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_update_supported_governance_service(relationship_guid, body)
         )
 
@@ -1823,8 +1815,7 @@ class AssetMaker(ServerClient):
 
         See _async_detach_supported_governance_service for parameter details.
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_supported_governance_service(relationship_guid, body)
         )
 
@@ -1907,8 +1898,7 @@ class AssetMaker(ServerClient):
           "class" : "DeleteRelationshipRequestBody"
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_catalog_target(
                 integration_connector_guid, metadata_element_guid, body
             )
@@ -2151,8 +2141,7 @@ class AssetMaker(ServerClient):
           "pageSize": 0
         }
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_data_assets(
                 search_string=search_string,
                 content_status_list=content_status_list,
@@ -2301,8 +2290,7 @@ class AssetMaker(ServerClient):
           "pageSize": 0
         }
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_data_assets_by_category(
                 category=category,
                 content_status_list=content_status_list,
@@ -2411,8 +2399,7 @@ class AssetMaker(ServerClient):
           }
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_link_data_set_content(data_set_guid, data_content_asset_guid, body)
         )
 
@@ -2475,8 +2462,7 @@ class AssetMaker(ServerClient):
             One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
             Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_data_set_content(data_set_guid, data_content_asset_guid, body)
         )
 
@@ -2542,8 +2528,7 @@ class AssetMaker(ServerClient):
         body: dict | UpdateRelationshipRequestBody, optional
             The properties to update.
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_data_set_content(data_set_content_guid, body))
+        run_sync(self._async_update_data_set_content(data_set_content_guid, body))
 
     @dynamic_catch
     async def _async_detach_data_set_content_relationship(
@@ -2589,8 +2574,7 @@ class AssetMaker(ServerClient):
         body: dict | DeleteRelationshipRequestBody, optional
             Additional parameters for the delete operation.
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_data_set_content_relationship(data_set_content_guid, body))
+        run_sync(self._async_detach_data_set_content_relationship(data_set_content_guid, body))
 
     #
     # Report Methods
@@ -2687,8 +2671,7 @@ class AssetMaker(ServerClient):
           }
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_link_report_originator(originator_guid, report_guid, body)
         )
 
@@ -2751,8 +2734,7 @@ class AssetMaker(ServerClient):
             One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
             Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_unlink_report_originator(originator_guid, report_guid, body)
         )
 
@@ -2847,8 +2829,7 @@ class AssetMaker(ServerClient):
           }
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_link_report_dependency(prior_report_guid, report_guid, body)
         )
 
@@ -2911,8 +2892,7 @@ class AssetMaker(ServerClient):
             One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
             Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_unlink_report_dependency(prior_report_guid, report_guid, body)
         )
 
@@ -3007,8 +2987,7 @@ class AssetMaker(ServerClient):
           }
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_link_report_subject(subject_guid, report_guid, body)
         )
 
@@ -3071,8 +3050,7 @@ class AssetMaker(ServerClient):
             One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
             Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_unlink_report_subject(subject_guid, report_guid, body)
         )
 
@@ -3283,8 +3261,7 @@ class AssetMaker(ServerClient):
           "pageSize": 0
         }
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_infrastructure(
                 search_string=search_string,
                 deployment_status_list=deployment_status_list,
@@ -3433,8 +3410,7 @@ class AssetMaker(ServerClient):
           "pageSize": 0
         }
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_infrastructure_by_category(
                 category=category,
                 deployment_status_list=deployment_status_list,
@@ -3544,8 +3520,7 @@ class AssetMaker(ServerClient):
           }
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_deploy_it_asset(asset_guid, destination_guid, body)
         )
 
@@ -3608,8 +3583,7 @@ class AssetMaker(ServerClient):
             One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
             Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_undeploy_it_asset(asset_guid, destination_guid, body)
         )
 
@@ -3704,8 +3678,7 @@ class AssetMaker(ServerClient):
           }
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_link_software_capability_to_asset(asset_guid, capability_guid, body)
         )
 
@@ -3768,8 +3741,7 @@ class AssetMaker(ServerClient):
             One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
             Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_software_capability_from_asset(asset_guid, capability_guid, body)
         )
 
@@ -3952,8 +3924,7 @@ class AssetMaker(ServerClient):
           "pageSize": 0
         }
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_processes(
                 search_string=search_string,
                 activity_status_list=activity_status_list,
@@ -4095,8 +4066,7 @@ class AssetMaker(ServerClient):
           "pageSize": 0
         }
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_processes_by_category(
                 category=category,
                 activity_status_list=activity_status_list,
@@ -4267,8 +4237,7 @@ class AssetMaker(ServerClient):
           "assignToActorGUID" : "add guid of actor that will be assigned this action (AssignmentScope relationship)"
         }
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_action(body))
+        return run_sync(self._async_create_action(body))
 
     @dynamic_catch
     async def _async_add_action_target(
@@ -4361,8 +4330,7 @@ class AssetMaker(ServerClient):
            "effectiveTime" : "{{$isoTimestamp}}"
         }
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_add_action_target(action_guid, metadata_element_guid, body)
         )
 
@@ -4435,8 +4403,7 @@ class AssetMaker(ServerClient):
           "effectiveTime": "{{$isoTimestamp}}"
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_update_action_target_properties(action_target_guid, body)
         )
 
@@ -4516,8 +4483,7 @@ class AssetMaker(ServerClient):
           "forDuplicateProcessing" : false
         }
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_action_target(action_target_guid=action_target_guid, graph_query_depth=graph_query_depth,
                                           output_format=output_format, report_spec=report_spec, body=body, **kwargs)
         )
@@ -4619,8 +4585,7 @@ class AssetMaker(ServerClient):
           "activityStatusList": ["IN_PROGRESS"]
         }
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_action_targets(
                 action_guid=action_guid,
                 activity_status_list=activity_status_list,
@@ -4734,8 +4699,7 @@ class AssetMaker(ServerClient):
           "activityStatusList": ["IN_PROGRESS"]
         }
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_actions_for_action_target(
                 metadata_element_guid=metadata_element_guid,
                 activity_status_list=activity_status_list,
@@ -4811,8 +4775,7 @@ class AssetMaker(ServerClient):
            "effectiveTime" : "{{$isoTimestamp}}"
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_assign_action(action_guid, actor_guid, body))
+        run_sync(self._async_assign_action(action_guid, actor_guid, body))
 
     @dynamic_catch
     async def _async_reassign_action(
@@ -4867,8 +4830,7 @@ class AssetMaker(ServerClient):
            "effectiveTime" : "{{$isoTimestamp}}"
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_reassign_action(action_guid, actor_guid, body))
+        run_sync(self._async_reassign_action(action_guid, actor_guid, body))
 
     @dynamic_catch
     async def _async_unassign_action(
@@ -4918,8 +4880,7 @@ class AssetMaker(ServerClient):
            "effectiveTime" : "{{$isoTimestamp}}"
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_unassign_action(action_guid, actor_guid, body))
+        run_sync(self._async_unassign_action(action_guid, actor_guid, body))
 
     @dynamic_catch
     async def _async_get_assigned_actions(
@@ -5018,8 +4979,7 @@ class AssetMaker(ServerClient):
           "activityStatusList": ["IN_PROGRESS"]
         }
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_assigned_actions(
                 actor_guid=actor_guid,
                 activity_status_list=activity_status_list,
@@ -5133,8 +5093,7 @@ class AssetMaker(ServerClient):
           "activityStatusList": ["IN_PROGRESS"]
         }
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_actions_for_sponsor(
                 metadata_element_guid=metadata_element_guid,
                 activity_status_list=activity_status_list,
@@ -5248,8 +5207,7 @@ class AssetMaker(ServerClient):
           "activityStatusList": ["IN_PROGRESS"]
         }
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_actions_for_requester(
                 metadata_element_guid=metadata_element_guid,
                 activity_status_list=activity_status_list,
@@ -5352,8 +5310,7 @@ class AssetMaker(ServerClient):
           }
         }
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_software_capability(body))
+        return run_sync(self._async_create_software_capability(body))
 
     @dynamic_catch
     async def _async_create_software_capability_from_template(
@@ -5434,8 +5391,7 @@ class AssetMaker(ServerClient):
           }
         }
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_software_capability_from_template(body))
+        return run_sync(self._async_create_software_capability_from_template(body))
 
     @dynamic_catch
     async def _async_update_software_capability(
@@ -5516,8 +5472,7 @@ class AssetMaker(ServerClient):
           }
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_update_software_capability(software_capability_guid, body)
         )
 
@@ -5619,8 +5574,7 @@ class AssetMaker(ServerClient):
         -----
         See: https://egeria-project.org/concepts/software-capability
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_software_capability_by_guid(
                 guid=guid,
                 metadata_element_type_name=metadata_element_type_name,
@@ -5885,8 +5839,7 @@ class AssetMaker(ServerClient):
             One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
             Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_software_capabilities(
                 search_string=search_string,
                 starts_with=starts_with,
@@ -6021,8 +5974,7 @@ class AssetMaker(ServerClient):
         -----
         See: https://egeria-project.org/concepts/software-capability
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_software_capabilities_by_name(
                 name=name,
                 metadata_element_type_name=metadata_element_type_name,
@@ -6140,8 +6092,7 @@ class AssetMaker(ServerClient):
         -----
         See: https://egeria-project.org/concepts/software-capability
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_software_capabilities_by_deployed_implementation_type(
                 deployed_implementation_type=deployed_implementation_type,
                 metadata_element_type_name=metadata_element_type_name,
@@ -6249,8 +6200,7 @@ class AssetMaker(ServerClient):
         -----
         See: https://egeria-project.org/concepts/software-capability
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_software_capabilities_for_infrastructure(
                 infrastructure_guid=infrastructure_guid,
                 graph_query_depth=graph_query_depth,
@@ -6366,8 +6316,7 @@ class AssetMaker(ServerClient):
           }
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_add_capability_asset_use(software_capability_guid, asset_guid, body)
         )
 
@@ -6430,8 +6379,7 @@ class AssetMaker(ServerClient):
             One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
             Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_remove_capability_asset_use(software_capability_guid, asset_guid, body)
         )
 
@@ -6529,8 +6477,7 @@ class AssetMaker(ServerClient):
         -----
         See: https://egeria-project.org/concepts/software-capability
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_capability_use(
                 asset_guid=asset_guid,
                 graph_query_depth=graph_query_depth,
@@ -6637,8 +6584,7 @@ class AssetMaker(ServerClient):
         -----
         See: https://egeria-project.org/concepts/governance-engine
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_governance_engines(
                 governance_service_guid=governance_service_guid,
                 graph_query_depth=graph_query_depth,
@@ -6717,8 +6663,7 @@ class AssetMaker(ServerClient):
         body: Optional[dict | NewRelationshipRequestBody] = None
     ) -> str:
         """Create a relationship that registers a governance service with a governance engine."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_link_supported_governance_service(governance_engine_guid, governance_service_guid, body)
         )
 
@@ -6774,8 +6719,7 @@ class AssetMaker(ServerClient):
         self, relationship_guid: str, body: Optional[dict | UpdateRelationshipRequestBody] = None
     ) -> None:
         """Update the properties of a SupportedGovernanceService relationship."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_supported_governance_service(relationship_guid, body))
+        run_sync(self._async_update_supported_governance_service(relationship_guid, body))
 
     @dynamic_catch
     async def _async_detach_supported_governance_service(
@@ -6808,8 +6752,7 @@ class AssetMaker(ServerClient):
         self, relationship_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None
     ) -> None:
         """Detach a governance service from a governance engine."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_supported_governance_service(relationship_guid, body))
+        run_sync(self._async_detach_supported_governance_service(relationship_guid, body))
 
     @dynamic_catch
     async def _async_get_integration_groups(
@@ -6905,8 +6848,7 @@ class AssetMaker(ServerClient):
         -----
         See: https://egeria-project.org/concepts/integration-group
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_integration_groups(
                 integration_connector_guid=integration_connector_guid,
                 graph_query_depth=graph_query_depth,
@@ -7010,8 +6952,7 @@ class AssetMaker(ServerClient):
     def link_api_endpoint(self, deployed_api_guid: str, endpoint_guid: str,
                           body: dict | NewRelationshipRequestBody | None = None) -> None:
         """Attach a network endpoint to a deployed API (APIEndpoint relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_api_endpoint(deployed_api_guid, endpoint_guid, body))
+        run_sync(self._async_link_api_endpoint(deployed_api_guid, endpoint_guid, body))
 
     @dynamic_catch
     async def _async_detach_api_endpoint(self, deployed_api_guid: str, endpoint_guid: str,
@@ -7024,8 +6965,7 @@ class AssetMaker(ServerClient):
     def detach_api_endpoint(self, deployed_api_guid: str, endpoint_guid: str,
                             body: dict | DeleteRelationshipRequestBody | None = None) -> None:
         """Detach a network endpoint from a deployed API."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_api_endpoint(deployed_api_guid, endpoint_guid, body))
+        run_sync(self._async_detach_api_endpoint(deployed_api_guid, endpoint_guid, body))
 
     @dynamic_catch
     async def _async_link_process_hierarchy(self, parent_process_guid: str, child_process_guid: str,
@@ -7038,8 +6978,7 @@ class AssetMaker(ServerClient):
     def link_process_hierarchy(self, parent_process_guid: str, child_process_guid: str,
                                body: dict | NewRelationshipRequestBody | None = None) -> None:
         """Attach a child process to its parent process (ProcessHierarchy relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_process_hierarchy(parent_process_guid, child_process_guid, body))
+        run_sync(self._async_link_process_hierarchy(parent_process_guid, child_process_guid, body))
 
     @dynamic_catch
     async def _async_detach_process_hierarchy(self, parent_process_guid: str, child_process_guid: str,
@@ -7052,8 +6991,7 @@ class AssetMaker(ServerClient):
     def detach_process_hierarchy(self, parent_process_guid: str, child_process_guid: str,
                                  body: dict | DeleteRelationshipRequestBody | None = None) -> None:
         """Detach a child process from its parent process."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_process_hierarchy(parent_process_guid, child_process_guid, body))
+        run_sync(self._async_detach_process_hierarchy(parent_process_guid, child_process_guid, body))
 
     @dynamic_catch
     async def _async_link_nested_files(self, folder_guid: str, file_guid: str,
@@ -7066,8 +7004,7 @@ class AssetMaker(ServerClient):
     def link_nested_files(self, folder_guid: str, file_guid: str,
                           body: dict | NewRelationshipRequestBody | None = None) -> None:
         """Attach a file to the folder that contains it (NestedFile relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_nested_files(folder_guid, file_guid, body))
+        run_sync(self._async_link_nested_files(folder_guid, file_guid, body))
 
     @dynamic_catch
     async def _async_detach_nested_file(self, folder_guid: str, file_guid: str,
@@ -7080,8 +7017,7 @@ class AssetMaker(ServerClient):
     def detach_nested_file(self, folder_guid: str, file_guid: str,
                            body: dict | DeleteRelationshipRequestBody | None = None) -> None:
         """Detach a file from the folder that contains it."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_nested_file(folder_guid, file_guid, body))
+        run_sync(self._async_detach_nested_file(folder_guid, file_guid, body))
 
     @dynamic_catch
     async def _async_link_linked_files(self, folder_guid: str, file_guid: str,
@@ -7094,8 +7030,7 @@ class AssetMaker(ServerClient):
     def link_linked_files(self, folder_guid: str, file_guid: str,
                           body: dict | NewRelationshipRequestBody | None = None) -> None:
         """Attach a file referenced by (but not contained in) a folder (LinkedFile relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_linked_files(folder_guid, file_guid, body))
+        run_sync(self._async_link_linked_files(folder_guid, file_guid, body))
 
     @dynamic_catch
     async def _async_detach_linked_file(self, folder_guid: str, file_guid: str,
@@ -7108,8 +7043,7 @@ class AssetMaker(ServerClient):
     def detach_linked_file(self, folder_guid: str, file_guid: str,
                            body: dict | DeleteRelationshipRequestBody | None = None) -> None:
         """Detach a referenced file from a folder."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_linked_file(folder_guid, file_guid, body))
+        run_sync(self._async_detach_linked_file(folder_guid, file_guid, body))
 
     @dynamic_catch
     async def _async_link_folder_hierarchy(self, parent_folder_guid: str, child_folder_guid: str,
@@ -7122,8 +7056,7 @@ class AssetMaker(ServerClient):
     def link_folder_hierarchy(self, parent_folder_guid: str, child_folder_guid: str,
                               body: dict | NewRelationshipRequestBody | None = None) -> None:
         """Attach a child folder to its parent folder (FolderHierarchy relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_folder_hierarchy(parent_folder_guid, child_folder_guid, body))
+        run_sync(self._async_link_folder_hierarchy(parent_folder_guid, child_folder_guid, body))
 
     @dynamic_catch
     async def _async_detach_folder_hierarchy(self, parent_folder_guid: str, child_folder_guid: str,
@@ -7136,8 +7069,7 @@ class AssetMaker(ServerClient):
     def detach_folder_hierarchy(self, parent_folder_guid: str, child_folder_guid: str,
                                 body: dict | DeleteRelationshipRequestBody | None = None) -> None:
         """Detach a child folder from its parent folder."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_folder_hierarchy(parent_folder_guid, child_folder_guid, body))
+        run_sync(self._async_detach_folder_hierarchy(parent_folder_guid, child_folder_guid, body))
 
     @dynamic_catch
     async def _async_link_impacted_resource(self, resource_guid: str, incident_report_guid: str,
@@ -7150,8 +7082,7 @@ class AssetMaker(ServerClient):
     def link_impacted_resource(self, resource_guid: str, incident_report_guid: str,
                                body: dict | NewRelationshipRequestBody | None = None) -> None:
         """Attach a resource to an incident report that affects it (ImpactedResource relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_impacted_resource(resource_guid, incident_report_guid, body))
+        run_sync(self._async_link_impacted_resource(resource_guid, incident_report_guid, body))
 
     @dynamic_catch
     async def _async_detach_impacted_resource(self, resource_guid: str, incident_report_guid: str,
@@ -7164,8 +7095,7 @@ class AssetMaker(ServerClient):
     def detach_impacted_resource(self, resource_guid: str, incident_report_guid: str,
                                  body: dict | DeleteRelationshipRequestBody | None = None) -> None:
         """Detach a resource from an incident report."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_impacted_resource(resource_guid, incident_report_guid, body))
+        run_sync(self._async_detach_impacted_resource(resource_guid, incident_report_guid, body))
 
     @dynamic_catch
     async def _async_link_archive_contents(self, archive_file_guid: str, collection_guid: str,
@@ -7178,8 +7108,7 @@ class AssetMaker(ServerClient):
     def link_archive_contents(self, archive_file_guid: str, collection_guid: str,
                               body: dict | NewRelationshipRequestBody | None = None) -> None:
         """Attach a collection as the contents of an archive file (ArchiveContents relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_archive_contents(archive_file_guid, collection_guid, body))
+        run_sync(self._async_link_archive_contents(archive_file_guid, collection_guid, body))
 
     @dynamic_catch
     async def _async_detach_archive_contents(self, archive_file_guid: str, collection_guid: str,
@@ -7192,8 +7121,7 @@ class AssetMaker(ServerClient):
     def detach_archive_contents(self, archive_file_guid: str, collection_guid: str,
                                 body: dict | DeleteRelationshipRequestBody | None = None) -> None:
         """Detach a collection from an archive file."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_archive_contents(archive_file_guid, collection_guid, body))
+        run_sync(self._async_detach_archive_contents(archive_file_guid, collection_guid, body))
 
     @dynamic_catch
     async def _async_link_associated_log(self, element_guid: str, log_asset_guid: str,
@@ -7206,8 +7134,7 @@ class AssetMaker(ServerClient):
     def link_associated_log(self, element_guid: str, log_asset_guid: str,
                             body: dict | NewRelationshipRequestBody | None = None) -> None:
         """Attach a log file asset to the element it logs activity for (AssociatedLog relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_associated_log(element_guid, log_asset_guid, body))
+        run_sync(self._async_link_associated_log(element_guid, log_asset_guid, body))
 
     @dynamic_catch
     async def _async_detach_associated_log(self, element_guid: str, log_asset_guid: str,
@@ -7220,8 +7147,7 @@ class AssetMaker(ServerClient):
     def detach_associated_log(self, element_guid: str, log_asset_guid: str,
                               body: dict | DeleteRelationshipRequestBody | None = None) -> None:
         """Detach a log file asset from the element it logs activity for."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_associated_log(element_guid, log_asset_guid, body))
+        run_sync(self._async_detach_associated_log(element_guid, log_asset_guid, body))
 
     @dynamic_catch
     async def _async_link_linked_media(self, media_file_guid: str, linked_media_file_guid: str,
@@ -7234,8 +7160,7 @@ class AssetMaker(ServerClient):
     def link_linked_media(self, media_file_guid: str, linked_media_file_guid: str,
                           body: dict | NewRelationshipRequestBody | None = None) -> None:
         """Attach a related media file to another media file (LinkedMedia relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_linked_media(media_file_guid, linked_media_file_guid, body))
+        run_sync(self._async_link_linked_media(media_file_guid, linked_media_file_guid, body))
 
     @dynamic_catch
     async def _async_detach_linked_media(self, media_file_guid: str, linked_media_file_guid: str,
@@ -7248,8 +7173,7 @@ class AssetMaker(ServerClient):
     def detach_linked_media(self, media_file_guid: str, linked_media_file_guid: str,
                             body: dict | DeleteRelationshipRequestBody | None = None) -> None:
         """Detach a related media file from another media file."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_linked_media(media_file_guid, linked_media_file_guid, body))
+        run_sync(self._async_detach_linked_media(media_file_guid, linked_media_file_guid, body))
 
     @dynamic_catch
     async def _async_link_process_port(self, process_guid: str, port_guid: str,
@@ -7262,8 +7186,7 @@ class AssetMaker(ServerClient):
     def link_process_port(self, process_guid: str, port_guid: str,
                           body: dict | NewRelationshipRequestBody | None = None) -> None:
         """Attach a port to the process it belongs to (ProcessPort relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_process_port(process_guid, port_guid, body))
+        run_sync(self._async_link_process_port(process_guid, port_guid, body))
 
     @dynamic_catch
     async def _async_detach_process_port(self, process_guid: str, port_guid: str,
@@ -7276,8 +7199,7 @@ class AssetMaker(ServerClient):
     def detach_process_port(self, process_guid: str, port_guid: str,
                             body: dict | DeleteRelationshipRequestBody | None = None) -> None:
         """Detach a port from the process it belongs to."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_process_port(process_guid, port_guid, body))
+        run_sync(self._async_detach_process_port(process_guid, port_guid, body))
 
     @dynamic_catch
     async def _async_link_sample_data(self, element_guid: str, sample_data_guid: str,
@@ -7290,8 +7212,7 @@ class AssetMaker(ServerClient):
     def link_sample_data(self, element_guid: str, sample_data_guid: str,
                          body: dict | NewRelationshipRequestBody | None = None) -> None:
         """Attach a data resource as sample data for an element (SampleData relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_sample_data(element_guid, sample_data_guid, body))
+        run_sync(self._async_link_sample_data(element_guid, sample_data_guid, body))
 
     @dynamic_catch
     async def _async_detach_sample_data(self, element_guid: str, sample_data_guid: str,
@@ -7304,8 +7225,7 @@ class AssetMaker(ServerClient):
     def detach_sample_data(self, element_guid: str, sample_data_guid: str,
                            body: dict | DeleteRelationshipRequestBody | None = None) -> None:
         """Detach a sample data resource from an element."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_sample_data(element_guid, sample_data_guid, body))
+        run_sync(self._async_detach_sample_data(element_guid, sample_data_guid, body))
 
     @dynamic_catch
     async def _async_link_port_delegation(self, delegating_from_port_guid: str, delegating_to_port_guid: str,
@@ -7318,8 +7238,7 @@ class AssetMaker(ServerClient):
     def link_port_delegation(self, delegating_from_port_guid: str, delegating_to_port_guid: str,
                              body: dict | NewRelationshipRequestBody | None = None) -> None:
         """Attach a port to the port it delegates to (PortDelegation relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_port_delegation(delegating_from_port_guid, delegating_to_port_guid, body))
+        run_sync(self._async_link_port_delegation(delegating_from_port_guid, delegating_to_port_guid, body))
 
     @dynamic_catch
     async def _async_detach_port_delegation(self, delegating_from_port_guid: str, delegating_to_port_guid: str,
@@ -7332,8 +7251,7 @@ class AssetMaker(ServerClient):
     def detach_port_delegation(self, delegating_from_port_guid: str, delegating_to_port_guid: str,
                                body: dict | DeleteRelationshipRequestBody | None = None) -> None:
         """Detach a port from the port it delegates to."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_port_delegation(delegating_from_port_guid, delegating_to_port_guid, body))
+        run_sync(self._async_detach_port_delegation(delegating_from_port_guid, delegating_to_port_guid, body))
 
     @dynamic_catch
     async def _async_link_registered_integration_connector(self, integration_group_guid: str, integration_connector_guid: str,
@@ -7347,8 +7265,7 @@ class AssetMaker(ServerClient):
     def link_registered_integration_connector(self, integration_group_guid: str, integration_connector_guid: str,
                                                body: dict | NewRelationshipRequestBody | None = None) -> None:
         """Register an integration connector with an integration group (RegisteredIntegrationConnector relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_registered_integration_connector(
+        run_sync(self._async_link_registered_integration_connector(
             integration_group_guid, integration_connector_guid, body))
 
     @dynamic_catch
@@ -7363,8 +7280,7 @@ class AssetMaker(ServerClient):
     def detach_registered_integration_connector(self, integration_group_guid: str, integration_connector_guid: str,
                                                  body: dict | DeleteRelationshipRequestBody | None = None) -> None:
         """Deregister an integration connector from an integration group."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_registered_integration_connector(
+        run_sync(self._async_detach_registered_integration_connector(
             integration_group_guid, integration_connector_guid, body))
 
     @dynamic_catch
@@ -7380,8 +7296,7 @@ class AssetMaker(ServerClient):
     def set_asset_as_audit_log(self, asset_guid: str,
                                body: dict | NewClassificationRequestBody | None = None) -> None:
         """Classify an asset as holding audit log content."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_asset_as_audit_log(asset_guid, body))
+        run_sync(self._async_set_asset_as_audit_log(asset_guid, body))
 
     @dynamic_catch
     async def _async_clear_asset_as_audit_log(self, asset_guid: str,
@@ -7394,8 +7309,7 @@ class AssetMaker(ServerClient):
     def clear_asset_as_audit_log(self, asset_guid: str,
                                  body: dict | DeleteClassificationRequestBody | None = None) -> None:
         """Remove the AuditLog classification from an asset."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_asset_as_audit_log(asset_guid, body))
+        run_sync(self._async_clear_asset_as_audit_log(asset_guid, body))
 
     @dynamic_catch
     async def _async_set_asset_as_lineage_log(self, asset_guid: str,
@@ -7410,8 +7324,7 @@ class AssetMaker(ServerClient):
     def set_asset_as_lineage_log(self, asset_guid: str,
                                  body: dict | NewClassificationRequestBody | None = None) -> None:
         """Classify an asset as holding lineage log content."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_asset_as_lineage_log(asset_guid, body))
+        run_sync(self._async_set_asset_as_lineage_log(asset_guid, body))
 
     @dynamic_catch
     async def _async_clear_asset_as_lineage_log(self, asset_guid: str,
@@ -7424,8 +7337,7 @@ class AssetMaker(ServerClient):
     def clear_asset_as_lineage_log(self, asset_guid: str,
                                    body: dict | DeleteClassificationRequestBody | None = None) -> None:
         """Remove the LineageLog classification from an asset."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_asset_as_lineage_log(asset_guid, body))
+        run_sync(self._async_clear_asset_as_lineage_log(asset_guid, body))
 
     @dynamic_catch
     async def _async_set_asset_as_metering_log(self, asset_guid: str,
@@ -7440,8 +7352,7 @@ class AssetMaker(ServerClient):
     def set_asset_as_metering_log(self, asset_guid: str,
                                   body: dict | NewClassificationRequestBody | None = None) -> None:
         """Classify an asset as holding metering log content."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_asset_as_metering_log(asset_guid, body))
+        run_sync(self._async_set_asset_as_metering_log(asset_guid, body))
 
     @dynamic_catch
     async def _async_clear_asset_as_metering_log(self, asset_guid: str,
@@ -7454,8 +7365,7 @@ class AssetMaker(ServerClient):
     def clear_asset_as_metering_log(self, asset_guid: str,
                                     body: dict | DeleteClassificationRequestBody | None = None) -> None:
         """Remove the MeteringLog classification from an asset."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_asset_as_metering_log(asset_guid, body))
+        run_sync(self._async_clear_asset_as_metering_log(asset_guid, body))
 
     @dynamic_catch
     async def _async_set_asset_as_security_log(self, asset_guid: str,
@@ -7470,8 +7380,7 @@ class AssetMaker(ServerClient):
     def set_asset_as_security_log(self, asset_guid: str,
                                   body: dict | NewClassificationRequestBody | None = None) -> None:
         """Classify an asset as holding security log content."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_asset_as_security_log(asset_guid, body))
+        run_sync(self._async_set_asset_as_security_log(asset_guid, body))
 
     @dynamic_catch
     async def _async_clear_asset_as_security_log(self, asset_guid: str,
@@ -7484,8 +7393,7 @@ class AssetMaker(ServerClient):
     def clear_asset_as_security_log(self, asset_guid: str,
                                     body: dict | DeleteClassificationRequestBody | None = None) -> None:
         """Remove the SecurityLog classification from an asset."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_asset_as_security_log(asset_guid, body))
+        run_sync(self._async_clear_asset_as_security_log(asset_guid, body))
 
     @dynamic_catch
     async def _async_set_asset_as_exception_backlog(self, asset_guid: str,
@@ -7500,8 +7408,7 @@ class AssetMaker(ServerClient):
     def set_asset_as_exception_backlog(self, asset_guid: str,
                                        body: dict | NewClassificationRequestBody | None = None) -> None:
         """Classify an asset as holding exception backlog content."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_asset_as_exception_backlog(asset_guid, body))
+        run_sync(self._async_set_asset_as_exception_backlog(asset_guid, body))
 
     @dynamic_catch
     async def _async_clear_asset_as_exception_backlog(self, asset_guid: str,
@@ -7514,8 +7421,7 @@ class AssetMaker(ServerClient):
     def clear_asset_as_exception_backlog(self, asset_guid: str,
                                          body: dict | DeleteClassificationRequestBody | None = None) -> None:
         """Remove the ExceptionBacklog classification from an asset."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_asset_as_exception_backlog(asset_guid, body))
+        run_sync(self._async_clear_asset_as_exception_backlog(asset_guid, body))
 
     @dynamic_catch
     async def _async_set_asset_as_log_analysis(self, asset_guid: str,
@@ -7530,8 +7436,7 @@ class AssetMaker(ServerClient):
     def set_asset_as_log_analysis(self, asset_guid: str,
                                   body: dict | NewClassificationRequestBody | None = None) -> None:
         """Classify an asset as performing log analysis."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_asset_as_log_analysis(asset_guid, body))
+        run_sync(self._async_set_asset_as_log_analysis(asset_guid, body))
 
     @dynamic_catch
     async def _async_clear_asset_as_log_analysis(self, asset_guid: str,
@@ -7544,8 +7449,7 @@ class AssetMaker(ServerClient):
     def clear_asset_as_log_analysis(self, asset_guid: str,
                                     body: dict | DeleteClassificationRequestBody | None = None) -> None:
         """Remove the LogAnalysis classification from an asset."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_asset_as_log_analysis(asset_guid, body))
+        run_sync(self._async_clear_asset_as_log_analysis(asset_guid, body))
 
     @dynamic_catch
     async def _async_set_api_as_listener_interface(self, deployed_api_guid: str,
@@ -7560,8 +7464,7 @@ class AssetMaker(ServerClient):
     def set_api_as_listener_interface(self, deployed_api_guid: str,
                                       body: dict | NewClassificationRequestBody | None = None) -> None:
         """Classify a deployed API as a listener interface."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_api_as_listener_interface(deployed_api_guid, body))
+        run_sync(self._async_set_api_as_listener_interface(deployed_api_guid, body))
 
     @dynamic_catch
     async def _async_clear_api_as_listener_interface(self, deployed_api_guid: str,
@@ -7574,8 +7477,7 @@ class AssetMaker(ServerClient):
     def clear_api_as_listener_interface(self, deployed_api_guid: str,
                                         body: dict | DeleteClassificationRequestBody | None = None) -> None:
         """Remove the ListenerInterface classification from a deployed API."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_api_as_listener_interface(deployed_api_guid, body))
+        run_sync(self._async_clear_api_as_listener_interface(deployed_api_guid, body))
 
     @dynamic_catch
     async def _async_set_api_as_publisher_interface(self, deployed_api_guid: str,
@@ -7590,8 +7492,7 @@ class AssetMaker(ServerClient):
     def set_api_as_publisher_interface(self, deployed_api_guid: str,
                                        body: dict | NewClassificationRequestBody | None = None) -> None:
         """Classify a deployed API as a publisher interface."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_api_as_publisher_interface(deployed_api_guid, body))
+        run_sync(self._async_set_api_as_publisher_interface(deployed_api_guid, body))
 
     @dynamic_catch
     async def _async_clear_api_as_publisher_interface(self, deployed_api_guid: str,
@@ -7604,8 +7505,7 @@ class AssetMaker(ServerClient):
     def clear_api_as_publisher_interface(self, deployed_api_guid: str,
                                          body: dict | DeleteClassificationRequestBody | None = None) -> None:
         """Remove the PublisherInterface classification from a deployed API."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_api_as_publisher_interface(deployed_api_guid, body))
+        run_sync(self._async_clear_api_as_publisher_interface(deployed_api_guid, body))
 
     @dynamic_catch
     async def _async_set_api_as_request_response_interface(self, deployed_api_guid: str,
@@ -7620,8 +7520,7 @@ class AssetMaker(ServerClient):
     def set_api_as_request_response_interface(self, deployed_api_guid: str,
                                                body: dict | NewClassificationRequestBody | None = None) -> None:
         """Classify a deployed API as a request-response interface."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_api_as_request_response_interface(deployed_api_guid, body))
+        run_sync(self._async_set_api_as_request_response_interface(deployed_api_guid, body))
 
     @dynamic_catch
     async def _async_clear_api_as_request_response_interface(self, deployed_api_guid: str,
@@ -7634,8 +7533,7 @@ class AssetMaker(ServerClient):
     def clear_api_as_request_response_interface(self, deployed_api_guid: str,
                                                  body: dict | DeleteClassificationRequestBody | None = None) -> None:
         """Remove the RequestResponseInterface classification from a deployed API."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_api_as_request_response_interface(deployed_api_guid, body))
+        run_sync(self._async_clear_api_as_request_response_interface(deployed_api_guid, body))
 
     @dynamic_catch
     async def _async_set_data_asset_encoding(self, data_asset_guid: str,
@@ -7650,8 +7548,7 @@ class AssetMaker(ServerClient):
     def set_data_asset_encoding(self, data_asset_guid: str,
                                 body: dict | NewClassificationRequestBody | None = None) -> None:
         """Classify a data asset with its encoding details."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_data_asset_encoding(data_asset_guid, body))
+        run_sync(self._async_set_data_asset_encoding(data_asset_guid, body))
 
     @dynamic_catch
     async def _async_clear_data_asset_encoding(self, data_asset_guid: str,
@@ -7664,5 +7561,4 @@ class AssetMaker(ServerClient):
     def clear_data_asset_encoding(self, data_asset_guid: str,
                                   body: dict | DeleteClassificationRequestBody | None = None) -> None:
         """Remove the DataAssetEncoding classification from a data asset."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_data_asset_encoding(data_asset_guid, body))
+        run_sync(self._async_clear_data_asset_encoding(data_asset_guid, body))

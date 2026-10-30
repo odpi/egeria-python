@@ -25,6 +25,7 @@ from pyegeria.models import (
 )
 from pyegeria.view.output_formatter import populate_columns_from_properties, \
     _extract_referenceable_properties, get_required_relationships
+from pyegeria.core.async_runner import run_sync
 
 class RuntimeManager(ServerClient):
     """
@@ -208,8 +209,7 @@ class RuntimeManager(ServerClient):
         PyegeriaUnauthorizedException
 
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_integration_connector_config_properties(
                 connector_name, server_guid, server_name, qualified_name, organization_name, output_format, report_spec, body
             )
@@ -333,8 +333,7 @@ class RuntimeManager(ServerClient):
         PyegeriaUnauthorizedException
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_update_connector_configuration(
                 connector_name,
                 server_guid,
@@ -448,8 +447,7 @@ class RuntimeManager(ServerClient):
         PyegeriaUnauthorizedException
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_update_endpoint_address(
                 connector_name,
                 endpoint_address,
@@ -563,8 +561,7 @@ class RuntimeManager(ServerClient):
         PyegeriaUnauthorizedException
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_update_connector_connection(
                 connector_name,
                 connection,
@@ -676,8 +673,7 @@ class RuntimeManager(ServerClient):
         PyegeriaUnauthorizedException
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_restart_connector(
                 connector_name, server_guid, display_name, qualified_name, organization_name, body
             )
@@ -753,8 +749,7 @@ class RuntimeManager(ServerClient):
         PyegeriaUnauthorizedException
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_connect_to_cohort(cohort_name, server_guid, server_name, organization_name, body)
         )
         return
@@ -828,8 +823,7 @@ class RuntimeManager(ServerClient):
         PyegeriaUnauthorizedException
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_disconnect_from_cohort(cohort_name, server_guid, server_name, organization_name, body)
         )
         return
@@ -903,8 +897,7 @@ class RuntimeManager(ServerClient):
         PyegeriaUnauthorizedException
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_unregister_from_cohort(cohort_name, server_guid, server_name, organization_name, body)
         )
         return
@@ -1015,8 +1008,7 @@ class RuntimeManager(ServerClient):
         PyegeriaUnauthorizedException
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_refresh_gov_eng_config(
                 gov_engine_name, server_guid, display_name, qualified_name, body, **kwargs
             )
@@ -1122,8 +1114,7 @@ class RuntimeManager(ServerClient):
         PyegeriaUnauthorizedException
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_refresh_integ_group_config(
                 integ_group_name, server_guid, display_name, qualified_name, organization_name, body, **kwargs
             )
@@ -1230,8 +1221,7 @@ class RuntimeManager(ServerClient):
         PyegeriaUnauthorizedException
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_refresh_integration_connector(
                 connector_name,
                 server_guid,
@@ -1347,8 +1337,7 @@ class RuntimeManager(ServerClient):
         PyegeriaUnauthorizedException
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_refresh_gov_engine(
                 gov_engine_name,
                 server_guid,
@@ -1456,8 +1445,7 @@ class RuntimeManager(ServerClient):
         PyegeriaUnauthorizedException
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_publish_open_lineage_event(ol_event, server_guid, display_name, qualified_name, organization_name, body)
         )
 
@@ -1572,8 +1560,7 @@ class RuntimeManager(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_publish_open_lineage_event_string(
                 ol_event_string, server_guid, display_name, qualified_name, organization_name, body
             )
@@ -1680,8 +1667,7 @@ class RuntimeManager(ServerClient):
         PyegeriaUnauthorizedException
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_add_archive_content(
                 archive_content, server_guid, display_name, qualified_name, timeout, body
             )
@@ -1793,8 +1779,7 @@ class RuntimeManager(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_add_archive_file(
                 archive_file, server_guid, display_name, qualified_name, timeout, organization_name, body
             )
@@ -1871,8 +1856,7 @@ class RuntimeManager(ServerClient):
         PyegeriaUnauthorizedException
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_shutdown_and_unregister_server(server_guid, qualified_name, body)
         )
         return
@@ -1961,8 +1945,7 @@ class RuntimeManager(ServerClient):
         PyegeriaUnauthorizedException
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_activate_server_with_stored_config(
                 server_guid, display_name, qualified_name, timeout, organization_name, body
             )
@@ -2032,8 +2015,7 @@ class RuntimeManager(ServerClient):
         PyegeriaUnauthorizedException
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_shutdown_server(server_guid, qualified_name, body)
         )
         return
@@ -2071,8 +2053,7 @@ class RuntimeManager(ServerClient):
         Response
            A list of JSONdict with the platform reports.
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_platforms_by_name(
                 filter_string=filter_string,
                 start_from=start_from,
@@ -2238,8 +2219,7 @@ class RuntimeManager(ServerClient):
         PyegeriaUnauthorizedException
 
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_platforms_by_type(
                 filter_string=filter_string,
                 start_from=start_from,
@@ -2347,8 +2327,7 @@ class RuntimeManager(ServerClient):
         PyegeriaUnauthorizedException
 
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_platform_templates_by_type(
                 filter_string=filter_string,
                 effective_time=effective_time,
@@ -2441,8 +2420,7 @@ class RuntimeManager(ServerClient):
         PyegeriaAPIException
         PyegeriaUnauthorizedException
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_platform_report(platform_guid, platform_name, output_format, report_spec)
         )
 
@@ -2517,8 +2495,7 @@ class RuntimeManager(ServerClient):
         PyegeriaUnauthorizedException
 
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_platform_by_guid(platform_guid, graph_query_depth, output_format, report_spec, body)
         )
         return response
@@ -2571,8 +2548,7 @@ class RuntimeManager(ServerClient):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_get_connector_type(platform_guid, java_class_name))
+        return run_sync(self._async_get_connector_type(platform_guid, java_class_name))
 
     @dynamic_catch
     async def _async_get_server_by_guid(
@@ -2651,8 +2627,7 @@ class RuntimeManager(ServerClient):
         PyegeriaUnauthorizedException
 
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_server_by_guid(server_guid, output_format=output_format,
                                            graph_query_depth=graph_query_depth,
                                            report_spec=report_spec, body=body)
@@ -2748,8 +2723,7 @@ class RuntimeManager(ServerClient):
         PyegeriaUnauthorizedException
 
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_servers_by_name(
                 filter_string=filter_string,
                 start_from=start_from,
@@ -2845,8 +2819,7 @@ class RuntimeManager(ServerClient):
             report_spec ():
 
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_servers_by_dep_impl_type(search_string, start_from,page_size,
                                                      output_format, report_spec, body)
         )
@@ -2942,8 +2915,7 @@ class RuntimeManager(ServerClient):
         PyegeriaUnauthorizedException
 
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_server_templates_by_dep_impl_type(
                 filter_string=filter_string,
                 start_from=start_from,
@@ -3042,8 +3014,7 @@ class RuntimeManager(ServerClient):
         PyegeriaUnauthorizedException
 
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_server_report(server_guid, server_name, output_format, report_spec, organization_name)
         )
 
@@ -3272,7 +3243,7 @@ class RuntimeManager(ServerClient):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        return asyncio.get_event_loop().run_until_complete(self._async_create_metadata_repository_cohort(body))
+        return run_sync(self._async_create_metadata_repository_cohort(body))
 
     @dynamic_catch
     async def _async_create_metadata_repository_cohort_from_template(
@@ -3317,7 +3288,7 @@ class RuntimeManager(ServerClient):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_create_metadata_repository_cohort_from_template(body))
 
     @dynamic_catch
@@ -3364,8 +3335,7 @@ class RuntimeManager(ServerClient):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_metadata_repository_cohort(cohort_guid, body))
+        run_sync(self._async_update_metadata_repository_cohort(cohort_guid, body))
 
     @dynamic_catch
     async def _async_delete_metadata_repository_cohort(self, cohort_guid: str,
@@ -3419,8 +3389,7 @@ class RuntimeManager(ServerClient):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_metadata_repository_cohort(cohort_guid, body, cascade))
+        run_sync(self._async_delete_metadata_repository_cohort(cohort_guid, body, cascade))
 
     @dynamic_catch
     async def _async_get_metadata_repository_cohorts_by_name(
@@ -3502,8 +3471,7 @@ class RuntimeManager(ServerClient):
         **kwargs,
     ) -> list | str:
         """Returns the list of metadata repository cohorts with a particular name."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_metadata_repository_cohorts_by_name(
                 name, metadata_element_type_name, metadata_element_subtypes, graph_query_depth,
                 start_from, page_size, output_format, report_spec, body, **kwargs
@@ -3603,8 +3571,7 @@ class RuntimeManager(ServerClient):
         **kwargs,
     ) -> list | str:
         """Retrieve the list of metadata repository cohorts that contain the search string."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_metadata_repository_cohorts(
                 search_string, starts_with, ends_with, ignore_case, metadata_element_type_name,
                 metadata_element_subtypes, graph_query_depth, start_from, page_size, output_format,
@@ -3669,8 +3636,7 @@ class RuntimeManager(ServerClient):
         **kwargs,
     ) -> dict | str:
         """Return the properties of a specific metadata repository cohort."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_metadata_repository_cohort_by_guid(
                 guid, graph_query_depth, output_format, report_spec, body, **kwargs
             )
@@ -3727,8 +3693,7 @@ class RuntimeManager(ServerClient):
     def link_cohort_member(self, cohort_guid: str, cohort_member_guid: str,
                            body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """ Connect a cohort to one of its members."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_cohort_member(cohort_guid, cohort_member_guid, body))
+        run_sync(self._async_link_cohort_member(cohort_guid, cohort_member_guid, body))
 
     @dynamic_catch
     async def _async_detach_cohort_member(self, cohort_guid: str, cohort_member_guid: str,
@@ -3775,8 +3740,7 @@ class RuntimeManager(ServerClient):
     def detach_cohort_member(self, cohort_guid: str, cohort_member_guid: str,
                              body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Detach a cohort member from a cohort."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_cohort_member(cohort_guid, cohort_member_guid, body))
+        run_sync(self._async_detach_cohort_member(cohort_guid, cohort_member_guid, body))
 
     # connect_to_cohort/disconnect_from_cohort/unregister_from_cohort (POST,
     # above) already cover connectToCohort/disconnectFromCohort/
@@ -3811,8 +3775,7 @@ class RuntimeManager(ServerClient):
     @dynamic_catch
     def connect_to_cohort_get(self, server_guid: str, cohort_name: str) -> None:
         """ Register this server's metadata collection with the other servers in the cohort (GET variant)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_connect_to_cohort_get(server_guid, cohort_name))
+        run_sync(self._async_connect_to_cohort_get(server_guid, cohort_name))
 
     @dynamic_catch
     async def _async_disconnect_from_cohort_get(self, server_guid: str, cohort_name: str) -> None:
@@ -3840,8 +3803,7 @@ class RuntimeManager(ServerClient):
     @dynamic_catch
     def disconnect_from_cohort_get(self, server_guid: str, cohort_name: str) -> None:
         """ Disconnect communications from a specific cohort (GET variant)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_disconnect_from_cohort_get(server_guid, cohort_name))
+        run_sync(self._async_disconnect_from_cohort_get(server_guid, cohort_name))
 
     @dynamic_catch
     async def _async_unregister_from_cohort_get(self, server_guid: str, cohort_name: str) -> None:
@@ -3870,8 +3832,7 @@ class RuntimeManager(ServerClient):
     @dynamic_catch
     def unregister_from_cohort_get(self, server_guid: str, cohort_name: str) -> None:
         """ Unregister from a specific cohort and disconnect from cohort communications (GET variant)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_unregister_from_cohort_get(server_guid, cohort_name))
+        run_sync(self._async_unregister_from_cohort_get(server_guid, cohort_name))
 
     @dynamic_catch
     async def _async_get_elements_by_category(
@@ -3998,8 +3959,7 @@ class RuntimeManager(ServerClient):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_elements_by_category(
                 category, start_from, page_size, skip_relationships, relationships_page_size,
                 output_format, report_spec, body, **kwargs

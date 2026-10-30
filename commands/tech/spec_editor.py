@@ -371,10 +371,10 @@ def main(port: int, compact_dir: str | None) -> None:
         _state["compact_dir"] = Path(compact_dir).resolve()
     click.echo(f"Serving compact_commands from: {_state['compact_dir']}")
     click.echo(f"Open http://localhost:{port} in your browser")
-    # Some pyegeria imports apply nest_asyncio, which patches asyncio.run() with a
-    # signature that doesn't accept uvicorn.run()'s internal loop_factory kwarg.
-    # Building the Server ourselves and calling plain asyncio.run(server.serve())
-    # avoids that incompatible call path.
+    # pyegeria imports used to apply nest_asyncio (removed in ISSUE-168), which
+    # patched asyncio.run() with a signature that doesn't accept uvicorn.run()'s
+    # internal loop_factory kwarg. Building the Server ourselves and calling plain
+    # asyncio.run(server.serve()) works either way.
     config = uvicorn.Config(app, host="127.0.0.1", port=port)
     server = uvicorn.Server(config)
     asyncio.run(server.serve())

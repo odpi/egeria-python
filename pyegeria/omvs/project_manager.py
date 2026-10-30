@@ -19,6 +19,7 @@ from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequ
 from pyegeria.view.output_formatter import populate_common_columns, overlay_additional_values, materialize_egeria_summary
 from pyegeria.core.utils import body_slimmer, dynamic_catch
 from loguru import logger
+from pyegeria.core.async_runner import run_sync
 
 PROJECT_TYPES = ["Project", "Campaign", "StudyProject", "Task", "PersonalProject", "Experiment", "Investigation"]
 
@@ -195,8 +196,7 @@ class ProjectManager(ServerClient):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
+        resp = run_sync(
             self._async_get_linked_projects(
                 parent_guid,
                 body,
@@ -303,8 +303,7 @@ class ProjectManager(ServerClient):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
+        resp = run_sync(
             self._async_get_classified_projects(project_classification,
                 start_from,page_size,
 
@@ -408,8 +407,7 @@ class ProjectManager(ServerClient):
            }
          }
          """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_add_project_classification(project_guid = project_guid,
                                                 body=body
                                                 )
@@ -503,8 +501,7 @@ class ProjectManager(ServerClient):
           "forDuplicateProcessing": false
          }
          """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_clear_project_classification(project_guid = project_guid,
                                                 body=body
                                                 )
@@ -639,8 +636,7 @@ class ProjectManager(ServerClient):
         }
         """
 
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
+        resp = run_sync(
             self._async_get_projects_by_classification_properties( approach, management_style, results_usage,
                                          start_from, page_size,
                                          output_format, report_spec, body, **kwargs)
@@ -746,8 +742,7 @@ class ProjectManager(ServerClient):
         PyegeriaException
 
         """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
+        resp = run_sync(
             self._async_get_project_team(project_guid, team_role, start_from, page_size,
                                          output_format,report_spec, body, **kwargs  )
         )
@@ -834,8 +829,7 @@ class ProjectManager(ServerClient):
         PyegeriaException
 
         """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
+        resp = run_sync(
             self._async_get_project_hierarchy(project_guid, output_format, report_spec, body, **kwargs)
         )
         return resp
@@ -959,8 +953,7 @@ class ProjectManager(ServerClient):
         **kwargs,
     ) -> list | str:
         """ Retrieve the list of project metadata elements that contain the search string. """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_projects(
                 search_string=search_string,
                 starts_with=starts_with,
@@ -1037,8 +1030,7 @@ class ProjectManager(ServerClient):
         body: Optional[dict | FilterRequestBody] = None,
         **kwargs,
     ) -> list | str:
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
+        resp = run_sync(
             self._async_get_projects_by_name(
                 filter_string=filter_string,
                 classification_names=classification_names,
@@ -1100,8 +1092,7 @@ class ProjectManager(ServerClient):
         **kwargs,
     ) -> dict | str:
         """Return the properties of a specific project."""
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
+        resp = run_sync(
             self._async_get_project_by_guid(
                 project_guid=project_guid,
                 include_only_relationships=include_only_relationships,
@@ -1197,8 +1188,7 @@ class ProjectManager(ServerClient):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
+        resp = run_sync(
             self._async_get_project_graph(project_guid, element_type, body, output_format, report_spec, **kwargs)
         )
 
@@ -1429,8 +1419,7 @@ class ProjectManager(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
+        resp = run_sync(
             self._async_create_project(anchor_guid, parent_guid, parent_relationship_type_name, parent_at_end1,
                                        display_name, description, classification_name, identifier,
                                        is_own_anchor, status, phase, health, start_date, planned_end_date, body)
@@ -1556,8 +1545,7 @@ class ProjectManager(ServerClient):
           }
         }
         """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_create_project_from_template(body))
+        resp = run_sync(self._async_create_project_from_template(body))
         return resp
 
     #
@@ -1706,8 +1694,7 @@ class ProjectManager(ServerClient):
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_update_project(project_guid, qualified_name, identifier, display_name, description,
                                        project_status, project_phase, project_health, start_date, planned_end_date,
                                        merge_update, body))
@@ -1779,8 +1766,7 @@ class ProjectManager(ServerClient):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_project(project_guid, cascade, body))
+        run_sync(self._async_delete_project(project_guid, cascade, body))
 
     @dynamic_catch
     async def _async_archive_project(self, project_guid: str,
@@ -1818,8 +1804,7 @@ class ProjectManager(ServerClient):
         body: dict | DeleteElementRequestBody, optional
             May set archiveDate, archiveProcess and archiveProperties; deleteMethod is always ARCHIVE.
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_archive_project(project_guid, body))
+        run_sync(self._async_archive_project(project_guid, body))
 
     @dynamic_catch
     async def _async_set_project_dependency(self, project_guid: str,
@@ -1893,8 +1878,7 @@ class ProjectManager(ServerClient):
             -----
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_set_project_dependency(project_guid, upstream_project_guid,
                                                body))
 
@@ -1985,8 +1969,7 @@ class ProjectManager(ServerClient):
           "forDuplicateProcessing": false
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_clear_project_dependency(project_guid, upstream_project_guid, body))
 
     @dynamic_catch
@@ -2062,8 +2045,7 @@ class ProjectManager(ServerClient):
             -----
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_set_project_hierarchy(project_guid, parent_project_guid,
                                               body))
 
@@ -2154,8 +2136,7 @@ class ProjectManager(ServerClient):
           "forDuplicateProcessing": false
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_clear_project_hierarchy(project_guid, parent_project_guid, body))
 
     @dynamic_catch
@@ -2257,8 +2238,7 @@ class ProjectManager(ServerClient):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_add_to_project_team(
                 project_guid,
                 actor_guid,
@@ -2339,8 +2319,7 @@ class ProjectManager(ServerClient):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_remove_from_project_team(project_guid, actor_guid, body)
         )
 
@@ -2397,8 +2376,7 @@ class ProjectManager(ServerClient):
             body: Optional[dict | NewElementRequestBody] = None
     ) -> str:
         """Create a new task for a project.  """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
+        resp = run_sync(
             self._async_create_project_task(project_guid, display_name, identifier, description, status, phase, health,
                                             start_date, planned_end_date, body)
         )
@@ -2430,8 +2408,7 @@ class ProjectManager(ServerClient):
     def set_project_as_campaign(self, project_guid: str,
                     body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify a project as a campaign."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_project_as_campaign(project_guid, body))
+        run_sync(self._async_set_project_as_campaign(project_guid, body))
 
     @dynamic_catch
     async def _async_clear_project_as_campaign(self, project_guid: str,
@@ -2445,8 +2422,7 @@ class ProjectManager(ServerClient):
     def clear_project_as_campaign(self, project_guid: str,
                       body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the campaign classification from a project."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_project_as_campaign(project_guid, body))
+        run_sync(self._async_clear_project_as_campaign(project_guid, body))
 
     @dynamic_catch
     async def _async_set_project_as_task(self, project_guid: str,
@@ -2462,8 +2438,7 @@ class ProjectManager(ServerClient):
     def set_project_as_task(self, project_guid: str,
                     body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify a project as a task."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_project_as_task(project_guid, body))
+        run_sync(self._async_set_project_as_task(project_guid, body))
 
     @dynamic_catch
     async def _async_clear_project_as_task(self, project_guid: str,
@@ -2477,8 +2452,7 @@ class ProjectManager(ServerClient):
     def clear_project_as_task(self, project_guid: str,
                       body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the task classification from a project."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_project_as_task(project_guid, body))
+        run_sync(self._async_clear_project_as_task(project_guid, body))
 
     @dynamic_catch
     async def _async_set_project_as_personal_project(self, project_guid: str,
@@ -2494,8 +2468,7 @@ class ProjectManager(ServerClient):
     def set_project_as_personal_project(self, project_guid: str,
                     body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify a project as a personal project."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_project_as_personal_project(project_guid, body))
+        run_sync(self._async_set_project_as_personal_project(project_guid, body))
 
     @dynamic_catch
     async def _async_clear_project_as_personal_project(self, project_guid: str,
@@ -2509,8 +2482,7 @@ class ProjectManager(ServerClient):
     def clear_project_as_personal_project(self, project_guid: str,
                       body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the personal project classification from a project."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_project_as_personal_project(project_guid, body))
+        run_sync(self._async_clear_project_as_personal_project(project_guid, body))
 
     @dynamic_catch
     async def _async_set_project_as_study_project(self, project_guid: str,
@@ -2526,8 +2498,7 @@ class ProjectManager(ServerClient):
     def set_project_as_study_project(self, project_guid: str,
                     body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify a project as a study project."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_project_as_study_project(project_guid, body))
+        run_sync(self._async_set_project_as_study_project(project_guid, body))
 
     @dynamic_catch
     async def _async_clear_project_as_study_project(self, project_guid: str,
@@ -2541,8 +2512,7 @@ class ProjectManager(ServerClient):
     def clear_project_as_study_project(self, project_guid: str,
                       body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the study project classification from a project."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_project_as_study_project(project_guid, body))
+        run_sync(self._async_clear_project_as_study_project(project_guid, body))
 
     @dynamic_catch
     async def _async_set_project_as_experiment(self, project_guid: str,
@@ -2558,8 +2528,7 @@ class ProjectManager(ServerClient):
     def set_project_as_experiment(self, project_guid: str,
                     body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify a project as a experiment."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_project_as_experiment(project_guid, body))
+        run_sync(self._async_set_project_as_experiment(project_guid, body))
 
     @dynamic_catch
     async def _async_clear_project_as_experiment(self, project_guid: str,
@@ -2573,8 +2542,7 @@ class ProjectManager(ServerClient):
     def clear_project_as_experiment(self, project_guid: str,
                       body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the experiment classification from a project."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_project_as_experiment(project_guid, body))
+        run_sync(self._async_clear_project_as_experiment(project_guid, body))
 
     @dynamic_catch
     async def _async_set_project_as_investigation(self, project_guid: str,
@@ -2590,8 +2558,7 @@ class ProjectManager(ServerClient):
     def set_project_as_investigation(self, project_guid: str,
                     body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify a project as an investigation that is seeking to answer a question."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_project_as_investigation(project_guid, body))
+        run_sync(self._async_set_project_as_investigation(project_guid, body))
 
     @dynamic_catch
     async def _async_clear_project_as_investigation(self, project_guid: str,
@@ -2605,8 +2572,7 @@ class ProjectManager(ServerClient):
     def clear_project_as_investigation(self, project_guid: str,
                       body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the investigation classification from a project."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_project_as_investigation(project_guid, body))
+        run_sync(self._async_clear_project_as_investigation(project_guid, body))
 
     @dynamic_catch
     async def _async_set_project_as_glossary_project(self, project_guid: str,
@@ -2622,8 +2588,7 @@ class ProjectManager(ServerClient):
     def set_project_as_glossary_project(self, project_guid: str,
                     body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify a project as a glossary project."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_project_as_glossary_project(project_guid, body))
+        run_sync(self._async_set_project_as_glossary_project(project_guid, body))
 
     @dynamic_catch
     async def _async_clear_project_as_glossary_project(self, project_guid: str,
@@ -2637,8 +2602,7 @@ class ProjectManager(ServerClient):
     def clear_project_as_glossary_project(self, project_guid: str,
                       body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the glossary project classification from a project."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_project_as_glossary_project(project_guid, body))
+        run_sync(self._async_clear_project_as_glossary_project(project_guid, body))
 
     @dynamic_catch
     async def _async_set_project_as_governance_project(self, project_guid: str,
@@ -2654,8 +2618,7 @@ class ProjectManager(ServerClient):
     def set_project_as_governance_project(self, project_guid: str,
                     body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify a project as a governance project."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_project_as_governance_project(project_guid, body))
+        run_sync(self._async_set_project_as_governance_project(project_guid, body))
 
     @dynamic_catch
     async def _async_clear_project_as_governance_project(self, project_guid: str,
@@ -2669,8 +2632,7 @@ class ProjectManager(ServerClient):
     def clear_project_as_governance_project(self, project_guid: str,
                       body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the governance project classification from a project."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_project_as_governance_project(project_guid, body))
+        run_sync(self._async_clear_project_as_governance_project(project_guid, body))
 
     @dynamic_catch
     async def _async_set_project_kind(self, project_guid: str,
@@ -2686,8 +2648,7 @@ class ProjectManager(ServerClient):
     def set_project_kind(self, project_guid: str,
                     body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify a project as a project kind."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_project_kind(project_guid, body))
+        run_sync(self._async_set_project_kind(project_guid, body))
 
     @dynamic_catch
     async def _async_clear_project_kind(self, project_guid: str,
@@ -2701,8 +2662,7 @@ class ProjectManager(ServerClient):
     def clear_project_kind(self, project_guid: str,
                       body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the project kind classification from a project."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_project_kind(project_guid, body))
+        run_sync(self._async_clear_project_kind(project_guid, body))
 
 
 if __name__ == "__main__":

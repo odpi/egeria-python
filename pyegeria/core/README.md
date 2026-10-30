@@ -9,6 +9,7 @@ builds on, plus shared config/exception/validation infrastructure.
 | File | Role |
 |---|---|
 | `_base_platform_client.py` → `_base_server_client.py` → `_server_client.py` | Layered HTTP stack: platform-level connectivity → server-level auth/session → the shared request/validate/response helpers (`_async_make_request`, `_async_new_relationship_request`, `_async_delete_element_request`, etc.) every `pyegeria/omvs/*.py` client inherits from. |
+| `async_runner.py` | `run_sync(coro)` — what every sync wrapper calls. Runs the coroutine on a per-thread persistent loop, or on a background thread when a loop is already running (Jupyter, Textual, async apps), so no `nest_asyncio` is needed (ISSUE-168). |
 | `config.py` | Pydantic-settings config; precedence = explicit args > OS env > `.env` > `config.json` > defaults. |
 | `_exceptions.py` | The `PyegeriaException` hierarchy — see `pyegeria/README.md`'s "Exceptions in pyegeria" section for the full class list and usage. |
 | `_validators.py` | Shared request-body/parameter validation helpers. |

@@ -12,7 +12,8 @@ module-to-class mapping (`ActionAuthor`, `ActorManager`, `AssetCatalog`,
 
 Conventions every client follows:
 - Every public method has an `_async_*` implementation plus a sync wrapper
-  calling `asyncio.get_event_loop().run_until_complete(...)`.
+  calling `run_sync(self._async_*(...))` from `pyegeria/core/async_runner.py`
+  (never `asyncio.run` or `get_event_loop().run_until_complete`).
 - All public methods are decorated with `@dynamic_catch`.
 - **Ground truth for API URLs and request bodies is `pyegeria/http
   clients/Egeria-api-*.http`** — check these files before constructing a

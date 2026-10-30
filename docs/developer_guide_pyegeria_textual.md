@@ -258,7 +258,9 @@ Every public method has two forms. `find_glossaries(...)` is synchronous and sim
 scripts. `_async_find_glossaries(...)` is the `async` implementation it wraps. Use the async
 form when you are already inside an event loop, as Textual apps and Dr. Egeria are, and want to
 `await` the call. The My Profile app does this when it loads the profile
-(`await self.my_profile_inst._async_get_my_profile(...)`).
+(`await self.my_profile_inst._async_get_my_profile(...)`). A sync call from a Textual handler
+still works, but the screen stops responding until Egeria answers. See
+[Sync and async](user_programming.md#sync-and-async) for more examples.
 
 ### Step 1: a first program
 

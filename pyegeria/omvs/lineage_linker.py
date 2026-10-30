@@ -18,6 +18,7 @@ from pyegeria.models import (
     DeleteRelationshipRequestBody,
 )
 from pyegeria.core.utils import dynamic_catch
+from pyegeria.core.async_runner import run_sync
 
 
 # Field set mirrors the real Java DTO inheritance chain (confirmed against
@@ -256,8 +257,7 @@ class LineageLinker(ServerClient):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_link_lineage(element_one_guid, relationship_type_name, element_two_guid, body)
         )
 
@@ -358,8 +358,7 @@ class LineageLinker(ServerClient):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_link_data_flow(element_one_guid, relationship_type_name, element_two_guid, body)
         )
 
@@ -453,8 +452,7 @@ class LineageLinker(ServerClient):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_update_lineage(lineage_relationship_guid, body))
+        return run_sync(self._async_update_lineage(lineage_relationship_guid, body))
 
     @dynamic_catch
     async def _async_detach_lineage(
@@ -542,7 +540,6 @@ class LineageLinker(ServerClient):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_detach_lineage(lineage_relationship_guid, body, cascade_delete=cascade_delete)
         )
