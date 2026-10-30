@@ -33,7 +33,8 @@ from pyegeria.view.base_report_formats import (
     get_report_registry,
 )
 from pyegeria.view.output_formatter import generate_output
-from pyegeria.view.analytic_registry import AnalyticActionSpec
+from pyegeria.view.analytic_registry import ABSENCE_STATES, AnalyticActionSpec
+from pyegeria.view.analytic_registry import get_analytic_registry as get_analytic_registry_functions
 from pyegeria.egeria_tech_client import EgeriaTech
 
 _CLIENT_CLASS_MAP = {
@@ -217,7 +218,10 @@ def _result_envelope(result: Any) -> Optional[Dict[str, str]]:
             return None
         reason = str(m.get("state_reason", m.get("resultStateReason", m.get("result_state_reason", ""))) or "")
         subtitle = m.get("subtitle") or (state.replace("_", " ") + (f" \u00b7 {reason}" if reason else ""))
-        return {"state": state, "reason": reason, "subtitle": str(subtitle)}
+        found = {"state": state, "reason": reason, "subtitle": str(subtitle)}
+        if m.get("absence") in ABSENCE_STATES:  # the result says which absence (ISSUE-171)
+            found["absence"] = m["absence"]
+        return found
 
     if isinstance(result, dict):
         found = _from_mapping(result)
@@ -246,6 +250,62 @@ def _with_envelope(out: Dict[str, Any], envelope: Optional[Dict[str, str]]) -> D
     if envelope:
         out["envelope"] = envelope
     return out
+
+
+# Envelope state -> the declared absence it is (ISSUE-171). not_established reads as
+# not_measured unless the result itself claims not_permitted (an `absence` key);
+# the reason text is never parsed to guess which.
+_ABSENCE_FOR_STATE = {
+    "nothing_found": "measured_nothing",
+    "not_established": "not_measured",
+    "not_applicable": "not_applicable",
+}
+
+# Used only when the function declares no absence sentences; built from its own reason.
+_UNDECLARED_ABSENCE_WORDS = {
+    "not_measured": "Not measured",
+    "not_permitted": "Not measured: not permitted",
+    "not_applicable": "Does not apply",
+    "measured_nothing": "Measured; nothing found",
+}
+
+
+def _declaration_for(func_decl: str):
+    """The registered declaration for an analytic_function, by registry name or by the
+    dotted path a registered entry declares; None when the function declares none."""
+    registry = get_analytic_registry_functions()
+    spec = registry.get(func_decl) or next((s for s in registry.values() if s.function == func_decl), None)
+    return spec.declaration if spec is not None else None
+
+
+def _absence_for(envelope: Optional[Dict[str, str]], func_decl: str) -> Optional[Dict[str, Any]]:
+    """What a reader is told when a result is not a measured value (ISSUE-171): the absence
+    state, the function's declared sentence for it (or words built from its reason when it
+    declares none, marked declared=False), and the reason. None for a measured result or
+    one with no envelope, which keep their old shapes."""
+    if not envelope or envelope["state"] not in _ABSENCE_FOR_STATE:
+        return None
+    state = _ABSENCE_FOR_STATE[envelope["state"]]
+    if state == "not_measured" and envelope.get("absence") == "not_permitted":
+        state = "not_permitted"
+    reason = envelope.get("reason", "")
+    declaration = _declaration_for(func_decl)
+    if declaration is not None:
+        return {"state": state, "sentence": declaration.absence.sentence(state), "reason": reason,
+                "declared": True}
+    words = _UNDECLARED_ABSENCE_WORDS[state]
+    return {"state": state, "sentence": f"{words}: {reason}." if reason else f"{words}.", "reason": reason,
+            "declared": False}
+
+
+def _absent_output(result: Any, envelope: Dict[str, str], absence: Dict[str, Any]) -> Dict[str, Any]:
+    """Output for a result whose value is not established or does not apply: the sentence,
+    never top-level data a chart or table would draw as an answer. Any partial result rides
+    under `detail`."""
+    out: Dict[str, Any] = {"kind": "absent", "content": absence["sentence"], "absence": absence}
+    if result not in (None, [], {}):
+        out["detail"] = result
+    return _with_envelope(out, envelope)
 
 
 def _run_analytic_function(
@@ -747,13 +807,14 @@ def _exec_analytic_chart(
     )
     envelope = _result_envelope(result)
     result = _jsonable(result)
-    if not result:
-        return _with_envelope({"kind": "empty"}, envelope)
+    absence = _absence_for(envelope, action["analytic_function"])
     # Chart only an established answer (ISSUE-140): measured, or nothing_found (a real
-    # zero). For not_established / not_applicable the numbers aren't known, so return
-    # the data and the state, never a chart whose zeros would read as an answer.
+    # zero). For not_established / not_applicable the numbers aren't known, so say so
+    # (ISSUE-171), never a chart whose zeros would read as an answer.
     if envelope and envelope["state"] not in CHARTABLE_STATES:
-        return _with_envelope({"kind": "json", "data": result}, envelope)
+        return _absent_output(result, envelope, absence)
+    if not result:
+        return _with_envelope({"kind": "empty", **({"absence": absence} if absence else {})}, envelope)
 
     try:
         heading = get_report_spec_heading(format_set_name) or str(format_set_name)
@@ -764,8 +825,10 @@ def _exec_analytic_chart(
         if not chart:
             return _with_envelope({"kind": "json", "data": result}, envelope)
         if envelope:  # the state rides on the chart itself (ISSUE-139)
-            chart["title"] = {"text": chart.get("title") or heading, "subtitle": envelope["subtitle"]}
-        return _with_envelope({"kind": "json", "data": chart}, envelope)
+            subtitle = absence["sentence"] if absence and absence["declared"] else envelope["subtitle"]
+            chart["title"] = {"text": chart.get("title") or heading, "subtitle": subtitle}
+        out = {"kind": "json", "data": chart, **({"absence": absence} if absence else {})}
+        return _with_envelope(out, envelope)
 
     if chart_kind == "line":
         if not isinstance(result, list) or not all(isinstance(pt, dict) for pt in result):
@@ -943,9 +1006,13 @@ def exec_report_spec(
         )
         envelope = _result_envelope(result)
         result = _jsonable(result)
+        absence = _absence_for(envelope, action["analytic_function"])
+        if envelope and envelope["state"] not in CHARTABLE_STATES:
+            return _absent_output(result, envelope, absence)  # ISSUE-171
+        extra = {"absence": absence} if absence else {}
         if result is None or result == [] or result == {}:
-            return _with_envelope({"kind": "empty"}, envelope)
-        return _with_envelope({"kind": "json", "data": result}, envelope)
+            return _with_envelope({"kind": "empty", **extra}, envelope)
+        return _with_envelope({"kind": "json", "data": result, **extra}, envelope)
 
     required_params = action.get("required_params", action.get("user_params", [])) or []
     optional_params = action.get("optional_params", []) or []
