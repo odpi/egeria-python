@@ -1051,6 +1051,9 @@ class AssignDataValueSpecificationProcessor(AsyncBaseCommandProcessor):
             body = set_rel_request_body("DataValueAssignment", attributes)
             body["properties"] = {
                 "class": "DataValueAssignmentProperties",
+                # label/description come from LabeledRelationshipProperties (ISSUE-154 item 4).
+                "label": attributes.get("Label", {}).get("value"),
+                "description": attributes.get("Description", {}).get("value"),
                 "assignmentStatus": attributes.get("Assignment Status", {}).get("value"),
                 "confidence": attributes.get("Confidence", {}).get("value"),
                 "method": attributes.get("Method", {}).get("value"),

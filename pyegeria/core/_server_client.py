@@ -48,6 +48,7 @@ from pyegeria.view.output_formatter import populate_common_columns, resolve_outp
 
 # Main Client Imports
 from pyegeria.models.models import (
+    DeleteMethod,
     NewElementRequestBody,
     NewAttachmentRequestBody,
     UpdateElementRequestBody,
@@ -6202,6 +6203,18 @@ class ServerClient(BaseServerClient):
 
         return validated_body
 
+    @staticmethod
+    def _archive_delete_body(body: Optional[dict | DeleteElementRequestBody] = None) -> dict | DeleteElementRequestBody:
+        """Return a copy of a delete request body with deleteMethod ARCHIVE (ISSUE-159). Egeria routes an
+        ARCHIVE delete to its archive operation: the element is classified Memento and its qualifiedName
+        gets an `_archivedOn_<date>` suffix, and MetadataExpert.restore_metadata_element reverses it."""
+        if isinstance(body, DeleteElementRequestBody):
+            return body.model_copy(update={"delete_method": DeleteMethod.ARCHIVE})
+        body = dict(body or {})
+        body.setdefault("class", "DeleteElementRequestBody")
+        body["deleteMethod"] = DeleteMethod.ARCHIVE.value
+        return body
+
     @dynamic_catch
     def validate_delete_element_request(self, body: Optional[dict | DeleteElementRequestBody] = None,
                                         cascade_delete: bool = False) -> DeleteElementRequestBody | None:
@@ -6212,7 +6225,7 @@ class ServerClient(BaseServerClient):
         else:  # handle case where body not provided
             body = {
                 "class": "DeleteElementRequestBody",
-                "cascadeDelete": cascade_delete
+                "cascadedDelete": cascade_delete
             }
             validated_body = self._validate_body(DeleteElementRequestBody.model_validate, body)
         return validated_body
@@ -6227,7 +6240,7 @@ class ServerClient(BaseServerClient):
         else:  # handle case where body not provided
             # body = {
             #     "class": "DeleteRelationshipRequestBody",
-            #     "cascadeDelete": cascade_delete
+            #     "cascadedDelete": cascade_delete
             # }
             # validated_body = self._validate_body(DeleteRelationshipRequestBody.model_validate, body)
             return None
@@ -6243,7 +6256,7 @@ class ServerClient(BaseServerClient):
         else:  # handle case where body not provided
             body = {
                 "class": "DeleteClassificationRequestBody",
-                "cascadeDelete": cascade_delete
+                "cascadedDelete": cascade_delete
             }
             validated_body = self._validate_body(DeleteClassificationRequestBody.model_validate, body)
         return validated_body

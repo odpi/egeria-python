@@ -93,6 +93,16 @@ class GovernanceProcessor(AsyncBaseCommandProcessor):
         )
 
     @staticmethod
+    def _fields_dropped_by_base_fallback(create_props: Dict[str, Any], fallback_props: Dict[str, Any]) -> list[str]:
+        """The set (non-empty) properties the base GovernanceDefinitionProperties retry would not send.
+        A field the fallback moves into additionalProperties (SecurityGroup's distinguishedName) is kept."""
+        carried = fallback_props.get("additionalProperties") or {}
+        return sorted(
+            k for k, v in create_props.items()
+            if k not in fallback_props and k not in carried and k != "class" and v not in (None, "", [], {})
+        )
+
+    @staticmethod
     def _to_base_governance_definition_properties(properties: Dict[str, Any], object_type: str) -> Dict[str, Any]:
         source = dict(properties)
         fallback: Dict[str, Any] = {
@@ -213,6 +223,14 @@ class GovernanceProcessor(AsyncBaseCommandProcessor):
                         raise
                     retry_body = dict(body)
                     retry_body["properties"] = self._to_base_governance_definition_properties(dict(create_props), object_type)
+                    # The base-class retry keeps only cross-type fields. Creating the element without the
+                    # type-specific ones and reporting success lost them silently (ISSUE-158), so refuse instead.
+                    dropped = self._fields_dropped_by_base_fallback(create_props, retry_body["properties"])
+                    if dropped:
+                        raise ValueError(
+                            f"Egeria would only create this {object_type} as a plain governance definition "
+                            f"(OMAG-COMMON-400-029), which would drop: {', '.join(dropped)}. Not created."
+                        ) from exc
                     logger.debug(
                         f"Create SecurityGroup fallback payload properties: {json.dumps(retry_body.get('properties', {}), sort_keys=True)}"
                     )

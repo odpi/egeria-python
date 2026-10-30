@@ -6602,6 +6602,43 @@ class CollectionManager(ServerClient):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_delete_collection(collection_guid, body, cascade))
 
+    @dynamic_catch
+    async def _async_archive_collection(self, collection_guid: str,
+                                        body: Optional[dict | DeleteElementRequestBody] = None) -> None:
+        """Archive a collection rather than delete it (ISSUE-159). Sends the collection delete with deleteMethod
+        ARCHIVE: Egeria classifies the collection Memento, so it stays readable for lineage, and renames its
+        qualifiedName with an `_archivedOn_<date>` suffix. Reverse it with
+        MetadataExpert.restore_metadata_element. Async version.
+
+        Parameters
+        ----------
+        collection_guid: str
+            The guid of the collection to archive.
+        body: dict | DeleteElementRequestBody, optional
+            May set archiveDate, archiveProcess and archiveProperties; deleteMethod is always ARCHIVE.
+        """
+        url = f"{self.collection_command_root}/{collection_guid}/delete"
+        await self._async_delete_element_request(url, self._archive_delete_body(body))
+        logger.info(f"Archived collection {collection_guid}")
+
+    @dynamic_catch
+    def archive_collection(self, collection_guid: str,
+                           body: Optional[dict | DeleteElementRequestBody] = None) -> None:
+        """Archive a collection rather than delete it (ISSUE-159). Sends the collection delete with deleteMethod
+        ARCHIVE: Egeria classifies the collection Memento, so it stays readable for lineage, and renames its
+        qualifiedName with an `_archivedOn_<date>` suffix. Reverse it with
+        MetadataExpert.restore_metadata_element.
+
+        Parameters
+        ----------
+        collection_guid: str
+            The guid of the collection to archive.
+        body: dict | DeleteElementRequestBody, optional
+            May set archiveDate, archiveProcess and archiveProperties; deleteMethod is always ARCHIVE.
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_archive_collection(collection_guid, body))
+
 
     @dynamic_catch
     async def _async_add_to_collection(self, collection_guid: str, element_guid: str,

@@ -217,14 +217,10 @@ class AsyncBaseCommandProcessor(ABC):
             {"UNCLASSIFIED": 0, "MARGINAL": 1, "IMPORTANT": 2, "CRITICAL": 3, "CATASTROPHIC": 4, "OTHER": 99},
         ),
         "Retention Classification": (
-            # "RetentionClassificationProperties" (the server's registered Jackson
-            # subtype ID for this classification - confirmed live via its own
-            # InvalidTypeIdException error listing all valid ids) is the correct
-            # class name to send, despite the real Java properties class's own
-            # simple name being "RetentionProperties" - do not "fix" this to
-            # "RetentionProperties", that's the wrong direction (confirmed live
-            # 2026-08-03: sending "RetentionProperties" gets rejected by Jackson
-            # outright as an unrecognized subtype id).
+            # Send "RetentionClassificationProperties". Servers before 2026-10 know
+            # only that subtype id (sending "RetentionProperties" was rejected live
+            # on 2026-08-03). Egeria main renamed it "RetentionProperties" and keeps
+            # the old name as an alias, so the old name works on both (ISSUE-154).
             #
             # Previously blocked server-side (see BACKLOG.md history) by
             # OMRS-REPOSITORY-400-028 ("a property called statusIdentifier ...

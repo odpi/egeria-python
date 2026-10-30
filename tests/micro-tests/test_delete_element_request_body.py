@@ -60,12 +60,12 @@ def test_delete_method_survives_validation():
 
 def test_cascade_delete_and_delete_method_serialize_with_canonical_names():
     b = DeleteElementRequestBody.model_validate(
-        {"class": "DeleteElementRequestBody", "cascadedDelete": True, "deleteMethod": "ARCHIVE"})
+        {"class": "DeleteElementRequestBody", "cascadeDelete": True, "deleteMethod": "ARCHIVE"})
     dumped = b.model_dump_json(exclude_none=True)
-    assert '"cascadeDelete":true' in dumped
+    # Egeria's field is cascadedDelete; older servers ignore cascadeDelete (ISSUE-132, ISSUE-154).
+    assert '"cascadedDelete":true' in dumped
     assert '"deleteMethod":"ARCHIVE"' in dumped
-    # confirms the alt spelling never leaks into the outgoing body
-    assert "cascadedDelete" not in dumped
+    assert '"cascadeDelete"' not in dumped
 
 
 async def test_delete_element_request_no_body_path_sends_cascade_delete():
@@ -79,7 +79,7 @@ async def test_delete_element_request_no_body_path_sends_cascade_delete():
     )
 
     assert cap["body"] is not None
-    assert '"cascadeDelete": true' in cap["body"]
+    assert '"cascadedDelete": true' in cap["body"]
 
 
 async def test_delete_element_request_forwards_caller_dict_body():

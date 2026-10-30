@@ -70,7 +70,7 @@ def test_delete_metadata_element_uses_delete_element_request_body():
 
     assert cap["url"].endswith("/metadata-elements/element-guid/delete")
     assert '"deleteMethod": "PURGE"' in cap["body"]
-    assert '"cascadeDelete": true' in cap["body"]
+    assert '"cascadedDelete": true' in cap["body"]
 
 
 def test_delete_metadata_element_cascade_delete_param_flows_through_no_body():
@@ -81,7 +81,7 @@ def test_delete_metadata_element_cascade_delete_param_flows_through_no_body():
     me.delete_metadata_element("element-guid", cascade_delete=True)
 
     assert cap["url"].endswith("/metadata-elements/element-guid/delete")
-    assert '"cascadeDelete": true' in cap["body"]
+    assert '"cascadedDelete": true' in cap["body"]
 
 
 def test_delete_relationship_request_body_still_preserves_delete_method():
@@ -98,4 +98,4 @@ def test_delete_element_request_body_still_preserves_delete_method_and_cascade()
         {"class": "DeleteElementRequestBody", "deleteMethod": "PURGE", "cascadeDelete": True})
     dumped = b.model_dump(by_alias=True, exclude_none=True)
     assert dumped["deleteMethod"] == "PURGE"
-    assert dumped["cascadeDelete"] is True
+    assert dumped["cascadedDelete"] is True

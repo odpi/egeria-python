@@ -2260,7 +2260,7 @@ class ReferenceDataManager(ServerClient):
         Sample body:
         {
           "class" : "DeleteElementRequestBody",
-          "cascadeDelete" : false,
+          "cascadedDelete" : false,
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime" : "{{$isoTimestamp}}",
@@ -2304,7 +2304,7 @@ class ReferenceDataManager(ServerClient):
             Sample body:
             {
               "class": "DeleteElementRequestBody",
-              "cascadeDelete": false,
+              "cascadedDelete": false,
               "externalSourceGUID": "add guid here",
               "externalSourceName": "add qualified name here",
               "effectiveTime": "{{$isoTimestamp}}",

@@ -132,6 +132,8 @@ CLASSIFICATION_METHODS: Dict[str, ClassificationSpec] = {
     "Criticality": ClassificationSpec(
         "_async_set_criticality_classification", "_async_clear_criticality_classification", "CriticalityProperties",
         level_field="criticalityLevel", fields=dict(_GOVERNANCE_SHARED_FIELDS)),
+    # Old class name on purpose: Egeria main (RetentionProperties) accepts it as an alias; older servers
+    # know only this one (ISSUE-154).
     "Retention": ClassificationSpec(
         "_async_set_retention_classification", "_async_clear_retention_classification", "RetentionClassificationProperties",
         level_field="retentionBasis",  # "Retention Basis" attribute holds an enum, reuse level_field slot

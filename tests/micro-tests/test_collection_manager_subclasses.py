@@ -94,7 +94,7 @@ async def test_cascade_true_reaches_the_server(cls, method, tail, monkeypatch):
     await getattr(client, method)("g1", cascade=True)
 
     assert calls[0]["url"].endswith(tail)
-    assert calls[0]["body"]["cascadeDelete"] is True
+    assert calls[0]["body"]["cascadedDelete"] is True
     assert calls[0]["body"]["class"] == "DeleteElementRequestBody"
 
 
@@ -105,7 +105,7 @@ async def test_cascade_default_does_not_cascade(method, monkeypatch):
 
     await getattr(client, method)("g1")
 
-    assert calls[0]["body"].get("cascadeDelete") in (None, False)
+    assert calls[0]["body"].get("cascadedDelete") in (None, False)
 
 
 @pytest.mark.asyncio
@@ -115,4 +115,4 @@ async def test_an_explicit_body_is_still_honoured(monkeypatch):
 
     await client._async_delete_collection("g1", body=body)
 
-    assert calls[0]["body"]["cascadeDelete"] is True and calls[0]["body"]["deleteMethod"] == "PURGE"
+    assert calls[0]["body"]["cascadedDelete"] is True and calls[0]["body"]["deleteMethod"] == "PURGE"

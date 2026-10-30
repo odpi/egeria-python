@@ -516,7 +516,7 @@ class MetadataExpert(ServerClient):
           "class" : "DeleteElementRequestBody",
           "externalSourceGUID" :  "",
           "externalSourceName" : "",
-          "cascadeDelete" : false,
+          "cascadedDelete" : false,
           "deleteMethod" : "SOFT_DELETE",
           "forLineage" : false,
           "forDuplicateProcessing" : false,
@@ -3881,15 +3881,16 @@ class MetadataExpert(ServerClient):
             - A `FindRequestBody` search structure (see `find_metadata_elements`).
         push_down: bool, optional, default = None
             - ISSUE-38 (PY-18): controls whether the repository counts matching
-              rows itself (`pushDown=True`, the server default when omitted —
-              fast, but does not apply the per-element visibility check
+              rows itself (`pushDown=True` — fast, but does not apply the
+              per-element visibility check
               `find_metadata_elements` does, so it can disagree with a list
               built from the same search) or whether the server retrieves and
               counts the matching elements the same way a find would
               (`pushDown=False` — agrees with a corresponding
               `find_metadata_elements` call by construction, at the cost of
               reading every one of them server-side). `None` omits the query
-              parameter entirely, i.e. today's existing behaviour.
+              parameter, and the server default applies: `false` on Egeria
+              main since the 2026-10-18 fixes, `true` on older servers.
         timeout: int, default = default_timeout
             - http request timeout for this request
 
@@ -3946,7 +3947,7 @@ class MetadataExpert(ServerClient):
             - A `FindRequestBody` search structure (see `find_metadata_elements`).
         push_down: bool, optional, default = None
             - ISSUE-38 (PY-18): see `_async_count_metadata_elements` for the full
-              explanation. `None` omits the query parameter (today's behaviour).
+              explanation. `None` omits the query parameter (server default).
         timeout: int, default = default_timeout
             - http request timeout for this request
 
@@ -4196,8 +4197,8 @@ class MetadataExpert(ServerClient):
               (see `find_relationships_between_elements`).
         push_down: bool, optional, default = None
             - ISSUE-38 (PY-18): controls whether the repository counts matching
-              rows itself (`pushDown=True`, the server default when omitted —
-              fast, but skips the per-relationship-end visibility check
+              rows itself (`pushDown=True` — fast, but skips the
+              per-relationship-end visibility check
               `find_relationships_between_elements` applies, so it can disagree
               with a list built from the same search — this is exactly the
               `count_relationships_between_elements("Exception")` vs.
@@ -4206,8 +4207,9 @@ class MetadataExpert(ServerClient):
               matching relationships the same way a find would
               (`pushDown=False` — agrees with a corresponding find by
               construction, at the cost of reading every one of them
-              server-side). `None` omits the query parameter entirely, i.e.
-              today's existing behaviour.
+              server-side). `None` omits the query parameter, and the server
+              default applies: `false` on Egeria main since the 2026-10-18
+              fixes, `true` on older servers.
         timeout: int, default = default_timeout
             - http request timeout for this request
 
@@ -4267,7 +4269,7 @@ class MetadataExpert(ServerClient):
         push_down: bool, optional, default = None
             - ISSUE-38 (PY-18): see `_async_count_relationships_between_elements`
               for the full explanation. `None` omits the query parameter
-              (today's behaviour).
+              (server default).
         timeout: int, default = default_timeout
             - http request timeout for this request
 

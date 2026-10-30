@@ -1783,6 +1783,45 @@ class ProjectManager(ServerClient):
         loop.run_until_complete(self._async_delete_project(project_guid, cascade, body))
 
     @dynamic_catch
+    async def _async_archive_project(self, project_guid: str,
+                                     body: Optional[dict | DeleteElementRequestBody] = None) -> None:
+        """Archive a project rather than delete it (ISSUE-159). Sends the project delete with deleteMethod
+        ARCHIVE: Egeria classifies the project Memento, so it stays readable for lineage, and renames its
+        qualifiedName with an `_archivedOn_<date>` suffix. Reverse it with
+        MetadataExpert.restore_metadata_element. Async version.
+
+        Parameters
+        ----------
+        project_guid: str
+            The guid of the project to archive.
+        body: dict | DeleteElementRequestBody, optional
+            May set archiveDate, archiveProcess and archiveProperties; deleteMethod is always ARCHIVE.
+        """
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/"
+            f"{project_guid}/delete"
+        )
+        await self._async_delete_element_request(url, self._archive_delete_body(body))
+        logger.info(f"Archived project {project_guid}")
+
+    @dynamic_catch
+    def archive_project(self, project_guid: str, body: Optional[dict | DeleteElementRequestBody] = None) -> None:
+        """Archive a project rather than delete it (ISSUE-159). Sends the project delete with deleteMethod
+        ARCHIVE: Egeria classifies the project Memento, so it stays readable for lineage, and renames its
+        qualifiedName with an `_archivedOn_<date>` suffix. Reverse it with
+        MetadataExpert.restore_metadata_element.
+
+        Parameters
+        ----------
+        project_guid: str
+            The guid of the project to archive.
+        body: dict | DeleteElementRequestBody, optional
+            May set archiveDate, archiveProcess and archiveProperties; deleteMethod is always ARCHIVE.
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_archive_project(project_guid, body))
+
+    @dynamic_catch
     async def _async_set_project_dependency(self, project_guid: str,
                                             upstream_project_guid: str,
                                             body: Optional[dict | NewRelationshipRequestBody] = None):
