@@ -118,7 +118,7 @@ class CommunitiesScreen(ModalScreen):
                 Select([(t, t) for t in JOIN_ASSIGNMENT_TYPES], value=JOIN_ASSIGNMENT_TYPES[0],
                        allow_blank=False, id="join_assignment_type"),
                 Button("Join Community", id="join_community_btn", variant="primary"),
-                Button("Open Community", id="open_found_community_btn", variant="default"),
+                Button("Open Community", id="open_found_community_btn", variant="primary"),
                 id="found_communities_buttons",
             ),
             id="find_communities_container",
