@@ -173,6 +173,8 @@ re-test candidates moved into *Awaiting re-test* below the open sections.
 
 **Open pyegeria items**
 - ISSUE-172: Installed packages couldn't register analytic functions or steps by installing; added the `pyegeria.analytics` entry-point group, read lazily
+- ISSUE-171: `exec_report_spec` returned an analytic result that was not measured as ordinary data or `empty`; it now returns the function's declared absence sentence
+- ISSUE-170: `AnalyticFunctionSpec` can't say what its results mean (unit, as-of, basis, absence sentences); added an optional `declaration`
 - ISSUE-169: `_resolve_analytic_function` imported any dotted path a report spec named; now registered names plus an allowlist of module prefixes
 - ISSUE-168: pyegeria can't run on Python 3.14: `nest_asyncio`, applied at import time, makes `asyncio.current_task()` return None
 - ISSUE-155: pyegeria gaps against Egeria `main` since 6.2 (omvs_audit + source diff, V6.2..05a5e982)
@@ -215,9 +217,42 @@ Tests: `tests/micro-tests/test_issue_172_analytic_entry_points.py`.
 
 ---
 
+### ISSUE-171: `exec_report_spec` returned an analytic result that was not measured as ordinary data or `empty`; it now returns the function's declared absence sentence
+
+**Layer:** pyegeria · **Status:** in PR (branch `feat/state-aware-report-spec`, stacked on ISSUE-170's `feat/analytic-declaration`) · **Found:** 2026-10-30, Resource Explorer's portal-extensibility evaluation, §3 item 2.
+
+**What:** ISSUE-139/140 stopped charting a `not_established`/`not_applicable` result. The DICT path and the chart fallback still returned `{"kind": "json", "data": <result>}`, though, so a table or tile showed the routine's placeholder zeros as an answer. And `{"kind": "empty"}` looks the same to a reader whether nothing was found or nobody looked. Egeria Advisor, for example, renders `empty` as "No results returned".
+
+**Change** (`pyegeria/view/format_set_executor.py`):
+- **not_established / not_applicable** results now return `{"kind": "absent", "content": <sentence>, "absence": {...}, "envelope": {...}}` on every output format. There is no top-level `data`; a partial result rides under `detail`.
+- **nothing_found** results keep their data or chart (real zeros) and gain the same `absence` block. A chart's subtitle is the declared `measured_nothing` sentence.
+- **measured** results, and results with no envelope, are unchanged.
+
+`absence` gives the state (`not_measured`, `not_permitted`, `not_applicable` or `measured_nothing`), the sentence, the reason, and `declared`. The sentence comes from the function's registered `declaration.absence` (ISSUE-170), looked up by registry name or by dotted path. A function with no declaration gets words built from its own reason, with `declared: False`. `not_established` becomes `not_permitted` only when the result says so itself (`"absence": "not_permitted"`); the reason text is never parsed to guess.
+
+**Consumers to update:** Egeria Advisor's `report_pipeline`/`report_spec_agent` (trellis) treat an unknown kind generically. `content` is among the keys its fallback reads, so it shows the sentence, but it should handle `absent` explicitly. Any Portal tile that reads `data` for these states gets no `data` now.
+
+Tests: `tests/micro-tests/test_issue_171_state_aware_report_spec.py`; three ISSUE-140 tests updated to the new shape.
+
+---
+
+### ISSUE-170: `AnalyticFunctionSpec` can't say what its results mean (unit, as-of, basis, absence sentences); added an optional `declaration`
+
+**Layer:** pyegeria · **Status:** in PR (branch `feat/analytic-declaration`) · **Found:** 2026-10-30, Resource Explorer's portal-extensibility evaluation, §3 item 1 (trellis `docs/design-notes/EVAL-PORTAL-EXTENSIBILITY-VS-RE-2026-10-30.md`).
+
+**What:** trellis-analytics' `Declaration` lets a step say what its results are: result kind, each measure's unit, as-of and basis, and a sentence for each way a result can be absent. Resource Explorer renders from that declaration with no per-analysis code. pyegeria's registry, which the Portal also registers into, had no place for it, so a Portal function's meaning lived only in prose.
+
+**Change:** `AnalyticFunctionSpec.declaration: Optional[AnalyticDeclaration]`, plus `MeasureDeclaration`, `BasisDeclaration`, `AbsenceSentences`, `RESULT_KINDS` and `ABSENCE_STATES` in `pyegeria/view/analytic_registry.py`. It is the minimum of trellis's model: `result_kind`, `measures` (required for measure/series/distribution/graph) and all four `absence` sentences. Field names and vocabulary are the same as trellis's. Trellis's richer blocks (extents, confidence, answers, categories, ...) are ignored, not refused. Optional, so every existing entry loads unchanged. All 42 declarations in RE's `analysis_catalog.yaml` validate (checked 2026-10-30). trellis's `StepManifest` already overrides the field with its own `Declaration`, which still works.
+
+**Rule from the evaluation:** a field two consumers need lives here; a field one consumer needs stays in that consumer's subclass. Moving more of trellis's model up waits for a second consumer.
+
+Tests: `tests/micro-tests/test_issue_170_analytic_declaration.py`.
+
+---
+
 ### ISSUE-169: `_resolve_analytic_function` imported any dotted path a report spec named; now registered names plus an allowlist of module prefixes
 
-**Layer:** pyegeria · **Status:** fix in PR (branch `fix/analytic-resolver-allowlist`) · **Found:** 2026-10-30, Resource Explorer's portal-extensibility evaluation (gap G6, trellis `docs/design-notes/EVAL-PORTAL-EXTENSIBILITY-VS-RE-2026-10-30.md`).
+**Layer:** pyegeria · **Status:** fixed in #516 (merged 2026-10-30), ships in the next release · **Found:** 2026-10-30, Resource Explorer's portal-extensibility evaluation (gap G6, trellis `docs/design-notes/EVAL-PORTAL-EXTENSIBILITY-VS-RE-2026-10-30.md`).
 
 **What:** `format_set_executor._resolve_analytic_function` ran `importlib.import_module` on whatever module a report spec's `analytic_function` (or an action's `fetch`/`analytic` step, or an `analytic_binders` factory) named. A report spec is data, which can come from a user's report-spec directory or a config tier, so it could make the executor import and call any module on the path.
 

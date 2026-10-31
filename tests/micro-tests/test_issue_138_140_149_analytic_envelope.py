@@ -118,7 +118,7 @@ def test_measured_bar_gets_subtitle_and_envelope(monkeypatch):
 def test_not_established_draws_no_chart(monkeypatch):
     _use_spec(monkeypatch, {"analytic_function": f"{MOD}.not_established"})
     out = fse.exec_report_spec("tile", output_format="BAR")
-    assert "$schema" not in out["data"]
+    assert out["kind"] == "absent" and "data" not in out  # ISSUE-171: the sentence, not a chart
     assert out["envelope"] == {"state": "not_established", "reason": "could not open the ODS",
                                "subtitle": "not established · could not open the ODS"}
 
@@ -133,13 +133,13 @@ def test_nothing_found_is_charted_as_real_zeros(monkeypatch):
 def test_not_applicable_draws_no_chart(monkeypatch):
     _use_spec(monkeypatch, {"analytic_function": f"{MOD}.not_applicable"})
     out = fse.exec_report_spec("tile", output_format="BAR")
-    assert "$schema" not in out["data"] and out["envelope"]["state"] == "not_applicable"
+    assert out["kind"] == "absent" and out["envelope"]["state"] == "not_applicable"
 
 
 def test_dict_output_carries_envelope(monkeypatch):
     _use_spec(monkeypatch, {"analytic_function": f"{MOD}.not_established"})
     out = fse.exec_report_spec("tile", output_format="DICT")
-    assert out["kind"] == "json" and out["envelope"]["state"] == "not_established"
+    assert out["kind"] == "absent" and out["envelope"]["state"] == "not_established"  # ISSUE-171
 
 
 def test_model_result_with_envelope_attribute(monkeypatch):

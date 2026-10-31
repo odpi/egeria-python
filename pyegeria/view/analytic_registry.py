@@ -43,12 +43,18 @@ from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
 from loguru import logger
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 __all__ = [
     'AnalyticParam',
     'AnalyticFunctionSpec',
     'AnalyticActionSpec',
+    'AnalyticDeclaration',
+    'MeasureDeclaration',
+    'BasisDeclaration',
+    'AbsenceSentences',
+    'RESULT_KINDS',
+    'ABSENCE_STATES',
     'KNOWN_ANALYTIC_SOURCES',
     'AnalyticRegistryCollision',
     'refresh_analytic_functions',
@@ -109,6 +115,96 @@ class AnalyticActionSpec(BaseModel):
     analytic_params: List[AnalyticParam] = Field(default_factory=list)
 
 
+# Declaration (ISSUE-170): what an analytic function says about its own results,
+# so a screen, report or chat answer can show them with no code written for that
+# function. The minimum of trellis-analytics' `Declaration` (result kind, measures
+# with unit/as-of/basis, the four absence sentences), with the same field names and
+# vocabulary, so a trellis declaration validates here too; its richer blocks
+# (extents, confidence, answers, ...) are ignored by this model, not refused.
+
+#: The fixed result-kind vocabulary (trellis `RESULT_KINDS`).
+RESULT_KINDS = ("measure", "series", "distribution", "list", "graph", "finding", "proposal", "table")
+
+#: The four ways a result can be absent, each a sentence the function declares. Envelope states
+#: map onto them: nothing_found -> measured_nothing; not_established -> not_measured (or
+#: not_permitted, told apart by the reason); not_applicable -> not_applicable.
+ABSENCE_STATES = ("not_measured", "not_permitted", "not_applicable", "measured_nothing")
+
+
+def _words(value: Any) -> str:
+    return " ".join(str(value or "").split())
+
+
+class BasisDeclaration(BaseModel):
+    """The whole a counted measure is part of, so "456 of 1,236 columns" is derived, not written."""
+    denominator_field: str  # the result field holding the whole, e.g. "column_count"
+    denominator_label: str  # the whole in words, plural, e.g. "columns"
+
+    @model_validator(mode="after")
+    def _filled(self) -> "BasisDeclaration":
+        if not _words(self.denominator_field) or not _words(self.denominator_label):
+            raise ValueError("a basis needs both denominator_field and denominator_label")
+        return self
+
+
+class MeasureDeclaration(BaseModel):
+    """One number a function reports. A number never travels without its unit and its as-of."""
+    name: str
+    unit: str  # in words, plural where it counts things: "tables", "fraction of rows (0-1)"
+    as_of: str  # the result field saying when this was measured, e.g. "asOf"
+    value_field: str  # the result field holding the value; dotted for nested, trailing [] counts a list
+    basis: Optional[BasisDeclaration] = None
+    capped_field: str = ""  # the result field that is true when the value is only a lower bound
+
+    @model_validator(mode="after")
+    def _filled(self) -> "MeasureDeclaration":
+        empty = [f for f in ("name", "unit", "as_of", "value_field") if not _words(getattr(self, f))]
+        if empty:
+            raise ValueError(f"measure '{self.name}' declares no {', '.join(empty)}: "
+                             "a number never travels without its unit and its as-of")
+        return self
+
+
+class AbsenceSentences(BaseModel):
+    """The sentence shown for each way a result can be absent. All four are declared."""
+    not_measured: str
+    not_permitted: str
+    not_applicable: str
+    measured_nothing: str
+
+    @model_validator(mode="after")
+    def _filled(self) -> "AbsenceSentences":
+        empty = [s for s in ABSENCE_STATES if not _words(getattr(self, s))]
+        if empty:
+            raise ValueError(f"absence sentence for {', '.join(empty)} is empty: "
+                             "an absence is declared, never improvised")
+        return self
+
+    def sentence(self, state: str) -> str:
+        return getattr(self, state)
+
+
+class AnalyticDeclaration(BaseModel):
+    """What an analytic function declares about its results: the minimum is `result_kind`,
+    `measures` (required for measure/series/distribution/graph) and `absence`."""
+    result_kind: str
+    measures: List[MeasureDeclaration] = Field(default_factory=list)
+    absence: AbsenceSentences
+
+    @field_validator("result_kind")
+    @classmethod
+    def _kind(cls, value: str) -> str:
+        if value not in RESULT_KINDS:
+            raise ValueError(f"result_kind '{value}' is not one of {', '.join(RESULT_KINDS)}")
+        return value
+
+    @model_validator(mode="after")
+    def _measured_kinds_declare_measures(self) -> "AnalyticDeclaration":
+        if self.result_kind in ("measure", "series", "distribution", "graph") and not self.measures:
+            raise ValueError(f"result_kind '{self.result_kind}' declares no measures")
+        return self
+
+
 class AnalyticFunctionSpec(BaseModel):
     """One entry in the analytic function registry.
 
@@ -151,6 +247,9 @@ class AnalyticFunctionSpec(BaseModel):
     resource_types: List[str] = Field(default_factory=list)  # e.g. ["database"]
     family: str = ""  # same word and meaning as FormatSet.family; in Egeria a family is a Collection
     tags: List[str] = Field(default_factory=list)
+    # What the results mean (ISSUE-170): result kind, measures with unit/as-of/basis, absence
+    # sentences. Optional; trellis-analytics' StepManifest narrows it to its fuller Declaration.
+    declaration: Optional[AnalyticDeclaration] = None
 
     @field_validator("source")
     @classmethod
