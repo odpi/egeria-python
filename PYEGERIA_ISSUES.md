@@ -172,6 +172,7 @@ re-test candidates moved into *Awaiting re-test* below the open sections.
   create-from-template) and 7 (`viewElementGUID`) are still open.
 
 **Open pyegeria items**
+- ISSUE-172: Installed packages couldn't register analytic functions or steps by installing; added the `pyegeria.analytics` entry-point group, read lazily
 - ISSUE-171: `exec_report_spec` returned an analytic result that was not measured as ordinary data or `empty`; it now returns the function's declared absence sentence
 - ISSUE-170: `AnalyticFunctionSpec` can't say what its results mean (unit, as-of, basis, absence sentences); added an optional `declaration`
 - ISSUE-169: `_resolve_analytic_function` imported any dotted path a report spec named; now registered names plus an allowlist of module prefixes
@@ -193,6 +194,26 @@ Actionable in this repo. Some of these are fully blocked today — waiting
 on an Egeria Server capability that doesn't exist yet — but the pyegeria/
 Dr.Egeria-side work each will need once that capability ships is written
 into the entry now, so it isn't rediscovered from scratch later.
+
+---
+
+### ISSUE-172: Installed packages couldn't register analytic functions or steps by installing; added the `pyegeria.analytics` entry-point group, read lazily
+
+**Layer:** pyegeria · **Status:** in PR (branch `feat/analytic-entry-points`) · **Found:** 2026-10-30, Resource Explorer's portal-extensibility evaluation (gap G3) and the Architect's `DESIGN-ANALYTIC-LIBRARY-SPLIT-2026-10-30` (LS1: "entry-point group name and manifest loader" go to pyegeria).
+
+**What:** a package could add analytic functions to pyegeria's registry only through `PYEGERIA_ANALYTIC_FUNCTIONS_JSON`/`_MODULES` or a runtime `register_analytic_functions` call. trellis-analytics has its own `trellis.analytics` entry-point group and pushes into the registry by hand (`discovery.register()`), so the Portal sees only what something has remembered to register.
+
+**Change** (`pyegeria/view/analytic_registry.py`):
+- **Group:** `ANALYTIC_ENTRY_POINT_GROUP = "pyegeria.analytics"`, with `trellis.analytics` read as an alias during the split. An entry point names an `AnalyticFunctionSpec` (or a subclass such as trellis's manifests), a list of them, or a callable returning either. That covers both routines and steps (`kind`).
+- **Lazy loading (manifests eager, code lazy, per the design note §3):** nothing is read at import. Entry points are read on the first `get_analytic_registry()` call and cached. `refresh_analytic_functions()` forgets the cache. Only the manifests load then; a function's own module is imported on its first run by the resolver.
+- **Failures:** a broken entry point is recorded with a sentence naming it and the error. The rest still load, and the failures are logged at WARNING and returned by `analytic_entry_point_errors()` (also in `analytic_registry_payload()["entry_point_errors"]`), so "installed, not loadable" never reads as "nothing installed". An installed name that clashes with a built-in or config entry is skipped and reported, never fatal. The same manifest under both groups is not a clash.
+- **Checked with trellis's venv** (2026-10-30): both installed entry points (`context_pack`, `curation_coverage`) are discovered with no errors, and trellis's `discovery.register()` then adds nothing, harmlessly.
+
+**With ISSUE-169:** an entry-point-registered function is trusted by the resolver whatever its module, so installing is the registration path, and the allowlist only governs unregistered dotted paths.
+
+**Not done here:** the design note's split of manifest from runner inside one step's entry point, failure words on first run, and Admin "reload steps" are library/RE-host work (LS3). Whether the Portal replaces `PYEGERIA_REPORT_SPEC_MODULES` with an entry-point group is Mandy's question 2 in that note.
+
+Tests: `tests/micro-tests/test_issue_172_analytic_entry_points.py`.
 
 ---
 
