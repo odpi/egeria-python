@@ -27,6 +27,7 @@ from pyegeria.models import (
 from pyegeria.view.base_report_formats import select_report_spec, get_report_spec_match
 from pyegeria.view.output_formatter import (populate_common_columns, resolve_output_formats, materialize_egeria_summary, select_report_format)
 import asyncio
+from pyegeria.core.async_runner import run_sync
 
 
 class MyProfile(AssetMaker):
@@ -462,8 +463,7 @@ class MyProfile(AssetMaker):
             One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
             Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_my_profile_by_get(output_format, report_spec, **kwargs)
         )
 
@@ -507,7 +507,7 @@ class MyProfile(AssetMaker):
         list[dict]
             A list of dictionaries, each containing 'properties' and 'time' for an entry.
         """
-        return asyncio.get_event_loop().run_until_complete(self._async_get_my_entries())
+        return run_sync(self._async_get_my_entries())
 
     @dynamic_catch
     def get_my_profile(
@@ -534,7 +534,7 @@ class MyProfile(AssetMaker):
             One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
             Egeria errors.
         """
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_get_my_profile(body, output_format, report_spec,**kwargs)
         )
 
@@ -657,7 +657,7 @@ class MyProfile(AssetMaker):
         }
         ```
         """
-        return asyncio.get_event_loop().run_until_complete(self._async_add_my_profile(body))
+        return run_sync(self._async_add_my_profile(body))
 
     @dynamic_catch
     async def _async_get_my_actors(
@@ -703,8 +703,7 @@ class MyProfile(AssetMaker):
         **kwargs,
     ) -> list | str:
         """Return the list of actors linked to the user's profile."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_my_actors(
                 graph_query_depth=graph_query_depth,
                 start_from=start_from,
@@ -759,8 +758,7 @@ class MyProfile(AssetMaker):
         **kwargs,
     ) -> list | str:
         """Return the list of user identities linked to the user's profile."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_my_user_identities(
                 graph_query_depth=graph_query_depth,
                 start_from=start_from,
@@ -815,8 +813,7 @@ class MyProfile(AssetMaker):
         **kwargs,
     ) -> list | str:
         """Return the list of assigned roles linked to the user's profile."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_my_roles(
                 graph_query_depth=graph_query_depth,
                 start_from=start_from,
@@ -872,8 +869,7 @@ class MyProfile(AssetMaker):
         **kwargs,
     ) -> list | str:
         """Return the list of assigned resources linked to the user's profile."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_my_resources(
                 graph_query_depth=graph_query_depth,
                 start_from=start_from,
@@ -956,8 +952,7 @@ class MyProfile(AssetMaker):
         **kwargs,
     ) -> list | str:
         """Get assigned actions for the user profile."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_my_assigned_actions(
                 metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
@@ -1021,8 +1016,7 @@ class MyProfile(AssetMaker):
         **kwargs,
     ) -> list | str:
         """Get actions sponsored by the user profile."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_my_sponsored_actions(
                 activity_status_list=activity_status_list,
                 start_from=start_from,
@@ -1084,8 +1078,7 @@ class MyProfile(AssetMaker):
         **kwargs,
     ) -> list | str:
         """Get actions requested by the user profile."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_my_requested_actions(
                 activity_status_list=activity_status_list,
                 start_from=start_from,
@@ -1148,8 +1141,7 @@ class MyProfile(AssetMaker):
                         body: Optional[dict | NewAttachmentRequestBody] = None,
                         qualified_name: Optional[str] = None) -> str:
         """Add a notification to the user's activity log."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_log_my_activity(text, display_name, body, qualified_name))
+        return run_sync(self._async_log_my_activity(text, display_name, body, qualified_name))
 
     @dynamic_catch
     async def _async_journal_my_activity(self, text: str = None, display_name: str = None,
@@ -1197,8 +1189,7 @@ class MyProfile(AssetMaker):
                             body: Optional[dict | NewAttachmentRequestBody] = None,
                             qualified_name: Optional[str] = None) -> str:
         """Add a notification to the user's journal."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_journal_my_activity(text, display_name, body, qualified_name))
+        return run_sync(self._async_journal_my_activity(text, display_name, body, qualified_name))
 
     @dynamic_catch
     async def _async_blog_my_activity(self, text: str = None, display_name: str = None,
@@ -1246,8 +1237,7 @@ class MyProfile(AssetMaker):
                          body: Optional[dict | NewAttachmentRequestBody] = None,
                          qualified_name: Optional[str] = None) -> str:
         """Add a notification to the user's blog."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_blog_my_activity(text, display_name, body, qualified_name))
+        return run_sync(self._async_blog_my_activity(text, display_name, body, qualified_name))
 
     #
     # Lifecycle
@@ -1381,8 +1371,7 @@ class MyProfile(AssetMaker):
             }
         }
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_create_my_todo(todo_name, activity_status,
+        response = run_sync(self._async_create_my_todo(todo_name, activity_status,
                                                                       description, situation, priority,
                                                                       qualified_name))
         return response
@@ -1477,8 +1466,7 @@ class MyProfile(AssetMaker):
         ValidationError
 
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_create_meeting(meeting_name, activity_status,
+        response = run_sync(self._async_create_meeting(meeting_name, activity_status,
                                                                       description, situation, priority,
                                                                       qualified_name))
         return response
@@ -1568,8 +1556,7 @@ class MyProfile(AssetMaker):
         ValidationError
 
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_create_review(review_name, activity_status,
+        response = run_sync(self._async_create_review(review_name, activity_status,
                                                                       description, situation, priority,
                                                                       qualified_name))
         return response
@@ -1682,8 +1669,7 @@ class MyProfile(AssetMaker):
     ) -> dict | str:
         """Retrieve the profile details of the user associated with the token, using a POST request that
         accepts an optional body to restrict/format the result."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_get_my_profile_by_post(body, output_format, report_spec, **kwargs))
+        return run_sync(self._async_get_my_profile_by_post(body, output_format, report_spec, **kwargs))
 
 
 if __name__ == "__main__":

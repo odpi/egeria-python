@@ -22,6 +22,7 @@ from pyegeria.view.output_formatter import (
     populate_columns_from_properties,
     get_required_relationships,
 )
+from pyegeria.core.async_runner import run_sync
 
 
 class ValidMetadataManager(ServerClient):
@@ -370,8 +371,7 @@ class ValidMetadataManager(ServerClient):
             }
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_setup_valid_metadata_value(property_name, type_name, body)
         )
         return
@@ -487,8 +487,7 @@ class ValidMetadataManager(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_setup_valid_metadata_map_name(property_name, type_name, body)
         )
         return
@@ -604,8 +603,7 @@ class ValidMetadataManager(ServerClient):
           "isCaseSensitive": false,
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_setup_valid_metadata_map_value(
                 property_name, map_name, type_name, body
             )
@@ -680,8 +678,7 @@ class ValidMetadataManager(ServerClient):
 
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_clear_valid_metadata_value(
                 property_name, type_name, preferred_value
             )
@@ -762,8 +759,7 @@ class ValidMetadataManager(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_clear_valid_metadata_map_name(
                 property_name, type_name, map_name
             )
@@ -832,8 +828,7 @@ class ValidMetadataManager(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_clear_valid_metadata_map_value(
                 property_name, type_name, map_name, preferred_value
             )
@@ -908,8 +903,7 @@ class ValidMetadataManager(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_validate_metadata_value(
                 property_name, type_name, actual_value
             )
@@ -984,8 +978,7 @@ class ValidMetadataManager(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_validate_metadata_map_name(property_name, type_name, map_name)
         )
         return response
@@ -1062,8 +1055,7 @@ class ValidMetadataManager(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_validate_metadata_map_value(
                 property_name, type_name, map_name, actual_value
             )
@@ -1157,8 +1149,7 @@ class ValidMetadataManager(ServerClient):
         PyegeriaException
 
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_valid_metadata_value(
                 property_name, type_name, preferred_value, output_format=output_format, report_spec=report_spec
             )
@@ -1252,8 +1243,7 @@ class ValidMetadataManager(ServerClient):
         PyegeriaException
 
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_valid_metadata_map_name(property_name, type_name, map_name,
                                                     output_format=output_format, report_spec=report_spec)
         )
@@ -1352,8 +1342,7 @@ class ValidMetadataManager(ServerClient):
             map_name ():
 
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_valid_metadata_map_value(property_name, type_name, preferred_value, map_name,
                                                      output_format=output_format, report_spec=report_spec)
         )
@@ -1473,8 +1462,7 @@ class ValidMetadataManager(ServerClient):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
+        resp = run_sync(
             self._async_get_valid_metadata_values(
                 property_name, type_name, start_from, page_size, output_format=output_format, report_spec=report_spec
             )
@@ -1602,8 +1590,7 @@ class ValidMetadataManager(ServerClient):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
+        resp = run_sync(
             self._async_get_consistent_metadata_values(
                 property_name,
                 type_name,
@@ -1727,8 +1714,7 @@ class ValidMetadataManager(ServerClient):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_set_consistent_metadata_values(property_name1, type_name1, map_name1, preferred_value1,
                                                        property_name2, type_name2, map_name2, preferred_value2)
         )
@@ -1822,8 +1808,7 @@ class ValidMetadataManager(ServerClient):
         PyegeriaException
 
         """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_get_all_entity_types(get_inherited_attributes=get_inherited_attributes,
+        resp = run_sync(self._async_get_all_entity_types(get_inherited_attributes=get_inherited_attributes,
                                                                         get_relationship_attributes=get_relationship_attributes,
                                                                         output_format=output_format,
                                                                         report_spec=report_spec))
@@ -1907,8 +1892,7 @@ class ValidMetadataManager(ServerClient):
         PyegeriaException
 
         """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_get_all_entity_defs(get_inherited_attributes=get_inherited_attributes,
+        resp = run_sync(self._async_get_all_entity_defs(get_inherited_attributes=get_inherited_attributes,
                                                                        get_relationship_attributes=get_relationship_attributes,
                                                                        output_format=output_format,
                                                                        report_spec=report_spec))
@@ -1992,8 +1976,7 @@ class ValidMetadataManager(ServerClient):
         PyegeriaException
 
         """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_get_all_relationship_defs(get_inherited_attributes=get_inherited_attributes,
+        resp = run_sync(self._async_get_all_relationship_defs(get_inherited_attributes=get_inherited_attributes,
                                                                              get_relationship_attributes=get_relationship_attributes,
                                                                              output_format=output_format,
                                                                              report_spec=report_spec))
@@ -2077,8 +2060,7 @@ class ValidMetadataManager(ServerClient):
         PyegeriaException
 
         """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_get_all_classification_defs(get_inherited_attributes=get_inherited_attributes,
+        resp = run_sync(self._async_get_all_classification_defs(get_inherited_attributes=get_inherited_attributes,
                                                                                get_relationship_attributes=get_relationship_attributes,
                                                                                output_format=output_format,
                                                                                report_spec=report_spec))
@@ -2151,8 +2133,7 @@ class ValidMetadataManager(ServerClient):
         PyegeriaException
 
         """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_get_attribute_types(category=category,
+        resp = run_sync(self._async_get_attribute_types(category=category,
                                                                         output_format=output_format,
                                                                         report_spec=report_spec))
         return resp
@@ -2245,8 +2226,7 @@ class ValidMetadataManager(ServerClient):
         PyegeriaException
 
         """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
+        resp = run_sync(
             self._async_get_sub_types(type_name,
                                       get_inherited_attributes=get_inherited_attributes,
                                       get_relationship_attributes=get_relationship_attributes,
@@ -2338,8 +2318,7 @@ class ValidMetadataManager(ServerClient):
         PyegeriaException
 
         """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
+        resp = run_sync(
             self._async_get_valid_relationship_types(entity_type,
                                                      get_inherited_attributes=get_inherited_attributes,
                                                      get_relationship_attributes=get_relationship_attributes,
@@ -2433,8 +2412,7 @@ class ValidMetadataManager(ServerClient):
         PyegeriaException
 
         """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
+        resp = run_sync(
             self._async_get_valid_classification_types(entity_type,
                                                        get_inherited_attributes=get_inherited_attributes,
                                                        get_relationship_attributes=get_relationship_attributes,
@@ -2528,8 +2506,7 @@ class ValidMetadataManager(ServerClient):
         PyegeriaException
 
         """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_get_typedef_by_name(name=name,
+        resp = run_sync(self._async_get_typedef_by_name(name=name,
                                                                        get_inherited_attributes=get_inherited_attributes,
                                                                        get_relationship_attributes=get_relationship_attributes,
                                                                        output_format=output_format,
@@ -2650,8 +2627,7 @@ class ValidMetadataManager(ServerClient):
               }
             }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_setup_specification_property(element_guid, body)
         )
 
@@ -2735,8 +2711,7 @@ class ValidMetadataManager(ServerClient):
                   "forDuplicateProcessing": false
                 }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_delete_specification_property(spec_property_guid, body, cascade)
         )
 
@@ -2825,8 +2800,7 @@ class ValidMetadataManager(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_specification_property(element_guid, vv_def_guid, body))
+        run_sync(self._async_link_specification_property(element_guid, vv_def_guid, body))
 
     @dynamic_catch
     async def _async_detach_specification_property(
@@ -2913,8 +2887,7 @@ class ValidMetadataManager(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_specification_property(element_guid, vv_def_guid, body, cascade_delete))
 
     @dynamic_catch
@@ -3115,8 +3088,7 @@ class ValidMetadataManager(ServerClient):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_specification_property(
                 search_string=search_string,
                 graph_query_depth=graph_query_depth,
@@ -3251,7 +3223,7 @@ class ValidMetadataManager(ServerClient):
               "sequencingProperty": ""
             }
         """
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_get_specification_property_by_type(spec_property_type, body, start_from, page_size,
                                                  output_format, report_spec))
     @dynamic_catch
@@ -3378,7 +3350,7 @@ class ValidMetadataManager(ServerClient):
 
             """
 
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_get_specification_property_by_name(name=name, start_from=start_from, page_size=page_size,
                                                            category=category, classification_names=classification_names,
                                                            graph_query_depth=graph_query_depth,
@@ -3487,7 +3459,7 @@ class ValidMetadataManager(ServerClient):
               "forDuplicateProcessing": false
             }
         """
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_get_specification_property_by_guid(guid=guid, element_type=element_type, body=body,
                                                graph_query_depth=graph_query_depth,
                                                output_format=output_format, report_spec=report_spec, **kwargs))
@@ -3571,7 +3543,7 @@ class ValidMetadataManager(ServerClient):
                "forDuplicateProcessing": false
              }
              """
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_get_specification_property_types(output_format, report_spec))
 
 

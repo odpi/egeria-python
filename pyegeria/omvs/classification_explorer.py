@@ -28,6 +28,7 @@ from pyegeria.view.output_formatter import (
     get_required_relationships,
 )
 from pyegeria.core.utils import body_slimmer, dynamic_catch
+from pyegeria.core.async_runner import run_sync
 
 
 
@@ -234,8 +235,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_classified_elements_by(
                 classification_name, body, output_format, report_spec, **kwargs
             )
@@ -367,8 +367,7 @@ class ClassificationExplorer(ServerClient):
         }
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_security_tagged_elements(
                 body, output_format, report_spec, **kwargs
             )
@@ -493,8 +492,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_owners_elements(owner_name, body, output_format, report_spec, **kwargs)
         )
         return response
@@ -613,8 +611,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_root_elements_by_category(category, body, output_format, report_spec, **kwargs)
         )
         return response
@@ -740,8 +737,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_subject_area_members(
                 subject_area, body, output_format, report_spec, **kwargs
             )
@@ -874,8 +870,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_elements_by_origin(body, output_format, report_spec, **kwargs)
         )
         return response
@@ -1015,8 +1010,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_meanings(element_guid, body, output_format, report_spec, **kwargs
                                     )
         )
@@ -1157,8 +1151,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_semantic_assignees(term_guid, body, output_format, report_spec, **kwargs
                                                )
         )
@@ -1286,8 +1279,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_governed_elements(gov_def_guid, start_from, page_size, output_format,
                                              report_spec, body, **kwargs)
         )
@@ -1415,8 +1407,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_governed_by_definitions(element_guid, start_from, page_size, output_format,
                                                    report_spec, body, **kwargs)
         )
@@ -1550,8 +1541,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_source_elements(element_guid, start_from, page_size, output_format,
                                               report_spec, body, **kwargs)
         )
@@ -1683,8 +1673,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_elements_sourced_from(element_guid, start_from, page_size, output_format,
                                                  report_spec, body, **kwargs)
         )
@@ -1812,8 +1801,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_scopes(element_guid, start_from, page_size, output_format, report_spec,
                                               body, **kwargs)
         )
@@ -1946,8 +1934,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_scoped_elements(scope_guid, start_from, page_size, output_format, report_spec, body, **kwargs)
         )
         return response
@@ -2073,8 +2060,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_licensed_elements(license_type_guid, start_from, page_size, output_format,
                                              report_spec, body, **kwargs)
         )
@@ -2202,8 +2188,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_licenses(element_guid, start_from, page_size, output_format,
                                     report_spec, body, **kwargs)
         )
@@ -2331,8 +2316,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_certified_elements(certification_type_guid, start_from, page_size, output_format,
                                               report_spec, body, **kwargs)
         )
@@ -2461,8 +2445,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_certifications(element_guid, start_from, page_size, output_format,
                                           report_spec, body, **kwargs)
         )
@@ -2567,8 +2550,7 @@ class ClassificationExplorer(ServerClient):
         PyegeriaException
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_elements(
                 metadata_element_type,
                 start_from,
@@ -2810,8 +2792,7 @@ class ClassificationExplorer(ServerClient):
         PyegeriaException.
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_elements_by_property_value(
                 property_value,
                 property_names,
@@ -3089,8 +3070,7 @@ class ClassificationExplorer(ServerClient):
         }
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_find_elements_by_property_value(
                 property_value,
                 property_names,
@@ -3215,8 +3195,7 @@ class ClassificationExplorer(ServerClient):
         PyegeriaException
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_element_by_guid(
                 guid=guid,
                 element_type_name=element_type_name,
@@ -3335,8 +3314,7 @@ class ClassificationExplorer(ServerClient):
         PyegeriaException
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_element_by_unique_name(name, property_name, output_format, report_spec, body, **kwargs)
         )
         return response
@@ -3414,8 +3392,7 @@ class ClassificationExplorer(ServerClient):
         PyegeriaException
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_element_guid_by_unique_name(
                 name,
                 property_name,
@@ -3488,8 +3465,7 @@ class ClassificationExplorer(ServerClient):
         PyegeriaExeception
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_guid_for_name(name, property_name, type_name, **kwargs)
         )
         return response
@@ -3599,8 +3575,7 @@ class ClassificationExplorer(ServerClient):
         PyegeriaException
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_elements_by_classification(
                 classification_name,
                 start_from,
@@ -3849,8 +3824,7 @@ class ClassificationExplorer(ServerClient):
         PyegeriaException
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_elements_by_classification_with_property_value(
                 classification_name,
                 property_value,
@@ -4081,8 +4055,7 @@ class ClassificationExplorer(ServerClient):
         PyegeriaException
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_find_elements_by_classification_with_property_value(
                 classification_name,
                 property_value,
@@ -4238,8 +4211,7 @@ class ClassificationExplorer(ServerClient):
         PyegeriaException
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_related_elements(
                 element_guid,
                 relationship_type,
@@ -4470,8 +4442,7 @@ class ClassificationExplorer(ServerClient):
         PyegeriaException
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_related_elements_with_property_value(
                 element_guid,
                 relationship_type,
@@ -4719,8 +4690,7 @@ class ClassificationExplorer(ServerClient):
         PyegeriaException
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_find_related_elements_with_property_value(
                 element_guid,
                 relationship_type,
@@ -4868,8 +4838,7 @@ class ClassificationExplorer(ServerClient):
             report_spec ():
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_relationships(
                 relationship_type,
                 start_from,
@@ -5030,8 +4999,7 @@ class ClassificationExplorer(ServerClient):
             report_spec ():
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_relationships_with_property_value(
                 property_value,
                 property_names,
@@ -5287,8 +5255,7 @@ class ClassificationExplorer(ServerClient):
         PyegeriaException
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_find_relationships_with_property_value(
                 property_value,
                 property_names,
@@ -5431,8 +5398,7 @@ class ClassificationExplorer(ServerClient):
             report_spec ():
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_retrieve_instance_for_guid(guid, effective_time, for_lineage, for_duplicate_processing,
                                                    timeout, output_format, report_spec, **kwargs)
         )
@@ -5563,8 +5529,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_set_confidence_classification(
                 element_guid,
                 body,
@@ -5696,8 +5661,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_clear_confidence_classification(
                 element_guid,
                 body,
@@ -5832,8 +5796,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_set_confidentiality_classification(
                 element_guid,
                 body,
@@ -5962,8 +5925,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_clear_confidentiality_classification(
                 element_guid,
                 body,
@@ -6095,8 +6057,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_set_impact_classification(
                 element_guid,
                 body,
@@ -6225,8 +6186,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_clear_impact_classification(
                 element_guid,
                 body,
@@ -6357,8 +6317,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_set_criticality_classification(
                 element_guid,
                 body,
@@ -6487,8 +6446,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_clear_criticality_classification(
                 element_guid,
                 body,
@@ -6602,8 +6560,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_add_gov_definition_to_element(
                 definition_guid,
                 element_guid,
@@ -6700,8 +6657,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_remove_gov_definition_from_element(
                 definition_guid,
                 element_guid,
@@ -6766,8 +6722,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_add_scope_to_element(
                 scoped_by_guid,
                 element_guid,
@@ -6841,8 +6796,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_clear_scope_from_element(scoped_by_guid, element_guid, body)
         )
 
@@ -6907,8 +6861,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_add_resource_to_element(
                 resource_guid,
                 element_guid,
@@ -6980,8 +6933,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_remove_resource_from_element(resource_guid, element_guid, body)
         )
 
@@ -7109,8 +7061,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_resource_list(element_guid, start_from, page_size, output_format,
                                             report_spec, body, **kwargs)
         )
@@ -7242,8 +7193,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_supported_by_resource(resource_guid, start_from, page_size, output_format,
                                                     report_spec, body, **kwargs)
         )
@@ -7309,8 +7259,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_add_more_information(
                 more_info_guid,
                 element_guid,
@@ -7382,8 +7331,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_remove_more_information(more_info_guid, element_guid, body)
         )
 
@@ -7481,8 +7429,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_assign_actor_to_element(
                 element_guid,
                 actor_guid,
@@ -7588,8 +7535,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_unassign_actor_from_element(
                 element_guid,
                 actor_guid,
@@ -7723,8 +7669,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_add_certification_to_element(certification_type_guid, element_guid, body)
         )
         return response
@@ -7841,8 +7786,7 @@ class ClassificationExplorer(ServerClient):
             }
             """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_update_certification(certification_guid, body)
         )
 
@@ -7899,8 +7843,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_decertify_element(certification_guid, body)
         )
 
@@ -8031,8 +7974,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_add_license_to_element(license_type_guid, element_guid, body)
         )
         return response
@@ -8157,8 +8099,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_update_license(license_guid, body)
         )
 
@@ -8220,8 +8161,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_unlicense_element(license_guid, body)
         )
 
@@ -8334,8 +8274,7 @@ class ClassificationExplorer(ServerClient):
         }
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_add_ownership_to_element(
                 element_guid,
                 body,
@@ -8431,8 +8370,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_clear_ownership_from_element(element_guid, for_lineage, for_duplicate_processing,
                                                                   effective_time, timeout)
         )
@@ -8544,8 +8482,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_add_digital_resource_origin(
                 element_guid,
                 body,
@@ -8617,8 +8554,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_clear_digital_resource_origin_from_element(element_guid, body)
         )
 
@@ -8723,8 +8659,7 @@ class ClassificationExplorer(ServerClient):
         }
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_add_zone_membership(
                 element_guid,
                 body,
@@ -8795,8 +8730,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_clear_zone_membership(element_guid, body)
         )
 
@@ -8940,8 +8874,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_set_retention_classification(
                 element_guid,
                 body,
@@ -9070,8 +9003,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_clear_retention_classification(
                 element_guid,
                 body,
@@ -9206,8 +9138,7 @@ class ClassificationExplorer(ServerClient):
         }
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_set_governance_expectation(
                 element_guid,
                 body,
@@ -9331,8 +9262,7 @@ class ClassificationExplorer(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_clear_governance_expectation(
                 element_guid,
                 body,
@@ -9469,8 +9399,7 @@ class ClassificationExplorer(ServerClient):
         }
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_update_governance_expectation(
                 element_guid,
                 body,
@@ -9606,8 +9535,7 @@ class ClassificationExplorer(ServerClient):
         }
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_add_governance_measurements(
                 element_guid,
                 body,
@@ -9745,8 +9673,7 @@ class ClassificationExplorer(ServerClient):
         }
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_update_governance_measurements(
                 element_guid,
                 body,
@@ -9868,8 +9795,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_clear_governance_measurements(
                 element_guid,
                 body,
@@ -10006,8 +9932,7 @@ class ClassificationExplorer(ServerClient):
         }
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_add_data_scope(
                 element_guid,
                 body,
@@ -10153,8 +10078,7 @@ class ClassificationExplorer(ServerClient):
         }
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_update_data_scope(
                 element_guid,
                 body,
@@ -10276,8 +10200,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_clear_data_scope(
                 element_guid,
                 body,
@@ -10406,8 +10329,7 @@ class ClassificationExplorer(ServerClient):
         }
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_set_security_tags_classification(
                 element_guid,
                 body,
@@ -10532,8 +10454,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_clear_security_tags_classification(
                 element_guid,
                 body,
@@ -10658,8 +10579,7 @@ class ClassificationExplorer(ServerClient):
         }
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_set_accounting_codes_classification(
                 element_guid,
                 body,
@@ -10783,8 +10703,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_clear_accounting_codes_classification(
                 element_guid,
                 body,
@@ -10891,8 +10810,7 @@ class ClassificationExplorer(ServerClient):
         }
         """
 
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_add_search_keyword_to_element(
                 element_guid,
                 body,
@@ -10996,8 +10914,7 @@ class ClassificationExplorer(ServerClient):
         }
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_update_search_keyword(
                 search_keyword_guid,
                 body,
@@ -11068,8 +10985,7 @@ class ClassificationExplorer(ServerClient):
         PyegeriaException
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_remove_search_keyword_from_element(
                 search_keyword_guid,
                 timeout,
@@ -11177,8 +11093,7 @@ class ClassificationExplorer(ServerClient):
         }
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_set_known_duplicate_classification(
                 element_guid,
                 body,
@@ -11296,8 +11211,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_clear_known_duplicate_classification(
                 element_guid,
                 body,
@@ -11429,8 +11343,7 @@ class ClassificationExplorer(ServerClient):
         }
         """
 
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_link_elements_as_peer_duplicates(
                 element_guid,
                 peer_duplicate_guid,
@@ -11538,8 +11451,7 @@ class ClassificationExplorer(ServerClient):
         }
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_unlink_elements_as_peer_duplicates(
                 element_guid,
                 peer_duplicate_guid,
@@ -11661,8 +11573,7 @@ class ClassificationExplorer(ServerClient):
         }
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_set_consolidated_duplicate_classification(
                 element_guid,
                 body,
@@ -11778,8 +11689,7 @@ class ClassificationExplorer(ServerClient):
         }
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_clear_consolidated_duplicate_classification(
                 element_guid,
                 body,
@@ -11900,8 +11810,7 @@ class ClassificationExplorer(ServerClient):
         }
         """
 
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_link_consolidated_duplicate_to_source(
                 element_guid,
                 source_element_guid,
@@ -12009,8 +11918,7 @@ class ClassificationExplorer(ServerClient):
         }
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_unlink_consolidated_duplicate_from_source_element(
                 element_guid,
                 source_element_guid,
@@ -12146,8 +12054,7 @@ class ClassificationExplorer(ServerClient):
         }
         """
 
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_setup_semantic_assignment(
                 glossary_term_guid,
                 element_guid,
@@ -12279,8 +12186,7 @@ class ClassificationExplorer(ServerClient):
         }
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_clear_semantic_assignment_classification(
                 glossary_term_guid,
                 element_guid,
@@ -12424,8 +12330,7 @@ class ClassificationExplorer(ServerClient):
         }
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_add_element_to_subject_area(
                 element_guid,
                 body,
@@ -12527,8 +12432,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_remove_element_from_subject_area(
                 element_guid,
                 for_lineage,
@@ -12690,8 +12594,7 @@ class ClassificationExplorer(ServerClient):
         # graph_query_depth, report_spec in output_format, timeout in report_spec, body in
         # timeout, and body itself dropped) — the same bug shape as ISSUE-21
         # (get_scoped_elements/get_scopes).
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_root_elements(
                 metadata_element_type_name=metadata_element_type_name,
                 search_properties=search_properties,
@@ -12875,8 +12778,7 @@ class ClassificationExplorer(ServerClient):
         list | str
             - a list of authored elements or a string message if no elements are found
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_authored_elements(
                 search_string=search_string,
                 content_status_list=content_status_list,
@@ -13015,8 +12917,7 @@ class ClassificationExplorer(ServerClient):
         list | str
             - a list of authored elements or a string message if no elements are found
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_authored_elements_by_category(
                 search_string,
                 content_status_list,
@@ -13144,8 +13045,7 @@ class ClassificationExplorer(ServerClient):
         }
         """
 
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_add_supplementary_properties_to_element(
                 element_guid,
                 glossary_term_guid,
@@ -13273,8 +13173,7 @@ class ClassificationExplorer(ServerClient):
         }
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_remove_supplementary_properties_from_element(
                 element_guid,
                 glossary_term_guid,
@@ -13308,8 +13207,7 @@ class ClassificationExplorer(ServerClient):
     def set_element_as_incomplete(self, element_guid: str,
                                   body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify an element as incomplete (still being assembled)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_element_as_incomplete(element_guid, body))
+        run_sync(self._async_set_element_as_incomplete(element_guid, body))
 
     @dynamic_catch
     async def _async_clear_element_as_incomplete(self, element_guid: str,
@@ -13323,8 +13221,7 @@ class ClassificationExplorer(ServerClient):
     def clear_element_as_incomplete(self, element_guid: str,
                                     body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the Incomplete classification from an element."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_element_as_incomplete(element_guid, body))
+        run_sync(self._async_clear_element_as_incomplete(element_guid, body))
 
     @dynamic_catch
     async def _async_set_element_as_object_identifier(self, element_guid: str,
@@ -13340,8 +13237,7 @@ class ClassificationExplorer(ServerClient):
     def set_element_as_object_identifier(self, element_guid: str,
                                          body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify an element as an object identifier."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_element_as_object_identifier(element_guid, body))
+        run_sync(self._async_set_element_as_object_identifier(element_guid, body))
 
     @dynamic_catch
     async def _async_clear_element_as_object_identifier(self, element_guid: str,
@@ -13355,8 +13251,7 @@ class ClassificationExplorer(ServerClient):
     def clear_element_as_object_identifier(self, element_guid: str,
                                            body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the ObjectIdentifier classification from an element."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_element_as_object_identifier(element_guid, body))
+        run_sync(self._async_clear_element_as_object_identifier(element_guid, body))
 
     @dynamic_catch
     async def _async_set_element_as_reference_data(self, element_guid: str,
@@ -13372,8 +13267,7 @@ class ClassificationExplorer(ServerClient):
     def set_element_as_reference_data(self, element_guid: str,
                                       body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify an element as reference data."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_element_as_reference_data(element_guid, body))
+        run_sync(self._async_set_element_as_reference_data(element_guid, body))
 
     @dynamic_catch
     async def _async_clear_element_as_reference_data(self, element_guid: str,
@@ -13387,8 +13281,7 @@ class ClassificationExplorer(ServerClient):
     def clear_element_as_reference_data(self, element_guid: str,
                                         body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the ReferenceData classification from an element."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_element_as_reference_data(element_guid, body))
+        run_sync(self._async_clear_element_as_reference_data(element_guid, body))
 
     @dynamic_catch
     async def _async_set_element_as_mobile_resource(self, element_guid: str,
@@ -13404,8 +13297,7 @@ class ClassificationExplorer(ServerClient):
     def set_element_as_mobile_resource(self, element_guid: str,
                                        body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify an element as a mobile resource."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_element_as_mobile_resource(element_guid, body))
+        run_sync(self._async_set_element_as_mobile_resource(element_guid, body))
 
     @dynamic_catch
     async def _async_clear_element_as_mobile_resource(self, element_guid: str,
@@ -13419,8 +13311,7 @@ class ClassificationExplorer(ServerClient):
     def clear_element_as_mobile_resource(self, element_guid: str,
                                          body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the MobileResource classification from an element."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_element_as_mobile_resource(element_guid, body))
+        run_sync(self._async_clear_element_as_mobile_resource(element_guid, body))
 
     @dynamic_catch
     async def _async_set_element_as_instance_metadata(self, element_guid: str,
@@ -13434,8 +13325,7 @@ class ClassificationExplorer(ServerClient):
     def set_element_as_instance_metadata(self, element_guid: str,
                                          body: dict | NewClassificationRequestBody) -> None:
         """Classify an element as instance metadata."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_element_as_instance_metadata(element_guid, body))
+        run_sync(self._async_set_element_as_instance_metadata(element_guid, body))
 
     @dynamic_catch
     async def _async_clear_element_as_instance_metadata(self, element_guid: str,
@@ -13449,8 +13339,7 @@ class ClassificationExplorer(ServerClient):
     def clear_element_as_instance_metadata(self, element_guid: str,
                                            body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the InstanceMetadata classification from an element."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_element_as_instance_metadata(element_guid, body))
+        run_sync(self._async_clear_element_as_instance_metadata(element_guid, body))
 
     @dynamic_catch
     async def _async_set_element_as_metamodel_instance(self, element_guid: str,
@@ -13478,8 +13367,7 @@ class ClassificationExplorer(ServerClient):
                                           body: Optional[dict | NewClassificationRequestBody] = None,
                                           metamodel_element_guid: Optional[str] = None) -> None:
         """Classify an element as an instance in a metamodel, referencing the metamodel element it instantiates."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_element_as_metamodel_instance(element_guid, body, metamodel_element_guid))
+        run_sync(self._async_set_element_as_metamodel_instance(element_guid, body, metamodel_element_guid))
 
     @dynamic_catch
     async def _async_clear_element_as_metamodel_instance(self, element_guid: str,
@@ -13493,8 +13381,7 @@ class ClassificationExplorer(ServerClient):
     def clear_element_as_metamodel_instance(self, element_guid: str,
                                             body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the MetamodelInstance classification from an element."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_element_as_metamodel_instance(element_guid, body))
+        run_sync(self._async_clear_element_as_metamodel_instance(element_guid, body))
 
     @dynamic_catch
     async def _async_set_element_as_promise(self, element_guid: str,
@@ -13540,8 +13427,7 @@ class ClassificationExplorer(ServerClient):
         """Classify an element as a Promise - a placeholder for a real-world digital resource/artifact that has
         not yet been delivered. Once classified, the element is only returned to lineage requests (forLineage=true).
         See _async_set_element_as_promise for a sample body."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_element_as_promise(element_guid, body))
+        run_sync(self._async_set_element_as_promise(element_guid, body))
 
     @dynamic_catch
     async def _async_clear_element_as_promise(self, element_guid: str,
@@ -13560,8 +13446,7 @@ class ClassificationExplorer(ServerClient):
                                  body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the Promise classification from an element - typically because the promised resource has now
         been delivered. The default body sets forLineage=true, which Egeria requires for this request."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_element_as_promise(element_guid, body))
+        run_sync(self._async_clear_element_as_promise(element_guid, body))
 
     #
     #   UsageActivity
@@ -13602,8 +13487,7 @@ class ClassificationExplorer(ServerClient):
         It records how often the element has been read, found, updated and had attachments or
         feedback changed or deleted.
         See _async_add_usage_activity for the body."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_add_usage_activity(element_guid, body))
+        run_sync(self._async_add_usage_activity(element_guid, body))
 
     @dynamic_catch
     async def _async_update_usage_activity(self, element_guid: str,
@@ -13636,8 +13520,7 @@ class ClassificationExplorer(ServerClient):
     def update_usage_activity(self, element_guid: str, body: dict | UpdateClassificationRequestBody) -> None:
         """Update the properties of an element's UsageActivity classification.
         See _async_update_usage_activity for the body."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_usage_activity(element_guid, body))
+        run_sync(self._async_update_usage_activity(element_guid, body))
 
     @dynamic_catch
     async def _async_clear_usage_activity(self, element_guid: str,
@@ -13652,8 +13535,7 @@ class ClassificationExplorer(ServerClient):
     @dynamic_catch
     def clear_usage_activity(self, element_guid: str, body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the UsageActivity classification from an element."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_usage_activity(element_guid, body))
+        run_sync(self._async_clear_usage_activity(element_guid, body))
 
     #
     #   MemberPopularityProfile
@@ -13701,8 +13583,7 @@ class ClassificationExplorer(ServerClient):
         It holds the same activity counts as UsageActivity for a collection, as a total plus a
         per-member map of member GUID to count.
         See _async_add_member_popularity_profile for the body."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_add_member_popularity_profile(element_guid, body))
+        run_sync(self._async_add_member_popularity_profile(element_guid, body))
 
     @dynamic_catch
     async def _async_update_member_popularity_profile(self, element_guid: str,
@@ -13742,8 +13623,7 @@ class ClassificationExplorer(ServerClient):
     def update_member_popularity_profile(self, element_guid: str, body: dict | UpdateClassificationRequestBody) -> None:
         """Update the properties of an element's MemberPopularityProfile classification.
         See _async_update_member_popularity_profile for the body."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_member_popularity_profile(element_guid, body))
+        run_sync(self._async_update_member_popularity_profile(element_guid, body))
 
     @dynamic_catch
     async def _async_clear_member_popularity_profile(self, element_guid: str,
@@ -13758,8 +13638,7 @@ class ClassificationExplorer(ServerClient):
     @dynamic_catch
     def clear_member_popularity_profile(self, element_guid: str, body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the MemberPopularityProfile classification from an element."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_member_popularity_profile(element_guid, body))
+        run_sync(self._async_clear_member_popularity_profile(element_guid, body))
 
 
 if __name__ == "__main__":

@@ -27,6 +27,7 @@ from pyegeria.models import (
     DeleteRelationshipRequestBody,
 )
 from pyegeria.core.utils import dynamic_catch
+from pyegeria.core.async_runner import run_sync
 
 
 class CommunityMatters(ServerClient):
@@ -79,8 +80,7 @@ class CommunityMatters(ServerClient):
 
     @dynamic_catch
     def create_community(self, body: Optional[dict | NewElementRequestBody] = None) -> str:
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_community(body))
+        return run_sync(self._async_create_community(body))
 
     # -----------------------------
     # Create from template
@@ -92,8 +92,7 @@ class CommunityMatters(ServerClient):
 
     @dynamic_catch
     def create_community_from_template(self, body: dict | TemplateRequestBody) -> str:
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_community_from_template(body))
+        return run_sync(self._async_create_community_from_template(body))
 
     # -----------------------------
     # Update
@@ -105,8 +104,7 @@ class CommunityMatters(ServerClient):
 
     @dynamic_catch
     def update_community(self, community_guid: str, body: dict | UpdateElementRequestBody) -> None:
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_community(community_guid, body))
+        run_sync(self._async_update_community(community_guid, body))
 
     # -----------------------------
     # Delete
@@ -128,8 +126,7 @@ class CommunityMatters(ServerClient):
         body: Optional[dict | DeleteElementRequestBody] = None,
         cascade: bool = False,
     ) -> None:
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_community(community_guid, body, cascade))
+        run_sync(self._async_delete_community(community_guid, body, cascade))
 
     # -----------------------------
     # Get by name
@@ -203,8 +200,7 @@ class CommunityMatters(ServerClient):
         body: Optional[dict | FilterRequestBody] = None,
         **kwargs,
     ) -> list | str:
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_communities_by_name(
                 filter_string=filter_string,
                 metadata_element_subtypes=metadata_element_subtypes,
@@ -389,8 +385,7 @@ class CommunityMatters(ServerClient):
             List of community metadata elements or formatted string, depending on output_format.
 
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_communities(
                 search_string=search_string,
                 starts_with=starts_with,
@@ -455,8 +450,7 @@ class CommunityMatters(ServerClient):
         body: Optional[dict | GetRequestBody] = None,
         **kwargs,
     ) -> dict | str:
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_community_by_guid(
                 community_guid=community_guid,
                 include_only_relationships=include_only_relationships,
@@ -490,8 +484,7 @@ class CommunityMatters(ServerClient):
         """Attach a contributor to an element they crowd-sourced content for (CrowdSourcingContribution relationship).
         The relationship properties' `roleType` is a CrowdSourcingRole: PROPOSER, REVIEWER, SUPPORTER, APPROVER
         or OTHER."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_crowd_sourcing_contribution(element_guid, contributor_guid, body))
+        run_sync(self._async_link_crowd_sourcing_contribution(element_guid, contributor_guid, body))
 
     @dynamic_catch
     async def _async_detach_crowd_sourcing_contribution(self, element_guid: str, contributor_guid: str,
@@ -504,5 +497,4 @@ class CommunityMatters(ServerClient):
     def detach_crowd_sourcing_contribution(self, element_guid: str, contributor_guid: str,
                                            body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """Detach a contributor from an element."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_crowd_sourcing_contribution(element_guid, contributor_guid, body))
+        run_sync(self._async_detach_crowd_sourcing_contribution(element_guid, contributor_guid, body))

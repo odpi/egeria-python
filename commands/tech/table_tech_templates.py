@@ -8,7 +8,6 @@ import time
 from datetime import datetime
 from typing import Union
 
-import nest_asyncio
 from rich import box
 from rich.console import Console
 from rich.markdown import Markdown
@@ -80,7 +79,6 @@ def display_templates_spec(
     placeholders: bool = False,
 ) -> Table | DataTable:
     a_client = AutomatedCuration(server, url, username)
-    nest_asyncio.apply()
     token = a_client.create_egeria_bearer_token(username, password)
     tech_list = a_client.find_technology_types(search_string, page_size=0)
 

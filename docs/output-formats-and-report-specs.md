@@ -528,42 +528,40 @@ Every report-spec lookup (`select_report_spec`, `get_report_spec_match`, `list_r
 |---|---|
 | `BUILTINS` | `base_report_specs`, hand-maintained in `base_report_formats.py` |
 | `GENERATED` | `generated_format_sets`, written by `refresh_specs` |
-| `CONFIG` | Your files and loaders (below) |
+| `CONFIG` | Installed packages' entry points, your JSON files, and (deprecated) loaders named in config (below) |
 | `RUNTIME` | Anything registered in code with `register_report_specs(...)` |
 
-**Adding your own files (the `CONFIG` tier).** List as many entries as you like, in either or both of these places:
+**Adding specs (the `CONFIG` tier).** There are two supported sources, plus some deprecated ones:
 
-- `config.json`, under the key `"Pyegeria Report Spec Modules"` (a JSON list):
-  ```json
-  "Pyegeria Report Spec Modules": [
-    "pyegeria.view.analytic_demo_specs:get_analytic_demo_specs",
-    "~/my-specs/team-reports.json",
-    "~/my-specs/governance-reports.json",
-    "my_package.specs:load_specs"
-  ]
+- **A package's entry points (ISSUE-173).** A package contributes report specs by installing. Declare an entry point in the `pyegeria.report_specs` group that names a callable returning a `FormatSetDict` (or a plain `dict` of label to `FormatSet`), or such a dict itself:
+  ```toml
+  [project.entry-points."pyegeria.report_specs"]
+  my_pkg = "my_pkg.specs:report_specs"
   ```
-- The environment variable `PYEGERIA_REPORT_SPEC_MODULES`, as a comma-separated string. Its entries are added after the config.json list.
+  The `trellis.report_specs` group is read too, as an alias. Entry points load first. pyegeria's own analytic demo specs load this way (`analytic_demos`), so an editable install needs `uv sync` (or `pip install -e .`) after a change to entry points.
 
 - **The user report specs directory.** Every `*.json` file in it is loaded, in alphabetical order, after the list above. Subdirectories and non-JSON files are ignored. The directory is resolved in this order:
   1. the `PYEGERIA_USER_REPORT_SPECS_DIR` env var (or the older `PYEGERIA_USER_FORMAT_SETS_DIR`);
   2. config.json's `"Pyegeria User Report Specs Dir"`;
   3. `~/.pyegeria/report_specs`.
 
-  If the directory doesn't exist, it's skipped quietly. A file that is also named explicitly in the list is loaded only once.
+  If the directory doesn't exist, it's skipped quietly. A file that is also named explicitly in a deprecated list below is loaded only once.
 
-Each list entry is one of:
+- **Deprecated in 6.2.18, removed in 6.2.19:** config.json's `"Pyegeria Report Spec Modules"` list, and the env vars `PYEGERIA_REPORT_SPEC_MODULES`, `PYEGERIA_REPORT_FORMATS_JSON` and `PYEGERIA_REPORT_FORMATS_MODULES`. They still load, after the entry points. When any is set, each refresh issues one `DeprecationWarning` and one WARNING log line naming them. Move a package's loader to an entry point, and JSON files to the user report specs directory. A config entry that names the same loader as an installed entry point (such as an older config.json listing `pyegeria.view.analytic_demo_specs:get_analytic_demo_specs`) is treated as that entry point, not as a clash, but still warns.
+
+Each entry in a deprecated list is one of:
 
 - **A path ending in `.json`** (`~` is expanded). The file holds a dictionary of FormatSets keyed by label; see [JSON structure for user specs](#json-structure-for-user-specs). `save_report_specs(...)` writes files in this shape.
 - **A loader reference**, `"pkg.mod:func"` or `"pkg.mod.func"`. The function is imported and called with no arguments, and must return a `FormatSetDict` or a plain `dict` of `FormatSet`s.
 
-Two older comma-separated env vars are still read, after the list above: `PYEGERIA_REPORT_FORMATS_JSON` (JSON paths only) and `PYEGERIA_REPORT_FORMATS_MODULES` (loaders only).
+`PYEGERIA_REPORT_FORMATS_JSON` takes JSON paths only and `PYEGERIA_REPORT_FORMATS_MODULES` loaders only; both are read after the user report specs directory.
 
 **When entries are loaded.** The `CONFIG` tier loads automatically the first time anything calls `get_report_registry()`, so no consumer needs to register anything. It loads once per process. If you add or edit a file while a process is running, call `refresh_report_specs()` to reload. `load_user_report_specs()` does the same reload and also copies the directory's files into the legacy `report_specs` dict, for older code that reads that dict directly.
 
 **What happens when an entry is bad.** Each entry loads on its own, and a bad entry is skipped as a whole. Every other entry still loads, before and after it. An entry is skipped when:
 
 - its file doesn't exist or isn't valid report-spec JSON;
-- its module or function can't be imported, or the function raises an error;
+- its entry point, module or function can't be imported, or the function raises an error;
 - it defines a label that another source already defined (an earlier `CONFIG` entry, a built-in, a generated spec, or a `RUNTIME` registration). Labels must be unique across the registry, so nothing is silently overridden. The first entry to claim a label keeps it.
 
 Each skip is logged as a warning (`Skipping report spec source JSON:<path>: <reason>`). `refresh_report_specs()` also returns the skips as a list of `(source, reason)` pairs, with an empty list meaning everything loaded. Use that to check your configuration:
@@ -574,7 +572,7 @@ for source, reason in refresh_report_specs():
     print(f"{source} was not loaded: {reason}")
 ```
 
-**Gotcha: `config.json` must be discoverable.** pyegeria only finds `config/config.json` if `PYEGERIA_CONFIG_DIRECTORY` (or `PYEGERIA_ROOT_PATH`) is set. Otherwise its `"Pyegeria Report Spec Modules"` and `"Pyegeria User Report Specs Dir"` settings are silently ignored. If you're not sure, use the env vars.
+**Gotcha: `config.json` must be discoverable.** pyegeria only finds `config/config.json` if `PYEGERIA_CONFIG_DIRECTORY` (or `PYEGERIA_ROOT_PATH`) is set. Otherwise its `"Pyegeria User Report Specs Dir"` setting (and the deprecated `"Pyegeria Report Spec Modules"`) is silently ignored. If you're not sure, use `PYEGERIA_USER_REPORT_SPECS_DIR`.
 
 **Changed behavior in the user specs directory.** Before, directory files could override a built-in spec, and a later file overwrote an earlier file's label. Neither is true any more, because the directory is now part of the `CONFIG` tier: a file that reuses an existing label is skipped with a warning. To change a built-in spec, save it under a new label. Also, before this fix the directory defaulted to `../`, the parent of the current working directory; it now defaults to `~/.pyegeria/report_specs`.
 
@@ -949,7 +947,7 @@ Tip: You can combine `find_report_specs` to discover candidates and then `run_re
 A `FormatSet`'s `action` (`ActionParameter`, in `pyegeria/view/_output_format_models.py`) has **two independent execution paths**, mirroring the two function slots Dr.Egeria commands have always carried (`find_method`/`find_constraints` and `extra_find`/`extra_constraints`):
 
 - `function` (from `find_method`): an element-query call, typically a `pyegeria.omvs.*` method (e.g. `MetadataExpert.find_metadata_elements_with_string`) — returns a list of Egeria elements, formatted per-column by the `FormatSet`'s `Format.attributes` (the TABLE/DICT/REPORT/MERMAID path already documented above).
-- `analytic_function` (from `extra_find`): a plain Python function — typically in `pyegeria.view.overview_metrics` — that takes an already-constructed, already-authenticated client as its first argument (or first two, for a function needing two client roles — see `_bind_client_args` in `pyegeria/view/format_set_executor.py`) and returns an already-aggregated scalar/dict/list result, **not** raw elements. Deliberately no fixed required/optional-param whitelist: every caller-supplied param is forwarded as-is (`**kwargs`); Python's own `TypeError` on an unexpected keyword is the validation.
+- `analytic_function` (from `extra_find`): a registered analytic function's name (a dotted path is deprecated; see below), naming a plain Python function — typically in `pyegeria.view.overview_metrics` — that takes an already-constructed, already-authenticated client as its first argument (or first two, for a function needing two client roles — see `_bind_client_args` in `pyegeria/view/format_set_executor.py`) and returns an already-aggregated scalar/dict/list result, **not** raw elements. Deliberately no fixed required/optional-param whitelist: every caller-supplied param is forwarded as-is (`**kwargs`); Python's own `TypeError` on an unexpected keyword is the validation. Which names and paths are accepted is described under [Which functions a report spec may name](#which-functions-a-report-spec-may-name).
 
 A `FormatSet` can declare either path, or both (in which case the analytic path only runs for `SERIES`/`BAR`/`PIE` output formats — see below — and the find path handles everything else, unchanged).
 
@@ -964,8 +962,23 @@ All three chart formats are dispatched *before* the normal Format-row lookup (`e
 **Result state (the envelope).** A routine can say how sure it is by returning a state with its result: `measured`, `nothing_found`, `not_established` or `not_applicable`, plus a reason. The executor recognises a dict with `state`/`state_reason` (and an optional ready-made `subtitle`), a dict with `resultState`/`resultStateReason`, a nested `envelope` dict in either style, or an object whose `envelope` attribute has `result_state`/`result_state_reason`. When it finds one:
 - every output shape gets `"envelope": {"state", "reason", "subtitle"}` beside `kind`/`data`;
 - a chart gets the subtitle on it (`title: {"text", "subtitle"}`);
-- **a chart is drawn only for an established answer: `measured`, or `nothing_found`** (the routine read the record and the count really is zero, so a chart of zeros is honest). For `not_established` and `not_applicable` the numbers aren't known, so the caller gets the data and the state instead; zeros there would read as an answer.
-A result without an envelope is returned exactly as before. A result that is a pydantic model is returned as plain data (`model_dump`). See ISSUE-139/140.
+- **a chart is drawn only for an established answer: `measured`, or `nothing_found`** (the routine read the record and the count really is zero, so a chart of zeros is honest).
+- **`not_established` and `not_applicable` return a sentence, not data** (ISSUE-171), on every output format:
+
+  ```json
+  {"kind": "absent",
+   "content": "Coverage was not measured: the catalog could not be read.",
+   "absence": {"state": "not_measured", "sentence": "...", "reason": "could not open the ODS", "declared": true},
+   "envelope": {"state": "not_established", "reason": "could not open the ODS", "subtitle": "..."},
+   "detail": {"...": "the routine's partial result, if any"}}
+  ```
+
+  There is no top-level `data`, so no table or tile can show placeholder zeros as an answer. A consumer should show `content`. `detail` is there for diagnosis, not display.
+- `nothing_found` keeps its data or chart and gains the same `absence` block (state `measured_nothing`). If the function declares sentences, its chart subtitle is the declared one.
+
+The `absence` states are the four of trellis-analytics: `not_measured`, `not_permitted`, `not_applicable` and `measured_nothing`. `not_established` becomes `not_measured`, unless the result itself says `"absence": "not_permitted"`; the reason text is never parsed to guess. The sentence is the function's declared one (see [Declaring what results mean](#declaring-what-results-mean)). A function with no declaration gets words built from its own reason, with `declared: false`.
+
+A result without an envelope is returned exactly as before. A result that is a pydantic model is returned as plain data (`model_dump`). See ISSUE-139/140/171.
 
 **Building non-JSON arguments (`analytic_binders`).** Report-spec params are JSON, and only leading parameters named `mgr`/`ce`/`expert`/`client` get an Egeria client. To name a routine that takes some other object (e.g. a reader) by its own dotted path, map the parameter to a factory:
 
@@ -995,11 +1008,80 @@ Here `OdsReader(url)` takes `url`, so the caller passes `url` and the routine re
 - `family`: the same word and meaning as `FormatSet.family`; in Egeria a family is a Collection;
 - `tags`.
 
-`get_analytic_registry()` combines a `BUILTINS` tier (the 10 `overview_metrics` functions shipped today) with optional `CONFIG`/`RUNTIME` tiers, mirroring `base_report_formats.py`'s report-spec registry shape.
+`get_analytic_registry()` combines four tiers, mirroring `base_report_formats.py`'s report-spec registry shape:
+- `BUILTINS`: the `overview_metrics` functions shipped in pyegeria;
+- `CONFIG`: JSON files and loader functions named by `PYEGERIA_ANALYTIC_FUNCTIONS_JSON` / `PYEGERIA_ANALYTIC_FUNCTIONS_MODULES`;
+- installed packages, through entry points (see [Registering functions from an installed package](#registering-functions-from-an-installed-package));
+- `RUNTIME`: `register_analytic_functions(...)` calls.
+
+A name defined twice raises `AnalyticRegistryCollision`, except that an installed package's entry clashing with a built-in or config name is skipped and reported, so one package can't break the registry for everyone.
+
+#### Which functions a report spec may name
+
+A report spec is data: it can come from a user's report-spec directory or a config file. So `exec_report_spec` does not import whatever it names (ISSUE-169). `analytic_function`, an action's `fetch`/`analytic` steps and `analytic_binders` factories are resolved in this order:
+
+1. **A registered name** resolves to that entry's `function`. This is the form report specs use.
+2. **A dotted path that a registered entry declares** is trusted, but deprecated in a report spec (below).
+3. **Any other dotted path** must be in a module under an allowed prefix. The defaults are `pyegeria` and `trellis_analytics`. Set `PYEGERIA_ANALYTIC_MODULE_PREFIXES` (comma-separated) to change the list. A prefix is a package boundary: `pyegeria` admits `pyegeria.view.x`, not `pyegeria_extras.x`. These resolve as before and log at DEBUG.
+4. **Anything else** raises `AnalyticFunctionRefused` (a `ValueError`) before anything is imported.
+
+To use a function from your own package, register it (any tier above, usually an entry point), or add your package to `PYEGERIA_ANALYTIC_MODULE_PREFIXES`. Registering is better: the function then appears in the registry for authoring tools, and it can carry a declaration.
+
+**Report specs name functions by registered name (ISSUE-173).** In 6.2.18 a report spec's `analytic_function`, or a function-valued parameter such as `metric_trend`'s `metric_path`, that is a dotted path (steps 2 and 3) still resolves, but raises a `DeprecationWarning` naming the registered name to use (or, if none, saying to register it), and logs it once per path at WARNING. 6.2.19 will refuse them. A path refused at step 4 raises without the deprecation warning. Registry entries themselves (`AnalyticFunctionSpec.function`, an action's `fetch`/`analytic`) and `analytic_binders` factories keep their dotted paths: those are code, not report-spec data. `metric_path` used to be imported with no check at all; it now goes through this resolver.
+
+#### Declaring what results mean
+
+`AnalyticFunctionSpec.declaration` (optional, ISSUE-170) lets a function say what its results are. A screen, report or chat answer can then show them with no code written for that function:
+
+```python
+AnalyticFunctionSpec(
+    name="column_coverage",
+    function="my_pkg.analytics.column_coverage",
+    declaration={
+        "result_kind": "measure",
+        "measures": [{
+            "name": "described_columns", "unit": "columns", "as_of": "asOf",
+            "value_field": "described",
+            "basis": {"denominator_field": "column_count", "denominator_label": "columns"},
+        }],
+        "absence": {
+            "not_measured": "Coverage was not measured: the catalog could not be read.",
+            "not_permitted": "Coverage was not measured: reading the catalog is not permitted.",
+            "not_applicable": "Coverage does not apply to this resource.",
+            "measured_nothing": "The catalog was read and holds no columns.",
+        },
+    },
+)
+```
+
+- `result_kind` is one of `measure`, `series`, `distribution`, `list`, `graph`, `finding`, `proposal` or `table`.
+- `measures` are required for `measure`, `series`, `distribution` and `graph`. Each has a `unit` in words and an `as_of` field: a number never travels without them.
+- `basis` lets a count be read as "456 of 1,236 columns" without anyone writing the "of".
+- `capped_field` names a result field that is true when the value is only a lower bound.
+- All four `absence` sentences are required. An absence is declared, never improvised; these are the sentences `kind: "absent"` returns (see the result envelope above).
+
+This is the minimum of trellis-analytics' `Declaration`, with the same field names, so a trellis declaration validates here. Its richer blocks (extents, confidence, answers, ...) are ignored by pyegeria, not refused. An incomplete declaration is refused with a sentence naming what is missing.
+
+#### Registering functions from an installed package
+
+A package can add analytic functions and steps to the registry by installing (ISSUE-172). Declare an entry point in the `pyegeria.analytics` group that names an `AnalyticFunctionSpec` (or a subclass), a list of them, or a callable returning either:
+
+```toml
+[project.entry-points."pyegeria.analytics"]
+my_pkg = "my_pkg.manifests:ANALYTICS"
+```
+
+- **Alias group:** trellis-analytics' `trellis.analytics` group is also read, during the library split.
+- **When it's read:** lazily, on the first `get_analytic_registry()` call, and cached; `refresh_analytic_functions()` forgets the cache.
+- **What loads:** only the manifests load then. Each function's own module is imported on its first run, so keep the manifest module free of heavy imports.
+- **Resolver:** a registered function is trusted whatever its module, so installing is all a package needs to do.
+- **Report specs too:** a package that also ships report specs for its functions declares them in the `pyegeria.report_specs` group (see [Where pyegeria looks for user specs](#where-pyegeria-looks-for-user-specs)), and those specs name the functions by registered name.
+- **Discovering what's installed:** `get_analytic_registry()` returns every function, including entry-point ones, and `analytic_registry_payload()` gives the JSON a UI lists. `get_report_registry()` returns every report spec, including entry-point ones. Both read entry points on first call; `refresh_analytic_functions()` and `refresh_report_specs()` re-read them.
+- **Failures:** an entry point that fails to load, or names something that isn't a spec, is reported by `analytic_entry_point_errors()` and in `analytic_registry_payload()["entry_point_errors"]`. It is logged at WARNING and never stops the rest loading, so "installed but not loadable" is never shown as "nothing installed".
 
 **Demo report specs** (`pyegeria/view/analytic_demo_specs.py`) — one real, executable `FormatSet` per registered analytic function, proving each is actually runnable as a report spec (not just documented in the registry). Named `Analytic Demo - <Heading>`, family `"Analytic Function Demo"`. Each spec's `description` states plainly whether the underlying function is generic or a fixed metric (pulled from the registry, not duplicated by hand).
 
-**Making extra report specs visible everywhere** — the demo specs are loaded through the registry's `CONFIG` tier. That tier takes any number of JSON files and loader functions, and one bad entry is skipped without affecting the rest; see [Where pyegeria looks for user specs](#where-pyegeria-looks-for-user-specs). `config/config.json` ships with `"Pyegeria Report Spec Modules": ["pyegeria.view.analytic_demo_specs:get_analytic_demo_specs"]` by default, so the demo specs above are visible to `dr_egeria`, `hey_egeria`, and any other pyegeria consumer without further setup — a consumer with no `config.json` of its own (e.g. a container with only the installed package) can set the `PYEGERIA_REPORT_SPEC_MODULES` env var instead. See `refresh_report_specs()`/`get_report_registry()` in `base_report_formats.py`.
+**Making extra report specs visible everywhere** — the demo specs are loaded through the registry's `CONFIG` tier, by pyegeria's own `pyegeria.report_specs` entry point (`analytic_demos`, ISSUE-173). Any installed pyegeria therefore shows them to `dr_egeria`, `hey_egeria`, and every other consumer, with no config.json or env var. Another package's specs load the same way; one bad entry is skipped without affecting the rest. See [Where pyegeria looks for user specs](#where-pyegeria-looks-for-user-specs) and `refresh_report_specs()`/`get_report_registry()` in `base_report_formats.py`.
 
 **Dashboard authoring** — a `Report` (a real Egeria asset naming a report spec plus default execution params, created via Dr.Egeria's `Create Report`) can be placed on a user-authored Dashboard Sheet (`Create Dashboard Sheet` / `Link Report to Dashboard Sheet`), alongside literal markdown text placements (`Add Text on Dashboard Sheet`) for section headers and explanations. See the "Report" family in `docs/dr_egeria_manual.md` and `pyegeria/view/_output_dashboard_sheet_models.py`.
 

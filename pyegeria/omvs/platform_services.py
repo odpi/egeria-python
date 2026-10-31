@@ -20,6 +20,7 @@ from pyegeria.core._exceptions import (
     print_basic_exception,
 )
 from pyegeria.core._validators import validate_user_id
+from pyegeria.core.async_runner import run_sync
 
 
 class Platform(BasePlatformClient):
@@ -107,8 +108,7 @@ class Platform(BasePlatformClient):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_get_connector_type(java_class_name))
+        return run_sync(self._async_get_connector_type(java_class_name))
 
     async def _async_activate_server_stored_config(
         self, server: Optional[str] = None, timeout: int = 60
@@ -162,8 +162,7 @@ class Platform(BasePlatformClient):
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_activate_server_stored_config(server, timeout)
         )
         return response
@@ -228,8 +227,7 @@ class Platform(BasePlatformClient):
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_activate_server_supplied_config(config_body, server, timeout)
         )
 
@@ -284,8 +282,7 @@ class Platform(BasePlatformClient):
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_active_server_instance_status(server)
         )
         return response
@@ -332,8 +329,7 @@ class Platform(BasePlatformClient):
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_known_servers())
+        response = run_sync(self._async_get_known_servers())
         return response
 
     async def _async_is_server_known(self, server: str = None) -> bool:
@@ -383,8 +379,7 @@ class Platform(BasePlatformClient):
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_is_server_known(server))
+        response = run_sync(self._async_is_server_known(server))
         return response
 
     async def _async_is_server_configured(self, server: str = None) -> bool:
@@ -424,8 +419,7 @@ class Platform(BasePlatformClient):
         bool
             Returns `True` if the server is configured, otherwise `False`.
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_is_server_configured(server))
+        response = run_sync(self._async_is_server_configured(server))
         return response
 
     async def _async_get_active_configuration(self, server: str = None) -> dict | str:
@@ -465,8 +459,7 @@ class Platform(BasePlatformClient):
         Returns configuration if server is active; InvalidParameter exception thrown otherwise
 
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_active_configuration(server))
+        response = run_sync(self._async_get_active_configuration(server))
         return response
 
     async def _async_check_server_active(self, server: str = None):
@@ -500,8 +493,7 @@ class Platform(BasePlatformClient):
         -------
         bool: True if the server has been activated, otherwise False.
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_check_server_active(server))
+        response = run_sync(self._async_check_server_active(server))
         return response
 
     async def _async_get_active_server_list(self) -> list:
@@ -550,8 +542,7 @@ class Platform(BasePlatformClient):
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_active_server_list())
+        response = run_sync(self._async_get_active_server_list())
         return response
 
     async def _async_shutdown_platform(self) -> None:
@@ -601,8 +592,7 @@ class Platform(BasePlatformClient):
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_shutdown_platform())
+        run_sync(self._async_shutdown_platform())
 
     async def _async_shutdown_server(self, server: str = None) -> None:
         """Shutdown a server on the associated platform. Async version.
@@ -650,8 +640,7 @@ class Platform(BasePlatformClient):
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_shutdown_server(server))
+        run_sync(self._async_shutdown_server(server))
 
     async def _async_shutdown_and_unregister_server(self, server: str = None) -> None:
         """Unregister a server from its cohorts and remove its configuration. Async version.
@@ -703,8 +692,7 @@ class Platform(BasePlatformClient):
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_shutdown_and_unregister_server(server))
+        run_sync(self._async_shutdown_and_unregister_server(server))
 
     async def _async_shutdown_unregister_servers(self) -> None:
         """
@@ -755,8 +743,7 @@ class Platform(BasePlatformClient):
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_shutdown_unregister_servers())
+        run_sync(self._async_shutdown_unregister_servers())
 
     async def _async_shutdown_all_servers(self) -> None:
         """
@@ -802,8 +789,7 @@ class Platform(BasePlatformClient):
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_shutdown_all_servers())
+        run_sync(self._async_shutdown_all_servers())
 
     async def _async_activate_server_if_down(
         self, server: str, verbose: bool = True, timeout: int = 60
@@ -890,8 +876,7 @@ class Platform(BasePlatformClient):
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_activate_server_if_down(server, verbose, timeout)
         )
         return response
@@ -983,8 +968,7 @@ class Platform(BasePlatformClient):
         `activate_server_stored_config` method for each server. The method returns True if at least one server
         is successfully activated, otherwise it returns False.
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_activate_servers_on_platform(
                 server_list, verbose, timeout=timeout
             )
@@ -1075,8 +1059,7 @@ class Platform(BasePlatformClient):
         that are down. If the platform is not active, it prints a message indicating so. If there is any exception
         while activating the platform or starting the servers, it prints an error message and the exception response.
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_activate_platform(platform_name, hosted_server_names, timeout)
         )
 
@@ -1094,8 +1077,7 @@ class Platform(BasePlatformClient):
 
     def get_platform_organization(self) -> str | None:
         """Get the name of the organization that owns this platform."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_get_platform_organization())
+        return run_sync(self._async_get_platform_organization())
 
     async def _async_get_security_connection(self) -> dict:
         """Retrieve the Connection object used for platform security. Async version."""
@@ -1105,8 +1087,7 @@ class Platform(BasePlatformClient):
 
     def get_security_connection(self) -> dict:
         """Retrieve the Connection object used for platform security."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_get_security_connection())
+        return run_sync(self._async_get_security_connection())
 
     async def _async_set_security_connection(self, body: dict) -> None:
         """Set up the connection for the platform security connector. Async version."""
@@ -1115,8 +1096,7 @@ class Platform(BasePlatformClient):
 
     def set_security_connection(self, body: dict) -> None:
         """Set up the connection for the platform security connector."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_security_connection(body))
+        run_sync(self._async_set_security_connection(body))
 
     async def _async_delete_security_connection(self) -> None:
         """Remove the currently configured platform security connection. Async version."""
@@ -1125,8 +1105,7 @@ class Platform(BasePlatformClient):
 
     def delete_security_connection(self) -> None:
         """Remove the currently configured platform security connection."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_security_connection())
+        run_sync(self._async_delete_security_connection())
 
     async def _async_get_security_user_list(self, status: str = None, user_type: str = None) -> list:
         """Get the list of users from the security connector. Async version."""
@@ -1141,8 +1120,7 @@ class Platform(BasePlatformClient):
 
     def get_security_user_list(self, status: str = None, user_type: str = None) -> list:
         """Get the list of users from the security connector."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_get_security_user_list(status, user_type))
+        return run_sync(self._async_get_security_user_list(status, user_type))
 
     async def _async_get_registered_services(self, service_category: Optional[str] = None) -> list:
         """Retrieve the list of registered services for a category. Async version."""
@@ -1155,38 +1133,31 @@ class Platform(BasePlatformClient):
 
     def get_registered_access_services(self) -> list:
         """Retrieve the list of Open Metadata Access Services (OMASs)."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_get_registered_services("access-services"))
+        return run_sync(self._async_get_registered_services("access-services"))
 
     def get_registered_view_services(self) -> list:
         """Retrieve the list of Open Metadata View Services (OMVSs)."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_get_registered_services("view-services"))
+        return run_sync(self._async_get_registered_services("view-services"))
 
     def get_registered_engine_services(self) -> list:
         """Retrieve the list of engine services."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_get_registered_services("engine-services"))
+        return run_sync(self._async_get_registered_services("engine-services"))
 
     def get_registered_governance_services(self) -> list:
         """Retrieve the list of governance services."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_get_registered_services("governance-services"))
+        return run_sync(self._async_get_registered_services("governance-services"))
 
     def get_registered_common_services(self) -> list:
         """Retrieve the list of common services."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_get_registered_services("common-services"))
+        return run_sync(self._async_get_registered_services("common-services"))
 
     def get_registered_integration_services(self) -> list:
         """Retrieve the list of integration services."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_get_registered_services("integration-services"))
+        return run_sync(self._async_get_registered_services("integration-services"))
 
     def get_registered_all_services(self) -> list:
         """Retrieve the list of all registered services."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_get_registered_services("all-services"))
+        return run_sync(self._async_get_registered_services("all-services"))
 
 
 if __name__ == "__main__":

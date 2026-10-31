@@ -22,6 +22,7 @@ from pyegeria.core.utils import body_slimmer, dynamic_catch
 from pyegeria.core._globals import max_paging_size
 from pyegeria.core._globals import NO_ELEMENTS_FOUND, NO_ASSETS_FOUND
 from typing import Any, Optional
+from pyegeria.core.async_runner import run_sync
 
 class AssetCatalog(ServerClient):
     """
@@ -267,8 +268,7 @@ class AssetCatalog(ServerClient):
         NotAuthorizedException
             The principle specified by the user_id does not have authorization for the requested action.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_in_asset_domain(
                 search_string=search_string,
                 starts_with=starts_with,
@@ -390,8 +390,7 @@ class AssetCatalog(ServerClient):
             The principle specified by the user_id does not have authorization.
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_asset_graph_by_guid(
                 guid=guid,
                 start_from=start_from,
@@ -616,8 +615,7 @@ class AssetCatalog(ServerClient):
             If there are issues in communications, message format, or Egeria errors.
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_asset_lineage_graph_by_guid(
                 guid=guid,
                 effective_time=effective_time,
@@ -847,8 +845,7 @@ class AssetCatalog(ServerClient):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_assets_by_metadata_collection_id(
                 metadata_collection_id=metadata_collection_id,
                 metadata_element_type_name=metadata_element_type_name,
@@ -902,8 +899,7 @@ class AssetCatalog(ServerClient):
             If there are issues in communications, message format, or Egeria errors.
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_asset_types())
+        response = run_sync(self._async_get_asset_types())
         return response
 
 

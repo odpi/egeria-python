@@ -5,9 +5,8 @@ load_commands()
 
 # Analytic Function Demo report specs (pyegeria.view.analytic_demo_specs) --
 # and any other extra report-spec source -- are auto-loaded by
-# get_report_registry() itself (CONFIG tier, driven by
-# settings.Environment.pyegeria_report_spec_modules / config.json's "Pyegeria
-# Report Spec Modules") the first time anything calls it. No explicit
+# get_report_registry() itself (CONFIG tier, through pyegeria's own
+# `pyegeria.report_specs` entry point, ISSUE-173) the first time anything calls it. No explicit
 # registration call needed here anymore.
 """
 This is an ongoing experiment in parsing and playing with Dr.Egeria docs
@@ -59,6 +58,7 @@ from md_processing.v2 import (
 
 from pyegeria import settings, EgeriaTech, PyegeriaException, print_basic_exception, print_validation_error
 from pyegeria.core.config import settings, resolve_egeria_credentials
+from pyegeria.core.async_runner import run_sync
 
 # Configure logging - module level default
 log_format = "{time} | {level} | {function} | {line} | {message} | {extra}"
@@ -908,8 +908,8 @@ def process_md_file(input_file: str, output_folder: str, directive: str, server:
         set_usage_level(usage_level)
     client = EgeriaTech(server, url, user_id=userid)
     client.create_egeria_bearer_token(userid, user_pass)
-    asyncio.run(process_md_file_v2(input_file, output_folder, directive, client, parse_summary, attribute_logs,
-                                   usage_level, summary_only, debug=debug))
+    run_sync(process_md_file_v2(input_file, output_folder, directive, client, parse_summary, attribute_logs,
+                                usage_level, summary_only, debug=debug))
 
 if __name__ == "__main__":
     import argparse

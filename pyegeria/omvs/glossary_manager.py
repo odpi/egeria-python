@@ -27,6 +27,7 @@ from pyegeria.models import (NewElementRequestBody, DeleteElementRequestBody, De
 from pyegeria.view.output_formatter import (_extract_referenceable_properties, populate_common_columns,
                                             overlay_additional_values, resolve_output_formats)
 from pyegeria.core.utils import body_slimmer, dynamic_catch
+from pyegeria.core.async_runner import run_sync
 
 class GlossaryProperties(ReferenceableProperties):
     class_: Annotated[Literal["GlossaryProperties"], Field(alias="class")]
@@ -187,8 +188,7 @@ class GlossaryManager(CollectionManager):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_create_glossary(display_name, description, language, usage, category, body)
             )
         return response
@@ -232,8 +232,7 @@ class GlossaryManager(CollectionManager):
         None
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_glossary(glossary_guid, body, cascade))
+        run_sync(self._async_delete_glossary(glossary_guid, body, cascade))
 
     @dynamic_catch
     async def _async_update_glossary(
@@ -300,8 +299,7 @@ class GlossaryManager(CollectionManager):
 
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_update_glossary(
                 glossary_guid,
                 body, merge_update
@@ -396,8 +394,7 @@ class GlossaryManager(CollectionManager):
             }
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_glossary_as_taxonomy(glossary_guid, organizing_principle, body))
+        run_sync(self._async_set_glossary_as_taxonomy(glossary_guid, organizing_principle, body))
 
     @dynamic_catch
     async def _async_clear_glossary_as_taxonomy(self, glossary_guid: str,
@@ -466,8 +463,7 @@ class GlossaryManager(CollectionManager):
             "forDuplicateProcessing": false
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_glossary_as_taxonomy(glossary_guid, body))
+        run_sync(self._async_clear_glossary_as_taxonomy(glossary_guid, body))
 
     @dynamic_catch
     async def _async_set_glossary_as_canonical(self, glossary_guid: str, scope: Optional[str] = None,
@@ -552,8 +548,7 @@ class GlossaryManager(CollectionManager):
             }
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_glossary_as_canonical(glossary_guid, scope, body))
+        run_sync(self._async_set_glossary_as_canonical(glossary_guid, scope, body))
 
     @dynamic_catch
     async def _async_clear_glossary_as_canonical(self, glossary_guid: str,
@@ -622,8 +617,7 @@ class GlossaryManager(CollectionManager):
             "forDuplicateProcessing": false
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_glossary_as_canonical(glossary_guid, body))
+        run_sync(self._async_clear_glossary_as_canonical(glossary_guid, body))
 
     @dynamic_catch
     async def _async_set_glossary_as_naming_standards_vocabulary(self, glossary_guid: str,
@@ -705,8 +699,7 @@ class GlossaryManager(CollectionManager):
             }
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_glossary_as_naming_standards_vocabulary(glossary_guid, body))
+        run_sync(self._async_set_glossary_as_naming_standards_vocabulary(glossary_guid, body))
 
     @dynamic_catch
     async def _async_clear_glossary_as_naming_standards_vocabulary(self, glossary_guid: str,
@@ -775,8 +768,7 @@ class GlossaryManager(CollectionManager):
             "forDuplicateProcessing": false
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_glossary_as_naming_standards_vocabulary(glossary_guid, body))
+        run_sync(self._async_clear_glossary_as_naming_standards_vocabulary(glossary_guid, body))
 
     #
     #  Terms
@@ -827,8 +819,7 @@ class GlossaryManager(CollectionManager):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_create_glossary_term(body)
             )
 
@@ -1113,8 +1104,7 @@ class GlossaryManager(CollectionManager):
 
         The file path is relative to the caller, not the Egeria platform.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_import_glossary_terms_from_csv(
                 glossary_name, filename, file_path, upsert, verbose
                 )
@@ -1272,8 +1262,7 @@ class GlossaryManager(CollectionManager):
         :meth:`import_glossary_terms_from_csv` so a round-trip
         export → edit → import is straightforward.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_export_glossary_to_csv(glossary_guid, target_file, file_path)
             )
 
@@ -1402,8 +1391,7 @@ class GlossaryManager(CollectionManager):
         -----
 
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_create_term_copy(
                 glossary_guid,
                 glossary_term_guid,
@@ -1506,8 +1494,7 @@ class GlossaryManager(CollectionManager):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_update_glossary_term(
                 glossary_term_guid,
                 body,
@@ -1622,8 +1609,7 @@ class GlossaryManager(CollectionManager):
             }
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_glossary_term_from_template(
+        run_sync(self._async_update_glossary_term_from_template(
             glossary_term_guid, template_guid, body, merge_update, merge_classifications))
 
     @dynamic_catch
@@ -1710,8 +1696,7 @@ class GlossaryManager(CollectionManager):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_update_glossary_term_status(
                 glossary_term_guid,
                 term_status,
@@ -1795,8 +1780,7 @@ class GlossaryManager(CollectionManager):
         Notes
         -----
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_delete_term(term_guid, cascade, body)
             )
 
@@ -1870,8 +1854,7 @@ class GlossaryManager(CollectionManager):
         Notes
         -----
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_move_term(term_guid, glossary_guid, body)
             )
 
@@ -1981,8 +1964,7 @@ class GlossaryManager(CollectionManager):
          }
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_add_is_abstract_concept(term_guid, body)
             )
 
@@ -2071,8 +2053,7 @@ class GlossaryManager(CollectionManager):
          }
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_remove_is_abstract_concept(term_guid, body)
             )
 
@@ -2173,8 +2154,7 @@ class GlossaryManager(CollectionManager):
          }
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_add_is_context_definition(term_guid, body)
             )
 
@@ -2262,8 +2242,7 @@ class GlossaryManager(CollectionManager):
          }
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_remove_is_context_definition(term_guid, body)
             )
 
@@ -2360,8 +2339,7 @@ class GlossaryManager(CollectionManager):
          }
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_add_is_data_value(term_guid, body)
             )
 
@@ -2450,8 +2428,7 @@ class GlossaryManager(CollectionManager):
          }
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_remove_is_data_value(term_guid, body)
             )
 
@@ -2554,8 +2531,7 @@ class GlossaryManager(CollectionManager):
          }
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_add_activity_description(term_guid, activity_type, body)
             )
 
@@ -2644,8 +2620,7 @@ class GlossaryManager(CollectionManager):
          }
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_remove_activity_description(term_guid, body)
             )
 
@@ -2725,8 +2700,7 @@ class GlossaryManager(CollectionManager):
             }
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_term_as_question(term_guid, body))
+        run_sync(self._async_set_term_as_question(term_guid, body))
 
     @dynamic_catch
     async def _async_clear_term_as_question(self, term_guid: str,
@@ -2795,8 +2769,7 @@ class GlossaryManager(CollectionManager):
             "forDuplicateProcessing": false
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_term_as_question(term_guid, body))
+        run_sync(self._async_clear_term_as_question(term_guid, body))
 
     @dynamic_catch
     async def _async_create_question(self, display_name: Optional[str] = None,
@@ -2866,8 +2839,7 @@ class GlossaryManager(CollectionManager):
         -------
         str - guid of the created question term
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_question(display_name, description, body))
+        return run_sync(self._async_create_question(display_name, description, body))
 
     #
     #   Term - Term Relationships
@@ -2997,8 +2969,7 @@ class GlossaryManager(CollectionManager):
          }
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_add_relationship_between_terms(term1_guid, term2_guid, relationship_type,
                                                        body)
             )
@@ -3122,8 +3093,7 @@ class GlossaryManager(CollectionManager):
          }
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_update_relationship_between_terms(term1_guid, term2_guid, relationship_type,
                                                           body)
             )
@@ -3207,8 +3177,7 @@ class GlossaryManager(CollectionManager):
              The principle specified by the user_id does not have authorization for the requested action.
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_remove_relationship_between_terms(term1_guid, term2_guid, relationship_type,
                                                           body)
             )
@@ -3389,8 +3358,7 @@ class GlossaryManager(CollectionManager):
 
     @dynamic_catch
     def get_glossary_term_statuses(self) -> [str]:
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_glossary_term_statuses())
+        response = run_sync(self._async_get_glossary_term_statuses())
         return response
 
     @dynamic_catch
@@ -3402,8 +3370,7 @@ class GlossaryManager(CollectionManager):
 
     @dynamic_catch
     def get_glossary_term_rel_statuses(self) -> [str]:
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_glossary_term_rel_statuses())
+        response = run_sync(self._async_get_glossary_term_rel_statuses())
         return response
 
     @dynamic_catch
@@ -3415,8 +3382,7 @@ class GlossaryManager(CollectionManager):
 
     @dynamic_catch
     def get_glossary_term_activity_types(self) -> [str]:
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_glossary_term_activity_types())
+        response = run_sync(self._async_get_glossary_term_activity_types())
         return response
 
     @dynamic_catch
@@ -3428,8 +3394,7 @@ class GlossaryManager(CollectionManager):
 
     @dynamic_catch
     def get_term_relationship_types(self) -> [str]:
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_term_relationship_types())
+        response = run_sync(self._async_get_term_relationship_types())
         return response
 
     @dynamic_catch
@@ -3550,8 +3515,7 @@ class GlossaryManager(CollectionManager):
         **kwargs,
     ) -> list | str:
         """Retrieve the list of glossary metadata elements that contain the search string."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_glossaries(
                 search_string=search_string,
                 starts_with=starts_with,
@@ -3627,8 +3591,7 @@ class GlossaryManager(CollectionManager):
         body: Optional[dict | FilterRequestBody] = None,
         **kwargs,
     ) -> dict | str:
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_glossaries_by_name(
                 filter_string=filter_string,
                 classification_names=classification_names,
@@ -3685,8 +3648,7 @@ class GlossaryManager(CollectionManager):
         body: Optional[dict | GetRequestBody] = None,
         **kwargs,
     ) -> dict | str:
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_glossary_by_guid(
                 glossary_guid=glossary_guid,
                 include_only_relationships=include_only_relationships,
@@ -3752,8 +3714,7 @@ class GlossaryManager(CollectionManager):
         body: Optional[dict | FilterRequestBody] = None,
         **kwargs,
     ) -> list | str:
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_terms_by_name(
                 filter_string=filter_string,
                 metadata_element_subtypes=metadata_element_subtypes,
@@ -3810,8 +3771,7 @@ class GlossaryManager(CollectionManager):
         body: Optional[dict | GetRequestBody] = None,
         **kwargs,
     ) -> dict | str:
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_term_by_guid(
                 term_guid=term_guid,
                 include_only_relationships=include_only_relationships,
@@ -3944,8 +3904,7 @@ class GlossaryManager(CollectionManager):
         **kwargs,
     ) -> list | str:
         """Retrieve the list of glossary term metadata elements that contain the search string."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_glossary_terms(
                 search_string=search_string,
                 starts_with=starts_with,
@@ -4021,8 +3980,7 @@ class GlossaryManager(CollectionManager):
         PyegeriaException
             If the term is not found, or it is not anchored to any glossary.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_get_glossary_for_term(term_guid))
+        return run_sync(self._async_get_glossary_for_term(term_guid))
 
     #
     # Naming standards classifications (0438) -- Egeria PR #9166. Simple marker
@@ -4067,8 +4025,7 @@ class GlossaryManager(CollectionManager):
     def set_is_prime_word(self, term_guid: str,
                           body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify a glossary term as a prime word in a naming standard."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_is_prime_word(term_guid, body))
+        run_sync(self._async_set_is_prime_word(term_guid, body))
 
     @dynamic_catch
     async def _async_clear_is_prime_word(self, term_guid: str,
@@ -4093,8 +4050,7 @@ class GlossaryManager(CollectionManager):
     def clear_is_prime_word(self, term_guid: str,
                             body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the prime word designation from a glossary term."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_is_prime_word(term_guid, body))
+        run_sync(self._async_clear_is_prime_word(term_guid, body))
 
     @dynamic_catch
     async def _async_set_is_modifier(self, term_guid: str,
@@ -4121,8 +4077,7 @@ class GlossaryManager(CollectionManager):
     def set_is_modifier(self, term_guid: str,
                         body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify a glossary term as a modifier in a naming standard."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_is_modifier(term_guid, body))
+        run_sync(self._async_set_is_modifier(term_guid, body))
 
     @dynamic_catch
     async def _async_clear_is_modifier(self, term_guid: str,
@@ -4147,8 +4102,7 @@ class GlossaryManager(CollectionManager):
     def clear_is_modifier(self, term_guid: str,
                           body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the modifier designation from a glossary term."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_is_modifier(term_guid, body))
+        run_sync(self._async_clear_is_modifier(term_guid, body))
 
     @dynamic_catch
     async def _async_set_is_class_word(self, term_guid: str,
@@ -4175,8 +4129,7 @@ class GlossaryManager(CollectionManager):
     def set_is_class_word(self, term_guid: str,
                           body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify a glossary term as a class word in a naming standard."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_is_class_word(term_guid, body))
+        run_sync(self._async_set_is_class_word(term_guid, body))
 
     @dynamic_catch
     async def _async_clear_is_class_word(self, term_guid: str,
@@ -4201,8 +4154,7 @@ class GlossaryManager(CollectionManager):
     def clear_is_class_word(self, term_guid: str,
                             body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the class word designation from a glossary term."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_is_class_word(term_guid, body))
+        run_sync(self._async_clear_is_class_word(term_guid, body))
 
 
     #
@@ -4226,8 +4178,7 @@ class GlossaryManager(CollectionManager):
     def link_used_in_context(self, glossary_term_guid: str, context_element_guid: str,
                              body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Attach a glossary term to the element that provides its usage context (UsedInContext relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_used_in_context(glossary_term_guid, context_element_guid, body))
+        run_sync(self._async_link_used_in_context(glossary_term_guid, context_element_guid, body))
 
     @dynamic_catch
     async def _async_detach_used_in_context(self, glossary_term_guid: str, context_element_guid: str,
@@ -4241,8 +4192,7 @@ class GlossaryManager(CollectionManager):
     def detach_used_in_context(self, glossary_term_guid: str, context_element_guid: str,
                                body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """Detach a glossary term from its usage context element."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_used_in_context(glossary_term_guid, context_element_guid, body))
+        run_sync(self._async_detach_used_in_context(glossary_term_guid, context_element_guid, body))
 
     @dynamic_catch
     async def _async_set_term_as_element_supplement(self, glossary_term_guid: str,
@@ -4258,8 +4208,7 @@ class GlossaryManager(CollectionManager):
     def set_term_as_element_supplement(self, glossary_term_guid: str,
                                        body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify a glossary term as a supplement (additional description) for another element."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_term_as_element_supplement(glossary_term_guid, body))
+        run_sync(self._async_set_term_as_element_supplement(glossary_term_guid, body))
 
     @dynamic_catch
     async def _async_clear_term_as_element_supplement(self, glossary_term_guid: str,
@@ -4273,8 +4222,7 @@ class GlossaryManager(CollectionManager):
     def clear_term_as_element_supplement(self, glossary_term_guid: str,
                                          body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the ElementSupplement classification from a glossary term."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_term_as_element_supplement(glossary_term_guid, body))
+        run_sync(self._async_clear_term_as_element_supplement(glossary_term_guid, body))
 
 
 if __name__ == "__main__":

@@ -30,6 +30,7 @@ from pyegeria.models import (
     ControlImplementationStatus,
 )
 from pyegeria.core.utils import dynamic_catch
+from pyegeria.core.async_runner import run_sync
 
 
 class SecurityOfficer(ServerClient):
@@ -115,8 +116,7 @@ class SecurityOfficer(ServerClient):
         self, platform_name: str, body: Union[dict, UserAccountRequestBody], platform_guid: str = None
     ) -> None:
         """Create or update a user account in the platform metadata security connector."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_set_user_account(platform_name, body, platform_guid))
+        return run_sync(self._async_set_user_account(platform_name, body, platform_guid))
 
     @dynamic_catch
     async def _async_get_user_account(self, platform_name: str, user_id: str, platform_guid: str = None) -> dict:
@@ -131,8 +131,7 @@ class SecurityOfficer(ServerClient):
 
     def get_user_account(self, platform_name: str, user_id: str, platform_guid: str = None) -> dict:
         """Return the user account object for the requested user."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_get_user_account(platform_name, user_id, platform_guid))
+        return run_sync(self._async_get_user_account(platform_name, user_id, platform_guid))
 
     @dynamic_catch
     async def _async_delete_user_account(self, platform_name: str, user_id: str, platform_guid: str = None) -> None:
@@ -144,8 +143,7 @@ class SecurityOfficer(ServerClient):
 
     def delete_user_account(self, platform_name: str, user_id: str, platform_guid: str = None) -> None:
         """Clear the account for a user with the platform security connector."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_delete_user_account(platform_name, user_id, platform_guid))
+        return run_sync(self._async_delete_user_account(platform_name, user_id, platform_guid))
 
     @dynamic_catch
     async def _async_get_user_list(
@@ -190,8 +188,7 @@ class SecurityOfficer(ServerClient):
         platform_guid: str = None,
     ) -> list[str]:
         """Return the list of users registered with the platform security connector."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_user_list(platform_name, status, user_type, platform_guid)
         )
 
@@ -219,8 +216,7 @@ class SecurityOfficer(ServerClient):
         body: Union[dict, NewRelationshipRequestBody],
     ) -> None:
         """Attach a nested governance zone to a broader governance zone definition."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_link_governance_zones(
                 governance_zone_guid, nested_governance_zone_guid, body
             )
@@ -250,8 +246,7 @@ class SecurityOfficer(ServerClient):
         body: Union[dict, DeleteRelationshipRequestBody],
     ) -> None:
         """Detach a governance zone definition from a hierarchical relationship."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_detach_governance_zones(
                 governance_zone_guid, nested_governance_zone_guid, body
             )
@@ -328,8 +323,7 @@ class SecurityOfficer(ServerClient):
         platform_guid : str, optional
             Pre-resolved GUID of the platform, bypassing the name lookup.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_set_security_access_control(platform_name, body, platform_guid)
         )
 
@@ -382,8 +376,7 @@ class SecurityOfficer(ServerClient):
         platform_guid : str, optional
             Pre-resolved GUID of the platform, bypassing the name lookup.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_security_access_control(platform_name, control_name, platform_guid)
         )
 
@@ -432,8 +425,7 @@ class SecurityOfficer(ServerClient):
         platform_guid : str, optional
             Pre-resolved GUID of the platform, bypassing the name lookup.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_delete_security_access_control(platform_name, control_name, platform_guid)
         )
 
@@ -516,8 +508,7 @@ class SecurityOfficer(ServerClient):
         **kwargs,
     ) -> list | str:
         """Return the list of security roles matching the search string."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_security_roles(
                 search_string=search_string,
                 starts_with=starts_with,
@@ -615,8 +606,7 @@ class SecurityOfficer(ServerClient):
         **kwargs,
     ) -> list | str:
         """Return the list of security groups matching the search string."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_security_groups(
                 search_string=search_string,
                 starts_with=starts_with,
@@ -656,8 +646,7 @@ class SecurityOfficer(ServerClient):
     def link_resource_permissions(self, secrets_collection_guid: str, security_access_control_guid: str,
                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Attach a security access control to a secrets collection it grants permission for (ResourcePermissions relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_resource_permissions(secrets_collection_guid, security_access_control_guid, body))
+        run_sync(self._async_link_resource_permissions(secrets_collection_guid, security_access_control_guid, body))
 
     @dynamic_catch
     async def _async_detach_resource_permissions(self, secrets_collection_guid: str, security_access_control_guid: str,
@@ -670,8 +659,7 @@ class SecurityOfficer(ServerClient):
     def detach_resource_permissions(self, secrets_collection_guid: str, security_access_control_guid: str,
                                     body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """Detach a security access control from a secrets collection."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_resource_permissions(secrets_collection_guid, security_access_control_guid, body))
+        run_sync(self._async_detach_resource_permissions(secrets_collection_guid, security_access_control_guid, body))
 
     @dynamic_catch
     async def _async_link_secrets_collection_security_list(self, secrets_collection_guid: str, security_list_guid: str,
@@ -684,8 +672,7 @@ class SecurityOfficer(ServerClient):
     def link_secrets_collection_security_list(self, secrets_collection_guid: str, security_list_guid: str,
                                                body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Attach a security list to a secrets collection it governs (SecretsCollectionSecurityList relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_secrets_collection_security_list(secrets_collection_guid, security_list_guid, body))
+        run_sync(self._async_link_secrets_collection_security_list(secrets_collection_guid, security_list_guid, body))
 
     @dynamic_catch
     async def _async_detach_secrets_collection_security_list(self, secrets_collection_guid: str, security_list_guid: str,
@@ -698,8 +685,7 @@ class SecurityOfficer(ServerClient):
     def detach_secrets_collection_security_list(self, secrets_collection_guid: str, security_list_guid: str,
                                                  body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """Detach a security list from a secrets collection."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_secrets_collection_security_list(secrets_collection_guid, security_list_guid, body))
+        run_sync(self._async_detach_secrets_collection_security_list(secrets_collection_guid, security_list_guid, body))
 
     @dynamic_catch
     async def _async_link_user_account(self, secrets_collection_guid: str, user_identity_guid: str,
@@ -712,8 +698,7 @@ class SecurityOfficer(ServerClient):
     def link_user_account(self, secrets_collection_guid: str, user_identity_guid: str,
                           body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Attach a user identity to a secrets collection holding its account secrets (UserAccount relationship)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_user_account(secrets_collection_guid, user_identity_guid, body))
+        run_sync(self._async_link_user_account(secrets_collection_guid, user_identity_guid, body))
 
     @dynamic_catch
     async def _async_detach_user_account(self, secrets_collection_guid: str, user_identity_guid: str,
@@ -726,8 +711,7 @@ class SecurityOfficer(ServerClient):
     def detach_user_account(self, secrets_collection_guid: str, user_identity_guid: str,
                             body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """Detach a user identity from a secrets collection."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_user_account(secrets_collection_guid, user_identity_guid, body))
+        run_sync(self._async_detach_user_account(secrets_collection_guid, user_identity_guid, body))
 
     @dynamic_catch
     async def _async_set_user_account_profile(self, secrets_collection_guid: str,
@@ -742,8 +726,7 @@ class SecurityOfficer(ServerClient):
     def set_user_account_profile(self, secrets_collection_guid: str,
                                  body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify a secrets collection with its user account profile statistics."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_user_account_profile(secrets_collection_guid, body))
+        run_sync(self._async_set_user_account_profile(secrets_collection_guid, body))
 
     @dynamic_catch
     async def _async_clear_user_account_profile(self, secrets_collection_guid: str,
@@ -756,8 +739,7 @@ class SecurityOfficer(ServerClient):
     def clear_user_account_profile(self, secrets_collection_guid: str,
                                    body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the UserAccountProfile classification from a secrets collection."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_user_account_profile(secrets_collection_guid, body))
+        run_sync(self._async_clear_user_account_profile(secrets_collection_guid, body))
 
     @dynamic_catch
     async def _async_set_zone_membership_profile(self, governance_zone_guid: str,
@@ -772,8 +754,7 @@ class SecurityOfficer(ServerClient):
     def set_zone_membership_profile(self, governance_zone_guid: str,
                                     body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify a governance zone with its zone membership profile (e.g. allowed security groups)."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_zone_membership_profile(governance_zone_guid, body))
+        run_sync(self._async_set_zone_membership_profile(governance_zone_guid, body))
 
     @dynamic_catch
     async def _async_clear_zone_membership_profile(self, governance_zone_guid: str,
@@ -786,8 +767,7 @@ class SecurityOfficer(ServerClient):
     def clear_zone_membership_profile(self, governance_zone_guid: str,
                                       body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the ZoneMembershipProfile classification from a governance zone."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_zone_membership_profile(governance_zone_guid, body))
+        run_sync(self._async_clear_zone_membership_profile(governance_zone_guid, body))
 
     #
     # Statements of applicability - which controls from a standard (such as the
@@ -826,8 +806,7 @@ class SecurityOfficer(ServerClient):
         str
             The GUID of the new statement of applicability.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_statement_of_applicability(body))
+        return run_sync(self._async_create_statement_of_applicability(body))
 
     @dynamic_catch
     async def _async_create_statement_of_applicability_from_template(self, body: dict | TemplateRequestBody) -> str:
@@ -838,8 +817,7 @@ class SecurityOfficer(ServerClient):
     @dynamic_catch
     def create_statement_of_applicability_from_template(self, body: dict | TemplateRequestBody) -> str:
         """Create a statement of applicability using an existing one as a template."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_statement_of_applicability_from_template(body))
+        return run_sync(self._async_create_statement_of_applicability_from_template(body))
 
     @dynamic_catch
     async def _async_update_statement_of_applicability(self, soa_guid: str,
@@ -851,8 +829,7 @@ class SecurityOfficer(ServerClient):
     @dynamic_catch
     def update_statement_of_applicability(self, soa_guid: str, body: dict | UpdateElementRequestBody) -> None:
         """Update the properties of a statement of applicability - for example, to approve it."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_statement_of_applicability(soa_guid, body))
+        run_sync(self._async_update_statement_of_applicability(soa_guid, body))
 
     @dynamic_catch
     async def _async_delete_statement_of_applicability(self, soa_guid: str,
@@ -866,8 +843,7 @@ class SecurityOfficer(ServerClient):
     def delete_statement_of_applicability(self, soa_guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
                                           cascade: bool = False) -> None:
         """Delete a statement of applicability."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_statement_of_applicability(soa_guid, body, cascade))
+        run_sync(self._async_delete_statement_of_applicability(soa_guid, body, cascade))
 
     def _generate_statement_of_applicability_output(
         self,
@@ -938,8 +914,7 @@ class SecurityOfficer(ServerClient):
         **kwargs,
     ) -> list | str:
         """Return the statements of applicability with a particular name."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_statements_of_applicability_by_name(
                 filter_string=filter_string,
                 metadata_element_subtypes=metadata_element_subtypes,
@@ -1026,8 +1001,7 @@ class SecurityOfficer(ServerClient):
         **kwargs,
     ) -> list | str:
         """Return the statements of applicability that contain the search string."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_statements_of_applicability(
                 search_string=search_string,
                 starts_with=starts_with,
@@ -1098,8 +1072,7 @@ class SecurityOfficer(ServerClient):
         Each linked control, with its ControlApplicability relationship properties, is returned in the
         element's otherRelatedElements list.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_statement_of_applicability_by_guid(
                 soa_guid=soa_guid,
                 include_only_relationships=include_only_relationships,
@@ -1150,8 +1123,7 @@ class SecurityOfficer(ServerClient):
         body : dict | NewRelationshipRequestBody, optional
             Request body whose properties class is ControlApplicabilityProperties.
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_control_applicability(soa_guid, control_guid, body))
+        run_sync(self._async_link_control_applicability(soa_guid, control_guid, body))
 
     @dynamic_catch
     async def _async_detach_control_applicability(self, soa_guid: str, control_guid: str,
@@ -1165,8 +1137,7 @@ class SecurityOfficer(ServerClient):
     def detach_control_applicability(self, soa_guid: str, control_guid: str,
                                      body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """Remove a control from a statement of applicability."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_control_applicability(soa_guid, control_guid, body))
+        run_sync(self._async_detach_control_applicability(soa_guid, control_guid, body))
 
     @staticmethod
     def _control_applicability_rows(soa: dict) -> list[dict]:
@@ -1261,8 +1232,7 @@ class SecurityOfficer(ServerClient):
 
         See _async_get_statement_of_applicability_controls.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_statement_of_applicability_controls(
                 soa_guid, output_format=output_format, report_spec=report_spec, body=body, **kwargs
             )
@@ -1302,5 +1272,4 @@ class SecurityOfficer(ServerClient):
 
         See _async_get_control_implementation_summary.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_get_control_implementation_summary(soa_guid, body))
+        return run_sync(self._async_get_control_implementation_summary(soa_guid, body))

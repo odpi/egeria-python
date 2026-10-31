@@ -33,6 +33,7 @@ from pyegeria.core._validators import (
     validate_user_id,
     _validate_url_path_safe,
 )
+from pyegeria.core.async_runner import run_sync
 
 ...
 
@@ -159,8 +160,20 @@ class BaseServerClient:
 
     @property
     def session(self) -> AsyncClient:
-        """Get the httpx session for the current thread."""
-        if not hasattr(self._thread_local, "session"):
+        """Get the httpx session for the current thread and event loop.
+
+        An httpx AsyncClient's connection pool belongs to the event loop that first used it, so a
+        thread that switches loops (a sync call, then asyncio.run of an async one) gets a new
+        session rather than reusing one bound to another loop (ISSUE-168).
+        """
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
+        stale = (getattr(self._thread_local, "session_loop", None) is not loop
+                 and not getattr(self._thread_local, "session_pinned", False))
+        if not hasattr(self._thread_local, "session") or stale:
+            self._thread_local.session_loop = loop
             self._thread_local.session = AsyncClient(
                 verify=enable_ssl_check,
                 timeout=httpx.Timeout(timeout=float(self.timeout), connect=10.0),
@@ -169,7 +182,9 @@ class BaseServerClient:
 
     @session.setter
     def session(self, value: AsyncClient):
-        """Allow setting the session for the current thread."""
+        """Allow setting the session for the current thread. A session set this way is kept even if
+        the thread later runs another event loop; the caller owns it."""
+        self._thread_local.session_pinned = True
         self._thread_local.session = value
 
     async def _async_check_connection(self) -> str:
@@ -207,15 +222,14 @@ class BaseServerClient:
         PyegeriaConnectionException
             If the connection to the platform fails.
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_check_connection())
+        response = run_sync(self._async_check_connection())
         return response
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.session.aclose()
+        run_sync(self.session.aclose())
         if exc_type is not None:
             self.exc_type = exc_type
             self.exc_val = exc_val
@@ -233,8 +247,7 @@ class BaseServerClient:
 
     def close_session(self) -> None:
         """Close the session"""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_close_session())
+        run_sync(self._async_close_session())
         return
 
     async def _async_create_egeria_bearer_token(
@@ -320,8 +333,7 @@ class BaseServerClient:
         A bearer token from another source can be set with the set_bearer_token() method.
 
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_create_egeria_bearer_token(user_id, password, new_password)
         )
         return response
@@ -379,8 +391,7 @@ class BaseServerClient:
         PyegeriaNotAuthorizedException
             The principle specified by the user_id does not have authorization for the requested action
         """
-        loop = asyncio.get_event_loop()
-        token = loop.run_until_complete(self._async_refresh_egeria_bearer_token())
+        token = run_sync(self._async_refresh_egeria_bearer_token())
         return token
 
     def set_bearer_token(self, token: str, source: str="Egeria") -> None:
@@ -452,8 +463,7 @@ class BaseServerClient:
         str
             The platform origin string if reachable, otherwise an empty string.
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self.async_get_platform_origin())
+        response = run_sync(self.async_get_platform_origin())
         return response
 
     def make_request(
@@ -495,17 +505,8 @@ class BaseServerClient:
         """
         if timeout is None:
             timeout = self.timeout
-        try:
-            loop = asyncio.get_running_loop()
-            if loop.is_running():
-                coro = self._async_make_request(request_type, endpoint, payload, is_json, params, timeout=timeout)
-                return asyncio.run_coroutine_threadsafe(coro, loop).result()
-            else:
-                return loop.run_until_complete(
-                    self._async_make_request(request_type, endpoint, payload, is_json, params, timeout=timeout))
-        except RuntimeError:
-            # No running loop exists; run the coroutine
-            return asyncio.run(self._async_make_request(request_type, endpoint, payload, is_json, params, timeout=timeout))
+        return run_sync(
+            self._async_make_request(request_type, endpoint, payload, is_json, params, timeout=timeout))
 
 
     async def _async_make_request(

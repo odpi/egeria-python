@@ -79,9 +79,11 @@ This module may raise the following exceptions:
 
 import os
 import re as _re
+import warnings
 from datetime import datetime, timezone
+from importlib.metadata import entry_points
 from pathlib import Path
-from typing import Callable, List, Optional, Tuple, Union
+from typing import Any, Callable, List, Optional, Tuple, Union
 
 from loguru import logger
 
@@ -2401,7 +2403,7 @@ base_report_specs = FormatSetDict({
         family="Security Officer",
         formats=[Format(types=["DICT", "JSON"], attributes=[])],
         action=ActionParameter(
-            analytic_function="pyegeria.view.overview_metrics.control_implementation_summary",
+            analytic_function="control_implementation_summary",
             required_params=["soa_guid"],
         ),
     ),
@@ -3847,11 +3849,42 @@ def _split_env_list(name: str) -> List[str]:
     return [p.strip() for p in os.getenv(name, "").split(",") if p.strip()]
 
 
+# Installed packages contribute report specs through this entry-point group (ISSUE-173),
+# the same way they contribute analytic functions through `pyegeria.analytics`.
+REPORT_SPEC_ENTRY_POINT_GROUP = "pyegeria.report_specs"
+REPORT_SPEC_ENTRY_POINT_ALIASES = ("trellis.report_specs",)
+
+_DEPRECATED_SPEC_SOURCES_MESSAGE = (
+    "Loading report specs through {sources} is deprecated and will be removed in the next release. "
+    "Register a package's specs through the 'pyegeria.report_specs' entry-point group instead, "
+    "or put JSON files in the user report specs directory.")
+
+
+def _load_entry_point(ep) -> FormatSetDict:
+    loaded = ep.load()
+    if callable(loaded) and not isinstance(loaded, dict):
+        loaded = loaded()
+    return loaded if isinstance(loaded, FormatSetDict) else FormatSetDict(loaded)
+
+
+def _report_spec_entry_points() -> list:
+    found = []
+    for group in (REPORT_SPEC_ENTRY_POINT_GROUP, *REPORT_SPEC_ENTRY_POINT_ALIASES):
+        found.extend((group, ep) for ep in entry_points(group=group))
+    return found
+
+
 def refresh_report_specs() -> List[Tuple[str, str]]:
     """Reload formats from configured JSON files and optional modules.
 
     Sources, in order:
-      - `settings.Environment.pyegeria_report_spec_modules` (config.json's
+      - Every entry point in the `pyegeria.report_specs` group (and its alias
+        `trellis.report_specs`). Its value is a callable returning a
+        FormatSetDict (or a dict of label to FormatSet), or such a dict itself.
+        This is how pyegeria's own analytic demo specs load (ISSUE-173).
+      - Deprecated (ISSUE-173; removed in the next release), with one
+        DeprecationWarning per refresh when any is set:
+        `settings.Environment.pyegeria_report_spec_modules` (config.json's
         "Pyegeria Report Spec Modules" list, or the OS env var
         PYEGERIA_REPORT_SPEC_MODULES as a comma-separated string) -- each
         entry is a JSON file path (ending ".json") or a "pkg.mod:func"/
@@ -3860,10 +3893,9 @@ def refresh_report_specs() -> List[Tuple[str, str]]:
         (PYEGERIA_USER_REPORT_SPECS_DIR / PYEGERIA_USER_FORMAT_SETS_DIR, else
         config.json's "Pyegeria User Report Specs Dir", else
         ~/.pyegeria/report_specs).
-      - PYEGERIA_REPORT_FORMATS_JSON: comma-separated JSON file paths (older,
-        still supported for backward compat).
-      - PYEGERIA_REPORT_FORMATS_MODULES: comma-separated module callables
-        (older, still supported for backward compat).
+      - Deprecated, as above: PYEGERIA_REPORT_FORMATS_JSON (comma-separated
+        JSON file paths) and PYEGERIA_REPORT_FORMATS_MODULES (comma-separated
+        module callables).
 
     Each entry is loaded independently: an entry that fails to load, or that
     defines a label already present (in an earlier entry, or in the BUILTINS/
@@ -3879,17 +3911,39 @@ def refresh_report_specs() -> List[Tuple[str, str]]:
         configured = list(settings.Environment.pyegeria_report_spec_modules or [])
     except Exception:  # noqa: BLE001 -- settings may not be initialized in every context
         configured = []
+    config_list = list(configured)
     configured.extend(_split_env_list("PYEGERIA_REPORT_SPEC_MODULES"))
+    legacy_json = _split_env_list("PYEGERIA_REPORT_FORMATS_JSON")
+    legacy_modules = _split_env_list("PYEGERIA_REPORT_FORMATS_MODULES")
 
-    entries: List[Tuple[str, str, Callable[[str], FormatSetDict]]] = []
+    entries: List[Tuple[str, Any, Callable[[Any], FormatSetDict]]] = []
+    ep_values = set()
+    for group, ep in _report_spec_entry_points():
+        ep_values.add(ep.value.replace(" ", ""))
+        entries.append((f"ENTRY_POINT:{group}:{ep.name}", ep, _load_entry_point))
+    # A config entry naming a loader an entry point already provides (e.g. an older
+    # config.json listing pyegeria's demo specs) is the same source, not a clash.
+    configured = [e for e in configured if e.replace(" ", "") not in ep_values]
+    legacy_modules = [m for m in legacy_modules if m.replace(" ", "") not in ep_values]
+
+    deprecated = [name for name, used in (
+        ('config.json "Pyegeria Report Spec Modules"', config_list),
+        ("PYEGERIA_REPORT_SPEC_MODULES", _split_env_list("PYEGERIA_REPORT_SPEC_MODULES")),
+        ("PYEGERIA_REPORT_FORMATS_JSON", legacy_json),
+        ("PYEGERIA_REPORT_FORMATS_MODULES", legacy_modules)) if used]
+    if deprecated:
+        message = _DEPRECATED_SPEC_SOURCES_MESSAGE.format(sources=", ".join(deprecated))
+        warnings.warn(message, DeprecationWarning, stacklevel=2)
+        logger.warning(message)
+
     for entry in configured:
         if entry.endswith(".json"):
             entries.append((f"JSON:{entry}", entry, _load_json_file))
         else:
             entries.append((f"MODULE:{entry}", entry, _load_module_loader))
     entries.extend((f"JSON:{p}", p, _load_json_file) for p in _user_report_spec_files())
-    entries.extend((f"JSON:{p}", p, _load_json_file) for p in _split_env_list("PYEGERIA_REPORT_FORMATS_JSON"))
-    entries.extend((f"MODULE:{m}", m, _load_module_loader) for m in _split_env_list("PYEGERIA_REPORT_FORMATS_MODULES"))
+    entries.extend((f"JSON:{p}", p, _load_json_file) for p in legacy_json)
+    entries.extend((f"MODULE:{m}", m, _load_module_loader) for m in legacy_modules)
 
     # A CONFIG label that duplicates another tier would make get_report_registry()
     # itself raise, taking every report spec down with it -- reject it here instead.

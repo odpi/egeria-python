@@ -18,6 +18,7 @@ from pyegeria.core._globals import NO_ELEMENTS_FOUND
 from pyegeria.core._server_client import ServerClient
 from pyegeria.core._validators import validate_guid
 from pyegeria.core.utils import body_slimmer, dynamic_catch
+from pyegeria.core.async_runner import run_sync
 
 
 class GovernanceEngine(ServerClient):
@@ -123,8 +124,7 @@ class GovernanceEngine(ServerClient):
     def get_approved_engine_actions(
             self, governance_engine_guid: str, start_from: int = 0, page_size: int = 0) -> list | str:
         """Retrieve the engine actions approved to run on a governance engine that no engine has claimed yet."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_approved_engine_actions(governance_engine_guid, start_from, page_size))
 
     @dynamic_catch
@@ -138,8 +138,7 @@ class GovernanceEngine(ServerClient):
 
     def claim_engine_action(self, engine_action_guid: str) -> None:
         """Request that execution of an engine action is allocated to the caller."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_claim_engine_action(engine_action_guid))
+        run_sync(self._async_claim_engine_action(engine_action_guid))
 
     @dynamic_catch
     async def _async_get_active_claimed_engine_actions(
@@ -159,8 +158,7 @@ class GovernanceEngine(ServerClient):
     def get_active_claimed_engine_actions(
             self, governance_engine_guid: str, start_from: int = 0, page_size: int = 0) -> list | str:
         """Retrieve the engine actions still in process that this caller's userId has claimed."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_active_claimed_engine_actions(governance_engine_guid, start_from, page_size))
 
     @dynamic_catch
@@ -184,8 +182,7 @@ class GovernanceEngine(ServerClient):
     def update_engine_action_status(self, engine_action_guid: str, status: str,
                                     body: Optional[dict] = None) -> None:
         """Update the status of the engine action - providing the caller is permitted."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_engine_action_status(engine_action_guid, status, body))
+        run_sync(self._async_update_engine_action_status(engine_action_guid, status, body))
 
     @dynamic_catch
     async def _async_update_action_target_status(
@@ -214,8 +211,7 @@ class GovernanceEngine(ServerClient):
             start_date: Optional[str] = None, completion_date: Optional[str] = None,
             completion_message: Optional[str] = None, body: Optional[dict] = None) -> None:
         """Update the status of a specific action target."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_action_target_status(
+        run_sync(self._async_update_action_target_status(
             action_target_guid, status, start_date, completion_date, completion_message, body))
 
     @dynamic_catch
@@ -250,7 +246,6 @@ class GovernanceEngine(ServerClient):
             new_action_targets: Optional[list[dict]] = None, completion_message: Optional[str] = None,
             body: Optional[dict] = None) -> None:
         """Declare that all processing for the engine action is finished, and the status of the work."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_record_completion_status(
+        run_sync(self._async_record_completion_status(
             engine_action_guid, status, request_parameters, output_guards, new_action_targets,
             completion_message, body))

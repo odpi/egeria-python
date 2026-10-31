@@ -5,7 +5,6 @@ This module provides a basic MCP server for Egeria.
 """
 import re
 import sys
-import nest_asyncio
 from loguru import logger
 
 from typing import Any, Dict, Optional, Literal
@@ -17,7 +16,6 @@ from pyegeria.core._exceptions import print_validation_error
 from pyegeria.view.base_report_formats import load_egeria_report_specs
 
 GLOBAL_EGERIA_CLIENT: Optional[EgeriaTech] = None
-nest_asyncio.apply()
 
 try:
     # We use Optional[] and List[] types, so we import them.
@@ -134,8 +132,6 @@ def main() -> None:
             ] = "DICT"
     ) -> Dict[str, Any]:
         import asyncio
-        import nest_asyncio
-        nest_asyncio.apply()
 
         """Run a report with the specified parameters."""
         print("DEBUG: Running report...", file=sys.stderr)

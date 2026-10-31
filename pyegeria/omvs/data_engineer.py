@@ -15,6 +15,7 @@ from pyegeria.core._server_client import ServerClient
 from pyegeria.models import SearchStringRequestBody
 from pyegeria.view.output_formatter import _generate_default_output
 from typing import Any, Optional
+from pyegeria.core.async_runner import run_sync
 
 class DataEngineer(ServerClient):
     """
@@ -268,8 +269,7 @@ class DataEngineer(ServerClient):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_tabular_data_sets(
                 search_string=search_string,
                 graph_query_depth=graph_query_depth,
@@ -311,8 +311,7 @@ class DataEngineer(ServerClient):
             One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
             Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_tabular_data_set(guid=guid, start_from_row=start_from_row, max_row_count=max_row_count, output_format=output_format, **kwargs)
         )
         return response

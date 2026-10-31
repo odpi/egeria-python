@@ -17,6 +17,7 @@ from pyegeria.models import (
     DeleteRelationshipRequestBody,
 )
 from pyegeria.core.utils import dynamic_catch, body_slimmer
+from pyegeria.core.async_runner import run_sync
 
 
 class NotificationManager(ServerClient):
@@ -145,8 +146,7 @@ class NotificationManager(ServerClient):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_link_monitored_resource(
                 notification_type_guid, monitored_resource_guid, body
             )
@@ -216,8 +216,7 @@ class NotificationManager(ServerClient):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_monitored_resource(
                 notification_type_guid, monitored_resource_guid, body
             )
@@ -286,8 +285,7 @@ class NotificationManager(ServerClient):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_link_notification_subscriber(
                 notification_type_guid, subscriber_guid, body
             )
@@ -352,8 +350,7 @@ class NotificationManager(ServerClient):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_detach_notification_subscriber(
                 notification_type_guid, subscriber_guid, body
             )

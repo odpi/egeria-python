@@ -20,6 +20,7 @@ from pyegeria.view.output_formatter import populate_columns_from_properties, \
     _extract_referenceable_properties, get_required_relationships
 from pyegeria.core.utils import dynamic_catch
 from loguru import logger
+from pyegeria.core.async_runner import run_sync
 
 
 class LocationArena(ServerClient):
@@ -142,7 +143,7 @@ class LocationArena(ServerClient):
         }
         ```
         """
-        return asyncio.get_event_loop().run_until_complete(self._async_create_location(body))
+        return run_sync(self._async_create_location(body))
 
     #######
 
@@ -257,8 +258,7 @@ class LocationArena(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_create_location_from_template(body))
+        resp = run_sync(self._async_create_location_from_template(body))
         return resp
 
     @dynamic_catch
@@ -331,7 +331,7 @@ class LocationArena(ServerClient):
         }
         ```
         """
-        return asyncio.get_event_loop().run_until_complete(
+        return run_sync(
             self._async_update_location(location_guid, body))
 
     @dynamic_catch
@@ -412,8 +412,7 @@ class LocationArena(ServerClient):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_peer_locations(location1_guid, location2_guid, body))
+        run_sync(self._async_link_peer_locations(location1_guid, location2_guid, body))
 
     @dynamic_catch
     async def _async_detach_peer_locations(self, location1_guid: str, location2_guid: str,
@@ -499,8 +498,7 @@ class LocationArena(ServerClient):
           "forDuplicateProcessing": false
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_peer_locations(location1_guid, location2_guid, body))
+        run_sync(self._async_detach_peer_locations(location1_guid, location2_guid, body))
 
     @dynamic_catch
     async def _async_link_nested_location(self, location_guid: str, nested_location_guid: str,
@@ -602,8 +600,7 @@ class LocationArena(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_nested_location(location_guid, nested_location_guid, body))
+        run_sync(self._async_link_nested_location(location_guid, nested_location_guid, body))
 
     @dynamic_catch
     async def _async_detach_nested_location(self, location_guid: str, nested_location_guid: str,
@@ -690,8 +687,7 @@ class LocationArena(ServerClient):
           "forDuplicateProcessing": false
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_nested_location(location_guid, nested_location_guid, body))
+        run_sync(self._async_detach_nested_location(location_guid, nested_location_guid, body))
 
     @dynamic_catch
     async def _async_link_known_location(self, element_guid: str, location_guid: str,
@@ -794,8 +790,7 @@ class LocationArena(ServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_known_location(element_guid, location_guid, body))
+        run_sync(self._async_link_known_location(element_guid, location_guid, body))
 
     @dynamic_catch
     async def _async_detach_known_location(self, element_guid: str, location_guid: str,
@@ -881,8 +876,7 @@ class LocationArena(ServerClient):
           "forDuplicateProcessing": false
         }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_known_location(element_guid, location_guid, body))
+        run_sync(self._async_detach_known_location(element_guid, location_guid, body))
 
     @dynamic_catch
     async def _async_delete_location(self, location_guid: str,
@@ -956,8 +950,7 @@ class LocationArena(ServerClient):
         }
         ```
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_location(location_guid, body, cascade))
+        run_sync(self._async_delete_location(location_guid, body, cascade))
 
     @dynamic_catch
     async def _async_find_locations(
@@ -1120,8 +1113,7 @@ class LocationArena(ServerClient):
         -------
         List | str
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_locations(
                 search_string=search_string,
                 starts_with=starts_with,
@@ -1282,8 +1274,7 @@ class LocationArena(ServerClient):
         if name is None and body is None:
             name = "*"
 
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_locations_by_name(
                 name=name,
                 metadata_element_type_name=metadata_element_type_name,
@@ -1389,8 +1380,7 @@ class LocationArena(ServerClient):
         -------
         dict | str
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_location_by_guid(
                 guid=guid,
                 include_only_relationships=include_only_relationships,
@@ -1506,8 +1496,7 @@ class LocationArena(ServerClient):
     def set_location_as_fixed_location(self, location_guid: str,
                                        body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify a location as a fixed physical location."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_location_as_fixed_location(location_guid, body))
+        run_sync(self._async_set_location_as_fixed_location(location_guid, body))
 
     @dynamic_catch
     async def _async_clear_location_as_fixed_location(self, location_guid: str,
@@ -1521,8 +1510,7 @@ class LocationArena(ServerClient):
     def clear_location_as_fixed_location(self, location_guid: str,
                                          body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the FixedLocation classification from a location."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_location_as_fixed_location(location_guid, body))
+        run_sync(self._async_clear_location_as_fixed_location(location_guid, body))
 
     @dynamic_catch
     async def _async_set_location_as_cyber_location(self, location_guid: str,
@@ -1538,8 +1526,7 @@ class LocationArena(ServerClient):
     def set_location_as_cyber_location(self, location_guid: str,
                                        body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify a location as a cyber (network) location."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_location_as_cyber_location(location_guid, body))
+        run_sync(self._async_set_location_as_cyber_location(location_guid, body))
 
     @dynamic_catch
     async def _async_clear_location_as_cyber_location(self, location_guid: str,
@@ -1553,8 +1540,7 @@ class LocationArena(ServerClient):
     def clear_location_as_cyber_location(self, location_guid: str,
                                          body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the CyberLocation classification from a location."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_location_as_cyber_location(location_guid, body))
+        run_sync(self._async_clear_location_as_cyber_location(location_guid, body))
 
     @dynamic_catch
     async def _async_set_location_as_secure_location(self, location_guid: str,
@@ -1570,8 +1556,7 @@ class LocationArena(ServerClient):
     def set_location_as_secure_location(self, location_guid: str,
                                         body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify a location as a secure location."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_set_location_as_secure_location(location_guid, body))
+        run_sync(self._async_set_location_as_secure_location(location_guid, body))
 
     @dynamic_catch
     async def _async_clear_location_as_secure_location(self, location_guid: str,
@@ -1585,5 +1570,4 @@ class LocationArena(ServerClient):
     def clear_location_as_secure_location(self, location_guid: str,
                                           body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the SecureLocation classification from a location."""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_clear_location_as_secure_location(location_guid, body))
+        run_sync(self._async_clear_location_as_secure_location(location_guid, body))

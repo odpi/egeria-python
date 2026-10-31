@@ -38,19 +38,29 @@ Python's own TypeError.
 from __future__ import annotations
 
 import os
+from importlib.metadata import entry_points
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
 from loguru import logger
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 __all__ = [
     'AnalyticParam',
     'AnalyticFunctionSpec',
     'AnalyticActionSpec',
+    'AnalyticDeclaration',
+    'MeasureDeclaration',
+    'BasisDeclaration',
+    'AbsenceSentences',
+    'RESULT_KINDS',
+    'ABSENCE_STATES',
     'KNOWN_ANALYTIC_SOURCES',
     'AnalyticRegistryCollision',
     'refresh_analytic_functions',
+    'ANALYTIC_ENTRY_POINT_GROUP',
+    'ANALYTIC_ENTRY_POINT_ALIASES',
+    'analytic_entry_point_errors',
     'get_analytic_registry',
     'analytic_registry_payload',
     'register_analytic_functions',
@@ -105,6 +115,96 @@ class AnalyticActionSpec(BaseModel):
     analytic_params: List[AnalyticParam] = Field(default_factory=list)
 
 
+# Declaration (ISSUE-170): what an analytic function says about its own results,
+# so a screen, report or chat answer can show them with no code written for that
+# function. The minimum of trellis-analytics' `Declaration` (result kind, measures
+# with unit/as-of/basis, the four absence sentences), with the same field names and
+# vocabulary, so a trellis declaration validates here too; its richer blocks
+# (extents, confidence, answers, ...) are ignored by this model, not refused.
+
+#: The fixed result-kind vocabulary (trellis `RESULT_KINDS`).
+RESULT_KINDS = ("measure", "series", "distribution", "list", "graph", "finding", "proposal", "table")
+
+#: The four ways a result can be absent, each a sentence the function declares. Envelope states
+#: map onto them: nothing_found -> measured_nothing; not_established -> not_measured (or
+#: not_permitted, told apart by the reason); not_applicable -> not_applicable.
+ABSENCE_STATES = ("not_measured", "not_permitted", "not_applicable", "measured_nothing")
+
+
+def _words(value: Any) -> str:
+    return " ".join(str(value or "").split())
+
+
+class BasisDeclaration(BaseModel):
+    """The whole a counted measure is part of, so "456 of 1,236 columns" is derived, not written."""
+    denominator_field: str  # the result field holding the whole, e.g. "column_count"
+    denominator_label: str  # the whole in words, plural, e.g. "columns"
+
+    @model_validator(mode="after")
+    def _filled(self) -> "BasisDeclaration":
+        if not _words(self.denominator_field) or not _words(self.denominator_label):
+            raise ValueError("a basis needs both denominator_field and denominator_label")
+        return self
+
+
+class MeasureDeclaration(BaseModel):
+    """One number a function reports. A number never travels without its unit and its as-of."""
+    name: str
+    unit: str  # in words, plural where it counts things: "tables", "fraction of rows (0-1)"
+    as_of: str  # the result field saying when this was measured, e.g. "asOf"
+    value_field: str  # the result field holding the value; dotted for nested, trailing [] counts a list
+    basis: Optional[BasisDeclaration] = None
+    capped_field: str = ""  # the result field that is true when the value is only a lower bound
+
+    @model_validator(mode="after")
+    def _filled(self) -> "MeasureDeclaration":
+        empty = [f for f in ("name", "unit", "as_of", "value_field") if not _words(getattr(self, f))]
+        if empty:
+            raise ValueError(f"measure '{self.name}' declares no {', '.join(empty)}: "
+                             "a number never travels without its unit and its as-of")
+        return self
+
+
+class AbsenceSentences(BaseModel):
+    """The sentence shown for each way a result can be absent. All four are declared."""
+    not_measured: str
+    not_permitted: str
+    not_applicable: str
+    measured_nothing: str
+
+    @model_validator(mode="after")
+    def _filled(self) -> "AbsenceSentences":
+        empty = [s for s in ABSENCE_STATES if not _words(getattr(self, s))]
+        if empty:
+            raise ValueError(f"absence sentence for {', '.join(empty)} is empty: "
+                             "an absence is declared, never improvised")
+        return self
+
+    def sentence(self, state: str) -> str:
+        return getattr(self, state)
+
+
+class AnalyticDeclaration(BaseModel):
+    """What an analytic function declares about its results: the minimum is `result_kind`,
+    `measures` (required for measure/series/distribution/graph) and `absence`."""
+    result_kind: str
+    measures: List[MeasureDeclaration] = Field(default_factory=list)
+    absence: AbsenceSentences
+
+    @field_validator("result_kind")
+    @classmethod
+    def _kind(cls, value: str) -> str:
+        if value not in RESULT_KINDS:
+            raise ValueError(f"result_kind '{value}' is not one of {', '.join(RESULT_KINDS)}")
+        return value
+
+    @model_validator(mode="after")
+    def _measured_kinds_declare_measures(self) -> "AnalyticDeclaration":
+        if self.result_kind in ("measure", "series", "distribution", "graph") and not self.measures:
+            raise ValueError(f"result_kind '{self.result_kind}' declares no measures")
+        return self
+
+
 class AnalyticFunctionSpec(BaseModel):
     """One entry in the analytic function registry.
 
@@ -147,6 +247,9 @@ class AnalyticFunctionSpec(BaseModel):
     resource_types: List[str] = Field(default_factory=list)  # e.g. ["database"]
     family: str = ""  # same word and meaning as FormatSet.family; in Egeria a family is a Collection
     tags: List[str] = Field(default_factory=list)
+    # What the results mean (ISSUE-170): result kind, measures with unit/as-of/basis, absence
+    # sentences. Optional; trellis-analytics' StepManifest narrows it to its fuller Declaration.
+    declaration: Optional[AnalyticDeclaration] = None
 
     @field_validator("source")
     @classmethod
@@ -494,8 +597,8 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         generic=True,
         params=[
             AnalyticParam(name="metric_path", type="str", required=True,
-                          description="Dotted import path of the target function, e.g. "
-                                       "'pyegeria.view.overview_metrics.governed_coverage'."),
+                          description="Registered name of the target analytic function, e.g. "
+                                       "'governed_coverage'. A dotted path is deprecated."),
             AnalyticParam(name="window", type="str", default="6mo",
                           description="8h|1d|3d|7d|30d|90d|6mo|1y -- sets span + default point count."),
             AnalyticParam(name="points", type="int",
@@ -522,6 +625,17 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
 
 _RUNTIME_ANALYTIC_FUNCTIONS = AnalyticFunctionDict()
 _CONFIG_ANALYTIC_FUNCTIONS = AnalyticFunctionDict()
+
+# Installed packages register analytic functions and steps through this entry-point
+# group (ISSUE-172). trellis-analytics' group is read as an alias during the library
+# split. An entry point names an AnalyticFunctionSpec (or subclass), a list of them, or
+# a callable returning either. Read lazily on first use of the registry; only the
+# manifests are loaded then -- a function's own module is imported on its first run,
+# by format_set_executor._resolve_analytic_function.
+ANALYTIC_ENTRY_POINT_GROUP = "pyegeria.analytics"
+ANALYTIC_ENTRY_POINT_ALIASES = ("trellis.analytics",)
+_ENTRY_POINT_ANALYTIC_FUNCTIONS: Optional[AnalyticFunctionDict] = None  # None = not read yet
+_ENTRY_POINT_ERRORS: Dict[str, str] = {}
 
 
 class AnalyticRegistryCollision(ValueError):
@@ -553,9 +667,11 @@ def refresh_analytic_functions() -> None:
       - PYEGERIA_ANALYTIC_FUNCTIONS_MODULES: comma-separated module callables
         (pkg.mod:func or pkg.mod.func) returning a dict/AnalyticFunctionDict
     Collisions across sources (including against BUILTINS) raise AnalyticRegistryCollision.
+    Also forgets the installed (entry-point) tier, so it is re-read on next use.
     """
-    global _CONFIG_ANALYTIC_FUNCTIONS
+    global _CONFIG_ANALYTIC_FUNCTIONS, _ENTRY_POINT_ANALYTIC_FUNCTIONS
     _CONFIG_ANALYTIC_FUNCTIONS = AnalyticFunctionDict()
+    _ENTRY_POINT_ANALYTIC_FUNCTIONS = None  # installed packages are re-read on next use
 
     json_paths = os.getenv("PYEGERIA_ANALYTIC_FUNCTIONS_JSON", "").strip()
     if json_paths:
@@ -584,12 +700,65 @@ def refresh_analytic_functions() -> None:
             _add_with_collision_check(_CONFIG_ANALYTIC_FUNCTIONS, loaded, source=f"MODULE:{m}")
 
 
+def _read_entry_points() -> Tuple[AnalyticFunctionDict, Dict[str, str]]:
+    """Load every manifest in the entry-point groups. A broken entry point is recorded
+    in the returned errors, naming it, and the rest still load."""
+    found = AnalyticFunctionDict()
+    errors: Dict[str, str] = {}
+    for group in (ANALYTIC_ENTRY_POINT_GROUP, *ANALYTIC_ENTRY_POINT_ALIASES):
+        for ep in entry_points(group=group):
+            label = f"{group}:{ep.name}"
+            try:
+                obj = ep.load()
+                if callable(obj) and not isinstance(obj, AnalyticFunctionSpec):
+                    obj = obj()
+                items = obj if isinstance(obj, (list, tuple)) else [obj]
+                for spec in items:
+                    if not isinstance(spec, AnalyticFunctionSpec):
+                        raise TypeError(f"{type(spec).__name__} is not an AnalyticFunctionSpec")
+                    prior = found.get(spec.name)
+                    if prior is not None and prior.function != spec.function:
+                        raise AnalyticRegistryCollision(
+                            f"'{spec.name}' is already provided by another entry point as {prior.function}")
+                    found[spec.name] = spec
+            except Exception as exc:  # noqa: BLE001 -- one broken package must not hide the others
+                errors[label] = f"entry point {label} ({ep.value}) could not be loaded: {exc}"
+                logger.warning(errors[label])
+    return found, errors
+
+
+def _entry_point_functions() -> AnalyticFunctionDict:
+    global _ENTRY_POINT_ANALYTIC_FUNCTIONS, _ENTRY_POINT_ERRORS
+    if _ENTRY_POINT_ANALYTIC_FUNCTIONS is None:
+        _ENTRY_POINT_ANALYTIC_FUNCTIONS, _ENTRY_POINT_ERRORS = _read_entry_points()
+    return _ENTRY_POINT_ANALYTIC_FUNCTIONS
+
+
+def analytic_entry_point_errors() -> Dict[str, str]:
+    """Entry points that are installed but could not be loaded, each with a sentence
+    naming it and the error (empty when every one loaded, or none is installed)."""
+    _entry_point_functions()
+    return dict(_ENTRY_POINT_ERRORS)
+
+
 def get_analytic_registry() -> AnalyticFunctionDict:
-    """Combine built-ins, config-loaded, and runtime-registered analytic functions.
-    Enforce no duplicate names across all sources."""
+    """Combine built-ins, config-loaded, installed (entry-point) and runtime-registered
+    analytic functions. Enforce no duplicate names across all sources, except that an
+    installed function whose name is already a built-in or config entry is skipped and
+    reported by analytic_entry_point_errors(), so an installed package can't break the
+    registry for everyone."""
     combined = AnalyticFunctionDict()
     _add_with_collision_check(combined, _BUILTINS, source="BUILTINS")
     _add_with_collision_check(combined, _CONFIG_ANALYTIC_FUNCTIONS, source="CONFIG")
+    for name, spec in _entry_point_functions().items():
+        if name in combined:
+            label = f"entry point function '{name}'"
+            if label not in _ENTRY_POINT_ERRORS:
+                _ENTRY_POINT_ERRORS[label] = (f"{label} ({spec.function}) was skipped: the name is already "
+                                              f"defined by a built-in or config entry")
+                logger.warning(_ENTRY_POINT_ERRORS[label])
+            continue
+        combined[name] = spec
     _add_with_collision_check(combined, _RUNTIME_ANALYTIC_FUNCTIONS, source="RUNTIME")
     return combined
 
@@ -601,6 +770,7 @@ def analytic_registry_payload() -> dict:
     return {
         "total": len(registry),
         "functions": {name: spec.dict() for name, spec in registry.items()},
+        "entry_point_errors": analytic_entry_point_errors(),
     }
 
 

@@ -86,6 +86,7 @@ from pyegeria.models.models import (
     ActivityStatusRequestBody,
     ActionRequestBody
 )
+from pyegeria.core.async_runner import run_sync
 
 __all__ = [
     # Models
@@ -348,8 +349,7 @@ class ServerClient(BaseServerClient):
         Egeria resource name convention. The organization_name falls back to self.organization_name if not supplied.
         Sync version.
         """
-        loop = asyncio.get_event_loop()
-        result = loop.run_until_complete(
+        result = run_sync(
             self.__async_get_guid__(
                 guid, display_name, property_name, qualified_name, tech_type, organization_name
             )
@@ -396,8 +396,7 @@ class ServerClient(BaseServerClient):
         """
         Synchronous version of _async_get_valid_metadata_values.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_get_valid_metadata_values(property_name, type_name)
         )
 
@@ -563,8 +562,7 @@ class ServerClient(BaseServerClient):
             The requesting user is not authorized to issue this request.
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_relationships_with_property_value(
                 relationship_type,
                 property_value,
@@ -728,8 +726,7 @@ class ServerClient(BaseServerClient):
         PyegeriaException.
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_elements_by_property_value(property_value, property_names, metadata_element_type,
                                                        effective_time, for_lineage, for_duplicate_processing,
                                                        start_from, page_size, output_format, report_spec, timeout, **kwargs)
@@ -802,8 +799,7 @@ class ServerClient(BaseServerClient):
         PyegeriaException
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_guid_for_name(name, property_name, type_name)
         )
         return response
@@ -871,8 +867,7 @@ class ServerClient(BaseServerClient):
         PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
         """
-        loop = asyncio.get_event_loop()
-        result = loop.run_until_complete(
+        result = run_sync(
             self._async_get_element_by_guid_(
                 element_guid
             )
@@ -999,8 +994,7 @@ class ServerClient(BaseServerClient):
                 str: The guid of the connector.
         """
 
-        loop = asyncio.get_event_loop()
-        result = loop.run_until_complete(
+        result = run_sync(
             self._async_get_connector_guid(
                 connector_name
             )
@@ -1104,8 +1098,7 @@ class ServerClient(BaseServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_add_archive_file(
                 archive_file, server_guid, display_name, qualified_name, timeout, organization_name
             )
@@ -1207,8 +1200,7 @@ class ServerClient(BaseServerClient):
         PyEgeriaException
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_add_comment_to_element(element_guid, comment, comment_type, body)
         )
         return response
@@ -1324,8 +1316,7 @@ class ServerClient(BaseServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_update_comment(comment_guid, comment, comment_type, body, merge_update)
         )
 
@@ -1386,8 +1377,7 @@ class ServerClient(BaseServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_setup_accepted_answer(question_comment_guid, answer_comment_guid)
         )
 
@@ -1444,8 +1434,7 @@ class ServerClient(BaseServerClient):
         PyEgeriaException
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_clear_accepted_answer(question_comment_guid, answer_comment_guid)
         )
 
@@ -1514,8 +1503,7 @@ class ServerClient(BaseServerClient):
         ------
         PyEgeriaException
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_remove_comment_from_element(comment_guid, body, cascade_delete=cascade_delete)
         )
 
@@ -1586,8 +1574,7 @@ class ServerClient(BaseServerClient):
         ------
         PyegeriaException
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_comment_by_guid(guid, graph_query_depth, output_format, report_spec, body, **kwargs)
         )
         return response
@@ -1672,8 +1659,7 @@ class ServerClient(BaseServerClient):
         ------
         PyegeriaException
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_attached_comments(element_guid, metadata_element_type_name, graph_query_depth,
                                               start_from, page_size, output_format, report_spec, body, **kwargs)
         )
@@ -1850,8 +1836,7 @@ class ServerClient(BaseServerClient):
 
 
         """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
+        resp = run_sync(
             self._async_find_comments(search_string, classification_names, metadata_element_subtypes, starts_with,
                                       ends_with, ignore_case, start_from, page_size, output_format, report_spec, body, **kwargs)
         )
@@ -2174,8 +2159,7 @@ class ServerClient(BaseServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_create_note_log(element_guid, display_name, description, body)
         )
         return response
@@ -2310,8 +2294,7 @@ class ServerClient(BaseServerClient):
             description ():
 
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_update_note_log(note_log_guid, display_name, description, body, merge_update)
         )
         return response
@@ -2376,8 +2359,7 @@ class ServerClient(BaseServerClient):
         ------
         PyEgeriaException
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_remove_note_log(note_log_guid, body, cascade_delete)
         )
 
@@ -2571,8 +2553,7 @@ class ServerClient(BaseServerClient):
 
 
         """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
+        resp = run_sync(
             self._async_find_note_logs(search_string, classification_names, metadata_element_subtypes, starts_with,
                                        ends_with, ignore_case, start_from, page_size, output_format, report_spec, body, **kwargs)
         )
@@ -2660,8 +2641,7 @@ class ServerClient(BaseServerClient):
         PyegeriaException
 
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_note_logs_by_name(name, metadata_element_type_name, metadata_element_subtypes,
                                              graph_query_depth, start_from, page_size, output_format,
                                              report_spec, body, **kwargs)
@@ -2735,8 +2715,7 @@ class ServerClient(BaseServerClient):
         ------
         PyegeriaException
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_note_log_by_guid(guid, graph_query_depth, output_format, report_spec, body, **kwargs)
         )
         return response
@@ -2821,8 +2800,7 @@ class ServerClient(BaseServerClient):
         ------
         PyegeriaException
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_attached_note_logs(element_guid, metadata_element_type_name, graph_query_depth,
                                                start_from, page_size, output_format, report_spec, body, **kwargs)
         )
@@ -3007,8 +2985,7 @@ class ServerClient(BaseServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_create_note(note_log_guid, display_name, description, associated_element, body)
         )
         return response
@@ -3190,8 +3167,7 @@ class ServerClient(BaseServerClient):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_add_journal_entry(note_log_qn, element_qn, note_log_display_name, journal_entry_display_name, note_entry, body)
         )
         return response
@@ -3345,8 +3321,7 @@ class ServerClient(BaseServerClient):
             merge_update ():
 
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_update_note(note_guid, display_name, description, body, merge_update)
         )
 
@@ -3415,8 +3390,7 @@ class ServerClient(BaseServerClient):
         ------
         PyegeriaException
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_remove_note(
                 note_guid,
                 body
@@ -3619,8 +3593,7 @@ class ServerClient(BaseServerClient):
         ------
         PyegeriaException
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_find_notes(search_string=search_string, body=body, starts_with=starts_with,
                                    ends_with=ends_with, ignore_case=ignore_case, start_from=start_from,
                                    page_size=page_size, output_format=output_format,
@@ -3704,8 +3677,7 @@ class ServerClient(BaseServerClient):
          ------
          PyegeriaException
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_note_by_guid(guid, metadata_element_type_name, graph_query_depth, output_format, report_spec, body, **kwargs)
         )
         return response
@@ -3797,8 +3769,7 @@ class ServerClient(BaseServerClient):
           PyegeriaException
 
          """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_notes_for_note_log(note_log_guid, metadata_element_type_name, graph_query_depth,
                                               start_from, page_size, output_format, report_spec, body, **kwargs)
         )
@@ -3890,8 +3861,7 @@ class ServerClient(BaseServerClient):
         ------
         PyegeriaException
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_create_informal_tag(display_name, description, qualified_name, body)
         )
         return response
@@ -3968,8 +3938,7 @@ class ServerClient(BaseServerClient):
         Args:
             body ():
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_update_tag_description(tag_guid, description)
         )
         return response
@@ -4031,8 +4000,7 @@ class ServerClient(BaseServerClient):
          ------
          PyegeriaException
          """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_delete_tag(tag_guid)
         )
 
@@ -4143,8 +4111,7 @@ class ServerClient(BaseServerClient):
         ------
         PyegeriaException
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_tag_by_guid(guid, graph_query_depth, output_format, report_spec, body, **kwargs)
         )
         return response
@@ -4236,8 +4203,7 @@ class ServerClient(BaseServerClient):
         ------
         PyegeriaException
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_tags_by_name(name, metadata_element_type_name, metadata_element_subtypes,
                                          graph_query_depth, start_from, page_size, output_format,
                                          report_spec, body, **kwargs)
@@ -4400,8 +4366,7 @@ class ServerClient(BaseServerClient):
         ------
         PyegeriaException
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_find_tags(search_string, body, starts_with, ends_with, ignore_case,
                                   start_from, page_size, output_format, report_spec, **kwargs)
         )
@@ -4521,8 +4486,7 @@ class ServerClient(BaseServerClient):
         ------
         PyegeriaException
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_find_my_tags(
                 search_string,
                 body,
@@ -4605,8 +4569,7 @@ class ServerClient(BaseServerClient):
         ------
         PyegeriaException
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_add_tag_to_element(
                 element_guid,
                 tag_guid,
@@ -4692,8 +4655,7 @@ class ServerClient(BaseServerClient):
         ------
         PyegeriaException
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_elements_by_tag(tag_guid, graph_query_depth, start_from, page_size,
                                            output_format, report_spec, body, **kwargs)
         )
@@ -4780,8 +4742,7 @@ class ServerClient(BaseServerClient):
         ------
         PyegeriaException
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_attached_tags(element_guid, metadata_element_type_name, graph_query_depth,
                                           start_from, page_size, output_format, report_spec, body, **kwargs)
         )
@@ -4860,8 +4821,7 @@ class ServerClient(BaseServerClient):
         PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_remove_tag_from_element(
                 element_guid,
                 tag_guid,
@@ -4990,8 +4950,7 @@ class ServerClient(BaseServerClient):
           }
         }
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_add_like_to_element(element_guid, emoji, body)
         )
         return response
@@ -5085,8 +5044,7 @@ class ServerClient(BaseServerClient):
         ------
         PyegeriaException
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_attached_likes(element_guid, metadata_element_type_name, graph_query_depth,
                                            start_from, page_size, output_format, report_spec, body, **kwargs)
         )
@@ -5156,8 +5114,7 @@ class ServerClient(BaseServerClient):
         PyegeriaUnauthorizedException
             The requesting user is not authorized to issue this request.
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_remove_like_from_element(element_guid, body)
         )
         return response
@@ -5261,8 +5218,7 @@ class ServerClient(BaseServerClient):
             }
         }
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_add_rating_to_element(element_guid, is_public, body)
         )
         return response
@@ -5356,8 +5312,7 @@ class ServerClient(BaseServerClient):
         ------
         PyegeriaException
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_attached_ratings(element_guid, metadata_element_type_name, graph_query_depth,
                                              start_from, page_size, output_format, report_spec, body, **kwargs)
         )
@@ -5427,8 +5382,7 @@ class ServerClient(BaseServerClient):
         PyegeriaUnauthorizedException
             The requesting user is not authorized to issue this request.
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_remove_rating_from_element(element_guid, body)
         )
         return response
@@ -5536,8 +5490,7 @@ class ServerClient(BaseServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_add_search_keyword_to_element(element_guid, keyword, body)
         )
         return response
@@ -5624,8 +5577,7 @@ class ServerClient(BaseServerClient):
 
          """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_update_search_keyword(keyword_guid, body)
         )
 
@@ -5678,8 +5630,7 @@ class ServerClient(BaseServerClient):
 
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        run_sync(
             self._async_remove_search_keyword(keyword_guid )
         )
 
@@ -5753,8 +5704,7 @@ class ServerClient(BaseServerClient):
         PyegeriaException
 
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_search_keyword_by_guid(guid, graph_query_depth, output_format, report_spec, body, **kwargs)
         )
         return response
@@ -5852,8 +5802,7 @@ class ServerClient(BaseServerClient):
         PyegeriaException
 
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_get_search_keyword_by_keyword(name, metadata_element_type_name, metadata_element_subtypes,
                                                      graph_query_depth, start_from, page_size,
                                                      output_format, report_spec, body, **kwargs)
@@ -6014,8 +5963,7 @@ class ServerClient(BaseServerClient):
         PyegeriaException
 
         """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        response = run_sync(
             self._async_find_search_keywords(search_string, body, start_from=start_from, page_size=page_size,
                                              output_format=output_format, report_spec=report_spec, **kwargs)
         )
@@ -7613,8 +7561,7 @@ class ServerClient(BaseServerClient):
               "effectiveTime" : "{{$isoTimestamp}}"
             }
            """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_element_status(guid, status, body))
+        run_sync(self._async_update_element_status(guid, status, body))
 
 
     @dynamic_catch
@@ -7676,8 +7623,7 @@ class ServerClient(BaseServerClient):
         -----
         See: https://egeria-project.org/concepts/asset
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_asset(asset_type, body))
+        return run_sync(self._async_create_asset(asset_type, body))
 
     @dynamic_catch
     async def _async_create_asset_from_template(
@@ -7729,8 +7675,7 @@ class ServerClient(BaseServerClient):
         ValidationError
             Pydantic validation errors are raised if the body does not conform to the TemplateRequestBody.
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_asset_from_template(body))
+        return run_sync(self._async_create_asset_from_template(body))
 
     @dynamic_catch
     async def _async_update_asset(
@@ -7785,8 +7730,7 @@ class ServerClient(BaseServerClient):
         ValidationError
             Pydantic validation errors are raised if the body does not conform to the UpdateElementRequestBody.
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_asset(asset_guid, body))
+        run_sync(self._async_update_asset(asset_guid, body))
 
     @dynamic_catch
     async def _async_delete_asset(
@@ -7837,8 +7781,7 @@ class ServerClient(BaseServerClient):
             One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
             Egeria errors.
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_asset(asset_guid, body))
+        run_sync(self._async_delete_asset(asset_guid, body))
 
     @dynamic_catch
     async def _async_find_assets(
@@ -8009,8 +7952,7 @@ class ServerClient(BaseServerClient):
             Egeria errors.
 
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_sync(
             self._async_find_assets(search_string=search_string, starts_with=starts_with, ends_with=ends_with,
                                     ignore_case=ignore_case, anchor_domain=anchor_domain,
                                     metadata_element_type=metadata_element_type,

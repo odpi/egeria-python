@@ -1479,12 +1479,11 @@ def metric_trend(
     (and future) fixed-metric function trend support for free, without
     adding `window`/`points` params to each one individually.
 
-    `metric_path` is a dotted import path exactly like `analytic_function`/
-    `extra_find` declarations use (e.g. "pyegeria.view.overview_metrics.
-    governed_coverage") -- resolved via `importlib`, not the analytic
-    registry, to keep this module free of the report-spec-registry layer
-    (see module docstring's design boundary; the registry itself already
-    carries these same dotted paths in `AnalyticFunctionSpec.function`).
+    `metric_path` names the function the way a report spec's
+    `analytic_function` does: a registered analytic function name (e.g.
+    "governed_coverage"). It is resolved through the report-spec resolver
+    (ISSUE-173), so a caller-supplied value gets the same allowlist check;
+    a dotted path still works but is deprecated.
 
     Pass both `mgr` and `ce` regardless of what the target function actually
     needs -- only the client parameter names it declares (by leading
@@ -1500,14 +1499,10 @@ def metric_trend(
     "value". A snapshot that raises logs at debug and stores None instead of
     aborting the whole series.
     """
-    import importlib
     from datetime import datetime, timezone
+    from pyegeria.view.format_set_executor import resolve_report_spec_function  # lazy: keeps the design boundary
 
-    module_path, func_name = metric_path.rsplit(".", 1)
-    module = importlib.import_module(module_path)
-    func = getattr(module, func_name, None)
-    if func is None or not callable(func):
-        raise AttributeError(f"'{func_name}' not found in module '{module_path}'")
+    func = resolve_report_spec_function(metric_path)
 
     clients = {"mgr": mgr, "ce": ce}
     bound_args = []
