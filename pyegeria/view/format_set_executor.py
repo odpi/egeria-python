@@ -16,6 +16,7 @@ from __future__ import annotations
 import asyncio
 import inspect
 import json
+import os
 import sys
 from typing import Any, Dict, Optional, Union
 
@@ -86,21 +87,77 @@ def _resolve_client_and_method(func_decl: str):
     return (client_class, method_name)
 
 
-def _resolve_analytic_function(func_decl: str):
-    """Given a dotted import path like 'pyegeria.view.overview_metrics.growth_series',
-    import and return the callable. Unlike `function` (find_method), `analytic_function`
-    (extra_find) targets a plain module-level function, not a client class method --
-    overview_metrics.py's whole design boundary is that its functions take an
-    already-constructed, already-authenticated client as their first argument, so
-    there's no client class to resolve here, just the function itself."""
-    if not isinstance(func_decl, str) or "." not in func_decl:
-        raise ValueError(f"Invalid analytic_function declaration: {func_decl!r}")
+# Module prefixes a report spec may name directly as a dotted path (ISSUE-169).
+# Override with PYEGERIA_ANALYTIC_MODULE_PREFIXES (comma-separated). A prefix
+# matches the module itself or anything under it, so "pyegeria" does not
+# admit "pyegeria_extras".
+DEFAULT_ANALYTIC_MODULE_PREFIXES = ("pyegeria", "trellis_analytics")
+
+
+class AnalyticFunctionRefused(ValueError):
+    """A report spec named a callable that is neither registered nor under an allowed module prefix."""
+    pass
+
+
+def analytic_module_prefixes() -> tuple:
+    """The allowed module prefixes: PYEGERIA_ANALYTIC_MODULE_PREFIXES if set, else the defaults."""
+    raw = os.getenv("PYEGERIA_ANALYTIC_MODULE_PREFIXES", "").strip()
+    if not raw:
+        return DEFAULT_ANALYTIC_MODULE_PREFIXES
+    return tuple(p.strip().rstrip(".") for p in raw.split(",") if p.strip())
+
+
+def _module_allowed(module_path: str) -> bool:
+    return any(module_path == p or module_path.startswith(p + ".") for p in analytic_module_prefixes())
+
+
+def _import_callable(func_decl: str):
     module_path, func_name = func_decl.rsplit(".", 1)
     module = importlib.import_module(module_path)
     func = getattr(module, func_name, None)
     if func is None or not callable(func):
         raise AttributeError(f"'{func_name}' not found in module '{module_path}'")
     return func
+
+
+def _resolve_analytic_function(func_decl: str):
+    """Return the callable a report spec's analytic_function (or an action's
+    fetch/analytic step, or a binder factory) names.
+
+    Unlike `function` (find_method), `analytic_function` (extra_find) targets a
+    plain module-level function, not a client class method -- overview_metrics.py's
+    whole design boundary is that its functions take an already-constructed,
+    already-authenticated client as their first argument, so there's no client
+    class to resolve here, just the function itself.
+
+    A report spec is data, so it may not import arbitrary code (ISSUE-169):
+      1. A registered name (analytic_registry) resolves to that entry's function.
+      2. A dotted path some registered entry declares is trusted as-is.
+      3. Any other dotted path must sit under an allowed module prefix
+         (`analytic_module_prefixes()`); anything else raises
+         AnalyticFunctionRefused before any import happens.
+    """
+    if not isinstance(func_decl, str) or not func_decl.strip():
+        raise ValueError(f"Invalid analytic_function declaration: {func_decl!r}")
+    from pyegeria.view.analytic_registry import get_analytic_registry
+
+    registry = get_analytic_registry()
+    spec = registry.get(func_decl)
+    if spec is not None:
+        return _import_callable(spec.function)
+    if "." not in func_decl:
+        raise AnalyticFunctionRefused(
+            f"Analytic function '{func_decl}' is not a registered name, and is not a dotted path.")
+    if any(s.function == func_decl for s in registry.values()):
+        return _import_callable(func_decl)
+    module_path = func_decl.rsplit(".", 1)[0]
+    if not _module_allowed(module_path):
+        raise AnalyticFunctionRefused(
+            f"Analytic function '{func_decl}' is not registered and its module is not under an allowed "
+            f"prefix {list(analytic_module_prefixes())}. Register it in the analytic registry, or add its "
+            f"package to PYEGERIA_ANALYTIC_MODULE_PREFIXES.")
+    logger.debug(f"Analytic function '{func_decl}' resolved by dotted path (not registered).")
+    return _import_callable(func_decl)
 
 
 # Parameter names an analytic function uses for its leading client argument(s)
