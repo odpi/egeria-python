@@ -2377,6 +2377,7 @@ class ServerClient(BaseServerClient):
             output_format: str = "JSON",
             report_spec: Optional[str | dict] = None,
             body: Optional[dict | SearchStringRequestBody] = None,
+            graph_query_depth: int = 3,
             **kwargs
     ) -> dict | str:
 
@@ -2407,6 +2408,10 @@ class ServerClient(BaseServerClient):
             Output format set for the response.
         body : dict | SearchStringRequestBody, optional
             Body of the request. Details of the body override other parameters if present.
+        graph_query_depth : int, default 3
+            How far to follow relationships from each log. At the default, each log's
+            entries (noteLogEntries) are inlined, and page_size bounds logs, not entries,
+            so a log with many entries makes the call slow. Pass 0 to list logs only.
         **kwargs : dict, optional
             Additional parameters supported by the underlying find request:
             
@@ -2488,7 +2493,8 @@ class ServerClient(BaseServerClient):
             'page_size': page_size,
             'output_format': output_format,
             'report_spec': report_spec,
-            'body': body
+            'body': body,
+            'graph_query_depth': graph_query_depth,
         }
         # Merge with any additional kwargs, removing None values
         params.update(kwargs)
@@ -2512,10 +2518,11 @@ class ServerClient(BaseServerClient):
             page_size: int = 0,
             output_format: str = "JSON", report_spec: Optional[str | dict] = None,
             body: Optional[dict | SearchStringRequestBody] = None,
+            graph_query_depth: int = 3,
             **kwargs
     ) -> dict | str:
         """
-        Return the list of comments containing the supplied string. Async Version.
+        Return the list of note logs containing the supplied string.
 
         Parameters
         ----------
@@ -2555,7 +2562,8 @@ class ServerClient(BaseServerClient):
         """
         resp = run_sync(
             self._async_find_note_logs(search_string, classification_names, metadata_element_subtypes, starts_with,
-                                       ends_with, ignore_case, start_from, page_size, output_format, report_spec, body, **kwargs)
+                                       ends_with, ignore_case, start_from, page_size, output_format, report_spec, body,
+                                       graph_query_depth=graph_query_depth, **kwargs)
         )
 
         return resp
