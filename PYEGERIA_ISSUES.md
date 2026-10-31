@@ -172,6 +172,7 @@ re-test candidates moved into *Awaiting re-test* below the open sections.
   create-from-template) and 7 (`viewElementGUID`) are still open.
 
 **Open pyegeria items**
+- ISSUE-171: `exec_report_spec` returned an analytic result that was not measured as ordinary data or `empty`; it now returns the function's declared absence sentence
 - ISSUE-170: `AnalyticFunctionSpec` can't say what its results mean (unit, as-of, basis, absence sentences); added an optional `declaration`
 - ISSUE-169: `_resolve_analytic_function` imported any dotted path a report spec named; now registered names plus an allowlist of module prefixes
 - ISSUE-168: pyegeria can't run on Python 3.14: `nest_asyncio`, applied at import time, makes `asyncio.current_task()` return None
@@ -192,6 +193,25 @@ Actionable in this repo. Some of these are fully blocked today — waiting
 on an Egeria Server capability that doesn't exist yet — but the pyegeria/
 Dr.Egeria-side work each will need once that capability ships is written
 into the entry now, so it isn't rediscovered from scratch later.
+
+---
+
+### ISSUE-171: `exec_report_spec` returned an analytic result that was not measured as ordinary data or `empty`; it now returns the function's declared absence sentence
+
+**Layer:** pyegeria · **Status:** in PR (branch `feat/state-aware-report-spec`, stacked on ISSUE-170's `feat/analytic-declaration`) · **Found:** 2026-10-30, Resource Explorer's portal-extensibility evaluation, §3 item 2.
+
+**What:** ISSUE-139/140 stopped charting a `not_established`/`not_applicable` result. The DICT path and the chart fallback still returned `{"kind": "json", "data": <result>}`, though, so a table or tile showed the routine's placeholder zeros as an answer. And `{"kind": "empty"}` looks the same to a reader whether nothing was found or nobody looked. Egeria Advisor, for example, renders `empty` as "No results returned".
+
+**Change** (`pyegeria/view/format_set_executor.py`):
+- **not_established / not_applicable** results now return `{"kind": "absent", "content": <sentence>, "absence": {...}, "envelope": {...}}` on every output format. There is no top-level `data`; a partial result rides under `detail`.
+- **nothing_found** results keep their data or chart (real zeros) and gain the same `absence` block. A chart's subtitle is the declared `measured_nothing` sentence.
+- **measured** results, and results with no envelope, are unchanged.
+
+`absence` gives the state (`not_measured`, `not_permitted`, `not_applicable` or `measured_nothing`), the sentence, the reason, and `declared`. The sentence comes from the function's registered `declaration.absence` (ISSUE-170), looked up by registry name or by dotted path. A function with no declaration gets words built from its own reason, with `declared: False`. `not_established` becomes `not_permitted` only when the result says so itself (`"absence": "not_permitted"`); the reason text is never parsed to guess.
+
+**Consumers to update:** Egeria Advisor's `report_pipeline`/`report_spec_agent` (trellis) treat an unknown kind generically. `content` is among the keys its fallback reads, so it shows the sentence, but it should handle `absent` explicitly. Any Portal tile that reads `data` for these states gets no `data` now.
+
+Tests: `tests/micro-tests/test_issue_171_state_aware_report_spec.py`; three ISSUE-140 tests updated to the new shape.
 
 ---
 
