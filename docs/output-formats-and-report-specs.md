@@ -949,7 +949,7 @@ Tip: You can combine `find_report_specs` to discover candidates and then `run_re
 A `FormatSet`'s `action` (`ActionParameter`, in `pyegeria/view/_output_format_models.py`) has **two independent execution paths**, mirroring the two function slots Dr.Egeria commands have always carried (`find_method`/`find_constraints` and `extra_find`/`extra_constraints`):
 
 - `function` (from `find_method`): an element-query call, typically a `pyegeria.omvs.*` method (e.g. `MetadataExpert.find_metadata_elements_with_string`) — returns a list of Egeria elements, formatted per-column by the `FormatSet`'s `Format.attributes` (the TABLE/DICT/REPORT/MERMAID path already documented above).
-- `analytic_function` (from `extra_find`): a plain Python function — typically in `pyegeria.view.overview_metrics` — that takes an already-constructed, already-authenticated client as its first argument (or first two, for a function needing two client roles — see `_bind_client_args` in `pyegeria/view/format_set_executor.py`) and returns an already-aggregated scalar/dict/list result, **not** raw elements. Deliberately no fixed required/optional-param whitelist: every caller-supplied param is forwarded as-is (`**kwargs`); Python's own `TypeError` on an unexpected keyword is the validation.
+- `analytic_function` (from `extra_find`): a registered analytic function's name, or the dotted path of a plain Python function — typically in `pyegeria.view.overview_metrics` — that takes an already-constructed, already-authenticated client as its first argument (or first two, for a function needing two client roles — see `_bind_client_args` in `pyegeria/view/format_set_executor.py`) and returns an already-aggregated scalar/dict/list result, **not** raw elements. Deliberately no fixed required/optional-param whitelist: every caller-supplied param is forwarded as-is (`**kwargs`); Python's own `TypeError` on an unexpected keyword is the validation. Which names and paths are accepted is described under [Which functions a report spec may name](#which-functions-a-report-spec-may-name).
 
 A `FormatSet` can declare either path, or both (in which case the analytic path only runs for `SERIES`/`BAR`/`PIE` output formats — see below — and the find path handles everything else, unchanged).
 
@@ -964,8 +964,23 @@ All three chart formats are dispatched *before* the normal Format-row lookup (`e
 **Result state (the envelope).** A routine can say how sure it is by returning a state with its result: `measured`, `nothing_found`, `not_established` or `not_applicable`, plus a reason. The executor recognises a dict with `state`/`state_reason` (and an optional ready-made `subtitle`), a dict with `resultState`/`resultStateReason`, a nested `envelope` dict in either style, or an object whose `envelope` attribute has `result_state`/`result_state_reason`. When it finds one:
 - every output shape gets `"envelope": {"state", "reason", "subtitle"}` beside `kind`/`data`;
 - a chart gets the subtitle on it (`title: {"text", "subtitle"}`);
-- **a chart is drawn only for an established answer: `measured`, or `nothing_found`** (the routine read the record and the count really is zero, so a chart of zeros is honest). For `not_established` and `not_applicable` the numbers aren't known, so the caller gets the data and the state instead; zeros there would read as an answer.
-A result without an envelope is returned exactly as before. A result that is a pydantic model is returned as plain data (`model_dump`). See ISSUE-139/140.
+- **a chart is drawn only for an established answer: `measured`, or `nothing_found`** (the routine read the record and the count really is zero, so a chart of zeros is honest).
+- **`not_established` and `not_applicable` return a sentence, not data** (ISSUE-171), on every output format:
+
+  ```json
+  {"kind": "absent",
+   "content": "Coverage was not measured: the catalog could not be read.",
+   "absence": {"state": "not_measured", "sentence": "...", "reason": "could not open the ODS", "declared": true},
+   "envelope": {"state": "not_established", "reason": "could not open the ODS", "subtitle": "..."},
+   "detail": {"...": "the routine's partial result, if any"}}
+  ```
+
+  There is no top-level `data`, so no table or tile can show placeholder zeros as an answer. A consumer should show `content`. `detail` is there for diagnosis, not display.
+- `nothing_found` keeps its data or chart and gains the same `absence` block (state `measured_nothing`). If the function declares sentences, its chart subtitle is the declared one.
+
+The `absence` states are the four of trellis-analytics: `not_measured`, `not_permitted`, `not_applicable` and `measured_nothing`. `not_established` becomes `not_measured`, unless the result itself says `"absence": "not_permitted"`; the reason text is never parsed to guess. The sentence is the function's declared one (see [Declaring what results mean](#declaring-what-results-mean)). A function with no declaration gets words built from its own reason, with `declared: false`.
+
+A result without an envelope is returned exactly as before. A result that is a pydantic model is returned as plain data (`model_dump`). See ISSUE-139/140/171.
 
 **Building non-JSON arguments (`analytic_binders`).** Report-spec params are JSON, and only leading parameters named `mgr`/`ce`/`expert`/`client` get an Egeria client. To name a routine that takes some other object (e.g. a reader) by its own dotted path, map the parameter to a factory:
 
@@ -995,7 +1010,72 @@ Here `OdsReader(url)` takes `url`, so the caller passes `url` and the routine re
 - `family`: the same word and meaning as `FormatSet.family`; in Egeria a family is a Collection;
 - `tags`.
 
-`get_analytic_registry()` combines a `BUILTINS` tier (the 10 `overview_metrics` functions shipped today) with optional `CONFIG`/`RUNTIME` tiers, mirroring `base_report_formats.py`'s report-spec registry shape.
+`get_analytic_registry()` combines four tiers, mirroring `base_report_formats.py`'s report-spec registry shape:
+- `BUILTINS`: the `overview_metrics` functions shipped in pyegeria;
+- `CONFIG`: JSON files and loader functions named by `PYEGERIA_ANALYTIC_FUNCTIONS_JSON` / `PYEGERIA_ANALYTIC_FUNCTIONS_MODULES`;
+- installed packages, through entry points (see [Registering functions from an installed package](#registering-functions-from-an-installed-package));
+- `RUNTIME`: `register_analytic_functions(...)` calls.
+
+A name defined twice raises `AnalyticRegistryCollision`, except that an installed package's entry clashing with a built-in or config name is skipped and reported, so one package can't break the registry for everyone.
+
+#### Which functions a report spec may name
+
+A report spec is data: it can come from a user's report-spec directory or a config file. So `exec_report_spec` does not import whatever it names (ISSUE-169). `analytic_function`, an action's `fetch`/`analytic` steps and `analytic_binders` factories are resolved in this order:
+
+1. **A registered name** resolves to that entry's `function`. This is the preferred form.
+2. **A dotted path that a registered entry declares** is trusted.
+3. **Any other dotted path** must be in a module under an allowed prefix. The defaults are `pyegeria` and `trellis_analytics`. Set `PYEGERIA_ANALYTIC_MODULE_PREFIXES` (comma-separated) to change the list. A prefix is a package boundary: `pyegeria` admits `pyegeria.view.x`, not `pyegeria_extras.x`. These resolve as before and log at DEBUG.
+4. **Anything else** raises `AnalyticFunctionRefused` (a `ValueError`) before anything is imported.
+
+To use a function from your own package, register it (any tier above), or add your package to `PYEGERIA_ANALYTIC_MODULE_PREFIXES`. Registering is better: the function then appears in the registry for authoring tools, and it can carry a declaration.
+
+#### Declaring what results mean
+
+`AnalyticFunctionSpec.declaration` (optional, ISSUE-170) lets a function say what its results are. A screen, report or chat answer can then show them with no code written for that function:
+
+```python
+AnalyticFunctionSpec(
+    name="column_coverage",
+    function="my_pkg.analytics.column_coverage",
+    declaration={
+        "result_kind": "measure",
+        "measures": [{
+            "name": "described_columns", "unit": "columns", "as_of": "asOf",
+            "value_field": "described",
+            "basis": {"denominator_field": "column_count", "denominator_label": "columns"},
+        }],
+        "absence": {
+            "not_measured": "Coverage was not measured: the catalog could not be read.",
+            "not_permitted": "Coverage was not measured: reading the catalog is not permitted.",
+            "not_applicable": "Coverage does not apply to this resource.",
+            "measured_nothing": "The catalog was read and holds no columns.",
+        },
+    },
+)
+```
+
+- `result_kind` is one of `measure`, `series`, `distribution`, `list`, `graph`, `finding`, `proposal` or `table`.
+- `measures` are required for `measure`, `series`, `distribution` and `graph`. Each has a `unit` in words and an `as_of` field: a number never travels without them.
+- `basis` lets a count be read as "456 of 1,236 columns" without anyone writing the "of".
+- `capped_field` names a result field that is true when the value is only a lower bound.
+- All four `absence` sentences are required. An absence is declared, never improvised; these are the sentences `kind: "absent"` returns (see the result envelope above).
+
+This is the minimum of trellis-analytics' `Declaration`, with the same field names, so a trellis declaration validates here. Its richer blocks (extents, confidence, answers, ...) are ignored by pyegeria, not refused. An incomplete declaration is refused with a sentence naming what is missing.
+
+#### Registering functions from an installed package
+
+A package can add analytic functions and steps to the registry by installing (ISSUE-172). Declare an entry point in the `pyegeria.analytics` group that names an `AnalyticFunctionSpec` (or a subclass), a list of them, or a callable returning either:
+
+```toml
+[project.entry-points."pyegeria.analytics"]
+my_pkg = "my_pkg.manifests:ANALYTICS"
+```
+
+- **Alias group:** trellis-analytics' `trellis.analytics` group is also read, during the library split.
+- **When it's read:** lazily, on the first `get_analytic_registry()` call, and cached; `refresh_analytic_functions()` forgets the cache.
+- **What loads:** only the manifests load then. Each function's own module is imported on its first run, so keep the manifest module free of heavy imports.
+- **Resolver:** a registered function is trusted whatever its module, so installing is all a package needs to do.
+- **Failures:** an entry point that fails to load, or names something that isn't a spec, is reported by `analytic_entry_point_errors()` and in `analytic_registry_payload()["entry_point_errors"]`. It is logged at WARNING and never stops the rest loading, so "installed but not loadable" is never shown as "nothing installed".
 
 **Demo report specs** (`pyegeria/view/analytic_demo_specs.py`) — one real, executable `FormatSet` per registered analytic function, proving each is actually runnable as a report spec (not just documented in the registry). Named `Analytic Demo - <Heading>`, family `"Analytic Function Demo"`. Each spec's `description` states plainly whether the underlying function is generic or a fixed metric (pulled from the registry, not duplicated by hand).
 

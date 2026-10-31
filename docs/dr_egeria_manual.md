@@ -328,6 +328,12 @@ for the full find-method vs. analytic-function distinction):
   actual list, not a string. (Fixed 2026-08-01 — before this, every value
   was stored as a literal string, so any non-scalar parameter broke the
   analytic function outright; see `PYEGERIA_ISSUES.md` ISSUE-20.)
+  The report spec's analytic function itself must be a registered analytic
+  function, or live in a module under an allowed prefix (`pyegeria` and
+  `trellis_analytics` by default); anything else is refused when the report
+  runs. If the function reports that it could not measure, the report shows
+  the function's own sentence saying so, rather than an empty result. See
+  [Which functions a report spec may name](output-formats-and-report-specs.md#which-functions-a-report-spec-may-name).
 - **`Report Parameters`** — for a report spec backed by a **find method**
   (a live Egeria query) whose action needs a parameter that isn't part of
   the standard find/search vocabulary — most commonly a GUID identifying
