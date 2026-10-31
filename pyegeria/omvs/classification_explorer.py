@@ -6462,7 +6462,7 @@ class ClassificationExplorer(ServerClient):
             definition_guid: str,
             element_guid: str,
             body: Optional[dict | NewRelationshipRequestBody] = None,
-    ) -> None:
+    ) -> str | None:
         """
         Link a governance definition to an element using the GovernedBy relationship. Async version.
 
@@ -6479,7 +6479,8 @@ class ClassificationExplorer(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -6509,7 +6510,7 @@ class ClassificationExplorer(ServerClient):
             f""
         )
 
-        await self._async_new_relationship_request(
+        return await self._async_new_relationship_request(
             url, prop=["GovernedByProperties"], body=body
         )
 
@@ -6518,7 +6519,7 @@ class ClassificationExplorer(ServerClient):
             definition_guid: str,
             element_guid: str,
             body: Optional[dict | NewRelationshipRequestBody] = None,
-    ) -> None:
+    ) -> str | None:
         """
         Link a governance definition to an element using the GovernedBy relationship.
 
@@ -6535,7 +6536,8 @@ class ClassificationExplorer(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -6560,7 +6562,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        run_sync(
+        return run_sync(
             self._async_add_gov_definition_to_element(
                 definition_guid,
                 element_guid,
@@ -6671,7 +6673,7 @@ class ClassificationExplorer(ServerClient):
             scoped_by_guid: str,
             element_guid: str,
             body: Optional[dict | NewRelationshipRequestBody] = None,
-    ) -> None:
+    ) -> str | None:
         """
         Link a scope to an element using the ScopedBy relationship. Async version.
 
@@ -6688,7 +6690,8 @@ class ClassificationExplorer(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -6698,14 +6701,14 @@ class ClassificationExplorer(ServerClient):
 
         url = f"{self.classification_command_root}/elements/{element_guid}/scoped-by/{scoped_by_guid}/attach"
 
-        await self._async_new_relationship_request(url, ['ScopedBy'], body)
+        return await self._async_new_relationship_request(url, ['ScopedBy'], body)
 
     def add_scope_to_element(
             self,
             scoped_by_guid: str,
             element_guid: str,
             body: Optional[dict | NewRelationshipRequestBody] = None,
-    ) -> None:
+    ) -> str | None:
         """
         Link a scope to an element using the ScopedBy relationship.
 
@@ -6722,7 +6725,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        run_sync(
+        return run_sync(
             self._async_add_scope_to_element(
                 scoped_by_guid,
                 element_guid,
@@ -6805,7 +6808,7 @@ class ClassificationExplorer(ServerClient):
             resource_guid: str,
             element_guid: str,
             body: Optional[dict | NewRelationshipRequestBody] = None,
-    ) -> None:
+    ) -> str | None:
         """
         Link a resource to an element using the ResourceList relationship. Async version.
 
@@ -6827,7 +6830,8 @@ class ClassificationExplorer(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -6837,14 +6841,14 @@ class ClassificationExplorer(ServerClient):
 
         url = f"{self.classification_command_root}/elements/{element_guid}/resource-list/{resource_guid}/attach"
 
-        await self._async_new_relationship_request(url, ['ResourceList'], body)
+        return await self._async_new_relationship_request(url, ['ResourceList'], body)
 
     def add_resource_to_element(
             self,
             resource_guid: str,
             element_guid: str,
             body: Optional[dict | NewRelationshipRequestBody] = None,
-    ) -> None:
+    ) -> str | None:
         """
         Link a resource to an element using the ResourceList relationship.
 
@@ -6861,7 +6865,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        run_sync(
+        return run_sync(
             self._async_add_resource_to_element(
                 resource_guid,
                 element_guid,
@@ -7204,7 +7208,7 @@ class ClassificationExplorer(ServerClient):
             more_info_guid: str,
             element_guid: str,
             body: Optional[dict | NewRelationshipRequestBody] = None,
-    ) -> None:
+    ) -> str | None:
         """
         Link a more-information resource to an element using the MoreInformation relationship. Async version.
 
@@ -7225,7 +7229,8 @@ class ClassificationExplorer(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -7235,14 +7240,14 @@ class ClassificationExplorer(ServerClient):
 
         url = f"{self.classification_command_root}/elements/{element_guid}/more-information/{more_info_guid}/attach"
 
-        await self._async_new_relationship_request(url, ['MoreInformation'], body)
+        return await self._async_new_relationship_request(url, ['MoreInformation'], body)
 
     def add_more_information(
             self,
             more_info_guid: str,
             element_guid: str,
             body: Optional[dict | NewRelationshipRequestBody] = None,
-    ) -> None:
+    ) -> str | None:
         """
         Link a more-information resource to an element using the MoreInformation relationship.
 
@@ -7259,7 +7264,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        run_sync(
+        return run_sync(
             self._async_add_more_information(
                 more_info_guid,
                 element_guid,
@@ -7340,7 +7345,7 @@ class ClassificationExplorer(ServerClient):
             element_guid: str,
             actor_guid: str,
             body: Optional[dict | NewRelationshipRequestBody] = None,
-    ) -> None:
+    ) -> str | None:
         """
         Attach an actor to an element. Async version.
 
@@ -7357,7 +7362,8 @@ class ClassificationExplorer(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -7383,14 +7389,14 @@ class ClassificationExplorer(ServerClient):
             f"{self.classification_command_root}/elements/{element_guid}/assigned-to-actor/{actor_guid}/attach"
         )
 
-        await self._async_new_relationship_request(url, body=body)
+        return await self._async_new_relationship_request(url, body=body)
 
     def assign_actor_to_element(
             self,
             element_guid: str,
             actor_guid: str,
             body: Optional[dict | NewRelationshipRequestBody] = None,
-    ) -> None:
+    ) -> str | None:
         """
         Attach an actor to an element.
 
@@ -7407,7 +7413,8 @@ class ClassificationExplorer(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -7429,7 +7436,7 @@ class ClassificationExplorer(ServerClient):
 
         """
 
-        run_sync(
+        return run_sync(
             self._async_assign_actor_to_element(
                 element_guid,
                 actor_guid,

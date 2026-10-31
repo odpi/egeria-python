@@ -194,11 +194,13 @@ into the entry now, so it isn't rediscovered from scratch later.
 
 ### ISSUE-174: 142 `link_*` methods throw away the relationship GUID the shared helper now returns
 
-**Layer:** pyegeria · **Status:** open, logged 2026-10-31 for a fix and release next session · **Found:** 2026-10-31, Resource Explorer D1-b ("Link the pack's 22 schemas"). `AssetMaker.link_data_set_content` returns None, so the handler re-reads each schema after every attach to learn the new DataSetContent relationship's GUID.
+**Layer:** pyegeria · **Status:** fixed 2026-10-31 on branch `fix/link-methods-return-guid`, targets 6.2.19 · **Found:** 2026-10-31, Resource Explorer D1-b ("Link the pack's 22 schemas"). `AssetMaker.link_data_set_content` returns None, so the handler re-reads each schema after every attach to learn the new DataSetContent relationship's GUID.
 
 **What:** `ServerClient._async_new_relationship_request` already returns the new relationship's GUID (`GUIDResponse.guid`; that was added earlier as "purely additive"). But 142 of its 160 callers in `pyegeria/omvs` call it as a bare `await ...` and return None, as do their sync wrappers. The worst-affected modules are asset_maker (22), schema_maker (15), solution_architect (12), data_designer (11) and governance_officer (10). It matters most for multi-link relationship types such as DataSetContent: attach creates a new instance each time, and update/detach need that instance's own GUID.
 
 **Fix (proposed):** return the helper's result from each `_async_link_*`/`_async_attach_*`/`_async_setup_*`, and from its sync wrapper, typed `str | None` in the docstring's Returns. This is purely additive, since callers that ignore the value are unaffected. A micro-test should stub `_async_make_request` and check that a representative sample (and an AST check that no omvs method discards the helper's result) returns the GUID. Do Dr.Egeria link processors next if any re-read to find the GUID.
+
+**Fix (done):** an AST-driven rewrite of `pyegeria/omvs`. Every async method that bare-awaited the helper now returns its result. Where a log line followed the call, the result is kept in `relationship_guid` and returned after it. Every sync wrapper that bare-called such a method now returns it, and so does every intermediate async method (e.g. ClassificationExplorer's `add_*_to_element`). `-> None` annotations became `-> str | None`, and `Returns: None` docstrings now describe the GUID. `tests/micro-tests/test_issue_174_link_returns_guid.py` has an AST guard over all of `pyegeria/omvs` (transitive, async and sync) and a stubbed round-trip for 8 methods across 7 clients, both sync and async.
 
 ### ISSUE-173: Report specs named analytic functions by dotted path and loaded package specs through env vars; added the `pyegeria.report_specs` entry-point group and deprecated both
 

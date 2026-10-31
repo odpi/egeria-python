@@ -53,7 +53,7 @@ class TemplateManager(ServerClient):
         self.command_root = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/template-manager"
 
     @dynamic_catch
-    async def _async_link_sourced_from(self, element_guid: str, template_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+    async def _async_link_sourced_from(self, element_guid: str, template_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a template to an element that was created from it.
         Async version.
 
@@ -83,10 +83,10 @@ class TemplateManager(ServerClient):
         }
         """
         url = f"{self.command_root}/elements/{element_guid}/sourced-from/{template_guid}/attach"
-        await self._async_new_relationship_request(url, body=body)
+        return await self._async_new_relationship_request(url, body=body)
 
     @dynamic_catch
-    def link_sourced_from(self, element_guid: str, template_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+    def link_sourced_from(self, element_guid: str, template_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a template to an element that was created from it."""
         return run_sync(self._async_link_sourced_from(element_guid, template_guid, body))
 
@@ -113,7 +113,7 @@ class TemplateManager(ServerClient):
         return run_sync(self._async_detach_sourced_from(element_guid, template_guid, body))
 
     @dynamic_catch
-    async def _async_link_catalog_template(self, element_guid: str, template_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+    async def _async_link_catalog_template(self, element_guid: str, template_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a template to an element that was created from it.
         Async version.
 
@@ -127,10 +127,10 @@ class TemplateManager(ServerClient):
             Relationship details.
         """
         url = f"{self.command_root}/elements/{element_guid}/catalog-template/{template_guid}/attach"
-        await self._async_new_relationship_request(url, body=body)
+        return await self._async_new_relationship_request(url, body=body)
 
     @dynamic_catch
-    def link_catalog_template(self, element_guid: str, template_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+    def link_catalog_template(self, element_guid: str, template_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a template to an element that was created from it."""
         return run_sync(self._async_link_catalog_template(element_guid, template_guid, body))
 

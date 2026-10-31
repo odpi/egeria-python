@@ -759,7 +759,7 @@ class DigitalBusiness(CollectionManager):
         business_capability_guid: str,
         supporting_capability_guid: str,
         body: Optional[dict | NewRelationshipRequestBody] = None,
-    ) -> None:
+    ) -> str | None:
         """Link dependent business capabilities. Async version.
 
         Parameters
@@ -773,7 +773,8 @@ class DigitalBusiness(CollectionManager):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -788,14 +789,14 @@ class DigitalBusiness(CollectionManager):
             f"{self.digital_business_command_root}/business-capabilities/"
             f"{business_capability_guid}/dependencies/{supporting_capability_guid}/attach"
         )
-        await self._async_new_relationship_request(url=url, prop=['BusinessCapabilityDependencyProperties'],body=body)
+        return await self._async_new_relationship_request(url=url, prop=['BusinessCapabilityDependencyProperties'],body=body)
 
     def link_business_capability_dependency(
         self,
         business_capability_guid: str,
         supporting_capability_guid: str,
         body: Optional[dict | NewRelationshipRequestBody] = None,
-    ) -> None:
+    ) -> str | None:
         """Link dependent business capabilities. Sync version.
 
         Parameters
@@ -809,14 +810,15 @@ class DigitalBusiness(CollectionManager):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        run_sync(
+        return run_sync(
             self._async_link_business_capability_dependency(
                 business_capability_guid, supporting_capability_guid, body
             )
@@ -902,7 +904,7 @@ class DigitalBusiness(CollectionManager):
         business_capability_guid: str,
         element_guid: str,
         body: Optional[dict | NewRelationshipRequestBody] = None,
-    ) -> None:
+    ) -> str | None:
         """Attach a business capability to an element that provides digital support. Async version.
 
         Parameters
@@ -916,7 +918,8 @@ class DigitalBusiness(CollectionManager):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -927,14 +930,14 @@ class DigitalBusiness(CollectionManager):
             f"{self.digital_business_command_root}/business-capabilities/"
             f"{business_capability_guid}/digital-support/{element_guid}/attach"
         )
-        await self._async_new_relationship_request(url=url, prop=['DigitalSupportProperties'],body=body)
+        return await self._async_new_relationship_request(url=url, prop=['DigitalSupportProperties'],body=body)
 
     def link_digital_support(
         self,
         business_capability_guid: str,
         element_guid: str,
         body: Optional[dict | NewRelationshipRequestBody] = None,
-    ) -> None:
+    ) -> str | None:
         """Attach a business capability to an element that provides digital support. Sync version.
 
         Parameters
@@ -948,14 +951,15 @@ class DigitalBusiness(CollectionManager):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        run_sync(
+        return run_sync(
             self._async_link_digital_support(business_capability_guid, element_guid, body)
         )
 
