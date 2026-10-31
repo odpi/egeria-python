@@ -49,13 +49,14 @@ class FeedbackMixin:
         if isinstance(current, (FeedbackScreen, FeedbackLogScreen)):
             return
         screen_name = type(current).__name__
-        screen_title = str(getattr(current, "sub_title", "") or "")
+        # The title names the screen; every sub_title is just "User: <name>"
+        screen_title = str(getattr(current, "title", "") or "")
         await self.push_screen(FeedbackScreen(screen_name, screen_title), callback=self.feedback_callback)
 
     async def feedback_callback(self, feedback: Any) -> None:
         """Record the feedback returned from the FeedbackScreen in the feedback log."""
         if not isinstance(feedback, dict):
-            self.log("Feedback cancelled")
+            # self.log("Feedback cancelled")
             return
         client = None
         try:
@@ -66,10 +67,10 @@ class FeedbackMixin:
                             timeout=10, severity="error")
                 return
             note_guid = await client._async_create_note(log_guid, body=self._build_feedback_note(log_guid, feedback))
-            self.log(f"Feedback recorded as note: {note_guid}")
+            # self.log(f"Feedback recorded as note: {note_guid}")
             self.notify("Thank you, your feedback has been recorded")
         except PyegeriaException as e:
-            self.log(f"Failed to record feedback: {e}")
+            # self.log(f"Failed to record feedback: {e}")
             self.notify(f"Failed to record feedback: {e}", timeout=10, severity="error")
         finally:
             if client:
@@ -121,7 +122,7 @@ class FeedbackMixin:
         else:
             body = {"class": "NewElementRequestBody", "properties": properties}
         log_guid = await client._async_create_note_log(element_guid=owner_guid, body=body)
-        self.log(f"Created feedback log: {log_guid}")
+        # self.log(f"Created feedback log: {log_guid}")
         return log_guid
 
     async def action_view_feedback_log(self) -> None:
@@ -136,7 +137,7 @@ class FeedbackMixin:
             client = self._feedback_client()
             entries = await self.get_feedback_entries(client)
         except PyegeriaException as e:
-            self.log(f"Failed to retrieve feedback log: {e}")
+            # self.log(f"Failed to retrieve feedback log: {e}")
             self.notify(f"Failed to retrieve feedback log: {e}", timeout=10, severity="error")
             return
         finally:

@@ -15,6 +15,7 @@ from textual.widgets import Header, Footer, Button, Label, Static
 
 from pyegeria import load_app_config, settings
 from ChangeUserScreen import ChangeUserScreen
+from profile_utils import set_screen_heading
 
 
 class SplashScreen(ModalScreen):
@@ -27,8 +28,6 @@ class SplashScreen(ModalScreen):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        self.title = "Egeria"
-        self.subtitle = "Welcome to my_egeria"
         load_app_config()
         app_config = settings.Environment
         app_user = settings.User_Profile
@@ -36,6 +35,9 @@ class SplashScreen(ModalScreen):
         self.user_password = app_user.user_pwd
         self.view_server = app_config.egeria_view_server
         self.platform_url = app_config.egeria_platform_url
+
+    def on_mount(self) -> None:
+        set_screen_heading(self, "Welcome to my_egeria")
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True,id="splash")

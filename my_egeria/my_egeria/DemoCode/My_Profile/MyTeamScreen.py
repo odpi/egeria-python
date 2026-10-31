@@ -12,6 +12,7 @@ from textual.screen import ModalScreen
 from textual.widgets import Header, Footer, Static, DataTable
 
 from pyegeria import Egeria, load_app_config, settings
+from profile_utils import set_screen_heading
 
 
 class MyTeam(ModalScreen):
@@ -34,7 +35,6 @@ class MyTeam(ModalScreen):
         super().__init__(*args, **kwargs)
         load_app_config()
         app_user = settings.User_Profile
-        self.title = "My Team"
         self.my_team = my_team or []
         props = list(my_team_properties) if my_team_properties is not None else ["", "", "", ""]
         while len(props) < 4:
@@ -47,6 +47,7 @@ class MyTeam(ModalScreen):
         self.team_table: DataTable = DataTable(id="team_table")
 
     def on_mount(self) -> None:
+        set_screen_heading(self, "My Team")
         if self.my_team:
             if "Selection Error" in self.my_team[0][0]:
                 self.team_table.add_column("Error")
@@ -62,7 +63,7 @@ class MyTeam(ModalScreen):
                 for member in self.my_team:
                     self.team_table.add_row(member[0], member[1], member[2])
         else:
-            self.log(f"No team member data for MyTeam Screen", { "my_team": self.my_team})
+            # self.log(f"No team member data for MyTeam Screen", { "my_team": self.my_team})
             self.team_table.add_column("Error")
             self.team_table.add_column("Description")
             self.team_table.add_row("No team members found", "No team members returned from Egeria for this team")

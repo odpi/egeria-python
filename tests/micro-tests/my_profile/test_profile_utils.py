@@ -5,6 +5,8 @@
    Unit tests for profile_utils module.
 """
 
+from types import SimpleNamespace
+
 import pytest
 from profile_utils import (
     truncate_at_sequence,
@@ -12,6 +14,7 @@ from profile_utils import (
     bools_to_strings,
     extract_glossary_terms,
     check_request_serialization,
+    set_screen_heading,
 )
 
 
@@ -199,3 +202,36 @@ class TestCheckRequestSerialization:
         assert message is not None
         assert "pydantic" in message
         assert ".venv" in message
+
+
+class TestSetScreenHeading:
+    """Tests for set_screen_heading, which gives every screen the main screen's header."""
+
+    def test_heading_matches_main_screen(self):
+        screen = SimpleNamespace(app=SimpleNamespace(user_name="erinoverview", karma_points=42))
+        set_screen_heading(screen, "Edit Blogs")
+        assert screen.title == "Egeria - Edit Blogs"
+        assert screen.sub_title == "User: erinoverview, Karma Points: 42"
+
+    def test_karma_points_are_0_before_the_profile_loads(self):
+        screen = SimpleNamespace(app=SimpleNamespace(user_name="erinoverview"))
+        set_screen_heading(screen)
+        assert screen.sub_title == "User: erinoverview, Karma Points: 0"
+
+    def test_app_passed_explicitly(self):
+        # The app sets the main screen's heading itself, where screen.app may not be available
+        screen = SimpleNamespace()
+        set_screen_heading(screen, app=SimpleNamespace(user_name="erinoverview", karma_points=7))
+        assert screen.sub_title == "User: erinoverview, Karma Points: 7"
+
+    def test_no_context_is_plain_egeria(self):
+        screen = SimpleNamespace(app=SimpleNamespace(user_name="erinoverview"))
+        set_screen_heading(screen)
+        assert screen.title == "Egeria"
+
+    def test_falls_back_to_settings_user(self, monkeypatch):
+        from pyegeria import settings
+        monkeypatch.setattr(settings.User_Profile, "user_name", "garygeeke")
+        screen = SimpleNamespace(app=SimpleNamespace())
+        set_screen_heading(screen, "Status")
+        assert screen.sub_title == "User: garygeeke, Karma Points: 0"

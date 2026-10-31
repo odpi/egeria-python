@@ -12,6 +12,7 @@ from textual.app import ComposeResult
 from textual.containers import ScrollableContainer
 from textual.screen import ModalScreen
 from textual.widgets import Header, Static, Input, Button, Footer
+from profile_utils import set_screen_heading
 
 
 class CreateProfileScreen(ModalScreen[int]):
@@ -41,8 +42,7 @@ class CreateProfileScreen(ModalScreen[int]):
         print("View Server:", self.view_server)
 
     def on_mount(self) -> None:
-        self.title = f"User: {self.user_name}, Karma Points: {self.karma_points}"
-        self.sub_title = f"Create Egeria Profile for user: {self.user_name}"
+        set_screen_heading(self, "Create Profile")
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
@@ -107,11 +107,11 @@ class CreateProfileScreen(ModalScreen[int]):
             new_profile_inst = MyProfile(self.view_server, self.platform_url, self.user_name, self.user_password)
             new_profile_inst.create_egeria_bearer_token(self.user_name, self.user_password)
             new_profile_guid = new_profile_inst.add_my_profile(self.new_element_request_body)
-            self.log(f"Profile created with GUID: {new_profile_guid}")
+            # self.log(f"Profile created with GUID: {new_profile_guid}")
             self.dismiss(200)
             return(200)
         except PyegeriaException as e:
-            self.log(f"Error creating profile: {e!s} | request={self.new_element_request_body}")
+            # self.log(f"Error creating profile: {e!s} | request={self.new_element_request_body}")
             self.dismiss(401)
             return(401)
 

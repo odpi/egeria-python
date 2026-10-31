@@ -85,6 +85,7 @@ from profile_utils import (
     check_request_serialization,
     check_egeria_access,
     element_summary,
+    set_screen_heading,
 )
 from tech_types_handler import TechTypesMixin
 from shop_for_data_handler import ShopForDataMixin
@@ -166,17 +167,17 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         self.description = "Display the user related items for the current user."
         load_app_config()
         app_config = settings.Environment
-        self.log(f"Application Config: {app_config}")
+        # self.log(f"Application Config: {app_config}")
         app_user = settings.User_Profile
-        self.log(f"User Profile: {app_user}")
+        # self.log(f"User Profile: {app_user}")
         self.user_name = app_user.user_name or "garygeeke"
         self.user_password = app_user.user_pwd or "secret"
         self.view_server = app_config.egeria_view_server or "qs-view-server"
         self.platform_url = app_config.egeria_platform_url or "https://127.0.0.1:9443"
-        self.log(f"Platform URL: {self.platform_url}")
-        self.log(f"View Server: {self.view_server}")
-        self.log(f"User: {self.user_name}")
-        self.log(f"User PWD: {self.user_password}")
+        # self.log(f"Platform URL: {self.platform_url}")
+        # self.log(f"View Server: {self.view_server}")
+        # self.log(f"User: {self.user_name}")
+        # self.log(f"User PWD: {self.user_password}")
 
         # Ensure compose() is safe before data loads
         self.actor_profile: dict = {}
@@ -248,13 +249,13 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                 except asyncio.CancelledError:
                     return
                 except Exception as e:
-                    self.log(f"Error in parallel initial load: {e}")
+                    # self.log(f"Error in parallel initial load: {e}")
                     profile_found = False
                 await self._after_profile_load(profile_found)
 
     async def change_user(self, user_name: str, user_password: str) -> None:
         """Switch the app to new (already validated) credentials and reload the profile for that user."""
-        self.log(f"Changing user from {self.user_name} to {user_name}")
+        # self.log(f"Changing user from {self.user_name} to {user_name}")
         self.user_name = user_name
         self.user_password = user_password
         # Screens read the user from pyegeria's (cached) settings, so record the
@@ -264,7 +265,9 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         # ...and pyegeria clients, commands and subprocesses started from this app read the environment
         os.environ["EGERIA_USER"] = user_name
         os.environ["EGERIA_USER_PASSWORD"] = user_password
-        self.get_screen("main").sub_title = f"User: {user_name}"
+        # The old user's karma points no longer apply; the new user's arrive with their profile
+        self.karma_points = 0
+        set_screen_heading(self.get_screen("main"), app=self)
         self.my_profile_data = None
         self.refresh_bindings()
         await self._load_or_create_profile()
@@ -279,7 +282,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
 
     async def connection_error_callback(self, result: int) -> None:
         """Return from the connection error screen: 200 Egeria is back, 201 change user, otherwise quit."""
-        self.log(f"Connection error screen returned: {result}")
+        # self.log(f"Connection error screen returned: {result}")
         if result == 200:
             await self._load_or_create_profile()
         elif result == 201:
@@ -302,13 +305,13 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                     self.my_profile_raw, "My", "MyProfile", "DICT", "My-User-MD")
                 if isinstance(self.my_profile_raw, dict) else self.my_profile_raw
             )
-            self.log(f"retrieve profile result: {self.my_profile_data}")
+            # self.log(f"retrieve profile result: {self.my_profile_data}")
         except PyegeriaConnectionException as e:
-            self.log(f"Unable to connect to Egeria: {e!s}")
+            # self.log(f"Unable to connect to Egeria: {e!s}")
             self.load_error = f"Unable to connect to the Egeria platform at {self.platform_url}."
             return False
         except PyegeriaException as e:
-            self.log(f"Error retrieving profile: {e!s}")
+            # self.log(f"Error retrieving profile: {e!s}")
             print_basic_exception(e)
             # str(e) is often empty (e.g. on a 401), so ask Egeria directly what is wrong
             reason = (check_egeria_access(self.view_server, self.platform_url, self.user_name, self.user_password)
@@ -317,7 +320,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
             return False
 
         if not self.my_profile_data:
-            self.log("No profile found for user.")
+            # self.log("No profile found for user.")
             return False
 
         self._process_profile_data(self.my_profile_data)
@@ -332,11 +335,11 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
     async def _after_profile_load(self, profile_found: bool) -> None:
         """Wait for Egeria if the load could not reach it; otherwise offer to create a missing profile."""
         if self.load_error:
-            self.log(f"Profile load failed: {self.load_error}")
+            # self.log(f"Profile load failed: {self.load_error}")
             await self.push_screen(ConnectionErrorScreen(self.load_error), callback=self.connection_error_callback)
             return
         if not profile_found and (not hasattr(self, "my_profile_data") or not self.my_profile_data):
-            self.log("No profile found. Prompting to create one...")
+            # self.log("No profile found. Prompting to create one...")
             await self.push_screen(
                 CreateProfileScreen(
                     user=self.user_name,
@@ -363,12 +366,13 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
             self.karma_points = self.contribution_record.get("Karma Points") or 0
         else:
             self.karma_points = 0
+        set_screen_heading(self.get_screen("main"), app=self)
         self.my_projects_data = self.user_profile.get("Projects") or []
         self.my_teams_data = self.user_profile.get("Teams") or []
         self.my_communities_data = self.user_profile.get("Communities") or []
         self.my_roles_data = self.user_profile.get("Roles") or []
         self.my_note_logs = self.user_profile.get("Note Logs") or []
-        self.log(f"my_note_logs: {self.my_note_logs}, type: {type(self.my_note_logs)}")
+        # self.log(f"my_note_logs: {self.my_note_logs}, type: {type(self.my_note_logs)}")
         for entry in self.my_note_logs:
             if entry.get("class") == "BlogEntryProperties":
                 self.my_blogs_data.append(entry)
@@ -376,14 +380,14 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                 self.my_journal_data.append(entry)
                 # are todos part of note logs?
 
-        self.log(f"Contribution Record: {self.contribution_record}")
-        self.log(f"Karma Points: {self.karma_points}")
-        self.log(f"my_projects_data: {self.my_projects_data}")
-        self.log(f"my_teams_data: {self.my_teams_data}")
-        self.log(f"my_communities_data: {self.my_communities_data}")
-        self.log(f"my_roles_data: {self.my_roles_data}")
-        self.log(f"my_blogs_data: {self.my_blogs_data}")
-        self.log(f"my_journal_data: {self.my_journal_data}")
+        # self.log(f"Contribution Record: {self.contribution_record}")
+        # self.log(f"Karma Points: {self.karma_points}")
+        # self.log(f"my_projects_data: {self.my_projects_data}")
+        # self.log(f"my_teams_data: {self.my_teams_data}")
+        # self.log(f"my_communities_data: {self.my_communities_data}")
+        # self.log(f"my_roles_data: {self.my_roles_data}")
+        # self.log(f"my_blogs_data: {self.my_blogs_data}")
+        # self.log(f"my_journal_data: {self.my_journal_data}")
 
         # User Identities
         try:
@@ -393,9 +397,9 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                 if isinstance(raw, dict)
                 else self.my_profile_inst.get_my_profile(report_spec="User-Identities", output_format="DICT")
             )
-            self.log(f"User-Identities: {self.user_identities}, type: {type(self.user_identities)}")
+            # self.log(f"User-Identities: {self.user_identities}, type: {type(self.user_identities)}")
         except PyegeriaException as e:
-            self.log(f"Error retrieving User-Identities: {e!s}")
+            # self.log(f"Error retrieving User-Identities: {e!s}")
             self.user_identities = {}
 
         # User To-Dos
@@ -405,12 +409,12 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                 graph_query_depth=0,  # the to-do table shows properties only
                 output_format="DICT",
             )
-            self.log(f"My To-Dos: {self.my_todos_data}, type: {type(self.my_todos_data)}")
+            # self.log(f"My To-Dos: {self.my_todos_data}, type: {type(self.my_todos_data)}")
         except PyegeriaException as e:
-            self.log(f"Error retrieving My To-Dos: {e!s}")
+            # self.log(f"Error retrieving My To-Dos: {e!s}")
             self.my_todos_data = {}
 
-        self.log(f"my_todos_data: {self.my_todos_data}")
+        # self.log(f"my_todos_data: {self.my_todos_data}")
 
         self.my_collections = self._load_my_collections()
 
@@ -431,14 +435,15 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                 )
             except PyegeriaException as e:
                 print_basic_exception(e)
-                self.log(f"Error retrieving actor profile: {e!s}")
+                # self.log(f"Error retrieving actor profile: {e!s}")
                 actor = None
             data = actor.get("data") if isinstance(actor, dict) else None
             if data:
                 self.user_GUID = data[0].get("GUID") or ""
             else:
-                self.log("Actor-Profiles lookup returned no data; user_GUID left unset.")
-        self.log(f"User GUID retrieved: {self.user_GUID!r}")
+                pass
+                # self.log("Actor-Profiles lookup returned no data; user_GUID left unset.")
+        # self.log(f"User GUID retrieved: {self.user_GUID!r}")
 
         # Normalize expected keys
         self.full_name = self.user_profile.get("Full Name") or ""
@@ -450,9 +455,9 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         self.journal = self.my_journal_data or []
         self.todos = self.my_todos_data or []
         self.teams = self.my_teams_data or []
-        self.log(f"Blogs data: {self.blogs}")
-        self.log(f"Journal data: {self.journal}")
-        self.log(f"Todos data: {self.todos}")
+        # self.log(f"Blogs data: {self.blogs}")
+        # self.log(f"Journal data: {self.journal}")
+        # self.log(f"Todos data: {self.todos}")
         if isinstance(self.user_identities, list):
             self.user_identity = self.user_identities
         else:
@@ -468,7 +473,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
             # Depth 0: only header/properties are summarised (~70s at the default depth 3 vs <1s).
             response = eclient.find_collections(search_string="*", output_format="JSON", graph_query_depth=0)
         except PyegeriaException as e:
-            self.log(f"Error retrieving My Collections: {e!s}")
+            # self.log(f"Error retrieving My Collections: {e!s}")
             return []
         finally:
             if eclient:
@@ -481,9 +486,9 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
     def new_profile_return(self, result: int) -> None:
         """This function handles either the return from the create new profile screen or
         when the user already has a profile continue processing."""
-        self.log(f"Profile creation result: {result}")
+        # self.log(f"Profile creation result: {result}")
         if not result or result != 200:
-            self.log(f"Profile creation cancelled/failed; return: {result}, exiting.")
+            # self.log(f"Profile creation cancelled/failed; return: {result}, exiting.")
             self.exit(403)
             return
 
@@ -495,15 +500,15 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                 output_format="DICT",
                 report_spec="My-User-MD",
             )
-            self.log(f"Profile retrieved successfully: {self.user_profile_struct}")
+            # self.log(f"Profile retrieved successfully: {self.user_profile_struct}")
             self.show_main_screen()
         except PyegeriaException as e2:
-            self.log(f"Error retrieving user profile: {e2!s}")
+            # self.log(f"Error retrieving user profile: {e2!s}")
             self.exit(412)
             return
 
         if not self.user_profile_struct or self.user_profile_struct == []:
-            self.log("Error retrieving user profile. Exiting.")
+            # self.log("Error retrieving user profile. Exiting.")
             self.exit(413)
             return
 
@@ -686,16 +691,16 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         self.exit(200)
 
     async def action_refresh(self) -> None:
-        self.log("Refreshing data...")
+        # self.log("Refreshing data...")
         await self._load_or_create_profile()
         await self._populate_tables()
-        self.log("Data refresh completed.")
+        # self.log("Data refresh completed.")
 
     @on(OptionList.OptionSelected, "#other_function_list")
     async def handle_option_selected(self, event: OptionList.OptionSelected) -> None:
         selected_option = event.option.prompt.strip("[] ")
         selected_option_id = event.option.id
-        self.log(f"Selected option: {selected_option} ({selected_option_id})")
+        # self.log(f"Selected option: {selected_option} ({selected_option_id})")
         if selected_option == "Technology Types":
             await self.handle_technology_types_option()
         elif selected_option == "User Identities":
@@ -714,6 +719,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                     karma_points=self.karma_points,
                     user_profile=self.user_profile,
                     user_GUID=self.user_GUID,
+                    profile_element=getattr(self, "my_profile_raw", None),
                 ),
                 callback=self.edit_profile_callback,
             )
@@ -734,7 +740,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
 
     def status_callback(self, status_callback_rc: Any) -> None:
         """Callback routine from the status screen: the user has read the message, so carry on."""
-        self.log(f"Status screen returned: {status_callback_rc}")
+        # self.log(f"Status screen returned: {status_callback_rc}")
         self.show_main_screen()
 
     @on(DataTable.RowSelected, "#roles_table")
@@ -748,25 +754,27 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
 
     def show_main_screen(self) -> None:
         """Show or switch back to the main screen by unwinding the screen stack."""
-        self.log("Returning to main screen")
+        # self.log("Returning to main screen")
         try:
             while len(getattr(self, "screen_stack", [])) > 1 and not isinstance(getattr(self, "screen", None), MainScreen):
                 self.pop_screen()
         except Exception as e:
-            self.log(f"Error popping screens to return to main screen: {e}")
+            pass
+            # self.log(f"Error popping screens to return to main screen: {e}")
 
         try:
             if getattr(self, "is_mounted", False) and not isinstance(getattr(self, "screen", None), MainScreen):
                 self.push_screen("main")
         except Exception as e:
-            self.log(f"Error ensuring main screen: {e}")
+            pass
+            # self.log(f"Error ensuring main screen: {e}")
 
     # Alias for handlers calling _show_main_screen
     _show_main_screen = show_main_screen
 
     def view_subscriptions_callback(self, subscriptions_callback_rc: Any) -> None:
         """Callback routine from the view subscriptions screen."""
-        self.log(f"View subscriptions screen returned: {subscriptions_callback_rc}")
+        # self.log(f"View subscriptions screen returned: {subscriptions_callback_rc}")
         self.show_main_screen()
 
     def get_data_product_catalog_table(self) -> int:
@@ -797,13 +805,13 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                 user_pass=self.user_password,
             )
         except PyegeriaException as e:
-            self.log(f"Error retrieving digital product catalog details: {e!s}")
+            # self.log(f"Error retrieving digital product catalog details: {e!s}")
             return 421
-        self.log(f"Digital Product Catalog data returned: {self.digital_product_catalog_data}")
+        # self.log(f"Digital Product Catalog data returned: {self.digital_product_catalog_data}")
         self.digital_product_catalog_data_extract = self.digital_product_catalog_data.get("data") or []
-        self.log(f"Digital Product Catalog data extracted: {self.digital_product_catalog_data_extract}")
+        # self.log(f"Digital Product Catalog data extracted: {self.digital_product_catalog_data_extract}")
         if not self.digital_product_catalog_data_extract:
-            self.log(f"No digital product catalog data found for user: {self.user_name}")
+            # self.log(f"No digital product catalog data found for user: {self.user_name}")
             self.digital_product_catalog_table.add_row("No digital product catalogs found",
                                                        "No data returned from Egeria", "")
             if hasattr(self, "notify"):
@@ -831,35 +839,36 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
             # find the column containing the GUID
             for key, column in table.columns.items():
                 if column.label.plain == target_heading:
-                    self.log(f"GUID column found: {column.label.plain}")
+                    # self.log(f"GUID column found: {column.label.plain}")
                     column_key = key
                     break
 
             if column_key:
                 # If GUID is found, use the row and column to get the selected row's GUID
-                self.log(f"GUID found in table: row: {table_row}, column: {column_key}")
+                pass
+                # self.log(f"GUID found in table: row: {table_row}, column: {column_key}")
             else:
                 # No GUID in table so look for Qualified Name to use instead
                 target_heading = "Qualified Name"
                 column_key = None
                 for key, column in table.columns.items():
                     if column.label.plain == target_heading:
-                        self.log(f"Qualified Name column found: {column.label.plain}")
+                        # self.log(f"Qualified Name column found: {column.label.plain}")
                         column_key = key
                         break
 
             if column_key:
-                self.log (f"Row_key is : {self.table_row}")
-                self.log(f"Column key is: {column_key}")
+                # self.log (f"Row_key is : {self.table_row}")
+                # self.log(f"Column key is: {column_key}")
                 row_id = table.get_cell(self.table_row, column_key)
-                self.log(f"Row ID is: {row_id}")
+                # self.log(f"Row ID is: {row_id}")
             else:
                 self.notify(f"Error retrieving row from table to add comment, no GUID or Qualified Name column found", severity="error", timeout=30)
-                self.log(f"Column_key is: {column_key} not valid to access Egeria")
+                # self.log(f"Column_key is: {column_key} not valid to access Egeria")
                 return (400)
 
             if row_id == "":
-                self.log(f"Row ID is: {row_id}, not valid to access Egeria")
+                # self.log(f"Row ID is: {row_id}, not valid to access Egeria")
                 return (400)
 
         except PyegeriaException as e:
@@ -873,7 +882,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
     def add_comment_callback(self, comment_content):
         """ Process feedback from thew add comment functions and then return to main screen"""
         # If the return is an integer, then either success or failure, return to main screen
-        self.log(f"Return from Add Comment Screen: {comment_content}")
+        # self.log(f"Return from Add Comment Screen: {comment_content}")
         # An integer return is cancel/quit (200) or no element selected (400); the
         # main screen is already showing once AddCommentScreen has dismissed
         if not isinstance(comment_content, (list, tuple)):
@@ -881,7 +890,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         # Check that all required data has been returned (Comment, Type, and the GUID of the element the comment applies to)
         if len(comment_content) != 3:
             self.notify("Return from Add Comment Screen incomplete, please retry", severity="error", timeout=30)
-            self.log(f"Return from Add Comment Screen: {comment_content}, length: {len(comment_content)}")
+            # self.log(f"Return from Add Comment Screen: {comment_content}, length: {len(comment_content)}")
             return
         # We have 3 return data items so extract them to individual variables
         self.comment = comment_content[0]
@@ -890,7 +899,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         # Make sure we really have all the required data
         if not self.comment or not self.type or not self.element_guid:
             self.notify("A row must be selected and Both comment text and comment type are required!")
-            self.log(f"One or more element missing: {comment_content}, length: {len(comment_content)}")
+            # self.log(f"One or more element missing: {comment_content}, length: {len(comment_content)}")
             return
         # We have all the required data, then try to create the Egeria client
         eclient = None
@@ -901,7 +910,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                             self.user_password)
             eclient.create_egeria_bearer_token(self.user_name, self.user_password)
         except PyegeriaException as e:
-            self.log(f"Error creating Egeria client: {e}")
+            # self.log(f"Error creating Egeria client: {e}")
             self.notify(
                 "Unable to connect to the Egeria Server, please check the server is running and your credentials and try again",
                 timeout=10,
@@ -911,16 +920,16 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         try:
             # Add comment to selected element
             self.comment_type = self.type.upper()
-            self.log(f"Adding comment to element: {self.element_guid}, values: {self.comment}, {self.comment_type}")
+            # self.log(f"Adding comment to element: {self.element_guid}, values: {self.comment}, {self.comment_type}")
             response = eclient.add_comment_to_element(
                 element_guid=self.element_guid,
                 comment=self.comment,
                 comment_type=self.comment_type
             )
-            self.log(f"Comment successfully added! New Comment GUID: {response}")
+            # self.log(f"Comment successfully added! New Comment GUID: {response}")
             self.notify(f"Comment successfully added! New Comment GUID: {response}")
         except Exception as e:
-            self.log(f"Failed to add comment: {e}")
+            # self.log(f"Failed to add comment: {e}")
             self.notify(f"Failed to add comment: {e} \n Please try again.", severity="error")
             return
         finally:
@@ -950,7 +959,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                         )
         token = eclient.create_egeria_bearer_token(self.user_name, self.user_password)
         guid = eclient.get_guid_for_name(name=qname)
-        self.log(f"GUID: {guid} returned for qualified name: {qname}")
+        # self.log(f"GUID: {guid} returned for qualified name: {qname}")
         eclient.close_session()
         return guid
 

@@ -95,7 +95,7 @@ class BookmarksMixin:
                 }
             }
         guid = client.create_collection(body=body)
-        self.log(f"Created bookmarks collection {guid}")
+        # self.log(f"Created bookmarks collection {guid}")
         return guid
 
     def _bookmark_rows(self, client: Egeria, collection_guid: str) -> list[tuple[str, str, str]]:
@@ -119,7 +119,7 @@ class BookmarksMixin:
                 return []
             return self._bookmark_rows(client, collection_guid)
         except PyegeriaException as e:
-            self.log(f"Retrieving bookmarks failed: {e}")
+            # self.log(f"Retrieving bookmarks failed: {e}")
             self.notify(f"Could not retrieve your bookmarks: {e}", timeout=10, severity="error")
             return None
         finally:
@@ -135,7 +135,8 @@ class BookmarksMixin:
         self.push_screen(MyBookMarksScreen(bookmarks, target_guid=target_guid), callback=self.my_bookmarks_callback)
 
     def my_bookmarks_callback(self, result: Any) -> None:
-        self.log(f"Bookmarks screen returned: {result}")
+        pass
+        # self.log(f"Bookmarks screen returned: {result}")
 
     def add_my_bookmark(self, target_guid: str) -> bool:
         """Bookmark the element with the given GUID. Returns True on success."""
@@ -150,7 +151,7 @@ class BookmarksMixin:
             self.notify(f"Bookmarked {target_guid}", timeout=10, severity="information")
             return True
         except (PyegeriaException, ValueError) as e:
-            self.log(f"Adding bookmark {target_guid} failed: {e}")
+            # self.log(f"Adding bookmark {target_guid} failed: {e}")
             self.notify(f"Adding the bookmark failed: {e}", timeout=10, severity="error")
             return False
         finally:
@@ -175,7 +176,7 @@ class BookmarksMixin:
             # "No elements found" is returned, rather than an exception, when nothing matches
             return resolved if isinstance(resolved, str) and resolved and "No " not in resolved else None
         except PyegeriaException as e:
-            self.log(f"Looking up the GUID for {qualified_name} failed: {e}")
+            # self.log(f"Looking up the GUID for {qualified_name} failed: {e}")
             return None
         finally:
             if client:
@@ -207,7 +208,7 @@ class BookmarksMixin:
             self.notify(f"Removed bookmark {target_guid}", timeout=10, severity="information")
             return True
         except PyegeriaException as e:
-            self.log(f"Removing bookmark {target_guid} failed: {e}")
+            # self.log(f"Removing bookmark {target_guid} failed: {e}")
             self.notify(f"Removing the bookmark failed: {e}", timeout=10, severity="error")
             return False
         finally:

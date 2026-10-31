@@ -13,6 +13,7 @@ from textual.containers import ScrollableContainer, Horizontal
 from textual.screen import ModalScreen
 from textual.widgets import Header, Footer, Static, Input, Placeholder, Button, Markdown
 from pyegeria import load_app_config, settings, PyegeriaException, exec_report_spec
+from profile_utils import set_screen_heading
 
 
 class SearchForTermScreen(ModalScreen):
@@ -42,8 +43,7 @@ class SearchForTermScreen(ModalScreen):
         self.platform_url = platform_url or app_config.egeria_platform_url or "https://127.0.0.1:9443"
 
     def on_mount(self):
-        self.title = "Egeria"
-        self.sub_title = "Search for Term"
+        set_screen_heading(self, "Search for Term")
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
@@ -65,32 +65,32 @@ class SearchForTermScreen(ModalScreen):
         yield Footer()
 
     def action_quit(self) -> None:
-        self.log("User requested quit")
+        # self.log("User requested quit")
         self.dismiss(200)
 
     def action_go_back(self) -> None:
-        self.log("User requested go back")
+        # self.log("User requested go back")
         self.dismiss(201)
 
     @on(Input.Changed, "#search_term_input")
     def handle_search_term_input_changed(self, event: Input.Changed) -> None:
         self.search_term = event.value
-        self.log(f"Search term input changed: {self.search_term}")
+        # self.log(f"Search term input changed: {self.search_term}")
 
     @on(Button.Pressed, "#search_term_btn")
     async def handle_search_term(self) -> None:
-        self.log("User requested search term")
+        # self.log("User requested search term")
         if self.search_term:
             # search for the term
             search_result = self.search_for_the_term(self.search_term)
-            self.log(f"Search result: {search_result}")
+            # self.log(f"Search result: {search_result}")
             my_placeholder = self.query_one("#search_term_result")
             await my_placeholder.remove()
             markdown = Markdown(search_result, id="search_term_result")
             markdown.code_indent_guides = False
             await self.query_one("#search_term_result_container", ScrollableContainer).mount(markdown)
         else:
-            self.log("No search term provided")
+            # self.log("No search term provided")
             my_placeholder = self.query_one("#search_term_result")
             await my_placeholder.remove()
             markdown = Markdown(f"# No Content Found for: {self.search_term}", id="search_term_result")
@@ -121,6 +121,6 @@ class SearchForTermScreen(ModalScreen):
 
             return self.search_result
         except PyegeriaException as e:
-            self.log(f"Error searching for term: {e}")
+            # self.log(f"Error searching for term: {e}")
             self.search_result = f"# Error searching for term: {e}"
             return self.search_result

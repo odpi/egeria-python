@@ -14,7 +14,7 @@ from textual.screen import ModalScreen
 from textual.widgets import Header, Footer, Button, Label, Input
 
 from pyegeria import load_app_config, settings
-from profile_utils import check_egeria_access
+from profile_utils import check_egeria_access, set_screen_heading
 
 
 class ChangeUserScreen(ModalScreen):
@@ -30,8 +30,6 @@ class ChangeUserScreen(ModalScreen):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        self.title = "Egeria"
-        self.sub_title = "Change User"
         load_app_config()
         self.user_name = settings.User_Profile.user_name
         self.view_server = settings.Environment.egeria_view_server
@@ -52,6 +50,7 @@ class ChangeUserScreen(ModalScreen):
         yield Footer()
 
     def on_mount(self) -> None:
+        set_screen_heading(self, "Change User")
         self.query_one("#new_user_name", Input).focus()
 
     def action_cancel(self) -> None:

@@ -14,7 +14,7 @@ from textual.screen import ModalScreen
 from textual.widgets import Header, Footer, Button, Label, Static
 
 from pyegeria import load_app_config, settings
-from profile_utils import check_egeria_access
+from profile_utils import check_egeria_access, set_screen_heading
 
 # Seconds between automatic reconnection attempts
 RETRY_INTERVAL = 10
@@ -38,8 +38,6 @@ class ConnectionErrorScreen(ModalScreen):
 
     def __init__(self, error_message: str, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        self.title = "Egeria"
-        self.sub_title = "Unable to connect to Egeria"
         self.error_message = error_message
         self.attempts = 0
         self.countdown = RETRY_INTERVAL
@@ -72,6 +70,7 @@ class ConnectionErrorScreen(ModalScreen):
         yield Footer()
 
     def on_mount(self) -> None:
+        set_screen_heading(self, "Unable to connect to Egeria")
         self.retry_timer = self.set_interval(1, self._tick)
 
     def _status_text(self) -> str:
@@ -90,7 +89,7 @@ class ConnectionErrorScreen(ModalScreen):
         self.attempts += 1
         self.query_one("#connection_retry_status", Static).update("Trying to connect to Egeria...")
         error = check_egeria_access(self.view_server, self.platform_url, self.user_name, self.user_password)
-        self.log(f"Connection attempt {self.attempts}: {error or 'connected'}")
+        # self.log(f"Connection attempt {self.attempts}: {error or 'connected'}")
         if error is None:
             self.retry_timer.stop()
             self.dismiss(200)

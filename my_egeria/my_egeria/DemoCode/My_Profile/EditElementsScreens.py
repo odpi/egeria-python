@@ -15,6 +15,7 @@ from textual.screen import ModalScreen
 from textual.widgets import Header, Footer, DataTable, Static, Placeholder, Input, Button
 
 from pyegeria import PyegeriaException, Egeria, load_app_config, settings
+from profile_utils import set_screen_heading
 
 
 class ConfirmDeleteScreen(ModalScreen[bool]):
@@ -51,8 +52,7 @@ class ConfirmDeleteScreen(ModalScreen[bool]):
         yield Footer()
 
     def on_mount(self) -> None:
-        self.title = "Egeria - my_profile"
-        self.sub_title = f"Confirm Deletion{f' - {self.context}' if self.context else ''}"
+        set_screen_heading(self, f"Confirm Deletion{f' - {self.context}' if self.context else ''}")
 
     @on(Button.Pressed, "#confirm_delete_btn")
     def handle_confirm_button(self, event: Button.Pressed) -> None:
@@ -129,8 +129,7 @@ class BaseEditScreen(ModalScreen):
         yield Footer()
 
     async def on_mount(self) -> None:
-        self.title = "Egeria - my_profile"
-        self.sub_title = self.TITLE_TEXT
+        set_screen_heading(self, self.TITLE_TEXT)
 
         if (not self.columns or not self.rows_with_keys) and self.SOURCE_TABLE:
             try:
@@ -149,7 +148,8 @@ class BaseEditScreen(ModalScreen):
                     if not self.rows_with_keys:
                         self.rows_with_keys = [(row_key.value, main_table.get_row(row_key)) for row_key in main_table.rows]
             except Exception as e:
-                self.log(f"Error querying source table #{self.SOURCE_TABLE}: {e}")
+                pass
+                # self.log(f"Error querying source table #{self.SOURCE_TABLE}: {e}")
 
         self.table.clear(columns=True)
         if self.columns:
@@ -167,7 +167,7 @@ class BaseEditScreen(ModalScreen):
             self.focus()
             self.call_after_refresh(self.table.focus)
         except NoMatches as e:
-            self.log(f"Container #{self.CONTAINER_ID} not found: {e}")
+            # self.log(f"Container #{self.CONTAINER_ID} not found: {e}")
             self.dismiss(400)
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
@@ -205,7 +205,7 @@ class BaseEditScreen(ModalScreen):
         try:
             row = self.table.get_row(self.row_key)
         except Exception as e:  # row removed, or key no longer valid
-            self.log(f"Could not read row {self.row_key}: {e}")
+            # self.log(f"Could not read row {self.row_key}: {e}")
             self.notify("Could not read the selected row.", timeout=5, severity="error")
             return None
 
@@ -249,7 +249,8 @@ class BaseEditScreen(ModalScreen):
             try:
                 self.table.remove_row(row_key)
             except Exception as e:
-                self.log(f"Row {row_key} already gone from the display: {e}")
+                pass
+                # self.log(f"Row {row_key} already gone from the display: {e}")
             self.table.refresh()
             if self.container is not None:
                 self.container.refresh(layout=True)
@@ -373,6 +374,7 @@ class EditProfileScreen(ModalScreen[Any]):
         karma_points: int | None = None,
         user_profile: dict | None = None,
         user_GUID: str | None = None,
+        profile_element: dict | None = None,
         *args,
         **kwargs,
     ):
@@ -387,6 +389,9 @@ class EditProfileScreen(ModalScreen[Any]):
         self.karma_points = karma_points if karma_points is not None else 0
         self.user_profile = user_profile or {}
         self.user_GUID = user_GUID or ""
+        # The raw Person element from get_my_profile: its properties use Egeria's own field
+        # names (givenNames, pronouns, ...), which the My-User-MD DICT in user_profile lacks.
+        self.profile_element = profile_element or {}
         print("Platform:", self.platform_url)
         print("View Server:", self.view_server)
 
@@ -397,8 +402,7 @@ class EditProfileScreen(ModalScreen[Any]):
             self.user_GUID = getattr(self.app, "user_GUID", "")
         if self.karma_points == 0 and hasattr(self, "app"):
             self.karma_points = getattr(self.app, "karma_points", 0)
-        self.title = f"User: {self.user_name}, Karma Points: {self.karma_points}"
-        self.sub_title = f"Edit Egeria Profile for user: {self.user_name}"
+        set_screen_heading(self, "Edit Profile")
         # retrieve person profile details
 
     def compose(self) -> ComposeResult:
@@ -408,27 +412,33 @@ class EditProfileScreen(ModalScreen[Any]):
             self.user_GUID = getattr(self.app, "user_GUID", "")
         if self.karma_points == 0 and hasattr(self, "app"):
             self.karma_points = getattr(self.app, "karma_points", 0)
-        self.job_title = str(self.user_profile.get("jobTitle", self.user_profile.get("Job Title", "")))
-        self.log(f"Job Title: {self.job_title}")
-        self.given_names = str(self.user_profile.get("givenNames", ""))
-        self.log(f"Given Names: {self.given_names}")
-        self.surname = str(self.user_profile.get("surname", ""))
-        self.log(f"Surname: {self.surname}")
-        self.display_name = str(self.user_profile.get("displayName", ""))
-        self.log(f"Display Name: {self.display_name}")
-        self.pronouns = str(self.user_profile.get("pronouns", ""))
-        self.log(f"Pronouns: {self.pronouns}")
-        self.description = str(self.user_profile.get("description", ""))
-        self.log(f"Description: {self.description}")
-        self.employee_id = str(self.user_profile.get("employeeNumber", self.user_profile.get("employeeId", self.user_profile.get("Employee Number", ""))))
-        self.log(f"Employee ID: {self.employee_id}")
-        self.preferred_language = str(self.user_profile.get("preferredLanguage", ""))
-        self.log(f"Preferred Language: {self.preferred_language}")
-        self.resident_country = str(self.user_profile.get("residentCountry", ""))
-        self.log(f"Resident Country: {self.resident_country}")
-        self.time_zone = str(self.user_profile.get("timeZone", ""))
-        self.log(f"Time Zone: {self.time_zone}")
-        self.courtesy_title = str(self.user_profile.get("courtesyTitle", ""))
+        if not self.profile_element and hasattr(self, "app"):
+            raw = getattr(self.app, "my_profile_raw", None)
+            if isinstance(raw, list) and raw:
+                raw = raw[0]
+            self.profile_element = raw if isinstance(raw, dict) else {}
+        props = self.profile_element.get("properties") or {}
+        self.job_title = str(props.get("jobTitle", self.user_profile.get("Job Title", "")) or "")
+        # self.log(f"Job Title: {self.job_title}")
+        self.given_names = str(props.get("givenNames", "") or "")
+        # self.log(f"Given Names: {self.given_names}")
+        self.surname = str(props.get("surname", "") or "")
+        # self.log(f"Surname: {self.surname}")
+        self.display_name = str(props.get("displayName", "") or "")
+        # self.log(f"Display Name: {self.display_name}")
+        self.pronouns = str(props.get("pronouns", "") or "")
+        # self.log(f"Pronouns: {self.pronouns}")
+        self.description = str(props.get("description", "") or "")
+        # self.log(f"Description: {self.description}")
+        self.employee_id = str(props.get("employeeNumber", self.user_profile.get("Employee Number", "")) or "")
+        # self.log(f"Employee ID: {self.employee_id}")
+        self.preferred_language = str(props.get("preferredLanguage", "") or "")
+        # self.log(f"Preferred Language: {self.preferred_language}")
+        self.resident_country = str(props.get("residentCountry", "") or "")
+        # self.log(f"Resident Country: {self.resident_country}")
+        self.time_zone = str(props.get("timeZone", "") or "")
+        # self.log(f"Time Zone: {self.time_zone}")
+        self.courtesy_title = str(props.get("courtesyTitle", "") or "")
 
         yield Header(show_clock=True)
         yield Static("Update your profile in Egeria", classes="span-3", id="edit_profile_title")
@@ -482,11 +492,6 @@ class EditProfileScreen(ModalScreen[Any]):
     def create_profile(self) -> Any:
         """Update profile in Egeria from data provided in Input fields."""
 
-        input_q_name = "Person" + self.query_one("#user_employee_id", Input).value + \
-                        self.query_one("#user_resident_country", Input).value + \
-                        self.query_one("#user_given_names", Input).value + \
-                        self.query_one("#user_family_name", Input).value
-
         input_d_name = self.query_one("#user_preferred_name", Input).value
 
         input_c_title = self.query_one("#user_title", Input).value
@@ -494,8 +499,6 @@ class EditProfileScreen(ModalScreen[Any]):
         input_g_name = self.query_one("#user_given_names", Input).value
 
         input_s_name = self.query_one("#user_family_name", Input).value
-
-        input_f_name = self.query_one("#user_preferred_name", Input).value
 
         input_pronouns = self.query_one("#user_pronouns", Input).value
 
@@ -511,19 +514,17 @@ class EditProfileScreen(ModalScreen[Any]):
 
         input_desc = self.query_one("#user_description", Input).value
 
-        self.log(f"Input q_name:{input_q_name}")
-        self.log(f"Input d_name:{input_d_name}")
-        self.log(f"Input j_title:{input_j_title}")
-        self.log(f"Input e_num:{input_e_num}")
-        self.log(f"Input p_lang:{input_p_lang}")
-        self.log(f"Input r_country:{input_r_country}")
-        self.log(f"Input t_z:{input_t_z}")
-        self.log(f"Input desc:{input_desc}")
+        # self.log(f"Input d_name:{input_d_name}")
+        # self.log(f"Input j_title:{input_j_title}")
+        # self.log(f"Input e_num:{input_e_num}")
+        # self.log(f"Input p_lang:{input_p_lang}")
+        # self.log(f"Input r_country:{input_r_country}")
+        # self.log(f"Input t_z:{input_t_z}")
+        # self.log(f"Input desc:{input_desc}")
 
+        # qualifiedName is left out so the merge update keeps the profile's existing one.
         props: dict = {}
         props.update({"class": "PersonProperties"})
-        if input_q_name:
-            props.update({"qualifiedName": input_q_name})
         if input_d_name:
             props.update({"displayName": input_d_name})
         if input_c_title:
@@ -532,8 +533,6 @@ class EditProfileScreen(ModalScreen[Any]):
             props.update({"givenNames": input_g_name})
         if input_s_name:
             props.update({"surname": input_s_name})
-        if input_f_name:
-            props.update({"fullName": input_f_name})
         if input_pronouns:
             props.update({"pronouns": input_pronouns})
         if input_j_title:
@@ -549,21 +548,31 @@ class EditProfileScreen(ModalScreen[Any]):
         if input_desc:
             props.update({"description": input_desc})
 
-        self.log(f"Props: {props}")
+        # self.log(f"Props: {props}")
 
         self.update_element_request_body: dict = {"class": "UpdateElementRequestBody",
                                                  "isOwnAnchor": True,
                                                  "properties": props
                                                  }
+        # A profile loaded from a content pack (or another external source) can only be changed by a
+        # request naming that source, otherwise Egeria rejects it with OMAG-REPOSITORY-HANDLER-400-008.
+        origin = (self.profile_element.get("elementHeader") or {}).get("origin") or {}
+        if origin.get("originCategory") not in (None, "LOCAL_COHORT") and origin.get("homeMetadataCollectionId"):
+            self.update_element_request_body.update({
+                "externalSourceGUID": origin.get("homeMetadataCollectionId"),
+                "externalSourceName": origin.get("homeMetadataCollectionName"),
+            })
         try:
             new_profile_inst = Egeria(self.view_server, self.platform_url, self.user_name, self.user_password)
             new_profile_inst.create_egeria_bearer_token(self.user_name, self.user_password)
             new_profile_inst.update_actor_profile(self.user_GUID, self.update_element_request_body)
-            self.log(f"Profile updated for GUID: {self.user_GUID}")
+            # self.log(f"Profile updated for GUID: {self.user_GUID}")
+            self.app.notify("Profile saved to Egeria")
             self.dismiss(200)
             return (200)
         except PyegeriaException as e:
-            self.log(f"Error creating profile: {e!s} | request={self.update_element_request_body}")
+            # self.log(f"Error creating profile: {e!s} | request={self.update_element_request_body}")
+            self.app.notify(f"Profile not saved: {e!s}", severity="error", timeout=10)
             self.dismiss(401)
             return (401)
 

@@ -14,6 +14,7 @@ from textual.app import ComposeResult
 from textual.containers import ScrollableContainer, Horizontal
 from textual.screen import ModalScreen
 from textual.widgets import Header, Static, Footer, Button, DataTable, Select, TextArea
+from profile_utils import set_screen_heading
 
 FEEDBACK_CATEGORIES = ["Bug", "Suggestion", "Question", "Praise", "Other"]
 
@@ -35,8 +36,7 @@ class FeedbackScreen(ModalScreen):
         self.category = FEEDBACK_CATEGORIES[1]
 
     def on_mount(self):
-        self.title = "Egeria - My Profile"
-        self.sub_title = "Leave Feedback"
+        set_screen_heading(self, "Leave Feedback")
         self.query_one("#feedback_text", TextArea).focus()
 
     def compose(self) -> ComposeResult:
@@ -79,7 +79,7 @@ class FeedbackScreen(ModalScreen):
             "category": self.category,
             "text": feedback_text,
         }
-        self.log(f"Feedback data: {feedback_data} being returned from screen")
+        # self.log(f"Feedback data: {feedback_data} being returned from screen")
         self.dismiss(feedback_data)
 
     def action_cancel(self):
@@ -109,8 +109,7 @@ class FeedbackLogScreen(ModalScreen):
         self.feedback_entries = feedback_entries or []
 
     def on_mount(self):
-        self.title = "Egeria - My Profile"
-        self.sub_title = f"Feedback Log ({len(self.feedback_entries)} entries)"
+        set_screen_heading(self, f"Feedback Log ({len(self.feedback_entries)} entries)")
         table = self.query_one("#feedback_log_table", DataTable)
         table.add_columns("Date", "Submitted By", "Category", "Screen", "Feedback")
         table.zebra_stripes = True

@@ -130,7 +130,7 @@ CommunitiesScreen {
     height: auto;
 }
 
-#join_assignment_type {
+#join_assignment_type, #creator_assignment_type {
     width: 20;
 }
 
@@ -178,15 +178,15 @@ NewBlogPostScreen, AddCommunityCommentScreen {
     background: $background;
 }
 
-#new_blog_post_container, #add_community_comment_container {
+#new_blog_post_container, #add_community_comment_container, #create_community_container {
     column-span: 3;
 }
 
-#new_blog_post_container Horizontal, #add_community_comment_container Horizontal {
+#new_blog_post_container Horizontal, #add_community_comment_container Horizontal, #create_community_container Horizontal {
     height: auto;
 }
 
-#blog_post_text, #community_comment_text {
+#blog_post_text, #community_comment_text, #community_mission_text {
     height: 10;
 }
 
@@ -194,7 +194,7 @@ ModalScreen > Header, ModalScreen > Footer {
     column-span: 3;
 }
 
-#communities_title, #community_title, #new_blog_post_title, #add_community_comment_title, #confirm_leave_community_title, #my_network_title, #confirm_remove_peer_title, #edit_profile_title, #create_profile_title, #edit_teams_title, #edit_roles_title, #edit_communities_title, #edit_identities_title, #status_title, #generic_data_view_title, #feedback_title, #feedback_log_title, .span-3 {
+#communities_title, #community_title, #new_blog_post_title, #add_community_comment_title, #create_community_title, #confirm_leave_community_title, #my_network_title, #confirm_remove_peer_title, #edit_profile_title, #create_profile_title, #edit_teams_title, #edit_roles_title, #edit_communities_title, #edit_identities_title, #status_title, #generic_data_view_title, #feedback_title, #feedback_log_title, .span-3 {
     column-span: 3;
     text-align: center;
     background: darkblue;

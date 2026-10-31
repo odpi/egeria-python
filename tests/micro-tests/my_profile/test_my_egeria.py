@@ -96,17 +96,22 @@ class TestMyProfileAppLifecycle:
 
         app = MyProfileApp()
         async with app.run_test() as pilot:
+            # A live load takes several seconds; checking before it finishes sees half-loaded data
+            await app._load_task
             await pilot.pause()
             backend.expect(app.karma_points, fake=150, live=is_int, label="karma_points")
             backend.expect(len(app.projects), fake=1, live=at_least(0), label="projects")
             backend.expect(len(app.teams), fake=1, live=at_least(0), label="teams")
-            backend.expect(len(app.roles), fake=1, live=at_least(1), label="roles")
+            # A user needn't hold any roles, e.g. a new user on a new system
+            backend.expect(len(app.roles), fake=1, live=at_least(0), label="roles")
             backend.expect(len(app.todos), fake=1, live=at_least(0), label="todos")
             backend.expect(
                 app.user_GUID, fake="profile-guid-12345", live=nonempty_str, label="user_GUID"
             )
 
             main_screen = app.get_screen("main")
+            # The heading picks up the karma points once the profile has loaded
+            assert main_screen.sub_title == f"User: {app.user_name}, Karma Points: {app.karma_points}"
             for table_id, fake_rows in (
                 ("#projects_table", 1),
                 ("#my_collections_table", 1),
@@ -309,7 +314,7 @@ class TestMyProfileAppActionsAndOptions:
             screen = AddTodoScreen("todos_table", "user-guid-123")
             assert (screen.user_name, screen.user_password) == ("erinoverview", "erin-pwd")
             assert (os.environ["EGERIA_USER"], os.environ["EGERIA_USER_PASSWORD"]) == ("erinoverview", "erin-pwd")
-            assert app.get_screen("main").sub_title == "User: erinoverview"
+            assert app.get_screen("main").sub_title == "User: erinoverview, Karma Points: 0"
             app._load_or_create_profile.assert_awaited_once()
         finally:
             settings.User_Profile.user_name, settings.User_Profile.user_pwd = saved

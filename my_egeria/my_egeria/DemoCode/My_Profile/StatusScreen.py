@@ -14,6 +14,7 @@ from textual.app import ComposeResult
 from textual.containers import ScrollableContainer
 from textual.screen import ModalScreen
 from textual.widgets import Header, TextArea, Footer, Static
+from profile_utils import set_screen_heading
 
 
 class StatusScreen(ModalScreen):
@@ -31,6 +32,9 @@ class StatusScreen(ModalScreen):
         """Initialize the StatusScreen screen."""
         super().__init__()
         self.status_message = status_message
+
+    def on_mount(self) -> None:
+        set_screen_heading(self, "Status")
 
     def compose(self) -> ComposeResult:
         """ Compose the UI components for the StatusScreen screen."""
@@ -55,11 +59,11 @@ class StatusScreen(ModalScreen):
         """ The copy GUID to clipboard option in the footer has been selected. Copy the GUID to the clipboard."""
         # The GUID is between single ' marks in the status_message when a good result is recorded.
         match = re.search(r"'(.*?)'", self.status_message)
-        self.log(f"Match: {match}")
+        # self.log(f"Match: {match}")
         if match:
             guid = match.group(1)
             copy_to_clipboard(guid)
-            self.log(f"Copied GUID to clipboard: {guid}")
+            # self.log(f"Copied GUID to clipboard: {guid}")
         else:
             self.dismiss(400)
         self.dismiss(200)

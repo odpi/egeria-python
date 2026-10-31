@@ -9,6 +9,8 @@
    (https://egeria-project.org/types/1/0120-Assignment-Scopes/). The actor is
    either the person's own profile, or a role they are appointed to.
 
+   Creating a community makes it with create_community and, unless the user
+   chooses not to join, links their profile to it (as its Leader by default).
    Joining links the user's profile to the community with link_assignment_scope,
    and leaving removes that link with detach_assignment_scope. Memberships held
    through a role are listed but not removed here: the role may be shared, and
@@ -35,10 +37,16 @@ if str(current_dir) not in sys.path:
     sys.path.append(str(current_dir))
 
 from pyegeria import Egeria, PyegeriaException
-from CommunitiesScreen import CommunitiesScreen, DIRECT_LINK, JOIN_ASSIGNMENT_TYPES
+from CommunitiesScreen import CommunitiesScreen, DIRECT_LINK, JOIN_ASSIGNMENT_TYPES, CREATOR_ASSIGNMENT_TYPES
 from CommunityScreen import comment_type_label
 
 COMMUNITY_TYPE = "Community"
+PERSON_TYPE = "Person"
+ROLE_TYPE = "ActorRole"
+# The relationship between a role and the people appointed to it
+APPOINTMENT_TYPE = "PersonRoleAppointment"
+# The "Member Through" value of a person linked to a community directly, rather than through a role
+MEMBER_DIRECT = "Direct"
 BLOG_LOG_QN = "NoteLog::{community_guid}::CommunityBlog"
 # How many of a community's most recent blog posts are listed
 LATEST_POSTS = 20
@@ -48,12 +56,20 @@ def _type_name(element: dict) -> str:
     return ((element.get("elementHeader") or {}).get("type") or {}).get("typeName") or ""
 
 
+def _is_role(element: dict) -> bool:
+    """True for an ActorRole, or any of its subtypes (PersonRole, GovernanceRole, ...)."""
+    element_type = (element.get("elementHeader") or {}).get("type") or {}
+    return ROLE_TYPE == element_type.get("typeName") or ROLE_TYPE in (element_type.get("superTypeNames") or [])
+
+
 def _guid(element: dict) -> str:
     return (element.get("elementHeader") or {}).get("guid") or ""
 
 
 def _name(properties: dict) -> str:
-    return properties.get("displayName") or properties.get("fullName") or properties.get("qualifiedName") or ""
+    # Some roles have only an identifier, such as "Community Leader of Data Science special interest group"
+    return (properties.get("displayName") or properties.get("fullName") or properties.get("identifier")
+            or properties.get("qualifiedName") or "")
 
 
 def _created(element: dict) -> tuple[str, str]:
@@ -84,7 +100,7 @@ class CommunitiesMixin:
             client = self._community_client()
             profile = client.get_my_profile(output_format="JSON")
         except PyegeriaException as e:
-            self.log(f"Retrieving my communities failed: {e}")
+            # self.log(f"Retrieving my communities failed: {e}")
             self.notify(f"Could not retrieve your communities: {e}", timeout=10, severity="error")
             return None
         finally:
@@ -130,7 +146,8 @@ class CommunitiesMixin:
         self.push_screen(CommunitiesScreen(communities), callback=self.communities_callback)
 
     def communities_callback(self, result: Any) -> None:
-        self.log(f"Communities screen returned: {result}")
+        pass
+        # self.log(f"Communities screen returned: {result}")
 
     def search_communities(self, search_string: str) -> list[tuple[str, str, str, str]] | None:
         """Communities matching search_string ('*' for all) as (name, description, qualified name, GUID) rows,
@@ -142,13 +159,13 @@ class CommunitiesMixin:
             found = client.find_communities(search_string=search_string or "*", ignore_case=True,
                                             output_format="JSON", graph_query_depth=0)
         except PyegeriaException as e:
-            self.log(f"Searching for communities matching {search_string} failed: {e}")
+            # self.log(f"Searching for communities matching {search_string} failed: {e}")
             self.notify(f"Searching for communities failed: {e}", timeout=10, severity="error")
             return None
         finally:
             if client:
                 client.close_session()
-        self.log(f"Communities found for {search_string}: {found}")
+        # self.log(f"Communities found for {search_string}: {found}")
         rows = []
         # "No elements found" is returned, rather than an exception, when nothing matches
         for community in found if isinstance(found, list) else []:
@@ -161,28 +178,64 @@ class CommunitiesMixin:
         return rows
 
     def get_community_members(self, community_guid: str) -> list[tuple[str, str, str, str, str]] | None:
-        """The actors linked to a community as (name, actor type, assignment type, qualified name, GUID) rows,
-           or None if they could not be retrieved. An actor may be a person or a role."""
+        """The people in a community as (name, assignment type, member through, qualified name, GUID) rows,
+           or None if they could not be retrieved.
+
+           A person is in the community when they are linked to it directly, or appointed to a role
+           that is; roles themselves aren't listed. Other actors (such as teams) are left out. A person
+           reached through several links is one row."""
         client = None
         try:
             client = self._community_client()
             community = client.get_community_by_guid(community_guid, output_format="JSON", graph_query_depth=1)
+            # (person, assignment type, member through) for each way a person belongs
+            memberships = []
+            unread_roles = 0
+            for link in (community.get("assignedActors") if isinstance(community, dict) else None) or []:
+                actor = link.get("relatedElement") or {}
+                assignment_type = (link.get("relationshipProperties") or {}).get("assignmentType") or ""
+                if _type_name(actor) == PERSON_TYPE:
+                    memberships.append((actor, assignment_type, MEMBER_DIRECT))
+                elif _is_role(actor):
+                    role_through = f"Role: {_name(actor.get('properties') or {})}"
+                    try:
+                        # Only the appointments are needed; a role can have hundreds of other links
+                        role = client.get_actor_role_by_guid(_guid(actor), output_format="JSON", graph_query_depth=1,
+                                                             include_only_relationships=[APPOINTMENT_TYPE])
+                    except PyegeriaException as e:
+                        # self.log(f"Retrieving the people in role {_guid(actor)} failed: {e}")
+                        unread_roles += 1
+                        continue
+                    for appointment in (role.get("rolePerformers") if isinstance(role, dict) else None) or []:
+                        person = appointment.get("relatedElement") or {}
+                        if _type_name(person) == PERSON_TYPE:
+                            memberships.append((person, assignment_type, role_through))
         except PyegeriaException as e:
-            self.log(f"Retrieving members of community {community_guid} failed: {e}")
+            # self.log(f"Retrieving members of community {community_guid} failed: {e}")
             self.notify(f"Could not retrieve the community's members: {e}", timeout=10, severity="error")
             return None
         finally:
             if client:
                 client.close_session()
-        self.log(f"Community {community_guid}: {community}")
-        rows = []
-        for link in (community.get("assignedActors") if isinstance(community, dict) else None) or []:
-            actor = link.get("relatedElement") or {}
-            properties = actor.get("properties") or {}
-            rows.append((_name(properties), _type_name(actor),
-                         (link.get("relationshipProperties") or {}).get("assignmentType") or "",
-                         properties.get("qualifiedName") or "", _guid(actor)))
-        return rows
+        if unread_roles:
+            self.notify(f"Could not see who holds {unread_roles} of the community's roles, so some members "
+                        f"may be missing", timeout=10, severity="warning")
+
+        people: dict[str, dict] = {}
+        for person, assignment_type, through in memberships:
+            guid = _guid(person)
+            if not guid:
+                continue
+            properties = person.get("properties") or {}
+            entry = people.setdefault(guid, {"name": _name(properties),
+                                             "qualified_name": properties.get("qualifiedName") or "",
+                                             "types": [], "through": []})
+            if assignment_type and assignment_type not in entry["types"]:
+                entry["types"].append(assignment_type)
+            if through not in entry["through"]:
+                entry["through"].append(through)
+        return sorted(((p["name"], ", ".join(p["types"]), "; ".join(p["through"]), p["qualified_name"], guid)
+                       for guid, p in people.items()), key=lambda row: row[0].lower())
 
     def get_community_blog_posts(self, community_guid: str) -> list[tuple[str, str, str, str, str]] | None:
         """The community's latest blog posts, newest first, as (title, author, posted, text, GUID) rows,
@@ -198,7 +251,7 @@ class CommunitiesMixin:
                                                         graph_query_depth=0)
                 posts += entries if isinstance(entries, list) else []
         except PyegeriaException as e:
-            self.log(f"Retrieving the blog of community {community_guid} failed: {e}")
+            # self.log(f"Retrieving the blog of community {community_guid} failed: {e}")
             self.notify(f"Could not retrieve the community's blog: {e}", timeout=10, severity="error")
             return None
         finally:
@@ -231,7 +284,7 @@ class CommunitiesMixin:
             }
         }
         log_guid = client.create_note_log(element_guid=community_guid, body=body)
-        self.log(f"Created blog for community {community_guid}: {log_guid}")
+        # self.log(f"Created blog for community {community_guid}: {log_guid}")
         return log_guid
 
     def add_community_blog_post(self, community_guid: str, community_name: str, title: str, text: str) -> bool:
@@ -248,12 +301,12 @@ class CommunitiesMixin:
                 "description": text,
             }
             post_guid = client.create_note(log_guid, body=properties)
-            self.log(f"Posted to the blog of community {community_guid}: {post_guid}")
+            # self.log(f"Posted to the blog of community {community_guid}: {post_guid}")
             self.notify(f"Your post '{title}' has been added to the {community_name} blog", timeout=10,
                         severity="information")
             return True
         except PyegeriaException as e:
-            self.log(f"Posting to the blog of community {community_guid} failed: {e}")
+            # self.log(f"Posting to the blog of community {community_guid} failed: {e}")
             self.notify(f"Posting to the community's blog failed: {e}", timeout=10, severity="error")
             return False
         finally:
@@ -268,7 +321,7 @@ class CommunitiesMixin:
             client = self._community_client()
             comments = client.get_attached_comments(community_guid, graph_query_depth=0)
         except PyegeriaException as e:
-            self.log(f"Retrieving the comments on community {community_guid} failed: {e}")
+            # self.log(f"Retrieving the comments on community {community_guid} failed: {e}")
             self.notify(f"Could not retrieve the community's comments: {e}", timeout=10, severity="error")
             return None
         finally:
@@ -291,13 +344,64 @@ class CommunitiesMixin:
         try:
             client = self._community_client()
             response = client.add_comment_to_element(community_guid, text, comment_type)
-            self.log(f"Commented on community {community_guid}: {response}")
+            # self.log(f"Commented on community {community_guid}: {response}")
             self.notify("Your comment has been added", timeout=10, severity="information")
             return True
         except PyegeriaException as e:
-            self.log(f"Commenting on community {community_guid} failed: {e}")
+            # self.log(f"Commenting on community {community_guid} failed: {e}")
             self.notify(f"Adding the comment failed: {e}", timeout=10, severity="error")
             return False
+        finally:
+            if client:
+                client.close_session()
+
+    def create_community(self, name: str, description: str, mission: str = "",
+                         assignment_type: str = CREATOR_ASSIGNMENT_TYPES[0]) -> str | None:
+        """Create a community, then link the user's profile to it with assignment_type (none if empty).
+           Returns the new community's GUID, or None if it could not be created; a failed link still
+           returns the GUID, because the community exists."""
+        properties = {
+            "class": "CommunityProperties",
+            "typeName": COMMUNITY_TYPE,
+            "displayName": name,
+            "description": description,
+        }
+        if mission:
+            properties["mission"] = mission
+        client = None
+        try:
+            client = self._community_client()
+            qualified_name = client.__create_qualified_name__(COMMUNITY_TYPE, name)
+            # Egeria rejects a second element with the same qualified name, but only with a server error
+            existing = client.get_communities_by_name(filter_string=qualified_name, graph_query_depth=0,
+                                                      output_format="JSON")
+            if isinstance(existing, list) and existing:
+                self.notify(f"A community called {name} already exists - find it below to join it",
+                            timeout=10, severity="warning")
+                return None
+            properties["qualifiedName"] = qualified_name
+            community_guid = client.create_community(body={"class": "NewElementRequestBody", "isOwnAnchor": True,
+                                                           "properties": properties})
+            if not assignment_type:
+                self.notify(f"Community {name} created", timeout=10, severity="information")
+                return community_guid
+            try:
+                # same GUID order as join_community: the community is the scope, the profile the actor
+                client.link_assignment_scope(community_guid, self.user_GUID, {
+                    "class": "NewRelationshipRequestBody",
+                    "properties": {"class": "AssignmentScopeProperties", "assignmentType": assignment_type},
+                })
+            except PyegeriaException as e:
+                # self.log(f"Joining new community {community_guid} failed: {e}")
+                self.notify(f"Community {name} created, but joining it failed: {e}", timeout=10, severity="warning")
+                return community_guid
+            self.notify(f"Community {name} created, and you have joined it as its {assignment_type}",
+                        timeout=10, severity="information")
+            return community_guid
+        except PyegeriaException as e:
+            # self.log(f"Creating community {name} failed: {e}")
+            self.notify(f"Creating the community failed: {e}", timeout=10, severity="error")
+            return None
         finally:
             if client:
                 client.close_session()
@@ -319,7 +423,7 @@ class CommunitiesMixin:
                         severity="information")
             return True
         except PyegeriaException as e:
-            self.log(f"Joining community {community_guid} failed: {e}")
+            # self.log(f"Joining community {community_guid} failed: {e}")
             self.notify(f"Joining the community failed: {e}", timeout=10, severity="error")
             return False
         finally:
@@ -336,7 +440,7 @@ class CommunitiesMixin:
             self.notify("You have left the community", timeout=10, severity="information")
             return True
         except PyegeriaException as e:
-            self.log(f"Leaving community {community_guid} failed: {e}")
+            # self.log(f"Leaving community {community_guid} failed: {e}")
             self.notify(f"Leaving the community failed: {e}", timeout=10, severity="error")
             return False
         finally:

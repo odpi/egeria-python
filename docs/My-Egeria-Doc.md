@@ -31,11 +31,11 @@ All source files named here are in `my_egeria/my_egeria/DemoCode/My_Profile/`.
 | `team_roles_handler.py`, `MyTeamScreen.py` | `TeamRolesMixin` and the team roster screen |
 | `bookmarks_handler.py`, `MyBookMarksScreen.py` | `BookmarksMixin` (bookmarks kept in a personal collection) and the bookmarks screen |
 | `network_handler.py`, `MyNetworkScreen.py` | `NetworkMixin` (peers linked by `Peer` relationships), `MyNetworkScreen` and `ConfirmRemovePeerScreen` |
-| `community_handler.py`, `CommunitiesScreen.py` | `CommunitiesMixin` (community membership through `AssignmentScope` relationships), `CommunitiesScreen` and `ConfirmLeaveCommunityScreen` |
+| `community_handler.py`, `CommunitiesScreen.py` | `CommunitiesMixin` (community membership through `AssignmentScope` relationships), `CommunitiesScreen`, `CreateCommunityScreen` and `ConfirmLeaveCommunityScreen` |
 | `CommunityScreen.py` | `CommunityScreen` (one community's members, blog and comments), `NewBlogPostScreen` and `AddCommunityCommentScreen` |
 | `UserIdentitiesScreen.py` | Read-only user identity table |
 | `StatusScreen.py` | Result message with copy-GUID |
-| `profile_utils.py` | Environment check, Egeria access check (`check_egeria_access`) and data clean-up helpers |
+| `profile_utils.py` | Environment check, Egeria access check (`check_egeria_access`), the shared screen heading (`set_screen_heading`) and data clean-up helpers |
 | `my_profile.tcss` | Layout and theme |
 | `RETURN_CODES.md`, `catalog_api_calls.md` | Return-code list and Shop for Data API notes |
 
@@ -84,6 +84,7 @@ classDiagram
         list_my_communities()
         search_communities()
         get_community_members()
+        create_community()
         join_community() / leave_community()
         get_community_blog_posts() / add_community_blog_post()
         get_community_comments() / add_community_comment()
@@ -106,6 +107,8 @@ classDiagram
 - **`check_action`** hides and disables `view_feedback_log` unless the current user is the feedback owner (`garygeeke`).
 - **Screen registration:** most screens are registered by name in `SCREENS`. `EditCollectionsScreen`, `AddCollectionScreen`, `AddUserIdentityScreen`, `FeedbackScreen`, `FeedbackLogScreen` and `ConfirmDeleteScreen` are pushed as instances instead.
 - **Mixins and `@on`:** the mixins are plain Python classes, not Textual message pumps. Textual only collects `@on(...)`-decorated handlers from classes built with its own metaclass, so an `@on` handler defined on a mixin is never dispatched. Put any `@on` handler on `MyProfileApp` itself and have it delegate to the mixin, as `_on_roles_row_selected` does. Handlers found by name (`on_worker_state_changed`, `action_*`) and callbacks passed to `push_screen` work on mixins.
+- **Screen headings:** every screen with a header calls `set_screen_heading(screen, context)` from `on_mount`. It sets the title to `Egeria - <context>` (just `Egeria` on the main screen) and the sub-title to `User: <user>, Karma Points: <points>`, read from the app's `user_name` and `karma_points`. The app passes `app=self` when it sets the main screen's heading itself, because `screen.app` isn't always available then. It does that in `_process_profile_data`, once the Karma Points are known, and in `change_user`. Screens opened later read the current values when they mount.
+- **Diagnostic logging is off.** The app's `self.log(...)` calls are commented out across every module, so the Textual developer console shows only Textual's own messages. Uncomment the ones you need to trace a problem. Where commenting one out would have left a block empty, a `pass` was added. The two "Unexpected table name" messages in `elements_crud_handler.py` are still logged, and also shown to the user with `notify`.
 - **Entry point:** `main()` runs the app. It is the target of the `my_profile` console script.
 
 ---
@@ -149,10 +152,10 @@ flowchart TD
 - **`ConnectionErrorScreen`** retries every `RETRY_INTERVAL` (10) seconds from a 1-second `set_interval` countdown, or on **Retry Now** (`r`). Each attempt calls `check_egeria_access` with the user in `settings.User_Profile`, and updates the reason shown if it changed. It dismisses with `200` once Egeria accepts the credentials, `201` for **Change User** (`u`) and `402` for **Quit** (`q`), stopping the timer each time. `connection_error_callback` reloads the profile on `200`, pushes `ChangeUserScreen` on `201`, and otherwise calls `exit(402)`.
 - **`check_egeria_access(view_server, platform_url, user, password)`** returns `None` if Egeria is reachable and accepts the credentials, otherwise a message. The `Egeria` constructor checks the platform answers; the token request then checks the credentials. A successful `create_egeria_bearer_token()` is not proof on its own: on a 401 it returns Egeria's JSON error body as if it were the token, so a token starting with `{` is treated as a rejection and its `exceptionErrorMessage` is reported.
 - **Change User** is reached three ways: the splash screen's button, the **Change User** menu option, and the connection error screen. All three push `ChangeUserScreen`, which validates the new credentials with `check_egeria_access` before dismissing with `[user, password]`; on a failure it shows the reason and stays open. It dismisses with `200` on Cancel or `Escape`. From the splash screen, a cancel leaves the splash showing; a list is passed on through the splash's own `dismiss` to `mainline`.
-- **`change_user(user, pwd)`** does the switch. It sets the app's user and password, writes them into pyegeria's cached `settings.User_Profile` (screens read the user from there, so every screen opened afterwards runs its Egeria calls as the new user), and exports `EGERIA_USER` / `EGERIA_USER_PASSWORD` so pyegeria clients, commands and subprocesses started from the app use them too. It then sets the main screen's subtitle to `User: <user>`, clears `my_profile_data`, calls `refresh_bindings()` (the feedback-log binding depends on the user) and runs `_load_or_create_profile()`.
+- **`change_user(user, pwd)`** does the switch. It sets the app's user and password, writes them into pyegeria's cached `settings.User_Profile` (screens read the user from there, so every screen opened afterwards runs its Egeria calls as the new user), and exports `EGERIA_USER` / `EGERIA_USER_PASSWORD` so pyegeria clients, commands and subprocesses started from the app use them too. It then resets `karma_points` to 0 and resets the main screen's heading (the new user's points arrive with their profile), clears `my_profile_data`, calls `refresh_bindings()` (the feedback-log binding depends on the user) and runs `_load_or_create_profile()`.
 - **`change_user_callback`** handles the menu and connection-error routes. If `ChangeUserScreen` is cancelled while `load_error` is set, it calls `_after_profile_load(False)`, which puts the connection error screen back; otherwise a cancel does nothing.
 - **What `_process_profile_data` extracts** from the first `My-User-MD` record:
-  - Contribution Record, which supplies the Karma Points;
+  - Contribution Record, which supplies the Karma Points (the main screen's heading is updated with them straight away);
   - Projects, Teams, Communities and Roles;
   - Note Logs, split into blogs and journal by their `class`.
 
@@ -359,7 +362,7 @@ sequenceDiagram
     participant Egeria as Egeria (note logs)
 
     User->>App: ctrl+f (any screen) or "Leave Feedback"
-    App->>App: record current screen class and sub-title
+    App->>App: record current screen class and title
     App->>FS: push_screen(FeedbackScreen(screen, title))
     User->>FS: category + text, Submit (ctrl+s)
     FS-->>App: {screen, screen_title, category, text}
@@ -587,6 +590,7 @@ sequenceDiagram
     actor User
     participant App as CommunitiesMixin
     participant CS as CommunitiesScreen
+    participant Create as CreateCommunityScreen
     participant Confirm as ConfirmLeaveCommunityScreen
     participant EG as Egeria
 
@@ -603,6 +607,15 @@ sequenceDiagram
         App->>EG: link_assignment_scope(GUID, user_GUID, AssignmentScopeProperties)
         CS->>App: list_my_communities() and search again
     end
+    opt create (ctrl+t)
+        CS->>Create: push
+        Create-->>CS: {name, description, mission, assignment type} / None
+        CS->>App: create_community(name, description, mission, assignment type)
+        App->>EG: get_communities_by_name(qualified name)
+        App->>EG: create_community(NewElementRequestBody, CommunityProperties)
+        App->>EG: link_assignment_scope(new GUID, user_GUID, AssignmentScopeProperties) unless "Don't join"
+        CS->>App: list_my_communities() and search again, then highlight the new community
+    end
     opt leave (ctrl+d)
         CS->>Confirm: push(community name)
         Confirm-->>CS: True / False
@@ -618,10 +631,12 @@ sequenceDiagram
 | `list_my_communities()` | `get_my_profile(JSON)`, then reads the profile's own `assignmentScope` links and each `performsRoles` appointment's `nestedElements`, keeping only `Community` elements. Returns one `(name, assignment types, linked through, description, GUID)` row per community; "linked through" is `Your profile` and/or `Role: <name>`. `None` if Egeria can't be reached |
 | `search_communities(search_string)` | `find_communities(..., ignore_case=True, graph_query_depth=0)` → `(name, description, qualified name, GUID)` rows. The screen drops communities the user already belongs to |
 | `join_community(guid, assignment_type)` | `link_assignment_scope(guid, user_GUID, NewRelationshipRequestBody)` with `AssignmentScopeProperties`. The screen offers only `Contributor` and `Observer` |
+| `create_community(name, description, mission, assignment_type)` | Builds the qualified name with `__create_qualified_name__("Community", name)` and refuses (a warning, returning `None`) if `get_communities_by_name` already finds it, because Egeria answers a duplicate qualified name only with a server error. Otherwise `create_community(NewElementRequestBody)` with `CommunityProperties` (`mission` only when given), then, unless `assignment_type` is empty, links the user's profile exactly as `join_community` does. Returns the new GUID; a failed link is a warning and still returns the GUID, because the community exists. The form offers `Leader` (the default), `Contributor`, `Observer` and "Don't join" (`NOT_JOINING`, an empty string) |
 | `leave_community(guid)` | `detach_assignment_scope(guid, user_GUID, DeleteRelationshipRequestBody)`, using the same GUID order as `link_assignment_scope` (scope first, actor second) |
 
 - **Leaving only unlinks the profile.** The screen refuses to leave a community reached only through a role, because the role may be shared and belongs to whoever manages it.
-- **Refresh.** After a successful join or leave the screen re-reads the user's communities and repeats the last search.
+- **Refresh.** After a successful create, join or leave the screen re-reads the user's communities and repeats the last search. After a create it also moves the cursor to the new community, in whichever list it appears.
+- **Two ways to create a community.** The User Associations edit screen's `AddCommunityScreen` also creates communities, but doesn't check for a duplicate name or link the user. Work with Communities' **Create Community** does both.
 - **Errors.** Every Egeria failure is reported with `notify(...)` and the screen stays open; none of them exit the app.
 - **Return code.** `CommunitiesScreen` dismisses with `200` on `q`; `communities_callback` just logs it.
 
@@ -639,6 +654,7 @@ sequenceDiagram
 
     CoS->>App: get_community_members(GUID)
     App->>EG: get_community_by_guid(JSON, graph_query_depth=1)
+    App->>EG: get_actor_role_by_guid(role, include_only_relationships=[PersonRoleAppointment]) for each role
     CoS->>App: get_community_blog_posts(GUID)
     App->>EG: get_attached_note_logs(GUID)
     App->>EG: get_notes_for_note_log(log, "BlogEntry") for each log
@@ -658,13 +674,15 @@ sequenceDiagram
 
 | Function | What it does |
 | :--- | :--- |
-| `get_community_members(guid)` | `get_community_by_guid(guid, JSON, graph_query_depth=1)`, reading `assignedActors` → `(name, actor type, assignment type, qualified name, GUID)` rows |
+| `get_community_members(guid)` | People only. Reads `assignedActors` from `get_community_by_guid(guid, JSON, graph_query_depth=1)`. A `Person` actor is a direct member. For an actor whose type is or inherits `ActorRole` (checked through `superTypeNames`), it calls `get_actor_role_by_guid(..., graph_query_depth=1, include_only_relationships=["PersonRoleAppointment"])` and takes the `Person` elements in `rolePerformers`. Other actors, such as teams, are skipped. Returns one `(name, assignment types, member through, qualified name, GUID)` row per person, sorted by name; "member through" is `Direct` and/or `Role: <name>`. A role that can't be read is skipped and reported with one warning; `None` if the community itself can't be read |
 | `get_community_blog_posts(guid)` | Reads the `BlogEntry` notes from every note log attached to the community, so posts written by other tools are included and the notifications some sample communities' logs hold are not. Returns the `LATEST_POSTS` (20) newest as `(title, author, posted, text, GUID)` rows; author and time come from the element header's `versions` |
 | `add_community_blog_post(guid, name, title, text)` | Finds the note log with qualified name `NoteLog::<guid>::CommunityBlog` among those attached to the community, creating it (attached, display name "_name_ Blog") on the first post, then `create_note(log, BlogEntryProperties)` |
 | `get_community_comments(guid)` | `get_attached_comments(guid, graph_query_depth=0)` → `(comment, type, author, posted, GUID)` rows, newest first |
 | `add_community_comment(guid, text, type)` | `add_comment_to_element(guid, text, type)`; the form offers pyegeria's `COMMENT_TYPES` |
 
 - **Return codes.** `CommunityScreen` dismisses with `200` on `Escape` (back to the communities list) and `210` on `q`; on `210` `CommunitiesScreen` dismisses itself too, so `q` reaches the main screen.
+- **Why the role lookups are filtered.** Without `include_only_relationships`, one role can return hundreds of unrelated links. One sample role had 284 `assignmentScope` entries. With the filter, the Sustainability Community's 40 roles resolve in under a second. Asking `get_community_by_guid` for `graph_query_depth=2` instead, to get the appointments in one call, timed out after 30 seconds on the sample data.
+- **Names.** People, roles and communities are named by `displayName`, then `fullName`, then `identifier`, then `qualifiedName`. Some sample community roles have only an `identifier`, such as "Community Leader of Data Science special interest group".
 - **Membership isn't checked.** Anyone can read and add to a community's blog and comments; Egeria's quickstart deployment enforces no access rules here either.
 
 ---
@@ -739,9 +757,20 @@ The suite in `tests/micro-tests/my_profile/` has one module per handler and scre
 
 **My Network.** `test_network_handler.py` covers `NetworkMixin` and `MyNetworkScreen`, including the remove confirmation; `test_my_egeria.py` checks the menu routing. The feature has also been tested by hand against a live server.
 
-**Work with Communities.** `test_community_handler.py` covers `CommunitiesMixin`, `CommunitiesScreen` and `CommunityScreen`, including memberships through roles, the leave confirmation, refusing to leave a role membership, creating the blog on the first post and reusing it afterwards, and the post and comment forms; `test_my_egeria.py` checks the menu routing. The blog and comment functions have also been run against a live server (2026-10-28); the screens themselves have not been tried by hand there yet.
+**Work with Communities.** `test_community_handler.py` covers `CommunitiesMixin`, `CommunitiesScreen` and `CommunityScreen`. That includes:
+- memberships through roles, the leave confirmation, and refusing to leave a role membership;
+- creating a community: leading it by default, not joining, a duplicate name, a failed create and a failed link;
+- the Create Community form: validation, cancel, and highlighting the new community;
+- members as people only, direct and through roles, merged per person, with an unreadable role skipped;
+- creating the blog on the first post and reusing it afterwards, and the post and comment forms.
 
-**Connection errors and Change User.** `test_connection_and_change_user.py` covers `check_egeria_access` (good credentials, unreachable platform, a 401 body returned as the token), `ConnectionErrorScreen` (retry, countdown, buttons), `ChangeUserScreen`, the splash screen's Change User button, and the app's callbacks: reload when Egeria comes back, change user from the error screen and the menu, cancel back to the error screen, and quit with `402`. `test_my_egeria.py` checks that a failed profile load shows the connection error screen instead of exiting, and that `change_user` updates `settings`, the environment and the main screen subtitle.
+`test_my_egeria.py` checks the menu routing. The blog and comment functions were run against a live server on 2026-10-28. Listing and finding communities, `create_community` (with and without joining, and the duplicate check) and `get_community_members` were run there on 2026-10-30. The screens themselves have not been tried by hand there yet.
+
+**Screen headings.** `test_profile_utils.py::TestSetScreenHeading` covers `set_screen_heading`. `test_my_egeria.py` checks that the main screen's heading shows the Karma Points once the profile has loaded, and resets them to 0 on `change_user`.
+
+**Live checks that depend on sample data.** A live check must not assume data a real user might not have. For example, a user needn't hold any roles, so `test_app_on_mount_success` accepts zero roles. Tests that need a team role get one from the `live_team_role_name` fixture, which skips when there is none. Tests that run the whole app must `await app._load_task` before checking what was loaded. A live profile load takes several seconds, and a single `pilot.pause()` sees it only half done.
+
+**Connection errors and Change User.** `test_connection_and_change_user.py` covers `check_egeria_access` (good credentials, unreachable platform, a 401 body returned as the token), `ConnectionErrorScreen` (retry, countdown, buttons), `ChangeUserScreen`, the splash screen's Change User button, and the app's callbacks: reload when Egeria comes back, change user from the error screen and the menu, cancel back to the error screen, and quit with `402`. `test_my_egeria.py` checks that a failed profile load shows the connection error screen instead of exiting, and that `change_user` updates `settings`, the environment and the main screen heading.
 
 **Add screens.** `test_screens.py::TestBaseAddScreen` covers the `BaseAddScreen` flow: required-field checks, create, link or no link, and keeping the form after a failed create.
 
@@ -753,7 +782,8 @@ The user-visible limitations are listed in the [user manual](my_egeria_manual.md
 
 - `get_data_product_catalog_table`, `get_guid_for_qualified_name`, `display_glossary_term_details`, `tech_type_processes_details`, `unpack_egeria_data` and `display_selected_data_specification` are defined but never called.
 - Bookmarks, My Collections, team joining, subscription links and starting processes have only been tested against fakes; they haven't yet been run against a live Egeria server.
-- Work with Communities: the blog and comment functions have been run against a live server, but `list_my_communities`, `search_communities`, `get_community_members`, `join_community`, `leave_community` and the screens have only been tested against fakes.
+- Work with Communities: `join_community` (from the found list), `leave_community` and the screens have only been tested against fakes. The other functions have been run against a live server.
+- Two Add paths create communities: `AddCommunityScreen` on the User Associations edit screen, and `CreateCommunityScreen` in Work with Communities. Only the second checks for a duplicate name and links the user.
 
 ---
 License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/),

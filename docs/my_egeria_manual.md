@@ -83,6 +83,8 @@ textual run --dev my_egeria.py
 
 Use Python 3.13: Textual currently fails on Python 3.14 (an assertion in `textual/rlock.py` at startup).
 
+The app's own diagnostic messages (its `self.log(...)` calls) are commented out, so the developer console shows only Textual's messages. To trace a problem, uncomment the ones you need in the source.
+
 To serve the app in a web browser instead of a terminal:
 
 ```bash
@@ -104,7 +106,7 @@ You can switch to a different Egeria user at any time: from the splash screen's 
 
 The screen shows who you are logged in as, with *User Name* and *Password* fields. Press `Enter` in the user name field to move to the password; `Enter` in the password field (or **Submit**) submits. Both fields are required.
 
-Before switching, the app asks Egeria to log in with the new user and password. If Egeria can't be reached or rejects them, a message says why and you stay on the screen to correct them. Once Egeria accepts them, the app discards the current profile and reloads everything for the new user; the main screen's subtitle shows the new user ID. Every screen opened afterwards, and any pyegeria command started from the app, runs as the new user.
+Before switching, the app asks Egeria to log in with the new user and password. If Egeria can't be reached or rejects them, a message says why and you stay on the screen to correct them. Once Egeria accepts them, the app discards the current profile and reloads everything for the new user; the header shows the new user ID, with Karma Points of 0 until their profile has loaded. Every screen opened afterwards, and any pyegeria command started from the app, runs as the new user.
 
 **Cancel** (or `Escape`) closes the screen without changing anything.
 
@@ -146,7 +148,7 @@ Press **Create Profile**. Egeria creates your `Person` profile, and the app relo
 
 ## The Main Screen
 
-The header shows your full name, user ID and **Karma Points** (your contribution score in Egeria). The panels are:
+The header reads **Egeria — User: _your user ID_, Karma Points: _n_**. Karma Points are your contribution score in Egeria, and they show as 0 until your profile has loaded. Every other screen has the same header, with the screen's name after "Egeria", for example **Egeria - Communities — User: garygeeke, Karma Points: 135**. The panels are:
 
 | Panel | Columns | Contents |
 | :--- | :--- | :--- |
@@ -206,7 +208,7 @@ If a required field is missing or a value is invalid, the screen tells you which
 | Journal | Title\*, Text\*, Situation | – | An entry in your journal |
 | User Associations | Choose **Project** or **Community**, then that screen opens | | |
 | Projects | Name\*, Description\*, Kind (`Project`, `Campaign`, `StudyProject`, `Task`, `PersonalProject`; default `Project`), Identifier, Start Date and Planned End Date (`YYYY-MM-DD`) | Add yourself to the project team | A project |
-| Communities | Name\*, Description\* | – | A community |
+| Communities | Name\*, Description\* | – | A community. You are not made a member; to create a community and join it in one step, use **Create Community** in [Work with Communities](#work-with-communities) |
 | Roles | Name\*, Description\* | Appoint yourself to this role | A person role |
 | Teams | Name\*, Description\* | Join this team as a member | A team; joining creates a TeamMember role for you, scoped to the team |
 | My Collections | Name\*, Description\*, Category | – | A standalone collection |
@@ -294,6 +296,7 @@ The screen lists the communities you belong to (name, assignment type, what link
 
 - **Linked Through** is **Your profile** if you joined the community yourself, or **Role: _name_** if you belong through a role you hold. A community you reach both ways is listed once.
 - **Open a community:** highlight a community in either list and press `Enter`, `ctrl+o` or **Open Community**. See [A community](#a-community) below.
+- **Create a community:** press `ctrl+t` (or **Create Community**). Enter a **Name\*** and **Description\***, and optionally a **Mission**, then choose **Your part in it**: **Leader** (the default, since you created it), **Contributor**, **Observer** or **Don't join**. Press `ctrl+s` (or **Create**); **Cancel** or `Escape` discards it. The lists reload and the new community is highlighted: in your communities if you joined it, otherwise in the found list. If a community with that name already exists, you are told to find it and join it instead.
 - **Find and join:** type a search term in the search field (`*` for all) and press `Enter`. Communities you already belong to are left out. Choose **Contributor** or **Observer**, highlight a community and press `ctrl+n` (or **Join Community**). Leaders and administrators are assigned by the people who manage the community, not chosen here.
 - **Leave:** highlight one of your communities and press `ctrl+d` (or **Leave Community**), then confirm with **Leave**. **Cancel** or `Escape` keeps you in it. Only the link between you and the community is removed. You can't leave a community you belong to through a role; ask whoever manages that role.
 - `Escape` or `q` returns to the main screen.
@@ -301,7 +304,9 @@ The screen lists the communities you belong to (name, assignment type, what link
 Membership is an `AssignmentScope` relationship from your profile (or a role) to the community, and the assignment type is stored on that relationship.
 
 #### A community
-Opening a community shows three lists: its **latest blog posts** (the 20 newest, with title, author and date; the highlighted post's text is shown underneath), its **members** (people or roles) and the **comments** on it, newest first. You don't have to be a member to read or add to them.
+Opening a community shows three lists: its **latest blog posts** (the 20 newest, with title, author and date; the highlighted post's text is shown underneath), its **members** and the **comments** on it, newest first. You don't have to be a member to read or add to them.
+
+The members list shows **people only**, in name order, not roles. It includes everyone linked to the community directly and everyone appointed to a role that is. **Member Through** says how each person belongs: **Direct**, or **Role: _name_** for each role they hold there. A person who belongs in several ways is listed once. Other kinds of member, such as teams, are not shown. If the people in one of the community's roles can't be read, the rest are still listed and a warning says some members may be missing.
 
 - **New blog post:** press `ctrl+n` (or **New Blog Post**), enter a title and the text, then press `ctrl+s` (or **Post**). **Cancel** or `Escape` discards it.
 - **Add a comment:** select the comments list and press `ctrl+n` (or press **Add Comment**), choose a comment type (Standard Comment, Question, Answer, Suggestion, Usage Experience, Requirement or Other), enter the comment and press `ctrl+s` (or **Add Comment**).
@@ -320,7 +325,7 @@ See [Leaving Feedback](#leaving-feedback).
 Every screen follows the same rules:
 
 - `Escape` goes back one level, on every screen except the main screen.
-- `q` returns to the main screen, or quits the app when you are on the main screen. Screens that are mostly text fields (Add screens, Add Comment, Create Subscription, Create/Edit Profile, Search for Term, Feedback, New Blog Post, Template and Process forms) have no `q`, because it would be typed into the field; use `Escape`.
+- `q` returns to the main screen, or quits the app when you are on the main screen. Screens that are mostly text fields (Add screens, Add Comment, Create Subscription, Create/Edit Profile, Search for Term, Feedback, New Blog Post, Create Community, Template and Process forms) have no `q`, because it would be typed into the field; use `Escape`.
 - Every other action is a `ctrl` key, and a key means the same thing wherever it appears. `ctrl` keys work even while a text field has focus.
 
 | Key | Action | Where |
@@ -329,11 +334,11 @@ Every screen follows the same rules:
 | `r` / `u` / `q` | Retry now / Change User / Quit | Connection error screen |
 | `q` | Main menu / quit the app | Every list screen / Main screen |
 | `Enter` | Select the highlighted row; continue | Tables and trees; Status screen |
-| `ctrl+s` | Save / submit the form | Add screens, Add Comment, Create Subscription, Create/Edit Profile, Feedback, New Blog Post |
+| `ctrl+s` | Save / submit the form | Add screens, Add Comment, Create Subscription, Create/Edit Profile, Feedback, New Blog Post, Create Community |
 | `ctrl+n` | Add a new item | Edit screens (row), Bookmarks, Comments, Main screen (comment), Communities (join), a community (blog post or comment) |
 | `ctrl+d` | Delete / remove the highlighted item | Edit screens, Bookmarks, My Network, Communities (leave) |
 | `ctrl+o` | Open the highlighted item | Main screen (comments), Comments (responses), My Network (person details), Communities (open a community) |
-| `ctrl+t` | Edit the selected table | Main screen |
+| `ctrl+t` | Edit the selected table / create a community | Main screen / Communities |
 | `ctrl+k` | Bookmark the highlighted row | Main screen, Shop for Data |
 | `ctrl+b` | Bookmarks, with the highlighted row's GUID ready to add | Main screen, Shop for Data |
 | `ctrl+u` | Subscribe | Shop for Data, Overview, sample-data view |
@@ -379,17 +384,17 @@ The full list is in `RETURN_CODES.md` in the app folder.
 - the view server named by `EGERIA_VIEW_SERVER` is running;
 - `EGERIA_USER` and `EGERIA_USER_PASSWORD` are correct, and the user is allowed to use the view server. If the credentials are the problem, press **Change User** rather than restarting the app.
 
-**Something I added doesn't appear.** Press `ctrl+r` on the main screen. Communities you create are not linked to you (see Known Limitations), so they don't appear in User Associations until you join them from **Work with Communities**.
+**Something I added doesn't appear.** Press `ctrl+r` on the main screen. A community added from the User Associations edit screen is not linked to you (see Known Limitations), so it doesn't appear in User Associations until you join it from **Work with Communities**. One made with **Create Community** there, with yourself as a member, appears after `ctrl+r`.
 
 **The app quit unexpectedly.** The app only exits by itself in a few cases: a startup problem (codes `403`, `430`; `402` only when you press Quit on the connection error screen), a failure fetching technology types (`416`), or an error looking up a glossary term (`440`). A failed team lookup is reported as a message instead.
 
 ## Known Limitations
 
-As of 2026-10-28, these features are incomplete or don't work as described elsewhere:
+As of 2026-10-30, these features are incomplete or don't work as described elsewhere:
 
-- **Communities you add** are not linked to you automatically. The community is created but won't appear in User Associations until you join it from **Work with Communities**.
+- **Communities added from the User Associations edit screen** are not linked to you. The community is created but won't appear in User Associations until you join it from **Work with Communities**. **Create Community** in Work with Communities does link you.
 - **Not yet verified against a live Egeria server:** bookmarks, My Collections, joining a team, subscription links and starting processes. The test server was unavailable when they were added, so they have only been tested against fakes.
-- **Work with Communities** has only partly been tried against a live server. Reading and adding blog posts and comments works there; the rest (listing, finding, joining and leaving communities, and the screens themselves) has so far only been tested against fakes.
+- **Work with Communities** has only partly been tried against a live server. Listing your communities, finding communities, creating a community (and joining it as part of that), the members list, and reading and adding blog posts and comments all work there. Leaving a community, joining one from the found list, and the screens themselves have so far only been tested against fakes.
 
 ## Running the Tests
 

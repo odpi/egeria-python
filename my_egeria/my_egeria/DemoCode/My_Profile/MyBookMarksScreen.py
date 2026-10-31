@@ -10,6 +10,7 @@ from textual.app import ComposeResult
 from textual.containers import ScrollableContainer, Container, Horizontal
 from textual.screen import ModalScreen
 from textual.widgets import DataTable, Header, Static, Footer, Input, Button
+from profile_utils import set_screen_heading
 
 
 class MyBookMarksScreen(ModalScreen):
@@ -30,8 +31,6 @@ class MyBookMarksScreen(ModalScreen):
 
     def __init__(self, my_bookmarks, *args, target_guid: str | None = None, **kwargs):
         super().__init__(id="bookmark_screen", *args, **kwargs)
-        self.title = "Egeria"
-        self.sub_title = "My Bookmarks"
         # Rows of (name, type, GUID)
         self.my_bookmarks_data = list(my_bookmarks or [])
         # GUID of the row highlighted when the screen was opened, if any, used to pre-fill a new bookmark
@@ -48,6 +47,7 @@ class MyBookMarksScreen(ModalScreen):
         yield Footer()
 
     def on_mount(self) -> None:
+        set_screen_heading(self, "My Bookmarks")
         table = self.query_one("#my_bookmark_table", DataTable)
         table.add_columns("Name", "Type", "GUID")
         self._fill_table()

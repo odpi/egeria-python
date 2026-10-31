@@ -14,6 +14,7 @@ from textual.widgets import DataTable, OptionList, Header, Static, Footer
 from textual.widgets._option_list import Option
 
 from pyegeria import load_app_config, settings
+from profile_utils import set_screen_heading
 
 
 class MainScreen(Screen):
@@ -39,12 +40,13 @@ class MainScreen(Screen):
         load_app_config()
         app_user = settings.User_Profile
         self.user_name = app_user.user_name or "garygeeke"
-        self.sub_title = f"User: {self.user_name}"
 
     def on_mount(self) -> None:
+        # The app sets the heading again once the profile, and so the karma points, have loaded
+        set_screen_heading(self)
         # self.log needs a running app, so it can't be called from __init__
-        self.log(f"Application Config: {settings.Environment}")
-        self.log(f"User Profile: {settings.User_Profile}")
+        # self.log(f"Application Config: {settings.Environment}")
+        # self.log(f"User Profile: {settings.User_Profile}")
 
     def compose(self) -> ComposeResult:
         # place widgets into grid on screen, note sequence determines position!
@@ -65,16 +67,16 @@ class MainScreen(Screen):
             Static(f"[b]Select a function[/b]"),
             OptionList(
                 # Option("[] User Identities"),
-                Option("[] Catalogs/Shop for Data"),
-                Option("[] Edit Profile"),
-                Option("[] Subscriptions"),
-                Option("[] Technology Types"),
-                Option("[] User Bookmarks"),
                 Option("[] My Network"),
                 Option("[] Work with Communities"),
-                Option("[] Change User"),
+                Option("[] User Bookmarks"),
                 Option("[] Leave Feedback"),
                 Option("[] Feedback Log"),
+                Option("[] Subscriptions"),
+                Option("[] Catalogs/Shop for Data"),
+                Option("[] Technology Types"),
+                Option("[] Edit Profile"),
+                Option("[] Change User"),
                 id="other_function_list"
             ),
             id="other_function_container"
@@ -123,41 +125,41 @@ class MainScreen(Screen):
                     self.selected_row = None
             else:
                 self.selected_row = None
-            self.log(f"Focused Table: {self.selected_table}, Row: {self.selected_row}")
+            # self.log(f"Focused Table: {self.selected_table}, Row: {self.selected_row}")
 
     @on(DataTable.RowHighlighted)
     def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted):
         """ Collect row and table when the user highlights a row in a table """
         self.selected_row = event.row_key
         self.selected_table = event.data_table.id
-        self.log(f"Highlighted Table: {self.selected_table}, Row: {self.selected_row}")
+        # self.log(f"Highlighted Table: {self.selected_table}, Row: {self.selected_row}")
 
     @on(DataTable.RowSelected)
     def on_data_table_row_selected(self, event: DataTable.RowSelected):
         """ Collect row and table when the user selects a row in a table """
         self.selected_row = event.row_key
         self.selected_table = event.data_table.id
-        self.log(f"Selected Table: {self.selected_table}, Row: {self.selected_row}")
+        # self.log(f"Selected Table: {self.selected_table}, Row: {self.selected_row}")
 
     @on(DataTable.CellHighlighted)
     def on_data_table_cell_highlighted(self, event: DataTable.CellHighlighted):
         """ Collect row and table when a cell is highlighted in a table """
         self.selected_row = event.cell_key.row_key
         self.selected_table = event.data_table.id
-        self.log(f"Cell Highlighted Table: {self.selected_table}, Row: {self.selected_row}")
+        # self.log(f"Cell Highlighted Table: {self.selected_table}, Row: {self.selected_row}")
 
     @on(DataTable.CellSelected)
     def on_data_table_cell_selected(self, event: DataTable.CellSelected):
         """ Collect row and table when a cell is selected in a table """
         self.selected_row = event.cell_key.row_key
         self.selected_table = event.data_table.id
-        self.log(f"Cell Selected Table: {self.selected_table}, Row: {self.selected_row}")
+        # self.log(f"Cell Selected Table: {self.selected_table}, Row: {self.selected_row}")
 
     @on(DataTable.HeaderSelected)
     def on_data_table_header_selected(self, event: DataTable.HeaderSelected):
         """ Collect table when header is selected in a table """
         self.selected_table = event.data_table.id
-        self.log(f"Header Selected Table: {self.selected_table}")
+        # self.log(f"Header Selected Table: {self.selected_table}")
 
     def get_focused_table(self) -> DataTable | None:
         focused_widget = self.screen.focused
@@ -188,7 +190,7 @@ class MainScreen(Screen):
         if table_name:
             self.selected_table = table_name
             self.selected_row = row_k
-            self.log(f"Editing Table: {table_name}, Row: {row_k}")
+            # self.log(f"Editing Table: {table_name}, Row: {row_k}")
             self.app.edit_tables(table_name, row_k)
         else:
             self.notify("Please select at least a table, or a table and row to edit.", timeout=5, severity="warning")
@@ -212,10 +214,10 @@ class MainScreen(Screen):
             add_comment_return = self.app.add_comment(table_name, row_k)
             if add_comment_return:
                 if add_comment_return == 200:
-                    self.log("Successfully added comment")
+                    # self.log("Successfully added comment")
                     return
                 else:
-                    self.log("Failed to add comment.")
+                    # self.log("Failed to add comment.")
                     self.notify("Failed to add comment.", timeout=20, severity="error")
         else:
             self.notify("Please select a row and table to add a comment.", timeout=5, severity="warning")

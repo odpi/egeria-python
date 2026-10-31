@@ -15,7 +15,8 @@ from textual.widgets import DataTable, Input, Button, Select, Static, TextArea
 
 import community_handler
 from community_handler import CommunitiesMixin
-from CommunitiesScreen import CommunitiesScreen, ConfirmLeaveCommunityScreen, DIRECT_LINK
+from CommunitiesScreen import (CommunitiesScreen, ConfirmLeaveCommunityScreen, CreateCommunityScreen, DIRECT_LINK,
+                               NOT_JOINING)
 from CommunityScreen import CommunityScreen, NewBlogPostScreen, AddCommunityCommentScreen
 from pyegeria import PyegeriaException
 
@@ -35,6 +36,21 @@ def _scope(element, assignment_type):
     return {"relationshipHeader": {"guid": f"rel-{element['elementHeader']['guid']}"},
             "relationshipProperties": {"class": "AssignmentScopeProperties", "assignmentType": assignment_type},
             "relatedElement": element}
+
+
+# The people appointed to each role, as get_actor_role_by_guid returns them, by role GUID
+ROLE_PERFORMERS: dict[str, dict] = {}
+
+
+def _role(guid, type_name, display_name, people):
+    """A role actor (whose type header lists its supertypes) appointed to the given people."""
+    role = _element(guid, type_name, display_name)
+    supertypes = ["ActorRole", "Actor", "Referenceable", "OpenMetadataRoot"]
+    if type_name == "GovernanceRole":
+        supertypes.insert(0, "PersonRole")
+    role["elementHeader"]["type"]["superTypeNames"] = supertypes
+    ROLE_PERFORMERS[guid] = {**role, "rolePerformers": [{"relatedElement": person} for person in people]}
+    return role
 
 
 DATA_SCI = _element("ds-guid", "Community", "Data Science SIG", "Data science")
@@ -80,6 +96,9 @@ class DummyApp(CommunitiesMixin):
 @pytest.fixture
 def client():
     with patch("community_handler.Egeria") as mock_egeria:
+        # MagicMock doesn't create dunder-named attributes on demand
+        mock_egeria.return_value.__create_qualified_name__ = MagicMock(
+            side_effect=lambda type_name, name: f"{type_name}::{name.replace(' ', '-')}")
         yield mock_egeria.return_value
 
 
@@ -137,14 +156,37 @@ class TestCommunitiesMixin:
         client.find_communities.side_effect = PyegeriaException("boom")
         assert DummyApp().search_communities("sig") is None
 
-    def test_members_are_people_and_roles(self, client):
+    def test_members_are_people_direct_and_through_roles(self, client):
+        gary, erin = _element("gary-guid", "Person", "Gary"), _element("erin-guid", "Person", "Erin")
+        lead_role = _role("lead-role", "PersonRole", "SIG Leader", [erin, gary])
+        champ_role = _role("champ-role", "GovernanceRole", "SIG Champion", [erin])
         client.get_community_by_guid.return_value = {
-            "assignedActors": [_scope(_element("gary-guid", "Person", "Gary"), "Contributor"),
-                               _scope(_element("lead-role", "PersonRole", "SIG Leader"), "Leader")]}
+            "assignedActors": [_scope(gary, "Contributor"),
+                               _scope(lead_role, "Leader"),
+                               _scope(champ_role, "Contributor"),
+                               _scope(_element("team-guid", "Team", "A team"), "Observer")]}
+        client.get_actor_role_by_guid.side_effect = lambda guid, **kwargs: ROLE_PERFORMERS[guid]
         rows = DummyApp().get_community_members("ds-guid")
         assert client.get_community_by_guid.call_args.args == ("ds-guid",)
-        assert rows == [("Gary", "Person", "Contributor", "Person::gary-guid", "gary-guid"),
-                        ("SIG Leader", "PersonRole", "Leader", "PersonRole::lead-role", "lead-role")]
+        # Only the role's appointments are fetched
+        assert client.get_actor_role_by_guid.call_args.kwargs["include_only_relationships"] == [
+            "PersonRoleAppointment"]
+        # One row per person, sorted by name; roles and teams aren't listed
+        assert rows == [
+            ("Erin", "Leader, Contributor", "Role: SIG Leader; Role: SIG Champion", "Person::erin-guid", "erin-guid"),
+            ("Gary", "Contributor, Leader", "Direct; Role: SIG Leader", "Person::gary-guid", "gary-guid"),
+        ]
+        client.close_session.assert_called_once()
+
+    def test_unreadable_role_is_skipped_with_a_warning(self, client):
+        gary = _element("gary-guid", "Person", "Gary")
+        client.get_community_by_guid.return_value = {
+            "assignedActors": [_scope(gary, "Contributor"),
+                               _scope(_role("lead-role", "PersonRole", "SIG Leader", []), "Leader")]}
+        client.get_actor_role_by_guid.side_effect = PyegeriaException("boom")
+        app = DummyApp()
+        assert [row[4] for row in app.get_community_members("ds-guid")] == ["gary-guid"]
+        assert app.notices[-1][1] == "warning"
 
     def test_members_error_returns_none(self, client):
         client.get_community_by_guid.side_effect = PyegeriaException("boom")
@@ -164,6 +206,55 @@ class TestCommunitiesMixin:
         app = DummyApp()
         assert app.join_community("ds-guid") is False
         assert app.notices[-1][1] == "error"
+
+    def test_create_and_lead(self, client):
+        client.create_community.return_value = "new-guid"
+        app = DummyApp()
+        assert app.create_community("Data Lovers", "People who love data", "Love data") == "new-guid"
+        client.__create_qualified_name__.assert_called_once_with("Community", "Data Lovers")
+        body = client.create_community.call_args.kwargs["body"]
+        assert body["class"] == "NewElementRequestBody"
+        assert body["properties"] == {"class": "CommunityProperties", "typeName": "Community",
+                                      "qualifiedName": "Community::Data-Lovers", "displayName": "Data Lovers",
+                                      "description": "People who love data", "mission": "Love data"}
+        # The creator leads the new community by default
+        scope, actor, link_body = client.link_assignment_scope.call_args.args
+        assert (scope, actor) == ("new-guid", "profile-guid")
+        assert link_body["properties"]["assignmentType"] == "Leader"
+        assert app.notices[-1][1] == "information"
+        client.close_session.assert_called_once()
+
+    def test_create_without_mission_or_joining(self, client):
+        client.create_community.return_value = "new-guid"
+        assert DummyApp().create_community("Data Lovers", "People who love data", "", "") == "new-guid"
+        assert "mission" not in client.create_community.call_args.kwargs["body"]["properties"]
+        client.link_assignment_scope.assert_not_called()
+
+    def test_create_refuses_an_existing_name(self, client):
+        client.get_communities_by_name.return_value = [DATA_SCI]
+        app = DummyApp()
+        assert app.create_community("Data Science SIG", "Again") is None
+        assert client.get_communities_by_name.call_args.kwargs["filter_string"] == "Community::Data-Science-SIG"
+        client.create_community.assert_not_called()
+        assert app.notices[-1] == ("A community called Data Science SIG already exists - find it below to join it",
+                                   "warning")
+        client.close_session.assert_called_once()
+
+    def test_create_error(self, client):
+        client.create_community.side_effect = PyegeriaException("boom")
+        app = DummyApp()
+        assert app.create_community("Data Lovers", "People who love data") is None
+        client.link_assignment_scope.assert_not_called()
+        assert app.notices[-1][1] == "error"
+        client.close_session.assert_called_once()
+
+    def test_create_with_failed_join_still_returns_the_community(self, client):
+        client.create_community.return_value = "new-guid"
+        client.link_assignment_scope.side_effect = PyegeriaException("boom")
+        app = DummyApp()
+        assert app.create_community("Data Lovers", "People who love data") == "new-guid"
+        assert app.notices[-1][1] == "warning"
+        client.close_session.assert_called_once()
 
     def test_leave(self, client):
         assert DummyApp().leave_community("ds-guid") is True
@@ -289,7 +380,7 @@ class CommunitiesHostApp(App):
         self.join_community = MagicMock(side_effect=self._join)
         self.leave_community = MagicMock(side_effect=self._leave)
         self.search_communities = MagicMock(return_value=list(ALL_COMMUNITIES))
-        self.get_community_members = MagicMock(return_value=[("Gary", "Person", "Contributor", "Person::g", "g")])
+        self.get_community_members = MagicMock(return_value=[("Gary", "Contributor", "Direct", "Person::g", "g")])
         self.posts = [("Second", "erin", "2026-10-20 13:27", "Again", "p2"),
                       ("First", "gary", "2026-10-01 09:00", "Hello", "p1")]
         self.comments = [("Why?", "Question", "gary", "2026-10-01 09:00", "c1")]
@@ -297,7 +388,14 @@ class CommunitiesHostApp(App):
         self.get_community_comments = MagicMock(side_effect=lambda guid: list(self.comments))
         self.add_community_blog_post = MagicMock(side_effect=self._post)
         self.add_community_comment = MagicMock(side_effect=self._comment)
+        self.create_community = MagicMock(side_effect=self._create)
         self.dismissed = None
+
+    def _create(self, name, description, mission, assignment_type):
+        self.search_communities.return_value.append((name, description, f"Community::{name}", "new-guid"))
+        if assignment_type:
+            self.rows.append((name, assignment_type, DIRECT_LINK, description, "new-guid"))
+        return "new-guid"
 
     def _post(self, guid, name, title, text):
         self.posts.insert(0, (title, "garygeeke", "2026-10-28 12:00", text, "p-new"))
@@ -457,6 +555,88 @@ class TestCommunitiesScreen:
             app.screen_under_test.action_leave_community()
             await pilot.pause()
             assert app.screen is app.screen_under_test
+
+    @pytest.mark.asyncio
+    async def test_create_and_join(self):
+        app = CommunitiesHostApp(MY_ROWS)
+        async with app.run_test() as pilot:
+            screen = app.screen_under_test
+            screen.query_one("#create_community_btn", Button).press()
+            await pilot.pause()
+            assert isinstance(app.screen, CreateCommunityScreen)
+            # The creator leads the community unless they choose otherwise
+            assert app.screen.query_one("#creator_assignment_type", Select).value == "Leader"
+            app.screen.query_one("#community_name_input", Input).value = "Data Lovers"
+            app.screen.query_one("#community_description_input", Input).value = "People who love data"
+            app.screen.query_one("#community_mission_text", TextArea).text = "Love data"
+            await pilot.press("ctrl+s")
+            await pilot.pause()
+            assert app.screen is screen
+            app.create_community.assert_called_once_with("Data Lovers", "People who love data", "Love data", "Leader")
+            mine = screen.query_one("#my_communities_table", DataTable)
+            assert mine.row_count == 3
+            # The new community is highlighted
+            assert screen.focused is mine
+            assert mine.get_row_at(mine.cursor_row)[4] == "new-guid"
+
+    @pytest.mark.asyncio
+    async def test_create_without_joining(self):
+        app = CommunitiesHostApp(MY_ROWS)
+        async with app.run_test() as pilot:
+            screen = app.screen_under_test
+            await pilot.press("ctrl+t")
+            await pilot.pause()
+            app.screen.query_one("#community_name_input", Input).value = "Data Lovers"
+            app.screen.query_one("#community_description_input", Input).value = "People who love data"
+            app.screen.query_one("#creator_assignment_type", Select).value = NOT_JOINING
+            app.screen.query_one("#submit_create_community_btn", Button).press()
+            await pilot.pause()
+            app.create_community.assert_called_once_with("Data Lovers", "People who love data", "", NOT_JOINING)
+            assert screen.query_one("#my_communities_table", DataTable).row_count == 2
+            # ...so it is offered in the found list instead
+            found = screen.query_one("#communities_found_table", DataTable)
+            assert screen.focused is found
+            assert found.get_row_at(found.cursor_row)[3] == "new-guid"
+
+    @pytest.mark.asyncio
+    async def test_create_needs_name_and_description(self):
+        app = CommunitiesHostApp(MY_ROWS)
+        async with app.run_test() as pilot:
+            app.screen_under_test.action_create_community()
+            await pilot.pause()
+            app.screen.query_one("#community_name_input", Input).value = "Data Lovers"
+            app.screen.action_submit()
+            await pilot.pause()
+            assert isinstance(app.screen, CreateCommunityScreen)
+            app.create_community.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_cancel_create(self):
+        app = CommunitiesHostApp(MY_ROWS)
+        async with app.run_test() as pilot:
+            app.screen_under_test.action_create_community()
+            await pilot.pause()
+            app.screen.query_one("#cancel_create_community_btn", Button).press()
+            await pilot.pause()
+            assert app.screen is app.screen_under_test
+            app.create_community.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_failed_create_leaves_the_lists_unchanged(self):
+        app = CommunitiesHostApp(MY_ROWS)
+        app.create_community = MagicMock(return_value=None)
+        async with app.run_test() as pilot:
+            screen = app.screen_under_test
+            screen.action_create_community()
+            await pilot.pause()
+            app.screen.query_one("#community_name_input", Input).value = "Data Lovers"
+            app.screen.query_one("#community_description_input", Input).value = "People who love data"
+            app.screen.action_submit()
+            await pilot.pause()
+            assert app.screen is screen
+            assert screen.query_one("#my_communities_table", DataTable).row_count == 2
+            # Only the search made on opening; nothing was reloaded
+            app.search_communities.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_quit(self):
