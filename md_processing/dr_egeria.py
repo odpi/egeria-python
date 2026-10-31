@@ -5,9 +5,8 @@ load_commands()
 
 # Analytic Function Demo report specs (pyegeria.view.analytic_demo_specs) --
 # and any other extra report-spec source -- are auto-loaded by
-# get_report_registry() itself (CONFIG tier, driven by
-# settings.Environment.pyegeria_report_spec_modules / config.json's "Pyegeria
-# Report Spec Modules") the first time anything calls it. No explicit
+# get_report_registry() itself (CONFIG tier, through pyegeria's own
+# `pyegeria.report_specs` entry point, ISSUE-173) the first time anything calls it. No explicit
 # registration call needed here anymore.
 """
 This is an ongoing experiment in parsing and playing with Dr.Egeria docs

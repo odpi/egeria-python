@@ -148,7 +148,7 @@ content was changed. The numbered section list above describes the
 
 # Open Issues
 
-**At a glance** — 2 open pyegeria items, 0 awaiting re-test, 0 open Egeria Server issues (2026-10-30: ISSUE-168, released in 6.2.16, and ISSUE-169..172, fixed for 6.2.17, moved to the Appendix. 2026-10-30: ISSUE-146's `remove_note` re-test passed, ISSUE-79's folder survey completes, ISSUE-108 did not reproduce at 200 links; all three moved to the Appendix. 2026-10-29: ISSUE-159, 132 and 85 live-verified; 12 Egeria-side fixes re-confirmed or closed on earlier passes and moved to the Appendix).
+**At a glance** — 3 open pyegeria items, 0 awaiting re-test, 0 open Egeria Server issues (2026-10-31: ISSUE-173 added, report specs by registered name and the `pyegeria.report_specs` entry points. 2026-10-30: ISSUE-168, released in 6.2.16, and ISSUE-169..172, fixed for 6.2.17, moved to the Appendix. 2026-10-30: ISSUE-146's `remove_note` re-test passed, ISSUE-79's folder survey completes, ISSUE-108 did not reproduce at 200 links; all three moved to the Appendix. 2026-10-29: ISSUE-159, 132 and 85 live-verified; 12 Egeria-side fixes re-confirmed or closed on earlier passes and moved to the Appendix).
 
 **Egeria team note, 2026-10-18 (Mandy Chessell).** Saved verbatim at
 `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`. Each entry below has a dated
@@ -191,6 +191,27 @@ Dr.Egeria-side work each will need once that capability ships is written
 into the entry now, so it isn't rediscovered from scratch later.
 
 ---
+
+### ISSUE-173: Report specs named analytic functions by dotted path and loaded package specs through env vars; added the `pyegeria.report_specs` entry-point group and deprecated both
+
+**Layer:** pyegeria · **Status:** built on branch `feat/analytic-registered-names`, no PR yet; targets 6.2.18, with removal in 6.2.19 · **Found:** 2026-10-31, the owner's ruling on Mandy's question 2 (portal analytics discovery), "yes to (b)", then "a" for report-spec registration (the Architect's R1, split note §11.3).
+
+**What:** the Portal could only find a package's analytic tiles if something set `PYEGERIA_REPORT_SPEC_MODULES` (or config.json's `"Pyegeria Report Spec Modules"`) to that package's loader, and report specs named functions by dotted path. pyegeria's own analytic demo specs depended on config.json's key too. Separately, `metric_trend`'s `metric_path`, which a caller can override, was imported with no allowlist check, bypassing ISSUE-169.
+
+**Change:**
+- **Report-spec entry points** (`base_report_formats.py`): `refresh_report_specs()` reads the `pyegeria.report_specs` group, and `trellis.report_specs` as an alias, first. An entry point names a callable returning a `FormatSetDict` (or a dict of label to `FormatSet`), or such a dict itself. Each entry point loads in isolation: one that fails or clashes is skipped, logged, and returned by `refresh_report_specs()`, and the rest still load.
+- **pyegeria's own demo specs** now load through its own entry point (`analytic_demos` in `pyproject.toml`), and the key is gone from `config/config.json`. A config entry naming the same loader as an installed entry point is treated as that entry point, not as a clash.
+- **Deprecation:** config.json's list, `PYEGERIA_REPORT_SPEC_MODULES`, `PYEGERIA_REPORT_FORMATS_JSON` and `PYEGERIA_REPORT_FORMATS_MODULES` still load. When any is set, each refresh issues one `DeprecationWarning` and one WARNING log line naming them and the replacement.
+- **Registered names** (`format_set_executor.resolve_report_spec_function`): a report spec's `analytic_function`, or `metric_trend`'s `metric_path`, given as a dotted path still resolves under the ISSUE-169 checks. It now raises a `DeprecationWarning` naming the registered name to use (or saying to register it), and logs once per path. A refused path raises with no deprecation warning. `metric_path` now goes through this resolver.
+- **pyegeria's own specs** now use registered names: the SoA implementation summary (`control_implementation_summary`), every analytic demo spec, and the metric-trend demo's `metric_path` (`governed_coverage`). A test checks that every shipped spec names a registered function.
+
+**Kept as dotted paths, on purpose:** `AnalyticFunctionSpec.function`, an action's `fetch`/`analytic` steps, and `analytic_binders` factories. They are code, not report-spec data, and binder factories have no registry to name them from.
+
+**Downstream:**
+- egeria-workspaces-fs `PyegeriaWebHandler/report_specs_handler.py` (quickstart and freshstart) names `pyegeria.view.overview_metrics.count_elements` and `.metric_trend`, with a dotted `metric_path`; it should use `count_elements` and `metric_trend`.
+- trellis-analytics `portal.py`'s tile names `trellis_analytics.portal.curation_coverage_tile`, which needs a registered name, and its `report_specs` loader moves to a `pyegeria.report_specs` entry point.
+
+**6.2.19:** refuse dotted paths in report specs, and stop reading the four deprecated sources.
 
 ### ISSUE-155: pyegeria gaps against Egeria `main` since 6.2 (omvs_audit + source diff, V6.2..05a5e982)
 
