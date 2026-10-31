@@ -49,6 +49,11 @@ class TechTypesMixin:
             return
         # self.log("Technology types fetched successfully.")
         # self.log("Displaying technology types...")
+        await self.show_technology_types_tree()
+        # self.log("Technology types displayed successfully.")
+
+    async def show_technology_types_tree(self) -> None:
+        """Push the technology types tree from the already-fetched hierarchy."""
         await self.push_screen(
             TechnologyTypesScreen(
                 ttlist=self.tech_type_list,
@@ -56,7 +61,6 @@ class TechTypesMixin:
             ),
             callback=self.tech_type_callback,
         )
-        # self.log("Technology types displayed successfully.")
 
     async def tech_type_callback(self, result: Any) -> int:
         """Callback for Technology Types screen.
@@ -153,7 +157,11 @@ class TechTypesMixin:
             self._show_main_screen()
             return 200
         elif isinstance(result, (int, str)):
-            if result == "back" or result == "":
+            if result == "back":
+                # Go back one level: the tree dismissed itself on selection, so re-open it
+                await self.show_technology_types_tree()
+                return 200
+            elif result == "":
                 # self.log(f"Technology Type Options screen cancelled/failed; return: {result}, exiting.")
                 self._show_main_screen()
                 return 200

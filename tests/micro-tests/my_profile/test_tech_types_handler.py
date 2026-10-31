@@ -233,10 +233,16 @@ class TestTechTypesMixin:
         assert res == 200
         assert app.shown_main_screen is True
 
+        # Back goes up one level, to a re-opened technology types tree, not the main screen
         app.shown_main_screen = False
+        app.tech_type_list = [{"displayName": "Root Technology Type"}]
         res = await app.tech_type_options_callback("back")
         assert res == 200
-        assert app.shown_main_screen is True
+        assert app.shown_main_screen is False
+        screen, cb = app.pushed_screens[-1]
+        assert isinstance(screen, TechnologyTypesScreen)
+        assert screen.tech_type_list == app.tech_type_list
+        assert cb == app.tech_type_callback
 
         app.shown_main_screen = False
         res = await app.tech_type_options_callback([])
