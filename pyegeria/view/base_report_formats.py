@@ -2401,7 +2401,7 @@ base_report_specs = FormatSetDict({
         family="Security Officer",
         formats=[Format(types=["DICT", "JSON"], attributes=[])],
         action=ActionParameter(
-            analytic_function="pyegeria.view.overview_metrics.control_implementation_summary",
+            analytic_function="control_implementation_summary",
             required_params=["soa_guid"],
         ),
     ),

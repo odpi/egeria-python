@@ -597,8 +597,8 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         generic=True,
         params=[
             AnalyticParam(name="metric_path", type="str", required=True,
-                          description="Dotted import path of the target function, e.g. "
-                                       "'pyegeria.view.overview_metrics.governed_coverage'."),
+                          description="Registered name of the target analytic function, e.g. "
+                                       "'governed_coverage'. A dotted path is deprecated."),
             AnalyticParam(name="window", type="str", default="6mo",
                           description="8h|1d|3d|7d|30d|90d|6mo|1y -- sets span + default point count."),
             AnalyticParam(name="points", type="int",

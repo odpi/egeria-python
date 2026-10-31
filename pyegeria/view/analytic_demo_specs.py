@@ -75,7 +75,7 @@ def _demo(
         # never matches the data.
         formats=[Format(types=types, attributes=[])],
         action=ActionParameter(
-            analytic_function=spec.function, analytic_spec_params=demo_params,
+            analytic_function=analytic_function_name, analytic_spec_params=demo_params,
         ),
     )
 
@@ -324,7 +324,7 @@ _DEMOS: Dict[str, FormatSet] = {
              "any other function in this module (e.g. people_counts, feedback_summary) the same "
              "way. Run with output_format SERIES for a Vega-Lite line chart of governedCount.",
         analytic_function_name="metric_trend",
-        demo_params={"metric_path": "pyegeria.view.overview_metrics.governed_coverage", "window": "6mo"},
+        demo_params={"metric_path": "governed_coverage", "window": "6mo"},
         result_shape="list[dict] (time series: {label, date, **snapshot})",
         chart_types=["SERIES"],
     ),
