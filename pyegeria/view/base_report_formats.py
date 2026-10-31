@@ -79,11 +79,10 @@ This module may raise the following exceptions:
 
 import os
 import re as _re
-import warnings
 from datetime import datetime, timezone
 from importlib.metadata import entry_points
 from pathlib import Path
-from typing import Any, Callable, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from loguru import logger
 
@@ -3832,19 +3831,6 @@ def _load_json_file(path: str) -> FormatSetDict:
     return FormatSetDict.load_from_json(str(p))
 
 
-def _load_module_loader(m: str) -> FormatSetDict:
-    """Resolve a "pkg.mod:func" or "pkg.mod.func" string to a loader callable,
-    call it, and coerce the result to a FormatSetDict."""
-    if ":" in m:
-        pkg, func = m.split(":", 1)
-    else:
-        pkg, func = m.rsplit(".", 1)
-    mod = __import__(pkg, fromlist=[func])
-    loader = getattr(mod, func)
-    loaded = loader()
-    return loaded if isinstance(loaded, FormatSetDict) else FormatSetDict(loaded)
-
-
 def _split_env_list(name: str) -> List[str]:
     return [p.strip() for p in os.getenv(name, "").split(",") if p.strip()]
 
@@ -3852,12 +3838,14 @@ def _split_env_list(name: str) -> List[str]:
 # Installed packages contribute report specs through this entry-point group (ISSUE-173),
 # the same way they contribute analytic functions through `pyegeria.analytics`.
 REPORT_SPEC_ENTRY_POINT_GROUP = "pyegeria.report_specs"
-REPORT_SPEC_ENTRY_POINT_ALIASES = ("trellis.report_specs",)
 
-_DEPRECATED_SPEC_SOURCES_MESSAGE = (
-    "Loading report specs through {sources} is deprecated and will be removed in the next release. "
-    "Register a package's specs through the 'pyegeria.report_specs' entry-point group instead, "
-    "or put JSON files in the user report specs directory.")
+# Sources removed in 6.2.19 (ISSUE-173). They are no longer read; a refresh that
+# finds one still set logs a warning, so a stale setting doesn't silently do nothing.
+_REMOVED_SPEC_SOURCES_MESSAGE = (
+    "{sources} {verb} set but no longer read: report spec sources other than entry points and "
+    "the user report specs directory were removed in pyegeria 6.2.19. Register a package's specs "
+    "through the 'pyegeria.report_specs' entry-point group, call register_report_specs() at "
+    "runtime, or put JSON files in the user report specs directory.")
 
 
 def _load_entry_point(ep) -> FormatSetDict:
@@ -3869,33 +3857,29 @@ def _load_entry_point(ep) -> FormatSetDict:
 
 def _report_spec_entry_points() -> list:
     found = []
-    for group in (REPORT_SPEC_ENTRY_POINT_GROUP, *REPORT_SPEC_ENTRY_POINT_ALIASES):
-        found.extend((group, ep) for ep in entry_points(group=group))
-    return found
+    return [(REPORT_SPEC_ENTRY_POINT_GROUP, ep) for ep in entry_points(group=REPORT_SPEC_ENTRY_POINT_GROUP)]
 
 
 def refresh_report_specs() -> List[Tuple[str, str]]:
-    """Reload formats from configured JSON files and optional modules.
+    """Reload the CONFIG tier of report specs.
 
     Sources, in order:
-      - Every entry point in the `pyegeria.report_specs` group (and its alias
-        `trellis.report_specs`). Its value is a callable returning a
-        FormatSetDict (or a dict of label to FormatSet), or such a dict itself.
-        This is how pyegeria's own analytic demo specs load (ISSUE-173).
-      - Deprecated (ISSUE-173; removed in the next release), with one
-        DeprecationWarning per refresh when any is set:
-        `settings.Environment.pyegeria_report_spec_modules` (config.json's
-        "Pyegeria Report Spec Modules" list, or the OS env var
-        PYEGERIA_REPORT_SPEC_MODULES as a comma-separated string) -- each
-        entry is a JSON file path (ending ".json") or a "pkg.mod:func"/
-        "pkg.mod.func" loader callable.
+      - Every entry point in the `pyegeria.report_specs` group. Its value is a
+        callable returning a FormatSetDict (or a dict of label to FormatSet),
+        or such a dict itself. This is how pyegeria's own analytic demo specs
+        load (ISSUE-173).
       - Every *.json file in the user report specs directory, alphabetically
         (PYEGERIA_USER_REPORT_SPECS_DIR / PYEGERIA_USER_FORMAT_SETS_DIR, else
         config.json's "Pyegeria User Report Specs Dir", else
         ~/.pyegeria/report_specs).
-      - Deprecated, as above: PYEGERIA_REPORT_FORMATS_JSON (comma-separated
-        JSON file paths) and PYEGERIA_REPORT_FORMATS_MODULES (comma-separated
-        module callables).
+
+    Code that isn't an installed package registers specs at runtime with
+    `register_report_specs()` instead; the RUNTIME tier survives a refresh.
+
+    Removed in 6.2.19: config.json's "Pyegeria Report Spec Modules" list,
+    PYEGERIA_REPORT_SPEC_MODULES, PYEGERIA_REPORT_FORMATS_JSON,
+    PYEGERIA_REPORT_FORMATS_MODULES and the `trellis.report_specs` alias group.
+    If any of the first four is still set, a refresh logs one warning naming it.
 
     Each entry is loaded independently: an entry that fails to load, or that
     defines a label already present (in an earlier entry, or in the BUILTINS/
@@ -3908,42 +3892,22 @@ def refresh_report_specs() -> List[Tuple[str, str]]:
 
     try:
         from pyegeria.core.config import settings
-        configured = list(settings.Environment.pyegeria_report_spec_modules or [])
+        config_list = list(settings.Environment.pyegeria_report_spec_modules or [])
     except Exception:  # noqa: BLE001 -- settings may not be initialized in every context
-        configured = []
-    config_list = list(configured)
-    configured.extend(_split_env_list("PYEGERIA_REPORT_SPEC_MODULES"))
-    legacy_json = _split_env_list("PYEGERIA_REPORT_FORMATS_JSON")
-    legacy_modules = _split_env_list("PYEGERIA_REPORT_FORMATS_MODULES")
-
-    entries: List[Tuple[str, Any, Callable[[Any], FormatSetDict]]] = []
-    ep_values = set()
-    for group, ep in _report_spec_entry_points():
-        ep_values.add(ep.value.replace(" ", ""))
-        entries.append((f"ENTRY_POINT:{group}:{ep.name}", ep, _load_entry_point))
-    # A config entry naming a loader an entry point already provides (e.g. an older
-    # config.json listing pyegeria's demo specs) is the same source, not a clash.
-    configured = [e for e in configured if e.replace(" ", "") not in ep_values]
-    legacy_modules = [m for m in legacy_modules if m.replace(" ", "") not in ep_values]
-
-    deprecated = [name for name, used in (
+        config_list = []
+    still_set = [name for name, used in (
         ('config.json "Pyegeria Report Spec Modules"', config_list),
         ("PYEGERIA_REPORT_SPEC_MODULES", _split_env_list("PYEGERIA_REPORT_SPEC_MODULES")),
-        ("PYEGERIA_REPORT_FORMATS_JSON", legacy_json),
-        ("PYEGERIA_REPORT_FORMATS_MODULES", legacy_modules)) if used]
-    if deprecated:
-        message = _DEPRECATED_SPEC_SOURCES_MESSAGE.format(sources=", ".join(deprecated))
-        warnings.warn(message, DeprecationWarning, stacklevel=2)
-        logger.warning(message)
+        ("PYEGERIA_REPORT_FORMATS_JSON", _split_env_list("PYEGERIA_REPORT_FORMATS_JSON")),
+        ("PYEGERIA_REPORT_FORMATS_MODULES", _split_env_list("PYEGERIA_REPORT_FORMATS_MODULES"))) if used]
+    if still_set:
+        logger.warning(_REMOVED_SPEC_SOURCES_MESSAGE.format(
+            sources=", ".join(still_set), verb="is" if len(still_set) == 1 else "are"))
 
-    for entry in configured:
-        if entry.endswith(".json"):
-            entries.append((f"JSON:{entry}", entry, _load_json_file))
-        else:
-            entries.append((f"MODULE:{entry}", entry, _load_module_loader))
+    entries: List[Tuple[str, Any, Callable[[Any], FormatSetDict]]] = []
+    for group, ep in _report_spec_entry_points():
+        entries.append((f"ENTRY_POINT:{group}:{ep.name}", ep, _load_entry_point))
     entries.extend((f"JSON:{p}", p, _load_json_file) for p in _user_report_spec_files())
-    entries.extend((f"JSON:{p}", p, _load_json_file) for p in legacy_json)
-    entries.extend((f"MODULE:{m}", m, _load_module_loader) for m in legacy_modules)
 
     # A CONFIG label that duplicates another tier would make get_report_registry()
     # itself raise, taking every report spec down with it -- reject it here instead.
@@ -4163,26 +4127,43 @@ def find_report_specs(
     return sorted(results, key=lambda d: d.get("report_spec", ""))
 
 
+# Which `source` registered each RUNTIME label, so a repeat registration from the
+# same source (a reloaded web handler, a re-run notebook cell) is a no-op.
+_RUNTIME_REPORT_SOURCES: Dict[str, str] = {}
+
+
 def register_report_specs(new_formats: Union[FormatSetDict, dict], *, source: str = "runtime") -> None:
-    """Dynamically add report formats at runtime. Raises on duplicate label."""
-    global _RUNTIME_REPORT_FORMATS
+    """Add report specs to the RUNTIME tier.
+
+    This is how code that isn't an installed package (and so can't declare a
+    `pyegeria.report_specs` entry point) registers its specs, e.g. a web app's
+    own tiles. The RUNTIME tier survives `refresh_report_specs()`.
+
+    Registering a label again from the same `source` replaces that spec and is
+    not an error, so calling this on every handler load is safe. A label that
+    another source, or a built-in, generated or config spec, already defines
+    raises ReportFormatCollision and nothing from this call is registered.
+    """
     if not isinstance(new_formats, FormatSetDict):
         new_formats = FormatSetDict(new_formats)
     existing = get_report_registry()
     for label in new_formats.keys():
-        if label in existing.keys():
+        if label in existing.keys() and _RUNTIME_REPORT_SOURCES.get(label) != source:
             raise ReportFormatCollision(
                 f"Report format label '{label}' already exists; cannot register from {source}")
     for k, v in new_formats.items():
         _RUNTIME_REPORT_FORMATS[k] = v
+        _RUNTIME_REPORT_SOURCES[k] = source
 
 
 def unregister_report_spec(label: str) -> bool:
+    _RUNTIME_REPORT_SOURCES.pop(label, None)
     return bool(_RUNTIME_REPORT_FORMATS.pop(label, None))
 
 
 def clear_runtime_report_specs() -> None:
     _RUNTIME_REPORT_FORMATS.clear()
+    _RUNTIME_REPORT_SOURCES.clear()
 
 
 def list_report_specs() -> list[str]:

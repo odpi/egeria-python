@@ -48,25 +48,27 @@ def isolated(monkeypatch, user_dir):
     return monkeypatch
 
 
-def test_bad_entry_does_not_skip_later_entries(isolated, tmp_path):
-    good_a = _write_specs(tmp_path / "a.json", "ConfigTier-A")
-    good_b = _write_specs(tmp_path / "b.json", "ConfigTier-B")
-    missing = str(tmp_path / "missing.json")
-    isolated.setenv("PYEGERIA_REPORT_SPEC_MODULES", ",".join([good_a, missing, "no.such.module:loader", good_b]))
+# Entries are fed in as files in the user report specs directory, which loads
+# alphabetically. (These tests used PYEGERIA_REPORT_SPEC_MODULES and friends
+# before those sources were removed in 6.2.19.)
+
+def test_bad_entry_does_not_skip_later_entries(isolated, user_dir):
+    _write_specs(user_dir / "a.json", "ConfigTier-A")
+    (user_dir / "b-broken.json").write_text("{ not json")
+    _write_specs(user_dir / "c.json", "ConfigTier-C")
 
     skipped = brf.refresh_report_specs()
 
-    assert [s for s, _ in skipped] == [f"JSON:{missing}", "MODULE:no.such.module:loader"]
+    assert [s for s, _ in skipped] == [f"JSON:{user_dir / 'b-broken.json'}"]
     registry = brf.get_report_registry()
     assert "ConfigTier-A" in registry
-    assert "ConfigTier-B" in registry
+    assert "ConfigTier-C" in registry
 
 
-def test_colliding_entry_skipped_whole_others_kept(isolated, tmp_path):
-    first = _write_specs(tmp_path / "first.json", "ConfigTier-Shared", "ConfigTier-OnlyFirst")
-    second = _write_specs(tmp_path / "second.json", "ConfigTier-Shared", "ConfigTier-OnlySecond")
-    third = _write_specs(tmp_path / "third.json", "ConfigTier-Third")
-    isolated.setattr(settings.Environment, "pyegeria_report_spec_modules", [first, second, third])
+def test_colliding_entry_skipped_whole_others_kept(isolated, user_dir):
+    _write_specs(user_dir / "1-first.json", "ConfigTier-Shared", "ConfigTier-OnlyFirst")
+    second = _write_specs(user_dir / "2-second.json", "ConfigTier-Shared", "ConfigTier-OnlySecond")
+    _write_specs(user_dir / "3-third.json", "ConfigTier-Third")
 
     skipped = brf.refresh_report_specs()
 
@@ -77,11 +79,10 @@ def test_colliding_entry_skipped_whole_others_kept(isolated, tmp_path):
     assert "ConfigTier-OnlySecond" not in registry
 
 
-def test_entry_duplicating_builtin_is_skipped_and_registry_still_works(isolated, tmp_path):
+def test_entry_duplicating_builtin_is_skipped_and_registry_still_works(isolated, user_dir):
     builtin_label = next(iter(brf.base_report_specs.keys()))
-    clash = _write_specs(tmp_path / "clash.json", builtin_label, "ConfigTier-WithClash")
-    ok = _write_specs(tmp_path / "ok.json", "ConfigTier-Ok")
-    isolated.setenv("PYEGERIA_REPORT_SPEC_MODULES", f"{clash},{ok}")
+    clash = _write_specs(user_dir / "clash.json", builtin_label, "ConfigTier-WithClash")
+    _write_specs(user_dir / "ok.json", "ConfigTier-Ok")
 
     skipped = brf.refresh_report_specs()
 
@@ -91,10 +92,8 @@ def test_entry_duplicating_builtin_is_skipped_and_registry_still_works(isolated,
     assert "ConfigTier-WithClash" not in registry
 
 
-def test_all_entries_good_returns_no_skips(isolated, tmp_path):
-    good = _write_specs(tmp_path / "good.json", "ConfigTier-Good")
-    isolated.setenv("PYEGERIA_REPORT_FORMATS_JSON", good)
-    isolated.setenv("PYEGERIA_REPORT_FORMATS_MODULES", "pyegeria.view.analytic_demo_specs:get_analytic_demo_specs")
+def test_all_entries_good_returns_no_skips(isolated, user_dir):
+    _write_specs(user_dir / "good.json", "ConfigTier-Good")
 
     assert brf.refresh_report_specs() == []
     assert "ConfigTier-Good" in brf.get_report_registry()
@@ -129,11 +128,3 @@ def test_user_dir_falls_back_to_config_setting(isolated, user_dir):
 
     assert brf.refresh_report_specs() == []
     assert "UserDir-FromConfig" in brf.get_report_registry()
-
-
-def test_file_both_listed_and_in_user_dir_loads_once(isolated, user_dir):
-    path = _write_specs(user_dir / "both.json", "UserDir-Both")
-    isolated.setenv("PYEGERIA_REPORT_SPEC_MODULES", path)
-
-    assert brf.refresh_report_specs() == []
-    assert "UserDir-Both" in brf.get_report_registry()

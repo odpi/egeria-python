@@ -70,7 +70,7 @@ def _patch_analytic_path(monkeypatch):
         return {"count": 3, "token_seen": client.token}
     monkeypatch.setattr(fse, "select_report_spec", lambda name, out: _ANALYTIC_FMT)
     monkeypatch.setattr(fse, "get_report_registry", lambda: {})
-    monkeypatch.setattr(fse, "_resolve_analytic_function", lambda decl: _analytic)
+    monkeypatch.setattr(fse, "resolve_report_spec_function", lambda decl: _analytic)
     monkeypatch.setattr(fse, "EgeriaTech", _RecordingClient)
 
 
@@ -147,7 +147,7 @@ def test_analytic_routine_without_client_param_builds_no_client(monkeypatch):
     def _local_only(window=0):
         return {"count": 7, "window": window}
 
-    monkeypatch.setattr(fse, "_resolve_analytic_function", lambda decl: _local_only)
+    monkeypatch.setattr(fse, "resolve_report_spec_function", lambda decl: _local_only)
     result = fse.exec_report_spec(
         "Anything", output_format="DICT", view_server="vs", view_url="https://unreachable",
         user="svc", user_pass="svc-pw", params={"window": 2},

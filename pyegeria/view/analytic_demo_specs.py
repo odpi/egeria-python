@@ -332,9 +332,9 @@ _DEMOS: Dict[str, FormatSet] = {
 
 
 def get_analytic_demo_specs() -> Dict[str, FormatSet]:
-    """Loader entry point -- usable directly, or via
-    PYEGERIA_REPORT_FORMATS_MODULES=pyegeria.view.analytic_demo_specs:get_analytic_demo_specs
-    (see base_report_formats.refresh_report_specs)."""
+    """Loader for pyegeria's `analytic_demos` entry point in the
+    `pyegeria.report_specs` group (see base_report_formats.refresh_report_specs);
+    also usable directly."""
     return dict(_DEMOS)
 
 
