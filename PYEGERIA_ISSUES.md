@@ -173,6 +173,7 @@ re-test candidates moved into *Awaiting re-test* below the open sections.
 
 **Open pyegeria items**
 - ISSUE-170: `AnalyticFunctionSpec` can't say what its results mean (unit, as-of, basis, absence sentences); added an optional `declaration`
+- ISSUE-169: `_resolve_analytic_function` imported any dotted path a report spec named; now registered names plus an allowlist of module prefixes
 - ISSUE-168: pyegeria can't run on Python 3.14: `nest_asyncio`, applied at import time, makes `asyncio.current_task()` return None
 - ISSUE-155: pyegeria gaps against Egeria `main` since 6.2 (omvs_audit + source diff, V6.2..05a5e982)
 - ISSUE-150: Dr.Egeria commands for an Analytic Function's Egeria declaration: a GovernanceActionType that Resource Explorer runs as an engine host, plus a synchronous path that bypasses Egeria
@@ -205,6 +206,24 @@ into the entry now, so it isn't rediscovered from scratch later.
 **Rule from the evaluation:** a field two consumers need lives here; a field one consumer needs stays in that consumer's subclass. Moving more of trellis's model up waits for a second consumer.
 
 Tests: `tests/micro-tests/test_issue_170_analytic_declaration.py`.
+
+---
+
+### ISSUE-169: `_resolve_analytic_function` imported any dotted path a report spec named; now registered names plus an allowlist of module prefixes
+
+**Layer:** pyegeria · **Status:** fixed in #516 (merged 2026-10-30), ships in the next release · **Found:** 2026-10-30, Resource Explorer's portal-extensibility evaluation (gap G6, trellis `docs/design-notes/EVAL-PORTAL-EXTENSIBILITY-VS-RE-2026-10-30.md`).
+
+**What:** `format_set_executor._resolve_analytic_function` ran `importlib.import_module` on whatever module a report spec's `analytic_function` (or an action's `fetch`/`analytic` step, or an `analytic_binders` factory) named. A report spec is data, which can come from a user's report-spec directory or a config tier, so it could make the executor import and call any module on the path.
+
+**Fix (owner's option C, kept quiet: no deprecation warning yet):**
+1. A registered name (`analytic_registry`) resolves to that entry's `function`.
+2. A dotted path some registered entry declares is trusted as before.
+3. Any other dotted path must sit under an allowed module prefix: `PYEGERIA_ANALYTIC_MODULE_PREFIXES` (comma-separated), default `pyegeria`, `trellis_analytics`. A prefix is a package boundary, so `pyegeria` does not admit `pyegeria_extras`. Such a path logs at DEBUG only.
+4. Anything else raises `AnalyticFunctionRefused` (a `ValueError`) before any import.
+
+No downstream spec in egeria-workspaces or trellis names a module outside the default list (checked 2026-10-30). Tests: `tests/micro-tests/test_issue_169_analytic_resolver.py`.
+
+**Later, not now:** once entry-point registration exists (ISSUE-172), consider a deprecation warning for unregistered dotted paths, then registry-only resolution.
 
 ---
 
