@@ -148,7 +148,7 @@ content was changed. The numbered section list above describes the
 
 # Open Issues
 
-**At a glance** — 3 open pyegeria items, 0 awaiting re-test, 0 open Egeria Server issues (2026-10-31: ISSUE-173 added, report specs by registered name and the `pyegeria.report_specs` entry points. 2026-10-30: ISSUE-168, released in 6.2.16, and ISSUE-169..172, fixed for 6.2.17, moved to the Appendix. 2026-10-30: ISSUE-146's `remove_note` re-test passed, ISSUE-79's folder survey completes, ISSUE-108 did not reproduce at 200 links; all three moved to the Appendix. 2026-10-29: ISSUE-159, 132 and 85 live-verified; 12 Egeria-side fixes re-confirmed or closed on earlier passes and moved to the Appendix).
+**At a glance** — 4 open pyegeria items, 0 awaiting re-test, 0 open Egeria Server issues (2026-10-31: ISSUE-174 added, link methods discard relationship GUIDs. ISSUE-173 added, released in 6.2.18, report specs by registered name and the `pyegeria.report_specs` entry points. 2026-10-30: ISSUE-168, released in 6.2.16, and ISSUE-169..172, fixed for 6.2.17, moved to the Appendix. 2026-10-30: ISSUE-146's `remove_note` re-test passed, ISSUE-79's folder survey completes, ISSUE-108 did not reproduce at 200 links; all three moved to the Appendix. 2026-10-29: ISSUE-159, 132 and 85 live-verified; 12 Egeria-side fixes re-confirmed or closed on earlier passes and moved to the Appendix).
 
 **Egeria team note, 2026-10-18 (Mandy Chessell).** Saved verbatim at
 `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`. Each entry below has a dated
@@ -191,6 +191,14 @@ Dr.Egeria-side work each will need once that capability ships is written
 into the entry now, so it isn't rediscovered from scratch later.
 
 ---
+
+### ISSUE-174: 142 `link_*` methods throw away the relationship GUID the shared helper now returns
+
+**Layer:** pyegeria · **Status:** open, logged 2026-10-31 for a fix and release next session · **Found:** 2026-10-31, Resource Explorer D1-b ("Link the pack's 22 schemas"). `AssetMaker.link_data_set_content` returns None, so the handler re-reads each schema after every attach to learn the new DataSetContent relationship's GUID.
+
+**What:** `ServerClient._async_new_relationship_request` already returns the new relationship's GUID (`GUIDResponse.guid`; that was added earlier as "purely additive"). But 142 of its 160 callers in `pyegeria/omvs` call it as a bare `await ...` and return None, as do their sync wrappers. The worst-affected modules are asset_maker (22), schema_maker (15), solution_architect (12), data_designer (11) and governance_officer (10). It matters most for multi-link relationship types such as DataSetContent: attach creates a new instance each time, and update/detach need that instance's own GUID.
+
+**Fix (proposed):** return the helper's result from each `_async_link_*`/`_async_attach_*`/`_async_setup_*`, and from its sync wrapper, typed `str | None` in the docstring's Returns. This is purely additive, since callers that ignore the value are unaffected. A micro-test should stub `_async_make_request` and check that a representative sample (and an AST check that no omvs method discards the helper's result) returns the GUID. Do Dr.Egeria link processors next if any re-read to find the GUID.
 
 ### ISSUE-173: Report specs named analytic functions by dotted path and loaded package specs through env vars; added the `pyegeria.report_specs` entry-point group and deprecated both
 
