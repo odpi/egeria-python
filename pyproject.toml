@@ -193,6 +193,11 @@ dependencies = [
     refresh_specs = "commands.tech.refresh_specs:main"
     dr_egeria_spec_editor = "commands.tech.spec_editor:main"
 
+# pyegeria's own analytic demo specs load through the same entry-point group as any
+# installed package's report specs (ISSUE-173).
+[project.entry-points."pyegeria.report_specs"]
+analytic_demos = "pyegeria.view.analytic_demo_specs:get_analytic_demo_specs"
+
 
 [tool.uv.workspace]
 members = ["my_egeria"]
