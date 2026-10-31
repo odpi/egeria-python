@@ -719,6 +719,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                     karma_points=self.karma_points,
                     user_profile=self.user_profile,
                     user_GUID=self.user_GUID,
+                    profile_element=getattr(self, "my_profile_raw", None),
                 ),
                 callback=self.edit_profile_callback,
             )

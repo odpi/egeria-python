@@ -145,6 +145,8 @@ class ElementsCrudMixin:
         if isinstance(return_c, int):
             if return_c == 200:
                 self._show_main_screen()
+                # Re-read the profile so the main screen and the next Edit Profile show the saved values
+                self.call_later(self.action_refresh)
             else:
                 # self.log(f"Error returned from EditProfileScreen: {return_c}")
                 # self.log("Returning to main screen")
