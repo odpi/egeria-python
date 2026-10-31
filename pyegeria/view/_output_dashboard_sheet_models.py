@@ -51,7 +51,7 @@ sheet = DashboardSheet(
 import json
 import os
 from typing import Dict, List, Literal, Optional, Union
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from loguru import logger
 
 __all__ = [
@@ -181,7 +181,8 @@ class DashboardSheet(BaseModel):
     family: Optional[str] = None
     placements: List[Union[Placement, Dict]] = Field(default_factory=list)
 
-    @validator('placements', pre=True)
+    @field_validator('placements', mode='before')
+    @classmethod
     def validate_placements(cls, v):
         """Convert dictionary placements to Placement objects."""
         result = []
@@ -194,9 +195,9 @@ class DashboardSheet(BaseModel):
 
     def dict(self, *args, **kwargs):
         """Override dict method to convert Placement objects back to dictionaries."""
-        result = super().dict(*args, **kwargs)
+        result = self.model_dump(*args, **kwargs)
         result['placements'] = [
-            p if isinstance(p, dict) else p.dict() for p in self.placements
+            p if isinstance(p, dict) else p.model_dump() for p in self.placements
         ]
         return result
 

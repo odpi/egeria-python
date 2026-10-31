@@ -4517,9 +4517,9 @@ def _select_from_registry(registry: FormatSetDict, kind: str, output_type: str) 
         "_report_spec_name": resolved_key,
     }
     if element.action:
-        output_struct["action"] = element.action.dict()
+        output_struct["action"] = element.action.model_dump()
     if element.get_additional_props:
-        output_struct["get_additional_props"] = element.get_additional_props.dict()
+        output_struct["get_additional_props"] = element.get_additional_props.model_dump()
 
     if output_type == "ANY":
         return output_struct
