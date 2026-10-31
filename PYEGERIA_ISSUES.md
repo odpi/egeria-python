@@ -148,7 +148,7 @@ content was changed. The numbered section list above describes the
 
 # Open Issues
 
-**At a glance** — 3 open pyegeria items, 0 awaiting re-test, 0 open Egeria Server issues (2026-10-30: ISSUE-146's `remove_note` re-test passed, ISSUE-79's folder survey completes, ISSUE-108 did not reproduce at 200 links; all three moved to the Appendix. 2026-10-29: ISSUE-159, 132 and 85 live-verified; 12 Egeria-side fixes re-confirmed or closed on earlier passes and moved to the Appendix).
+**At a glance** — 2 open pyegeria items, 0 awaiting re-test, 0 open Egeria Server issues (2026-10-30: ISSUE-168, released in 6.2.16, and ISSUE-169..172, fixed for 6.2.17, moved to the Appendix. 2026-10-30: ISSUE-146's `remove_note` re-test passed, ISSUE-79's folder survey completes, ISSUE-108 did not reproduce at 200 links; all three moved to the Appendix. 2026-10-29: ISSUE-159, 132 and 85 live-verified; 12 Egeria-side fixes re-confirmed or closed on earlier passes and moved to the Appendix).
 
 **Egeria team note, 2026-10-18 (Mandy Chessell).** Saved verbatim at
 `~/.re-gate/EGERIA-TEAM-NOTE-2026-10-18.md`. Each entry below has a dated
@@ -172,11 +172,6 @@ re-test candidates moved into *Awaiting re-test* below the open sections.
   create-from-template) and 7 (`viewElementGUID`) are still open.
 
 **Open pyegeria items**
-- ISSUE-172: Installed packages couldn't register analytic functions or steps by installing; added the `pyegeria.analytics` entry-point group, read lazily
-- ISSUE-171: `exec_report_spec` returned an analytic result that was not measured as ordinary data or `empty`; it now returns the function's declared absence sentence
-- ISSUE-170: `AnalyticFunctionSpec` can't say what its results mean (unit, as-of, basis, absence sentences); added an optional `declaration`
-- ISSUE-169: `_resolve_analytic_function` imported any dotted path a report spec named; now registered names plus an allowlist of module prefixes
-- ISSUE-168: pyegeria can't run on Python 3.14: `nest_asyncio`, applied at import time, makes `asyncio.current_task()` return None
 - ISSUE-155: pyegeria gaps against Egeria `main` since 6.2 (omvs_audit + source diff, V6.2..05a5e982)
 - ISSUE-150: Dr.Egeria commands for an Analytic Function's Egeria declaration: a GovernanceActionType that Resource Explorer runs as an engine host, plus a synchronous path that bypasses Egeria
 
@@ -194,103 +189,6 @@ Actionable in this repo. Some of these are fully blocked today — waiting
 on an Egeria Server capability that doesn't exist yet — but the pyegeria/
 Dr.Egeria-side work each will need once that capability ships is written
 into the entry now, so it isn't rediscovered from scratch later.
-
----
-
-### ISSUE-172: Installed packages couldn't register analytic functions or steps by installing; added the `pyegeria.analytics` entry-point group, read lazily
-
-**Layer:** pyegeria · **Status:** in PR (branch `feat/analytic-entry-points`) · **Found:** 2026-10-30, Resource Explorer's portal-extensibility evaluation (gap G3) and the Architect's `DESIGN-ANALYTIC-LIBRARY-SPLIT-2026-10-30` (LS1: "entry-point group name and manifest loader" go to pyegeria).
-
-**What:** a package could add analytic functions to pyegeria's registry only through `PYEGERIA_ANALYTIC_FUNCTIONS_JSON`/`_MODULES` or a runtime `register_analytic_functions` call. trellis-analytics has its own `trellis.analytics` entry-point group and pushes into the registry by hand (`discovery.register()`), so the Portal sees only what something has remembered to register.
-
-**Change** (`pyegeria/view/analytic_registry.py`):
-- **Group:** `ANALYTIC_ENTRY_POINT_GROUP = "pyegeria.analytics"`, with `trellis.analytics` read as an alias during the split. An entry point names an `AnalyticFunctionSpec` (or a subclass such as trellis's manifests), a list of them, or a callable returning either. That covers both routines and steps (`kind`).
-- **Lazy loading (manifests eager, code lazy, per the design note §3):** nothing is read at import. Entry points are read on the first `get_analytic_registry()` call and cached. `refresh_analytic_functions()` forgets the cache. Only the manifests load then; a function's own module is imported on its first run by the resolver.
-- **Failures:** a broken entry point is recorded with a sentence naming it and the error. The rest still load, and the failures are logged at WARNING and returned by `analytic_entry_point_errors()` (also in `analytic_registry_payload()["entry_point_errors"]`), so "installed, not loadable" never reads as "nothing installed". An installed name that clashes with a built-in or config entry is skipped and reported, never fatal. The same manifest under both groups is not a clash.
-- **Checked with trellis's venv** (2026-10-30): both installed entry points (`context_pack`, `curation_coverage`) are discovered with no errors, and trellis's `discovery.register()` then adds nothing, harmlessly.
-
-**With ISSUE-169:** an entry-point-registered function is trusted by the resolver whatever its module, so installing is the registration path, and the allowlist only governs unregistered dotted paths.
-
-**Not done here:** the design note's split of manifest from runner inside one step's entry point, failure words on first run, and Admin "reload steps" are library/RE-host work (LS3). Whether the Portal replaces `PYEGERIA_REPORT_SPEC_MODULES` with an entry-point group is Mandy's question 2 in that note.
-
-Tests: `tests/micro-tests/test_issue_172_analytic_entry_points.py`.
-
----
-
-### ISSUE-171: `exec_report_spec` returned an analytic result that was not measured as ordinary data or `empty`; it now returns the function's declared absence sentence
-
-**Layer:** pyegeria · **Status:** in PR (branch `feat/state-aware-report-spec`, stacked on ISSUE-170's `feat/analytic-declaration`) · **Found:** 2026-10-30, Resource Explorer's portal-extensibility evaluation, §3 item 2.
-
-**What:** ISSUE-139/140 stopped charting a `not_established`/`not_applicable` result. The DICT path and the chart fallback still returned `{"kind": "json", "data": <result>}`, though, so a table or tile showed the routine's placeholder zeros as an answer. And `{"kind": "empty"}` looks the same to a reader whether nothing was found or nobody looked. Egeria Advisor, for example, renders `empty` as "No results returned".
-
-**Change** (`pyegeria/view/format_set_executor.py`):
-- **not_established / not_applicable** results now return `{"kind": "absent", "content": <sentence>, "absence": {...}, "envelope": {...}}` on every output format. There is no top-level `data`; a partial result rides under `detail`.
-- **nothing_found** results keep their data or chart (real zeros) and gain the same `absence` block. A chart's subtitle is the declared `measured_nothing` sentence.
-- **measured** results, and results with no envelope, are unchanged.
-
-`absence` gives the state (`not_measured`, `not_permitted`, `not_applicable` or `measured_nothing`), the sentence, the reason, and `declared`. The sentence comes from the function's registered `declaration.absence` (ISSUE-170), looked up by registry name or by dotted path. A function with no declaration gets words built from its own reason, with `declared: False`. `not_established` becomes `not_permitted` only when the result says so itself (`"absence": "not_permitted"`); the reason text is never parsed to guess.
-
-**Consumers to update:** Egeria Advisor's `report_pipeline`/`report_spec_agent` (trellis) treat an unknown kind generically. `content` is among the keys its fallback reads, so it shows the sentence, but it should handle `absent` explicitly. Any Portal tile that reads `data` for these states gets no `data` now.
-
-Tests: `tests/micro-tests/test_issue_171_state_aware_report_spec.py`; three ISSUE-140 tests updated to the new shape.
-
----
-
-### ISSUE-170: `AnalyticFunctionSpec` can't say what its results mean (unit, as-of, basis, absence sentences); added an optional `declaration`
-
-**Layer:** pyegeria · **Status:** in PR (branch `feat/analytic-declaration`) · **Found:** 2026-10-30, Resource Explorer's portal-extensibility evaluation, §3 item 1 (trellis `docs/design-notes/EVAL-PORTAL-EXTENSIBILITY-VS-RE-2026-10-30.md`).
-
-**What:** trellis-analytics' `Declaration` lets a step say what its results are: result kind, each measure's unit, as-of and basis, and a sentence for each way a result can be absent. Resource Explorer renders from that declaration with no per-analysis code. pyegeria's registry, which the Portal also registers into, had no place for it, so a Portal function's meaning lived only in prose.
-
-**Change:** `AnalyticFunctionSpec.declaration: Optional[AnalyticDeclaration]`, plus `MeasureDeclaration`, `BasisDeclaration`, `AbsenceSentences`, `RESULT_KINDS` and `ABSENCE_STATES` in `pyegeria/view/analytic_registry.py`. It is the minimum of trellis's model: `result_kind`, `measures` (required for measure/series/distribution/graph) and all four `absence` sentences. Field names and vocabulary are the same as trellis's. Trellis's richer blocks (extents, confidence, answers, categories, ...) are ignored, not refused. Optional, so every existing entry loads unchanged. All 42 declarations in RE's `analysis_catalog.yaml` validate (checked 2026-10-30). trellis's `StepManifest` already overrides the field with its own `Declaration`, which still works.
-
-**Rule from the evaluation:** a field two consumers need lives here; a field one consumer needs stays in that consumer's subclass. Moving more of trellis's model up waits for a second consumer.
-
-Tests: `tests/micro-tests/test_issue_170_analytic_declaration.py`.
-
----
-
-### ISSUE-169: `_resolve_analytic_function` imported any dotted path a report spec named; now registered names plus an allowlist of module prefixes
-
-**Layer:** pyegeria · **Status:** fixed in #516 (merged 2026-10-30), ships in the next release · **Found:** 2026-10-30, Resource Explorer's portal-extensibility evaluation (gap G6, trellis `docs/design-notes/EVAL-PORTAL-EXTENSIBILITY-VS-RE-2026-10-30.md`).
-
-**What:** `format_set_executor._resolve_analytic_function` ran `importlib.import_module` on whatever module a report spec's `analytic_function` (or an action's `fetch`/`analytic` step, or an `analytic_binders` factory) named. A report spec is data, which can come from a user's report-spec directory or a config tier, so it could make the executor import and call any module on the path.
-
-**Fix (owner's option C, kept quiet: no deprecation warning yet):**
-1. A registered name (`analytic_registry`) resolves to that entry's `function`.
-2. A dotted path some registered entry declares is trusted as before.
-3. Any other dotted path must sit under an allowed module prefix: `PYEGERIA_ANALYTIC_MODULE_PREFIXES` (comma-separated), default `pyegeria`, `trellis_analytics`. A prefix is a package boundary, so `pyegeria` does not admit `pyegeria_extras`. Such a path logs at DEBUG only.
-4. Anything else raises `AnalyticFunctionRefused` (a `ValueError`) before any import.
-
-No downstream spec in egeria-workspaces or trellis names a module outside the default list (checked 2026-10-30). Tests: `tests/micro-tests/test_issue_169_analytic_resolver.py`.
-
-**Later, not now:** once entry-point registration exists (ISSUE-172), consider a deprecation warning for unregistered dotted paths, then registry-only resolution.
-
----
-
-### ISSUE-168: pyegeria can't run on Python 3.14: `nest_asyncio`, applied at import time, makes `asyncio.current_task()` return None
-
-**Layer:** pyegeria · **Status:** fix drafted on branch `fix/issue-168-py314-sync-runner` (not merged) · **Found:** 2026-10-29, when the owner asked why pyegeria caps Python at `<3.14`.
-
-**What:** `pyproject.toml` caps `requires-python` at `<3.14` and CI tests only 3.12/3.13. The release workflow's comment blamed Textual (37 TUI tests failed with `assert task is not None` in `textual/rlock.py` when a 2026-08-19 release run picked up 3.14). Re-run 2026-10-29 on Python 3.14.5 with the cap lifted in a scratch worktree: **162 of 1661 micro-tests fail, all in the Textual apps (`tests/micro-tests/my_profile/`) and `test_my_egeria_serve.py`**; everything else passes.
-
-**Cause:** not Textual (8.2.8 supports 3.14). pyegeria calls `nest_asyncio.apply()` when `pyegeria/view/mermaid_utilities.py` is imported (also `pyegeria/core/mcp_server.py` and three `commands/` modules). With `nest_asyncio` 1.6.0 (no release since 2024), `asyncio.current_task()` returns None inside a task on 3.14 but not on 3.13:
-
-| | 3.13.2 | 3.14.5 |
-|---|---|---|
-| plain `asyncio.run`: `current_task()` set | yes | yes |
-| after `nest_asyncio.apply()` | yes | **no** |
-
-Textual's `RLock` and aiohttp's timeout ("Timeout context manager should be used inside a task") both need it. `nest_asyncio` is there because every sync wrapper (1310 call sites in 41 files) did `asyncio.get_event_loop().run_until_complete(...)`, which fails inside a running loop (Jupyter, Textual) without it. On 3.14 `get_event_loop()` also no longer creates a loop.
-
-**Fix (drafted):**
-- `pyegeria/core/async_runner.run_sync(coro)`: no running loop → this thread's persistent loop; a running loop → one shared background thread with its own persistent loop; called from inside that background loop → a one-off thread (no deadlock).
-- All 1310 sync-wrapper call sites now call `run_sync(...)` (mechanical rewrite); both `make_request` sync paths too (their `run_coroutine_threadsafe(coro, <the same thread's running loop>).result()` would deadlock without `nest_asyncio`).
-- The per-thread httpx session now remembers its event loop and is replaced when the thread runs a different loop (sync calls, then `asyncio.run` of an async call); a session assigned via the setter is kept.
-- `nest_asyncio` removed from pyegeria, `commands/`, `my_egeria`, and the dependency list; `requires-python` is `<3.15`; CI tests 3.12/3.13/3.14; releases stay on 3.13.
-- Tests: `tests/micro-tests/test_async_runner.py` (8). Full micro-tests pass on 3.13 and 3.14 (1669, 0 failed). Live read-only smoke on both versions: plain script, sync calls inside a running loop followed by a direct `await`, sync after `asyncio.run`, three threads.
-
-**Not yet checked:** the Textual apps and the MCP server interactively, and a real Jupyter kernel. **Behaviour change for users:** notebooks that relied on pyegeria applying `nest_asyncio` to make their own `asyncio.run(...)` calls work inside Jupyter must now `await` instead (or apply `nest_asyncio` themselves, on 3.13 or older).
 
 ---
 
@@ -466,6 +364,103 @@ sessions first.
 
 Sorted newest-first by `ISSUE-#` (2026-10-12). ISSUE-91 has two entries
 (the same defect reported twice); both are kept, next to each other.
+
+---
+
+### ISSUE-172: Installed packages couldn't register analytic functions or steps by installing; added the `pyegeria.analytics` entry-point group, read lazily
+
+**Layer:** pyegeria · **Status:** fixed in #519, ships in 6.2.17 · **Found:** 2026-10-30, Resource Explorer's portal-extensibility evaluation (gap G3) and the Architect's `DESIGN-ANALYTIC-LIBRARY-SPLIT-2026-10-30` (LS1: "entry-point group name and manifest loader" go to pyegeria).
+
+**What:** a package could add analytic functions to pyegeria's registry only through `PYEGERIA_ANALYTIC_FUNCTIONS_JSON`/`_MODULES` or a runtime `register_analytic_functions` call. trellis-analytics has its own `trellis.analytics` entry-point group and pushes into the registry by hand (`discovery.register()`), so the Portal sees only what something has remembered to register.
+
+**Change** (`pyegeria/view/analytic_registry.py`):
+- **Group:** `ANALYTIC_ENTRY_POINT_GROUP = "pyegeria.analytics"`, with `trellis.analytics` read as an alias during the split. An entry point names an `AnalyticFunctionSpec` (or a subclass such as trellis's manifests), a list of them, or a callable returning either. That covers both routines and steps (`kind`).
+- **Lazy loading (manifests eager, code lazy, per the design note §3):** nothing is read at import. Entry points are read on the first `get_analytic_registry()` call and cached. `refresh_analytic_functions()` forgets the cache. Only the manifests load then; a function's own module is imported on its first run by the resolver.
+- **Failures:** a broken entry point is recorded with a sentence naming it and the error. The rest still load, and the failures are logged at WARNING and returned by `analytic_entry_point_errors()` (also in `analytic_registry_payload()["entry_point_errors"]`), so "installed, not loadable" never reads as "nothing installed". An installed name that clashes with a built-in or config entry is skipped and reported, never fatal. The same manifest under both groups is not a clash.
+- **Checked with trellis's venv** (2026-10-30): both installed entry points (`context_pack`, `curation_coverage`) are discovered with no errors, and trellis's `discovery.register()` then adds nothing, harmlessly.
+
+**With ISSUE-169:** an entry-point-registered function is trusted by the resolver whatever its module, so installing is the registration path, and the allowlist only governs unregistered dotted paths.
+
+**Not done here:** the design note's split of manifest from runner inside one step's entry point, failure words on first run, and Admin "reload steps" are library/RE-host work (LS3). Whether the Portal replaces `PYEGERIA_REPORT_SPEC_MODULES` with an entry-point group is Mandy's question 2 in that note.
+
+Tests: `tests/micro-tests/test_issue_172_analytic_entry_points.py`.
+
+---
+
+### ISSUE-171: `exec_report_spec` returned an analytic result that was not measured as ordinary data or `empty`; it now returns the function's declared absence sentence
+
+**Layer:** pyegeria · **Status:** fixed in #518, ships in 6.2.17 · **Found:** 2026-10-30, Resource Explorer's portal-extensibility evaluation, §3 item 2.
+
+**What:** ISSUE-139/140 stopped charting a `not_established`/`not_applicable` result. The DICT path and the chart fallback still returned `{"kind": "json", "data": <result>}`, though, so a table or tile showed the routine's placeholder zeros as an answer. And `{"kind": "empty"}` looks the same to a reader whether nothing was found or nobody looked. Egeria Advisor, for example, renders `empty` as "No results returned".
+
+**Change** (`pyegeria/view/format_set_executor.py`):
+- **not_established / not_applicable** results now return `{"kind": "absent", "content": <sentence>, "absence": {...}, "envelope": {...}}` on every output format. There is no top-level `data`; a partial result rides under `detail`.
+- **nothing_found** results keep their data or chart (real zeros) and gain the same `absence` block. A chart's subtitle is the declared `measured_nothing` sentence.
+- **measured** results, and results with no envelope, are unchanged.
+
+`absence` gives the state (`not_measured`, `not_permitted`, `not_applicable` or `measured_nothing`), the sentence, the reason, and `declared`. The sentence comes from the function's registered `declaration.absence` (ISSUE-170), looked up by registry name or by dotted path. A function with no declaration gets words built from its own reason, with `declared: False`. `not_established` becomes `not_permitted` only when the result says so itself (`"absence": "not_permitted"`); the reason text is never parsed to guess.
+
+**Consumers to update:** Egeria Advisor's `report_pipeline`/`report_spec_agent` (trellis) treat an unknown kind generically. `content` is among the keys its fallback reads, so it shows the sentence, but it should handle `absent` explicitly. Any Portal tile that reads `data` for these states gets no `data` now.
+
+Tests: `tests/micro-tests/test_issue_171_state_aware_report_spec.py`; three ISSUE-140 tests updated to the new shape.
+
+---
+
+### ISSUE-170: `AnalyticFunctionSpec` can't say what its results mean (unit, as-of, basis, absence sentences); added an optional `declaration`
+
+**Layer:** pyegeria · **Status:** fixed in #517, ships in 6.2.17 · **Found:** 2026-10-30, Resource Explorer's portal-extensibility evaluation, §3 item 1 (trellis `docs/design-notes/EVAL-PORTAL-EXTENSIBILITY-VS-RE-2026-10-30.md`).
+
+**What:** trellis-analytics' `Declaration` lets a step say what its results are: result kind, each measure's unit, as-of and basis, and a sentence for each way a result can be absent. Resource Explorer renders from that declaration with no per-analysis code. pyegeria's registry, which the Portal also registers into, had no place for it, so a Portal function's meaning lived only in prose.
+
+**Change:** `AnalyticFunctionSpec.declaration: Optional[AnalyticDeclaration]`, plus `MeasureDeclaration`, `BasisDeclaration`, `AbsenceSentences`, `RESULT_KINDS` and `ABSENCE_STATES` in `pyegeria/view/analytic_registry.py`. It is the minimum of trellis's model: `result_kind`, `measures` (required for measure/series/distribution/graph) and all four `absence` sentences. Field names and vocabulary are the same as trellis's. Trellis's richer blocks (extents, confidence, answers, categories, ...) are ignored, not refused. Optional, so every existing entry loads unchanged. All 42 declarations in RE's `analysis_catalog.yaml` validate (checked 2026-10-30). trellis's `StepManifest` already overrides the field with its own `Declaration`, which still works.
+
+**Rule from the evaluation:** a field two consumers need lives here; a field one consumer needs stays in that consumer's subclass. Moving more of trellis's model up waits for a second consumer.
+
+Tests: `tests/micro-tests/test_issue_170_analytic_declaration.py`.
+
+---
+
+### ISSUE-169: `_resolve_analytic_function` imported any dotted path a report spec named; now registered names plus an allowlist of module prefixes
+
+**Layer:** pyegeria · **Status:** fixed in #516, ships in 6.2.17 · **Found:** 2026-10-30, Resource Explorer's portal-extensibility evaluation (gap G6, trellis `docs/design-notes/EVAL-PORTAL-EXTENSIBILITY-VS-RE-2026-10-30.md`).
+
+**What:** `format_set_executor._resolve_analytic_function` ran `importlib.import_module` on whatever module a report spec's `analytic_function` (or an action's `fetch`/`analytic` step, or an `analytic_binders` factory) named. A report spec is data, which can come from a user's report-spec directory or a config tier, so it could make the executor import and call any module on the path.
+
+**Fix (owner's option C, kept quiet: no deprecation warning yet):**
+1. A registered name (`analytic_registry`) resolves to that entry's `function`.
+2. A dotted path some registered entry declares is trusted as before.
+3. Any other dotted path must sit under an allowed module prefix: `PYEGERIA_ANALYTIC_MODULE_PREFIXES` (comma-separated), default `pyegeria`, `trellis_analytics`. A prefix is a package boundary, so `pyegeria` does not admit `pyegeria_extras`. Such a path logs at DEBUG only.
+4. Anything else raises `AnalyticFunctionRefused` (a `ValueError`) before any import.
+
+No downstream spec in egeria-workspaces or trellis names a module outside the default list (checked 2026-10-30). Tests: `tests/micro-tests/test_issue_169_analytic_resolver.py`.
+
+**Later, not now:** once entry-point registration exists (ISSUE-172), consider a deprecation warning for unregistered dotted paths, then registry-only resolution.
+
+---
+
+### ISSUE-168: pyegeria can't run on Python 3.14: `nest_asyncio`, applied at import time, makes `asyncio.current_task()` return None
+
+**Layer:** pyegeria · **Status:** fixed in #513, released in 6.2.16 · **Found:** 2026-10-29, when the owner asked why pyegeria caps Python at `<3.14`.
+
+**What:** `pyproject.toml` caps `requires-python` at `<3.14` and CI tests only 3.12/3.13. The release workflow's comment blamed Textual (37 TUI tests failed with `assert task is not None` in `textual/rlock.py` when a 2026-08-19 release run picked up 3.14). Re-run 2026-10-29 on Python 3.14.5 with the cap lifted in a scratch worktree: **162 of 1661 micro-tests fail, all in the Textual apps (`tests/micro-tests/my_profile/`) and `test_my_egeria_serve.py`**; everything else passes.
+
+**Cause:** not Textual (8.2.8 supports 3.14). pyegeria calls `nest_asyncio.apply()` when `pyegeria/view/mermaid_utilities.py` is imported (also `pyegeria/core/mcp_server.py` and three `commands/` modules). With `nest_asyncio` 1.6.0 (no release since 2024), `asyncio.current_task()` returns None inside a task on 3.14 but not on 3.13:
+
+| | 3.13.2 | 3.14.5 |
+|---|---|---|
+| plain `asyncio.run`: `current_task()` set | yes | yes |
+| after `nest_asyncio.apply()` | yes | **no** |
+
+Textual's `RLock` and aiohttp's timeout ("Timeout context manager should be used inside a task") both need it. `nest_asyncio` is there because every sync wrapper (1310 call sites in 41 files) did `asyncio.get_event_loop().run_until_complete(...)`, which fails inside a running loop (Jupyter, Textual) without it. On 3.14 `get_event_loop()` also no longer creates a loop.
+
+**Fix (drafted):**
+- `pyegeria/core/async_runner.run_sync(coro)`: no running loop → this thread's persistent loop; a running loop → one shared background thread with its own persistent loop; called from inside that background loop → a one-off thread (no deadlock).
+- All 1310 sync-wrapper call sites now call `run_sync(...)` (mechanical rewrite); both `make_request` sync paths too (their `run_coroutine_threadsafe(coro, <the same thread's running loop>).result()` would deadlock without `nest_asyncio`).
+- The per-thread httpx session now remembers its event loop and is replaced when the thread runs a different loop (sync calls, then `asyncio.run` of an async call); a session assigned via the setter is kept.
+- `nest_asyncio` removed from pyegeria, `commands/`, `my_egeria`, and the dependency list; `requires-python` is `<3.15`; CI tests 3.12/3.13/3.14; releases stay on 3.13.
+- Tests: `tests/micro-tests/test_async_runner.py` (8). Full micro-tests pass on 3.13 and 3.14 (1669, 0 failed). Live read-only smoke on both versions: plain script, sync calls inside a running loop followed by a direct `await`, sync after `asyncio.run`, three threads.
+
+**Not yet checked:** the Textual apps and the MCP server interactively, and a real Jupyter kernel. **Behaviour change for users:** notebooks that relied on pyegeria applying `nest_asyncio` to make their own `asyncio.run(...)` calls work inside Jupyter must now `await` instead (or apply `nest_asyncio` themselves, on 3.13 or older).
 
 ---
 
