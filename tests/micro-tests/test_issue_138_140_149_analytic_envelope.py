@@ -74,6 +74,7 @@ def fake_module(monkeypatch):
     for f in (Reader, read_with, measured, not_established, nothing_found, not_applicable, plain_counts, model_result):
         setattr(mod, f.__name__, f)
     monkeypatch.setitem(sys.modules, MOD, mod)
+    monkeypatch.setenv("PYEGERIA_ANALYTIC_MODULE_PREFIXES", f"pyegeria,{MOD}")  # ISSUE-169
 
     def no_egeria(*a, **k):
         raise AssertionError("an analytic routine with no client must not build an Egeria client")
