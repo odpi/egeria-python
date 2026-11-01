@@ -930,7 +930,7 @@ class ActionRequestBody(RequestBody):
 def get_defined_fields(model):
     return {
         field_name: field
-        for field_name, field in model.__fields__.items()
+        for field_name, field in model.model_fields.items()
         if field_name in model.__annotations__  # Only fields defined in the current model
     }
 

@@ -182,7 +182,7 @@ class DataDesigner(ServerClient):
     @dynamic_catch
     async def _async_link_specialized_data_value_specification(
         self, spec_guid: str, grain_guid: str, body: dict | None = None
-    ) -> None:
+    ) -> str | None:
         """
         Link a specialized data value specification (grain) to a data value specification. Async version.
 
@@ -197,7 +197,8 @@ class DataDesigner(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -208,12 +209,12 @@ class DataDesigner(ServerClient):
             f"{self.ref_data_designer_command_base}/data-value-specifications/{spec_guid}"
             f"/specialized-data-value-specifications/{grain_guid}/attach"
         )
-        await self._async_new_relationship_request(url, ["DataValueHierarchyProperties"], body)
+        return await self._async_new_relationship_request(url, ["DataValueHierarchyProperties"], body)
 
     @dynamic_catch
     def link_specialized_data_value_specification(
         self, spec_guid: str, grain_guid: str, body: dict | None = None
-    ) -> None:
+    ) -> str | None:
         """
         Link a specialized data value specification (grain) to a data value specification.
 
@@ -228,14 +229,15 @@ class DataDesigner(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        run_sync(self._async_link_specialized_data_value_specification(spec_guid, grain_guid, body))
+        return run_sync(self._async_link_specialized_data_value_specification(spec_guid, grain_guid, body))
 
     @dynamic_catch
     async def _async_detach_specialized_data_value_specification(
@@ -2226,7 +2228,7 @@ class DataDesigner(ServerClient):
 
     @dynamic_catch
     async def _async_link_member_data_field(self, parent_data_struct_guid: str, member_data_field_guid: str,
-                                            body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                            body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """
         Connect a data structure to a data field. Async version.
 
@@ -2241,7 +2243,8 @@ class DataDesigner(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -2278,12 +2281,13 @@ class DataDesigner(ServerClient):
 
         url = (f"{self.ref_data_designer_command_base}/data-structures/{parent_data_struct_guid}"
                f"/member-data-fields/{member_data_field_guid}/attach")
-        await self._async_new_relationship_request(url, ["MemberDataFieldProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["MemberDataFieldProperties"], body)
         logger.info(f"Data field {member_data_field_guid} attached to Data structure {parent_data_struct_guid}.")
+        return relationship_guid
 
     @dynamic_catch
     def link_member_data_field(self, parent_data_struct_guid: str, member_data_field_guid: str,
-                               body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                               body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """
          Connect a data structure to a data field.
 
@@ -2298,7 +2302,8 @@ class DataDesigner(ServerClient):
 
          Returns
          -------
-         None
+         str | None
+             The GUID of the new relationship, or None if the server did not return one.
 
          Raises
          ------
@@ -2333,7 +2338,7 @@ class DataDesigner(ServerClient):
 
          """
 
-        run_sync(
+        return run_sync(
             self._async_link_member_data_field(parent_data_struct_guid, member_data_field_guid, body))
 
     @dynamic_catch
@@ -2444,18 +2449,19 @@ class DataDesigner(ServerClient):
 
     @dynamic_catch
     async def _async_link_nested_data_field(self, parent_data_field_guid: str, nested_data_field_guid: str,
-                                             body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                             body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Link a nested data field to a parent data field (NestedDataField relationship). Async version."""
         url = (f"{self.ref_data_designer_command_base}/data-fields/{parent_data_field_guid}"
                f"/nested-data-fields/{nested_data_field_guid}/attach")
-        await self._async_new_relationship_request(url, ["NestedDataFieldProperties", "MemberDataFieldProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["NestedDataFieldProperties", "MemberDataFieldProperties"], body)
         logger.info(f"Nested data field {nested_data_field_guid} linked to parent {parent_data_field_guid}.")
+        return relationship_guid
 
     @dynamic_catch
     def link_nested_data_field(self, parent_data_field_guid: str, nested_data_field_guid: str,
-                               body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                               body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Link a nested data field to a parent data field (NestedDataField relationship)."""
-        run_sync(self._async_link_nested_data_field(parent_data_field_guid, nested_data_field_guid, body))
+        return run_sync(self._async_link_nested_data_field(parent_data_field_guid, nested_data_field_guid, body))
 
     @dynamic_catch
     async def _async_detach_nested_data_field(self, parent_data_field_guid: str, nested_data_field_guid: str,
@@ -3591,7 +3597,7 @@ class DataDesigner(ServerClient):
 
     @dynamic_catch
     async def _async_link_data_classification_to_data_field(self, data_classification_guid: str, data_field_guid: str,
-                                                             body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                                             body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """
          Connect a data classification to a data field to guide the survey action service (that checks the data
          quality of a data resource as part of certifying it with the supplied certification type) to the definition
@@ -3611,7 +3617,8 @@ class DataDesigner(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -3642,13 +3649,13 @@ class DataDesigner(ServerClient):
         # these were the old data-class operations, now data value specifications (the common root of
         # DataClass and DataGrain) - a best-effort mapping, not confirmed against a live round trip.
         self._warn_data_classification("link_data_classification_to_data_field", "link_data_value_assignment(data_field_guid, spec_guid)")
-        await self._async_link_data_value_assignment(data_field_guid, data_classification_guid,
+        return await self._async_link_data_value_assignment(data_field_guid, data_classification_guid,
                                                      self._as_value_assignment(body))
 
 
     @dynamic_catch
     def link_data_classification_to_data_field(self, data_classification_guid: str, data_field_guid: str,
-                                               body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                               body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """
         Connect a data classification to a data field to guide the survey action service (that checks the data
          quality of a data resource as part of certifying it with the supplied certification type) to the definition
@@ -3668,7 +3675,8 @@ class DataDesigner(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -3695,7 +3703,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        run_sync(
+        return run_sync(
             self._async_link_data_classification_to_data_field(data_classification_guid, data_field_guid, body))
 
     @dynamic_catch
@@ -3806,7 +3814,7 @@ class DataDesigner(ServerClient):
     #
     @dynamic_catch
     async def _async_link_data_class_definition(self, data_definition_guid: str, data_class_guid: str,
-                                                body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                                body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """
          Connect an element that is part of a data design to a data class to show that the data class should be used as
          the specification for the data values when interpreting the data definition. Request body is optional.
@@ -3823,7 +3831,8 @@ class DataDesigner(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -3853,12 +3862,13 @@ class DataDesigner(ServerClient):
         url = (f"{self.ref_data_designer_command_base}/data-definitions/{data_definition_guid}"
                f"/data-value-specification-definition/{data_class_guid}/attach")
 
-        await self._async_new_relationship_request(url, ["DataValueDefinitionProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["DataValueDefinitionProperties"], body)
         logger.info(f"Data class {data_class_guid} attached to Data definition {data_definition_guid}.")
+        return relationship_guid
 
     @dynamic_catch
     def link_data_class_definition(self, data_definition_guid: str, data_class_guid: str,
-                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """
          Connect an element that is part of a data design to a data class to show that the data class should be used as
          the specification for the data values when interpreting the data definition. Request body is optional.
@@ -3875,7 +3885,8 @@ class DataDesigner(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -3902,7 +3913,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        run_sync(self._async_link_data_class_definition(data_definition_guid, data_class_guid, body))
+        return run_sync(self._async_link_data_class_definition(data_definition_guid, data_class_guid, body))
 
     @dynamic_catch
     async def _async_detach_data_class_definition(self, data_definition_guid: str, data_class_guid: str,
@@ -4007,18 +4018,19 @@ class DataDesigner(ServerClient):
 
     @dynamic_catch
     async def _async_link_nested_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
-                                             body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                             body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Link a child data class to a parent via DataClassComposition relationship. Async version."""
         url = (f"{self.ref_data_designer_command_base}/data-classes/{parent_data_class_guid}"
                f"/nested-data-classes/{child_data_class_guid}/attach")
-        await self._async_new_relationship_request(url, ["DataClassCompositionProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["DataClassCompositionProperties"], body)
         logger.info(f"Nested data class {child_data_class_guid} linked to parent {parent_data_class_guid}.")
+        return relationship_guid
 
     @dynamic_catch
     def link_nested_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
-                               body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                               body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Link a child data class to a parent via DataClassComposition relationship."""
-        run_sync(self._async_link_nested_data_class(parent_data_class_guid, child_data_class_guid, body))
+        return run_sync(self._async_link_nested_data_class(parent_data_class_guid, child_data_class_guid, body))
 
     @dynamic_catch
     async def _async_detach_nested_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
@@ -4038,7 +4050,7 @@ class DataDesigner(ServerClient):
 
     @dynamic_catch
     async def _async_link_semantic_definition(self, data_definition_guid: str, glossary_term_guid: str,
-                                              body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                              body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """
         Connect an element that is part of a data design to a glossary term to show that the term should be used as
         the semantic definition for the data values when interpreting the data definition. Request body is optional.
@@ -4055,7 +4067,8 @@ class DataDesigner(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -4085,12 +4098,13 @@ class DataDesigner(ServerClient):
         url = (f"{self.ref_data_designer_command_base}/data-definitions/{data_definition_guid}"
                f"/semantic-definition/{glossary_term_guid}/attach")
 
-        await self._async_new_relationship_request(url, ["SemanticDefinitionProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["SemanticDefinitionProperties"], body)
         logger.info(f"Data class {data_definition_guid} attached to term definition {glossary_term_guid}.")
+        return relationship_guid
 
     @dynamic_catch
     def link_semantic_definition(self, data_definition_guid: str, glossary_term_guid: str,
-                                 body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                 body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """
         Connect an element that is part of a data design to a glossary term to show that the term should be used as
         the semantic definition for the data values when interpreting the data definition. Request body is optional.
@@ -4107,7 +4121,8 @@ class DataDesigner(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -4134,7 +4149,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        run_sync(self._async_link_semantic_definition(data_definition_guid, glossary_term_guid, body))
+        return run_sync(self._async_link_semantic_definition(data_definition_guid, glossary_term_guid, body))
 
     @dynamic_catch
     async def _async_detach_semantic_definition(self, data_definition_guid: str, glossary_term_guid: str,
@@ -4239,7 +4254,7 @@ class DataDesigner(ServerClient):
 
 
     async def _async_link_certification_type_to_data_structure(self, certification_type_guid: str,
-                                                               data_structure_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                                               data_structure_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """
          Connect a certification type to a data structure to guide the survey action service (that checks the data
          quality of a data resource as part of certifying it with the supplied certification type) to the definition
@@ -4259,7 +4274,8 @@ class DataDesigner(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -4288,12 +4304,13 @@ class DataDesigner(ServerClient):
 
         url = (f"{self.ref_data_designer_command_base}/certification-types/{certification_type_guid}"
                f"/data-structure-definition/{data_structure_guid}/attach")
-        await self._async_new_relationship_request(url, ["CertificationTypeProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["CertificationTypeProperties"], body)
         logger.info(f"Certification type {certification_type_guid} linked to {data_structure_guid}.")
+        return relationship_guid
 
 
     def link_certification_type_to_data_structure(self, certification_type_guid: str, data_structure_guid: str,
-                                                  body: dict |NewRelationshipRequestBody = None) -> None:
+                                                  body: dict |NewRelationshipRequestBody = None) -> str | None:
         """
         Connect a certification type to a data structure to guide the survey action service (that checks the data
          quality of a data resource as part of certifying it with the supplied certification type) to the definition
@@ -4313,7 +4330,8 @@ class DataDesigner(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -4340,7 +4358,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        run_sync(
+        return run_sync(
             self._async_link_certification_type_to_data_structure(certification_type_guid, data_structure_guid, body))
 
     async def _async_detach_certification_type_from_data_structure(self, certification_type_guid: str,
@@ -4797,20 +4815,21 @@ class DataDesigner(ServerClient):
         return None
 
     @dynamic_catch
-    async def _async_link_data_value_assignment(self, element_guid: str, spec_guid: str, body: dict = None) -> None:
+    async def _async_link_data_value_assignment(self, element_guid: str, spec_guid: str, body: dict = None) -> str | None:
         """
         Link a Data Value Specification to an element (DataValueAssignment relationship). Async version.
         """
         url = f"{self.ref_data_designer_command_base}/elements/{element_guid}/data-value-specifications/{spec_guid}/attach"
-        await self._async_new_relationship_request(url, ["DataValueAssignmentProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["DataValueAssignmentProperties"], body)
         logger.info(f"Data Value Specification {spec_guid} assigned to element {element_guid}.")
+        return relationship_guid
 
     @dynamic_catch
-    def link_data_value_assignment(self, element_guid: str, spec_guid: str, body: dict = None) -> None:
+    def link_data_value_assignment(self, element_guid: str, spec_guid: str, body: dict = None) -> str | None:
         """
         Link a Data Value Specification to an element (DataValueAssignment relationship). Sync version.
         """
-        run_sync(self._async_link_data_value_assignment(element_guid, spec_guid, body))
+        return run_sync(self._async_link_data_value_assignment(element_guid, spec_guid, body))
 
     @dynamic_catch
     async def _async_detach_data_value_assignment(self, element_guid: str, spec_guid: str, body: dict = None) -> None:
@@ -4891,17 +4910,18 @@ class DataDesigner(ServerClient):
 
     @dynamic_catch
     async def _async_link_linked_data_field(self, data_field_one_guid: str, data_field_two_guid: str,
-                                            body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                            body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach two related data fields (LinkedDataField relationship). Async version."""
         url = f"{self.ref_data_designer_command_base}/data-fields/{data_field_one_guid}/linked-data-fields/{data_field_two_guid}/attach"
-        await self._async_new_relationship_request(url, ["LinkedDataFieldProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["LinkedDataFieldProperties"], body)
         logger.info(f"Data field {data_field_two_guid} linked to data field {data_field_one_guid}.")
+        return relationship_guid
 
     @dynamic_catch
     def link_linked_data_field(self, data_field_one_guid: str, data_field_two_guid: str,
-                               body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                               body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach two related data fields (LinkedDataField relationship)."""
-        run_sync(self._async_link_linked_data_field(data_field_one_guid, data_field_two_guid, body))
+        return run_sync(self._async_link_linked_data_field(data_field_one_guid, data_field_two_guid, body))
 
     @dynamic_catch
     async def _async_detach_linked_data_field(self, data_field_one_guid: str, data_field_two_guid: str,
@@ -4922,17 +4942,18 @@ class DataDesigner(ServerClient):
 
     @dynamic_catch
     async def _async_link_schema_attribute_definition(self, data_field_guid: str, schema_attribute_guid: str,
-                                                       body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                                       body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a data field to the schema attribute that defines it (SchemaAttributeDefinition relationship). Async version."""
         url = f"{self.ref_data_designer_command_base}/data-fields/{data_field_guid}/schema-attribute-definitions/{schema_attribute_guid}/attach"
-        await self._async_new_relationship_request(url, ["SchemaAttributeDefinitionProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["SchemaAttributeDefinitionProperties"], body)
         logger.info(f"Schema attribute {schema_attribute_guid} linked to data field {data_field_guid}.")
+        return relationship_guid
 
     @dynamic_catch
     def link_schema_attribute_definition(self, data_field_guid: str, schema_attribute_guid: str,
-                                         body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                         body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a data field to the schema attribute that defines it (SchemaAttributeDefinition relationship)."""
-        run_sync(self._async_link_schema_attribute_definition(data_field_guid, schema_attribute_guid, body))
+        return run_sync(self._async_link_schema_attribute_definition(data_field_guid, schema_attribute_guid, body))
 
     @dynamic_catch
     async def _async_detach_schema_attribute_definition(self, data_field_guid: str, schema_attribute_guid: str,
@@ -4953,17 +4974,18 @@ class DataDesigner(ServerClient):
 
     @dynamic_catch
     async def _async_link_schema_type_definition(self, data_structure_guid: str, schema_type_guid: str,
-                                                  body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                                  body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a data structure to the schema type that defines it (SchemaTypeDefinition relationship). Async version."""
         url = f"{self.ref_data_designer_command_base}/data-structures/{data_structure_guid}/schema-type-definitions/{schema_type_guid}/attach"
-        await self._async_new_relationship_request(url, ["SchemaTypeDefinitionProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["SchemaTypeDefinitionProperties"], body)
         logger.info(f"Schema type {schema_type_guid} linked to data structure {data_structure_guid}.")
+        return relationship_guid
 
     @dynamic_catch
     def link_schema_type_definition(self, data_structure_guid: str, schema_type_guid: str,
-                                    body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                    body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a data structure to the schema type that defines it (SchemaTypeDefinition relationship)."""
-        run_sync(self._async_link_schema_type_definition(data_structure_guid, schema_type_guid, body))
+        return run_sync(self._async_link_schema_type_definition(data_structure_guid, schema_type_guid, body))
 
     @dynamic_catch
     async def _async_detach_schema_type_definition(self, data_structure_guid: str, schema_type_guid: str,

@@ -957,13 +957,14 @@ class ReferenceDataManager(ServerClient):
 
         """
         url = f"{self.ref_data_command_base}/valid-values/{vv_set_guid}/members/{vv_member_guid}/attach"
-        await self._async_new_relationship_request(url, ["ValidValueMemberProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["ValidValueMemberProperties"], body)
         logger.info(f"Linked valid value definition {vv_set_guid} to {vv_member_guid}")
+        return relationship_guid
 
     @dynamic_catch
     def link_valid_value_definition(
             self,
-            vv_set_guid: str, vv_member_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+            vv_set_guid: str, vv_member_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Link a valid value definition to another valid value definition.
 
         Parameters
@@ -1005,7 +1006,7 @@ class ReferenceDataManager(ServerClient):
         }
 
         """
-        run_sync(self._async_link_valid_value_member(vv_set_guid, vv_member_guid, body))
+        return run_sync(self._async_link_valid_value_member(vv_set_guid, vv_member_guid, body))
 
     @dynamic_catch
     async def _async_detach_valid_value_member(self, vv_set_guid: str, vv_member_guid: str,
@@ -1099,7 +1100,7 @@ class ReferenceDataManager(ServerClient):
 
     @dynamic_catch
     async def _async_link_valid_values_assignment(
-            self, element_guid: str, vv_def_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+            self, element_guid: str, vv_def_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Attach a valid value to a consumer - probably a schema element or data set. Async version.
 
         Parameters
@@ -1140,12 +1141,13 @@ class ReferenceDataManager(ServerClient):
 
         """
         url = f"{self.ref_data_command_base}/elements/{element_guid}/valid-values-assignment/{vv_def_guid}/attach"
-        await self._async_new_relationship_request(url, ["ValidValuesAssignmentProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["ValidValuesAssignmentProperties"], body)
         logger.info(f"Linked valid value definition {vv_def_guid} to consumer {element_guid}")
+        return relationship_guid
 
     @dynamic_catch
     def link_valid_values_assignment(
-            self, element_guid: str, vv_def_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+            self, element_guid: str, vv_def_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Attach a valid value to a consumer - probably a schema element or data set.
 
         Parameters
@@ -1185,7 +1187,7 @@ class ReferenceDataManager(ServerClient):
         }
 
         """
-        run_sync(self._async_link_valid_values_assignment(element_guid, vv_def_guid, body))
+        return run_sync(self._async_link_valid_values_assignment(element_guid, vv_def_guid, body))
 
     @dynamic_catch
     async def _async_detach_valid_values_assignment(
@@ -1278,7 +1280,7 @@ class ReferenceDataManager(ServerClient):
 
     @dynamic_catch
     async def _async_link_reference_value_assignment(
-            self, element_guid: str, vv_def_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+            self, element_guid: str, vv_def_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Attach a valid value to a tagged element. Async version.
 
         Parameters
@@ -1323,12 +1325,13 @@ class ReferenceDataManager(ServerClient):
 
         """
         url = f"{self.ref_data_command_base}/elements/{element_guid}/reference-value-assignment/{vv_def_guid}/attach"
-        await self._async_new_relationship_request(url, ["ReferenceValueAssignmentProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["ReferenceValueAssignmentProperties"], body)
         logger.info(f"Linked reference value {vv_def_guid} to tagged element {element_guid}")
+        return relationship_guid
 
     @dynamic_catch
     def link_reference_value_assignment(
-            self, element_guid: str, vv_def_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+            self, element_guid: str, vv_def_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Attach a valid value to a tagged element.
 
         Parameters
@@ -1372,7 +1375,7 @@ class ReferenceDataManager(ServerClient):
         }
 
         """
-        run_sync(self._async_link_reference_value_assignment(element_guid, vv_def_guid, body))
+        return run_sync(self._async_link_reference_value_assignment(element_guid, vv_def_guid, body))
 
     @dynamic_catch
     async def _async_detach_reference_value_assignment(
@@ -1660,7 +1663,7 @@ class ReferenceDataManager(ServerClient):
     @dynamic_catch
     async def _async_link_associated_valid_values(
             self, vv_def_one_guid: str, vv_def_two_guid: str,
-            body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+            body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Link two valid value definitions as associated (related) values. Async version.
 
         Parameters
@@ -1702,13 +1705,14 @@ class ReferenceDataManager(ServerClient):
 
         """
         url = f"{self.ref_data_command_base}/valid-values/{vv_def_one_guid}/associated-valid-values/{vv_def_two_guid}/attach"
-        await self._async_new_relationship_request(url, ["ValidValueAssociationProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["ValidValueAssociationProperties"], body)
         logger.info(f"Linked associated valid values {vv_def_one_guid} and {vv_def_two_guid}")
+        return relationship_guid
 
     @dynamic_catch
     def link_associated_valid_values(
             self, vv_def_one_guid: str, vv_def_two_guid: str,
-            body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+            body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Link two valid value definitions as associated (related) values.
 
         Parameters
@@ -1749,7 +1753,7 @@ class ReferenceDataManager(ServerClient):
         }
 
         """
-        run_sync(self._async_link_associated_valid_values(vv_def_one_guid, vv_def_two_guid, body))
+        return run_sync(self._async_link_associated_valid_values(vv_def_one_guid, vv_def_two_guid, body))
 
     @dynamic_catch
     async def _async_detach_associated_valid_values(
@@ -1845,7 +1849,7 @@ class ReferenceDataManager(ServerClient):
     @dynamic_catch
     async def _async_link_consistent_valid_values(
             self, vv_def_one_guid: str, vv_def_two_guid: str,
-            body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+            body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Link two valid value definitions as consistent with one another. Async version.
 
         Parameters
@@ -1884,13 +1888,14 @@ class ReferenceDataManager(ServerClient):
 
         """
         url = f"{self.ref_data_command_base}/valid-values/{vv_def_one_guid}/consistent-valid-values/{vv_def_two_guid}/attach"
-        await self._async_new_relationship_request(url, None, body)
+        relationship_guid = await self._async_new_relationship_request(url, None, body)
         logger.info(f"Linked consistent valid values {vv_def_one_guid} and {vv_def_two_guid}")
+        return relationship_guid
 
     @dynamic_catch
     def link_consistent_valid_values(
             self, vv_def_one_guid: str, vv_def_two_guid: str,
-            body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+            body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Link two valid value definitions as consistent with one another.
 
         Parameters
@@ -1926,7 +1931,7 @@ class ReferenceDataManager(ServerClient):
         }
 
         """
-        run_sync(self._async_link_consistent_valid_values(vv_def_one_guid, vv_def_two_guid, body))
+        return run_sync(self._async_link_consistent_valid_values(vv_def_one_guid, vv_def_two_guid, body))
 
     @dynamic_catch
     async def _async_detach_consistent_valid_values(
@@ -2022,7 +2027,7 @@ class ReferenceDataManager(ServerClient):
     @dynamic_catch
     async def _async_link_mapped_valid_values(
             self, vv_def_one_guid: str, vv_def_two_guid: str,
-            body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+            body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Link two valid value definitions as a mapping from one to the other. Async version.
 
         Parameters
@@ -2068,13 +2073,14 @@ class ReferenceDataManager(ServerClient):
 
         """
         url = f"{self.ref_data_command_base}/valid-values/{vv_def_one_guid}/mapped-valid-values/{vv_def_two_guid}/attach"
-        await self._async_new_relationship_request(url, ["ValidValuesMappingProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["ValidValuesMappingProperties"], body)
         logger.info(f"Linked mapped valid values {vv_def_one_guid} and {vv_def_two_guid}")
+        return relationship_guid
 
     @dynamic_catch
     def link_mapped_valid_values(
             self, vv_def_one_guid: str, vv_def_two_guid: str,
-            body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+            body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Link two valid value definitions as a mapping from one to the other.
 
         Parameters
@@ -2119,7 +2125,7 @@ class ReferenceDataManager(ServerClient):
         }
 
         """
-        run_sync(self._async_link_mapped_valid_values(vv_def_one_guid, vv_def_two_guid, body))
+        return run_sync(self._async_link_mapped_valid_values(vv_def_one_guid, vv_def_two_guid, body))
 
     @dynamic_catch
     async def _async_detach_mapped_valid_values(

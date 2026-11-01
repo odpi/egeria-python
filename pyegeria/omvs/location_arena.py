@@ -336,7 +336,7 @@ class LocationArena(ServerClient):
 
     @dynamic_catch
     async def _async_link_peer_locations(self, location1_guid: str, location2_guid: str,
-                                         body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                         body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Link peer locations. Async version.
 
         Parameters
@@ -350,7 +350,8 @@ class LocationArena(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -372,8 +373,9 @@ class LocationArena(ServerClient):
         ```
         """
         url = f"{self.ref_location_command_base}/locations/{location1_guid}/adjacent-locations/{location2_guid}/attach"
-        await self._async_new_relationship_request(url, ["AdjacentLocationProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["AdjacentLocationProperties"], body)
         logger.info(f"Linking location {location1_guid} to location {location2_guid}")
+        return relationship_guid
 
     @dynamic_catch
     def link_peer_locations(self, location1_guid: str, location2_guid: str,
@@ -391,7 +393,8 @@ class LocationArena(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -412,7 +415,7 @@ class LocationArena(ServerClient):
         }
         ```
         """
-        run_sync(self._async_link_peer_locations(location1_guid, location2_guid, body))
+        return run_sync(self._async_link_peer_locations(location1_guid, location2_guid, body))
 
     @dynamic_catch
     async def _async_detach_peer_locations(self, location1_guid: str, location2_guid: str,
@@ -502,7 +505,7 @@ class LocationArena(ServerClient):
 
     @dynamic_catch
     async def _async_link_nested_location(self, location_guid: str, nested_location_guid: str,
-                                          body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                          body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ AAttach a super location to a nested location.
             Async version.
 
@@ -550,8 +553,9 @@ class LocationArena(ServerClient):
         """
 
         url = f"{self.ref_location_command_base}/locations/{location_guid}/nested-locations/{nested_location_guid}/attach"
-        await self._async_new_relationship_request(url, ["NestedLocationProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["NestedLocationProperties"], body)
         logger.info(f"Linking element {location_guid} to nested location  {nested_location_guid}")
+        return relationship_guid
 
     @dynamic_catch
     def link_nested_location(self, location_guid: str, nested_location_guid: str,
@@ -600,7 +604,7 @@ class LocationArena(ServerClient):
         }
 
         """
-        run_sync(self._async_link_nested_location(location_guid, nested_location_guid, body))
+        return run_sync(self._async_link_nested_location(location_guid, nested_location_guid, body))
 
     @dynamic_catch
     async def _async_detach_nested_location(self, location_guid: str, nested_location_guid: str,
@@ -691,7 +695,7 @@ class LocationArena(ServerClient):
 
     @dynamic_catch
     async def _async_link_known_location(self, element_guid: str, location_guid: str,
-                                         body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                         body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Attach an element to its location.
             Async version.
 
@@ -739,8 +743,9 @@ class LocationArena(ServerClient):
         """
 
         url = f"{self.ref_location_command_base}/elements/{element_guid}/known-locations/{location_guid}/attach"
-        await self._async_new_relationship_request(url, ["KnownLocationProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["KnownLocationProperties"], body)
         logger.info(f"Linking element {element_guid} to location {location_guid}")
+        return relationship_guid
 
     @dynamic_catch
     def link_known_location(self, element_guid: str, location_guid: str,
@@ -790,7 +795,7 @@ class LocationArena(ServerClient):
         }
 
         """
-        run_sync(self._async_link_known_location(element_guid, location_guid, body))
+        return run_sync(self._async_link_known_location(element_guid, location_guid, body))
 
     @dynamic_catch
     async def _async_detach_known_location(self, element_guid: str, location_guid: str,

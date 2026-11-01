@@ -522,18 +522,19 @@ class SchemaMaker(ServerClient):
 
     @dynamic_catch
     async def _async_link_nested_schema_attribute(self, schema_attribute_guid: str, nested_schema_attribute_guid: str,
-                                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a nested schema attribute to its parent schema attribute (NestedSchemaAttribute relationship). Async version."""
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/"
                f"schema-attributes/{schema_attribute_guid}/nested-schema-attributes/{nested_schema_attribute_guid}/attach")
-        await self._async_new_relationship_request(url, ["NestedSchemaAttributeProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["NestedSchemaAttributeProperties"], body)
         logger.info(f"Nested schema attribute {nested_schema_attribute_guid} linked to parent {schema_attribute_guid}.")
+        return relationship_guid
 
     @dynamic_catch
     def link_nested_schema_attribute(self, schema_attribute_guid: str, nested_schema_attribute_guid: str,
-                                     body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                     body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a nested schema attribute to its parent schema attribute (NestedSchemaAttribute relationship)."""
-        run_sync(self._async_link_nested_schema_attribute(schema_attribute_guid, nested_schema_attribute_guid, body))
+        return run_sync(self._async_link_nested_schema_attribute(schema_attribute_guid, nested_schema_attribute_guid, body))
 
     @dynamic_catch
     async def _async_detach_nested_schema_attribute(self, schema_attribute_guid: str, nested_schema_attribute_guid: str,
@@ -555,18 +556,19 @@ class SchemaMaker(ServerClient):
 
     @dynamic_catch
     async def _async_link_attribute_for_schema(self, schema_type_guid: str, schema_attribute_guid: str,
-                                               body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                               body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a schema attribute to the schema type that it belongs to (AttributeForSchema relationship). Async version."""
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/"
                f"schema-types/{schema_type_guid}/attribute-for-schema/{schema_attribute_guid}/attach")
-        await self._async_new_relationship_request(url, ["AttributeForSchemaProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["AttributeForSchemaProperties"], body)
         logger.info(f"Schema attribute {schema_attribute_guid} linked to schema type {schema_type_guid}.")
+        return relationship_guid
 
     @dynamic_catch
     def link_attribute_for_schema(self, schema_type_guid: str, schema_attribute_guid: str,
-                                  body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                  body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a schema attribute to the schema type that it belongs to (AttributeForSchema relationship)."""
-        run_sync(self._async_link_attribute_for_schema(schema_type_guid, schema_attribute_guid, body))
+        return run_sync(self._async_link_attribute_for_schema(schema_type_guid, schema_attribute_guid, body))
 
     @dynamic_catch
     async def _async_detach_attribute_for_schema(self, schema_type_guid: str, schema_attribute_guid: str,
@@ -588,18 +590,19 @@ class SchemaMaker(ServerClient):
 
     @dynamic_catch
     async def _async_link_foreign_key(self, primary_key_column_guid: str, foreign_key_column_guid: str,
-                                      body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                      body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a foreign key column to the primary key column that it refers to (ForeignKey relationship). Async version."""
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/"
                f"schema-attributes/{primary_key_column_guid}/foreign-keys/{foreign_key_column_guid}/attach")
-        await self._async_new_relationship_request(url, ["ForeignKeyProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["ForeignKeyProperties"], body)
         logger.info(f"Foreign key column {foreign_key_column_guid} linked to primary key column {primary_key_column_guid}.")
+        return relationship_guid
 
     @dynamic_catch
     def link_foreign_key(self, primary_key_column_guid: str, foreign_key_column_guid: str,
-                         body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                         body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a foreign key column to the primary key column that it refers to (ForeignKey relationship)."""
-        run_sync(self._async_link_foreign_key(primary_key_column_guid, foreign_key_column_guid, body))
+        return run_sync(self._async_link_foreign_key(primary_key_column_guid, foreign_key_column_guid, body))
 
     @dynamic_catch
     async def _async_detach_foreign_key(self, primary_key_column_guid: str, foreign_key_column_guid: str,
@@ -621,18 +624,19 @@ class SchemaMaker(ServerClient):
 
     @dynamic_catch
     async def _async_link_external_schema_type(self, schema_element_guid: str, schema_type_guid: str,
-                                                body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                                body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a schema element to a reusable, externally-defined schema type (LinkedExternalSchemaType relationship). Async version."""
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/"
                f"schema-elements/{schema_element_guid}/linked-external-schema-types/{schema_type_guid}/attach")
-        await self._async_new_relationship_request(url, ["LinkedExternalSchemaTypeProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["LinkedExternalSchemaTypeProperties"], body)
         logger.info(f"External schema type {schema_type_guid} linked to schema element {schema_element_guid}.")
+        return relationship_guid
 
     @dynamic_catch
     def link_external_schema_type(self, schema_element_guid: str, schema_type_guid: str,
-                                  body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                  body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a schema element to a reusable, externally-defined schema type (LinkedExternalSchemaType relationship)."""
-        run_sync(self._async_link_external_schema_type(schema_element_guid, schema_type_guid, body))
+        return run_sync(self._async_link_external_schema_type(schema_element_guid, schema_type_guid, body))
 
     @dynamic_catch
     async def _async_detach_external_schema_type(self, schema_element_guid: str, schema_type_guid: str,
@@ -654,18 +658,19 @@ class SchemaMaker(ServerClient):
 
     @dynamic_catch
     async def _async_link_map_from_schema_type(self, schema_element_guid: str, schema_type_guid: str,
-                                                body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                                body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach the 'from' end of a map schema type (MapFromElementType relationship). Async version."""
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/"
                f"schema-elements/{schema_element_guid}/map-from-element-types/{schema_type_guid}/attach")
-        await self._async_new_relationship_request(url, ["MapFromElementTypeProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["MapFromElementTypeProperties"], body)
         logger.info(f"Map-from schema type {schema_type_guid} linked to schema element {schema_element_guid}.")
+        return relationship_guid
 
     @dynamic_catch
     def link_map_from_schema_type(self, schema_element_guid: str, schema_type_guid: str,
-                                  body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                  body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach the 'from' end of a map schema type (MapFromElementType relationship)."""
-        run_sync(self._async_link_map_from_schema_type(schema_element_guid, schema_type_guid, body))
+        return run_sync(self._async_link_map_from_schema_type(schema_element_guid, schema_type_guid, body))
 
     @dynamic_catch
     async def _async_detach_map_from_schema_type(self, schema_element_guid: str, schema_type_guid: str,
@@ -687,18 +692,19 @@ class SchemaMaker(ServerClient):
 
     @dynamic_catch
     async def _async_link_map_to_schema_type(self, schema_element_guid: str, schema_type_guid: str,
-                                              body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                              body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach the 'to' end of a map schema type (MapToElementType relationship). Async version."""
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/"
                f"schema-elements/{schema_element_guid}/map-to-element-types/{schema_type_guid}/attach")
-        await self._async_new_relationship_request(url, ["MapToElementTypeProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["MapToElementTypeProperties"], body)
         logger.info(f"Map-to schema type {schema_type_guid} linked to schema element {schema_element_guid}.")
+        return relationship_guid
 
     @dynamic_catch
     def link_map_to_schema_type(self, schema_element_guid: str, schema_type_guid: str,
-                                body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach the 'to' end of a map schema type (MapToElementType relationship)."""
-        run_sync(self._async_link_map_to_schema_type(schema_element_guid, schema_type_guid, body))
+        return run_sync(self._async_link_map_to_schema_type(schema_element_guid, schema_type_guid, body))
 
     @dynamic_catch
     async def _async_detach_map_to_schema_type(self, schema_element_guid: str, schema_type_guid: str,
@@ -720,18 +726,19 @@ class SchemaMaker(ServerClient):
 
     @dynamic_catch
     async def _async_link_graph_edge(self, graph_edge_guid: str, graph_vertex_guid: str,
-                                     body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                     body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a graph edge to one of the vertices it connects (GraphEdgeLink relationship). Async version."""
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/"
                f"graph-edges/{graph_edge_guid}/graph-vertices/{graph_vertex_guid}/attach")
-        await self._async_new_relationship_request(url, ["GraphEdgeLinkProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["GraphEdgeLinkProperties"], body)
         logger.info(f"Graph edge {graph_edge_guid} linked to graph vertex {graph_vertex_guid}.")
+        return relationship_guid
 
     @dynamic_catch
     def link_graph_edge(self, graph_edge_guid: str, graph_vertex_guid: str,
-                        body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                        body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a graph edge to one of the vertices it connects (GraphEdgeLink relationship)."""
-        run_sync(self._async_link_graph_edge(graph_edge_guid, graph_vertex_guid, body))
+        return run_sync(self._async_link_graph_edge(graph_edge_guid, graph_vertex_guid, body))
 
     @dynamic_catch
     async def _async_detach_graph_edge(self, graph_edge_guid: str, graph_vertex_guid: str,
@@ -753,18 +760,19 @@ class SchemaMaker(ServerClient):
 
     @dynamic_catch
     async def _async_link_query_target(self, schema_element_guid: str, query_target_schema_element_guid: str,
-                                       body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                       body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a query target to a derived schema element (DerivedSchemaTypeQueryTarget relationship). Async version."""
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/"
                f"schema-elements/{schema_element_guid}/query-targets/{query_target_schema_element_guid}/attach")
-        await self._async_new_relationship_request(url, ["DerivedSchemaTypeQueryTargetProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["DerivedSchemaTypeQueryTargetProperties"], body)
         logger.info(f"Query target {query_target_schema_element_guid} linked to schema element {schema_element_guid}.")
+        return relationship_guid
 
     @dynamic_catch
     def link_query_target(self, schema_element_guid: str, query_target_schema_element_guid: str,
-                          body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                          body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a query target to a derived schema element (DerivedSchemaTypeQueryTarget relationship)."""
-        run_sync(self._async_link_query_target(schema_element_guid, query_target_schema_element_guid, body))
+        return run_sync(self._async_link_query_target(schema_element_guid, query_target_schema_element_guid, body))
 
     @dynamic_catch
     async def _async_detach_query_target(self, schema_element_guid: str, query_target_schema_element_guid: str,
@@ -786,18 +794,19 @@ class SchemaMaker(ServerClient):
 
     @dynamic_catch
     async def _async_link_schema(self, element_guid: str, schema_type_guid: str,
-                                 body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                 body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a schema type to the element it describes (SchemaTypeAssociation relationship). Async version."""
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/"
                f"elements/{element_guid}/schema-types/{schema_type_guid}/attach")
-        await self._async_new_relationship_request(url, ["SchemaProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["SchemaProperties"], body)
         logger.info(f"Schema type {schema_type_guid} linked to element {element_guid}.")
+        return relationship_guid
 
     @dynamic_catch
     def link_schema(self, element_guid: str, schema_type_guid: str,
-                    body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                    body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a schema type to the element it describes (SchemaTypeAssociation relationship)."""
-        run_sync(self._async_link_schema(element_guid, schema_type_guid, body))
+        return run_sync(self._async_link_schema(element_guid, schema_type_guid, body))
 
     @dynamic_catch
     async def _async_detach_schema(self, element_guid: str, schema_type_guid: str,
@@ -819,18 +828,19 @@ class SchemaMaker(ServerClient):
 
     @dynamic_catch
     async def _async_link_relational_db_schema(self, database_schema_type_list_guid: str, relational_db_schema_type_guid: str,
-                                               body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                               body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a relational database schema to the schema type list it belongs to (RelationalDBSchema relationship). Async version."""
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/"
                f"relational-db-schema-type-lists/{database_schema_type_list_guid}/relational-db-schemas/{relational_db_schema_type_guid}/attach")
-        await self._async_new_relationship_request(url, ["RelationalDBSchemaProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["RelationalDBSchemaProperties"], body)
         logger.info(f"Relational DB schema {relational_db_schema_type_guid} linked to schema type list {database_schema_type_list_guid}.")
+        return relationship_guid
 
     @dynamic_catch
     def link_relational_db_schema(self, database_schema_type_list_guid: str, relational_db_schema_type_guid: str,
-                                  body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                  body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a relational database schema to the schema type list it belongs to (RelationalDBSchema relationship)."""
-        run_sync(self._async_link_relational_db_schema(
+        return run_sync(self._async_link_relational_db_schema(
             database_schema_type_list_guid, relational_db_schema_type_guid, body))
 
     @dynamic_catch
@@ -853,18 +863,19 @@ class SchemaMaker(ServerClient):
 
     @dynamic_catch
     async def _async_link_api_operations(self, api_schema_type_guid: str, api_operation_guid: str,
-                                         body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                         body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach an API operation to the API schema type it belongs to (APIOperations relationship). Async version."""
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/"
                f"api-schema-types/{api_schema_type_guid}/api-operations/{api_operation_guid}/attach")
-        await self._async_new_relationship_request(url, ["APIOperationsProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["APIOperationsProperties"], body)
         logger.info(f"API operation {api_operation_guid} linked to API schema type {api_schema_type_guid}.")
+        return relationship_guid
 
     @dynamic_catch
     def link_api_operations(self, api_schema_type_guid: str, api_operation_guid: str,
-                            body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                            body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach an API operation to the API schema type it belongs to (APIOperations relationship)."""
-        run_sync(self._async_link_api_operations(api_schema_type_guid, api_operation_guid, body))
+        return run_sync(self._async_link_api_operations(api_schema_type_guid, api_operation_guid, body))
 
     @dynamic_catch
     async def _async_detach_api_operations(self, api_schema_type_guid: str, api_operation_guid: str,
@@ -886,18 +897,19 @@ class SchemaMaker(ServerClient):
 
     @dynamic_catch
     async def _async_link_api_header(self, api_operation_guid: str, schema_type_guid: str,
-                                     body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                     body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a schema type as the header for an API operation (APIHeader relationship). Async version."""
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/"
                f"api-operations/{api_operation_guid}/api-headers/{schema_type_guid}/attach")
-        await self._async_new_relationship_request(url, ["APIHeaderProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["APIHeaderProperties"], body)
         logger.info(f"API header schema type {schema_type_guid} linked to API operation {api_operation_guid}.")
+        return relationship_guid
 
     @dynamic_catch
     def link_api_header(self, api_operation_guid: str, schema_type_guid: str,
-                        body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                        body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a schema type as the header for an API operation (APIHeader relationship)."""
-        run_sync(self._async_link_api_header(api_operation_guid, schema_type_guid, body))
+        return run_sync(self._async_link_api_header(api_operation_guid, schema_type_guid, body))
 
     @dynamic_catch
     async def _async_detach_api_header(self, api_operation_guid: str, schema_type_guid: str,
@@ -919,18 +931,19 @@ class SchemaMaker(ServerClient):
 
     @dynamic_catch
     async def _async_link_api_request(self, api_operation_guid: str, schema_type_guid: str,
-                                      body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                      body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a schema type as the request for an API operation (APIRequest relationship). Async version."""
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/"
                f"api-operations/{api_operation_guid}/api-requests/{schema_type_guid}/attach")
-        await self._async_new_relationship_request(url, ["APIRequestProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["APIRequestProperties"], body)
         logger.info(f"API request schema type {schema_type_guid} linked to API operation {api_operation_guid}.")
+        return relationship_guid
 
     @dynamic_catch
     def link_api_request(self, api_operation_guid: str, schema_type_guid: str,
-                         body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                         body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a schema type as the request for an API operation (APIRequest relationship)."""
-        run_sync(self._async_link_api_request(api_operation_guid, schema_type_guid, body))
+        return run_sync(self._async_link_api_request(api_operation_guid, schema_type_guid, body))
 
     @dynamic_catch
     async def _async_detach_api_request(self, api_operation_guid: str, schema_type_guid: str,
@@ -952,18 +965,19 @@ class SchemaMaker(ServerClient):
 
     @dynamic_catch
     async def _async_link_api_response(self, api_operation_guid: str, schema_type_guid: str,
-                                       body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                       body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a schema type as the response for an API operation (APIResponse relationship). Async version."""
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/"
                f"api-operations/{api_operation_guid}/api-responses/{schema_type_guid}/attach")
-        await self._async_new_relationship_request(url, ["APIResponseProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["APIResponseProperties"], body)
         logger.info(f"API response schema type {schema_type_guid} linked to API operation {api_operation_guid}.")
+        return relationship_guid
 
     @dynamic_catch
     def link_api_response(self, api_operation_guid: str, schema_type_guid: str,
-                          body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                          body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a schema type as the response for an API operation (APIResponse relationship)."""
-        run_sync(self._async_link_api_response(api_operation_guid, schema_type_guid, body))
+        return run_sync(self._async_link_api_response(api_operation_guid, schema_type_guid, body))
 
     @dynamic_catch
     async def _async_detach_api_response(self, api_operation_guid: str, schema_type_guid: str,
@@ -985,18 +999,19 @@ class SchemaMaker(ServerClient):
 
     @dynamic_catch
     async def _async_link_schema_type_option(self, schema_element_guid: str, schema_type_guid: str,
-                                             body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                             body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach an optional schema type to a schema element (SchemaTypeOption relationship). Async version."""
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/"
                f"schema-elements/{schema_element_guid}/schema-type-options/{schema_type_guid}/attach")
-        await self._async_new_relationship_request(url, ["SchemaTypeOptionProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["SchemaTypeOptionProperties"], body)
         logger.info(f"Schema type option {schema_type_guid} linked to schema element {schema_element_guid}.")
+        return relationship_guid
 
     @dynamic_catch
     def link_schema_type_option(self, schema_element_guid: str, schema_type_guid: str,
-                                body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach an optional schema type to a schema element (SchemaTypeOption relationship)."""
-        run_sync(self._async_link_schema_type_option(schema_element_guid, schema_type_guid, body))
+        return run_sync(self._async_link_schema_type_option(schema_element_guid, schema_type_guid, body))
 
     @dynamic_catch
     async def _async_detach_schema_type_option(self, schema_element_guid: str, schema_type_guid: str,

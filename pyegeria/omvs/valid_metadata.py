@@ -2717,7 +2717,7 @@ class ValidMetadataManager(ServerClient):
 
     @dynamic_catch
     async def _async_link_specification_property(
-            self, element_guid: str, vv_def_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+            self, element_guid: str, vv_def_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Link an element to a valid value that represents one of its specification properties. Async version.
 
         Parameters
@@ -2757,12 +2757,13 @@ class ValidMetadataManager(ServerClient):
         """
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/valid-metadata/"
                f"elements/{element_guid}/specification-properties/{vv_def_guid}/attach")
-        await self._async_new_relationship_request(url, ["SpecificationPropertyAssignmentProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["SpecificationPropertyAssignmentProperties"], body)
         logger.info(f"Linked specification property {vv_def_guid} to element {element_guid}")
+        return relationship_guid
 
     @dynamic_catch
     def link_specification_property(
-            self, element_guid: str, vv_def_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+            self, element_guid: str, vv_def_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Link an element to a valid value that represents one of its specification properties.
 
         Parameters
@@ -2800,7 +2801,7 @@ class ValidMetadataManager(ServerClient):
         }
 
         """
-        run_sync(self._async_link_specification_property(element_guid, vv_def_guid, body))
+        return run_sync(self._async_link_specification_property(element_guid, vv_def_guid, body))
 
     @dynamic_catch
     async def _async_detach_specification_property(

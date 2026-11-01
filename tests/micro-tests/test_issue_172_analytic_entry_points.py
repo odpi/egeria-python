@@ -1,6 +1,7 @@
 """ISSUE-172: installed packages register analytic functions and steps through the
-`pyegeria.analytics` entry-point group (trellis.analytics as an alias), read lazily
-on first use of the registry, with a broken entry point reported, not fatal."""
+`pyegeria.analytics` entry-point group, read lazily on first use of the registry,
+with a broken entry point reported, not fatal. The `trellis.analytics` alias group
+was removed in 6.2.19."""
 import sys
 
 import pytest
@@ -43,10 +44,10 @@ def installed(monkeypatch):
     reg.clear_runtime_analytic_functions()
 
 
-def test_functions_and_steps_from_both_groups_are_registered(installed):
+def test_functions_and_steps_are_registered(installed):
     groups, _ = installed
     groups[reg.ANALYTIC_ENTRY_POINT_GROUP].append(FakeEntryPoint("one", "ep_pkg:ROUTINE", ROUTINE))
-    groups["trellis.analytics"].append(FakeEntryPoint("two", "ep_pkg:steps", lambda: [STEP]))
+    groups[reg.ANALYTIC_ENTRY_POINT_GROUP].append(FakeEntryPoint("two", "ep_pkg:steps", lambda: [STEP]))
     registry = reg.get_analytic_registry()
     assert registry["ep-routine"].function == "ep_pkg.routines.coverage"
     assert registry["ep-step"].kind == "step"
@@ -104,18 +105,17 @@ def test_installed_name_clashing_with_a_builtin_is_skipped_not_fatal(installed):
     assert any("was skipped" in e for e in reg.analytic_entry_point_errors().values())
 
 
-def test_same_manifest_under_both_groups_is_not_a_clash(installed):
-    groups, _ = installed
-    groups[reg.ANALYTIC_ENTRY_POINT_GROUP].append(FakeEntryPoint("one", "ep_pkg:ROUTINE", ROUTINE))
+def test_trellis_alias_group_is_no_longer_read(installed):
+    groups, calls = installed
     groups["trellis.analytics"].append(FakeEntryPoint("one", "ep_pkg:ROUTINE", ROUTINE))
-    assert "ep-routine" in reg.get_analytic_registry()
-    assert reg.analytic_entry_point_errors() == {}
+    assert "ep-routine" not in reg.get_analytic_registry()
+    assert calls == [reg.ANALYTIC_ENTRY_POINT_GROUP]
 
 
 def test_runtime_register_skipping_existing_names_still_works(installed):
     """trellis-analytics' register() checks get_analytic_registry() and skips names present."""
     groups, _ = installed
-    groups["trellis.analytics"].append(FakeEntryPoint("one", "ep_pkg:ROUTINE", ROUTINE))
+    groups[reg.ANALYTIC_ENTRY_POINT_GROUP].append(FakeEntryPoint("one", "ep_pkg:ROUTINE", ROUTINE))
     existing = set(reg.get_analytic_registry())
     new = {n: m for n, m in {"ep-routine": ROUTINE}.items() if n not in existing}
     assert new == {}
