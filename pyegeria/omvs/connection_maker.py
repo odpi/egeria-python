@@ -927,7 +927,7 @@ class ConnectionMaker(ServerClient):
 
     async def _async_link_connection_connector_type(self, connection_guid: str, connector_type_guid: str, body: Union[NewRelationshipRequestBody, dict] = None):
         url = f"{self.base_url}/connections/{connection_guid}/connector-types/{connector_type_guid}/attach"
-        await self._async_new_relationship_request(url, ["ConnectionConnectorTypeProperties"], body)
+        return await self._async_new_relationship_request(url, ["ConnectionConnectorTypeProperties"], body)
 
     def link_connection_connector_type(self, connection_guid: str, connector_type_guid: str, body: Union[NewRelationshipRequestBody, dict] = None):
         return run_sync(self._async_link_connection_connector_type(connection_guid, connector_type_guid, body))
@@ -941,7 +941,7 @@ class ConnectionMaker(ServerClient):
 
     async def _async_link_connection_endpoint(self, connection_guid: str, endpoint_guid: str, body: Union[NewRelationshipRequestBody, dict] = None):
         url = f"{self.base_url}/connections/{connection_guid}/endpoints/{endpoint_guid}/attach"
-        await self._async_new_relationship_request(url, ["ConnectToEndpointProperties"], body)
+        return await self._async_new_relationship_request(url, ["ConnectToEndpointProperties"], body)
 
     def link_connection_endpoint(self, connection_guid: str, endpoint_guid: str, body: Union[NewRelationshipRequestBody, dict] = None):
         return run_sync(self._async_link_connection_endpoint(connection_guid, endpoint_guid, body))
@@ -955,7 +955,7 @@ class ConnectionMaker(ServerClient):
 
     async def _async_link_embedded_connection(self, connection_guid: str, embedded_connection_guid: str, body: Union[NewRelationshipRequestBody, dict] = None):
         url = f"{self.base_url}/connections/{connection_guid}/embedded-connections/{embedded_connection_guid}/attach"
-        await self._async_new_relationship_request(url, ["EmbeddedConnectionProperties"], body)
+        return await self._async_new_relationship_request(url, ["EmbeddedConnectionProperties"], body)
 
     def link_embedded_connection(self, connection_guid: str, embedded_connection_guid: str, body: Union[NewRelationshipRequestBody, dict] = None):
         return run_sync(self._async_link_embedded_connection(connection_guid, embedded_connection_guid, body))
@@ -969,7 +969,7 @@ class ConnectionMaker(ServerClient):
 
     async def _async_link_asset_to_connection(self, asset_guid: str, connection_guid: str, body: Union[NewRelationshipRequestBody, dict] = None):
         url = f"{self.base_url}/assets/{asset_guid}/connections/{connection_guid}/attach"
-        await self._async_new_relationship_request(url, ["ResourceConnectionProperties"], body)
+        return await self._async_new_relationship_request(url, ["ResourceConnectionProperties"], body)
 
     def link_asset_to_connection(self, asset_guid: str, connection_guid: str, body: Union[NewRelationshipRequestBody, dict] = None):
         return run_sync(self._async_link_asset_to_connection(asset_guid, connection_guid, body))
@@ -1001,7 +1001,7 @@ class ConnectionMaker(ServerClient):
         }
         """
         url = f"{self.base_url}/elements/{element_guid}/connections/{connection_guid}/attach"
-        await self._async_new_relationship_request(url, ["ResourceConnectionProperties"], body)
+        return await self._async_new_relationship_request(url, ["ResourceConnectionProperties"], body)
 
     @dynamic_catch
     def link_resource_to_connection(self, element_guid: str, connection_guid: str, body: Union[NewRelationshipRequestBody, dict] = None):
@@ -1021,7 +1021,7 @@ class ConnectionMaker(ServerClient):
 
     async def _async_link_endpoint_to_it_asset(self, asset_guid: str, endpoint_guid: str, body: Union[NewRelationshipRequestBody, dict] = None):
         url = f"{self.base_url}/assets/{asset_guid}/endpoints/{endpoint_guid}/attach"
-        await self._async_new_relationship_request(url, ["ServerEndpointProperties"], body)
+        return await self._async_new_relationship_request(url, ["ServerEndpointProperties"], body)
 
     def link_endpoint_to_it_asset(self, asset_guid: str, endpoint_guid: str, body: Union[NewRelationshipRequestBody, dict] = None):
         return run_sync(self._async_link_endpoint_to_it_asset(asset_guid, endpoint_guid, body))

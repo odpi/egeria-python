@@ -18,7 +18,6 @@ import inspect
 import json
 import os
 import sys
-import warnings
 from typing import Any, Dict, Optional, Union
 
 from loguru import logger
@@ -161,33 +160,25 @@ def _resolve_analytic_function(func_decl: str):
     return _import_callable(func_decl)
 
 
-_DOTTED_PATH_WARNED: set = set()
-
-
 def resolve_report_spec_function(func_decl: str):
     """Resolve a function a report spec names: its `analytic_function`, or a
     function-valued parameter such as metric_trend's `metric_path`.
 
-    Report specs name analytic functions by registered name (ISSUE-173). A
-    dotted path still resolves, under the same checks as
-    `_resolve_analytic_function`, but warns with a DeprecationWarning and one log
-    line per path, naming the registered name to use. Dotted paths are refused
-    from the next release.
+    A report spec names an analytic function by its registered name (ISSUE-173).
+    Anything else, including a dotted path, raises AnalyticFunctionRefused before
+    any import; the message names the registered name to use when one exists.
+    Dotted paths were deprecated in 6.2.18 and are refused from 6.2.19.
     """
-    func = _resolve_analytic_function(func_decl)  # a refused path raises before any warning
     registry = get_analytic_registry_functions()
-    if func_decl in registry:
-        return func
+    if isinstance(func_decl, str) and func_decl in registry:
+        return _resolve_analytic_function(func_decl)
     names = sorted(n for n, s in registry.items() if s.function == func_decl)
-    instead = (f"use the registered name '{names[0]}'" if names else
+    instead = (f"use its registered name '{names[0]}'" if names else
                "register it through the 'pyegeria.analytics' entry-point group and use its name")
-    message = (f"Report spec names analytic function '{func_decl}' by dotted path; {instead}. "
-               f"Dotted paths in report specs are deprecated and will be refused in the next release.")
-    warnings.warn(message, DeprecationWarning, stacklevel=2)
-    if func_decl not in _DOTTED_PATH_WARNED:
-        _DOTTED_PATH_WARNED.add(func_decl)
-        logger.warning(message)
-    return func
+    raise AnalyticFunctionRefused(
+        f"Report spec names analytic function {func_decl!r}, which is not a registered name; {instead}. "
+        f"Report specs name analytic functions by registered name only (dotted paths are refused "
+        f"from pyegeria 6.2.19).")
 
 
 # Parameter names an analytic function uses for its leading client argument(s)

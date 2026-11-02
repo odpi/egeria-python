@@ -977,7 +977,7 @@ class ProductManager(CollectionManager):
         digital_product_guid: str,
         product_manager_role_guid: str,
         body: Optional[dict | NewRelationshipRequestBody] = None,
-    ) -> None:
+    ) -> str | None:
         """Attach a product manager role to a digital product. Async version.
 
         Parameters
@@ -991,7 +991,8 @@ class ProductManager(CollectionManager):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -1016,15 +1017,16 @@ class ProductManager(CollectionManager):
             f"{self.product_manager_command_root}/digital-products/"
             f"{digital_product_guid}/product-managers/{product_manager_role_guid}/attach"
         )
-        await self._async_new_relationship_request(url, ["AssignmentScopeProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["AssignmentScopeProperties"], body)
         logger.info(f"Attached digital product manager {digital_product_guid} -> {product_manager_role_guid}")
+        return relationship_guid
 
     def link_product_manager(
         self,
         digital_product_guid: str,
         product_manager_role_guid: str,
         body: Optional[dict | NewRelationshipRequestBody] = None,
-    ) -> None:
+    ) -> str | None:
         """Attach a product manager role to a digital product.
 
         Parameters
@@ -1038,7 +1040,8 @@ class ProductManager(CollectionManager):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -1059,7 +1062,7 @@ class ProductManager(CollectionManager):
         }
         ```
         """
-        run_sync(
+        return run_sync(
             self._async_link_product_manager(
                 digital_product_guid, product_manager_role_guid, body
             )

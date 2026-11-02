@@ -193,16 +193,16 @@ class PrivacyOfficer(ServerClient):
 
     @dynamic_catch
     async def _async_link_data_processing_specification(self, element_guid: str, data_processing_description_guid: str,
-                                                         body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                                         body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a data processing description to the element it specifies processing for (DataProcessingSpecification relationship). Async version."""
         url = f"{self.privacy_officer_base_url}/elements/{element_guid}/data-processing-specifications/{data_processing_description_guid}/attach"
-        await self._async_new_relationship_request(url, ["DataProcessingSpecificationProperties"], body)
+        return await self._async_new_relationship_request(url, ["DataProcessingSpecificationProperties"], body)
 
     @dynamic_catch
     def link_data_processing_specification(self, element_guid: str, data_processing_description_guid: str,
-                                           body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                           body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a data processing description to the element it specifies processing for (DataProcessingSpecification relationship)."""
-        run_sync(self._async_link_data_processing_specification(element_guid, data_processing_description_guid, body))
+        return run_sync(self._async_link_data_processing_specification(element_guid, data_processing_description_guid, body))
 
     @dynamic_catch
     async def _async_detach_data_processing_specification(self, element_guid: str, data_processing_description_guid: str,
@@ -219,16 +219,16 @@ class PrivacyOfficer(ServerClient):
 
     @dynamic_catch
     async def _async_link_detailed_processing_action(self, parent_processing_action_guid: str, child_processing_action_guid: str,
-                                                      body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                                      body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a child processing action to the parent action it details (DetailedProcessingAction relationship). Async version."""
         url = f"{self.privacy_officer_base_url}/data-processing-actions/{parent_processing_action_guid}/detailed-processing-actions/{child_processing_action_guid}/attach"
-        await self._async_new_relationship_request(url, ["DetailedProcessingActionProperties"], body)
+        return await self._async_new_relationship_request(url, ["DetailedProcessingActionProperties"], body)
 
     @dynamic_catch
     def link_detailed_processing_action(self, parent_processing_action_guid: str, child_processing_action_guid: str,
-                                        body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                        body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a child processing action to the parent action it details (DetailedProcessingAction relationship)."""
-        run_sync(self._async_link_detailed_processing_action(parent_processing_action_guid, child_processing_action_guid, body))
+        return run_sync(self._async_link_detailed_processing_action(parent_processing_action_guid, child_processing_action_guid, body))
 
     @dynamic_catch
     async def _async_detach_detailed_processing_action(self, parent_processing_action_guid: str, child_processing_action_guid: str,

@@ -20,7 +20,8 @@ import pytest
 from pydantic import BaseModel, ValidationError
 
 import pyegeria.view.format_set_executor as fse
-from pyegeria.view.analytic_registry import AnalyticFunctionSpec
+from pyegeria.view.analytic_registry import (
+    AnalyticFunctionSpec, clear_runtime_analytic_functions, register_analytic_functions)
 
 MOD = "fake_trellis_analytics"
 
@@ -81,10 +82,19 @@ def fake_module(monkeypatch):
 
     monkeypatch.setattr(fse, "EgeriaTech", no_egeria)
     monkeypatch.setattr(fse, "get_report_spec_heading", lambda name: "Heading")
+    clear_runtime_analytic_functions()
     yield
+    clear_runtime_analytic_functions()
 
 
 def _use_spec(monkeypatch, action: dict):
+    # Report specs name functions by registered name (ISSUE-173): register the
+    # fake module's function under its own short name and use that.
+    path = action.get("analytic_function")
+    if path and path.startswith(f"{MOD}."):
+        name = f"t138-{path.rsplit('.', 1)[1]}"
+        register_analytic_functions({name: {"name": name, "function": path}})
+        action = {**action, "analytic_function": name}
     fmt = {"target_type": None, "action": {"function": None, **action}}
     monkeypatch.setattr(fse, "select_report_spec", lambda name, fmt_type: fmt)
 

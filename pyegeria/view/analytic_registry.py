@@ -59,7 +59,6 @@ __all__ = [
     'AnalyticRegistryCollision',
     'refresh_analytic_functions',
     'ANALYTIC_ENTRY_POINT_GROUP',
-    'ANALYTIC_ENTRY_POINT_ALIASES',
     'analytic_entry_point_errors',
     'get_analytic_registry',
     'analytic_registry_payload',
@@ -627,13 +626,11 @@ _RUNTIME_ANALYTIC_FUNCTIONS = AnalyticFunctionDict()
 _CONFIG_ANALYTIC_FUNCTIONS = AnalyticFunctionDict()
 
 # Installed packages register analytic functions and steps through this entry-point
-# group (ISSUE-172). trellis-analytics' group is read as an alias during the library
-# split. An entry point names an AnalyticFunctionSpec (or subclass), a list of them, or
+# group (ISSUE-172; the `trellis.analytics` alias was removed in 6.2.19). An entry point names an AnalyticFunctionSpec (or subclass), a list of them, or
 # a callable returning either. Read lazily on first use of the registry; only the
 # manifests are loaded then -- a function's own module is imported on its first run,
 # by format_set_executor._resolve_analytic_function.
 ANALYTIC_ENTRY_POINT_GROUP = "pyegeria.analytics"
-ANALYTIC_ENTRY_POINT_ALIASES = ("trellis.analytics",)
 _ENTRY_POINT_ANALYTIC_FUNCTIONS: Optional[AnalyticFunctionDict] = None  # None = not read yet
 _ENTRY_POINT_ERRORS: Dict[str, str] = {}
 
@@ -705,7 +702,7 @@ def _read_entry_points() -> Tuple[AnalyticFunctionDict, Dict[str, str]]:
     in the returned errors, naming it, and the rest still load."""
     found = AnalyticFunctionDict()
     errors: Dict[str, str] = {}
-    for group in (ANALYTIC_ENTRY_POINT_GROUP, *ANALYTIC_ENTRY_POINT_ALIASES):
+    for group in (ANALYTIC_ENTRY_POINT_GROUP,):
         for ep in entry_points(group=group):
             label = f"{group}:{ep.name}"
             try:

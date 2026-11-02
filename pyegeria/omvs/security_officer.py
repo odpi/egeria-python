@@ -637,16 +637,16 @@ class SecurityOfficer(ServerClient):
 
     @dynamic_catch
     async def _async_link_resource_permissions(self, secrets_collection_guid: str, security_access_control_guid: str,
-                                                body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                                body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a security access control to a secrets collection it grants permission for (ResourcePermissions relationship). Async version."""
         url = f"{self.security_officer_base_url}/secrets-collections/{secrets_collection_guid}/resource-permissions/{security_access_control_guid}/attach"
-        await self._async_new_relationship_request(url, ["ResourcePermissionsProperties"], body)
+        return await self._async_new_relationship_request(url, ["ResourcePermissionsProperties"], body)
 
     @dynamic_catch
     def link_resource_permissions(self, secrets_collection_guid: str, security_access_control_guid: str,
-                                  body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                  body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a security access control to a secrets collection it grants permission for (ResourcePermissions relationship)."""
-        run_sync(self._async_link_resource_permissions(secrets_collection_guid, security_access_control_guid, body))
+        return run_sync(self._async_link_resource_permissions(secrets_collection_guid, security_access_control_guid, body))
 
     @dynamic_catch
     async def _async_detach_resource_permissions(self, secrets_collection_guid: str, security_access_control_guid: str,
@@ -663,16 +663,16 @@ class SecurityOfficer(ServerClient):
 
     @dynamic_catch
     async def _async_link_secrets_collection_security_list(self, secrets_collection_guid: str, security_list_guid: str,
-                                                            body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                                            body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a security list to a secrets collection it governs (SecretsCollectionSecurityList relationship). Async version."""
         url = f"{self.security_officer_base_url}/secrets-collections/{secrets_collection_guid}/security-lists/{security_list_guid}/attach"
-        await self._async_new_relationship_request(url, ["SecretsCollectionSecurityListProperties"], body)
+        return await self._async_new_relationship_request(url, ["SecretsCollectionSecurityListProperties"], body)
 
     @dynamic_catch
     def link_secrets_collection_security_list(self, secrets_collection_guid: str, security_list_guid: str,
-                                               body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                               body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a security list to a secrets collection it governs (SecretsCollectionSecurityList relationship)."""
-        run_sync(self._async_link_secrets_collection_security_list(secrets_collection_guid, security_list_guid, body))
+        return run_sync(self._async_link_secrets_collection_security_list(secrets_collection_guid, security_list_guid, body))
 
     @dynamic_catch
     async def _async_detach_secrets_collection_security_list(self, secrets_collection_guid: str, security_list_guid: str,
@@ -689,16 +689,16 @@ class SecurityOfficer(ServerClient):
 
     @dynamic_catch
     async def _async_link_user_account(self, secrets_collection_guid: str, user_identity_guid: str,
-                                       body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                       body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a user identity to a secrets collection holding its account secrets (UserAccount relationship). Async version."""
         url = f"{self.security_officer_base_url}/secrets-collections/{secrets_collection_guid}/user-accounts/{user_identity_guid}/attach"
-        await self._async_new_relationship_request(url, ["UserAccountProperties"], body)
+        return await self._async_new_relationship_request(url, ["UserAccountProperties"], body)
 
     @dynamic_catch
     def link_user_account(self, secrets_collection_guid: str, user_identity_guid: str,
-                          body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                          body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a user identity to a secrets collection holding its account secrets (UserAccount relationship)."""
-        run_sync(self._async_link_user_account(secrets_collection_guid, user_identity_guid, body))
+        return run_sync(self._async_link_user_account(secrets_collection_guid, user_identity_guid, body))
 
     @dynamic_catch
     async def _async_detach_user_account(self, secrets_collection_guid: str, user_identity_guid: str,
@@ -1087,7 +1087,7 @@ class SecurityOfficer(ServerClient):
 
     @dynamic_catch
     async def _async_link_control_applicability(self, soa_guid: str, control_guid: str,
-                                                body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                                body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Link a control to a statement of applicability (ControlApplicability relationship). Async version.
 
         ControlApplicability is not multi-link: linking a control that is already linked updates the
@@ -1104,11 +1104,11 @@ class SecurityOfficer(ServerClient):
         """
         url = (f"{self.security_officer_base_url}/statements-of-applicability/{soa_guid}"
                f"/control-applicability/{control_guid}/attach")
-        await self._async_new_relationship_request(url, ["ControlApplicabilityProperties"], body)
+        return await self._async_new_relationship_request(url, ["ControlApplicabilityProperties"], body)
 
     @dynamic_catch
     def link_control_applicability(self, soa_guid: str, control_guid: str,
-                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Link a control to a statement of applicability (ControlApplicability relationship).
 
         ControlApplicability is not multi-link: linking a control that is already linked updates the
@@ -1123,7 +1123,7 @@ class SecurityOfficer(ServerClient):
         body : dict | NewRelationshipRequestBody, optional
             Request body whose properties class is ControlApplicabilityProperties.
         """
-        run_sync(self._async_link_control_applicability(soa_guid, control_guid, body))
+        return run_sync(self._async_link_control_applicability(soa_guid, control_guid, body))
 
     @dynamic_catch
     async def _async_detach_control_applicability(self, soa_guid: str, control_guid: str,

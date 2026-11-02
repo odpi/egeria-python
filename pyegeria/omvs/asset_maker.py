@@ -2310,7 +2310,7 @@ class AssetMaker(ServerClient):
         data_set_guid: str,
         data_content_asset_guid: str,
         body: dict | NewRelationshipRequestBody | None = None,
-    ) -> None:
+    ) -> str | None:
         """Attach a data set to another asset (typically a data store) that is supplying the data. Async version.
 
         Parameters
@@ -2324,7 +2324,8 @@ class AssetMaker(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -2351,7 +2352,7 @@ class AssetMaker(ServerClient):
         }
         """
         url = f"{self.asset_command_root}/data-sets/{data_set_guid}/data-set-content/{data_content_asset_guid}/attach"
-        await self._async_new_relationship_request(url, ["DataSetContentProperties"], body)
+        return await self._async_new_relationship_request(url, ["DataSetContentProperties"], body)
 
     @dynamic_catch
     def link_data_set_content(
@@ -2359,7 +2360,7 @@ class AssetMaker(ServerClient):
         data_set_guid: str,
         data_content_asset_guid: str,
         body: dict | NewRelationshipRequestBody | None = None,
-    ) -> None:
+    ) -> str | None:
         """Attach a data set to another asset (typically a data store) that is supplying the data.
 
         Parameters
@@ -2373,7 +2374,8 @@ class AssetMaker(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -2399,7 +2401,7 @@ class AssetMaker(ServerClient):
           }
         }
         """
-        run_sync(
+        return run_sync(
             self._async_link_data_set_content(data_set_guid, data_content_asset_guid, body)
         )
 
@@ -2586,7 +2588,7 @@ class AssetMaker(ServerClient):
         originator_guid: str,
         report_guid: str,
         body: dict | NewRelationshipRequestBody | None = None,
-    ) -> None:
+    ) -> str | None:
         """Create a relationship that identifies the originator of a report. Async version.
 
         Parameters
@@ -2600,7 +2602,8 @@ class AssetMaker(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -2625,7 +2628,7 @@ class AssetMaker(ServerClient):
         }
         """
         url = f"{self.asset_command_root}/elements/{originator_guid}/originated-reports/{report_guid}/attach"
-        await self._async_new_relationship_request(url, ["ReportOriginatorProperties"], body)
+        return await self._async_new_relationship_request(url, ["ReportOriginatorProperties"], body)
 
     @dynamic_catch
     def link_report_originator(
@@ -2633,7 +2636,7 @@ class AssetMaker(ServerClient):
         originator_guid: str,
         report_guid: str,
         body: dict | NewRelationshipRequestBody | None = None,
-    ) -> None:
+    ) -> str | None:
         """Create a relationship that identifies the originator of a report.
 
         Parameters
@@ -2647,7 +2650,8 @@ class AssetMaker(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -2671,7 +2675,7 @@ class AssetMaker(ServerClient):
           }
         }
         """
-        run_sync(
+        return run_sync(
             self._async_link_report_originator(originator_guid, report_guid, body)
         )
 
@@ -2744,7 +2748,7 @@ class AssetMaker(ServerClient):
         prior_report_guid: str,
         report_guid: str,
         body: dict | NewRelationshipRequestBody | None = None,
-    ) -> None:
+    ) -> str | None:
         """Create a relationship that identifies the prior publishing of a report. Async version.
 
         Parameters
@@ -2758,7 +2762,8 @@ class AssetMaker(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -2783,7 +2788,7 @@ class AssetMaker(ServerClient):
         }
         """
         url = f"{self.asset_command_root}/reports/{prior_report_guid}/follow-on-reports/{report_guid}/attach"
-        await self._async_new_relationship_request(url, ["ReportDependencyProperties"], body)
+        return await self._async_new_relationship_request(url, ["ReportDependencyProperties"], body)
 
     @dynamic_catch
     def link_report_dependency(
@@ -2791,7 +2796,7 @@ class AssetMaker(ServerClient):
         prior_report_guid: str,
         report_guid: str,
         body: dict | NewRelationshipRequestBody | None = None,
-    ) -> None:
+    ) -> str | None:
         """Create a relationship that identifies the prior publishing of a report.
 
         Parameters
@@ -2805,7 +2810,8 @@ class AssetMaker(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -2829,7 +2835,7 @@ class AssetMaker(ServerClient):
           }
         }
         """
-        run_sync(
+        return run_sync(
             self._async_link_report_dependency(prior_report_guid, report_guid, body)
         )
 
@@ -2902,7 +2908,7 @@ class AssetMaker(ServerClient):
         subject_guid: str,
         report_guid: str,
         body: dict | NewRelationshipRequestBody | None = None,
-    ) -> None:
+    ) -> str | None:
         """Create a relationship that identifies the subject of a report. Async version.
 
         Parameters
@@ -2916,7 +2922,8 @@ class AssetMaker(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -2941,7 +2948,7 @@ class AssetMaker(ServerClient):
         }
         """
         url = f"{self.asset_command_root}/elements/{subject_guid}/reports/{report_guid}/attach"
-        await self._async_new_relationship_request(url, ["ReportSubjectProperties"], body)
+        return await self._async_new_relationship_request(url, ["ReportSubjectProperties"], body)
 
     @dynamic_catch
     def link_report_subject(
@@ -2949,7 +2956,7 @@ class AssetMaker(ServerClient):
         subject_guid: str,
         report_guid: str,
         body: dict | NewRelationshipRequestBody | None = None,
-    ) -> None:
+    ) -> str | None:
         """Create a relationship that identifies the subject of a report.
 
         Parameters
@@ -2963,7 +2970,8 @@ class AssetMaker(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -2987,7 +2995,7 @@ class AssetMaker(ServerClient):
           }
         }
         """
-        run_sync(
+        return run_sync(
             self._async_link_report_subject(subject_guid, report_guid, body)
         )
 
@@ -3430,7 +3438,7 @@ class AssetMaker(ServerClient):
         asset_guid: str,
         destination_guid: str,
         body: dict | NewRelationshipRequestBody | None = None,
-    ) -> None:
+    ) -> str | None:
         """Create a relationship that represents the deployment of an IT infrastructure asset to a destination.
         Async version.
 
@@ -3445,7 +3453,8 @@ class AssetMaker(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -3472,7 +3481,7 @@ class AssetMaker(ServerClient):
         }
         """
         url = f"{self.asset_command_root}/assets/{asset_guid}/deployed-on/{destination_guid}/attach"
-        await self._async_new_relationship_request(url, ["DeployedOnProperties"], body)
+        return await self._async_new_relationship_request(url, ["DeployedOnProperties"], body)
 
     @dynamic_catch
     def deploy_it_asset(
@@ -3480,7 +3489,7 @@ class AssetMaker(ServerClient):
         asset_guid: str,
         destination_guid: str,
         body: dict | NewRelationshipRequestBody | None = None,
-    ) -> None:
+    ) -> str | None:
         """Create a relationship that represents the deployment of an IT infrastructure asset to a destination.
 
         Parameters
@@ -3494,7 +3503,8 @@ class AssetMaker(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -3520,7 +3530,7 @@ class AssetMaker(ServerClient):
           }
         }
         """
-        run_sync(
+        return run_sync(
             self._async_deploy_it_asset(asset_guid, destination_guid, body)
         )
 
@@ -3593,7 +3603,7 @@ class AssetMaker(ServerClient):
         asset_guid: str,
         capability_guid: str,
         body: dict | NewRelationshipRequestBody | None = None,
-    ) -> None:
+    ) -> str | None:
         """Create a relationship that links a software capability to an infrastructure asset. Async version.
 
         Parameters
@@ -3607,7 +3617,8 @@ class AssetMaker(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -3632,7 +3643,7 @@ class AssetMaker(ServerClient):
         }
         """
         url = f"{self.asset_command_root}/assets/{asset_guid}/supported-software-capabilities/{capability_guid}/attach"
-        await self._async_new_relationship_request(url, ["SupportedSoftwareCapabilityProperties"], body)
+        return await self._async_new_relationship_request(url, ["SupportedSoftwareCapabilityProperties"], body)
 
     @dynamic_catch
     def link_software_capability_to_asset(
@@ -3640,7 +3651,7 @@ class AssetMaker(ServerClient):
         asset_guid: str,
         capability_guid: str,
         body: dict | NewRelationshipRequestBody | None = None,
-    ) -> None:
+    ) -> str | None:
         """Create a relationship that links a software capability to an infrastructure asset.
 
         Parameters
@@ -3654,7 +3665,8 @@ class AssetMaker(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -3678,7 +3690,7 @@ class AssetMaker(ServerClient):
           }
         }
         """
-        run_sync(
+        return run_sync(
             self._async_link_software_capability_to_asset(asset_guid, capability_guid, body)
         )
 
@@ -4722,7 +4734,7 @@ class AssetMaker(ServerClient):
         action_guid: str,
         actor_guid: str,
         body: Optional[dict | NewRelationshipRequestBody] = None,
-    ) -> None:
+    ) -> str | None:
         """
         Assign an action to an actor. Request body is optional. Async version.
 
@@ -4737,7 +4749,7 @@ class AssetMaker(ServerClient):
         """
         url = f"{self.asset_command_root}/actions/{action_guid}/assign/{actor_guid}"
 
-        await self._async_new_relationship_request(url, prop=["AssignmentScopeProperties"], body=body)
+        return await self._async_new_relationship_request(url, prop=["AssignmentScopeProperties"], body=body)
 
     @dynamic_catch
     def assign_action(
@@ -4745,7 +4757,7 @@ class AssetMaker(ServerClient):
         action_guid: str,
         actor_guid: str,
         body: Optional[dict | NewRelationshipRequestBody] = None,
-    ) -> None:
+    ) -> str | None:
         """
         Assign an action to an actor. Sync version.
 
@@ -4775,7 +4787,7 @@ class AssetMaker(ServerClient):
            "effectiveTime" : "{{$isoTimestamp}}"
         }
         """
-        run_sync(self._async_assign_action(action_guid, actor_guid, body))
+        return run_sync(self._async_assign_action(action_guid, actor_guid, body))
 
     @dynamic_catch
     async def _async_reassign_action(
@@ -4783,7 +4795,7 @@ class AssetMaker(ServerClient):
         action_guid: str,
         actor_guid: str,
         body: Optional[dict | NewRelationshipRequestBody] = None,
-    ) -> None:
+    ) -> str | None:
         """
         Assign an action to a new actor. This will unassign all other actors previously assigned to the action. Async version.
 
@@ -4795,7 +4807,7 @@ class AssetMaker(ServerClient):
         """
         url = f"{self.asset_command_root}/actions/{action_guid}/reassign/{actor_guid}"
 
-        await self._async_new_relationship_request(url, prop=["AssignmentScopeProperties"], body=body)
+        return await self._async_new_relationship_request(url, prop=["AssignmentScopeProperties"], body=body)
 
     @dynamic_catch
     def reassign_action(
@@ -4803,7 +4815,7 @@ class AssetMaker(ServerClient):
         action_guid: str,
         actor_guid: str,
         body: Optional[dict | NewRelationshipRequestBody] = None,
-    ) -> None:
+    ) -> str | None:
         """
         Assign an action to a new actor. Sync version.
 
@@ -4830,7 +4842,7 @@ class AssetMaker(ServerClient):
            "effectiveTime" : "{{$isoTimestamp}}"
         }
         """
-        run_sync(self._async_reassign_action(action_guid, actor_guid, body))
+        return run_sync(self._async_reassign_action(action_guid, actor_guid, body))
 
     @dynamic_catch
     async def _async_unassign_action(
@@ -6219,7 +6231,7 @@ class AssetMaker(ServerClient):
         software_capability_guid: str,
         asset_guid: str,
         body: dict | NewRelationshipRequestBody | None = None,
-    ) -> None:
+    ) -> str | None:
         """Create a CapabilityAssetUse relationship between a software capability and an asset. Async version.
 
         Parameters
@@ -6233,7 +6245,8 @@ class AssetMaker(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -6264,7 +6277,7 @@ class AssetMaker(ServerClient):
         }
         """
         url = f"{self.asset_command_root}/software-capabilities/{software_capability_guid}/assets/{asset_guid}/attach"
-        await self._async_new_relationship_request(url, ["CapabilityAssetUseProperties"], body)
+        return await self._async_new_relationship_request(url, ["CapabilityAssetUseProperties"], body)
 
     @dynamic_catch
     def add_capability_asset_use(
@@ -6272,7 +6285,7 @@ class AssetMaker(ServerClient):
         software_capability_guid: str,
         asset_guid: str,
         body: dict | NewRelationshipRequestBody | None = None,
-    ) -> None:
+    ) -> str | None:
         """Create a CapabilityAssetUse relationship between a software capability and an asset.
 
         Parameters
@@ -6286,7 +6299,8 @@ class AssetMaker(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -6316,7 +6330,7 @@ class AssetMaker(ServerClient):
           }
         }
         """
-        run_sync(
+        return run_sync(
             self._async_add_capability_asset_use(software_capability_guid, asset_guid, body)
         )
 
@@ -6943,16 +6957,16 @@ class AssetMaker(ServerClient):
 
     @dynamic_catch
     async def _async_link_api_endpoint(self, deployed_api_guid: str, endpoint_guid: str,
-                                       body: dict | NewRelationshipRequestBody | None = None) -> None:
+                                       body: dict | NewRelationshipRequestBody | None = None) -> str | None:
         """Attach a network endpoint to a deployed API (APIEndpoint relationship). Async version."""
         url = f"{self.asset_command_root}/deployed-apis/{deployed_api_guid}/api-endpoints/{endpoint_guid}/attach"
-        await self._async_new_relationship_request(url, ["APIEndpointProperties"], body)
+        return await self._async_new_relationship_request(url, ["APIEndpointProperties"], body)
 
     @dynamic_catch
     def link_api_endpoint(self, deployed_api_guid: str, endpoint_guid: str,
-                          body: dict | NewRelationshipRequestBody | None = None) -> None:
+                          body: dict | NewRelationshipRequestBody | None = None) -> str | None:
         """Attach a network endpoint to a deployed API (APIEndpoint relationship)."""
-        run_sync(self._async_link_api_endpoint(deployed_api_guid, endpoint_guid, body))
+        return run_sync(self._async_link_api_endpoint(deployed_api_guid, endpoint_guid, body))
 
     @dynamic_catch
     async def _async_detach_api_endpoint(self, deployed_api_guid: str, endpoint_guid: str,
@@ -6969,16 +6983,16 @@ class AssetMaker(ServerClient):
 
     @dynamic_catch
     async def _async_link_process_hierarchy(self, parent_process_guid: str, child_process_guid: str,
-                                            body: dict | NewRelationshipRequestBody | None = None) -> None:
+                                            body: dict | NewRelationshipRequestBody | None = None) -> str | None:
         """Attach a child process to its parent process (ProcessHierarchy relationship). Async version."""
         url = f"{self.asset_command_root}/processes/{parent_process_guid}/process-hierarchies/{child_process_guid}/attach"
-        await self._async_new_relationship_request(url, ["ProcessHierarchyProperties"], body)
+        return await self._async_new_relationship_request(url, ["ProcessHierarchyProperties"], body)
 
     @dynamic_catch
     def link_process_hierarchy(self, parent_process_guid: str, child_process_guid: str,
-                               body: dict | NewRelationshipRequestBody | None = None) -> None:
+                               body: dict | NewRelationshipRequestBody | None = None) -> str | None:
         """Attach a child process to its parent process (ProcessHierarchy relationship)."""
-        run_sync(self._async_link_process_hierarchy(parent_process_guid, child_process_guid, body))
+        return run_sync(self._async_link_process_hierarchy(parent_process_guid, child_process_guid, body))
 
     @dynamic_catch
     async def _async_detach_process_hierarchy(self, parent_process_guid: str, child_process_guid: str,
@@ -6995,16 +7009,16 @@ class AssetMaker(ServerClient):
 
     @dynamic_catch
     async def _async_link_nested_files(self, folder_guid: str, file_guid: str,
-                                       body: dict | NewRelationshipRequestBody | None = None) -> None:
+                                       body: dict | NewRelationshipRequestBody | None = None) -> str | None:
         """Attach a file to the folder that contains it (NestedFile relationship). Async version."""
         url = f"{self.asset_command_root}/file-folders/{folder_guid}/nested-files/{file_guid}/attach"
-        await self._async_new_relationship_request(url, ["NestedFileProperties"], body)
+        return await self._async_new_relationship_request(url, ["NestedFileProperties"], body)
 
     @dynamic_catch
     def link_nested_files(self, folder_guid: str, file_guid: str,
-                          body: dict | NewRelationshipRequestBody | None = None) -> None:
+                          body: dict | NewRelationshipRequestBody | None = None) -> str | None:
         """Attach a file to the folder that contains it (NestedFile relationship)."""
-        run_sync(self._async_link_nested_files(folder_guid, file_guid, body))
+        return run_sync(self._async_link_nested_files(folder_guid, file_guid, body))
 
     @dynamic_catch
     async def _async_detach_nested_file(self, folder_guid: str, file_guid: str,
@@ -7021,16 +7035,16 @@ class AssetMaker(ServerClient):
 
     @dynamic_catch
     async def _async_link_linked_files(self, folder_guid: str, file_guid: str,
-                                       body: dict | NewRelationshipRequestBody | None = None) -> None:
+                                       body: dict | NewRelationshipRequestBody | None = None) -> str | None:
         """Attach a file referenced by (but not contained in) a folder (LinkedFile relationship). Async version."""
         url = f"{self.asset_command_root}/file-folders/{folder_guid}/linked-files/{file_guid}/attach"
-        await self._async_new_relationship_request(url, ["LinkedFileProperties"], body)
+        return await self._async_new_relationship_request(url, ["LinkedFileProperties"], body)
 
     @dynamic_catch
     def link_linked_files(self, folder_guid: str, file_guid: str,
-                          body: dict | NewRelationshipRequestBody | None = None) -> None:
+                          body: dict | NewRelationshipRequestBody | None = None) -> str | None:
         """Attach a file referenced by (but not contained in) a folder (LinkedFile relationship)."""
-        run_sync(self._async_link_linked_files(folder_guid, file_guid, body))
+        return run_sync(self._async_link_linked_files(folder_guid, file_guid, body))
 
     @dynamic_catch
     async def _async_detach_linked_file(self, folder_guid: str, file_guid: str,
@@ -7047,16 +7061,16 @@ class AssetMaker(ServerClient):
 
     @dynamic_catch
     async def _async_link_folder_hierarchy(self, parent_folder_guid: str, child_folder_guid: str,
-                                           body: dict | NewRelationshipRequestBody | None = None) -> None:
+                                           body: dict | NewRelationshipRequestBody | None = None) -> str | None:
         """Attach a child folder to its parent folder (FolderHierarchy relationship). Async version."""
         url = f"{self.asset_command_root}/file-folders/{parent_folder_guid}/folder-hierarchies/{child_folder_guid}/attach"
-        await self._async_new_relationship_request(url, ["FolderHierarchyProperties"], body)
+        return await self._async_new_relationship_request(url, ["FolderHierarchyProperties"], body)
 
     @dynamic_catch
     def link_folder_hierarchy(self, parent_folder_guid: str, child_folder_guid: str,
-                              body: dict | NewRelationshipRequestBody | None = None) -> None:
+                              body: dict | NewRelationshipRequestBody | None = None) -> str | None:
         """Attach a child folder to its parent folder (FolderHierarchy relationship)."""
-        run_sync(self._async_link_folder_hierarchy(parent_folder_guid, child_folder_guid, body))
+        return run_sync(self._async_link_folder_hierarchy(parent_folder_guid, child_folder_guid, body))
 
     @dynamic_catch
     async def _async_detach_folder_hierarchy(self, parent_folder_guid: str, child_folder_guid: str,
@@ -7073,16 +7087,16 @@ class AssetMaker(ServerClient):
 
     @dynamic_catch
     async def _async_link_impacted_resource(self, resource_guid: str, incident_report_guid: str,
-                                            body: dict | NewRelationshipRequestBody | None = None) -> None:
+                                            body: dict | NewRelationshipRequestBody | None = None) -> str | None:
         """Attach a resource to an incident report that affects it (ImpactedResource relationship). Async version."""
         url = f"{self.asset_command_root}/resources/{resource_guid}/impacted-resources/{incident_report_guid}/attach"
-        await self._async_new_relationship_request(url, ["ImpactedResourceProperties"], body)
+        return await self._async_new_relationship_request(url, ["ImpactedResourceProperties"], body)
 
     @dynamic_catch
     def link_impacted_resource(self, resource_guid: str, incident_report_guid: str,
-                               body: dict | NewRelationshipRequestBody | None = None) -> None:
+                               body: dict | NewRelationshipRequestBody | None = None) -> str | None:
         """Attach a resource to an incident report that affects it (ImpactedResource relationship)."""
-        run_sync(self._async_link_impacted_resource(resource_guid, incident_report_guid, body))
+        return run_sync(self._async_link_impacted_resource(resource_guid, incident_report_guid, body))
 
     @dynamic_catch
     async def _async_detach_impacted_resource(self, resource_guid: str, incident_report_guid: str,
@@ -7099,16 +7113,16 @@ class AssetMaker(ServerClient):
 
     @dynamic_catch
     async def _async_link_archive_contents(self, archive_file_guid: str, collection_guid: str,
-                                           body: dict | NewRelationshipRequestBody | None = None) -> None:
+                                           body: dict | NewRelationshipRequestBody | None = None) -> str | None:
         """Attach a collection as the contents of an archive file (ArchiveContents relationship). Async version."""
         url = f"{self.asset_command_root}/archive-files/{archive_file_guid}/archive-contents/{collection_guid}/attach"
-        await self._async_new_relationship_request(url, ["ArchiveContentsProperties"], body)
+        return await self._async_new_relationship_request(url, ["ArchiveContentsProperties"], body)
 
     @dynamic_catch
     def link_archive_contents(self, archive_file_guid: str, collection_guid: str,
-                              body: dict | NewRelationshipRequestBody | None = None) -> None:
+                              body: dict | NewRelationshipRequestBody | None = None) -> str | None:
         """Attach a collection as the contents of an archive file (ArchiveContents relationship)."""
-        run_sync(self._async_link_archive_contents(archive_file_guid, collection_guid, body))
+        return run_sync(self._async_link_archive_contents(archive_file_guid, collection_guid, body))
 
     @dynamic_catch
     async def _async_detach_archive_contents(self, archive_file_guid: str, collection_guid: str,
@@ -7125,16 +7139,16 @@ class AssetMaker(ServerClient):
 
     @dynamic_catch
     async def _async_link_associated_log(self, element_guid: str, log_asset_guid: str,
-                                         body: dict | NewRelationshipRequestBody | None = None) -> None:
+                                         body: dict | NewRelationshipRequestBody | None = None) -> str | None:
         """Attach a log file asset to the element it logs activity for (AssociatedLog relationship). Async version."""
         url = f"{self.asset_command_root}/elements/{element_guid}/associated-logs/{log_asset_guid}/attach"
-        await self._async_new_relationship_request(url, ["AssociatedLogProperties"], body)
+        return await self._async_new_relationship_request(url, ["AssociatedLogProperties"], body)
 
     @dynamic_catch
     def link_associated_log(self, element_guid: str, log_asset_guid: str,
-                            body: dict | NewRelationshipRequestBody | None = None) -> None:
+                            body: dict | NewRelationshipRequestBody | None = None) -> str | None:
         """Attach a log file asset to the element it logs activity for (AssociatedLog relationship)."""
-        run_sync(self._async_link_associated_log(element_guid, log_asset_guid, body))
+        return run_sync(self._async_link_associated_log(element_guid, log_asset_guid, body))
 
     @dynamic_catch
     async def _async_detach_associated_log(self, element_guid: str, log_asset_guid: str,
@@ -7151,16 +7165,16 @@ class AssetMaker(ServerClient):
 
     @dynamic_catch
     async def _async_link_linked_media(self, media_file_guid: str, linked_media_file_guid: str,
-                                       body: dict | NewRelationshipRequestBody | None = None) -> None:
+                                       body: dict | NewRelationshipRequestBody | None = None) -> str | None:
         """Attach a related media file to another media file (LinkedMedia relationship). Async version."""
         url = f"{self.asset_command_root}/media-files/{media_file_guid}/linked-media/{linked_media_file_guid}/attach"
-        await self._async_new_relationship_request(url, ["LinkedMediaProperties"], body)
+        return await self._async_new_relationship_request(url, ["LinkedMediaProperties"], body)
 
     @dynamic_catch
     def link_linked_media(self, media_file_guid: str, linked_media_file_guid: str,
-                          body: dict | NewRelationshipRequestBody | None = None) -> None:
+                          body: dict | NewRelationshipRequestBody | None = None) -> str | None:
         """Attach a related media file to another media file (LinkedMedia relationship)."""
-        run_sync(self._async_link_linked_media(media_file_guid, linked_media_file_guid, body))
+        return run_sync(self._async_link_linked_media(media_file_guid, linked_media_file_guid, body))
 
     @dynamic_catch
     async def _async_detach_linked_media(self, media_file_guid: str, linked_media_file_guid: str,
@@ -7177,16 +7191,16 @@ class AssetMaker(ServerClient):
 
     @dynamic_catch
     async def _async_link_process_port(self, process_guid: str, port_guid: str,
-                                       body: dict | NewRelationshipRequestBody | None = None) -> None:
+                                       body: dict | NewRelationshipRequestBody | None = None) -> str | None:
         """Attach a port to the process it belongs to (ProcessPort relationship). Async version."""
         url = f"{self.asset_command_root}/processes/{process_guid}/ports/{port_guid}/attach"
-        await self._async_new_relationship_request(url, ["ProcessPortProperties"], body)
+        return await self._async_new_relationship_request(url, ["ProcessPortProperties"], body)
 
     @dynamic_catch
     def link_process_port(self, process_guid: str, port_guid: str,
-                          body: dict | NewRelationshipRequestBody | None = None) -> None:
+                          body: dict | NewRelationshipRequestBody | None = None) -> str | None:
         """Attach a port to the process it belongs to (ProcessPort relationship)."""
-        run_sync(self._async_link_process_port(process_guid, port_guid, body))
+        return run_sync(self._async_link_process_port(process_guid, port_guid, body))
 
     @dynamic_catch
     async def _async_detach_process_port(self, process_guid: str, port_guid: str,
@@ -7203,16 +7217,16 @@ class AssetMaker(ServerClient):
 
     @dynamic_catch
     async def _async_link_sample_data(self, element_guid: str, sample_data_guid: str,
-                                      body: dict | NewRelationshipRequestBody | None = None) -> None:
+                                      body: dict | NewRelationshipRequestBody | None = None) -> str | None:
         """Attach a data resource as sample data for an element (SampleData relationship). Async version."""
         url = f"{self.asset_command_root}/elements/{element_guid}/sample-data/{sample_data_guid}/attach"
-        await self._async_new_relationship_request(url, ["SampleDataProperties"], body)
+        return await self._async_new_relationship_request(url, ["SampleDataProperties"], body)
 
     @dynamic_catch
     def link_sample_data(self, element_guid: str, sample_data_guid: str,
-                         body: dict | NewRelationshipRequestBody | None = None) -> None:
+                         body: dict | NewRelationshipRequestBody | None = None) -> str | None:
         """Attach a data resource as sample data for an element (SampleData relationship)."""
-        run_sync(self._async_link_sample_data(element_guid, sample_data_guid, body))
+        return run_sync(self._async_link_sample_data(element_guid, sample_data_guid, body))
 
     @dynamic_catch
     async def _async_detach_sample_data(self, element_guid: str, sample_data_guid: str,
@@ -7229,16 +7243,16 @@ class AssetMaker(ServerClient):
 
     @dynamic_catch
     async def _async_link_port_delegation(self, delegating_from_port_guid: str, delegating_to_port_guid: str,
-                                          body: dict | NewRelationshipRequestBody | None = None) -> None:
+                                          body: dict | NewRelationshipRequestBody | None = None) -> str | None:
         """Attach a port to the port it delegates to (PortDelegation relationship). Async version."""
         url = f"{self.asset_command_root}/ports/{delegating_from_port_guid}/port-delegations/{delegating_to_port_guid}/attach"
-        await self._async_new_relationship_request(url, ["PortDelegationProperties"], body)
+        return await self._async_new_relationship_request(url, ["PortDelegationProperties"], body)
 
     @dynamic_catch
     def link_port_delegation(self, delegating_from_port_guid: str, delegating_to_port_guid: str,
-                             body: dict | NewRelationshipRequestBody | None = None) -> None:
+                             body: dict | NewRelationshipRequestBody | None = None) -> str | None:
         """Attach a port to the port it delegates to (PortDelegation relationship)."""
-        run_sync(self._async_link_port_delegation(delegating_from_port_guid, delegating_to_port_guid, body))
+        return run_sync(self._async_link_port_delegation(delegating_from_port_guid, delegating_to_port_guid, body))
 
     @dynamic_catch
     async def _async_detach_port_delegation(self, delegating_from_port_guid: str, delegating_to_port_guid: str,
@@ -7255,17 +7269,17 @@ class AssetMaker(ServerClient):
 
     @dynamic_catch
     async def _async_link_registered_integration_connector(self, integration_group_guid: str, integration_connector_guid: str,
-                                                            body: dict | NewRelationshipRequestBody | None = None) -> None:
+                                                            body: dict | NewRelationshipRequestBody | None = None) -> str | None:
         """Register an integration connector with an integration group (RegisteredIntegrationConnector relationship). Async version."""
         url = (f"{self.asset_command_root}/integration-groups/{integration_group_guid}"
                f"/registered-integration-connectors/{integration_connector_guid}/attach")
-        await self._async_new_relationship_request(url, ["RegisteredIntegrationConnectorProperties"], body)
+        return await self._async_new_relationship_request(url, ["RegisteredIntegrationConnectorProperties"], body)
 
     @dynamic_catch
     def link_registered_integration_connector(self, integration_group_guid: str, integration_connector_guid: str,
-                                               body: dict | NewRelationshipRequestBody | None = None) -> None:
+                                               body: dict | NewRelationshipRequestBody | None = None) -> str | None:
         """Register an integration connector with an integration group (RegisteredIntegrationConnector relationship)."""
-        run_sync(self._async_link_registered_integration_connector(
+        return run_sync(self._async_link_registered_integration_connector(
             integration_group_guid, integration_connector_guid, body))
 
     @dynamic_catch

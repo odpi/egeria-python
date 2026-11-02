@@ -407,7 +407,7 @@ class SubjectArea(ServerClient):
         parent_subject_area_guid: str,
         nested_subject_area_guid: str,
         body: dict | NewRelationshipRequestBody,
-    ) -> None:
+    ) -> str | None:
         """Link subject areas in a hierarchy. Async version.
 
         Parameters
@@ -421,7 +421,8 @@ class SubjectArea(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -441,14 +442,14 @@ class SubjectArea(ServerClient):
         ```
         """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/subject-area/subject-areas/{parent_subject_area_guid}/subject-area-hierarchies/{nested_subject_area_guid}/attach"
-        await self._async_new_relationship_request(url, ["SubjectAreaHierarchyProperties"], body)
+        return await self._async_new_relationship_request(url, ["SubjectAreaHierarchyProperties"], body)
 
     def link_subject_area_hierarchy(
         self,
         parent_subject_area_guid: str,
         nested_subject_area_guid: str,
         body: dict | NewRelationshipRequestBody,
-    ) -> None:
+    ) -> str | None:
         """Link subject areas in a hierarchy.
 
         Parameters
@@ -462,7 +463,8 @@ class SubjectArea(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -481,7 +483,7 @@ class SubjectArea(ServerClient):
         }
         ```
         """
-        run_sync(
+        return run_sync(
             self._async_link_subject_area_hierarchy(
                 parent_subject_area_guid, nested_subject_area_guid, body
             )
@@ -1039,16 +1041,16 @@ class SubjectArea(ServerClient):
 
     @dynamic_catch
     async def _async_link_subject_areas(self, parent_subject_area_guid: str, nested_subject_area_guid: str,
-                                        body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                        body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a nested subject area to its parent subject area (SubjectAreaHierarchy relationship). Async version."""
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/subject-area/subject-areas/{parent_subject_area_guid}/subject-area-hierarchies/{nested_subject_area_guid}/attach"
-        await self._async_new_relationship_request(url, ["SubjectAreaHierarchyProperties"], body)
+        return await self._async_new_relationship_request(url, ["SubjectAreaHierarchyProperties"], body)
 
     @dynamic_catch
     def link_subject_areas(self, parent_subject_area_guid: str, nested_subject_area_guid: str,
-                           body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                           body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a nested subject area to its parent subject area (SubjectAreaHierarchy relationship)."""
-        run_sync(self._async_link_subject_areas(parent_subject_area_guid, nested_subject_area_guid, body))
+        return run_sync(self._async_link_subject_areas(parent_subject_area_guid, nested_subject_area_guid, body))
 
     @dynamic_catch
     async def _async_detach_subject_areas(self, parent_subject_area_guid: str, nested_subject_area_guid: str,

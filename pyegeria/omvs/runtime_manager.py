@@ -3644,7 +3644,7 @@ class RuntimeManager(ServerClient):
 
     @dynamic_catch
     async def _async_link_cohort_member(self, cohort_guid: str, cohort_member_guid: str,
-                                        body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                        body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Connect a cohort to one of its members. Async version.
 
         Parameters
@@ -3686,14 +3686,15 @@ class RuntimeManager(ServerClient):
         ```
         """
         url = f"{self.runtime_command_root}/metadata-repository-cohorts/{cohort_guid}/cohort-members/{cohort_member_guid}/attach"
-        await self._async_new_relationship_request(url, ["MetadataCohortPeerProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["MetadataCohortPeerProperties"], body)
         logger.info(f"Linked cohort member {cohort_member_guid} to cohort {cohort_guid}")
+        return relationship_guid
 
     @dynamic_catch
     def link_cohort_member(self, cohort_guid: str, cohort_member_guid: str,
-                           body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                           body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Connect a cohort to one of its members."""
-        run_sync(self._async_link_cohort_member(cohort_guid, cohort_member_guid, body))
+        return run_sync(self._async_link_cohort_member(cohort_guid, cohort_member_guid, body))
 
     @dynamic_catch
     async def _async_detach_cohort_member(self, cohort_guid: str, cohort_member_guid: str,

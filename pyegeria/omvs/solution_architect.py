@@ -1261,7 +1261,7 @@ class SolutionArchitect(ServerClient):
         run_sync(self._async_update_info_supply_chain(guid, body))
 
     @dynamic_catch
-    async def _async_link_peer_info_supply_chains(self, peer1_guid: str, peer2_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+    async def _async_link_peer_info_supply_chains(self, peer1_guid: str, peer2_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Connect two peer information supply chains.  The linked elements are of type 'Referenceable' to
         allow significant data stores to be included in the definition of the information supply chain.
         Request body is optional. Async Version.
@@ -1277,7 +1277,8 @@ class SolutionArchitect(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -1312,11 +1313,12 @@ class SolutionArchitect(ServerClient):
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"information-supply-chains/{peer1_guid}/peer-links/{peer2_guid}/attach")
 
-        await self._async_new_relationship_request(url, ["InformationSupplyChainLinkProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["InformationSupplyChainLinkProperties"], body)
         logger.info(f"Linked Supply Chains {peer1_guid} -> {peer2_guid}")
+        return relationship_guid
 
     @dynamic_catch
-    def link_peer_info_supply_chains(self, peer1_guid: str, peer2_guid: str, body: dict | NewRelationshipRequestBody) -> None:
+    def link_peer_info_supply_chains(self, peer1_guid: str, peer2_guid: str, body: dict | NewRelationshipRequestBody) -> str | None:
         """ Connect two peer information supply chains.  The linked elements are of type 'Referenceable' to
         allow significant data stores to be included in the definition of the information supply chain.
         Request body is optional.
@@ -1332,7 +1334,8 @@ class SolutionArchitect(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -1363,7 +1366,7 @@ class SolutionArchitect(ServerClient):
             }
         }
         """
-        run_sync(self._async_link_peer_info_supply_chains(peer1_guid, peer2_guid, body))
+        return run_sync(self._async_link_peer_info_supply_chains(peer1_guid, peer2_guid, body))
 
     @dynamic_catch
     async def _async_unlink_peer_info_supply_chains(self, peer1_guid: str, peer2_guid: str,
@@ -2753,7 +2756,7 @@ class SolutionArchitect(ServerClient):
 
     @dynamic_catch
     async def _async_link_solution_design(self, blueprint_guid: str, element_guid: str,
-                                              body: dict | NewRelationshipRequestBody) -> None:
+                                              body: dict | NewRelationshipRequestBody) -> str | None:
         """ Connect a solution blueprint to a referenceable element. Async Version.
 
         Parameters
@@ -2767,7 +2770,8 @@ class SolutionArchitect(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -2803,11 +2807,12 @@ class SolutionArchitect(ServerClient):
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"elements/{element_guid}/solution-designs/{blueprint_guid}/attach")
 
-        await self._async_new_relationship_request(url, ["SolutionDesignProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["SolutionDesignProperties"], body)
         logger.info(f"Linked referenceable element to blueprint {element_guid} -> {blueprint_guid}")
+        return relationship_guid
 
     @dynamic_catch
-    def link_solution_design(self, blueprint_guid: str, element_guid: str, body: dict | NewRelationshipRequestBody) -> None:
+    def link_solution_design(self, blueprint_guid: str, element_guid: str, body: dict | NewRelationshipRequestBody) -> str | None:
         """ Connect a solution blueprint to a referenceable element.
 
         Parameters
@@ -2821,7 +2826,8 @@ class SolutionArchitect(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -2852,7 +2858,7 @@ class SolutionArchitect(ServerClient):
           "forDuplicateProcessing" : false
         }
         """
-        run_sync(self._async_link_solution_design(blueprint_guid, element_guid, body))
+        return run_sync(self._async_link_solution_design(blueprint_guid, element_guid, body))
 
     @dynamic_catch
     async def _async_detach_solution_design(self, blueprint_guid: str, element_guid: str,
@@ -4013,7 +4019,7 @@ class SolutionArchitect(ServerClient):
         run_sync(self._async_update_solution_component(guid, body))
 
     @dynamic_catch
-    async def _async_link_subcomponent(self, component_guid: str, sub_component_guid: str, body: dict | NewRelationshipRequestBody) -> None:
+    async def _async_link_subcomponent(self, component_guid: str, sub_component_guid: str, body: dict | NewRelationshipRequestBody) -> str | None:
         """ Attach a solution component to a solution component. Async Version.
 
         Parameters
@@ -4027,7 +4033,8 @@ class SolutionArchitect(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -4055,11 +4062,12 @@ class SolutionArchitect(ServerClient):
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"solution-components/{component_guid}/subcomponents/{sub_component_guid}/attach")
 
-        await self._async_new_relationship_request(url, ["SolutionCompositionProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["SolutionCompositionProperties"], body)
         logger.info(f"Linked Subcomponent {component_guid} -> {sub_component_guid}")
+        return relationship_guid
 
     @dynamic_catch
-    def link_subcomponent(self, component_guid: str, sub_component_guid: str, body: dict | NewRelationshipRequestBody) -> None:
+    def link_subcomponent(self, component_guid: str, sub_component_guid: str, body: dict | NewRelationshipRequestBody) -> str | None:
         """ Attach a solution component to a solution component.
 
                 Parameters
@@ -4073,7 +4081,8 @@ class SolutionArchitect(ServerClient):
 
                 Returns
                 -------
-                None
+                str | None
+                    The GUID of the new relationship, or None if the server did not return one.
 
                 Raises
                 ------
@@ -4097,7 +4106,7 @@ class SolutionArchitect(ServerClient):
                   "forDuplicateProcessing" : false
                 }
                 """
-        run_sync(self._async_link_subcomponent(component_guid, sub_component_guid, body))
+        return run_sync(self._async_link_subcomponent(component_guid, sub_component_guid, body))
     @dynamic_catch
     async def _async_detach_sub_component(self, parent_component_guid: str, member_component_guid: str,
                                           body: dict |DeleteRelationshipRequestBody = None) -> None:
@@ -5723,7 +5732,7 @@ class SolutionArchitect(ServerClient):
         run_sync(self._async_update_solution_role(guid, body))
 
     @dynamic_catch
-    async def _async_link_component_to_actor(self, role_guid: str, component_guid: str, body: dict | NewRelationshipRequestBody) -> None:
+    async def _async_link_component_to_actor(self, role_guid: str, component_guid: str, body: dict | NewRelationshipRequestBody) -> str | None:
         """ Attach a solution component to a solution role. Async Version.
 
         Parameters
@@ -5737,7 +5746,8 @@ class SolutionArchitect(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -5772,11 +5782,12 @@ class SolutionArchitect(ServerClient):
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"solution-roles/{role_guid}/solution-component-actors/{component_guid}/attach")
 
-        await self._async_new_relationship_request(url, ["SolutionComponentActorProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["SolutionComponentActorProperties"], body)
         logger.info(f"Linked Role to Component {role_guid} -> {component_guid}")
+        return relationship_guid
 
     @dynamic_catch
-    def link_component_to_actor(self, role_guid: str, component_guid: str, body: dict | NewRelationshipRequestBody) -> None:
+    def link_component_to_actor(self, role_guid: str, component_guid: str, body: dict | NewRelationshipRequestBody) -> str | None:
         """ Attach a solution component to a solution role.
 
             Parameters
@@ -5790,7 +5801,8 @@ class SolutionArchitect(ServerClient):
 
             Returns
             -------
-            None
+            str | None
+                The GUID of the new relationship, or None if the server did not return one.
 
             Raises
             ------
@@ -5822,7 +5834,7 @@ class SolutionArchitect(ServerClient):
             }
 
                 """
-        run_sync(self._async_link_component_to_actor(role_guid, component_guid, body))
+        return run_sync(self._async_link_component_to_actor(role_guid, component_guid, body))
 
     @dynamic_catch
     async def _async_detach_component_actor(self, role_guid: str, component_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
@@ -6693,16 +6705,16 @@ class SolutionArchitect(ServerClient):
 
     @dynamic_catch
     async def _async_link_concept_design(self, element_guid: str, concept_model_guid: str,
-                                         body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                         body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach an element to the concept model element that designs it (ConceptDesign relationship). Async version."""
         url = f"{self.solution_architect_command_root}/elements/{element_guid}/concept-designs/{concept_model_guid}/attach"
-        await self._async_new_relationship_request(url, ["ConceptDesignProperties"], body)
+        return await self._async_new_relationship_request(url, ["ConceptDesignProperties"], body)
 
     @dynamic_catch
     def link_concept_design(self, element_guid: str, concept_model_guid: str,
-                            body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                            body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach an element to the concept model element that designs it (ConceptDesign relationship)."""
-        run_sync(self._async_link_concept_design(element_guid, concept_model_guid, body))
+        return run_sync(self._async_link_concept_design(element_guid, concept_model_guid, body))
 
     @dynamic_catch
     async def _async_detach_concept_design(self, element_guid: str, concept_model_guid: str,
@@ -6719,16 +6731,16 @@ class SolutionArchitect(ServerClient):
 
     @dynamic_catch
     async def _async_link_concept_bead_relationship_end(self, concept_bead_relationship_guid: str, concept_bead_guid: str,
-                                                         body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                                         body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a concept bead as one end of a concept bead relationship (ConceptBeadRelationshipEnd relationship). Async version."""
         url = f"{self.solution_architect_command_root}/concept-bead-relationships/{concept_bead_relationship_guid}/relationship-ends/{concept_bead_guid}/attach"
-        await self._async_new_relationship_request(url, ["ConceptBeadRelationshipEndProperties"], body)
+        return await self._async_new_relationship_request(url, ["ConceptBeadRelationshipEndProperties"], body)
 
     @dynamic_catch
     def link_concept_bead_relationship_end(self, concept_bead_relationship_guid: str, concept_bead_guid: str,
-                                           body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                           body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a concept bead as one end of a concept bead relationship (ConceptBeadRelationshipEnd relationship)."""
-        run_sync(self._async_link_concept_bead_relationship_end(concept_bead_relationship_guid, concept_bead_guid, body))
+        return run_sync(self._async_link_concept_bead_relationship_end(concept_bead_relationship_guid, concept_bead_guid, body))
 
     @dynamic_catch
     async def _async_detach_concept_bead_relationship_end(self, concept_bead_relationship_guid: str, concept_bead_guid: str,
@@ -6745,16 +6757,16 @@ class SolutionArchitect(ServerClient):
 
     @dynamic_catch
     async def _async_link_typed_by_concept_bead(self, concept_bead_attribute_guid: str, concept_bead_guid: str,
-                                                body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                                body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a concept bead attribute to the concept bead that types it (TypedByConceptBead relationship). Async version."""
         url = f"{self.solution_architect_command_root}/concept-bead-attributes/{concept_bead_attribute_guid}/typed-by/{concept_bead_guid}/attach"
-        await self._async_new_relationship_request(url, ["TypedByConceptBeadProperties"], body)
+        return await self._async_new_relationship_request(url, ["TypedByConceptBeadProperties"], body)
 
     @dynamic_catch
     def link_typed_by_concept_bead(self, concept_bead_attribute_guid: str, concept_bead_guid: str,
-                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a concept bead attribute to the concept bead that types it (TypedByConceptBead relationship)."""
-        run_sync(self._async_link_typed_by_concept_bead(concept_bead_attribute_guid, concept_bead_guid, body))
+        return run_sync(self._async_link_typed_by_concept_bead(concept_bead_attribute_guid, concept_bead_guid, body))
 
     @dynamic_catch
     async def _async_detach_typed_by_concept_bead(self, concept_bead_attribute_guid: str, concept_bead_guid: str,
@@ -6771,16 +6783,16 @@ class SolutionArchitect(ServerClient):
 
     @dynamic_catch
     async def _async_link_is_a_concept_bead(self, concept_bead_guid: str, general_concept_bead_guid: str,
-                                            body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                            body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a concept bead to the more general concept bead it is a kind of (IsAConceptBead relationship). Async version."""
         url = f"{self.solution_architect_command_root}/concept-beads/{concept_bead_guid}/is-a/{general_concept_bead_guid}/attach"
-        await self._async_new_relationship_request(url, ["IsAConceptBeadProperties"], body)
+        return await self._async_new_relationship_request(url, ["IsAConceptBeadProperties"], body)
 
     @dynamic_catch
     def link_is_a_concept_bead(self, concept_bead_guid: str, general_concept_bead_guid: str,
-                               body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                               body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a concept bead to the more general concept bead it is a kind of (IsAConceptBead relationship)."""
-        run_sync(self._async_link_is_a_concept_bead(concept_bead_guid, general_concept_bead_guid, body))
+        return run_sync(self._async_link_is_a_concept_bead(concept_bead_guid, general_concept_bead_guid, body))
 
     @dynamic_catch
     async def _async_detach_is_a_concept_bead(self, concept_bead_guid: str, general_concept_bead_guid: str,
@@ -6797,16 +6809,16 @@ class SolutionArchitect(ServerClient):
 
     @dynamic_catch
     async def _async_link_concept_bead_attribute_link(self, concept_bead_guid: str, concept_bead_attribute_guid: str,
-                                                       body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                                       body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach an attribute to the concept bead it belongs to (ConceptBeadAttributeLink relationship). Async version."""
         url = f"{self.solution_architect_command_root}/concept-beads/{concept_bead_guid}/attribute-links/{concept_bead_attribute_guid}/attach"
-        await self._async_new_relationship_request(url, ["ConceptBeadAttributeLinkProperties"], body)
+        return await self._async_new_relationship_request(url, ["ConceptBeadAttributeLinkProperties"], body)
 
     @dynamic_catch
     def link_concept_bead_attribute_link(self, concept_bead_guid: str, concept_bead_attribute_guid: str,
-                                         body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                         body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach an attribute to the concept bead it belongs to (ConceptBeadAttributeLink relationship)."""
-        run_sync(self._async_link_concept_bead_attribute_link(concept_bead_guid, concept_bead_attribute_guid, body))
+        return run_sync(self._async_link_concept_bead_attribute_link(concept_bead_guid, concept_bead_attribute_guid, body))
 
     @dynamic_catch
     async def _async_detach_concept_bead_attribute_link(self, concept_bead_guid: str, concept_bead_attribute_guid: str,
@@ -6823,16 +6835,16 @@ class SolutionArchitect(ServerClient):
 
     @dynamic_catch
     async def _async_link_concept_bead_extension(self, concept_bead_guid: str, extension_concept_bead_guid: str,
-                                                 body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                                 body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a concept bead to another concept bead that extends it (ConceptBeadExtension relationship). Async version."""
         url = f"{self.solution_architect_command_root}/concept-beads/{concept_bead_guid}/extensions/{extension_concept_bead_guid}/attach"
-        await self._async_new_relationship_request(url, ["ConceptBeadExtensionProperties"], body)
+        return await self._async_new_relationship_request(url, ["ConceptBeadExtensionProperties"], body)
 
     @dynamic_catch
     def link_concept_bead_extension(self, concept_bead_guid: str, extension_concept_bead_guid: str,
-                                    body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                    body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a concept bead to another concept bead that extends it (ConceptBeadExtension relationship)."""
-        run_sync(self._async_link_concept_bead_extension(concept_bead_guid, extension_concept_bead_guid, body))
+        return run_sync(self._async_link_concept_bead_extension(concept_bead_guid, extension_concept_bead_guid, body))
 
     @dynamic_catch
     async def _async_detach_concept_bead_extension(self, concept_bead_guid: str, extension_concept_bead_guid: str,
@@ -6982,16 +6994,16 @@ class SolutionArchitect(ServerClient):
 
     @dynamic_catch
     async def _async_link_solution_component_port(self, solution_component_guid: str, solution_port_guid: str,
-                                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a solution port to the solution component it belongs to (SolutionComponentPort relationship). Async version."""
         url = f"{self.solution_architect_command_root}/solution-components/{solution_component_guid}/solution-ports/{solution_port_guid}/attach"
-        await self._async_new_relationship_request(url, ["SolutionComponentPortProperties"], body)
+        return await self._async_new_relationship_request(url, ["SolutionComponentPortProperties"], body)
 
     @dynamic_catch
     def link_solution_component_port(self, solution_component_guid: str, solution_port_guid: str,
-                                     body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                     body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a solution port to the solution component it belongs to (SolutionComponentPort relationship)."""
-        run_sync(self._async_link_solution_component_port(solution_component_guid, solution_port_guid, body))
+        return run_sync(self._async_link_solution_component_port(solution_component_guid, solution_port_guid, body))
 
     @dynamic_catch
     async def _async_detach_solution_component_port(self, solution_component_guid: str, solution_port_guid: str,
@@ -7008,16 +7020,16 @@ class SolutionArchitect(ServerClient):
 
     @dynamic_catch
     async def _async_link_solution_port_delegation(self, aligns_to_port_guid: str, delegation_port_guid: str,
-                                                    body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                                    body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a solution port to the port it delegates to (PortDelegation relationship). Async version."""
         url = f"{self.solution_architect_command_root}/solution-ports/{aligns_to_port_guid}/port-delegations/{delegation_port_guid}/attach"
-        await self._async_new_relationship_request(url, ["SolutionPortDelegationProperties"], body)
+        return await self._async_new_relationship_request(url, ["SolutionPortDelegationProperties"], body)
 
     @dynamic_catch
     def link_solution_port_delegation(self, aligns_to_port_guid: str, delegation_port_guid: str,
-                                      body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                      body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a solution port to the port it delegates to (PortDelegation relationship)."""
-        run_sync(self._async_link_solution_port_delegation(aligns_to_port_guid, delegation_port_guid, body))
+        return run_sync(self._async_link_solution_port_delegation(aligns_to_port_guid, delegation_port_guid, body))
 
     @dynamic_catch
     async def _async_detach_solution_port_delegation(self, aligns_to_port_guid: str, delegation_port_guid: str,

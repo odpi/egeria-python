@@ -1113,7 +1113,7 @@ class GovernanceOfficer(ServerClient):
 
     @dynamic_catch
     async def _async_link_peer_definitions(self, definition_guid1: str, relationship_type: str, definition_guid2: str,
-                                           body: dict = None | NewRelationshipRequestBody) -> None:
+                                           body: dict = None | NewRelationshipRequestBody) -> str | None:
         """ Attach two peer governance definitions. Request body is optional. Async Version.
 
         Parameters
@@ -1129,7 +1129,8 @@ class GovernanceOfficer(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -1171,12 +1172,13 @@ class GovernanceOfficer(ServerClient):
             f"ervers/{self.view_server}/api/open-metadata/governance-officer/governance-definitions/"
             f"{definition_guid1}/peer-definitions/{relationship_type}/{definition_guid2}/attach")
 
-        await self._async_new_relationship_request(url, "PeerDefinitionProperties", body)
+        relationship_guid = await self._async_new_relationship_request(url, "PeerDefinitionProperties", body)
         logger.info(f"Linked {definition_guid1} -> {definition_guid2}")
+        return relationship_guid
 
     @dynamic_catch
     def link_peer_definitions(self, definition_guid1: str, relationship_type: str, definition_guid2: str,
-                              body: Optional[dict | NewElementRequestBody] = None) -> None:
+                              body: Optional[dict | NewElementRequestBody] = None) -> str | None:
         """ Attach two peer governance definitions. Async Version.
 
         Parameters
@@ -1192,7 +1194,8 @@ class GovernanceOfficer(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -1229,7 +1232,7 @@ class GovernanceOfficer(ServerClient):
           }
         }
         """
-        run_sync(
+        return run_sync(
             self._async_link_peer_definitions(definition_guid1, relationship_type, definition_guid2, body))
 
     @dynamic_catch
@@ -1331,7 +1334,7 @@ class GovernanceOfficer(ServerClient):
     @dynamic_catch
     async def _async_attach_supporting_definitions(self, definition_guid1: str, relationship_type: str,
                                                    definition_guid2: str,
-                                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Attach a supporting governance definition. Request body is optional.
             The relationshipTypeNme can be:
             * GovernanceResponse between governance drivers (GovernanceStrategy, BusinessImperative, Regulation,
@@ -1356,7 +1359,8 @@ class GovernanceOfficer(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -1390,12 +1394,13 @@ class GovernanceOfficer(ServerClient):
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
             f"{self.url_marker}/governance-definitions/"
             f"{definition_guid1}/supporting-definitions/{relationship_type}/{definition_guid2}/attach")
-        await self._async_new_relationship_request(url, "SupportingDefinitionProperties", body)
+        relationship_guid = await self._async_new_relationship_request(url, "SupportingDefinitionProperties", body)
         logger.info(f"Linked {definition_guid1} -> {definition_guid2}")
+        return relationship_guid
 
     @dynamic_catch
     def attach_supporting_definitions(self, definition_guid1: str, relationship_type: str, definition_guid2: str,
-                                      body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                      body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Attach a supporting governance definition. Request body is optional.
             The relationshipTypeNme can be:
             * GovernanceResponse between governance drivers (GovernanceStrategy, BusinessImperative, Regulation,
@@ -1418,7 +1423,8 @@ class GovernanceOfficer(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -1448,7 +1454,7 @@ class GovernanceOfficer(ServerClient):
           }
         }
         """
-        run_sync(
+        return run_sync(
             self._async_attach_supporting_definitions(definition_guid1, relationship_type, definition_guid2, body))
 
     @dynamic_catch
@@ -1552,7 +1558,7 @@ class GovernanceOfficer(ServerClient):
 
 
     async def _async_attach_governed_by_definition(self, element_guid: str, definition_guid: str,
-                                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Link a governance definition to an element using the GovernedBy relationship. Request body is optional.
 
         Async Version.
@@ -1568,7 +1574,8 @@ class GovernanceOfficer(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -1597,12 +1604,13 @@ class GovernanceOfficer(ServerClient):
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
             f"{self.url_marker}/elements/{element_guid}/governed-by/definition/{definition_guid}/attach"
         )
-        await self._async_new_relationship_request(url, "GovernedByProperties", body)
+        relationship_guid = await self._async_new_relationship_request(url, "GovernedByProperties", body)
         logger.info(f"Linked Governed-By {definition_guid} -> {element_guid}")
+        return relationship_guid
 
     @dynamic_catch
     def attach_governed_by_definition(self, element_guid: str, definition_guid: str,
-                                      body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                      body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Link a governance definition to an element using the GovernedBy relationship. Request body is optional.
 
         Parameters
@@ -1616,7 +1624,8 @@ class GovernanceOfficer(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -1641,7 +1650,7 @@ class GovernanceOfficer(ServerClient):
            "effectiveTime" : "{{$isoTimestamp}}"
         }
         """
-        run_sync(
+        return run_sync(
             self._async_attach_governed_by_definition(element_guid, definition_guid, body))
 
     @dynamic_catch
@@ -2396,7 +2405,7 @@ class GovernanceOfficer(ServerClient):
 
     @dynamic_catch
     async def _async_link_approved_purpose(self, element_guid: str, data_processing_purpose_guid: str,
-                                           body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                           body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Attach an element to an approved purpose. Async version.
 
         Parameters
@@ -2434,14 +2443,15 @@ class GovernanceOfficer(ServerClient):
         """
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/elements/"
                f"{element_guid}/approved-purposes/{data_processing_purpose_guid}/attach")
-        await self._async_new_relationship_request(url, ["ApprovedPurposeProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["ApprovedPurposeProperties"], body)
         logger.info(f"Linked approved purpose {data_processing_purpose_guid} to element {element_guid}")
+        return relationship_guid
 
     @dynamic_catch
     def link_approved_purpose(self, element_guid: str, data_processing_purpose_guid: str,
-                              body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                              body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Attach an element to an approved purpose."""
-        run_sync(self._async_link_approved_purpose(element_guid, data_processing_purpose_guid, body))
+        return run_sync(self._async_link_approved_purpose(element_guid, data_processing_purpose_guid, body))
 
     @dynamic_catch
     async def _async_detach_approved_purpose(self, element_guid: str, data_processing_purpose_guid: str,
@@ -3043,7 +3053,7 @@ class GovernanceOfficer(ServerClient):
 
     @dynamic_catch
     async def _async_link_design_to_implementation(self, design_desc_guid: str, implementation_guid: str,
-                                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Attach a design object such as a solution component or governance definition to its implementation via the
             ImplementedBy relationship. Request body is optional. Async Version.
             https://egeria-project.org/types/7/0737-Solution-Implementation/
@@ -3059,7 +3069,8 @@ class GovernanceOfficer(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -3095,12 +3106,13 @@ class GovernanceOfficer(ServerClient):
         """
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/designs/"
                f"{design_desc_guid}/implementations/{implementation_guid}/attach")
-        await self._async_new_relationship_request(url, "ImplementedByProperties", body)
+        relationship_guid = await self._async_new_relationship_request(url, "ImplementedByProperties", body)
         logger.info(f"Linked design to implementation: {design_desc_guid} -> {implementation_guid}")
+        return relationship_guid
 
     @dynamic_catch
     def link_design_to_implementation(self, design_desc_guid: str, implementation_guid: str,
-                                      body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                      body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Attach a design object such as a solution component or governance definition to its implementation via the
             ImplementedBy relationship. Request body is optional.
             https://egeria-project.org/types/7/0737-Solution-Implementation/
@@ -3116,7 +3128,8 @@ class GovernanceOfficer(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -3150,7 +3163,7 @@ class GovernanceOfficer(ServerClient):
           }
         }
         """
-        run_sync(self._async_link_design_to_implementation(design_desc_guid, implementation_guid, body))
+        return run_sync(self._async_link_design_to_implementation(design_desc_guid, implementation_guid, body))
 
     @dynamic_catch
     async def _async_detach_design_from_implementation(self, design_desc_guid: str, implementation_guid: str,
@@ -3243,7 +3256,7 @@ class GovernanceOfficer(ServerClient):
 
     @dynamic_catch
     async def _async_link_implementation_resource(self, design_desc_guid: str, implementation_guid: str,
-                                                  body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                                  body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Attach a design object such as a solution component or governance definition to one of its implementation
             resource via the ImplementationResource relationship. Request body is optional.
             https://egeria-project.org/types/7/0737-Solution-Implementation/
@@ -3259,7 +3272,8 @@ class GovernanceOfficer(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -3296,12 +3310,13 @@ class GovernanceOfficer(ServerClient):
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/designs/"
                f"{design_desc_guid}/implementation-resources/{implementation_guid}/attach")
-        await self._async_new_relationship_request(url, "ImplementationResourceProperties", body)
+        relationship_guid = await self._async_new_relationship_request(url, "ImplementationResourceProperties", body)
         logger.info(f"Linked design to implementation resource: {design_desc_guid} -> {implementation_guid}")
+        return relationship_guid
 
     @dynamic_catch
     def link_implementation_resource(self, design_desc_guid: str, implementation_guid: str,
-                                     body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                     body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Attach a design object such as a solution component or governance definition to its implementation via the
             ImplementedBy relationship. Request body is optional.
             https://egeria-project.org/types/7/0737-Solution-Implementation/
@@ -3317,7 +3332,8 @@ class GovernanceOfficer(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -3351,7 +3367,7 @@ class GovernanceOfficer(ServerClient):
           }
         }
         """
-        run_sync(self._async_link_implementation_resource(design_desc_guid, implementation_guid, body))
+        return run_sync(self._async_link_implementation_resource(design_desc_guid, implementation_guid, body))
 
     @dynamic_catch
     async def _async_detach_implementation_resource(self, design_desc_guid: str, implementation_guid: str,
@@ -3446,7 +3462,7 @@ class GovernanceOfficer(ServerClient):
 
     @dynamic_catch
     async def _async_link_governance_results(self, gov_metric_guid: str, data_asset_guid: str,
-                                                  body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                                  body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Attach a governance metric to a data asset that describes where its measurements are kept.
             Request body is optional. https://egeria-project.org/concepts/governance-definition/
 
@@ -3463,7 +3479,8 @@ class GovernanceOfficer(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -3493,12 +3510,13 @@ class GovernanceOfficer(ServerClient):
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/governance-metrics/"
                f"{gov_metric_guid}/measurements/{data_asset_guid}/attach"
                )
-        await self._async_new_relationship_request(url, "GovernanceResultsProperties", body)
+        relationship_guid = await self._async_new_relationship_request(url, "GovernanceResultsProperties", body)
         logger.info(f"Linked governance metric to a data asset containing its measurements.: {gov_metric_guid} -> {data_asset_guid}")
+        return relationship_guid
 
     @dynamic_catch
     def link_governance_results(self, gov_metric_guid: str, data_asset_guid: str,
-                                                  body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                                  body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Attach a governance metric to a data asset that describes where its measurements are kept.
             Request body is optional. https://egeria-project.org/concepts/governance-definition/
 
@@ -3514,7 +3532,8 @@ class GovernanceOfficer(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -3540,7 +3559,7 @@ class GovernanceOfficer(ServerClient):
           "forDuplicateProcessing" : false
         }
         """
-        run_sync(self._async_link_governance_results(gov_metric_guid, data_asset_guid, body))
+        return run_sync(self._async_link_governance_results(gov_metric_guid, data_asset_guid, body))
 
     @dynamic_catch
     async def _async_detach_governance_results(self, gov_metric_guid: str, data_asset_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
@@ -3624,7 +3643,7 @@ class GovernanceOfficer(ServerClient):
         run_sync(self._async_detach_governance_results(gov_metric_guid, data_asset_guid, body))
     @dynamic_catch
     async def _async_add_regulator_to_regulation(self, regulation_guid: str, regulator_guid,
-                                                  body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                                  body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Attach a regulation to a regulator (usually an organization) using the Regulator relationship.
             Request body is optional. https://egeria-project.org/egeria-solutions/assessing-new-regulation/overview
 
@@ -3641,7 +3660,8 @@ class GovernanceOfficer(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -3674,12 +3694,13 @@ class GovernanceOfficer(ServerClient):
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/"
                f"regulations/{regulation_guid}/regulators/organizations/{regulator_guid}/attach"
                )
-        await self._async_new_relationship_request(url, "RegulatorProperties", body)
+        relationship_guid = await self._async_new_relationship_request(url, "RegulatorProperties", body)
         logger.info(f"Linked regulation to regulator: {regulation_guid} -> {regulator_guid}")
+        return relationship_guid
 
     @dynamic_catch
     def add_regulator_to_regulation(self, regulation_guid: str, regulator_guid,
-                                                  body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                                  body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Attach a regulation to a regulator (usually an organization) using the Regulator relationship.
             Request body is optional. https://egeria-project.org/egeria-solutions/assessing-new-regulation/overview
 
@@ -3695,7 +3716,8 @@ class GovernanceOfficer(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -3724,7 +3746,7 @@ class GovernanceOfficer(ServerClient):
         }
 
         """
-        run_sync(self._async_add_regulator_to_regulation(regulation_guid, regulator_guid, body))
+        return run_sync(self._async_add_regulator_to_regulation(regulation_guid, regulator_guid, body))
 
     @dynamic_catch
     async def _async_detach_regulator_from_regulation(self, regulation_guid: str, regulator_guid, body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
@@ -3822,17 +3844,18 @@ class GovernanceOfficer(ServerClient):
 
     @dynamic_catch
     async def _async_link_exception(self, element_guid: str, exception_type_guid: str,
-                                     body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                     body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach an exception to the element it was raised against (Exception relationship). Async version."""
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/elements/{element_guid}/exceptions/{exception_type_guid}/attach"
-        await self._async_new_relationship_request(url, ["ExceptionProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["ExceptionProperties"], body)
         logger.info(f"Exception {exception_type_guid} linked to element {element_guid}.")
+        return relationship_guid
 
     @dynamic_catch
     def link_exception(self, element_guid: str, exception_type_guid: str,
-                       body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                       body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach an exception to the element it was raised against (Exception relationship)."""
-        run_sync(self._async_link_exception(element_guid, exception_type_guid, body))
+        return run_sync(self._async_link_exception(element_guid, exception_type_guid, body))
 
     @dynamic_catch
     async def _async_update_exception(self, exception_guid: str,
@@ -3864,17 +3887,18 @@ class GovernanceOfficer(ServerClient):
 
     @dynamic_catch
     async def _async_link_regulation_certification_type(self, regulation_guid: str, certification_type_guid: str,
-                                                          body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                                          body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a certification type that demonstrates compliance with a regulation (RegulationCertificationType relationship). Async version."""
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/regulations/{regulation_guid}/regulation-certification-types/{certification_type_guid}/attach"
-        await self._async_new_relationship_request(url, ["RegulationCertificationTypeProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["RegulationCertificationTypeProperties"], body)
         logger.info(f"Certification type {certification_type_guid} linked to regulation {regulation_guid}.")
+        return relationship_guid
 
     @dynamic_catch
     def link_regulation_certification_type(self, regulation_guid: str, certification_type_guid: str,
-                                            body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                            body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a certification type that demonstrates compliance with a regulation (RegulationCertificationType relationship)."""
-        run_sync(self._async_link_regulation_certification_type(regulation_guid, certification_type_guid, body))
+        return run_sync(self._async_link_regulation_certification_type(regulation_guid, certification_type_guid, body))
 
     @dynamic_catch
     async def _async_detach_regulation_certification_type(self, regulation_guid: str, certification_type_guid: str,

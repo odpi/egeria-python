@@ -91,7 +91,7 @@ class ActionAuthor(ServerClient):
         governance_action_type_guid: str,
         governance_engine_guid: str,
         body: dict | NewRelationshipRequestBody,
-    ) -> None:
+    ) -> str | None:
         """Link a governance action type to a governance engine. Async version.
 
         Parameters
@@ -105,7 +105,8 @@ class ActionAuthor(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -131,14 +132,14 @@ class ActionAuthor(ServerClient):
         ```
         """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/action-author/governance-action-types/{governance_action_type_guid}/governance-engine-executor/{governance_engine_guid}/attach"
-        await self._async_new_relationship_request(url, ["GovernanceActionExecutorProperties"], body)
+        return await self._async_new_relationship_request(url, ["GovernanceActionExecutorProperties"], body)
 
     def link_governance_action_executor(
         self,
         governance_action_type_guid: str,
         governance_engine_guid: str,
         body: dict | NewRelationshipRequestBody,
-    ) -> None:
+    ) -> str | None:
         """Link a governance action type to a governance engine.
 
         Parameters
@@ -152,7 +153,8 @@ class ActionAuthor(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -177,7 +179,7 @@ class ActionAuthor(ServerClient):
         }
         ```
         """
-        run_sync(
+        return run_sync(
             self._async_link_governance_action_executor(
                 governance_action_type_guid, governance_engine_guid, body
             )
@@ -211,17 +213,17 @@ class ActionAuthor(ServerClient):
         governance_action_guid: str,
         element_guid: str,
         body: dict | NewRelationshipRequestBody,
-    ) -> None:
+    ) -> str | None:
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/action-author/governance-actions/{governance_action_guid}/action-targets/{element_guid}/attach"
-        await self._async_new_relationship_request(url, ["TargetForGovernanceActionProperties"], body)
+        return await self._async_new_relationship_request(url, ["TargetForGovernanceActionProperties"], body)
 
     def link_target_for_governance_action(
         self,
         governance_action_guid: str,
         element_guid: str,
         body: dict | NewRelationshipRequestBody,
-    ) -> None:
-        run_sync(
+    ) -> str | None:
+        return run_sync(
             self._async_link_target_for_governance_action(governance_action_guid, element_guid, body)
         )
 
@@ -253,17 +255,17 @@ class ActionAuthor(ServerClient):
         process_guid: str,
         process_step_guid: str,
         body: dict | NewRelationshipRequestBody,
-    ) -> None:
+    ) -> str | None:
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/action-author/governance-action-processes/{process_guid}/first-process-step/{process_step_guid}/attach"
-        await self._async_new_relationship_request(url, ["GovernanceActionProcessFlowProperties"], body)
+        return await self._async_new_relationship_request(url, ["GovernanceActionProcessFlowProperties"], body)
 
     def setup_first_action_process_step(
         self,
         process_guid: str,
         process_step_guid: str,
         body: dict | NewRelationshipRequestBody,
-    ) -> None:
-        run_sync(
+    ) -> str | None:
+        return run_sync(
             self._async_setup_first_action_process_step(process_guid, process_step_guid, body)
         )
 

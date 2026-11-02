@@ -2446,17 +2446,18 @@ class ExternalReferences(ServerClient):
 
     @dynamic_catch
     async def _async_link_external_id_to_element(self, element_guid: str, external_id_guid: str,
-                                                  body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                                  body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach an external identifier to the element it identifies (ExternalIdLink relationship). Async version."""
         url = f"{self.command_root}/elements/{element_guid}/external-ids/{external_id_guid}/attach"
-        await self._async_new_relationship_request(url, ["ExternalIdLinkProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["ExternalIdLinkProperties"], body)
         logger.info(f"External id {external_id_guid} linked to element {element_guid}.")
+        return relationship_guid
 
     @dynamic_catch
     def link_external_id_to_element(self, element_guid: str, external_id_guid: str,
-                                    body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                    body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach an external identifier to the element it identifies (ExternalIdLink relationship)."""
-        run_sync(self._async_link_external_id_to_element(element_guid, external_id_guid, body))
+        return run_sync(self._async_link_external_id_to_element(element_guid, external_id_guid, body))
 
     @dynamic_catch
     async def _async_detach_external_id_from_element(self, element_guid: str, external_id_guid: str,

@@ -55,7 +55,7 @@ def test_run_analytic_function_uses_token_when_given(fake_egeria_tech, monkeypat
     """When a token is supplied, set_bearer_token(token) is used -- not
     create_egeria_bearer_token()."""
     monkeypatch.setattr(
-        fse, "_resolve_analytic_function", lambda decl: decl
+        fse, "resolve_report_spec_function", lambda decl: decl
     )
     monkeypatch.setattr(
         fse, "_bind_client_args", lambda func, client: (client,)
@@ -78,7 +78,7 @@ def test_run_analytic_function_mints_token_when_none_given(fake_egeria_tech, mon
     """Backward compatible: with no token, the old create_egeria_bearer_token()
     path from user/user_pass is used unchanged."""
     monkeypatch.setattr(
-        fse, "_resolve_analytic_function", lambda decl: decl
+        fse, "resolve_report_spec_function", lambda decl: decl
     )
     monkeypatch.setattr(
         fse, "_bind_client_args", lambda func, client: (client,)

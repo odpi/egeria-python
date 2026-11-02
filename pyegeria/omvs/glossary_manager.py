@@ -2848,7 +2848,7 @@ class GlossaryManager(CollectionManager):
     @dynamic_catch
     async def _async_add_relationship_between_terms(
             self, term1_guid: str, term2_guid: str, relationship_type: str, body: Optional[dict | NewRelationshipRequestBody] = None,
-            ) -> None:
+            ) -> str | None:
         """Add a relationship between terms. Async Version.
 
         Parameters
@@ -2865,7 +2865,8 @@ class GlossaryManager(CollectionManager):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -2914,13 +2915,14 @@ class GlossaryManager(CollectionManager):
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
             f"terms/{term1_guid}/relationships/{relationship_type}/terms/{term2_guid}"
         )
-        await self._async_new_relationship_request(url, ["GlossaryTermRelationshipProperties"],body)
+        relationship_guid = await self._async_new_relationship_request(url, ["GlossaryTermRelationshipProperties"],body)
         logger.info(f"Added relationship between {term1_guid} and {term2_guid} of type {relationship_type}")
+        return relationship_guid
 
     @dynamic_catch
     def add_relationship_between_terms(
             self, term1_guid: str, term2_guid: str, relationship_type: str, body: Optional[dict | NewRelationshipRequestBody] = None,
-            ) -> None:
+            ) -> str | None:
         """Add a relationship between terms.
 
         Parameters
@@ -2936,7 +2938,8 @@ class GlossaryManager(CollectionManager):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -2969,7 +2972,7 @@ class GlossaryManager(CollectionManager):
          }
         }
         """
-        run_sync(
+        return run_sync(
             self._async_add_relationship_between_terms(term1_guid, term2_guid, relationship_type,
                                                        body)
             )
@@ -4168,17 +4171,18 @@ class GlossaryManager(CollectionManager):
 
     @dynamic_catch
     async def _async_link_used_in_context(self, glossary_term_guid: str, context_element_guid: str,
-                                          body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                          body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a glossary term to the element that provides its usage context (UsedInContext relationship). Async version."""
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossary-terms/{glossary_term_guid}/used-in-contexts/{context_element_guid}/attach"
-        await self._async_new_relationship_request(url, ["UsedInContextProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["UsedInContextProperties"], body)
         logger.info(f"Context element {context_element_guid} linked to glossary term {glossary_term_guid}.")
+        return relationship_guid
 
     @dynamic_catch
     def link_used_in_context(self, glossary_term_guid: str, context_element_guid: str,
-                             body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                             body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Attach a glossary term to the element that provides its usage context (UsedInContext relationship)."""
-        run_sync(self._async_link_used_in_context(glossary_term_guid, context_element_guid, body))
+        return run_sync(self._async_link_used_in_context(glossary_term_guid, context_element_guid, body))
 
     @dynamic_catch
     async def _async_detach_used_in_context(self, glossary_term_guid: str, context_element_guid: str,

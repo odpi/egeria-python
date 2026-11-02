@@ -3297,7 +3297,7 @@ class CollectionManager(ServerClient):
 
     @dynamic_catch
     async def _async_link_associated_skill_set(self, actor_guid: str, skill_set_guid: str,
-                                               body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                               body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Attach a skill set collection to an actor via the AssociatedSkillSet relationship. Async version.
 
         Parameters
@@ -3337,12 +3337,13 @@ class CollectionManager(ServerClient):
         """
         base = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager"
         url = f"{base}/actors/{actor_guid}/associated-skill-sets/{skill_set_guid}/attach"
-        await self._async_new_relationship_request(url, ["AssociatedSkillSetProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["AssociatedSkillSetProperties"], body)
         logger.debug(f"Linked skill set {skill_set_guid} to actor {actor_guid}")
+        return relationship_guid
 
     @dynamic_catch
     def link_associated_skill_set(self, actor_guid: str, skill_set_guid: str,
-                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Attach a skill set collection to an actor via the AssociatedSkillSet relationship.
 
         Parameters
@@ -3380,7 +3381,7 @@ class CollectionManager(ServerClient):
           }
         }
         """
-        run_sync(
+        return run_sync(
             self._async_link_associated_skill_set(actor_guid, skill_set_guid, body))
 
     @dynamic_catch
@@ -5447,7 +5448,7 @@ class CollectionManager(ServerClient):
 
     @dynamic_catch
     async def _async_link_contract(self, agreement_guid: str, external_ref_guid: str,
-                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Attach an agreement to an external reference element that describes the location of the contract
         documents.
             Request body is optional. Async version.
@@ -5498,11 +5499,12 @@ class CollectionManager(ServerClient):
         """
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections/"
                f"agreements/{agreement_guid}/contract-links/{external_ref_guid}/attach")
-        await self._async_new_relationship_request(url, "ContractLinkProperties", body)
+        relationship_guid = await self._async_new_relationship_request(url, "ContractLinkProperties", body)
         logger.info(f"Attached agreement {agreement_guid} to contract {external_ref_guid}")
+        return relationship_guid
 
     @dynamic_catch
-    def link_contract(self, agreement_guid: str, external_ref_guid: str, body: dict = None) -> None:
+    def link_contract(self, agreement_guid: str, external_ref_guid: str, body: dict = None) -> str | None:
         """ Attach an agreement to an external reference element that describes the location of the contract
         documents.
             Request body is optional.
@@ -5551,7 +5553,7 @@ class CollectionManager(ServerClient):
         }
 
         """
-        run_sync(self._async_link_contract(agreement_guid, external_ref_guid, body))
+        return run_sync(self._async_link_contract(agreement_guid, external_ref_guid, body))
 
 
     @dynamic_catch
@@ -5933,7 +5935,7 @@ class CollectionManager(ServerClient):
 
     @dynamic_catch
     async def _async_link_subscriber(self, subscriber_guid: str, subscription_guid: str,
-                                     body: Optional[dict | NewRelationshipRequestBody] = None)-> None:
+                                     body: Optional[dict | NewRelationshipRequestBody] = None)-> str | None:
         """ Attach a subscriber to a subscription.  The subscriber is of type 'Referenceable' to allow digital
             products, team or business capabilities to be the subscriber. The subscription is an element of type
             DigitalSubscription.
@@ -5983,8 +5985,9 @@ class CollectionManager(ServerClient):
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager"
             f"/subscribers/"
             f"{subscriber_guid}/subscriptions/{subscription_guid}/attach")
-        await self._async_new_relationship_request(url, "DigitalSubscriberProperties", body)
+        relationship_guid = await self._async_new_relationship_request(url, "DigitalSubscriberProperties", body)
         logger.info(f"Linking subscriber {subscriber_guid} to subscription {subscription_guid}")
+        return relationship_guid
 
     @dynamic_catch
     def link_subscriber(self, subscriber_guid: str, subscription_guid: str,
@@ -6034,7 +6037,7 @@ class CollectionManager(ServerClient):
           }
         }
         """
-        run_sync(self._async_link_subscriber(subscriber_guid, subscription_guid, body))
+        return run_sync(self._async_link_subscriber(subscriber_guid, subscription_guid, body))
 
 
     @dynamic_catch
@@ -6185,8 +6188,9 @@ class CollectionManager(ServerClient):
             f"{self.platform_url}/servers/"
             f"{self.view_server}/api/open-metadata/collection-manager/metadata-elements/"
             f"{parent_guid}/collections/{collection_guid}/attach")
-        await self._async_new_relationship_request(url, "ResourceListProperties", body)
+        relationship_guid = await self._async_new_relationship_request(url, "ResourceListProperties", body)
         logger.info(f"Attached {collection_guid} to {parent_guid}")
+        return relationship_guid
 
     @dynamic_catch
     async def _async_attach_data_description(self, element_guid: str, collection_guid: str,
@@ -6206,14 +6210,15 @@ class CollectionManager(ServerClient):
             f"{self.platform_url}/servers/"
             f"{self.view_server}/api/open-metadata/collection-manager/metadata-elements/"
             f"{element_guid}/data-descriptions/{collection_guid}/attach")
-        await self._async_new_relationship_request(url, "DataDescriptionProperties", body)
+        relationship_guid = await self._async_new_relationship_request(url, "DataDescriptionProperties", body)
         logger.info(f"Attached data description {collection_guid} to element {element_guid}")
+        return relationship_guid
 
     @dynamic_catch
     def attach_data_description(self, element_guid: str, collection_guid: str,
                                 body: dict | NewRelationshipRequestBody = None):
         """Attach a data description collection to an element (DataDescription relationship)."""
-        run_sync(self._async_attach_data_description(element_guid, collection_guid, body))
+        return run_sync(self._async_attach_data_description(element_guid, collection_guid, body))
 
     @dynamic_catch
     async def _async_detach_data_description(self, element_guid: str, collection_guid: str,
@@ -6244,7 +6249,7 @@ class CollectionManager(ServerClient):
 
     @dynamic_catch
     async def _async_attach_smart_query(self, results_set_guid: str, saved_query_guid: str,
-                                        body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                        body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Connect a SavedQuery to a ResultsSet via the collection-manager-native SmartQuery attach endpoint.
             Async version.
 
@@ -6263,7 +6268,8 @@ class CollectionManager(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -6289,14 +6295,15 @@ class CollectionManager(ServerClient):
             f"{self.platform_url}/servers/"
             f"{self.view_server}/api/open-metadata/collection-manager/collections/results-sets/"
             f"{results_set_guid}/smart-query/{saved_query_guid}/attach")
-        await self._async_new_relationship_request(url, ["SmartQueryProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["SmartQueryProperties"], body)
         logger.info(f"Attached SmartQuery {saved_query_guid} to results set {results_set_guid}")
+        return relationship_guid
 
     @dynamic_catch
     def attach_smart_query(self, results_set_guid: str, saved_query_guid: str,
-                           body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                           body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Connect a SavedQuery to a ResultsSet via the collection-manager-native SmartQuery attach endpoint."""
-        run_sync(self._async_attach_smart_query(results_set_guid, saved_query_guid, body))
+        return run_sync(self._async_attach_smart_query(results_set_guid, saved_query_guid, body))
 
     @dynamic_catch
     async def _async_detach_smart_query(self, results_set_guid: str, saved_query_guid: str,
@@ -6387,7 +6394,7 @@ class CollectionManager(ServerClient):
               "forDuplicateProcessing" : false
             }
             """
-        run_sync(self._async_attach_collection(parent_guid, collection_guid, body))
+        return run_sync(self._async_attach_collection(parent_guid, collection_guid, body))
 
 
     @dynamic_catch
@@ -6613,7 +6620,7 @@ class CollectionManager(ServerClient):
 
     @dynamic_catch
     async def _async_add_to_collection(self, collection_guid: str, element_guid: str,
-                                       body: Optional[dict | NewRelationshipRequestBody] = None, ) -> None:
+                                       body: Optional[dict | NewRelationshipRequestBody] = None, ) -> str | None:
         """Add an element to a collection.  The request body is optional. Async version.
 
         Parameters
@@ -6627,7 +6634,8 @@ class CollectionManager(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -6669,12 +6677,13 @@ class CollectionManager(ServerClient):
 
         url = (f"{self.collection_command_root}/{collection_guid}/members/"
                f"{element_guid}/attach")
-        await self._async_new_relationship_request(url, "CollectionMembershipProperties", body)
+        relationship_guid = await self._async_new_relationship_request(url, "CollectionMembershipProperties", body)
         logger.info(f"Added {element_guid} to {collection_guid}")
+        return relationship_guid
 
 
     def add_to_collection(self, collection_guid: str, element_guid: str,
-                          body: dict | NewRelationshipRequestBody= None, ) -> None:
+                          body: dict | NewRelationshipRequestBody= None, ) -> str | None:
         """Add an element to a collection.  The request body is optional.
 
         Parameters
@@ -6691,7 +6700,8 @@ class CollectionManager(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -6730,12 +6740,12 @@ class CollectionManager(ServerClient):
         }
 
         """
-        run_sync(self._async_add_to_collection( collection_guid, element_guid, body))
+        return run_sync(self._async_add_to_collection( collection_guid, element_guid, body))
 
     def add_term_to_folder(self, folder_guid: str, term_guid: str,
-                             body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                             body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """Add a term to a category.  The request body is optional."""
-        run_sync(self._async_add_to_collection(folder_guid, term_guid, body))
+        return run_sync(self._async_add_to_collection(folder_guid, term_guid, body))
 
 
     @dynamic_catch

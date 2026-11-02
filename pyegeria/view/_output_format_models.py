@@ -68,7 +68,7 @@ import json
 import os
 from pathlib import Path
 from typing import Dict, List, Optional, Union, Any
-from pydantic import BaseModel, Field, model_validator, validator, root_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from loguru import logger
 __all__ = [
     'Column',
@@ -161,7 +161,8 @@ class Format(BaseModel):
     types: List[str]
     attributes: List[Union[Column, Dict[str, Any]]]
     
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def _migrate_columns_to_attributes(cls, values):
         """Support legacy 'columns' by migrating to 'attributes' when loading."""
         if isinstance(values, dict):
@@ -169,7 +170,8 @@ class Format(BaseModel):
                 values['attributes'] = values.pop('columns')
         return values
 
-    @validator('attributes', pre=True)
+    @field_validator('attributes', mode='before')
+    @classmethod
     def validate_attributes(cls, v):
         """Convert dictionary attributes to Attribute/Column objects."""
         result = []
@@ -184,9 +186,9 @@ class Format(BaseModel):
         """Override dict method to convert Attribute objects back to dictionaries.
         Emits both 'attributes' (preferred) and 'columns' (deprecated) for backward compatibility.
         """
-        result = super().dict(*args, **kwargs)
+        result = self.model_dump(*args, **kwargs)
         result['attributes'] = [
-            attr if isinstance(attr, dict) else attr.dict()
+            attr if isinstance(attr, dict) else attr.model_dump()
             for attr in self.attributes
         ]
         # Backward-compat alias
@@ -258,7 +260,8 @@ class ActionParameter(BaseModel):
     analytic_spec_params: Dict[str, Any] = Field(default_factory=dict)
     analytic_binders: Dict[str, str] = Field(default_factory=dict)
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def _migrate_legacy_user_params(cls, values):
         """Migrate legacy 'user_params' into 'required_params' when loading from older dict/json."""
         if isinstance(values, dict):
@@ -285,7 +288,8 @@ class QuestionSpec(BaseModel):
         perspectives: A list of perspective names for whom these questions are relevant
         questions: Example natural-language questions this report spec can answer
     """
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def _migrate_legacy_roles(cls, values):
         """Migrate legacy 'roles' field to 'perspectives' when loading from older dict/json."""
         if isinstance(values, dict) and 'perspectives' not in values and 'roles' in values:
@@ -322,7 +326,8 @@ class FormatSet(BaseModel):
     # Optional: example questions and perspectives this report spec can address
     question_spec: Optional[List[Union[QuestionSpec, Dict[str, Any]]]] = None
     
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def _migrate_legacy_fields(cls, values):
         """Migrate legacy fields from older saved JSON (entity_type -> target_type)."""
         if isinstance(values, dict):
@@ -330,7 +335,8 @@ class FormatSet(BaseModel):
                 values['target_type'] = values.pop('entity_type')
         return values
 
-    @validator('formats', pre=True)
+    @field_validator('formats', mode='before')
+    @classmethod
     def validate_formats(cls, v):
         """Convert dictionary formats to Format objects."""
         result = []
@@ -341,7 +347,8 @@ class FormatSet(BaseModel):
                 result.append(item)
         return result
 
-    @validator('question_spec', pre=True)
+    @field_validator('question_spec', mode='before')
+    @classmethod
     def validate_question_spec(cls, v):
         """Convert dictionary items to QuestionSpec objects when provided."""
         if v is None:
@@ -354,7 +361,8 @@ class FormatSet(BaseModel):
                 out.append(item)
         return out
     
-    @validator('action', 'get_additional_props', pre=True)
+    @field_validator('action', 'get_additional_props', mode='before')
+    @classmethod
     def validate_action_like(cls, v):
         """Convert dictionary action-like fields to ActionParameter objects. Accepts legacy list shape."""
         if v is None:
@@ -371,20 +379,20 @@ class FormatSet(BaseModel):
     
     def dict(self, *args, **kwargs):
         """Override dict method to convert nested objects back to dictionaries."""
-        result = super().dict(*args, **kwargs)
+        result = self.model_dump(*args, **kwargs)
         result['formats'] = [
             format if isinstance(format, dict) else format.dict()
             for format in self.formats
         ]
         if self.action is not None:
-            result['action'] = self.action if isinstance(self.action, dict) else self.action.dict()
+            result['action'] = self.action if isinstance(self.action, dict) else self.action.model_dump()
         if self.get_additional_props is not None:
             result['get_additional_props'] = (
-                self.get_additional_props if isinstance(self.get_additional_props, dict) else self.get_additional_props.dict()
+                self.get_additional_props if isinstance(self.get_additional_props, dict) else self.get_additional_props.model_dump()
             )
         if self.question_spec is not None:
             result['question_spec'] = [
-                item if isinstance(item, dict) else item.dict() for item in self.question_spec
+                item if isinstance(item, dict) else item.model_dump() for item in self.question_spec
             ]
         return result
     

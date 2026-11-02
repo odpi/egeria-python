@@ -7,7 +7,8 @@ import types
 import pytest
 
 import pyegeria.view.format_set_executor as fse
-from pyegeria.view.analytic_registry import clear_runtime_analytic_functions, register_analytic_functions
+from pyegeria.view.analytic_registry import (
+    clear_runtime_analytic_functions, get_analytic_registry, register_analytic_functions)
 
 MOD = "fake_issue_171_analytics"
 
@@ -66,7 +67,12 @@ def _declare(func_name: str):
 
 
 def _run(monkeypatch, func_name: str, output_format: str = "DICT"):
-    fmt = {"action": {"analytic_function": f"{MOD}.{func_name}"}, "target_type": "Referenceable"}
+    # Report specs name functions by registered name (ISSUE-173); an undeclared
+    # function is registered with no declaration.
+    name = f"cov-{func_name}"
+    if name not in get_analytic_registry():
+        register_analytic_functions({name: {"name": name, "function": f"{MOD}.{func_name}"}})
+    fmt = {"action": {"analytic_function": name}, "target_type": "Referenceable"}
     monkeypatch.setattr(fse, "select_report_spec", lambda name, fmt_type: fmt)
     return fse.exec_report_spec("coverage", output_format=output_format)
 

@@ -1842,8 +1842,9 @@ class ProjectManager(ServerClient):
         url = (
             f"{self.project_command_base}/{project_guid}/project-dependencies/{upstream_project_guid}/attach"
         )
-        await self._async_new_relationship_request(url, None, body)
+        relationship_guid = await self._async_new_relationship_request(url, None, body)
         logger.info(f"Project {project_guid} depends on -> {upstream_project_guid}")
+        return relationship_guid
 
     @dynamic_catch
     def set_project_dependency(self, project_guid: str,
@@ -1878,7 +1879,7 @@ class ProjectManager(ServerClient):
             -----
 
         """
-        run_sync(
+        return run_sync(
             self._async_set_project_dependency(project_guid, upstream_project_guid,
                                                body))
 
@@ -2009,8 +2010,9 @@ class ProjectManager(ServerClient):
         url = (
             f"{self.project_command_base}/{parent_project_guid}/project-hierarchies/{project_guid}/attach"
         )
-        await self._async_new_relationship_request(url, None, body)
+        relationship_guid = await self._async_new_relationship_request(url, None, body)
         logger.info(f"Project {project_guid} managed by -> {parent_project_guid}")
+        return relationship_guid
 
     @dynamic_catch
     def set_project_hierarchy(self, project_guid: str,
@@ -2045,7 +2047,7 @@ class ProjectManager(ServerClient):
             -----
 
         """
-        run_sync(
+        return run_sync(
             self._async_set_project_hierarchy(project_guid, parent_project_guid,
                                               body))
 
@@ -2147,7 +2149,7 @@ class ProjectManager(ServerClient):
             assignment_type: Optional[str] = None,
             description: Optional[str] = None,
             body: Optional[dict | NewRelationshipRequestBody] = None
-    ) -> None:
+    ) -> str | None:
         """Add an actor to a project. The request body is optional.  If supplied, it contains the name of the perspective that
         the actor plays in the project. Async version.
 
@@ -2166,7 +2168,8 @@ class ProjectManager(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -2195,8 +2198,9 @@ class ProjectManager(ServerClient):
             }
             body_s = body_slimmer(body)
 
-        await self._async_new_relationship_request(url, ["AssignmentScopeProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["AssignmentScopeProperties"], body)
         logger.info(f"Added member {actor_guid} to project {project_guid}")
+        return relationship_guid
 
     @dynamic_catch
     def add_to_project_team(
@@ -2206,7 +2210,7 @@ class ProjectManager(ServerClient):
             assignment_type: Optional[str] = None,
             description: Optional[str] = None,
             body: Optional[dict | NewRelationshipRequestBody] = None
-    ) -> None:
+    ) -> str | None:
         """Add an actor to a project. The request body is optional.  If supplied, it contains the name of the perspective that
         the actor plays in the project.
 
@@ -2225,7 +2229,8 @@ class ProjectManager(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -2238,7 +2243,7 @@ class ProjectManager(ServerClient):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        run_sync(
+        return run_sync(
             self._async_add_to_project_team(
                 project_guid,
                 actor_guid,

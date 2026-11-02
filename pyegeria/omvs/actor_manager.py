@@ -433,7 +433,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     async def _async_link_asset_to_profile(self, asset_guid: str, it_profile_guid: str,
-                                           body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                           body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Attach an asset to an IT Profile. Async version.
     
         Parameters
@@ -480,8 +480,9 @@ class ActorManager(ServerClient):
         """
 
         url = url = (f"{self.command_root}/assets/{asset_guid}/it-profiles/{it_profile_guid}/attach")
-        await self._async_new_relationship_request(url, ["RelationshipProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["RelationshipProperties"], body)
         logger.debug(f"Linking element {asset_guid} to IT Profile  {it_profile_guid}")
+        return relationship_guid
 
     @dynamic_catch
     def link_asset_to_profile(self, asset_guid: str, it_profile_guid: str,
@@ -534,7 +535,7 @@ class ActorManager(ServerClient):
             }
 
             """
-        run_sync(self._async_link_asset_to_profile(asset_guid, it_profile_guid, body))
+        return run_sync(self._async_link_asset_to_profile(asset_guid, it_profile_guid, body))
 
     @dynamic_catch
     async def _async_detach_asset_from_profile(self, asset_guid: str, it_profile_guid: str,
@@ -1605,7 +1606,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     async def _async_link_person_role_to_profile(self, person_role_guid: str, person_profile_guid: str,
-                                                 body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                                 body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Attach a person role to a person profile. Async version.
 
         Parameters
@@ -1652,8 +1653,9 @@ class ActorManager(ServerClient):
 
         url = url = (
             f"{self.command_root}/actor-roles/{person_role_guid}/person-role-appointments/{person_profile_guid}/attach")
-        await self._async_new_relationship_request(url, ["PersonRoleAppointmentProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["PersonRoleAppointmentProperties"], body)
         logger.debug(f"Linking person role {person_role_guid} to Person Profile  {person_profile_guid}")
+        return relationship_guid
 
     @dynamic_catch
     def link_person_role_to_profile(self, person_role_guid: str, person_profile_guid: str,
@@ -1700,7 +1702,7 @@ class ActorManager(ServerClient):
             }
 
             """
-        run_sync(self._async_link_person_role_to_profile(person_role_guid, person_profile_guid, body))
+        return run_sync(self._async_link_person_role_to_profile(person_role_guid, person_profile_guid, body))
 
     @dynamic_catch
     async def _async_detach_person_role_from_profile(self, person_role_guid: str, person_profile_guid: str,
@@ -1795,7 +1797,7 @@ class ActorManager(ServerClient):
     #
     @dynamic_catch
     async def _async_link_team_role_to_profile(self, team_role_guid: str, team_profile_guid: str,
-                                               body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                               body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Attach a team role to a team profile. Async version.
 
         Parameters
@@ -1842,8 +1844,9 @@ class ActorManager(ServerClient):
 
         url = url = (
             f"{self.command_root}/actor-roles/{team_role_guid}/team-role-appointments/{team_profile_guid}/attach")
-        await self._async_new_relationship_request(url, ["TeamRoleAppointmentProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["TeamRoleAppointmentProperties"], body)
         logger.debug(f"Linking team role {team_role_guid} to Team Profile  {team_profile_guid}")
+        return relationship_guid
 
     @dynamic_catch
     def link_team_role_to_profile(self, team_role_guid: str, team_profile_guid: str,
@@ -1890,7 +1893,7 @@ class ActorManager(ServerClient):
             }
 
             """
-        run_sync(self._async_link_team_role_to_profile(team_role_guid, team_profile_guid, body))
+        return run_sync(self._async_link_team_role_to_profile(team_role_guid, team_profile_guid, body))
 
     @dynamic_catch
     async def _async_detach_team_role_from_profile(self, team_role_guid: str, team_profile_guid: str,
@@ -1983,7 +1986,7 @@ class ActorManager(ServerClient):
     #
     @dynamic_catch
     async def _async_link_it_profile_role_to_it_profile(self, it_profile_role_guid: str, it_profile_guid: str,
-                                                        body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                                        body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Attach an IT profile role to an IT profile. Async version.
 
         Parameters
@@ -2030,8 +2033,9 @@ class ActorManager(ServerClient):
 
         url = url = (
             f"{self.command_root}/actor-roles/{it_profile_role_guid}/it-profile-role-appointments/{it_profile_guid}/attach")
-        await self._async_new_relationship_request(url, ["ITProfileRoleAppointmentProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["ITProfileRoleAppointmentProperties"], body)
         logger.debug(f"Linking IT Profile role {it_profile_role_guid} to IT Profile  {it_profile_guid}")
+        return relationship_guid
 
     @dynamic_catch
     def link_it_profile_role_to_it_profile(self, it_profile_role_guid: str, it_profile_guid: str,
@@ -2078,7 +2082,7 @@ class ActorManager(ServerClient):
             }
 
             """
-        run_sync(
+        return run_sync(
             self._async_link_it_profile_role_to_it_profile(it_profile_role_guid, it_profile_guid, body))
 
     @dynamic_catch
@@ -3168,7 +3172,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     async def _async_link_identity_to_profile(self, user_identity_guid: str, actor_profile_guid: str,
-                                              body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                              body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Attach an actor profile to a user identity. Async version.
 
         Parameters
@@ -3215,8 +3219,9 @@ class ActorManager(ServerClient):
 
         url = url = (
             f"{self.command_root}/user-identities/{user_identity_guid}/profile-identity/{actor_profile_guid}/attach")
-        await self._async_new_relationship_request(url, ["ProfileIdentityProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["ProfileIdentityProperties"], body)
         logger.debug(f"Linking User Identity {user_identity_guid} to Actor Profile  {actor_profile_guid}")
+        return relationship_guid
 
     @dynamic_catch
     def link_identity_to_profile(self, user_identity_guid: str, actor_profile_guid: str,
@@ -3264,7 +3269,7 @@ class ActorManager(ServerClient):
         }
 
         """
-        run_sync(self._async_link_identity_to_profile(user_identity_guid, actor_profile_guid, body))
+        return run_sync(self._async_link_identity_to_profile(user_identity_guid, actor_profile_guid, body))
 
     @dynamic_catch
     async def _async_detach_identity_from_profile(self, user_identity_guid: str, actor_profile_guid: str,
@@ -3357,7 +3362,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     async def _async_link_assignment_scope(self, scope_element_guid: str, actor_guid: str,
-                                           body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                           body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Attach an actor to an element that describes its scope. Async version.
 
         Parameters
@@ -3404,8 +3409,9 @@ class ActorManager(ServerClient):
         """
 
         url = f"{self.command_root}/elements/{scope_element_guid}/actors/{actor_guid}/attach"
-        await self._async_new_relationship_request(url, ["AssignmentScopeProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["AssignmentScopeProperties"], body)
         logger.debug(f"Linking actor {actor_guid} to assignment scope {scope_element_guid}")
+        return relationship_guid
 
     @dynamic_catch
     def link_assignment_scope(self, scope_element_guid: str, actor_guid: str,
@@ -3454,7 +3460,7 @@ class ActorManager(ServerClient):
         }
 
         """
-        run_sync(self._async_link_assignment_scope(scope_element_guid, actor_guid, body))
+        return run_sync(self._async_link_assignment_scope(scope_element_guid, actor_guid, body))
 
     @dynamic_catch
     async def _async_detach_assignment_scope(self, scope_element_guid: str, actor_guid: str,
@@ -5790,7 +5796,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     async def _async_link_contact_details(self, element_guid: str, contact_details_guid: str,
-                                          body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+                                          body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
         """ Attach an element to its contact details. Async version.
 
         Parameters
@@ -5836,8 +5842,9 @@ class ActorManager(ServerClient):
         """
 
         url = f"{self.command_root}/elements/{element_guid}/contact-details/{contact_details_guid}/attach"
-        await self._async_new_relationship_request(url, ["ContactThroughProperties"], body)
+        relationship_guid = await self._async_new_relationship_request(url, ["ContactThroughProperties"], body)
         logger.debug(f"Linking element {element_guid} to contact details {contact_details_guid}")
+        return relationship_guid
 
     @dynamic_catch
     def link_contact_details(self, element_guid: str, contact_details_guid: str,
@@ -5885,7 +5892,7 @@ class ActorManager(ServerClient):
         }
 
         """
-        run_sync(self._async_link_contact_details(element_guid, contact_details_guid, body))
+        return run_sync(self._async_link_contact_details(element_guid, contact_details_guid, body))
 
     @dynamic_catch
     async def _async_detach_contact_details(self, element_guid: str, contact_details_guid: str,

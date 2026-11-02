@@ -577,7 +577,7 @@ def test_metric_trend_calls_target_once_per_point_and_merges_dict_result():
     mgr = _mgr()
     mgr.find_metadata_elements.return_value = [{}] * 3
     series = om.metric_trend(
-        mgr, MagicMock(), "pyegeria.view.overview_metrics.people_counts",
+        mgr, MagicMock(), "people_counts",
         window="7d", points=3,
     )
     assert len(series) == 3
@@ -587,7 +587,7 @@ def test_metric_trend_calls_target_once_per_point_and_merges_dict_result():
 def test_metric_trend_scalar_result_stored_under_value():
     mgr = _mgr(count_metadata_elements=MagicMock(return_value=5))
     series = om.metric_trend(
-        mgr, MagicMock(), "pyegeria.view.overview_metrics.count_elements",
+        mgr, MagicMock(), "count_elements",
         window="7d", points=2, metric_params={"type_name": "Asset"},
     )
     assert len(series) == 2
@@ -602,15 +602,17 @@ def test_metric_trend_snapshot_failure_yields_none_not_raise():
         raise RuntimeError("boom")
 
     import pyegeria.view.overview_metrics as om_module
+    from pyegeria.view.analytic_registry import clear_runtime_analytic_functions, register_analytic_functions
     om_module._boom_for_test = _boom
+    # metric_path is a registered name from 6.2.19 (ISSUE-173)
+    register_analytic_functions({"boom-for-test": {
+        "name": "boom-for-test", "function": "pyegeria.view.overview_metrics._boom_for_test"}})
     try:
-        series = om.metric_trend(
-            mgr, MagicMock(), "pyegeria.view.overview_metrics._boom_for_test",
-            window="7d", points=2,
-        )
+        series = om.metric_trend(mgr, MagicMock(), "boom-for-test", window="7d", points=2)
         assert len(series) == 2
         assert all(p["value"] is None for p in series)
     finally:
+        clear_runtime_analytic_functions()
         del om_module._boom_for_test
 
 

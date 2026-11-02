@@ -449,7 +449,7 @@ class TimeKeeper(ServerClient):
         parent_context_event_guid: str,
         child_context_event_guid: str,
         body: dict | NewRelationshipRequestBody,
-    ) -> None:
+    ) -> str | None:
         """Link dependent context events. Async version.
 
         Parameters
@@ -463,7 +463,8 @@ class TimeKeeper(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -485,14 +486,14 @@ class TimeKeeper(ServerClient):
         ```
         """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/time-keeper/context-events/{parent_context_event_guid}/dependent-context-events/{child_context_event_guid}/attach"
-        await self._async_new_relationship_request(url, ["DependentContextEventProperties"], body)
+        return await self._async_new_relationship_request(url, ["DependentContextEventProperties"], body)
 
     def link_dependent_context_events(
         self,
         parent_context_event_guid: str,
         child_context_event_guid: str,
         body: dict | NewRelationshipRequestBody,
-    ) -> None:
+    ) -> str | None:
         """Link dependent context events.
 
         Parameters
@@ -506,7 +507,8 @@ class TimeKeeper(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -527,7 +529,7 @@ class TimeKeeper(ServerClient):
         }
         ```
         """
-        run_sync(
+        return run_sync(
             self._async_link_dependent_context_events(
                 parent_context_event_guid, child_context_event_guid, body
             )
@@ -623,7 +625,7 @@ class TimeKeeper(ServerClient):
         context_event_one_guid: str,
         context_event_two_guid: str,
         body: dict | NewRelationshipRequestBody,
-    ) -> None:
+    ) -> str | None:
         """Link related context events. Async version.
 
         Parameters
@@ -637,7 +639,8 @@ class TimeKeeper(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -659,14 +662,14 @@ class TimeKeeper(ServerClient):
         ```
         """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/time-keeper/context-events/{context_event_one_guid}/related-context-events/{context_event_two_guid}/attach"
-        await self._async_new_relationship_request(url, ['ContextEventEvidence'],body)
+        return await self._async_new_relationship_request(url, ['ContextEventEvidence'],body)
 
     def link_related_context_events(
         self,
         context_event_one_guid: str,
         context_event_two_guid: str,
         body: dict | NewRelationshipRequestBody,
-    ) -> None:
+    ) -> str | None:
         """Link related context events.
 
         Parameters
@@ -680,7 +683,8 @@ class TimeKeeper(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -701,7 +705,7 @@ class TimeKeeper(ServerClient):
         }
         ```
         """
-        run_sync(
+        return run_sync(
             self._async_link_related_context_events(context_event_one_guid, context_event_two_guid, body)
         )
 
@@ -790,7 +794,7 @@ class TimeKeeper(ServerClient):
     @dynamic_catch
     async def _async_link_context_event_evidence(
         self, context_event_guid: str, evidence_guid: str, body: dict | NewRelationshipRequestBody
-    ) -> None:
+    ) -> str | None:
         """Link context event evidence. Async version.
 
         Parameters
@@ -804,7 +808,8 @@ class TimeKeeper(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -826,11 +831,11 @@ class TimeKeeper(ServerClient):
         ```
         """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/time-keeper/context-events/{context_event_guid}/evidence/{evidence_guid}/attach"
-        await self._async_new_relationship_request(url, ["ContextEventEvidenceProperties"], body)
+        return await self._async_new_relationship_request(url, ["ContextEventEvidenceProperties"], body)
 
     def link_context_event_evidence(
         self, context_event_guid: str, evidence_guid: str, body: dict | NewRelationshipRequestBody
-    ) -> None:
+    ) -> str | None:
         """Link context event evidence.
 
         Parameters
@@ -844,7 +849,8 @@ class TimeKeeper(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -865,7 +871,7 @@ class TimeKeeper(ServerClient):
         }
         ```
         """
-        run_sync(
+        return run_sync(
             self._async_link_context_event_evidence(context_event_guid, evidence_guid, body)
         )
 
@@ -948,7 +954,7 @@ class TimeKeeper(ServerClient):
     @dynamic_catch
     async def _async_link_context_event_impact(
         self, context_event_guid: str, impacted_element_guid: str, body: dict | NewRelationshipRequestBody
-    ) -> None:
+    ) -> str | None:
         """Link context event impact. Async version.
 
         Parameters
@@ -962,7 +968,8 @@ class TimeKeeper(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -984,11 +991,11 @@ class TimeKeeper(ServerClient):
         ```
         """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/time-keeper/context-events/{context_event_guid}/impacts/{impacted_element_guid}/attach"
-        await self._async_new_relationship_request(url, ['ContextEventImpact'],body)
+        return await self._async_new_relationship_request(url, ['ContextEventImpact'],body)
 
     def link_context_event_impact(
         self, context_event_guid: str, impacted_element_guid: str, body: dict | NewRelationshipRequestBody
-    ) -> None:
+    ) -> str | None:
         """Link context event impact.
 
         Parameters
@@ -1002,7 +1009,8 @@ class TimeKeeper(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -1023,7 +1031,7 @@ class TimeKeeper(ServerClient):
         }
         ```
         """
-        run_sync(
+        return run_sync(
             self._async_link_context_event_impact(context_event_guid, impacted_element_guid, body)
         )
 
@@ -1109,7 +1117,7 @@ class TimeKeeper(ServerClient):
         timeline_affected_element_guid: str,
         context_event_guid: str,
         body: dict | NewRelationshipRequestBody,
-    ) -> None:
+    ) -> str | None:
         """Link context event timeline effect. Async version.
 
         Parameters
@@ -1123,7 +1131,8 @@ class TimeKeeper(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -1145,14 +1154,14 @@ class TimeKeeper(ServerClient):
         ```
         """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/time-keeper/elements/{timeline_affected_element_guid}/context-events-describing-timeline-effects/{context_event_guid}/attach"
-        await self._async_new_relationship_request(url, ["ContextEventForTimelineEffectsProperties"], body)
+        return await self._async_new_relationship_request(url, ["ContextEventForTimelineEffectsProperties"], body)
 
     def link_context_event_timeline_effect(
         self,
         timeline_affected_element_guid: str,
         context_event_guid: str,
         body: dict | NewRelationshipRequestBody,
-    ) -> None:
+    ) -> str | None:
         """Link context event timeline effect.
 
         Parameters
@@ -1166,7 +1175,8 @@ class TimeKeeper(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -1187,7 +1197,7 @@ class TimeKeeper(ServerClient):
         }
         ```
         """
-        run_sync(
+        return run_sync(
             self._async_link_context_event_timeline_effect(
                 timeline_affected_element_guid, context_event_guid, body
             )

@@ -64,7 +64,7 @@ class PeopleOrganizer(ServerClient):
         person_one_guid: str,
         person_two_guid: str,
         body: dict | NewRelationshipRequestBody,
-    ) -> None:
+    ) -> str | None:
         """Link a person profile to one of its peers. Async version.
 
         Parameters
@@ -78,7 +78,8 @@ class PeopleOrganizer(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -99,14 +100,14 @@ class PeopleOrganizer(ServerClient):
         ```
         """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/people-organizer/actor-profiles/{person_one_guid}/peer-persons/{person_two_guid}/attach"
-        await self._async_new_relationship_request(url, ["PeerProperties"], body)
+        return await self._async_new_relationship_request(url, ["PeerProperties"], body)
 
     def link_peer_person(
         self,
         person_one_guid: str,
         person_two_guid: str,
         body: dict | NewRelationshipRequestBody,
-    ) -> None:
+    ) -> str | None:
         """Link a person profile to one of its peers.
 
         Parameters
@@ -120,7 +121,8 @@ class PeopleOrganizer(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -140,7 +142,7 @@ class PeopleOrganizer(ServerClient):
         }
         ```
         """
-        run_sync(
+        return run_sync(
             self._async_link_peer_person(person_one_guid, person_two_guid, body)
         )
 
@@ -270,7 +272,7 @@ class PeopleOrganizer(ServerClient):
         super_team_guid: str,
         subteam_guid: str,
         body: dict | NewRelationshipRequestBody,
-    ) -> None:
+    ) -> str | None:
         """Link a super team to a subteam. Async version.
 
         Parameters
@@ -284,7 +286,8 @@ class PeopleOrganizer(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -305,14 +308,14 @@ class PeopleOrganizer(ServerClient):
         ```
         """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/people-organizer/actor-profiles/{super_team_guid}/team-structures/{subteam_guid}/attach"
-        await self._async_new_relationship_request(url, ["TeamStructureProperties"], body)
+        return await self._async_new_relationship_request(url, ["TeamStructureProperties"], body)
 
     def link_team_structure(
         self,
         super_team_guid: str,
         subteam_guid: str,
         body: dict | NewRelationshipRequestBody,
-    ) -> None:
+    ) -> str | None:
         """Link a super team to a subteam.
 
         Parameters
@@ -326,7 +329,8 @@ class PeopleOrganizer(ServerClient):
 
         Returns
         -------
-        None
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
 
         Raises
         ------
@@ -346,7 +350,7 @@ class PeopleOrganizer(ServerClient):
         }
         ```
         """
-        run_sync(
+        return run_sync(
             self._async_link_team_structure(super_team_guid, subteam_guid, body)
         )
 
