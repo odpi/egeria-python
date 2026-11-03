@@ -1419,6 +1419,29 @@ base_report_specs = FormatSetDict({
             spec_params={},
         )
     ),
+    "Asset-Lineage-Hops": FormatSet(
+        target_type="Asset",
+        heading="Asset Lineage Hops",
+        description=("One row per element of an asset lineage graph, with how many hops it is from the asset and "
+                     "whether its lineage continues past Egeria's hop limit (Egeria 6.3+). "
+                     "AssetCatalog.get_asset_lineage_graph_by_guid heads the output with a line saying whether, "
+                     "and where, the graph was cut."),
+        annotations={},
+        family="AssetCatalog",
+        formats=[
+            Format(
+                types=["ALL"],
+                attributes=[
+                    Column(name='Display Name', key='display_name'),
+                    Column(name="Qualified Name", key='qualified_name'),
+                    Column(name="Type Name", key='type_name'),
+                    Column(name="GUID", key='guid'),
+                    Column(name="Hops From Start", key='hopsFromStart'),
+                    Column(name="Hop Limit Reached", key='hopLimitReached'),
+                ],
+            )
+        ],
+    ),
     "Common-Mermaid": FormatSet(
         target_type="Referenceable",
         heading="Common Attributes with Mermaid",
