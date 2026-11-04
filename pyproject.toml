@@ -3,7 +3,7 @@
 
 [project]
 name = "pyegeria"
-version = "6.2.20"
+version = "6.2.21"
 license = 'Apache-2.0'
 license-files = ["LICENSE"]
 authors = [{name = "Dan Wolfson", email = "dan.wolfson@pdr-associates.com"},]
@@ -19,6 +19,7 @@ classifiers = [
 
 dependencies = [
     "httpx",
+    "certifi>=2026.10.18",  # emSign ECC Root CA - G3 distrust; certifi arrives via httpx/requests
     "rich>=14.2",
     "validators",
     "urllib3",
