@@ -20,6 +20,7 @@ classifiers = [
 dependencies = [
     "httpx",
     "certifi>=2026.10.18",  # emSign ECC Root CA - G3 distrust; certifi arrives via httpx/requests
+    "tornado>=6.6",  # Dependabot alerts (chunked bodies, header folding, open redirect); arrives via jupyter/ipykernel
     "rich>=14.2",
     "validators",
     "urllib3",
