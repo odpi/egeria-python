@@ -28,6 +28,10 @@ PYEGERIA_USER_REPORT_SPECS_DIR="~/.pyegeria/report_specs"
 # Deprecated: kept for backward compatibility if set in external environments
 # PYEGERIA_USER_FORMAT_SETS_DIR="~/.pyegeria/format_sets"
 EGERIA_WIDTH=130
+# Verify the Egeria platform's TLS certificate (default off: quickstart certs are self-signed)
+# PYEGERIA_SSL_VERIFY=true
+# PEM bundle to trust instead of certifi's; only used when PYEGERIA_SSL_VERIFY is on
+# PYEGERIA_CA_BUNDLE="~/certs/egeria-ca.pem"
 # Preferred variable name
 EGERIA_USER=erinoverview
 # Deprecated alias kept for external environments; not used by loader

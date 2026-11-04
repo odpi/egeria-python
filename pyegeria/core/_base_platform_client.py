@@ -27,6 +27,7 @@ from pyegeria.core._exceptions import (
     PyegeriaUnknownException, PyegeriaClientException, PyegeriaTimeoutException,
     PyegeriaUnauthorizedException
 )
+from pyegeria.core import _globals
 from pyegeria.core._globals import enable_ssl_check, max_paging_size
 from pyegeria.core._validators import (
     validate_name,
@@ -65,7 +66,7 @@ async def _post_for_bearer_token(url: str, data: dict, headers: dict, user_id: s
     """
     context = {"caller method": "create_egeria_bearer_token"}
     try:
-        async with AsyncClient(verify=enable_ssl_check) as client:
+        async with AsyncClient(verify=_globals.ssl_verify) as client:
             response = await client.post(url, json=data, headers=headers)
     except httpx.TimeoutException as e:
         raise PyegeriaTimeoutException(context, {"endpoint": url, "error_kind": "timeout"}, e)
@@ -230,7 +231,7 @@ class BasePlatformClient:
         if not hasattr(self._thread_local, "session") or stale:
             self._thread_local.session_loop = loop
             self._thread_local.session = AsyncClient(
-                verify=enable_ssl_check,
+                verify=_globals.ssl_verify,
                 timeout=httpx.Timeout(timeout=float(self.timeout), connect=10.0),
                 limits=httpx.Limits(
                     max_connections=10,

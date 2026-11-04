@@ -177,6 +177,16 @@ You can override many values via environment variables; `config/env` contains co
   - `PYEGERIA_NORMALIZE_MERMAID` (`True`/`False`)
 - Logging
   - `PYEGERIA_ENABLE_LOGGING`, `PYEGERIA_LOG_DIRECTORY`, `PYEGERIA_CONSOLE_LOG_LVL`, `PYEGERIA_FILE_LOG_LVL`, `PYEGERIA_CONSOLE_FILTER_LEVELS`
+- TLS verification of the Egeria platform's certificate
+  - `PYEGERIA_SSL_VERIFY` (`True`/`False`, default `False`); JSON key `"Pyegeria SSL Verify"` under `Environment`.
+    Off by default because the quickstart platforms use self-signed certificates. Turn it on
+    for any platform with a certificate from a trusted CA.
+  - `PYEGERIA_CA_BUNDLE` (path to a PEM file); JSON key `"Pyegeria CA Bundle"`. Used only when
+    verification is on: pyegeria then trusts this bundle instead of certifi's. Point it at your own
+    CA (or the quickstart's certificate chain) to verify a self-signed platform. A path that
+    doesn't exist stops pyegeria at import with an error, rather than silently not verifying.
+  - Programs can also set `pyegeria.core._globals.ssl_verify` (anything httpx accepts as
+    `verify`, e.g. an `ssl.SSLContext`) before creating clients.
 
 Values provided via environment variables take precedence over JSON and defaults.
 
