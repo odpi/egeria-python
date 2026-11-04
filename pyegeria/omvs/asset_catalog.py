@@ -24,6 +24,74 @@ from pyegeria.core._globals import NO_ELEMENTS_FOUND, NO_ASSETS_FOUND
 from typing import Any, Optional
 from pyegeria.core.async_runner import run_sync
 
+# Report spec for the hop-aware lineage listing (one row per lineage node).
+LINEAGE_HOPS_REPORT_SPEC = "Asset-Lineage-Hops"
+
+
+def _lineage_nodes(graph: dict) -> list[dict]:
+    """The starting asset followed by its linked elements, once each."""
+    nodes, seen = [], set()
+    for node in [graph] + list(graph.get("linkedAssets") or []):
+        guid = (node.get("elementHeader") or {}).get("guid")
+        if guid and guid in seen:
+            continue
+        seen.add(guid)
+        nodes.append(node)
+    return nodes
+
+
+def lineage_hop_summary(graph: dict, max_hops: Optional[int] = None) -> dict:
+    """Say whether an asset lineage graph was cut by Egeria's hop limit.
+
+    Egeria 6.3 stops the lineage walk after ``maxHops`` relationships (default 8) and sets
+    ``hopLimitReached`` on each element whose lineage continues past the limit. A platform older
+    than 6.3 sends neither ``hopsFromStart`` nor ``hopLimitReached``, so its graphs are reported as
+    of unknown completeness, never as complete.
+
+    Parameters
+    ----------
+    graph : dict
+        The ``element`` returned by the as-lineage-graph request (an AssetLineageGraph).
+    max_hops : int, optional
+        The ``maxHops`` the request sent, if any. Used only to word the summary.
+
+    Returns
+    -------
+    dict
+        ``complete`` (True, False, or None when unknown), ``nodeCount``, ``maxHopsFromStart``,
+        ``hopLimitReachedCount``, ``cutAtHops`` (None unless cut) and a one-line ``summary``.
+    """
+    nodes = _lineage_nodes(graph)
+    hops = [n["hopsFromStart"] for n in nodes if isinstance(n.get("hopsFromStart"), int)]
+    if not hops:
+        return {
+            "complete": None,
+            "nodeCount": len(nodes),
+            "maxHopsFromStart": None,
+            "hopLimitReachedCount": None,
+            "cutAtHops": None,
+            "summary": (f"{len(nodes)} elements · hop information not reported (Egeria platform "
+                        f"older than 6.3), so it is unknown whether the graph is complete"),
+        }
+    cut = [n for n in nodes if n.get("hopLimitReached") is True]
+    deepest = max(hops)
+    if cut:
+        cut_at = max_hops if max_hops else max(n.get("hopsFromStart") or 0 for n in cut)
+        noun = "element continues" if len(cut) == 1 else "elements continue"
+        summary = f"Graph cut at {cut_at} hops · {len(cut)} {noun} past the limit · {len(nodes)} elements shown"
+    else:
+        cut_at = None
+        summary = f"Complete graph · {len(nodes)} elements · up to {deepest} hops from the start"
+    return {
+        "complete": not cut,
+        "nodeCount": len(nodes),
+        "maxHopsFromStart": deepest,
+        "hopLimitReachedCount": len(cut),
+        "cutAtHops": cut_at,
+        "summary": summary,
+    }
+
+
 class AssetCatalog(ServerClient):
     """
     Client for the Asset Catalog View Service.
@@ -82,6 +150,9 @@ class AssetCatalog(ServerClient):
                 col["value"] = proc_status
             elif key == "stepCount":
                 col["value"] = step_count
+            elif key in ("hopsFromStart", "hopLimitReached"):
+                # Top-level on AssetLineageGraphNode (Egeria 6.3+); left empty, not 0/False, when absent.
+                col["value"] = element.get(key)
         col_data = get_required_relationships(element, col_data)
         mermaid_val = element.get("mermaidGraph", "") or ""
         for col in columns_list:
@@ -451,6 +522,9 @@ class AssetCatalog(ServerClient):
         graph_query_depth: int = 5,
         max_mermaid_node_count: int = 10,
         for_lineage: Optional[bool] = None,
+        max_hops: Optional[int] = None,
+        skip_relationships: Optional[list[str]] = None,
+        timeout: Optional[int] = None,
         output_format: str = "DICT",
         report_spec: str | dict = "Common-Mermaid",
         **kwargs,
@@ -468,7 +542,13 @@ class AssetCatalog(ServerClient):
         as_of_time : str, optional
             As-of time to query on. If not specified, the current time is used.
         relationship_types : list[str], optional
-            Relationship types to include in the lineage graph. If not specified, all relationship types are included.
+            Lineage relationship types to follow (sent as ``includeOnlyRelationships``). The list replaces
+            Egeria's defaults rather than adding to them, and a supertype name such as ``LineageRelationship``
+            or ``DataLineageRelationship`` includes all of its subtypes. If not specified, Egeria's default
+            list applies; from Egeria 6.3 that is DataFlow, ControlFlow, LineageMapping, ProcessCall,
+            DerivedSchemaTypeQueryTarget, DataSetContent, DataMapping and ActionRequester.
+            RequestForActionTarget and AssignmentScope are no longer followed by default: name them here
+            to follow them.
         limit_to_isc_q_name : str, optional
             If specified, filters results to only include information supply chains with the given qualified name.
         hilight_isc_q_name : str, optional
@@ -481,22 +561,39 @@ class AssetCatalog(ServerClient):
             The maximum number of items to fetch.
         graph_query_depth : int, default 5
             How many hops of the lineage graph to traverse.
-        max_mermaid_node_count : int, default 5
+        max_mermaid_node_count : int, default 10
             Maximum number of nodes to include in the generated mermaid graph.
         for_lineage : bool, optional
             Set True to include elements only visible to lineage requests (e.g. ones classified as
             Promise or Memento). If not specified, Egeria's default (False) applies.
+        max_hops : int, optional
+            Egeria 6.3+: how many lineage relationships to follow away from the asset in each direction
+            (sent as ``maxHops``). 0 means no limit, which can take minutes on a large estate (raise
+            ``timeout`` too). If not specified, nothing is sent and Egeria's default (8 on 6.3) applies.
+            Elements whose lineage continues past the limit come back with ``hopLimitReached`` set, and
+            every element carries ``hopsFromStart``; see ``lineage_hop_summary``.
+        skip_relationships : list[str], optional
+            Egeria 6.3+: relationship types (and their subtypes) to remove from the default or requested
+            list (sent as ``skipRelationships``), for example ``["DataSetContent"]``. Ignored by older
+            platforms.
+        timeout : int, optional
+            Seconds to wait for this request, overriding the client's timeout. Lineage walks are slow on
+            large estates.
         output_format : str, default "DICT"
             The desired output format.
         report_spec : str | dict, default "Common-Mermaid"
-            The desired output columns/fields to include.
+            The desired output columns/fields to include. ``"Asset-Lineage-Hops"`` lists one row per lineage
+            element (the asset first) with ``hopsFromStart`` and ``hopLimitReached``, headed by the
+            ``lineage_hop_summary`` line that says whether, and where, the graph was cut.
         **kwargs : dict, optional
             Additional query parameters.
 
         Returns
         -------
         str | dict
-            A dictionary of the asset graph that includes a mermaid markdown string.
+            A dictionary of the asset graph that includes a mermaid markdown string. With
+            ``report_spec="Asset-Lineage-Hops"``, string formats start with the summary line and list
+            formats return ``{"lineageSummary": {...}, "nodes": [...]}``.
 
         Raises
         ------
@@ -533,13 +630,26 @@ class AssetCatalog(ServerClient):
             "graphQueryDepth": graph_query_depth,
             "maxMermaidNodeCount": max_mermaid_node_count,
             "forLineage": for_lineage,
+            # Egeria 6.3+. None is slimmed away, so a 6.2 platform sees the same body as before.
+            "maxHops": max_hops,
+            "skipRelationships": skip_relationships,
         }
 
-        response = await self._async_make_request("POST", url, body_slimmer(body))
+        request_kwargs = {"timeout": timeout} if timeout is not None else {}
+        response = await self._async_make_request("POST", url, body_slimmer(body), **request_kwargs)
         element = response.json().get("element", NO_ASSETS_FOUND)
         if isinstance(element, str):
             logger.info(NO_ELEMENTS_FOUND)
             return NO_ELEMENTS_FOUND
+
+        if output_format != "JSON" and report_spec == LINEAGE_HOPS_REPORT_SPEC:
+            summary = lineage_hop_summary(element, max_hops)
+            rows = self._generate_asset_output(
+                _lineage_nodes(element), None, "Asset", output_format, report_spec
+            )
+            if isinstance(rows, str):
+                return f"{summary['summary']}\n\n{rows}"
+            return {"lineageSummary": summary, "nodes": rows}
 
         if output_format != "JSON":  # return a simplified markdown representation
             logger.info(
@@ -564,6 +674,9 @@ class AssetCatalog(ServerClient):
         graph_query_depth: int = 5,
         max_mermaid_node_count: int = 10,
         for_lineage: Optional[bool] = None,
+        max_hops: Optional[int] = None,
+        skip_relationships: Optional[list[str]] = None,
+        timeout: Optional[int] = None,
         output_format: str = "DICT",
         report_spec: str | dict = "Common-Mermaid",
         **kwargs,
@@ -579,7 +692,13 @@ class AssetCatalog(ServerClient):
         as_of_time : str, optional
             As-of time to query on. If not specified, the current time is used.
         relationship_types : list[str], optional
-            Relationship types to include in the lineage graph. If not specified, all relationship types are included.
+            Lineage relationship types to follow (sent as ``includeOnlyRelationships``). The list replaces
+            Egeria's defaults rather than adding to them, and a supertype name such as ``LineageRelationship``
+            or ``DataLineageRelationship`` includes all of its subtypes. If not specified, Egeria's default
+            list applies; from Egeria 6.3 that is DataFlow, ControlFlow, LineageMapping, ProcessCall,
+            DerivedSchemaTypeQueryTarget, DataSetContent, DataMapping and ActionRequester.
+            RequestForActionTarget and AssignmentScope are no longer followed by default: name them here
+            to follow them.
         limit_to_isc_q_name : str, optional
             If specified, filters results to only include information supply chains with the given qualified name.
         hilight_isc_q_name : str, optional
@@ -592,22 +711,39 @@ class AssetCatalog(ServerClient):
             The maximum number of items to fetch.
         graph_query_depth : int, default 5
             How many hops of the lineage graph to traverse.
-        max_mermaid_node_count : int, default 5
+        max_mermaid_node_count : int, default 10
             Maximum number of nodes to include in the generated mermaid graph.
         for_lineage : bool, optional
             Set True to include elements only visible to lineage requests (e.g. ones classified as
             Promise or Memento). If not specified, Egeria's default (False) applies.
+        max_hops : int, optional
+            Egeria 6.3+: how many lineage relationships to follow away from the asset in each direction
+            (sent as ``maxHops``). 0 means no limit, which can take minutes on a large estate (raise
+            ``timeout`` too). If not specified, nothing is sent and Egeria's default (8 on 6.3) applies.
+            Elements whose lineage continues past the limit come back with ``hopLimitReached`` set, and
+            every element carries ``hopsFromStart``; see ``lineage_hop_summary``.
+        skip_relationships : list[str], optional
+            Egeria 6.3+: relationship types (and their subtypes) to remove from the default or requested
+            list (sent as ``skipRelationships``), for example ``["DataSetContent"]``. Ignored by older
+            platforms.
+        timeout : int, optional
+            Seconds to wait for this request, overriding the client's timeout. Lineage walks are slow on
+            large estates.
         output_format : str, default "DICT"
             The desired output format.
         report_spec : str | dict, default "Common-Mermaid"
-            The desired output columns/fields to include.
+            The desired output columns/fields to include. ``"Asset-Lineage-Hops"`` lists one row per lineage
+            element (the asset first) with ``hopsFromStart`` and ``hopLimitReached``, headed by the
+            ``lineage_hop_summary`` line that says whether, and where, the graph was cut.
         **kwargs : dict, optional
             Additional query parameters.
 
         Returns
         -------
         str | dict
-            A dictionary of the asset graph that includes a mermaid markdown string.
+            A dictionary of the asset graph that includes a mermaid markdown string. With
+            ``report_spec="Asset-Lineage-Hops"``, string formats start with the summary line and list
+            formats return ``{"lineageSummary": {...}, "nodes": [...]}``.
 
         Raises
         ------
@@ -629,6 +765,9 @@ class AssetCatalog(ServerClient):
                 graph_query_depth=graph_query_depth,
                 max_mermaid_node_count=max_mermaid_node_count,
                 for_lineage=for_lineage,
+                max_hops=max_hops,
+                skip_relationships=skip_relationships,
+                timeout=timeout,
                 output_format=output_format,
                 report_spec=report_spec,
                 **kwargs,
@@ -650,6 +789,9 @@ class AssetCatalog(ServerClient):
         graph_query_depth: int = 5,
         max_mermaid_node_count: int = 10,
         for_lineage: Optional[bool] = None,
+        max_hops: Optional[int] = None,
+        skip_relationships: Optional[list[str]] = None,
+        timeout: Optional[int] = None,
     ) -> str:
         """Return the asset lineage including a mermaid markdown string.
 
@@ -662,7 +804,13 @@ class AssetCatalog(ServerClient):
         as_of_time : str, optional
             As-of time to query on. If not specified, the current time is used.
         relationship_types : list[str], optional
-            Relationship types to include in the lineage graph. If not specified, all relationship types are included.
+            Lineage relationship types to follow (sent as ``includeOnlyRelationships``). The list replaces
+            Egeria's defaults rather than adding to them, and a supertype name such as ``LineageRelationship``
+            or ``DataLineageRelationship`` includes all of its subtypes. If not specified, Egeria's default
+            list applies; from Egeria 6.3 that is DataFlow, ControlFlow, LineageMapping, ProcessCall,
+            DerivedSchemaTypeQueryTarget, DataSetContent, DataMapping and ActionRequester.
+            RequestForActionTarget and AssignmentScope are no longer followed by default: name them here
+            to follow them.
         limit_to_isc_q_name : str, optional
             If specified, filters results to only include information supply chains with the given qualified name.
         hilight_isc_q_name : str, optional
@@ -675,11 +823,24 @@ class AssetCatalog(ServerClient):
             The maximum number of items to fetch.
         graph_query_depth : int, default 5
             How many hops of the lineage graph to traverse.
-        max_mermaid_node_count : int, default 5
+        max_mermaid_node_count : int, default 10
             Maximum number of nodes to include in the generated mermaid graph.
         for_lineage : bool, optional
             Set True to include elements only visible to lineage requests (e.g. ones classified as
             Promise or Memento). If not specified, Egeria's default (False) applies.
+        max_hops : int, optional
+            Egeria 6.3+: how many lineage relationships to follow away from the asset in each direction
+            (sent as ``maxHops``). 0 means no limit, which can take minutes on a large estate (raise
+            ``timeout`` too). If not specified, nothing is sent and Egeria's default (8 on 6.3) applies.
+            Elements whose lineage continues past the limit come back with ``hopLimitReached`` set, and
+            every element carries ``hopsFromStart``; see ``lineage_hop_summary``.
+        skip_relationships : list[str], optional
+            Egeria 6.3+: relationship types (and their subtypes) to remove from the default or requested
+            list (sent as ``skipRelationships``), for example ``["DataSetContent"]``. Ignored by older
+            platforms.
+        timeout : int, optional
+            Seconds to wait for this request, overriding the client's timeout. Lineage walks are slow on
+            large estates.
 
         Returns
         -------
@@ -707,8 +868,17 @@ class AssetCatalog(ServerClient):
             graph_query_depth=graph_query_depth,
             max_mermaid_node_count=max_mermaid_node_count,
             for_lineage=for_lineage,
+            max_hops=max_hops,
+            skip_relationships=skip_relationships,
+            timeout=timeout,
             output_format="JSON",
         )
+        if not isinstance(asset_graph, dict):
+            return asset_graph
+        hop_summary = lineage_hop_summary(asset_graph, max_hops)
+        if hop_summary["complete"] is False:
+            # The Mermaid string itself does not mark the cut; don't let it pass as the whole graph.
+            logger.warning(hop_summary["summary"])
         return asset_graph.get("mermaidGraph")
 
 
