@@ -24,6 +24,7 @@ from pyegeria.core._exceptions import (
     PyegeriaUnknownException, PyegeriaClientException, PyegeriaTimeoutException,
     PyegeriaNotFoundException, PyegeriaUnauthorizedException
 )
+from pyegeria.core import _globals
 from pyegeria.core._globals import enable_ssl_check, max_paging_size
 from pyegeria.core._base_platform_client import _apply_for_lineage_default, _post_for_bearer_token
 from pyegeria.core._validators import (
@@ -175,7 +176,7 @@ class BaseServerClient:
         if not hasattr(self._thread_local, "session") or stale:
             self._thread_local.session_loop = loop
             self._thread_local.session = AsyncClient(
-                verify=enable_ssl_check,
+                verify=_globals.ssl_verify,
                 timeout=httpx.Timeout(timeout=float(self.timeout), connect=10.0),
             )
         return self._thread_local.session

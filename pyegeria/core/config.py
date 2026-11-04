@@ -63,6 +63,13 @@ class PyegeriaSettings(BaseSettings):
     # env-configurable means a future limit change is a .env edit, not a grep across
     # every hardcoded page_size literal in every caller.
     egeria_max_page_size: int = 500
+    # TLS verification of the Egeria platform's certificate (pyegeria.core._globals
+    # .ssl_verify). Off by default because the quickstart platforms use self-signed
+    # certificates; turn on for any deployment with a real certificate.
+    pyegeria_ssl_verify: bool = False
+    # Optional CA bundle (PEM) to verify against instead of certifi's, e.g. the
+    # quickstart's own CA. Only used when pyegeria_ssl_verify is on.
+    pyegeria_ca_bundle: str = ""
     # Renamed: format_sets -> report_specs
     pyegeria_user_report_specs_dir: str = "~/.pyegeria/report_specs"
     egeria_user_name: str = Field(default="", validation_alias="EGERIA_USER")
@@ -107,6 +114,8 @@ class EnvironmentConfig(BaseModel):
     """Environment configuration settings"""
     egeria_width: int = Field(default=200, alias="Egeria Width")
     egeria_max_page_size: int = Field(default=500, alias="Egeria Max Page Size")
+    pyegeria_ssl_verify: bool = Field(default=False, alias="Pyegeria SSL Verify")
+    pyegeria_ca_bundle: str = Field(default="", alias="Pyegeria CA Bundle")
     egeria_outbox: str = Field(default="egeria-outbox", alias="Egeria Outbox")
     egeria_inbox: str = Field(default="egeria-inbox", alias="Egeria Inbox")
     dr_egeria_inbox: str = Field(default="egeria-inbox/dr-egeria-inbox", alias="Dr.Egeria Inbox")
@@ -346,6 +355,13 @@ def load_app_config(env_file: str | None = None):
     env["egeria_width"] = env["Egeria Width"]
     env["Egeria Max Page Size"] = int(os.getenv("EGERIA_MAX_PAGE_SIZE", env.get("Egeria Max Page Size", env_settings.egeria_max_page_size)))
     env["egeria_max_page_size"] = env["Egeria Max Page Size"]
+    # TLS verification: PYEGERIA_SSL_VERIFY > .env > config.json > False.
+    env["Pyegeria SSL Verify"] = _parse_bool_value(
+        os.getenv("PYEGERIA_SSL_VERIFY", env.get("Pyegeria SSL Verify", env_settings.pyegeria_ssl_verify))
+    )
+    env["pyegeria_ssl_verify"] = env["Pyegeria SSL Verify"]
+    env["Pyegeria CA Bundle"] = os.getenv("PYEGERIA_CA_BUNDLE", env.get("Pyegeria CA Bundle", env_settings.pyegeria_ca_bundle)) or ""
+    env["pyegeria_ca_bundle"] = env["Pyegeria CA Bundle"]
     # Egeria Outbox (new)
     env["Egeria Outbox"] = os.getenv("EGERIA_OUTBOX", env.get("Egeria Outbox", "egeria-outbox"))
     env["Egeria Inbox"] = os.getenv("EGERIA_INBOX", env.get("Egeria Inbox", "egeria-inbox"))

@@ -7,6 +7,7 @@ Copyright Contributors to the ODPi Egeria project.
 This common file is used to set some global values and enumerations used by the overall package. 
 
 """
+import os
 from enum import Enum
 from typing import Any
 
@@ -40,7 +41,50 @@ def resolve_enum(enum_class: type[Enum], value: str | int) -> int | None:
 
 is_debug = False
 disable_ssl_warnings = True
-enable_ssl_check = False
+
+
+def resolve_ssl_verify(verify: bool, ca_bundle: str = "") -> "bool | ssl.SSLContext":
+    """Turn the SSL settings into the value httpx takes as ``verify``.
+
+    * ``verify`` off -> ``False``: the Egeria platform's certificate is not checked
+      (the historical behaviour, needed for the quickstart's self-signed certificates).
+    * ``verify`` on, no bundle -> ``True``: httpx checks against certifi's bundle.
+    * ``verify`` on with a bundle -> an ``SSLContext`` that trusts that PEM file.
+
+    A bundle that can't be loaded raises: falling back to "don't verify" would
+    quietly undo the setting, and falling back to certifi would hide the typo
+    behind a confusing certificate error later.
+    """
+    if not verify:
+        return False
+    if not ca_bundle:
+        return True
+    import ssl
+    path = os.path.expanduser(os.path.expandvars(ca_bundle))
+    if not os.path.isfile(path):
+        raise FileNotFoundError(
+            f"Pyegeria CA Bundle / PYEGERIA_CA_BUNDLE is set to {ca_bundle!r}, but {path!r} is not a file"
+        )
+    return ssl.create_default_context(cafile=path)
+
+
+# TLS verification of the Egeria platform's certificate. Configurable through
+# PYEGERIA_SSL_VERIFY / PYEGERIA_CA_BUNDLE, the same names in .env, or
+# "Pyegeria SSL Verify" / "Pyegeria CA Bundle" in config.json (see
+# pyegeria.core.config.EnvironmentConfig). Default off, as before.
+# enable_ssl_check stays a plain bool for existing importers; ssl_verify is
+# what the HTTP clients pass to httpx. The clients read ssl_verify from this
+# module when they create a session, so a program can also set
+# pyegeria.core._globals.ssl_verify itself before connecting.
+try:
+    from pyegeria.core.config import settings as _ssl_settings
+    _ssl_env = _ssl_settings.Environment
+    enable_ssl_check = bool(getattr(_ssl_env, "pyegeria_ssl_verify", False))
+    _ca_bundle = str(getattr(_ssl_env, "pyegeria_ca_bundle", "") or "")
+except Exception:  # noqa: BLE001 -- config not ready yet; keep the historical default
+    enable_ssl_check = False
+    _ca_bundle = ""
+ssl_verify = resolve_ssl_verify(enable_ssl_check, _ca_bundle)
 
 # Default page size for paged find/relationship queries. Env-configurable
 # (EGERIA_MAX_PAGE_SIZE / "Egeria Max Page Size" in config.json/.env, see
