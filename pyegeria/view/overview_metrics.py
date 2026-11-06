@@ -455,9 +455,12 @@ def governed_coverage(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
     type, so these are catalog-wide counts, not Asset-only -- an existing,
     already-accepted proxy in this dashboard, not a new one introduced here.
 
-    Returns {"governedCount": int, "byClassification": {name: count},
+    If the find fails, governedCount/governedCapped/fullyGoverned/partialZoneOnly
+    are None (unmeasured) and byClassification/topZones are empty.
+
+    Returns {"governedCount": int|None, "byClassification": {name: count},
     "topZones": [{"zone": name, "count": count}, ...8 max],
-    "fullyGoverned": int, "partialZoneOnly": int}.
+    "fullyGoverned": int|None, "partialZoneOnly": int|None}.
     """
     body = {
         "class": "FindRequestBody",
@@ -469,7 +472,16 @@ def governed_coverage(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
     }
     if as_of:
         body["asOfTime"] = as_of
-    hits = _find(mgr, body)
+    hits = _find_or_none(mgr, body)
+    if hits is None:  # query failed: unmeasured, not "nothing governed"
+        return {
+            "governedCount": None,
+            "governedCapped": None,
+            "byClassification": {},
+            "topZones": [],
+            "fullyGoverned": None,
+            "partialZoneOnly": None,
+        }
 
     substantive = set(GOVERNANCE_CLASSIFICATIONS) - {"ZoneMembership"}
     by_classification: Dict[str, int] = {}
@@ -582,18 +594,26 @@ def business_value_signals(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
     demo dataset, confirmed live -- so a rating average is honestly omitted
     rather than faked).
 
-    Returns {"assetTotal": int, "assetCapped": bool, "confidentialCount": int,
-    "describedCount": int, "duplicateCount": int}.
+    Any field whose query failed is None (unmeasured), never 0: assetTotal/
+    assetCapped/confidentialCount/describedCount when the Asset find fails,
+    duplicateCount when its (strict) count fails.
+
+    Returns {"assetTotal": int|None, "assetCapped": bool|None,
+    "confidentialCount": int|None, "describedCount": int|None,
+    "duplicateCount": int|None}.
     """
     body = {"class": "FindRequestBody", "limitResultsByStatus": ["ACTIVE"],
             "metadataElementTypeName": "Asset"}
     if as_of:
         body["asOfTime"] = as_of
-    assets = _find(mgr, body)
+    assets = _find_or_none(mgr, body)
 
-    confidential = 0
-    described = 0
-    for a in assets:
+    confidential: Optional[int] = None
+    described: Optional[int] = None
+    if assets is not None:
+        confidential = 0
+        described = 0
+    for a in assets or []:
         if "Confidentiality" in _classifications_of(a):
             confidential += 1
         pvm = (a.get("elementProperties") or {}).get("propertyValueMap") or {}
@@ -601,11 +621,11 @@ def business_value_signals(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
         if isinstance(desc, str) and desc.strip():
             described += 1
 
-    duplicate = count_elements(mgr, None, as_of, classifications=["ConsolidatedDuplicate"])
+    duplicate = count_elements(mgr, None, as_of, classifications=["ConsolidatedDuplicate"], strict=True)
 
     return {
-        "assetTotal": len(assets),
-        "assetCapped": len(assets) >= DEFAULT_CAP,
+        "assetTotal": len(assets) if assets is not None else None,
+        "assetCapped": (len(assets) >= DEFAULT_CAP) if assets is not None else None,
         "confidentialCount": confidential,
         "describedCount": described,
         "duplicateCount": duplicate,
@@ -812,11 +832,14 @@ def context_readiness_funnel(mgr, ce, as_of: Optional[str] = None) -> Dict[str, 
     underlying queries yet) -- fold `aiReady` into that work rather than
     faking an approximate number here.
 
-    Returns {"cataloged": int, "documented": int|None, "classified": int,
+    `cataloged` and `classified` are None only when unmeasured (query failed,
+    or the fallback count hit DEFAULT_CAP); a measured 0 is returned as 0.
+
+    Returns {"cataloged": int|None, "documented": int|None, "classified": int|None,
     "lineage": int|None, "aiReady": None}.
     """
-    cataloged = count_elements(mgr, "Asset", as_of)
-    classified = count_elements(mgr, None, as_of, classifications=GOVERNANCE_CLASSIFICATIONS)
+    cataloged = count_elements(mgr, "Asset", as_of, strict=True)
+    classified = count_elements(mgr, None, as_of, classifications=GOVERNANCE_CLASSIFICATIONS, strict=True)
 
     documented = None
     try:
@@ -837,9 +860,9 @@ def context_readiness_funnel(mgr, ce, as_of: Optional[str] = None) -> Dict[str, 
     lineage = count_relationships(ce, "DataFlow", as_of)
 
     return {
-        "cataloged": cataloged or None,
+        "cataloged": cataloged,
         "documented": documented,
-        "classified": classified or None,
+        "classified": classified,
         "lineage": lineage,
         "aiReady": None,
     }
@@ -1108,10 +1131,15 @@ def feedback_summary(ce, as_of: Optional[str] = None) -> Dict[str, Any]:
     (Collaboration OMAS relationship counts). Often sparse in demo data, but
     real.
 
-    Returns {"byType": {ratings, comments, likes, tags, noteLogs}, "total": int}.
+    A type whose count failed is None in `byType`; `total` is None unless every
+    type was measured (a partial sum would read as "less feedback").
+
+    Returns {"byType": {ratings, comments, likes, tags, noteLogs: int|None},
+    "total": int|None}.
     """
-    by_type = {key: (count_relationships(ce, rel, as_of) or 0) for rel, key in _FEEDBACK_RELATIONSHIP_TYPES}
-    return {"byType": by_type, "total": sum(by_type.values())}
+    by_type = {key: count_relationships(ce, rel, as_of) for rel, key in _FEEDBACK_RELATIONSHIP_TYPES}
+    measured = all(v is not None for v in by_type.values())
+    return {"byType": by_type, "total": sum(by_type.values()) if measured else None}
 
 
 def usage_context_counts(mgr, as_of: Optional[str] = None, strict: bool = False) -> Dict[str, Optional[int]]:

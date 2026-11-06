@@ -709,3 +709,36 @@ def test_contextualised_coverage_zero_asset_total_yields_none_pct_not_zero_divis
     assert result["contextualisedCount"] == 0
     assert result["assetTotal"] is None
     assert result["contextualisedPct"] is None
+
+
+# ── unmeasured != zero (overview defects: egeria-workspaces#783) ─────────
+
+def test_funnel_keeps_measured_zero_and_none_on_failure():
+    mgr = _mgr()
+    mgr.find_metadata_elements.return_value = []
+    ce = MagicMock()
+    ce.get_relationships.return_value = []
+    r = om.context_readiness_funnel(mgr, ce)
+    assert r["cataloged"] == 0 and r["classified"] == 0
+
+    mgr.find_metadata_elements.side_effect = RuntimeError("down")
+    r = om.context_readiness_funnel(mgr, ce)
+    assert r["cataloged"] is None and r["classified"] is None
+
+
+def test_feedback_summary_total_none_unless_all_measured():
+    ce = MagicMock()
+    ce.get_relationships.side_effect = [[{}] * 3, RuntimeError("x"), [], [], []]
+    r = om.feedback_summary(ce)
+    assert r["byType"]["comments"] is None and r["byType"]["ratings"] == 3
+    assert r["total"] is None
+
+
+def test_governed_coverage_and_business_value_none_on_failed_find():
+    mgr = _mgr()
+    mgr.find_metadata_elements.side_effect = RuntimeError("down")
+    g = om.governed_coverage(mgr)
+    assert g["governedCount"] is None and g["fullyGoverned"] is None and g["partialZoneOnly"] is None
+    b = om.business_value_signals(mgr)
+    assert b["assetTotal"] is None and b["confidentialCount"] is None
+    assert b["describedCount"] is None and b["duplicateCount"] is None
