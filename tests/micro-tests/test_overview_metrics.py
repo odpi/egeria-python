@@ -842,3 +842,231 @@ def test_count_relationships_scope():
     assert om.count_relationships(ce, "License", scope="repository") is None
     assert om.count_relationships(ce, "License") == 9
     assert om.feedback_summary(ce, scope="repository")["total"] is None
+
+
+# ── asset_subtype_tree / asset_composition (RS-W1-4) ─────────────────────────
+
+import threading
+import time as _time
+
+_TREE = {  # three levels under Asset
+    "Asset": ["DataAsset", "Process"],
+    "DataAsset": ["DataSet", "DataStore"],
+    "Process": [],  # null result: no subtypes
+    "DataSet": ["Report"],
+}
+
+
+class _FakeVM:
+    def __init__(self, tree=_TREE, fail=()):
+        self.tree, self.fail, self.calls = tree, set(fail), []
+
+    def get_sub_types(self, type_name, **_):
+        self.calls.append(type_name)
+        if type_name in self.fail:
+            raise RuntimeError("typedef service down")
+        kids = self.tree.get(type_name)
+        if not kids:
+            return "No elements found"  # pyegeria's NO_ELEMENTS_FOUND sentinel
+        return [{"name": k, "superType": {"name": type_name}} for k in kids]
+
+
+_COUNTS = {
+    "repository": {"Asset": 100, "DataAsset": 60, "DataSet": 40, "DataStore": 15, "Process": 30, "Report": 5},
+    "viewer": {"Asset": 90, "DataAsset": 55, "DataSet": 36, "DataStore": 15, "Process": 30, "Report": 5},
+}
+
+
+class _FakeCounter:
+    """Stands in for count_elements: records concurrency, fails on chosen (type, scope) pairs."""
+
+    def __init__(self, counts=_COUNTS, fail=(), raise_on=(), delay=0.02):
+        self.counts, self.fail, self.raise_on, self.delay = counts, set(fail), set(raise_on), delay
+        self.lock = threading.Lock()
+        self.active = self.peak = 0
+        self.calls = []
+
+    def __call__(self, mgr, type_name=None, as_of=None, classifications=None, strict=False, scope=None):
+        assert strict is True
+        with self.lock:
+            self.active += 1
+            self.peak = max(self.peak, self.active)
+            self.calls.append((type_name, scope, as_of))
+        try:
+            _time.sleep(self.delay)
+            if (type_name, scope) in self.raise_on:
+                raise RuntimeError("HikariPool timeout")
+            if (type_name, scope) in self.fail:
+                return None
+            return self.counts[scope].get(type_name, 0)
+        finally:
+            with self.lock:
+                self.active -= 1
+
+
+def _rows(result):
+    return {(r["type_name"], r["exact_type"]): r for r in result["rows"]}
+
+
+def test_asset_subtype_tree_breadth_first_with_other_rows():
+    rows = om.asset_subtype_tree(_FakeVM(), root="Asset", depth=2)
+    got = [(r["type_name"], r["parent"], r["level"], r["exact_type"]) for r in rows]
+    assert got == [
+        ("Asset", None, 0, False),
+        ("DataAsset", "Asset", 1, False), ("Process", "Asset", 1, False), ("Asset", "Asset", 1, True),
+        ("DataSet", "DataAsset", 2, False), ("DataStore", "DataAsset", 2, False),
+        ("DataAsset", "DataAsset", 2, True),
+    ]  # Process has no subtypes: no `other` row; DataSet's Report is below depth 2
+
+
+def test_asset_subtype_tree_depth_three_and_skips_non_direct():
+    tree = dict(_TREE)
+    vm = _FakeVM(tree)
+    real = vm.get_sub_types
+    vm.get_sub_types = lambda t, **k: (real(t) if t != "Asset" else
+                                       real(t) + [{"name": "DataSet", "superType": {"name": "DataAsset"}}])
+    rows = om.asset_subtype_tree(vm, depth=3)
+    names = [(r["type_name"], r["level"]) for r in rows if not r["exact_type"]]
+    assert ("Report", 3) in names
+    assert names.count(("DataSet", 1)) == 0  # a grandchild returned for Asset is not a direct child
+
+
+def test_asset_subtype_tree_records_a_failed_subtype_call():
+    rows = om.asset_subtype_tree(_FakeVM(fail={"DataAsset"}), depth=2)
+    da = next(r for r in rows if r["type_name"] == "DataAsset" and not r["exact_type"])
+    assert "could not be read" in da["subtypes_error"]
+    assert not any(r["parent"] == "DataAsset" for r in rows)  # no children, no `other` row
+
+
+def test_asset_composition_cells_other_rows_and_not_visible(monkeypatch):
+    counter = _FakeCounter()
+    monkeypatch.setattr(om, "count_elements", counter)
+    res = om.asset_composition(MagicMock(platform_url="u", view_server="s"), _FakeVM(), depth=2)
+    rows = _rows(res)
+    assert res["state"] == "measured" and res["state_reason"] == "" and res["not_measured"] == []
+    asset = rows[("Asset", False)]
+    assert asset["repository"] == {"value": 100, "state": "measured", "completeness": "complete",
+                                   "as_of": res["as_of"], "population": "repository", "reason": "",
+                                   "elapsed_s": asset["repository"]["elapsed_s"]}
+    assert asset["viewer"]["completeness"] == "unknown" and asset["viewer"]["population"] == "viewer"
+    assert asset["not_visible"] == {"value": 10, "state": "measured", "reason": ""}
+    # other rows: parent - sum(children), per scope
+    assert rows[("Asset", True)]["repository"]["value"] == 100 - 60 - 30
+    assert rows[("Asset", True)]["viewer"]["value"] == 90 - 55 - 30
+    assert rows[("DataAsset", True)]["repository"]["value"] == 60 - 40 - 15
+    assert rows[("DataAsset", True)]["repository"]["elapsed_s"] is None  # derived
+    # an `other` row reuses its parent's count: each distinct type counted once per scope
+    assert sorted((t, s) for t, s, _ in counter.calls) == sorted(
+        (t, s) for s in ("viewer", "repository") for t in ("Asset", "DataAsset", "Process", "DataSet", "DataStore"))
+    assert res["provenance"]["server"] == "s" and res["provenance"]["pyegeria_version"]
+
+
+def test_asset_composition_zero_is_nothing_found(monkeypatch):
+    counts = {s: dict(c) for s, c in _COUNTS.items()}
+    counts["repository"]["Process"] = 0
+    counts["viewer"]["Process"] = 0
+    monkeypatch.setattr(om, "count_elements", _FakeCounter(counts))
+    rows = _rows(om.asset_composition(MagicMock(), _FakeVM(), depth=1))
+    proc = rows[("Process", False)]
+    assert proc["repository"]["state"] == "nothing_found" and proc["repository"]["value"] == 0
+    assert proc["repository"]["completeness"] == "complete"
+    assert proc["not_visible"] == {"value": 0, "state": "nothing_found", "reason": ""}
+
+
+def test_asset_composition_failure_is_not_measured_never_zero(monkeypatch):
+    counter = _FakeCounter(fail={("DataStore", "viewer")}, raise_on={("Process", "repository")})
+    monkeypatch.setattr(om, "count_elements", counter)
+    res = om.asset_composition(MagicMock(), _FakeVM(), depth=2)
+    rows = _rows(res)
+    ds_viewer = rows[("DataStore", False)]["viewer"]
+    assert ds_viewer["value"] is None and ds_viewer["state"] == "not_measured"
+    assert ds_viewer["completeness"] == "unknown" and "could not be measured" in ds_viewer["reason"]
+    proc_repo = rows[("Process", False)]["repository"]
+    assert proc_repo["value"] is None and "HikariPool timeout" in proc_repo["reason"]
+    # the failed scope's `other` row is not_measured; the other scope still derives
+    assert rows[("DataAsset", True)]["viewer"] == {**rows[("DataAsset", True)]["viewer"],
+                                                   "value": None, "state": "not_measured",
+                                                   "reason": "a child count is missing"}
+    assert rows[("DataAsset", True)]["repository"]["value"] == 5
+    assert rows[("Asset", True)]["repository"]["reason"] == "a child count is missing"
+    assert rows[("Asset", True)]["viewer"]["value"] == 5
+    # not_visible needs both scopes established
+    assert rows[("DataStore", False)]["not_visible"]["state"] == "not_measured"
+    assert rows[("Process", False)]["not_visible"]["value"] is None
+    assert rows[("DataSet", False)]["not_visible"]["value"] == 4
+    # envelope: still measured (other cells are), and the reason lists the failed cells
+    assert res["state"] == "measured"
+    assert set(res["not_measured"]) == {"DataStore/viewer", "Process/repository"}
+    assert "DataStore/viewer" in res["state_reason"] and "Process/repository" in res["state_reason"]
+
+
+def test_asset_composition_all_failed_is_not_established(monkeypatch):
+    monkeypatch.setattr(om, "count_elements", lambda *a, **k: None)
+    res = om.asset_composition(MagicMock(), _FakeVM(), depth=1, scopes=("repository",))
+    assert res["state"] == "not_established"
+    assert all(r["repository"]["value"] is None for r in res["rows"])
+
+
+def test_asset_composition_single_scope_not_visible_needs_both(monkeypatch):
+    monkeypatch.setattr(om, "count_elements", _FakeCounter())
+    res = om.asset_composition(MagicMock(), _FakeVM(), depth=1, scopes=("repository",))
+    asset = _rows(res)[("Asset", False)]
+    assert "viewer" not in asset and res["scopes"] == ["repository"]
+    assert asset["not_visible"] == {"value": None, "state": "not_measured", "reason": "needs both scopes"}
+
+
+@pytest.mark.parametrize("asked, cap", [(1, 1), (2, 2), (3, 3), (5, 5), (12, 5)])
+def test_asset_composition_one_pool_for_both_scopes_respects_cap(monkeypatch, asked, cap):
+    counter = _FakeCounter(delay=0.05)
+    monkeypatch.setattr(om, "count_elements", counter)
+    res = om.asset_composition(MagicMock(), _FakeVM(), depth=2, concurrency=asked)
+    assert res["concurrency"] == cap
+    assert len(counter.calls) == 10  # 5 types x 2 scopes, all through the one pool
+    assert counter.peak <= cap
+    if cap > 1:
+        assert counter.peak > 1  # really concurrent, and across both scopes together
+
+
+def test_asset_composition_default_concurrency_is_three(monkeypatch):
+    counter = _FakeCounter(delay=0.05)
+    monkeypatch.setattr(om, "count_elements", counter)
+    res = om.asset_composition(MagicMock(), _FakeVM(), depth=2)
+    assert res["concurrency"] == 3 and counter.peak == 3
+
+
+def test_asset_composition_passes_as_of_and_vm_defaults_to_mgr(monkeypatch):
+    counter = _FakeCounter()
+    monkeypatch.setattr(om, "count_elements", counter)
+    both = _FakeVM()
+    res = om.asset_composition(both, depth=1, as_of="2026-01-01T00:00:00+00:00")
+    assert both.calls == ["Asset"]
+    assert {a for _, _, a in counter.calls} == {"2026-01-01T00:00:00+00:00"}
+    assert res["as_of"] == "2026-01-01T00:00:00+00:00"
+    assert all(r[s]["as_of"] == res["as_of"] for r in res["rows"] for s in res["scopes"])
+
+
+@pytest.mark.parametrize("kwargs", [{"scopes": ()}, {"scopes": ("everyone",)}, {"concurrency": 0},
+                                    {"strict": False}])
+def test_asset_composition_rejects_bad_arguments(kwargs):
+    with pytest.raises(ValueError):
+        om.asset_composition(MagicMock(), _FakeVM(), **kwargs)
+
+
+def test_asset_composition_uses_the_real_count_seam_per_scope():
+    """Through the real count_elements: push_down follows the scope."""
+    mgr = _mgr(count_metadata_elements=MagicMock(return_value={"count": 4}))
+    res = om.asset_composition(mgr, _FakeVM({"Asset": []}), depth=1)
+    push = sorted(c.kwargs["push_down"] for c in mgr.count_metadata_elements.call_args_list)
+    assert push == [False, True]
+    assert res["rows"][0]["repository"]["value"] == 4
+
+
+def test_asset_composition_is_registered_with_a_declaration():
+    from pyegeria.view.analytic_registry import get_analytic_registry
+    spec = get_analytic_registry()["asset_composition"]
+    assert spec.function == "pyegeria.view.overview_metrics.asset_composition" and spec.envelope
+    decl = spec.declaration
+    assert decl.result_kind == "distribution"
+    assert {m.name for m in decl.measures} == {"repository_count", "viewer_count", "not_visible"}
+    assert all(m.unit == "elements" and m.as_of == "as_of" for m in decl.measures)
+    assert decl.absence.measured_nothing  # RS-W1-1 PR-2 not landed: still measured_nothing

@@ -607,6 +607,57 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                                        "every snapshot (e.g. classifications for count_elements)."),
         ],
     ),
+    "asset_composition": AnalyticFunctionSpec(
+        name="asset_composition",
+        function="pyegeria.view.overview_metrics.asset_composition",
+        description="The composition of a type (default Asset) by subtype: one row per type in its "
+                    "subtype tree to `depth`, each counted in viewer and/or repository scope, an "
+                    "`other` row per parent (elements typed as exactly the parent), and not_visible = "
+                    "repository - viewer. Stages (reporting model §10.8): a `typedefs` producer, two "
+                    "per-row `derive`s (viewer count, repository count) and a `difference`. All counts "
+                    "share one pool of `concurrency` workers (default 3, capped at 5). Takes two "
+                    "leading clients (mgr, vm); vm defaults to mgr (an EgeriaTech has both).",
+        returns="AssetComposition (dict: state, state_reason, root, depth, scopes, as_of, concurrency, "
+                "rows[{type_name, parent, level, exact_type, subtypes_error, viewer?, repository?, "
+                "not_visible}], not_measured, provenance); each count cell is {value, state, "
+                "completeness, as_of, population, reason, elapsed_s}",
+        generic=True,
+        envelope=True,
+        params=[
+            AnalyticParam(name="root", type="str", default="Asset",
+                          description="The type whose subtypes are counted."),
+            AnalyticParam(name="depth", type="int", default=2,
+                          description="Subtype levels below root (0 = root only)."),
+            _as_of("ISO-8601 asOfTime for point-in-time counts (None = now); the subtype tree is today's."),
+            AnalyticParam(name="scopes", type="list[str]", default=["viewer", "repository"],
+                          description="Populations to count: viewer (what the caller may see) and/or "
+                                      "repository (whole repository, fast). Each cell names its "
+                                      "population under `population`."),
+            AnalyticParam(name="concurrency", type="int", default=3,
+                          description="Counts in flight at once across both scopes, 1-5 (above 5 is "
+                                      "lowered to 5: Egeria's database pool is 10 connections)."),
+        ],
+        declaration=AnalyticDeclaration(
+            result_kind="distribution",
+            measures=[
+                MeasureDeclaration(name="repository_count", unit="elements", as_of="as_of",
+                                   value_field="rows.repository.value"),
+                MeasureDeclaration(name="viewer_count", unit="elements", as_of="as_of",
+                                   value_field="rows.viewer.value"),
+                MeasureDeclaration(name="not_visible", unit="elements", as_of="as_of",
+                                   value_field="rows.not_visible.value"),
+            ],
+            # RS-W1-1 PR-2 (the nothing_found rename) has not landed: the fourth word is
+            # still measured_nothing here.
+            absence=AbsenceSentences(
+                not_measured="The subtype counts could not be measured: the count queries failed or "
+                             "the server could not answer them.",
+                not_permitted="You are not permitted to count these elements.",
+                not_applicable="A subtype composition does not apply to this type.",
+                measured_nothing="Counted: there are no elements of this type or its subtypes.",
+            ),
+        ),
+    ),
     "control_implementation_summary": AnalyticFunctionSpec(
         name="control_implementation_summary",
         function="pyegeria.view.overview_metrics.control_implementation_summary",
