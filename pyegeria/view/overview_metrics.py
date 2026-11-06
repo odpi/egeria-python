@@ -25,10 +25,16 @@ for the original inline versions this was extracted from.
 """
 
 import inspect
+import time
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 from loguru import logger
 
+from pyegeria.core._exceptions import (
+    PyegeriaConnectionException,
+    PyegeriaNotFoundException,
+    PyegeriaTimeoutException,
+)
 from pyegeria.core._globals import max_paging_size
 
 __all__ = [
@@ -115,22 +121,67 @@ def growth_label(d, span_s: int) -> str:
 _ELEMENT_COUNT_CANDIDATES = ("count_metadata_elements", "get_metadata_element_count")
 _REL_COUNT_CANDIDATES = ("count_relationships_between_elements", "count_relationships")
 _count_caps: Dict[str, Optional[str]] = {}
-_native_server_ok: Dict[str, bool] = {}
+_native_server_ok: Dict[str, float] = {}  # server key -> monotonic time native was found unsupported
 
 
 def _server_key(client) -> str:
     return f"{getattr(client, 'platform_url', '')}|{getattr(client, 'view_server', '')}"
 
 
+# How long a "this server has no native counts" verdict is trusted before the
+# next count tries native again (a server upgraded to support it is picked up
+# without a process restart).
+NATIVE_DISABLE_TTL_S = 300.0
+
+_UNSUPPORTED_MARKERS = ("not implemented", "not supported", "unsupported", "no such method",
+                        "no static resource", "not found")
+
+
+def _native_unsupported(exc: Exception) -> bool:
+    """True only when `exc` says the server lacks the native count endpoint
+    (404/405/501 or an equivalent message). A timeout, a connection error or
+    any other transient failure is NOT evidence of that: it fails only the one
+    count (which then uses the len(find) fallback) and leaves native enabled."""
+    if isinstance(exc, (PyegeriaTimeoutException, PyegeriaConnectionException)):
+        return False
+    if isinstance(exc, PyegeriaNotFoundException):
+        return True
+    code = getattr(exc, "http_status_code", None) or getattr(exc, "related_http_code", None)
+    if code in (404, 405, 501):
+        return True
+    ai = getattr(exc, "additional_info", None)
+    if isinstance(ai, dict) and ai.get("relatedHTTPCode") in (404, 405, 501):
+        return True
+    if isinstance(exc, (AttributeError, NotImplementedError)):
+        return True
+    msg = str(exc).lower()
+    return any(m in msg for m in _UNSUPPORTED_MARKERS)
+
+
 def _native_disabled(client) -> bool:
-    return _native_server_ok.get(_server_key(client)) is False
+    key = _server_key(client)
+    since = _native_server_ok.get(key)
+    if since is None:
+        return False
+    if time.monotonic() - since > NATIVE_DISABLE_TTL_S:
+        _native_server_ok.pop(key, None)  # expired: try native again
+        return False
+    return True
 
 
 def _disable_native(client, exc) -> None:
+    """Record that native counting failed. Only a 'server lacks it' error
+    disables native for the server (until NATIVE_DISABLE_TTL_S); anything else
+    is transient and only that one count falls back."""
+    if not _native_unsupported(exc):
+        logger.info(f"overview_metrics count seam: native count failed once for "
+                    f"{_server_key(client)} ({exc}) -- this count falls back; native stays enabled")
+        return
     if not _native_disabled(client):
         logger.info(f"overview_metrics count seam: native count not supported by "
-                    f"{_server_key(client)} -- using len(find/get) fallback ({exc})")
-    _native_server_ok[_server_key(client)] = False
+                    f"{_server_key(client)} -- using len(find/get) fallback for "
+                    f"{NATIVE_DISABLE_TTL_S:.0f}s ({exc})")
+    _native_server_ok[_server_key(client)] = time.monotonic()
 
 
 def _native_count_method(client, candidates: Sequence[str], cache_key: str) -> Optional[str]:
@@ -192,25 +243,57 @@ def _find_or_none(mgr, body: dict, page_size: int = DEFAULT_CAP) -> Optional[lis
     return None
 
 
-def _element_count(mgr, body: dict, as_of: Optional[str] = None, strict: bool = False) -> Optional[int]:
+SCOPE_VIEWER = "viewer"
+SCOPE_REPOSITORY = "repository"
+
+
+def _push_down(scope: Optional[str]) -> Optional[bool]:
+    """Map a count scope to the native `push_down` argument: "viewer" -> False
+    (server counts only what the caller may see), "repository" -> True (a raw
+    repository COUNT: fast, but it also counts elements the caller cannot see),
+    None -> None (omit it; the server default applies). Raises ValueError for
+    any other value -- a programming error, not a runtime condition."""
+    if scope is None:
+        return None
+    if scope == SCOPE_VIEWER:
+        return False
+    if scope == SCOPE_REPOSITORY:
+        return True
+    raise ValueError(f"scope must be None, {SCOPE_VIEWER!r} or {SCOPE_REPOSITORY!r}; got {scope!r}")
+
+
+def _element_count(mgr, body: dict, as_of: Optional[str] = None, strict: bool = False,
+                   scope: Optional[str] = None) -> Optional[int]:
     """Count elements matching a FindRequestBody -- native when available, else
     len(find_metadata_elements(...)).
+
+    scope="repository": only a native push-down count can answer. The
+    len(find) fallback is always viewer-scoped, so it is NOT used -- the result
+    is None (strict) or 0 (non-strict, the historical failure value) instead of
+    a viewer number masquerading as a repository one.
 
     strict=False: 0 when the fallback query fails (the historical behaviour).
     strict=True: None when the count is not known -- the fallback query failed,
     or it returned a full page (DEFAULT_CAP), which is only a lower bound.
     """
+    push_down = _push_down(scope)
+    kw = {} if push_down is None else {"push_down": push_down}
     b = dict(body)
     if as_of:
         b["asOfTime"] = as_of
     name = _native_count_method(mgr, _ELEMENT_COUNT_CANDIDATES, "elem:" + type(mgr).__name__)
     if name and not _native_disabled(mgr):
         try:
-            c = _as_count(getattr(mgr, name)(b))
+            c = _as_count(getattr(mgr, name)(b, **kw))
             if c is not None:
                 return c
         except Exception as exc:  # noqa: BLE001 -- old server: mark unsupported, fall back
             _disable_native(mgr, exc)
+    if scope == SCOPE_REPOSITORY:
+        logger.warning(f"overview_metrics: repository-scope count of "
+                       f"{body.get('metadataElementTypeName') or 'elements'!r} not measured -- "
+                       f"native count unavailable or failed (the find fallback is viewer-scoped)")
+        return None if strict else 0
     if not strict:
         return len(_find(mgr, b))
     found = _find_or_none(mgr, b)
@@ -231,6 +314,7 @@ def count_elements(
     as_of: Optional[str] = None,
     classifications: Optional[Sequence[str]] = None,
     strict: bool = False,
+    scope: Optional[str] = None,
 ) -> Optional[int]:
     """
     Count ACTIVE elements, optionally of a given type and/or matching ANY of
@@ -250,6 +334,11 @@ def count_elements(
         single call's worth (some connectors mishandle 2+ ANY conditions)
     strict : when True, return None if the query failed, or if the fallback
         count hit DEFAULT_CAP (a lower bound, not a total)
+    scope : None (server default), "viewer" (push_down=False: only what the
+        caller may see) or "repository" (push_down=True: whole-repository raw
+        count, fast, includes elements the caller cannot see). The len(find)
+        fallback always answers in viewer scope, so with scope="repository" it
+        is never used: a failed native count is None (strict) or 0 (non-strict).
 
     Returns
     -------
@@ -263,7 +352,7 @@ def count_elements(
             "class": "SearchClassifications", "matchCriteria": "ANY",
             "conditions": [{"name": n} for n in classifications],
         }
-    return _element_count(mgr, body, as_of, strict)
+    return _element_count(mgr, body, as_of, strict, scope)
 
 
 def count_elements_by_property(
@@ -273,6 +362,7 @@ def count_elements_by_property(
     property_value: str,
     as_of: Optional[str] = None,
     strict: bool = False,
+    scope: Optional[str] = None,
 ) -> Optional[int]:
     """
     Count ACTIVE elements of a given type whose named string property equals
@@ -291,6 +381,7 @@ def count_elements_by_property(
     property_value : the exact string value to match
     as_of : ISO-8601 asOfTime for a point-in-time count (None = now)
     strict : as for count_elements -- None instead of 0 when not measured
+    scope : as for count_elements (None | "viewer" | "repository")
 
     Returns
     -------
@@ -310,10 +401,11 @@ def count_elements_by_property(
             }],
         },
     }
-    return _element_count(mgr, body, as_of, strict)
+    return _element_count(mgr, body, as_of, strict, scope)
 
 
-def count_relationships(ce, relationship_type: str, as_of: Optional[str] = None, expert=None) -> Optional[int]:
+def count_relationships(ce, relationship_type: str, as_of: Optional[str] = None, expert=None,
+                        scope: Optional[str] = None) -> Optional[int]:
     """
     Count relationships of a type, optionally as of a past time.
 
@@ -332,11 +424,19 @@ def count_relationships(ce, relationship_type: str, as_of: Optional[str] = None,
     relationship_type : the relationship type name to count
     as_of : ISO-8601 asOfTime for a point-in-time count (None = now)
     expert : optional MetadataExpert to enable the native fast-path
+    scope : None (default: today's behaviour), "viewer" (native push_down=False)
+        or "repository" (native push_down=True). Only the native path takes a
+        scope; the get_relationships path is always viewer-scoped, so with
+        scope="repository" it is never used -- a missing `expert`, an
+        unsupported server or a failed native call gives None, not a viewer
+        number.
 
     Returns
     -------
     Optional[int] -- None on total failure (never raises)
     """
+    push_down = _push_down(scope)
+    kw = {} if push_down is None else {"push_down": push_down}
     if expert is not None and not _native_disabled(expert):
         name = _native_count_method(expert, _REL_COUNT_CANDIDATES, "rel:" + type(expert).__name__)
         if name:
@@ -345,11 +445,15 @@ def count_relationships(ce, relationship_type: str, as_of: Optional[str] = None,
             if as_of:
                 body["asOfTime"] = as_of
             try:
-                c = _as_count(getattr(expert, name)(body))
+                c = _as_count(getattr(expert, name)(body, **kw))
                 if c is not None:
                     return c
             except Exception as exc:  # noqa: BLE001
                 _disable_native(expert, exc)
+    if scope == SCOPE_REPOSITORY:
+        logger.warning(f"overview_metrics: repository-scope count of {relationship_type!r} not measured -- "
+                       f"native count unavailable or failed (get_relationships is viewer-scoped)")
+        return None
     try:
         body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
         return len(_json_list(ce.get_relationships(
@@ -361,17 +465,17 @@ def count_relationships(ce, relationship_type: str, as_of: Optional[str] = None,
 
 
 def counts_by_type(mgr, type_map: Sequence[Tuple[str, str]], as_of: Optional[str] = None,
-                   strict: bool = False) -> List[Dict[str, Any]]:
+                   strict: bool = False, scope: Optional[str] = None) -> List[Dict[str, Any]]:
     """
     Per-type counts for a set of (label, type_name) pairs -- e.g. the assets-
     by-type composition breakdown. Unknown/wrong types just yield 0 rather
     than failing the whole call. With strict=True, a count that could not be
-    measured is None (see count_elements).
+    measured is None (see count_elements). `scope` is passed to count_elements.
 
     Returns a list of {"label": ..., "type": ..., "count": ...} dicts, in the
     order given.
     """
-    return [{"label": label, "type": type_name, "count": count_elements(mgr, type_name, as_of, strict=strict)}
+    return [{"label": label, "type": type_name, "count": count_elements(mgr, type_name, as_of, strict=strict, scope=scope)}
             for label, type_name in type_map]
 
 
@@ -559,7 +663,7 @@ def ownership_coverage(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
     }
 
 
-def business_value_signals(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
+def business_value_signals(mgr, as_of: Optional[str] = None, scope: Optional[str] = None) -> Dict[str, Any]:
     """
     Real signals behind the Overview dashboard's four "Business Value" tiles
     (NEXT-9) -- replaces the four previously-synthetic narrative numbers
@@ -594,6 +698,9 @@ def business_value_signals(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
     demo dataset, confirmed live -- so a rating average is honestly omitted
     rather than faked).
 
+    `scope` applies to the duplicate count only; the Asset-derived fields come
+    from a find and stay viewer-scoped.
+
     Any field whose query failed is None (unmeasured), never 0: assetTotal/
     assetCapped/confidentialCount/describedCount when the Asset find fails,
     duplicateCount when its (strict) count fails.
@@ -621,7 +728,7 @@ def business_value_signals(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
         if isinstance(desc, str) and desc.strip():
             described += 1
 
-    duplicate = count_elements(mgr, None, as_of, classifications=["ConsolidatedDuplicate"], strict=True)
+    duplicate = count_elements(mgr, None, as_of, classifications=["ConsolidatedDuplicate"], strict=True, scope=scope)
 
     return {
         "assetTotal": len(assets) if assets is not None else None,
@@ -1094,7 +1201,7 @@ def _update_time(el: dict):
         return None
 
 
-def people_counts(mgr, as_of: Optional[str] = None, strict: bool = False) -> Dict[str, Optional[int]]:
+def people_counts(mgr, as_of: Optional[str] = None, strict: bool = False, scope: Optional[str] = None) -> Dict[str, Optional[int]]:
     """
     Person / Team / Organization / ITProfile / Community counts via native
     element counts (sub-second where an older find-and-bucket approach would
@@ -1108,11 +1215,11 @@ def people_counts(mgr, as_of: Optional[str] = None, strict: bool = False) -> Dic
     could not be measured is None (see count_elements).
     """
     return {
-        "persons": count_elements(mgr, "Person", as_of, strict=strict),
-        "teams": count_elements(mgr, "Team", as_of, strict=strict),
-        "organizations": count_elements(mgr, "Organization", as_of, strict=strict),
-        "itProfiles": count_elements(mgr, "ITProfile", as_of, strict=strict),
-        "communities": count_elements(mgr, "Community", as_of, strict=strict),
+        "persons": count_elements(mgr, "Person", as_of, strict=strict, scope=scope),
+        "teams": count_elements(mgr, "Team", as_of, strict=strict, scope=scope),
+        "organizations": count_elements(mgr, "Organization", as_of, strict=strict, scope=scope),
+        "itProfiles": count_elements(mgr, "ITProfile", as_of, strict=strict, scope=scope),
+        "communities": count_elements(mgr, "Community", as_of, strict=strict, scope=scope),
     }
 
 
@@ -1125,11 +1232,15 @@ _FEEDBACK_RELATIONSHIP_TYPES = (
 )
 
 
-def feedback_summary(ce, as_of: Optional[str] = None) -> Dict[str, Any]:
+def feedback_summary(ce, as_of: Optional[str] = None, scope: Optional[str] = None, expert=None) -> Dict[str, Any]:
     """
     Crowd-sourced feedback tally -- ratings/comments/likes/tags/note-logs
     (Collaboration OMAS relationship counts). Often sparse in demo data, but
     real.
+
+    `scope` (and the MetadataExpert it needs, `expert`) are passed to
+    count_relationships; scope="repository" without `expert` yields None for
+    every type.
 
     A type whose count failed is None in `byType`; `total` is None unless every
     type was measured (a partial sum would read as "less feedback").
@@ -1137,12 +1248,12 @@ def feedback_summary(ce, as_of: Optional[str] = None) -> Dict[str, Any]:
     Returns {"byType": {ratings, comments, likes, tags, noteLogs: int|None},
     "total": int|None}.
     """
-    by_type = {key: count_relationships(ce, rel, as_of) for rel, key in _FEEDBACK_RELATIONSHIP_TYPES}
+    by_type = {key: count_relationships(ce, rel, as_of, expert=expert, scope=scope) for rel, key in _FEEDBACK_RELATIONSHIP_TYPES}
     measured = all(v is not None for v in by_type.values())
     return {"byType": by_type, "total": sum(by_type.values()) if measured else None}
 
 
-def usage_context_counts(mgr, as_of: Optional[str] = None, strict: bool = False) -> Dict[str, Optional[int]]:
+def usage_context_counts(mgr, as_of: Optional[str] = None, strict: bool = False, scope: Optional[str] = None) -> Dict[str, Optional[int]]:
     """
     InformationSupplyChain and SolutionBlueprint counts -- what puts assets
     in a *usage context* ("this store feeds the Clinical Trial supply
@@ -1152,8 +1263,8 @@ def usage_context_counts(mgr, as_of: Optional[str] = None, strict: bool = False)
     strict=True, a count that could not be measured is None (see count_elements).
     """
     return {
-        "informationSupplyChains": count_elements(mgr, "InformationSupplyChain", as_of, strict=strict),
-        "blueprints": count_elements(mgr, "SolutionBlueprint", as_of, strict=strict),
+        "informationSupplyChains": count_elements(mgr, "InformationSupplyChain", as_of, strict=strict, scope=scope),
+        "blueprints": count_elements(mgr, "SolutionBlueprint", as_of, strict=strict, scope=scope),
     }
 
 

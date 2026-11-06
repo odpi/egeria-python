@@ -3823,7 +3823,7 @@ class MetadataExpert(ServerClient):
         self,
         body: dict,
         push_down: Optional[bool] = None,
-        timeout: int = default_timeout,
+        timeout: Optional[int] = None,
         **kwargs,
     ) -> int:
         """Return the number of metadata elements that match the supplied criteria.
@@ -3849,8 +3849,8 @@ class MetadataExpert(ServerClient):
               reading every one of them server-side). `None` omits the query
               parameter, and the server default applies: `false` on Egeria
               main since the 2026-10-18 fixes, `true` on older servers.
-        timeout: int, default = default_timeout
-            - http request timeout for this request
+        timeout: int, optional
+            - http request timeout for this request; None (default) uses the client's own time_out
 
         Returns
         -------
@@ -3890,7 +3890,7 @@ class MetadataExpert(ServerClient):
         self,
         body: dict,
         push_down: Optional[bool] = None,
-        timeout: int = default_timeout,
+        timeout: Optional[int] = None,
         **kwargs,
     ) -> int:
         """Return the number of metadata elements that match the supplied criteria.
@@ -3906,8 +3906,8 @@ class MetadataExpert(ServerClient):
         push_down: bool, optional, default = None
             - ISSUE-38 (PY-18): see `_async_count_metadata_elements` for the full
               explanation. `None` omits the query parameter (server default).
-        timeout: int, default = default_timeout
-            - http request timeout for this request
+        timeout: int, optional
+            - http request timeout for this request; None (default) uses the client's own time_out
 
         Returns
         -------
@@ -4137,7 +4137,7 @@ class MetadataExpert(ServerClient):
         self,
         body: dict,
         push_down: Optional[bool] = None,
-        timeout: int = default_timeout,
+        timeout: Optional[int] = None,
         **kwargs,
     ) -> int:
         """Return the number of relationships that match the requested conditions.
@@ -4166,8 +4166,8 @@ class MetadataExpert(ServerClient):
               server-side). `None` omits the query parameter, and the server
               default applies: `false` on Egeria main since the 2026-10-18
               fixes, `true` on older servers.
-        timeout: int, default = default_timeout
-            - http request timeout for this request
+        timeout: int, optional
+            - http request timeout for this request; None (default) uses the client's own time_out
 
         Returns
         -------
@@ -4208,7 +4208,7 @@ class MetadataExpert(ServerClient):
         self,
         body: dict,
         push_down: Optional[bool] = None,
-        timeout: int = default_timeout,
+        timeout: Optional[int] = None,
         **kwargs,
     ) -> int:
         """Return the number of relationships that match the requested conditions.
@@ -4226,8 +4226,8 @@ class MetadataExpert(ServerClient):
             - ISSUE-38 (PY-18): see `_async_count_relationships_between_elements`
               for the full explanation. `None` omits the query parameter
               (server default).
-        timeout: int, default = default_timeout
-            - http request timeout for this request
+        timeout: int, optional
+            - http request timeout for this request; None (default) uses the client's own time_out
 
         Returns
         -------

@@ -742,3 +742,103 @@ def test_governed_coverage_and_business_value_none_on_failed_find():
     b = om.business_value_signals(mgr)
     assert b["assetTotal"] is None and b["confidentialCount"] is None
     assert b["describedCount"] is None and b["duplicateCount"] is None
+
+
+# ── sticky native-count switch ───────────────────────────────────────────
+
+def test_timeout_does_not_disable_native_counting():
+    from pyegeria.core._exceptions import PyegeriaTimeoutException
+    mgr = _mgr(count_metadata_elements=MagicMock(side_effect=[PyegeriaTimeoutException(), 987]))
+    mgr.find_metadata_elements.return_value = [{}] * 3
+    assert om.count_elements(mgr, "Asset") == 3          # that one count falls back
+    assert not om._native_disabled(mgr)
+    assert om.count_elements(mgr, "GlossaryTerm", strict=True) == 987  # native still used
+
+
+def test_transient_generic_error_does_not_disable_native():
+    mgr = _mgr(count_metadata_elements=MagicMock(side_effect=[RuntimeError("boom"), 5]))
+    mgr.find_metadata_elements.return_value = []
+    om.count_elements(mgr, "Asset")
+    assert not om._native_disabled(mgr)
+    assert om.count_elements(mgr, "Asset") == 5
+
+
+def test_not_supported_error_disables_native():
+    from pyegeria.core._exceptions import PyegeriaNotFoundException
+    resp = MagicMock(status_code=404, url="https://x/count", text="")
+    resp.json.return_value = {}
+    for exc in (PyegeriaNotFoundException(resp), RuntimeError("Operation not implemented")):
+        om._native_server_ok.clear(); om._count_caps.clear()
+        mgr = _mgr(count_metadata_elements=MagicMock(side_effect=exc))
+        mgr.find_metadata_elements.return_value = [{}] * 2
+        assert om.count_elements(mgr, "Asset") == 2
+        assert om._native_disabled(mgr)
+        om.count_elements(mgr, "Asset")
+        assert mgr.count_metadata_elements.call_count == 1   # not retried
+
+
+def test_native_disable_expires(monkeypatch):
+    mgr = _mgr(count_metadata_elements=MagicMock(return_value=9))
+    om._native_server_ok[om._server_key(mgr)] = om.time.monotonic() - om.NATIVE_DISABLE_TTL_S - 1
+    assert not om._native_disabled(mgr)
+    assert om.count_elements(mgr, "Asset") == 9
+
+
+# ── count scope -> native push_down ──────────────────────────────────────
+
+@pytest.mark.parametrize("scope,expected", [("viewer", False), ("repository", True)])
+def test_scope_maps_to_push_down(scope, expected):
+    mgr = _mgr(count_metadata_elements=MagicMock(return_value=11))
+    assert om.count_elements(mgr, "Asset", scope=scope) == 11
+    assert mgr.count_metadata_elements.call_args.kwargs == {"push_down": expected}
+
+
+def test_scope_none_omits_push_down():
+    mgr = _mgr(count_metadata_elements=MagicMock(return_value=11))
+    om.count_elements(mgr, "Asset")
+    assert mgr.count_metadata_elements.call_args.kwargs == {}
+
+
+def test_invalid_scope_raises():
+    with pytest.raises(ValueError):
+        om.count_elements(_mgr(), "Asset", scope="everyone")
+
+
+def test_repository_scope_failure_strict_is_none_not_find_result():
+    mgr = _mgr(count_metadata_elements=MagicMock(side_effect=RuntimeError("boom")))
+    mgr.find_metadata_elements.return_value = [{}] * 43     # viewer-scope answer
+    assert om.count_elements(mgr, "Asset", strict=True, scope="repository") is None
+    assert om.count_elements(mgr, "Asset", scope="repository") == 0
+    mgr.find_metadata_elements.assert_not_called()
+
+
+def test_repository_scope_without_native_method_is_none():
+    mgr = _mgr()
+    mgr.find_metadata_elements.return_value = [{}] * 3
+    assert om.count_elements(mgr, "Asset", strict=True, scope="repository") is None
+    assert om.count_elements(mgr, "Asset", strict=True, scope="viewer") == 3   # viewer may fall back
+
+
+def test_scope_threads_through_helpers():
+    mgr = _mgr(count_metadata_elements=MagicMock(return_value=2))
+    om.counts_by_type(mgr, [("A", "Asset")], scope="repository")
+    om.people_counts(mgr, scope="repository")
+    om.usage_context_counts(mgr, scope="repository")
+    om.count_elements_by_property(mgr, "DigitalProduct", "deploymentStatus", "ACTIVE", scope="repository")
+    calls = mgr.count_metadata_elements.call_args_list
+    assert len(calls) == 1 + 5 + 2 + 1
+    assert all(c.kwargs == {"push_down": True} for c in calls)
+
+
+def test_count_relationships_scope():
+    expert = MagicMock(spec=["count_relationships_between_elements", "platform_url", "view_server"])
+    expert.platform_url, expert.view_server = "u", "v"
+    expert.count_relationships_between_elements.return_value = 4
+    ce = MagicMock()
+    ce.get_relationships.return_value = [{}] * 9
+    assert om.count_relationships(ce, "License", expert=expert, scope="repository") == 4
+    assert expert.count_relationships_between_elements.call_args.kwargs == {"push_down": True}
+    # no expert: repository scope cannot be answered by the viewer-scoped path
+    assert om.count_relationships(ce, "License", scope="repository") is None
+    assert om.count_relationships(ce, "License") == 9
+    assert om.feedback_summary(ce, scope="repository")["total"] is None
