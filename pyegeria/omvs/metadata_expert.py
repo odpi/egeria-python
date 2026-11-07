@@ -2189,6 +2189,7 @@ class MetadataExpert(ServerClient):
                                                         sequencing_property: str = "qualifiedName",
                                                         start_from: int = 0, page_size: int = 0,
                                                         output_format: str = "JSON",
+                                                        report_spec: Optional[str | dict] = None,
                                                         body: SearchStringRequestBody | dict = None,
                                                         **kwargs) -> list | str:
         """ Searches for metadata elements based on a string pattern with a comprehensive filtering
@@ -2265,7 +2266,7 @@ class MetadataExpert(ServerClient):
                                                   limit_results_by_status=limit_results_by_status,
                                                   sequencing_order=sequencing_order,
                                                   sequencing_property=sequencing_property, output_format=output_format,
-                                                  report_spec=None, start_from=start_from, page_size=page_size,
+                                                  report_spec=report_spec, start_from=start_from, page_size=page_size,
                                                   body=body, **kwargs)
         return response
 
@@ -2371,6 +2372,7 @@ class MetadataExpert(ServerClient):
                                               sequencing_property: str = "qualifiedName",
                                               start_from: int = 0, page_size: int = 0,
                                               output_format: str = "JSON",
+                                              report_spec: Optional[str | dict] = None,
                                               body: SearchStringRequestBody | dict = None,
                                               **kwargs) -> list | str:
         """ Return a list of elements with the requested search string in their (display, resource) name, qualified name,
@@ -2448,7 +2450,7 @@ class MetadataExpert(ServerClient):
                                                   limit_results_by_status=limit_results_by_status,
                                                   sequencing_order=sequencing_order,
                                                   sequencing_property=sequencing_property, output_format=output_format,
-                                                  report_spec=None, start_from=start_from, page_size=page_size,
+                                                  report_spec=report_spec, start_from=start_from, page_size=page_size,
                                                   body=body, **kwargs)
         return response
 
@@ -2552,6 +2554,7 @@ class MetadataExpert(ServerClient):
                                                     sequencing_property: str = "qualifiedName",
                                                     start_from: int = 0, page_size: int = 0,
                                                     output_format: str = "JSON",
+                                                    report_spec: Optional[str | dict] = None,
                                                     body: SearchStringRequestBody | dict = None,
                                                     **kwargs) -> list | str:
         """ Return a list of elements with the requested search string in their (display, resource) name, qualified name,
@@ -2629,7 +2632,7 @@ class MetadataExpert(ServerClient):
                                                   limit_results_by_status=limit_results_by_status,
                                                   sequencing_order=sequencing_order,
                                                   sequencing_property=sequencing_property, output_format=output_format,
-                                                  report_spec=None, start_from=start_from, page_size=page_size,
+                                                  report_spec=report_spec, start_from=start_from, page_size=page_size,
                                                   body=body, **kwargs)
         return response
 
@@ -2732,6 +2735,7 @@ class MetadataExpert(ServerClient):
                                                    sequencing_property: str = "qualifiedName",
                                                    start_from: int = 0, page_size: int = 0,
                                                    output_format: str = "JSON",
+                                                   report_spec: Optional[str | dict] = None,
                                                    body: SearchStringRequestBody | dict = None,
                                                    **kwargs) -> list | str:
         """ Return a list of elements with the requested search string in their (display, resource) name, qualified name,
@@ -2813,7 +2817,7 @@ class MetadataExpert(ServerClient):
                                                   limit_results_by_status=limit_results_by_status,
                                                   sequencing_order=sequencing_order,
                                                   sequencing_property=sequencing_property, output_format=output_format,
-                                                  report_spec=None, start_from=start_from, page_size=page_size,
+                                                  report_spec=report_spec, start_from=start_from, page_size=page_size,
                                                   body=body, **kwargs)
         return response
 
