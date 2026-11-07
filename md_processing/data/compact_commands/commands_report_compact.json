@@ -1310,7 +1310,6 @@
       "display_name": "Dashboard Sheet",
       "qn_prefix": "Dashboard",
       "alternate_names": [
-        "Dashboard",
         "Sheet"
       ],
       "family": "Views & Reports",
@@ -1326,7 +1325,7 @@
       "OM_TYPE": "",
       "bundle": "Dashboard Sheet Base",
       "custom_attributes": [],
-      "Journal Entry": "Creates a named, ordered, nestable Dashboard Sheet \u2014 a local pyegeria-managed layout record (see Container/ContainerDict in pyegeria.view._output_container_models), NOT yet an Egeria element. PLANNED: Dashboard Sheet will become an Egeria Collection subtype \u2014 when that lands, this bundle (Dashboard Sheet Base) should switch BundleInherits from none to Collection Base (see /Command Specifications/Common Bundles/Collection Base), picking up Purpose + the full Referenceable/AuthoredReferenceable chain. Not immediate \u2014 until then this stays a local record: no upsert, no qualified name prefix, mirroring the Report command's own non-element-creation pattern."
+      "Journal Entry": "Creates a named, ordered, nestable Dashboard Sheet \u2014 a local pyegeria-managed layout record (see Container/ContainerDict in pyegeria.view._output_container_models), NOT yet an Egeria element. PLANNED: Dashboard Sheet will become an Egeria Collection subtype \u2014 when that lands, this bundle (Dashboard Sheet Base) should switch BundleInherits from none to Collection Base (see /Command Specifications/Common Bundles/Collection Base), picking up Purpose + the full Referenceable/AuthoredReferenceable chain. Not immediate \u2014 until then this stays a local record: no upsert, no qualified name prefix, mirroring the Report command's own non-element-creation pattern. 2026-11-07: dropped the 'Dashboard' alias -- 'Create Dashboard' now creates an Egeria Dashboard (odpi/egeria#9432)."
     },
     "Link Report to Dashboard Sheet": {
       "display_name": "",

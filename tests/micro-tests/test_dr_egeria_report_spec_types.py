@@ -279,3 +279,27 @@ def test_output_format_list_covers_the_report_format_registry():
     assert registry_types <= set(attr["valid_values"])
     assert "KPI" in attr["valid_values"]
     assert attr["property_name"] == "outputFormat"
+
+
+@pytest.mark.parametrize("command, expected", [
+    ("Create Dashboard", "DashboardProcessor"),
+    ("Update Dashboard", "DashboardProcessor"),
+    ("Create Dashboard Sheet", "CreateDashboardSheetProcessor"),
+    ("Create Report Spec", "CollectionManagerProcessor"),
+    ("Create Measurement Specification", "DataValueSpecificationProcessor"),
+    ("Create Display Data Container", "SchemaElementProcessor"),
+    ("Create Display Data Field", "SchemaElementProcessor"),
+    ("Link Basis Data Field", "DataDesignerLinkProcessor"),
+    ("Link Report Run Of", "DataDesignerLinkProcessor"),
+    ("Detach Report Type Instance", "DataDesignerLinkProcessor"),
+])
+def test_dispatcher_routes_to_the_right_processor(command, expected):
+    # Found live 2026-11-07: "Create Dashboard Sheet" had the alternate name "Dashboard", whose alias
+    # registration took over the "Create Dashboard" key, so an Egeria Dashboard was silently written as
+    # a local Dashboard Sheet record instead.
+    from md_processing.dr_egeria import setup_dispatcher
+    dispatcher = setup_dispatcher(cast(Any, _FakeClient()))
+    verb, _, object_type = command.partition(" ")
+    cls = dispatcher.resolve_processor_class(
+        DrECommand(verb=verb, object_type=object_type, attributes={}, raw_block=""))
+    assert cls is not None and cls.__name__ == expected, (command, cls)
