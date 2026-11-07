@@ -637,7 +637,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                     "per-row `derive`s (viewer count, repository count) and a `difference`. All counts "
                     "share one pool of `concurrency` workers (default 3, capped at 5). Takes two "
                     "leading clients (mgr, vm); vm defaults to mgr (an EgeriaTech has both).",
-        returns="AssetComposition (dict: state, state_reason, root, depth, scopes, as_of, concurrency, "
+        returns="AssetComposition (dict: state, state_reason, root, depth, populations, as_of, concurrency, "
                 "rows[{type_name, parent, level, exact_type, subtypes_error, viewer?, repository?, "
                 "not_visible}], not_measured, provenance); each count cell is {value, state, "
                 "completeness, as_of, population, reason, elapsed_s}",
@@ -649,7 +649,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
             AnalyticParam(name="depth", type="int", default=2,
                           description="Subtype levels below root (0 = root only)."),
             _as_of("ISO-8601 asOfTime for point-in-time counts (None = now); the subtype tree is today's."),
-            AnalyticParam(name="scopes", type="list[str]", default=["viewer", "repository"],
+            AnalyticParam(name="populations", type="list[str]", default=["viewer", "repository"],
                           description="Populations to count: viewer (what the caller may see) and/or "
                                       "repository (whole repository, fast). Each cell names its "
                                       "population under `population`."),
