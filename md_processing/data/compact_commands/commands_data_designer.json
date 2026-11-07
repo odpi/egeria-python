@@ -3473,6 +3473,121 @@
       "max_cardinality": 1,
       "level": "Basic",
       "Journal Entry": "Added 2026-09-11 -- Schema Maker family relationship/classification endpoint attributes; see 'Create Schema Type' Journal Entry for family-wide notes."
+    },
+    "Completeness Declared": {
+      "variable_name": "completeness_declared",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [
+        "complete",
+        "lower_bound",
+        "unknown"
+      ],
+      "existing_element": "",
+      "description": "Whether a measured value counts everything or may undercount (e.g. a page limit was hit), so a renderer can say 'at least N'. Validated against Egeria's valid metadata values for completenessDeclared.",
+      "generated": false,
+      "style": "Valid Value",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Basic",
+      "Journal Entry": "2026-11-07 -- Egeria 6.3 report specs / measurements / dashboards (odpi/egeria#9432).",
+      "property_name": "completenessDeclared",
+      "type_name": null
+    },
+    "Confidence Form": {
+      "variable_name": "confidence_form",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [
+        "measured",
+        "estimated",
+        "inferred",
+        "judged",
+        "generated"
+      ],
+      "existing_element": "",
+      "description": "How the value is produced -- confidence in the method, not the value. Validated against Egeria's valid metadata values for confidenceForm.",
+      "generated": false,
+      "style": "Valid Value",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Basic",
+      "Journal Entry": "2026-11-07 -- Egeria 6.3 report specs / measurements / dashboards (odpi/egeria#9432).",
+      "property_name": "confidenceForm",
+      "type_name": null
+    },
+    "Uncertainty Form": {
+      "variable_name": "uncertainty_form",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [
+        "plus_minus",
+        "low_high",
+        "band"
+      ],
+      "existing_element": "",
+      "description": "How to read Absolute/Relative Uncertainty: plus/minus a spread, a low-high range, or a named band. Validated against Egeria's valid metadata values for uncertaintyForm.",
+      "generated": false,
+      "style": "Valid Value",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Basic",
+      "Journal Entry": "2026-11-07 -- Egeria 6.3 report specs / measurements / dashboards (odpi/egeria#9432).",
+      "property_name": "uncertaintyForm",
+      "type_name": null
+    },
+    "Absence Sentences": {
+      "variable_name": "absence_sentences",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "nothing_found: No matching elements were found.",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Map from an absence state (nothing_found, not_measured, not_permitted, not_applicable) to the sentence shown in place of a value when there isn't one.",
+      "generated": false,
+      "style": "Dictionary",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Basic",
+      "Journal Entry": "2026-11-07 -- Egeria 6.3 report specs / measurements / dashboards (odpi/egeria#9432)."
+    },
+    "Measurement Specification": {
+      "variable_name": "measurement_specification",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "MeasurementSpecification",
+      "description": "A measurement specification name. Preferably a qualified name.",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": true,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": "2026-11-07 -- Egeria 6.3 report specs / measurements / dashboards (odpi/egeria#9432)."
     }
   },
   "bundles": {
@@ -3707,6 +3822,15 @@
         "Maximum Cardinality",
         "Minimum Cardinality",
         "Position"
+      ]
+    },
+    "Measurement Specification Base": {
+      "inherits": "Data Value Specification Base",
+      "own_attributes": [
+        "Completeness Declared",
+        "Confidence Form",
+        "Uncertainty Form",
+        "Absence Sentences"
       ]
     }
   },
@@ -4217,6 +4341,69 @@
         "Data Field"
       ],
       "Journal Entry": "2026-09-26 -- aligned with Egeria types 0580/0581 (DataField/DataStructure and their relationships)."
+    },
+    "Create Measurement Specification": {
+      "alternate_names": [],
+      "upsert": true,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "DataDesigner.find_data_value_specifications",
+      "find_constraints": "{\"metadata_element_type\": \"MeasurementSpecification\"}",
+      "extra_find": "",
+      "extra_constraints": "",
+      "custom_attributes": [],
+      "Journal Entry": "2026-11-07 -- Egeria 6.3 report specs / measurements / dashboards (odpi/egeria#9432).",
+      "display_name": "Measurement Specification",
+      "qn_prefix": "MeasurementSpecification",
+      "family": "Data Designer",
+      "description": "Creates or updates a measurement specification -- how a measured value is read (units, completeness, confidence and uncertainty form, absence sentences). Link it to its fields with Link Basis Data Field / Link As Of Data Field, and to a field it defines with Link Data Value Definition.",
+      "verb": "Create",
+      "OM_TYPE": "MeasurementSpecification",
+      "bundle": "Measurement Specification Base"
+    },
+    "Link Basis Data Field": {
+      "alternate_names": [],
+      "upsert": false,
+      "attach": true,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "custom_attributes": [
+        "Measurement Specification",
+        "Data Field"
+      ],
+      "Journal Entry": "2026-11-07 -- Egeria 6.3 report specs / measurements / dashboards (odpi/egeria#9432).",
+      "display_name": "Basis Data Field",
+      "qn_prefix": "",
+      "family": "Data Designer",
+      "description": "Link a measurement specification to the data field that gives the basis for the measurement, for example the denominator of a percentage (BasisDataField relationship).",
+      "verb": "Link",
+      "OM_TYPE": "BasisDataField",
+      "bundle": "Link Command Base"
+    },
+    "Link As Of Data Field": {
+      "alternate_names": [],
+      "upsert": false,
+      "attach": true,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "custom_attributes": [
+        "Measurement Specification",
+        "Data Field"
+      ],
+      "Journal Entry": "2026-11-07 -- Egeria 6.3 report specs / measurements / dashboards (odpi/egeria#9432).",
+      "display_name": "As Of Data Field",
+      "qn_prefix": "",
+      "family": "Data Designer",
+      "description": "Link a measurement specification to the data field that gives the time of the measurement (AsOfDataField relationship).",
+      "verb": "Link",
+      "OM_TYPE": "AsOfDataField",
+      "bundle": "Link Command Base"
     }
   }
 }

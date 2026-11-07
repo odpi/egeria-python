@@ -85,6 +85,15 @@ class DataValueSpecificationProcessor(AsyncBaseCommandProcessor):
             "dataPatterns": attributes.get('Data Patterns', {}).get('value'),
             "additionalProperties": attributes.get('Additional Properties', {}).get('value')
         }
+        if om_type == "MeasurementSpecification":
+            # Egeria 6.3 (odpi/egeria#9432). The state set is a ValidValuesAssignment and the basis /
+            # as-of fields are the BasisDataField / AsOfDataField relationships, not properties.
+            props.update({
+                "completenessDeclared": attributes.get('Completeness Declared', {}).get('value'),
+                "confidenceForm": attributes.get('Confidence Form', {}).get('value'),
+                "uncertaintyForm": attributes.get('Uncertainty Form', {}).get('value'),
+                "absenceSentences": attributes.get('Absence Sentences', {}).get('value'),
+            })
 
         # "In Data Value Specification"/"Specializes Data Value Specification"
         # both describe the same DataValueHierarchy parent -- near-synonym
@@ -849,6 +858,16 @@ def _linked_data_field_props(attributes: dict) -> dict:
     }
 
 
+def _report_run_of_props(attributes: dict) -> dict:
+    """ReportRunOfProperties: LabeledRelationshipProperties plus the run's result state."""
+    return {
+        **_labeled_props(attributes),
+        "resultState": attributes.get('Result State', {}).get('value'),
+        "resultStateReason": attributes.get('Result State Reason', {}).get('value'),
+        "resultLocation": attributes.get('Result Location', {}).get('value'),
+    }
+
+
 # OM_TYPE -> (end1 attribute, end2 attribute, link method, detach method, relationship properties builder).
 # Relationship ends and properties follow Egeria types 0540/0580/0581; each link/detach method takes
 # (end1_guid, end2_guid, body) in that order.
@@ -876,6 +895,16 @@ DATA_DESIGNER_LINKS: Dict[str, tuple] = {
                            "_async_detach_specialized_data_value_specification", _labeled_props),
     "DataClassComposition": ("Data Class", "Data Class Child",
                              "_async_link_nested_data_class", "_async_detach_nested_data_class", _labeled_props),
+    # Egeria 6.3 report specs and measurements (odpi/egeria#9432, area 0582).
+    "BasisDataField": ("Measurement Specification", "Data Field",
+                       "_async_link_basis_data_field", "_async_detach_basis_data_field", _labeled_props),
+    "AsOfDataField": ("Measurement Specification", "Data Field",
+                      "_async_link_as_of_data_field", "_async_detach_as_of_data_field", _labeled_props),
+    "ReportTypeInstance": ("Report Type", "Report",
+                           "_async_link_report_type_instance", "_async_detach_report_type_instance",
+                           _labeled_props),
+    "ReportRunOf": ("Results Set", "Report",
+                    "_async_link_report_run_of", "_async_detach_report_run_of", _report_run_of_props),
 }
 
 
