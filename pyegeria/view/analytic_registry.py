@@ -45,13 +45,24 @@ from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
 from loguru import logger
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 __all__ = [
     'AnalyticParam',
     'AnalyticFunctionSpec',
     'AnalyticActionSpec',
     'AnalyticDeclaration',
+    'RoutineDeclaration',
+    'ParamDeclaration',
+    'Binding',
+    'TileSafety',
+    'Admission',
+    'ROUTINE_KINDS',
+    'BINDING_KINDS',
+    'PARAM_CATEGORIES',
+    'INPUT_ROLES',
+    'get_routine_registry',
+    'routine_declaration_errors',
     'MeasureDeclaration',
     'BasisDeclaration',
     'AbsenceSentences',
@@ -94,6 +105,8 @@ class AnalyticParam(BaseModel):
     required: bool = False
     default: Optional[Any] = None
     description: str = ""
+    #: What the parameter changes (PARAM_CATEGORIES): content, shape or performance (RS-W2-2).
+    category: Literal["content", "shape", "performance"] = "content"
 
 
 class AnalyticActionSpec(BaseModel):
@@ -375,15 +388,32 @@ class AnalyticDeclaration(BaseModel):
     """What an analytic function declares about its results: the minimum is `result_kind`,
     `measures` (required for measure/series/distribution/graph) and `absence`.
 
-    `out` lists the result's fields (for a list or series, the fields of one row). `categories`
-    belongs to a distribution or graph and `listing` to a list, as in trellis-analytics; this model
-    accepts a declaration without them, and the built-ins all carry them."""
+    `out` says the result's fields (for a list or series, the fields of one row) in one of the
+    library's three forms: a list of fields (every pyegeria built-in), a registered shape's name, or
+    an inline shape (`{"fields": [...], "extends": ...}`, kept as data); None or [] when not declared. Read it through
+    `out_fields()`, never by iterating `out`, so a library declaration reads the same way (RS-W2-1a
+    read-back F2). `categories` belongs to a distribution or graph and `listing` to a list, as in
+    trellis-analytics; this model accepts a declaration without them, and the built-ins all carry
+    them."""
     result_kind: str
     measures: List[MeasureDeclaration] = Field(default_factory=list)
     absence: AbsenceSentences
     categories: Optional[CategoriesDeclaration] = None
     listing: Optional[ListDeclaration] = None
-    out: List[FieldDeclaration] = Field(default_factory=list)
+    out: Optional[Union[List[FieldDeclaration], str, Dict[str, Any]]] = Field(default_factory=list)
+
+    def out_fields(self) -> List[FieldDeclaration]:
+        """The result's fields, whichever form `out` takes. A shape name pyegeria does not hold in
+        ROW_SHAPES (one only the library registers) and an inline shape's reused fields (`extends`,
+        `include`) are not resolved here, so they read as []; the resolver (RS-W2-2 PR-B) says why."""
+        if self.out is None:  # the library's word for "not declared"
+            return []
+        if isinstance(self.out, list):
+            return list(self.out)
+        if isinstance(self.out, str):
+            return list(ROW_SHAPES.get(self.out, []))
+        return [FieldDeclaration.model_validate(f) for f in self.out.get("fields", [])
+                if isinstance(f, dict) and "include" not in f]
 
     @field_validator("result_kind")
     @classmethod
@@ -397,6 +427,177 @@ class AnalyticDeclaration(BaseModel):
         if self.result_kind in ("measure", "series", "distribution", "graph") and not self.measures:
             raise ValueError(f"result_kind '{self.result_kind}' declares no measures")
         return self
+
+
+# ── Routine declaration and bindings (RS-W2-2 PR-A; note §2b), mirrored from trellis-analytics 0.4 ──
+# A registry entry is a declaration (data: what the routine is, its inputs, parameters, constants and
+# results) plus one or more bindings (how it is reached). The library authors the schema in
+# `trellis_analytics.routine` (owner decision D2); pyegeria keeps the same names, words and rules
+# without importing it, and tests/micro-tests/test_routine_declarations_match_library.py loads every
+# built-in here in the library when it is installed. `AnalyticFunctionSpec` below is the compatibility
+# view: its `function` is the one python binding.
+
+#: What a declaration declares: a stage of a micro-flow (producer, processor, routine) or a step (a
+#: routine deployed to an engine host).
+ROUTINE_KINDS = ("producer", "processor", "routine", "step")
+
+#: How a routine is reached. `python`: an importable `module.attr` path; `egeria_query`: a saved Egeria
+#: query by name; `sql`: a named query a reader owns; `step`: a step's registered name.
+BINDING_KINDS = ("python", "egeria_query", "sql", "step")
+
+#: What a parameter changes: what is counted (`content`), how the result is laid out (`shape`), or
+#: only how fast or how much is read (`performance`, which never changes a value).
+PARAM_CATEGORIES = ("content", "shape", "performance")
+
+#: The role words a routine's `inputs` use. `egeria_client` and `reader` take a qualifier.
+INPUT_ROLES = ("egeria_client", "reader", "viewer", "subject")
+
+_INPUT_ROLE = re.compile(r"^(?:egeria_client:[A-Za-z_][A-Za-z0-9_]*|reader:[a-z_][a-z0-9_]*|viewer|subject)$")
+_PYTHON_TARGET = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)+$")
+
+
+class _StrictModel(BaseModel):
+    # An unknown key is refused, so a misspelt field is named rather than silently dropped.
+    model_config = ConfigDict(extra="forbid")
+
+
+class Binding(_StrictModel):
+    """How a routine is reached: one of BINDING_KINDS and its target. A python target is a dotted
+    import path; the module allow-list (`format_set_executor.python_binding_allowed`) applies to it,
+    and only to it: a report spec names routines, never targets (ISSUE-173)."""
+    kind: Literal["python", "egeria_query", "sql", "step"]
+    target: str
+
+    @model_validator(mode="after")
+    def _target(self) -> "Binding":
+        if not _words(self.target):
+            raise ValueError(f"a {self.kind} binding names no target")
+        if self.kind == "python" and not _PYTHON_TARGET.fullmatch(self.target):
+            raise ValueError(f"python binding target '{self.target}' is not a dotted import path (module.attr)")
+        return self
+
+
+class ParamDeclaration(_StrictModel):
+    """One parameter a caller may set. Either it has a default or it is required, never both."""
+    name: str
+    type: str = "str"
+    default: Any = None
+    required: bool = False
+    category: Literal["content", "shape", "performance"] = "content"
+    description: str = ""
+
+    @model_validator(mode="after")
+    def _shape(self) -> "ParamDeclaration":
+        if not re.fullmatch(_FIELD_NAME, self.name or ""):
+            raise ValueError(f"parameter name '{self.name}' is not an identifier")
+        if self.required and self.default is not None:
+            raise ValueError(f"parameter '{self.name}' is required and has a default: a required parameter has none")
+        return self
+
+
+class TileSafety(_StrictModel):
+    """May the routine run on a tile's request path? `safe` with no `cap` is a yes at any size; a
+    `cap` (param -> value) is a yes only within it. The reason is the evidence and is always said."""
+    safe: bool
+    cap: Dict[str, Any] = Field(default_factory=dict)
+    reason: str
+
+    @model_validator(mode="after")
+    def _reason(self) -> "TileSafety":
+        if not _words(self.reason):
+            raise ValueError("tile_safe declares no reason: say the evidence (a timing, a cost class)")
+        if self.cap and not self.safe:
+            raise ValueError("tile_safe declares a cap and safe false: a cap says within what it IS safe")
+        return self
+
+
+class Admission(_StrictModel):
+    """Where the routine may be offered: the resource types it is about ([] = any), and whether only
+    in tests."""
+    resource_types: List[str] = Field(default_factory=list)
+    test_only: bool = False
+
+
+#: A processor's input shape (`in`): a list of fields, a registered shape's name, or an inline shape.
+ShapeRef = Union[List[FieldDeclaration], str, Dict[str, Any]]
+
+
+class RoutineDeclaration(_StrictModel):
+    """What a routine says about how it is called and what it returns (note §2b).
+
+    Only `name` is required. `declaration` is the results (`AnalyticDeclaration`: result kind,
+    measures, absence sentences, `out`); `out` lives there, not here, so a result's fields are
+    declared once. `in` (attribute `in_`) is the shape a processor reads. `constants` are values
+    fixed for every call; a constant is never also a parameter. At most one python binding.
+
+    A shape name in `in` is not checked against ROW_SHAPES here (the library may register shapes
+    pyegeria does not hold); the resolver checks it (RS-W2-2 PR-B, check 3)."""
+    name: str
+    kind: Literal["producer", "processor", "routine", "step"] = "routine"
+    description: str = ""
+    version: str = ""
+    source: str = ""
+    family: str = ""
+    tags: List[str] = Field(default_factory=list)
+    generic: bool = False
+    binding_note: str = ""
+    inputs: List[str] = Field(default_factory=list)
+    params: List[ParamDeclaration] = Field(default_factory=list)
+    constants: Dict[str, Any] = Field(default_factory=dict)
+    in_: Optional[ShapeRef] = Field(default=None, alias="in")
+    declaration: Optional[AnalyticDeclaration] = None
+    pushdown: List[str] = Field(default_factory=list)
+    tile_safe: Optional[TileSafety] = None
+    admission: Admission = Field(default_factory=Admission)
+    bindings: List[Binding] = Field(default_factory=list)
+    annotation_type: str = ""
+
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+
+    @model_validator(mode="after")
+    def _whole(self) -> "RoutineDeclaration":
+        if not re.fullmatch(_FIELD_NAME, self.name or ""):
+            raise ValueError(f"routine name '{self.name}' is not an identifier")
+        label = f"routine '{self.name}'"
+        bad = [i for i in self.inputs if not _INPUT_ROLE.fullmatch(i or "")]
+        if bad:
+            raise ValueError(f"{label} input {', '.join(repr(b) for b in bad)} is not a role word "
+                             "(egeria_client:<Class>, reader:<name>, viewer, subject)")
+        if len(set(self.inputs)) != len(self.inputs):
+            raise ValueError(f"{label} declares an input more than once")
+        names = [p.name for p in self.params]
+        twice = sorted({n for n in names if names.count(n) > 1})
+        if twice:
+            raise ValueError(f"{label} declares parameter {', '.join(twice)} more than once")
+        clash = sorted(set(names) & set(self.constants))
+        if clash:
+            raise ValueError(f"{label} declares {', '.join(clash)} as a parameter and a constant: a constant is "
+                             "fixed for every call, so it is not a parameter")
+        if sum(1 for b in self.bindings if b.kind == "python") > 1:
+            raise ValueError(f"{label} declares more than one python binding: one routine, one function")
+        if self.in_ is not None and self.kind != "processor":
+            raise ValueError(f"{label} declares in and is a '{self.kind}': only a processor reads a previous "
+                             "stage's shape; a routine or producer names its inputs")
+        if self.generic and _words(self.binding_note):
+            raise ValueError(f"{label} is generic and declares a binding_note: the note names what is fixed, "
+                             "and a generic routine fixes nothing")
+        return self
+
+    def python_target(self) -> str:
+        """The python binding's target, or "" when it has none."""
+        return next((b.target for b in self.bindings if b.kind == "python"), "")
+
+    def out_fields(self) -> List[FieldDeclaration]:
+        """The result's fields (`declaration.out`); [] when not declared."""
+        return self.declaration.out_fields() if self.declaration is not None else []
+
+
+def _as_analytic_declaration(decl: Any) -> Optional[AnalyticDeclaration]:
+    """A declaration as pyegeria's model. A subclass's richer declaration (trellis-analytics'
+    `Declaration`) is read through its dump; the blocks pyegeria does not model are left out."""
+    if decl is None or isinstance(decl, AnalyticDeclaration):
+        return decl
+    return AnalyticDeclaration.model_validate(decl.model_dump() if isinstance(decl, BaseModel) else decl)
 
 
 class AnalyticFunctionSpec(BaseModel):
@@ -422,7 +623,10 @@ class AnalyticFunctionSpec(BaseModel):
     existing consumer that only reads `.function` -- including every other
     entry in this registry -- keeps working completely unchanged."""
     name: str
-    function: str  # dotted import path, e.g. "pyegeria.view.overview_metrics.growth_series"
+    # The one python binding's target (a dotted import path, e.g.
+    # "pyegeria.view.overview_metrics.growth_series"). "" only for an entry whose bindings has no
+    # python binding; this pyegeria runs python bindings only, and refuses such an entry by name.
+    function: str = ""
     description: str = ""
     returns: str = ""  # human-readable result shape, e.g. "scalar (int)", "list[dict] (time series)"
     generic: bool = False
@@ -433,7 +637,8 @@ class AnalyticFunctionSpec(BaseModel):
     # Manifest fields (ISSUE-149), all optional so every existing entry is unchanged.
     # trellis-analytics' RoutineManifest/StepManifest subclass this class and used to
     # carry these themselves.
-    kind: Literal["routine", "step"] = "routine"  # routine: runs in the caller; step: a survey-style step
+    # routine: runs in the caller; step: a survey-style step; producer/processor: a stage (RS-W2-2)
+    kind: Literal["producer", "processor", "routine", "step"] = "routine"
     source: str = ""  # where the data comes from; known values in KNOWN_ANALYTIC_SOURCES
     version: str = ""  # the producer's version, stamped on every result
     envelope: bool = False  # the result carries a state envelope (measured / nothing_found / ...)
@@ -445,6 +650,48 @@ class AnalyticFunctionSpec(BaseModel):
     # sentences. Optional; trellis-analytics' StepManifest narrows it to its fuller Declaration.
     declaration: Optional[AnalyticDeclaration] = None
 
+    # The routine declaration's own fields (RS-W2-2 PR-A), so this view carries a RoutineDeclaration
+    # whole: `routine()` and `from_routine()` round-trip. All optional; no existing entry sets them.
+    bindings: List[Binding] = Field(default_factory=list)  # every binding; the python one is `function`
+    inputs: List[str] = Field(default_factory=list)  # role words (INPUT_ROLES)
+    constants: Dict[str, Any] = Field(default_factory=dict)
+    in_: Optional[ShapeRef] = Field(default=None, alias="in")
+    pushdown: List[str] = Field(default_factory=list)
+    tile_safe: Optional[TileSafety] = None
+    test_only: bool = False  # with resource_types, the routine's Admission
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _function_is_the_python_binding(cls, data: Any) -> Any:
+        """`function` and the python binding are one value: either fills the other; two that differ,
+        two python bindings, or no binding at all are refused."""
+        if not isinstance(data, dict):
+            return data
+        data = dict(data)
+        label = f"analytic function '{data.get('name', '')}'"
+        function = data.get("function") or ""
+        bindings = list(data.get("bindings") or [])
+
+        def _get(b: Any, key: str) -> Any:
+            return b.get(key) if isinstance(b, dict) else getattr(b, key, None)
+
+        python = [_get(b, "target") for b in bindings if _get(b, "kind") == "python"]
+        if len(python) > 1:
+            raise ValueError(f"{label} declares more than one python binding: one routine, one function")
+        if function and not python:
+            bindings.insert(0, {"kind": "python", "target": function})
+        elif python and not function:
+            data["function"] = python[0]
+        elif python and python[0] != function:
+            raise ValueError(f"{label} names function '{function}' and python binding '{python[0]}': they are "
+                             "one value, so name it once")
+        if not bindings:
+            raise ValueError(f"{label} declares no binding: name its function (a python binding) or a binding")
+        data["bindings"] = bindings
+        return data
+
     @field_validator("source")
     @classmethod
     def _suggest_known_source(cls, value: str) -> str:
@@ -453,6 +700,48 @@ class AnalyticFunctionSpec(BaseModel):
             logger.warning(f"Analytic source '{value}' is not one of the known values "
                            f"{sorted(KNOWN_ANALYTIC_SOURCES)}; keeping it.")
         return value
+
+    def python_target(self) -> str:
+        """The python binding's target ("" when the entry has none)."""
+        return next((b.target for b in self.bindings if b.kind == "python"), "")
+
+    def routine(self) -> RoutineDeclaration:
+        """This entry as a RoutineDeclaration (the declaration + bindings it is a view of). Raises
+        ValueError, in words, when the entry breaks a declaration rule; `get_routine_registry`
+        records that instead of raising."""
+        return RoutineDeclaration(
+            name=self.name, kind=self.kind, description=self.description, version=self.version,
+            source=self.source, family=self.family, tags=list(self.tags), generic=self.generic,
+            binding_note=self.binding_note, inputs=list(self.inputs),
+            params=[ParamDeclaration(name=p.name, type=p.type, default=p.default, required=p.required,
+                                     category=p.category, description=p.description) for p in self.params],
+            constants=dict(self.constants), in_=self.in_,
+            declaration=_as_analytic_declaration(self.declaration), pushdown=list(self.pushdown),
+            tile_safe=self.tile_safe,
+            admission=Admission(resource_types=list(self.resource_types), test_only=self.test_only),
+            bindings=list(self.bindings),
+            annotation_type=self.annotation_type if self.kind == "step" else "",
+        )
+
+    @classmethod
+    def from_routine(cls, routine: RoutineDeclaration, *, returns: str = "",
+                     action: Optional[AnalyticActionSpec] = None, envelope: bool = False,
+                     **extra: Any) -> "AnalyticFunctionSpec":
+        """The compatibility view of a RoutineDeclaration. `returns`, `action` and `envelope` are
+        the view's own fields, which a declaration does not carry (its results are in
+        `declaration`). `extra` is passed on, for a subclass's own fields."""
+        r = routine
+        return cls(
+            name=r.name, function=r.python_target(), description=r.description, returns=returns,
+            generic=r.generic, binding_note=r.binding_note,
+            params=[AnalyticParam(name=p.name, type=p.type, required=p.required, default=p.default,
+                                  description=p.description, category=p.category) for p in r.params],
+            action=action, kind=r.kind, source=r.source, version=r.version, envelope=envelope,
+            annotation_type=r.annotation_type, resource_types=list(r.admission.resource_types),
+            family=r.family, tags=list(r.tags), declaration=r.declaration, bindings=list(r.bindings),
+            inputs=list(r.inputs), constants=dict(r.constants), in_=r.in_, pushdown=list(r.pushdown),
+            tile_safe=r.tile_safe, test_only=r.admission.test_only, **extra,
+        )
 
 
 class AnalyticFunctionDict(Dict[str, AnalyticFunctionSpec]):
@@ -1028,8 +1317,9 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                     "(a Vega-Lite line chart) is proven against today. "
                     "Cost: one count per series per snapshot (four series by default), seconds to tens of seconds.",
         returns="list[dict] (time series: {label, date, <series_key>: count, ...})",
+        # Generic: what it counts is type_map. (Its binding_note used to repeat type_map's own
+        # description; a generic routine fixes nothing, so it declares no note -- RS-W2-2.)
         generic=True,
-        binding_note="type_map defaults to assets/terms/governed/products but is fully overridable.",
         params=[
             AnalyticParam(name="window", type="str", default="6mo",
                           description="8h|1d|3d|7d|30d|90d|6mo|1y -- sets span + default point count."),
@@ -1777,6 +2067,33 @@ def register_analytic_functions(new_functions: Union[AnalyticFunctionDict, dict]
                 f"Analytic function '{name}' already exists; cannot register from {source}")
     for k, v in new_functions.items():
         _RUNTIME_ANALYTIC_FUNCTIONS[k] = v
+
+
+def get_routine_registry() -> Dict[str, RoutineDeclaration]:
+    """Every registry entry (built-in, config, installed, runtime) as a RoutineDeclaration: the
+    declaration + bindings each `AnalyticFunctionSpec` is a view of. An entry that breaks a
+    declaration rule is left out and named, with the rule's words, by `routine_declaration_errors()`;
+    it still runs as before (RS-W2-2 PR-A changes no behaviour)."""
+    routines, _ = _routines_and_errors()
+    return routines
+
+
+def routine_declaration_errors() -> Dict[str, str]:
+    """Registry entries that cannot be read as a RoutineDeclaration, each with a sentence naming the
+    entry and the rule it breaks (empty when every entry reads)."""
+    _, errors = _routines_and_errors()
+    return errors
+
+
+def _routines_and_errors() -> Tuple[Dict[str, RoutineDeclaration], Dict[str, str]]:
+    routines: Dict[str, RoutineDeclaration] = {}
+    errors: Dict[str, str] = {}
+    for name, spec in get_analytic_registry().items():
+        try:
+            routines[name] = spec.routine()
+        except ValueError as exc:  # pydantic's ValidationError is a ValueError
+            errors[name] = f"analytic function '{name}' is not a valid routine declaration: {exc}"
+    return routines, errors
 
 
 def unregister_analytic_function(name: str) -> bool:

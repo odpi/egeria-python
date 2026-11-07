@@ -111,6 +111,25 @@ def _module_allowed(module_path: str) -> bool:
     return any(module_path == p or module_path.startswith(p + ".") for p in analytic_module_prefixes())
 
 
+def python_binding_allowed(target: str) -> bool:
+    """Is a python binding's target under an allowed module prefix? The allow-list applies to
+    binding targets only: a report spec names routines by registered name and never carries a
+    target (ISSUE-173, RS-W2-2)."""
+    return isinstance(target, str) and "." in target and _module_allowed(target.rsplit(".", 1)[0])
+
+
+def _python_binding_of(spec) -> str:
+    """A registered entry's python binding target, or AnalyticFunctionRefused naming the bindings
+    it has instead (this pyegeria runs python bindings only)."""
+    target = spec.python_target() if hasattr(spec, "python_target") else spec.function
+    if not target:
+        kinds = ", ".join(f"{b.kind} '{b.target}'" for b in getattr(spec, "bindings", [])) or "none"
+        raise AnalyticFunctionRefused(
+            f"Analytic function '{spec.name}' has no python binding (its bindings: {kinds}); this pyegeria "
+            f"runs python bindings only.")
+    return target
+
+
 def _import_callable(func_decl: str):
     module_path, func_name = func_decl.rsplit(".", 1)
     module = importlib.import_module(module_path)
@@ -131,11 +150,15 @@ def _resolve_analytic_function(func_decl: str):
     class to resolve here, just the function itself.
 
     A report spec is data, so it may not import arbitrary code (ISSUE-169):
-      1. A registered name (analytic_registry) resolves to that entry's function.
+      1. A registered name (analytic_registry) resolves to that entry's python
+         binding; an entry with none is refused by name.
       2. A dotted path some registered entry declares is trusted as-is.
       3. Any other dotted path must sit under an allowed module prefix
-         (`analytic_module_prefixes()`); anything else raises
+         (`python_binding_allowed`); anything else raises
          AnalyticFunctionRefused before any import happens.
+    Cases 2 and 3 are binding targets (an action's fetch/analytic step, a binder
+    factory): a report spec never reaches them, because
+    `resolve_report_spec_function` accepts registered names only (ISSUE-173).
     """
     if not isinstance(func_decl, str) or not func_decl.strip():
         raise ValueError(f"Invalid analytic_function declaration: {func_decl!r}")
@@ -144,14 +167,13 @@ def _resolve_analytic_function(func_decl: str):
     registry = get_analytic_registry()
     spec = registry.get(func_decl)
     if spec is not None:
-        return _import_callable(spec.function)
+        return _import_callable(_python_binding_of(spec))
     if "." not in func_decl:
         raise AnalyticFunctionRefused(
             f"Analytic function '{func_decl}' is not a registered name, and is not a dotted path.")
-    if any(s.function == func_decl for s in registry.values()):
+    if any(s.function and s.function == func_decl for s in registry.values()):
         return _import_callable(func_decl)
-    module_path = func_decl.rsplit(".", 1)[0]
-    if not _module_allowed(module_path):
+    if not python_binding_allowed(func_decl):
         raise AnalyticFunctionRefused(
             f"Analytic function '{func_decl}' is not registered and its module is not under an allowed "
             f"prefix {list(analytic_module_prefixes())}. Register it in the analytic registry, or add its "
