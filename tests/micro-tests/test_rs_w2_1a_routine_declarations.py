@@ -72,3 +72,21 @@ def test_bad_fields_are_refused_with_a_sentence(field, words):
 def test_out_defaults_empty_so_older_declarations_still_load():
     d = AnalyticDeclaration(result_kind="list", absence=ABSENCE)
     assert d.out == [] and d.categories is None and d.listing is None
+
+
+# ── a failed query is None (not_measured), never 0 (RS-W2-1a §3.3) ──
+
+def _failing_clients():
+    from unittest.mock import MagicMock
+    mgr = MagicMock(spec=["platform_url", "view_server", "find_metadata_elements"])
+    mgr.platform_url, mgr.view_server = "https://localhost:9443", "test-server"
+    mgr.find_metadata_elements.side_effect = RuntimeError("boom")
+    ce = MagicMock(spec=["get_relationships"])
+    ce.get_relationships.side_effect = RuntimeError("boom")
+    return mgr, ce
+
+
+def test_ownership_coverage_failure_is_unmeasured():
+    from pyegeria.view import overview_metrics as om
+    mgr, _ = _failing_clients()
+    assert om.ownership_coverage(mgr) == {"ownershipCount": None, "ownershipCapped": None, "byOwnerType": {}}

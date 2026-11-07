@@ -614,6 +614,38 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         binding_note="Fixed to GOVERNANCE_CLASSIFICATIONS: ZoneMembership, Confidentiality, "
                      "Criticality, Impact, Retention -- not a parameter.",
         params=[_as_of()],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            # The find is not restricted to Asset: these count elements of any type.
+            measures=[
+                _measure("governed_elements", "elements of any type carrying at least one of the five "
+                         "governance classifications", "governedCount",
+                         completeness_field="governedCapped", population="viewer"),
+                _measure("fully_governed", "elements carrying Confidentiality, Criticality, Impact or "
+                         "Retention", "fullyGoverned", completeness_field="governedCapped", population="viewer",
+                         basis=_basis("governedCount", "governed elements")),
+                _measure("zone_only", "elements carrying ZoneMembership and no other governance "
+                         "classification", "partialZoneOnly", completeness_field="governedCapped",
+                         population="viewer", basis=_basis("governedCount", "governed elements")),
+            ],
+            absence=_absence(
+                not_measured="Governance coverage was not measured: the find of classified elements failed.",
+                not_permitted="You are not permitted to read the classified elements, so governance "
+                              "coverage was not measured.",
+                not_applicable=_always_applies("Governance coverage"),
+                nothing_found="Counted: no active element carries any of the five governance "
+                              "classifications (ZoneMembership, Confidentiality, Criticality, Impact, "
+                              "Retention).",
+            ),
+            out=[
+                _field("governedCount", "Governed elements", "int", unit="elements"),
+                _field("governedCapped", "At least (page cap reached)", "bool"),
+                _field("fullyGoverned", "Fully governed", "int", unit="elements"),
+                _field("partialZoneOnly", "Zone only", "int", unit="elements"),
+                _field("byClassification", "By classification", "map<string,int>", unit="elements"),
+                _field("topZones", "Top zones", kind="dataset", shape="ZoneCount"),
+            ],
+        ),
     ),
     "ownership_coverage": AnalyticFunctionSpec(
         name="ownership_coverage",
@@ -627,6 +659,23 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         generic=False,
         binding_note="Fixed to the Ownership classification -- not a parameter.",
         params=[_as_of()],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            measures=[_measure("owned_elements", "elements of any type carrying an Ownership classification",
+                               "ownershipCount", completeness_field="ownershipCapped", population="viewer")],
+            absence=_absence(
+                not_measured="Ownership coverage was not measured: the find of owned elements failed.",
+                not_permitted="You are not permitted to read the owned elements, so ownership coverage "
+                              "was not measured.",
+                not_applicable=_always_applies("Ownership coverage"),
+                nothing_found="Counted: no active element carries an Ownership classification.",
+            ),
+            out=[
+                _field("ownershipCount", "Owned elements", "int", unit="elements"),
+                _field("ownershipCapped", "At least (page cap reached)", "bool"),
+                _field("byOwnerType", "By owner type", "map<string,int>", unit="elements"),
+            ],
+        ),
     ),
     "business_value_signals": AnalyticFunctionSpec(
         name="business_value_signals",
@@ -640,7 +689,37 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         generic=False,
         binding_note="Fixed to the Asset type hierarchy and Confidentiality/ConsolidatedDuplicate "
                      "classifications -- not a parameter.",
-        params=[_as_of()],
+        params=[_as_of(), _population()],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            measures=[
+                _measure("assets_read", "Assets", "assetTotal", completeness_field="assetCapped",
+                         population="viewer"),
+                _measure("confidential_assets", "Assets carrying a Confidentiality classification",
+                         "confidentialCount", completeness_field="assetCapped", population="viewer",
+                         basis=_basis("assetTotal", "Assets read")),
+                _measure("described_assets", "Assets with a description", "describedCount",
+                         completeness_field="assetCapped", population="viewer",
+                         basis=_basis("assetTotal", "Assets read")),
+                _measure("duplicate_elements", "elements of any type carrying ConsolidatedDuplicate",
+                         "duplicateCount"),
+            ],
+            absence=_absence(
+                not_measured="The business-value signals were not measured: the Asset find or the "
+                             "duplicate count failed.",
+                not_permitted="You are not permitted to read the Assets, so the business-value "
+                              "signals were not measured.",
+                not_applicable=_always_applies("The business-value signals"),
+                nothing_found="Counted: there are no active Assets and no elements marked as duplicates.",
+            ),
+            out=[
+                _field("assetTotal", "Assets read", "int", unit="Assets"),
+                _field("assetCapped", "At least (page cap reached)", "bool"),
+                _field("confidentialCount", "Confidential Assets", "int", unit="Assets"),
+                _field("describedCount", "Described Assets", "int", unit="Assets"),
+                _field("duplicateCount", "Duplicates", "int", unit="elements"),
+            ],
+        ),
     ),
     "certifications_summary": AnalyticFunctionSpec(
         name="certifications_summary",
@@ -650,6 +729,30 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         generic=False,
         binding_note="Fixed to the Certification and Exception relationship types -- not a parameter.",
         params=[_as_of()],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            # Each count is one get_relationships page (DEFAULT_CAP), with no completeness flag.
+            measures=[
+                _measure("certifications", "Certification relationships", "active", population="viewer"),
+                _measure("expiring_certifications", "Certification relationships ending within 90 days",
+                         "expiring90", population="viewer", basis=_basis("active", "certifications")),
+                _measure("licenses", "License relationships", "licenses", population="viewer"),
+                _measure("exceptions", "Exception relationships", "exceptions", population="viewer"),
+            ],
+            absence=_absence(
+                not_measured="Certifications were not measured: the relationship queries failed.",
+                not_permitted="You are not permitted to read certifications, licenses or exceptions.",
+                not_applicable=_always_applies("A certification summary"),
+                nothing_found="Counted: there are no active certifications, licenses or exceptions.",
+            ),
+            out=[
+                _field("active", "Certifications", "int", unit="relationships"),
+                _field("expiring90", "Ending within 90 days", "int", unit="relationships"),
+                _field("soon", "Ending soonest", kind="dataset", shape="ExpiringCertification"),
+                _field("licenses", "Licenses", "int", unit="relationships"),
+                _field("exceptions", "Exceptions", "int", unit="relationships"),
+            ],
+        ),
     ),
     "people_counts": AnalyticFunctionSpec(
         name="people_counts",
@@ -691,6 +794,27 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         generic=False,
         binding_note="Fixed to the SemanticAssignment relationship type -- not a parameter.",
         params=[_as_of()],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            measures=[
+                _measure("grounding_links", "SemanticAssignment relationships", "groundingLinks",
+                         population="viewer"),
+                # links / Assets, not the share of Assets with a link: one Asset may carry several.
+                _measure("grounding_percent", "percent: SemanticAssignment links per hundred Assets, "
+                         "at most 100", "groundingPct"),
+            ],
+            absence=_absence(
+                not_measured="Semantic grounding was not measured: the relationship query failed or "
+                             "there was no Asset count to divide by.",
+                not_permitted="You are not permitted to read the semantic assignments.",
+                not_applicable=_always_applies("Semantic grounding"),
+                nothing_found="Counted: no glossary term is assigned to anything.",
+            ),
+            out=[
+                _field("groundingLinks", "Grounding links", "int", unit="relationships"),
+                _field("groundingPct", "Links per hundred Assets", "int", unit="percent"),
+            ],
+        ),
     ),
     "context_readiness_funnel": AnalyticFunctionSpec(
         name="context_readiness_funnel",

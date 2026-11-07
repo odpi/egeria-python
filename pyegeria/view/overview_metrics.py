@@ -677,7 +677,10 @@ def ownership_coverage(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
     data" is repeatedly named as the foundation for trustworthy AI
     consumption), not a duplicate of governance-classification coverage.
 
-    Returns {"ownershipCount": int, "ownershipCapped": bool,
+    If the find fails, ownershipCount/ownershipCapped are None (unmeasured, as in
+    governed_coverage) and byOwnerType is empty -- not 0, which read as "nothing owned".
+
+    Returns {"ownershipCount": int|None, "ownershipCapped": bool|None,
     "byOwnerType": {typeName: count}}.
     """
     body = {
@@ -690,7 +693,9 @@ def ownership_coverage(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
     }
     if as_of:
         body["asOfTime"] = as_of
-    hits = _find(mgr, body)
+    hits = _find_or_none(mgr, body)
+    if hits is None:  # query failed: unmeasured, not "nothing owned"
+        return {"ownershipCount": None, "ownershipCapped": None, "byOwnerType": {}}
 
     by_owner_type: Dict[str, int] = {}
     for el in hits:
