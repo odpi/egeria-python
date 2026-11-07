@@ -26,7 +26,8 @@ for the original inline versions this was extracted from.
 
 import inspect
 import time
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, TypedDict
 
 from loguru import logger
 
@@ -65,6 +66,13 @@ __all__ = [
     "metric_trend",
     "term_definition_completeness",
     "active_contributors",
+    "asset_subtype_tree",
+    "asset_composition",
+    "AssetComposition",
+    "AssetCompositionRow",
+    "CompositionCell",
+    "COMPOSITION_DEFAULT_CONCURRENCY",
+    "COMPOSITION_MAX_CONCURRENCY",
     "WINDOWS",
     "growth_label",
 ]
@@ -1789,3 +1797,346 @@ def control_implementation_summary(client, soa_guid: str) -> Dict[str, int]:
     dict -- {status: count}, one key per ControlImplementationStatus value
     """
     return client.get_control_implementation_summary(soa_guid)["byStatus"]
+
+
+# ── Asset composition (RS-W1-4): the Asset subtype tree, counted in two scopes ──
+#
+# One routine today, opaque to the executor (as the reporting model's §7 allows).
+# In the reporting model's §10.8 words it is four stages, so step (a'') can split
+# it later without changing what it returns:
+#   1. a `typedefs` producer   -- asset_subtype_tree(): the subtype tree under root;
+#   2. a per-row `derive`      -- each row counted in viewer scope;
+#   3. a per-row `derive`      -- each row counted in repository scope;
+#   4. a `difference`          -- not_visible = repository - viewer per row, and each
+#                                 parent's `other` row = parent - sum(children).
+
+#: The cell's word for which population was counted ("viewer" | "repository"). The
+#: owner chose `population` (RS-W1-1 §5); the routine's keyword stays `scopes=` and
+#: count_elements' keyword stays `scope=`.
+POPULATION_WORD = "population"
+
+#: Cell and row states. A 0 is nothing_found; a failure is not_measured, never 0.
+CELL_MEASURED = "measured"
+CELL_NOTHING_FOUND = "nothing_found"
+CELL_NOT_MEASURED = "not_measured"
+_ESTABLISHED = (CELL_MEASURED, CELL_NOTHING_FOUND)
+
+#: Completeness of an established cell, per population: a repository count is the
+#: whole repository; a viewer count is what one person's client may see, which the
+#: routine cannot judge complete (RS-W1-1 §5 default under a person's client).
+_COMPLETENESS = {SCOPE_REPOSITORY: "complete", SCOPE_VIEWER: "unknown"}
+
+#: Concurrency is a performance parameter below Egeria's database pool (10
+#: connections): the default leaves room for other users; the cap is never exceeded.
+COMPOSITION_DEFAULT_CONCURRENCY = 3
+COMPOSITION_MAX_CONCURRENCY = 5
+
+
+class CompositionCell(TypedDict, total=False):
+    """One count of one row in one population."""
+    value: Optional[int]       # None unless state is measured or nothing_found
+    state: str                 # measured | nothing_found | not_measured
+    completeness: str          # complete (repository) | unknown (viewer, or not measured)
+    as_of: str                 # when the count is of: the requested as_of, else the run time
+    population: str            # viewer | repository (POPULATION_WORD)
+    reason: str                # why not measured; "" when established
+    elapsed_s: Optional[float] # wall time of this count; None for a derived (`other`) cell
+
+
+class AssetCompositionRow(TypedDict, total=False):
+    """One type in the subtype tree. `viewer` / `repository` are present for each requested scope."""
+    type_name: str
+    parent: Optional[str]      # None for the root row
+    level: int                 # 0 = root, 1 = its direct subtypes, ...
+    exact_type: bool           # True on an `other` row: elements typed as exactly `parent`
+    subtypes_error: Optional[str]  # set when this type's subtypes could not be read
+    viewer: CompositionCell
+    repository: CompositionCell
+    not_visible: Dict[str, Any]  # {value, state, reason}: repository - viewer
+
+
+class AssetComposition(TypedDict, total=False):
+    """asset_composition()'s result: the rows plus the envelope executors read."""
+    state: str                 # measured | nothing_found | not_established
+    state_reason: str          # lists the cells that were not measured
+    root: str
+    depth: int
+    scopes: List[str]
+    as_of: str
+    concurrency: int
+    rows: List[AssetCompositionRow]
+    not_measured: List[str]    # "<type_name>/<population>" for each failed count
+    provenance: Dict[str, Any]  # pyegeria version, platform, server, run time, elapsed
+
+
+def _typedef_names(result, parent: str) -> List[str]:
+    """Direct subtype names from a get_sub_types result. A null/"no elements" result is
+    no subtypes. A TypeDef whose superType names another type is skipped, in case a
+    server answers with every descendant rather than the direct children."""
+    if isinstance(result, dict):
+        result = result.get("typeDefs", result.get("typeDefList"))
+    if not isinstance(result, list):
+        return []
+    names = []
+    for td in result:
+        if not isinstance(td, dict) or not td.get("name"):
+            continue
+        sup = td.get("superType")
+        sup_name = sup.get("name") if isinstance(sup, dict) else None
+        if sup_name and sup_name != parent:
+            continue
+        names.append(td["name"])
+    return sorted(set(names))
+
+
+def asset_subtype_tree(vm, root: str = "Asset", depth: int = 2) -> List[Dict[str, Any]]:
+    """
+    The subtype tree under `root` to `depth`, breadth-first, from
+    `ValidMetadataManager.get_sub_types` (one call per expanded node).
+
+    Rows: {type_name, parent, level, exact_type, subtypes_error}. The root is level 0;
+    its direct subtypes are level 1. After the children of each parent comes one
+    `other` row (type_name = parent, level = the children's level, exact_type=True)
+    for elements typed as exactly the parent -- an "other" row shows rather than hides.
+
+    A null result is "no subtypes", not an error. A call that raises sets the node's
+    `subtypes_error` (its children are unknown, so it gets no `other` row) and the
+    walk carries on.
+    """
+    if depth < 0:
+        raise ValueError(f"depth must be >= 0; got {depth!r}")
+    rows: List[Dict[str, Any]] = [
+        {"type_name": root, "parent": None, "level": 0, "exact_type": False, "subtypes_error": None}]
+    frontier = [rows[0]]
+    for level in range(1, depth + 1):
+        next_frontier = []
+        for node in frontier:
+            try:
+                children = _typedef_names(vm.get_sub_types(node["type_name"]), node["type_name"])
+            except Exception as exc:  # noqa: BLE001 -- recorded on the row, never a silent leaf
+                node["subtypes_error"] = f"subtypes of {node['type_name']} could not be read: {exc}"
+                logger.warning(f"overview_metrics asset_subtype_tree: {node['subtypes_error']}")
+                continue
+            if not children:
+                continue
+            for name in children:
+                row = {"type_name": name, "parent": node["type_name"], "level": level,
+                       "exact_type": False, "subtypes_error": None}
+                rows.append(row)
+                next_frontier.append(row)
+            rows.append({"type_name": node["type_name"], "parent": node["type_name"], "level": level,
+                         "exact_type": True, "subtypes_error": None})
+        frontier = next_frontier
+    return rows
+
+
+def _pyegeria_version() -> str:
+    try:
+        from importlib.metadata import version
+        return version("pyegeria")
+    except Exception:  # noqa: BLE001
+        return "unknown"
+
+
+def _count_cell(mgr, type_name: str, as_of: Optional[str], scope: str, stamp: str) -> Dict[str, Any]:
+    """One strict count, as a cell. A 0 is nothing_found; None or an exception is not_measured."""
+    started = time.monotonic()
+    reason = ""
+    try:
+        value = count_elements(mgr, type_name, as_of, strict=True, scope=scope)
+        if value is None:
+            reason = (f"the {scope} count of {type_name} could not be measured "
+                      f"(query failed, native count unavailable, or the fallback hit its cap)")
+    except Exception as exc:  # noqa: BLE001 -- the exception's words become the reason
+        value = None
+        reason = f"the {scope} count of {type_name} failed: {exc}"
+    elapsed = round(time.monotonic() - started, 3)
+    if value is None:
+        state = CELL_NOT_MEASURED
+    else:
+        state = CELL_MEASURED if value > 0 else CELL_NOTHING_FOUND
+    return {"value": value, "state": state,
+            "completeness": _COMPLETENESS[scope] if state in _ESTABLISHED else "unknown",
+            "as_of": stamp, POPULATION_WORD: scope, "reason": reason, "elapsed_s": elapsed}
+
+
+def _derived_cell(value: Optional[int], reason: str, scope: str, stamp: str) -> Dict[str, Any]:
+    if value is None:
+        state = CELL_NOT_MEASURED
+    else:
+        state = CELL_MEASURED if value > 0 else CELL_NOTHING_FOUND
+    return {"value": value, "state": state,
+            "completeness": _COMPLETENESS[scope] if state in _ESTABLISHED else "unknown",
+            "as_of": stamp, POPULATION_WORD: scope, "reason": reason, "elapsed_s": None}
+
+
+def _other_cell(parent_cell: Optional[Dict[str, Any]], child_cells: List[Dict[str, Any]],
+                scope: str, stamp: str) -> Dict[str, Any]:
+    """parent - sum(children), only when the parent and every child are established."""
+    if parent_cell is None or parent_cell["state"] not in _ESTABLISHED:
+        return _derived_cell(None, "the parent count is missing", scope, stamp)
+    if any(c["state"] not in _ESTABLISHED for c in child_cells):
+        return _derived_cell(None, "a child count is missing", scope, stamp)
+    rest = parent_cell["value"] - sum(c["value"] for c in child_cells)
+    if rest < 0:
+        return _derived_cell(None, "the children's counts exceed the parent's "
+                                   "(counts taken at different moments)", scope, stamp)
+    return _derived_cell(rest, "", scope, stamp)
+
+
+def _not_visible(row: Dict[str, Any]) -> Dict[str, Any]:
+    """repository - viewer, only when both cells are established."""
+    viewer, repo = row.get(SCOPE_VIEWER), row.get(SCOPE_REPOSITORY)
+    if viewer is None or repo is None:
+        return {"value": None, "state": CELL_NOT_MEASURED, "reason": "needs both scopes"}
+    if viewer["state"] not in _ESTABLISHED or repo["state"] not in _ESTABLISHED:
+        return {"value": None, "state": CELL_NOT_MEASURED, "reason": "needs both scopes measured"}
+    diff = repo["value"] - viewer["value"]
+    if diff < 0:
+        return {"value": None, "state": CELL_NOT_MEASURED,
+                "reason": "the viewer count exceeds the repository count (counts taken at different moments)"}
+    return {"value": diff, "state": CELL_MEASURED if diff > 0 else CELL_NOTHING_FOUND, "reason": ""}
+
+
+def asset_composition(
+    mgr,
+    vm=None,
+    root: str = "Asset",
+    depth: int = 2,
+    as_of: Optional[str] = None,
+    scopes: Sequence[str] = (SCOPE_VIEWER, SCOPE_REPOSITORY),
+    concurrency: int = COMPOSITION_DEFAULT_CONCURRENCY,
+    strict: bool = True,
+) -> Dict[str, Any]:
+    """
+    The composition of `root` by subtype: one row per type in the subtype tree to
+    `depth`, each counted in every requested scope, with an `other` row per parent
+    and `not_visible` = repository - viewer.
+
+    Stages, in the reporting model's §10.8 words (one opaque routine today; step
+    (a'') can split it along these lines): a `typedefs` producer
+    (asset_subtype_tree), two per-row `derive`s (the viewer count and the
+    repository count, via count_elements(..., strict=True, scope=...)), and a
+    `difference` (not_visible per row; each `other` row = parent - sum(children),
+    only when every child count is established in that scope).
+
+    Every count, in both scopes, goes through ONE ThreadPoolExecutor of
+    `concurrency` workers, so `concurrency` is the real number of counts in flight
+    against Egeria. The default is 3; above COMPOSITION_MAX_CONCURRENCY (5) it is
+    lowered to 5, because Egeria's database pool is 10 connections and one sheet
+    must not starve other users.
+
+    Cells (see CompositionCell): `value`, `state` (a 0 is nothing_found; a failed
+    count is not_measured with the failure's words in `reason`, never 0),
+    `completeness` (repository "complete", viewer "unknown"), `as_of`,
+    `population` ("viewer" | "repository"), `reason`, `elapsed_s` (a viewer
+    `Process` count can take minutes; the page can say which cell was slow).
+
+    Parameters
+    ----------
+    mgr : MetadataExpert (or EgeriaTech) -- counts elements
+    vm : ValidMetadataManager -- reads the subtype tree. None (the default) uses
+        `mgr`, which works when mgr is an EgeriaTech; the report-spec executor binds
+        only clients named mgr/ce/expert/client, so it relies on this default.
+    root : the type whose subtypes are counted
+    depth : how many subtype levels below root (0 = root only)
+    as_of : ISO-8601 asOfTime for point-in-time counts (None = now). The subtype
+        tree is always today's.
+    scopes : any of "viewer", "repository" -- the populations to count. The
+        keyword is `scopes`; each cell names its population under `population`.
+    concurrency : counts in flight at once, 1..5 (default 3)
+    strict : must be True -- the routine never turns a failure into a 0
+
+    Returns
+    -------
+    AssetComposition -- {state, state_reason, root, depth, scopes, as_of,
+    concurrency, rows, not_measured, provenance}. `state` is measured when any
+    cell is measured, nothing_found when every established cell is 0, else
+    not_established.
+    """
+    if not strict:
+        raise ValueError("asset_composition always counts strictly: a failed count is not_measured, never 0")
+    wanted: List[str] = []
+    for s in scopes:
+        _push_down(s)  # ValueError for an unknown scope
+        if s is None:
+            raise ValueError("scopes must name 'viewer' and/or 'repository'")
+        if s not in wanted:
+            wanted.append(s)
+    if not wanted:
+        raise ValueError("scopes must name 'viewer' and/or 'repository'")
+    if not isinstance(concurrency, int) or concurrency < 1:
+        raise ValueError(f"concurrency must be a positive int; got {concurrency!r}")
+    if concurrency > COMPOSITION_MAX_CONCURRENCY:
+        logger.warning(f"overview_metrics asset_composition: concurrency {concurrency} lowered to the cap "
+                       f"{COMPOSITION_MAX_CONCURRENCY} (Egeria's database pool is 10 connections)")
+        concurrency = COMPOSITION_MAX_CONCURRENCY
+
+    from datetime import datetime, timezone
+    run_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    stamp = as_of or run_at
+    started = time.monotonic()
+
+    rows = asset_subtype_tree(mgr if vm is None else vm, root=root, depth=depth)
+
+    # Each distinct type is counted once per scope; an `other` row reuses its parent's count.
+    type_names: List[str] = []
+    for row in rows:
+        if not row["exact_type"] and row["type_name"] not in type_names:
+            type_names.append(row["type_name"])
+    cells: Dict[Tuple[str, str], Dict[str, Any]] = {}
+    with ThreadPoolExecutor(max_workers=concurrency, thread_name_prefix="asset-composition") as pool:
+        futures = {pool.submit(_count_cell, mgr, t, as_of, s, stamp): (t, s)
+                   for s in wanted for t in type_names}
+        for fut in as_completed(futures):
+            cells[futures[fut]] = fut.result()
+
+    for row in rows:
+        if row["exact_type"]:
+            continue
+        for s in wanted:
+            row[s] = dict(cells[(row["type_name"], s)])
+    for row in rows:
+        if not row["exact_type"]:
+            continue
+        parent = row["type_name"]
+        parent_row = next(r for r in rows if r["type_name"] == parent and not r["exact_type"])
+        children = [r for r in rows if r["parent"] == parent and not r["exact_type"]]
+        for s in wanted:
+            row[s] = _other_cell(parent_row.get(s), [c[s] for c in children], s, stamp)
+    for row in rows:
+        row["not_visible"] = _not_visible(row)
+
+    all_cells = [row[s] for row in rows for s in wanted]
+    failed = [f"{t}/{s}" for s in wanted for t in type_names if cells[(t, s)]["state"] == CELL_NOT_MEASURED]
+    tree_errors = [r["subtypes_error"] for r in rows if r["subtypes_error"]]
+    if any(c["state"] == CELL_MEASURED for c in all_cells):
+        state = "measured"
+    elif any(c["state"] == CELL_NOTHING_FOUND for c in all_cells):
+        state = "nothing_found"
+    else:
+        state = "not_established"
+    reasons = []
+    if failed:
+        reasons.append("not measured: " + ", ".join(failed))
+    reasons.extend(tree_errors)
+
+    return {
+        "state": state,
+        "state_reason": "; ".join(reasons),
+        "root": root,
+        "depth": depth,
+        "scopes": wanted,
+        "as_of": stamp,
+        "concurrency": concurrency,
+        "rows": rows,
+        "not_measured": failed,
+        "provenance": {
+            "pyegeria_version": _pyegeria_version(),
+            "platform": getattr(mgr, "platform_url", None),
+            "server": getattr(mgr, "view_server", None),
+            "run_at": run_at,
+            "as_of_requested": as_of,
+            "elapsed_s": round(time.monotonic() - started, 3),
+        },
+    }
