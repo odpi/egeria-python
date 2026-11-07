@@ -15,7 +15,7 @@ import pytest
 
 library = pytest.importorskip("trellis_analytics.declaration")
 
-from pyegeria.view.analytic_registry import ROW_SHAPES, get_analytic_registry  # noqa: E402
+from pyegeria.view.analytic_registry import _BUILTINS, ROW_SHAPES  # noqa: E402
 
 #: Keys pyegeria declares that a library release may not know yet, by where they sit. Each is
 #: dropped before validation only when the installed library's model has no such field, so a newer
@@ -39,7 +39,8 @@ def _fields(fields) -> list:
     return [f.model_dump(exclude_defaults=True) for f in fields]
 
 
-DECLARED = sorted((name, spec.declaration) for name, spec in get_analytic_registry().items()
+#: pyegeria's own routines; entry points from the library declare in the library's own models.
+DECLARED = sorted((name, spec.declaration) for name, spec in _BUILTINS.items()
                   if spec.declaration is not None)
 
 
