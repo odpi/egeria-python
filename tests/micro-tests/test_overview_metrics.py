@@ -789,7 +789,7 @@ def test_native_disable_expires(monkeypatch):
 @pytest.mark.parametrize("scope,expected", [("viewer", False), ("repository", True)])
 def test_scope_maps_to_push_down(scope, expected):
     mgr = _mgr(count_metadata_elements=MagicMock(return_value=11))
-    assert om.count_elements(mgr, "Asset", scope=scope) == 11
+    assert om.count_elements(mgr, "Asset", population=scope) == 11
     assert mgr.count_metadata_elements.call_args.kwargs == {"push_down": expected}
 
 
@@ -801,30 +801,30 @@ def test_scope_none_omits_push_down():
 
 def test_invalid_scope_raises():
     with pytest.raises(ValueError):
-        om.count_elements(_mgr(), "Asset", scope="everyone")
+        om.count_elements(_mgr(), "Asset", population="everyone")
 
 
 def test_repository_scope_failure_strict_is_none_not_find_result():
     mgr = _mgr(count_metadata_elements=MagicMock(side_effect=RuntimeError("boom")))
     mgr.find_metadata_elements.return_value = [{}] * 43     # viewer-scope answer
-    assert om.count_elements(mgr, "Asset", strict=True, scope="repository") is None
-    assert om.count_elements(mgr, "Asset", scope="repository") == 0
+    assert om.count_elements(mgr, "Asset", strict=True, population="repository") is None
+    assert om.count_elements(mgr, "Asset", population="repository") == 0
     mgr.find_metadata_elements.assert_not_called()
 
 
 def test_repository_scope_without_native_method_is_none():
     mgr = _mgr()
     mgr.find_metadata_elements.return_value = [{}] * 3
-    assert om.count_elements(mgr, "Asset", strict=True, scope="repository") is None
-    assert om.count_elements(mgr, "Asset", strict=True, scope="viewer") == 3   # viewer may fall back
+    assert om.count_elements(mgr, "Asset", strict=True, population="repository") is None
+    assert om.count_elements(mgr, "Asset", strict=True, population="viewer") == 3   # viewer may fall back
 
 
 def test_scope_threads_through_helpers():
     mgr = _mgr(count_metadata_elements=MagicMock(return_value=2))
-    om.counts_by_type(mgr, [("A", "Asset")], scope="repository")
-    om.people_counts(mgr, scope="repository")
-    om.usage_context_counts(mgr, scope="repository")
-    om.count_elements_by_property(mgr, "DigitalProduct", "deploymentStatus", "ACTIVE", scope="repository")
+    om.counts_by_type(mgr, [("A", "Asset")], population="repository")
+    om.people_counts(mgr, population="repository")
+    om.usage_context_counts(mgr, population="repository")
+    om.count_elements_by_property(mgr, "DigitalProduct", "deploymentStatus", "ACTIVE", population="repository")
     calls = mgr.count_metadata_elements.call_args_list
     assert len(calls) == 1 + 5 + 2 + 1
     assert all(c.kwargs == {"push_down": True} for c in calls)
@@ -836,12 +836,12 @@ def test_count_relationships_scope():
     expert.count_relationships_between_elements.return_value = 4
     ce = MagicMock()
     ce.get_relationships.return_value = [{}] * 9
-    assert om.count_relationships(ce, "License", expert=expert, scope="repository") == 4
+    assert om.count_relationships(ce, "License", expert=expert, population="repository") == 4
     assert expert.count_relationships_between_elements.call_args.kwargs == {"push_down": True}
     # no expert: repository scope cannot be answered by the viewer-scoped path
-    assert om.count_relationships(ce, "License", scope="repository") is None
+    assert om.count_relationships(ce, "License", population="repository") is None
     assert om.count_relationships(ce, "License") == 9
-    assert om.feedback_summary(ce, scope="repository")["total"] is None
+    assert om.feedback_summary(ce, population="repository")["total"] is None
 
 
 # ── asset_subtype_tree / asset_composition (RS-W1-4) ─────────────────────────
@@ -886,8 +886,10 @@ class _FakeCounter:
         self.active = self.peak = 0
         self.calls = []
 
-    def __call__(self, mgr, type_name=None, as_of=None, classifications=None, strict=False, scope=None):
+    def __call__(self, mgr, type_name=None, as_of=None, classifications=None, strict=False, scope=None,
+                 population=None):
         assert strict is True
+        scope = population or scope
         with self.lock:
             self.active += 1
             self.peak = max(self.peak, self.active)
@@ -1002,16 +1004,16 @@ def test_asset_composition_failure_is_not_measured_never_zero(monkeypatch):
 
 def test_asset_composition_all_failed_is_not_established(monkeypatch):
     monkeypatch.setattr(om, "count_elements", lambda *a, **k: None)
-    res = om.asset_composition(MagicMock(), _FakeVM(), depth=1, scopes=("repository",))
+    res = om.asset_composition(MagicMock(), _FakeVM(), depth=1, populations=("repository",))
     assert res["state"] == "not_established"
     assert all(r["repository"]["value"] is None for r in res["rows"])
 
 
 def test_asset_composition_single_scope_not_visible_needs_both(monkeypatch):
     monkeypatch.setattr(om, "count_elements", _FakeCounter())
-    res = om.asset_composition(MagicMock(), _FakeVM(), depth=1, scopes=("repository",))
+    res = om.asset_composition(MagicMock(), _FakeVM(), depth=1, populations=("repository",))
     asset = _rows(res)[("Asset", False)]
-    assert "viewer" not in asset and res["scopes"] == ["repository"]
+    assert "viewer" not in asset and res["populations"] == ["repository"]
     assert asset["not_visible"] == {"value": None, "state": "not_measured", "reason": "needs both scopes"}
 
 
@@ -1042,10 +1044,10 @@ def test_asset_composition_passes_as_of_and_vm_defaults_to_mgr(monkeypatch):
     assert both.calls == ["Asset"]
     assert {a for _, _, a in counter.calls} == {"2026-01-01T00:00:00+00:00"}
     assert res["as_of"] == "2026-01-01T00:00:00+00:00"
-    assert all(r[s]["as_of"] == res["as_of"] for r in res["rows"] for s in res["scopes"])
+    assert all(r[s]["as_of"] == res["as_of"] for r in res["rows"] for s in res["populations"])
 
 
-@pytest.mark.parametrize("kwargs", [{"scopes": ()}, {"scopes": ("everyone",)}, {"concurrency": 0},
+@pytest.mark.parametrize("kwargs", [{"populations": ()}, {"populations": ("everyone",)}, {"concurrency": 0},
                                     {"strict": False}])
 def test_asset_composition_rejects_bad_arguments(kwargs):
     with pytest.raises(ValueError):
@@ -1070,3 +1072,34 @@ def test_asset_composition_is_registered_with_a_declaration():
     assert {m.name for m in decl.measures} == {"repository_count", "viewer_count", "not_visible"}
     assert all(m.unit == "elements" and m.as_of == "as_of" for m in decl.measures)
     assert decl.absence.nothing_found
+
+
+# ── population= is the keyword; scope= / scopes= are deprecated aliases (RS-W1-1 §5) ──
+
+def test_count_elements_scope_alias_warns_and_matches_population():
+    mgr = _mgr()
+    mgr.count_metadata_elements = MagicMock(return_value=7)
+    with pytest.warns(DeprecationWarning, match="population="):
+        old = om.count_elements(mgr, "Asset", scope="repository")
+    new = om.count_elements(mgr, "Asset", population="repository")
+    assert old == new == 7
+
+
+def test_count_elements_population_and_scope_must_agree():
+    with pytest.raises(ValueError, match="disagree"):
+        om.count_elements(_mgr(), "Asset", population="viewer", scope="repository")
+
+
+def test_population_keyword_is_in_every_count_helper_signature():
+    import inspect
+    for fn in (om.count_elements, om.count_elements_by_property, om.count_relationships, om.counts_by_type,
+               om.business_value_signals, om.people_counts, om.feedback_summary, om.usage_context_counts):
+        assert "population" in inspect.signature(fn).parameters, fn.__name__
+
+
+def test_asset_composition_scopes_alias_warns_and_matches_populations():
+    with pytest.warns(DeprecationWarning, match="populations="):
+        old = om.asset_composition(MagicMock(), _FakeVM(), depth=1, scopes=("repository",))
+    assert old["populations"] == old["scopes"] == ["repository"]
+    with pytest.raises(ValueError, match="disagree"):
+        om.asset_composition(MagicMock(), _FakeVM(), depth=1, scopes=("viewer",), populations=("repository",))

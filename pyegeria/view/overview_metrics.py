@@ -24,8 +24,10 @@ concerns. `overview_handler.py` is the reference caller; see its git history
 for the original inline versions this was extracted from.
 """
 
+import functools
 import inspect
 import time
+import warnings
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, TypedDict
 
@@ -255,6 +257,33 @@ SCOPE_VIEWER = "viewer"
 SCOPE_REPOSITORY = "repository"
 
 
+def _population_keyword(fn):
+    """Accept `population=` ("viewer" | "repository"), the owner's word (RS-W1-1 §5, 2026-11-06), as the
+    count helpers' keyword. `scope=` still works as a deprecated alias: `scope` already means result level
+    (resource, container, member, field) in the declaration model, so the population word must not reuse it.
+    Passing both with different values is a ValueError."""
+    sig = inspect.signature(fn)
+    params = list(sig.parameters.values()) + [
+        inspect.Parameter("population", inspect.Parameter.KEYWORD_ONLY, default=None, annotation=Optional[str])]
+
+    @functools.wraps(fn)
+    def wrapper(*args, population: Optional[str] = None, **kwargs):
+        scope = kwargs.get("scope")
+        if scope is not None:
+            if population is not None and population != scope:
+                raise ValueError(f"{fn.__name__}: population={population!r} and scope={scope!r} disagree; "
+                                 f"pass population= only")
+            if population is None:
+                warnings.warn(f"{fn.__name__}(scope=...) is deprecated; use population=",
+                              DeprecationWarning, stacklevel=2)
+        if population is not None:
+            kwargs["scope"] = population
+        return fn(*args, **kwargs)
+
+    wrapper.__signature__ = sig.replace(parameters=params)
+    return wrapper
+
+
 def _push_down(scope: Optional[str]) -> Optional[bool]:
     """Map a count scope to the native `push_down` argument: "viewer" -> False
     (server counts only what the caller may see), "repository" -> True (a raw
@@ -316,6 +345,7 @@ def _element_count(mgr, body: dict, as_of: Optional[str] = None, strict: bool = 
     return len(found)
 
 
+@_population_keyword
 def count_elements(
     mgr,
     type_name: Optional[str] = None,
@@ -363,6 +393,7 @@ def count_elements(
     return _element_count(mgr, body, as_of, strict, scope)
 
 
+@_population_keyword
 def count_elements_by_property(
     mgr,
     type_name: str,
@@ -412,6 +443,7 @@ def count_elements_by_property(
     return _element_count(mgr, body, as_of, strict, scope)
 
 
+@_population_keyword
 def count_relationships(ce, relationship_type: str, as_of: Optional[str] = None, expert=None,
                         scope: Optional[str] = None) -> Optional[int]:
     """
@@ -472,6 +504,7 @@ def count_relationships(ce, relationship_type: str, as_of: Optional[str] = None,
         return None
 
 
+@_population_keyword
 def counts_by_type(mgr, type_map: Sequence[Tuple[str, str]], as_of: Optional[str] = None,
                    strict: bool = False, scope: Optional[str] = None) -> List[Dict[str, Any]]:
     """
@@ -483,7 +516,7 @@ def counts_by_type(mgr, type_map: Sequence[Tuple[str, str]], as_of: Optional[str
     Returns a list of {"label": ..., "type": ..., "count": ...} dicts, in the
     order given.
     """
-    return [{"label": label, "type": type_name, "count": count_elements(mgr, type_name, as_of, strict=strict, scope=scope)}
+    return [{"label": label, "type": type_name, "count": count_elements(mgr, type_name, as_of, strict=strict, population=scope)}
             for label, type_name in type_map]
 
 
@@ -671,6 +704,7 @@ def ownership_coverage(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
     }
 
 
+@_population_keyword
 def business_value_signals(mgr, as_of: Optional[str] = None, scope: Optional[str] = None) -> Dict[str, Any]:
     """
     Real signals behind the Overview dashboard's four "Business Value" tiles
@@ -736,7 +770,7 @@ def business_value_signals(mgr, as_of: Optional[str] = None, scope: Optional[str
         if isinstance(desc, str) and desc.strip():
             described += 1
 
-    duplicate = count_elements(mgr, None, as_of, classifications=["ConsolidatedDuplicate"], strict=True, scope=scope)
+    duplicate = count_elements(mgr, None, as_of, classifications=["ConsolidatedDuplicate"], strict=True, population=scope)
 
     return {
         "assetTotal": len(assets) if assets is not None else None,
@@ -1209,6 +1243,7 @@ def _update_time(el: dict):
         return None
 
 
+@_population_keyword
 def people_counts(mgr, as_of: Optional[str] = None, strict: bool = False, scope: Optional[str] = None) -> Dict[str, Optional[int]]:
     """
     Person / Team / Organization / ITProfile / Community counts via native
@@ -1223,11 +1258,11 @@ def people_counts(mgr, as_of: Optional[str] = None, strict: bool = False, scope:
     could not be measured is None (see count_elements).
     """
     return {
-        "persons": count_elements(mgr, "Person", as_of, strict=strict, scope=scope),
-        "teams": count_elements(mgr, "Team", as_of, strict=strict, scope=scope),
-        "organizations": count_elements(mgr, "Organization", as_of, strict=strict, scope=scope),
-        "itProfiles": count_elements(mgr, "ITProfile", as_of, strict=strict, scope=scope),
-        "communities": count_elements(mgr, "Community", as_of, strict=strict, scope=scope),
+        "persons": count_elements(mgr, "Person", as_of, strict=strict, population=scope),
+        "teams": count_elements(mgr, "Team", as_of, strict=strict, population=scope),
+        "organizations": count_elements(mgr, "Organization", as_of, strict=strict, population=scope),
+        "itProfiles": count_elements(mgr, "ITProfile", as_of, strict=strict, population=scope),
+        "communities": count_elements(mgr, "Community", as_of, strict=strict, population=scope),
     }
 
 
@@ -1240,6 +1275,7 @@ _FEEDBACK_RELATIONSHIP_TYPES = (
 )
 
 
+@_population_keyword
 def feedback_summary(ce, as_of: Optional[str] = None, scope: Optional[str] = None, expert=None) -> Dict[str, Any]:
     """
     Crowd-sourced feedback tally -- ratings/comments/likes/tags/note-logs
@@ -1256,11 +1292,12 @@ def feedback_summary(ce, as_of: Optional[str] = None, scope: Optional[str] = Non
     Returns {"byType": {ratings, comments, likes, tags, noteLogs: int|None},
     "total": int|None}.
     """
-    by_type = {key: count_relationships(ce, rel, as_of, expert=expert, scope=scope) for rel, key in _FEEDBACK_RELATIONSHIP_TYPES}
+    by_type = {key: count_relationships(ce, rel, as_of, expert=expert, population=scope) for rel, key in _FEEDBACK_RELATIONSHIP_TYPES}
     measured = all(v is not None for v in by_type.values())
     return {"byType": by_type, "total": sum(by_type.values()) if measured else None}
 
 
+@_population_keyword
 def usage_context_counts(mgr, as_of: Optional[str] = None, strict: bool = False, scope: Optional[str] = None) -> Dict[str, Optional[int]]:
     """
     InformationSupplyChain and SolutionBlueprint counts -- what puts assets
@@ -1271,8 +1308,8 @@ def usage_context_counts(mgr, as_of: Optional[str] = None, strict: bool = False,
     strict=True, a count that could not be measured is None (see count_elements).
     """
     return {
-        "informationSupplyChains": count_elements(mgr, "InformationSupplyChain", as_of, strict=strict, scope=scope),
-        "blueprints": count_elements(mgr, "SolutionBlueprint", as_of, strict=strict, scope=scope),
+        "informationSupplyChains": count_elements(mgr, "InformationSupplyChain", as_of, strict=strict, population=scope),
+        "blueprints": count_elements(mgr, "SolutionBlueprint", as_of, strict=strict, population=scope),
     }
 
 
@@ -1811,8 +1848,8 @@ def control_implementation_summary(client, soa_guid: str) -> Dict[str, int]:
 #                                 parent's `other` row = parent - sum(children).
 
 #: The cell's word for which population was counted ("viewer" | "repository"). The
-#: owner chose `population` (RS-W1-1 §5); the routine's keyword stays `scopes=` and
-#: count_elements' keyword stays `scope=`.
+#: owner chose `population` (RS-W1-1 §5). The keywords are `populations=` (asset_composition) and
+#: `population=` (the count helpers); `scopes=` / `scope=` remain as deprecated aliases.
 POPULATION_WORD = "population"
 
 #: Cell and row states. A 0 is nothing_found; a failure is not_measured, never 0.
@@ -1943,7 +1980,7 @@ def _count_cell(mgr, type_name: str, as_of: Optional[str], scope: str, stamp: st
     started = time.monotonic()
     reason = ""
     try:
-        value = count_elements(mgr, type_name, as_of, strict=True, scope=scope)
+        value = count_elements(mgr, type_name, as_of, strict=True, population=scope)
         if value is None:
             reason = (f"the {scope} count of {type_name} could not be measured "
                       f"(query failed, native count unavailable, or the fallback hit its cap)")
@@ -2004,9 +2041,11 @@ def asset_composition(
     root: str = "Asset",
     depth: int = 2,
     as_of: Optional[str] = None,
-    scopes: Sequence[str] = (SCOPE_VIEWER, SCOPE_REPOSITORY),
+    scopes: Optional[Sequence[str]] = None,
     concurrency: int = COMPOSITION_DEFAULT_CONCURRENCY,
     strict: bool = True,
+    *,
+    populations: Optional[Sequence[str]] = None,
 ) -> Dict[str, Any]:
     """
     The composition of `root` by subtype: one row per type in the subtype tree to
@@ -2042,8 +2081,8 @@ def asset_composition(
     depth : how many subtype levels below root (0 = root only)
     as_of : ISO-8601 asOfTime for point-in-time counts (None = now). The subtype
         tree is always today's.
-    scopes : any of "viewer", "repository" -- the populations to count. The
-        keyword is `scopes`; each cell names its population under `population`.
+    populations : any of "viewer", "repository" -- the populations to count; each cell
+        names its population under `population`. `scopes=` is a deprecated alias.
     concurrency : counts in flight at once, 1..5 (default 3)
     strict : must be True -- the routine never turns a failure into a 0
 
@@ -2056,6 +2095,16 @@ def asset_composition(
     """
     if not strict:
         raise ValueError("asset_composition always counts strictly: a failed count is not_measured, never 0")
+    if scopes is not None:
+        if populations is not None and list(populations) != list(scopes):
+            raise ValueError("asset_composition: populations= and scopes= disagree; pass populations= only")
+        if populations is None:
+            warnings.warn("asset_composition(scopes=...) is deprecated; use populations=",
+                          DeprecationWarning, stacklevel=2)
+            populations = scopes
+    if populations is None:
+        populations = (SCOPE_VIEWER, SCOPE_REPOSITORY)
+    scopes = populations
     wanted: List[str] = []
     for s in scopes:
         _push_down(s)  # ValueError for an unknown scope
@@ -2126,7 +2175,8 @@ def asset_composition(
         "state_reason": "; ".join(reasons),
         "root": root,
         "depth": depth,
-        "scopes": wanted,
+        "populations": wanted,
+        "scopes": wanted,  # deprecated key, same value as "populations"
         "as_of": stamp,
         "concurrency": concurrency,
         "rows": rows,
