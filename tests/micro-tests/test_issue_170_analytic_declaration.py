@@ -16,7 +16,7 @@ ABSENCE = {
     "not_measured": "Coverage was not measured: the catalog could not be read.",
     "not_permitted": "Coverage was not measured: reading the catalog is not permitted.",
     "not_applicable": "Coverage does not apply to this resource.",
-    "measured_nothing": "No columns were found to cover.",
+    "nothing_found": "No columns were found to cover.",
 }
 
 DECLARATION = {
@@ -45,7 +45,7 @@ def test_declaration_round_trips_on_a_spec():
                                 declaration=DECLARATION)
     m = spec.declaration.measures[0]
     assert (m.unit, m.as_of, m.basis.denominator_label) == ("columns", "asOf", "columns")
-    assert spec.declaration.absence.sentence("measured_nothing") == ABSENCE["measured_nothing"]
+    assert spec.declaration.absence.sentence("nothing_found") == ABSENCE["nothing_found"]
     assert AnalyticFunctionSpec(**spec.model_dump()).declaration == spec.declaration
 
 
@@ -80,3 +80,13 @@ def test_incomplete_declarations_are_refused_with_a_sentence(bad, words):
 
 def test_unmeasured_kinds_need_no_measures():
     assert AnalyticDeclaration(result_kind="finding", absence=ABSENCE).measures == []
+
+
+def test_legacy_measured_nothing_declaration_still_loads_and_is_written_as_nothing_found():
+    legacy = dict(ABSENCE)
+    legacy["measured_nothing"] = legacy.pop("nothing_found")
+    decl = AnalyticDeclaration(**{**DECLARATION, "absence": legacy})
+    assert decl.absence.nothing_found == ABSENCE["nothing_found"]
+    assert decl.absence.sentence("measured_nothing") == ABSENCE["nothing_found"]
+    dumped = decl.model_dump()
+    assert "measured_nothing" not in dumped["absence"] and dumped["absence"]["nothing_found"]

@@ -16,7 +16,7 @@ ABSENCE = {
     "not_measured": "Coverage was not measured: the catalog could not be read.",
     "not_permitted": "Coverage was not measured: reading the catalog is not permitted.",
     "not_applicable": "Coverage does not apply to this resource.",
-    "measured_nothing": "The catalog was read and holds no columns.",
+    "nothing_found": "The catalog was read and holds no columns.",
 }
 
 
@@ -102,19 +102,19 @@ def test_not_applicable_says_so(monkeypatch):
     assert (out["kind"], out["content"]) == ("absent", ABSENCE["not_applicable"])
 
 
-def test_nothing_found_carries_the_measured_nothing_sentence(monkeypatch):
+def test_nothing_found_carries_the_nothing_found_sentence(monkeypatch):
     _declare("nothing_found_empty")
     out = _run(monkeypatch, "nothing_found_empty")
     assert out["kind"] == "json"  # a real answer: the dict, with its sentence
-    assert out["absence"]["state"] == "measured_nothing"
-    assert out["absence"]["sentence"] == ABSENCE["measured_nothing"]
+    assert out["absence"]["state"] == "nothing_found"
+    assert out["absence"]["sentence"] == ABSENCE["nothing_found"]
 
 
 def test_nothing_found_counts_are_charted_with_the_declared_sentence(monkeypatch):
     _declare("nothing_found_counts")
     out = _run(monkeypatch, "nothing_found_counts", "BAR")
     assert "$schema" in out["data"]
-    assert out["data"]["title"] == {"text": "Coverage", "subtitle": ABSENCE["measured_nothing"]}
+    assert out["data"]["title"] == {"text": "Coverage", "subtitle": ABSENCE["nothing_found"]}
 
 
 def test_undeclared_function_gets_words_from_its_own_reason(monkeypatch):
@@ -136,3 +136,17 @@ def test_registered_name_finds_the_declaration(monkeypatch):
     assert fse._declaration_for("cov-not_established").absence.not_measured == ABSENCE["not_measured"]
     assert fse._declaration_for(f"{MOD}.not_established") is not None
     assert fse._declaration_for(f"{MOD}.unregistered") is None
+
+
+def test_legacy_declaration_and_stored_result_word_still_resolve(monkeypatch):
+    legacy = dict(ABSENCE)
+    legacy["measured_nothing"] = legacy.pop("nothing_found")
+    register_analytic_functions({"legacy": {"name": "legacy", "function": f"{MOD}.nothing_found_empty",
+                                            "declaration": {"result_kind": "list", "absence": legacy}}})
+    out = fse._absence_for({"state": "nothing_found"}, "legacy")
+    assert out["state"] == "nothing_found" and out["sentence"] == ABSENCE["nothing_found"]
+    # a stored result that names its absence with the old word is read as the new one
+    from pyegeria.view.analytic_registry import canonical_absence_state
+    assert canonical_absence_state("measured_nothing") == "nothing_found"
+    found = fse._result_envelope({"state": "not_established", "absence": "measured_nothing"})
+    assert found["absence"] == "nothing_found"

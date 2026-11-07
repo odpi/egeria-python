@@ -427,10 +427,10 @@ Tests: `tests/micro-tests/test_issue_172_analytic_entry_points.py`.
 
 **Change** (`pyegeria/view/format_set_executor.py`):
 - **not_established / not_applicable** results now return `{"kind": "absent", "content": <sentence>, "absence": {...}, "envelope": {...}}` on every output format. There is no top-level `data`; a partial result rides under `detail`.
-- **nothing_found** results keep their data or chart (real zeros) and gain the same `absence` block. A chart's subtitle is the declared `measured_nothing` sentence.
+- **nothing_found** results keep their data or chart (real zeros) and gain the same `absence` block. A chart's subtitle is the declared `nothing_found` sentence.
 - **measured** results, and results with no envelope, are unchanged.
 
-`absence` gives the state (`not_measured`, `not_permitted`, `not_applicable` or `measured_nothing`), the sentence, the reason, and `declared`. The sentence comes from the function's registered `declaration.absence` (ISSUE-170), looked up by registry name or by dotted path. A function with no declaration gets words built from its own reason, with `declared: False`. `not_established` becomes `not_permitted` only when the result says so itself (`"absence": "not_permitted"`); the reason text is never parsed to guess.
+`absence` gives the state (`not_measured`, `not_permitted`, `not_applicable` or `nothing_found`), the sentence, the reason, and `declared`. The sentence comes from the function's registered `declaration.absence` (ISSUE-170), looked up by registry name or by dotted path. A function with no declaration gets words built from its own reason, with `declared: False`. `not_established` becomes `not_permitted` only when the result says so itself (`"absence": "not_permitted"`); the reason text is never parsed to guess.
 
 **Consumers to update:** Egeria Advisor's `report_pipeline`/`report_spec_agent` (trellis) treat an unknown kind generically. `content` is among the keys its fallback reads, so it shows the sentence, but it should handle `absent` explicitly. Any Portal tile that reads `data` for these states gets no `data` now.
 

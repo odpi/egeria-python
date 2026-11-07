@@ -976,9 +976,9 @@ All three chart formats are dispatched *before* the normal Format-row lookup (`e
   ```
 
   There is no top-level `data`, so no table or tile can show placeholder zeros as an answer. A consumer should show `content`. `detail` is there for diagnosis, not display.
-- `nothing_found` keeps its data or chart and gains the same `absence` block (state `measured_nothing`). If the function declares sentences, its chart subtitle is the declared one.
+- `nothing_found` keeps its data or chart and gains the same `absence` block (state `nothing_found`). If the function declares sentences, its chart subtitle is the declared one.
 
-The `absence` states are the four of trellis-analytics: `not_measured`, `not_permitted`, `not_applicable` and `measured_nothing`. `not_established` becomes `not_measured`, unless the result itself says `"absence": "not_permitted"`; the reason text is never parsed to guess. The sentence is the function's declared one (see [Declaring what results mean](#declaring-what-results-mean)). A function with no declaration gets words built from its own reason, with `declared: false`.
+The `absence` states are the four of trellis-analytics: `not_measured`, `not_permitted`, `not_applicable` and `nothing_found`. `not_established` becomes `not_measured`, unless the result itself says `"absence": "not_permitted"`; the reason text is never parsed to guess. The sentence is the function's declared one (see [Declaring what results mean](#declaring-what-results-mean)). A function with no declaration gets words built from its own reason, with `declared: false`.
 
 A result without an envelope is returned exactly as before. A result that is a pydantic model is returned as plain data (`model_dump`). See ISSUE-139/140/171.
 
@@ -1050,7 +1050,7 @@ AnalyticFunctionSpec(
             "not_measured": "Coverage was not measured: the catalog could not be read.",
             "not_permitted": "Coverage was not measured: reading the catalog is not permitted.",
             "not_applicable": "Coverage does not apply to this resource.",
-            "measured_nothing": "The catalog was read and holds no columns.",
+            "nothing_found": "The catalog was read and holds no columns.",
         },
     },
 )
