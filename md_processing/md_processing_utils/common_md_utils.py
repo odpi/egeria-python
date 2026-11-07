@@ -457,6 +457,16 @@ def set_collection_manager_body(object_type: str, qualified_name: str, attribute
             "lastModifier": attributes.get('Last Modifier', {}).get('value', None),
         })
 
+    # Handle Report Spec (a ReportType subtype, Egeria 6.3 / odpi/egeria#9432)
+    if object_type in ["Report Spec", "ReportSpec"]:
+        prop_bod.update({
+            "microflow": attributes.get('Microflow', {}).get('value', None),
+            "targetTypeName": attributes.get('Target Type Name', {}).get('value', None),
+            "aliases": attributes.get('Aliases', {}).get('value', None),
+            "outputTypes": attributes.get('Output Types', {}).get('value', None),
+            "includePreamble": attributes.get('Include Preamble', {}).get('value', None),
+        })
+
     # Handle Security subtypes
     if object_type in ["Security Group", "Security List", "Security Role", "SecurityGroup", "SecurityList", "SecurityRole"]:
         prop_bod['distinguishedName'] = attributes.get('Distinguished Name', {}).get('value', None)

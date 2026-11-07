@@ -2,7 +2,7 @@ ___
 
 ## Create Dashboard Sheet
 >
->	**Alternative Names**: Dashboard; Sheet
+>	**Alternative Names**: Sheet
 
 ### Display Name
 >	**Input Required**: True
