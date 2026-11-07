@@ -38,6 +38,8 @@ Python's own TypeError.
 from __future__ import annotations
 
 import os
+import re
+import warnings
 from importlib.metadata import entry_points
 from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional, Tuple, Union
@@ -53,7 +55,17 @@ __all__ = [
     'MeasureDeclaration',
     'BasisDeclaration',
     'AbsenceSentences',
+    'FieldDeclaration',
+    'FieldCompanion',
+    'CategoriesDeclaration',
+    'ListDeclaration',
+    'ROW_SHAPES',
     'RESULT_KINDS',
+    'POPULATIONS',
+    'COMPLETENESS',
+    'FIELD_KINDS',
+    'FIELD_TYPES',
+    'CELL_COMPANIONS',
     'ABSENCE_STATES',
     'canonical_absence_state',
     'KNOWN_ANALYTIC_SOURCES',
@@ -156,14 +168,66 @@ class BasisDeclaration(BaseModel):
         return self
 
 
+#: The two populations a count can be taken over (trellis `POPULATIONS`, RS-W1-1 §5). `viewer`: what
+#: the caller may see (Egeria pushDown=false, or any find); `repository`: the whole repository, fast,
+#: with no per-element visibility check (pushDown=true).
+POPULATIONS = ("viewer", "repository")
+
+#: §5 completeness (trellis `COMPLETENESS`), replacing the boolean `capped_field`. A boolean result
+#: field still reads: true is `lower_bound`, false is `complete`.
+COMPLETENESS = ("complete", "lower_bound", "unknown")
+
+
+def _is_fraction(unit: str) -> bool:
+    """Does this unit say a share rather than a count (trellis `is_fraction`)? Its whole is in its words."""
+    u = " ".join(str(unit or "").lower().split())
+    return u.startswith(("fraction", "ratio", "percent", "share", "proportion")) or "(0-1)" in u or "%" in u
+
+
 class MeasureDeclaration(BaseModel):
-    """One number a function reports. A number never travels without its unit and its as-of."""
+    """One number a function reports. A number never travels without its unit and its as-of.
+
+    `as_of` names the result field saying when the value is of; `run.as_of` names the call's own
+    `as_of` argument (None = when it ran), for a routine whose result carries no time of its own.
+    `completeness_field` names the result field that says the value may be incomplete (one of
+    COMPLETENESS, or a boolean: true = only a lower bound). `capped_field` is its old name, read
+    with a DeprecationWarning. `population` is set when the value is always counted in one
+    population; empty when the caller chooses it or the server default applies."""
     name: str
     unit: str  # in words, plural where it counts things: "tables", "fraction of rows (0-1)"
-    as_of: str  # the result field saying when this was measured, e.g. "asOf"
+    as_of: str  # the result field saying when this was measured, e.g. "asOf"; or run.as_of
     value_field: str  # the result field holding the value; dotted for nested, trailing [] counts a list
     basis: Optional[BasisDeclaration] = None
-    capped_field: str = ""  # the result field that is true when the value is only a lower bound
+    completeness_field: str = ""
+    population: str = ""
+
+    @model_validator(mode="before")
+    @classmethod
+    def _legacy_capped_field(cls, data: Any) -> Any:
+        if isinstance(data, dict) and "capped_field" in data:
+            data = dict(data)
+            capped = data.pop("capped_field")
+            if _words(data.get("completeness_field")) and _words(capped) != _words(data["completeness_field"]):
+                raise ValueError(f"measure '{data.get('name', '')}' declares capped_field and completeness_field: "
+                                 "capped_field is the old word for completeness_field, so declare that only")
+            data["completeness_field"] = capped
+            warnings.warn(f"measure '{data.get('name', '')}': capped_field is deprecated; use completeness_field",
+                          DeprecationWarning, stacklevel=2)
+        return data
+
+    @property
+    def capped_field(self) -> str:
+        """The old name for `completeness_field`. Read-only; warns."""
+        warnings.warn("MeasureDeclaration.capped_field is deprecated; use completeness_field",
+                      DeprecationWarning, stacklevel=2)
+        return self.completeness_field
+
+    @field_validator("population")
+    @classmethod
+    def _population(cls, value: str) -> str:
+        if value and value not in POPULATIONS:
+            raise ValueError(f"population '{value}' is not one of {', '.join(POPULATIONS)}")
+        return value
 
     @model_validator(mode="after")
     def _filled(self) -> "MeasureDeclaration":
@@ -171,6 +235,110 @@ class MeasureDeclaration(BaseModel):
         if empty:
             raise ValueError(f"measure '{self.name}' declares no {', '.join(empty)}: "
                              "a number never travels without its unit and its as-of")
+        if self.basis is not None and _is_fraction(self.unit):
+            raise ValueError(f"measure '{self.name}' declares a basis on a share ('{self.unit}'): "
+                             "its whole is in its unit, so a basis belongs on a count only")
+        return self
+
+
+# ── Result fields (§5 of the report-spec pipeline model), mirrored from trellis-analytics ──
+# The library (egeria-trellis-analytics) authors this vocabulary; pyegeria keeps the same names and
+# meanings without importing it. tests/micro-tests/test_declarations_match_library.py checks every
+# built-in declaration loads in the library when it is installed.
+
+#: What a field is: plain data; a value cell with companions; a pre-built representation; nested
+#: rows of a registered shape.
+FIELD_KINDS = ("data", "cell", "representation", "dataset")
+
+#: The plain field types; `list<T>` and `map<string,T>` take one of them as T.
+FIELD_TYPES = ("string", "int", "float", "fraction", "bool", "datetime", "guid")
+
+#: The companions a value cell may carry.
+CELL_COMPANIONS = ("state", "completeness", "uncertainty", "unit", "as_of", "basis", "provenance", "score",
+                   "population")
+
+_FIELD_NAME = r"[A-Za-z_][A-Za-z0-9_]*"
+_SCALAR = "|".join(FIELD_TYPES)
+_FIELD_TYPE = re.compile(rf"(?:{_SCALAR})|list<(?:{_SCALAR})>|map<\s*string\s*,\s*(?:{_SCALAR})\s*>|"
+                         rf"representation/[A-Za-z0-9_.+-]+")
+
+
+class FieldCompanion(BaseModel):
+    """A companion a cell carries, optionally narrowed to a named state set or a list of values."""
+    name: str
+    valid_values: Optional[Union[str, List[str]]] = None
+
+
+class FieldDeclaration(BaseModel):
+    """One field of a result (trellis `Field`). `name` is the result key (an identifier; a dot is a
+    path, never part of a name), `label` the column name a person reads. A `cell` is a value with
+    companions; a `dataset` is nested rows of the registered shape it names (ROW_SHAPES)."""
+    name: str
+    label: str = ""
+    kind: Literal["data", "cell", "representation", "dataset"] = "data"
+    type: str = ""
+    unit: str = ""
+    detail_spec: str = ""
+    valid_values: Optional[Union[str, List[str]]] = None
+    shape: str = ""
+    companions: Optional[List[Union[str, FieldCompanion]]] = None
+    format: str = ""
+    measure: str = ""
+
+    @model_validator(mode="after")
+    def _shape(self) -> "FieldDeclaration":
+        label = f"field '{self.name}'"
+        if not re.fullmatch(_FIELD_NAME, self.name or ""):
+            raise ValueError(f"{label} is not an identifier: a dot is a path, never part of a name")
+        if not _words(self.label) and self.kind != "representation":
+            raise ValueError(f"{label} declares no label: say the column name a person reads")
+        if self.kind == "dataset":
+            if not _words(self.shape) or _words(self.type):
+                raise ValueError(f"{label} is a dataset: it names a shape and no type")
+        else:
+            if _words(self.shape):
+                raise ValueError(f"{label} names a shape and is a '{self.kind}' field: a shape belongs to a dataset")
+            if not _FIELD_TYPE.fullmatch(self.type or ""):
+                raise ValueError(f"{label} type '{self.type}' is not a field type ({', '.join(FIELD_TYPES)}, "
+                                 "list<T>, map<string,T>, representation/<format>)")
+            if self.type.startswith("representation/") != (self.kind == "representation"):
+                raise ValueError(f"{label}: a representation field, and only one, has type representation/<format>")
+        if self.companions is not None:
+            if self.kind != "cell":
+                raise ValueError(f"{label} declares companions and is a '{self.kind}' field: companions belong to a cell")
+            names = [c if isinstance(c, str) else c.name for c in self.companions]
+            unknown = [n for n in names if n not in CELL_COMPANIONS]
+            if unknown or len(set(names)) != len(names):
+                raise ValueError(f"{label} companions {names} must be distinct cell companions "
+                                 f"({', '.join(CELL_COMPANIONS)})")
+        return self
+
+
+class CategoriesDeclaration(BaseModel):
+    """How a distribution's or graph's categories relate (trellis `CategoriesDeclaration`): exclusive
+    when one item falls in exactly one category; `sums_to` names the field holding the stated total."""
+    exclusive: bool
+    sums_to: str = ""
+
+    @model_validator(mode="after")
+    def _sums(self) -> "CategoriesDeclaration":
+        if _words(self.sums_to) and not self.exclusive:
+            raise ValueError("categories that overlap cannot sum to a total: leave sums_to out or declare exclusive")
+        return self
+
+
+class ListDeclaration(BaseModel):
+    """A list result's items (trellis `ListDeclaration`): the fields a row shows, the order in words,
+    and the field that makes an item one item."""
+    item_fields: List[str]
+    order: str
+    key_field: str
+    item_label: str = ""
+
+    @model_validator(mode="after")
+    def _filled(self) -> "ListDeclaration":
+        if not [f for f in self.item_fields if _words(f)] or not _words(self.order) or not _words(self.key_field):
+            raise ValueError("a list declares its item_fields, its order in words and its key_field")
         return self
 
 
@@ -205,10 +373,17 @@ class AbsenceSentences(BaseModel):
 
 class AnalyticDeclaration(BaseModel):
     """What an analytic function declares about its results: the minimum is `result_kind`,
-    `measures` (required for measure/series/distribution/graph) and `absence`."""
+    `measures` (required for measure/series/distribution/graph) and `absence`.
+
+    `out` lists the result's fields (for a list or series, the fields of one row). `categories`
+    belongs to a distribution or graph and `listing` to a list, as in trellis-analytics; this model
+    accepts a declaration without them, and the built-ins all carry them."""
     result_kind: str
     measures: List[MeasureDeclaration] = Field(default_factory=list)
     absence: AbsenceSentences
+    categories: Optional[CategoriesDeclaration] = None
+    listing: Optional[ListDeclaration] = None
+    out: List[FieldDeclaration] = Field(default_factory=list)
 
     @field_validator("result_kind")
     @classmethod
@@ -293,6 +468,73 @@ def _strict() -> AnalyticParam:
     return AnalyticParam(name="strict", type="bool", default=False,
                          description="Return None instead of 0 when a count could not be measured "
                                      "(query failed, or the fallback hit the page-size cap). ISSUE-123.")
+
+
+def _population() -> AnalyticParam:
+    return AnalyticParam(name="population", type="str",
+                         description="viewer (what the caller may see) or repository (whole repository, "
+                                     "fast; native count only). Omit for the server default.")
+
+
+# ── Declaration literals (RS-W2-1a). Short builders so each entry below reads as its declaration. ──
+# `as_of="run.as_of"` names the call's own as_of argument (None = when it ran): these routines'
+# results carry no time of their own.
+
+RUN_AS_OF = "run.as_of"
+
+
+def _measure(name: str, unit: str, value_field: str, as_of: str = RUN_AS_OF, **kw: Any) -> MeasureDeclaration:
+    return MeasureDeclaration(name=name, unit=unit, as_of=as_of, value_field=value_field, **kw)
+
+
+def _basis(denominator_field: str, denominator_label: str) -> BasisDeclaration:
+    return BasisDeclaration(denominator_field=denominator_field, denominator_label=denominator_label)
+
+
+def _field(name: str, label: str, type: str = "", kind: str = "data", **kw: Any) -> FieldDeclaration:
+    return FieldDeclaration(name=name, label=label, type=type, kind=kind, **kw)
+
+
+def _absence(not_measured: str, not_permitted: str, not_applicable: str, nothing_found: str) -> AbsenceSentences:
+    return AbsenceSentences(not_measured=not_measured, not_permitted=not_permitted,
+                            not_applicable=not_applicable, nothing_found=nothing_found)
+
+
+def _always_applies(what: str) -> str:
+    """The not_applicable sentence for a routine with no input that could make it not apply."""
+    return (f"{what} applies to every catalog, so this routine never reports it as not applicable; "
+            "seeing this means the result was labelled wrongly.")
+
+
+#: Row shapes the built-in declarations name from a `dataset` field (trellis registered shapes).
+ROW_SHAPES: Dict[str, List[FieldDeclaration]] = {
+    "TypeCount": [
+        _field("label", "Label", "string"),
+        _field("type", "Type", "string"),
+        _field("count", "Count", "int", unit="elements"),
+    ],
+    "ZoneCount": [
+        _field("zone", "Zone", "string"),
+        _field("count", "Elements", "int", unit="elements"),
+    ],
+    "ExpiringCertification": [
+        _field("name", "Certification", "string"),
+        _field("days", "Days left", "int", unit="days"),
+    ],
+    "CompositionRow": [
+        _field("type_name", "Type", "string"),
+        _field("parent", "Parent", "string"),
+        _field("level", "Level", "int"),
+        _field("exact_type", "Exactly the parent type", "bool"),
+        _field("subtypes_error", "Subtypes not read", "string"),
+        _field("viewer", "Viewer count", "int", kind="cell", unit="elements",
+               companions=["state", "completeness", "as_of", "population"], measure="viewer_count"),
+        _field("repository", "Repository count", "int", kind="cell", unit="elements",
+               companions=["state", "completeness", "as_of", "population"], measure="repository_count"),
+        _field("not_visible", "Not visible to you", "int", kind="cell", unit="elements",
+               companions=["state"], measure="not_visible"),
+    ],
+}
 
 
 # ── Built-ins -- every analytic function already proven live via the Overview
@@ -661,12 +903,16 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
             result_kind="distribution",
             measures=[
                 MeasureDeclaration(name="repository_count", unit="elements", as_of="as_of",
-                                   value_field="rows.repository.value"),
+                                   value_field="rows.repository.value",
+                                   completeness_field="rows.repository.completeness", population="repository"),
                 MeasureDeclaration(name="viewer_count", unit="elements", as_of="as_of",
-                                   value_field="rows.viewer.value"),
+                                   value_field="rows.viewer.value",
+                                   completeness_field="rows.viewer.completeness", population="viewer"),
                 MeasureDeclaration(name="not_visible", unit="elements", as_of="as_of",
                                    value_field="rows.not_visible.value"),
             ],
+            # A parent row counts its subtypes too, so the rows overlap and never sum.
+            categories=CategoriesDeclaration(exclusive=False),
             absence=AbsenceSentences(
                 not_measured="The subtype counts could not be measured: the count queries failed or "
                              "the server could not answer them.",
@@ -674,6 +920,16 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                 not_applicable="A subtype composition does not apply to this type.",
                 nothing_found="Counted: there are no elements of this type or its subtypes.",
             ),
+            out=[
+                _field("state", "State", "string"),
+                _field("state_reason", "Why", "string"),
+                _field("root", "Root type", "string"),
+                _field("depth", "Depth", "int"),
+                _field("as_of", "As of", "datetime"),
+                _field("concurrency", "Counts in flight", "int"),
+                _field("rows", "Types", kind="dataset", shape="CompositionRow"),
+                _field("not_measured", "Not measured", "list<string>"),
+            ],
         ),
     ),
     "control_implementation_summary": AnalyticFunctionSpec(
