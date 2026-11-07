@@ -3,6 +3,7 @@
 """RS-W2-1a: every registered routine declares its results -- measures with unit and as-of, the four
 nothing_found-vocabulary absence sentences and an `out` field list -- and the model mirrors the
 trellis-analytics §5 vocabulary (population, completeness, fields)."""
+import re
 import warnings
 
 import pytest
@@ -152,8 +153,24 @@ def test_every_builtin_is_declared():
     assert undeclared == []
 
 
+def _trellis_analytics_version():
+    """The installed egeria-trellis-analytics version as a tuple, or None when it is not installed."""
+    from importlib.metadata import PackageNotFoundError, version
+    try:
+        raw = version("egeria-trellis-analytics")
+    except PackageNotFoundError:
+        return None
+    return raw, tuple(int(p) for p in re.findall(r"\d+", raw)[:3])
+
+
 def test_every_registry_entry_is_declared():
-    """The census over the whole registry, entry points included: each has a declaration."""
+    """The census over the whole registry, entry points included: each has a declaration.
+    egeria-trellis-analytics before 0.4.0 registers entry points that predate declarations, so
+    the census is skipped there; the built-ins are still checked by test_every_builtin_is_declared."""
+    installed = _trellis_analytics_version()
+    if installed is not None and installed[1] < (0, 4, 0):
+        pytest.skip(f"egeria-trellis-analytics {installed[0]} is installed; its entry points predate "
+                    "declarations (0.4.0 adds them)")
     undeclared = sorted(name for name, spec in get_analytic_registry().items() if spec.declaration is None)
     assert undeclared == []
 
