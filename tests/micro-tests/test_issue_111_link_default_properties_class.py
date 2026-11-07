@@ -13,7 +13,9 @@ import json
 import pytest
 
 from pyegeria.omvs.connection_maker import ConnectionMaker
+from pyegeria.omvs.classification_explorer import ClassificationExplorer
 from pyegeria.omvs.data_discovery import DataDiscovery
+from pyegeria.omvs.time_keeper import TimeKeeper
 
 
 class _Response:
@@ -46,6 +48,13 @@ CASES = [
     (DataDiscovery, "_async_link_resource_profile_data", "ResourceProfileDataProperties"),
     (DataDiscovery, "_async_link_annotation_match", "AnnotationMatchProperties"),
     (DataDiscovery, "_async_link_request_for_action_target", "RequestForActionTargetProperties"),
+    # 2026-11-07: ScopedBy refused live (HTTP 400 "Could not resolve type id 'ScopedBy'") on the
+    # Trellis perspective migration; the same bare-name pattern was in four more methods.
+    (ClassificationExplorer, "_async_add_scope_to_element", "ScopedByProperties"),
+    (ClassificationExplorer, "_async_add_resource_to_element", "ResourceListProperties"),
+    (ClassificationExplorer, "_async_add_more_information", "MoreInformationProperties"),
+    (TimeKeeper, "_async_link_related_context_events", "RelatedContextEventProperties"),
+    (TimeKeeper, "_async_link_context_event_impact", "ContextEventImpactProperties"),
 ]
 
 

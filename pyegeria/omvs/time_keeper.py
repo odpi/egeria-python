@@ -662,7 +662,7 @@ class TimeKeeper(ServerClient):
         ```
         """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/time-keeper/context-events/{context_event_one_guid}/related-context-events/{context_event_two_guid}/attach"
-        return await self._async_new_relationship_request(url, ['ContextEventEvidence'],body)
+        return await self._async_new_relationship_request(url, ['RelatedContextEventProperties'],body)
 
     def link_related_context_events(
         self,
@@ -991,7 +991,7 @@ class TimeKeeper(ServerClient):
         ```
         """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/time-keeper/context-events/{context_event_guid}/impacts/{impacted_element_guid}/attach"
-        return await self._async_new_relationship_request(url, ['ContextEventImpact'],body)
+        return await self._async_new_relationship_request(url, ['ContextEventImpactProperties'],body)
 
     def link_context_event_impact(
         self, context_event_guid: str, impacted_element_guid: str, body: dict | NewRelationshipRequestBody
