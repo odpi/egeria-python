@@ -914,7 +914,7 @@ def stale_assets(mgr, as_of: Optional[str] = None, days: int = 180) -> Dict[str,
     anchoring).
 
     Returns {"staleCount": int|None, "assetTotal": int|None}. `staleCount`
-    is None on total failure; `assetTotal` reuses `count_elements` (native,
+    is None when the Asset find fails (not 0); `assetTotal` reuses `count_elements` (native,
     unaffected by this function's own element-fetch cap).
     """
     from datetime import datetime, timezone, timedelta
@@ -928,9 +928,9 @@ def stale_assets(mgr, as_of: Optional[str] = None, days: int = 180) -> Dict[str,
         body = {"class": "FindRequestBody", "metadataElementTypeName": "Asset", "limitResultsByStatus": ["ACTIVE"]}
         if as_of:
             body["asOfTime"] = as_of
-        elements = _find(mgr, body)
-        stale_count = 0
-        for el in elements:
+        elements = _find_or_none(mgr, body)  # None when the find failed: staleCount stays None, not 0
+        stale_count = None if elements is None else 0
+        for el in elements or []:
             updated = _update_time(el)
             if updated is not None and updated < cutoff:
                 stale_count += 1
@@ -1764,16 +1764,19 @@ def term_definition_completeness(mgr, as_of: Optional[str] = None) -> Dict[str, 
     output_format='JSON' relationship/report path other functions here use,
     e.g. `certifications_summary`'s `end2`, not this raw element-query path).
 
-    Returns {"total": int, "defined": int, "undefinedPct": int|None}
+    Returns {"total": int|None, "defined": int|None, "undefinedPct": int|None}
     (`undefinedPct` mirrors `semantic_grounding.groundingPct`'s naming: the
     gap, not the coverage, since a near-100%-defined glossary is the
-    uninteresting case and the gap is what's actionable).
+    uninteresting case and the gap is what's actionable). A failed find makes
+    all three None -- unmeasured, not an empty glossary.
     """
     body: Dict[str, Any] = {"class": "FindRequestBody", "limitResultsByStatus": ["ACTIVE"],
                              "metadataElementTypeName": "GlossaryTerm"}
     if as_of:
         body["asOfTime"] = as_of
-    terms = _find(mgr, body)
+    terms = _find_or_none(mgr, body)
+    if terms is None:
+        return {"total": None, "defined": None, "undefinedPct": None}
     total = len(terms)
     defined = 0
     for t in terms:

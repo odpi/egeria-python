@@ -29,20 +29,11 @@ DECLARATION = {
 }
 
 
-#: Built-ins that declare their results (RS-W1-4 added the first); every other spec
-#: still loads with no declaration -- the field stays optional.
-DECLARED_BUILTINS = {"asset_composition", "count_elements", "count_elements_by_property", "count_relationships",
-                     "counts_by_type", "sum_type_counts", "governed_coverage", "ownership_coverage",
-                     "business_value_signals", "certifications_summary", "semantic_grounding", "people_counts", "feedback_summary",
-                     "usage_context_counts", "active_contributors", "karma_leaderboard", "context_readiness_funnel",
-                     "ai_ready_assets", "drl_readiness_gates", "contextualised_coverage",
-                     "solution_component_realisation"}
-
-
-def test_existing_specs_load_without_a_declaration():
-    registry = get_analytic_registry()
-    assert all(spec.declaration is None for name, spec in registry.items() if name not in DECLARED_BUILTINS)
-    assert all(registry[name].declaration is not None for name in DECLARED_BUILTINS)
+def test_every_builtin_declares_its_results():
+    """RS-W2-1a: every built-in now declares (asset_composition was the first, RS-W1-4); the field
+    itself stays optional for specs registered by others."""
+    assert all(spec.declaration is not None for spec in get_analytic_registry().values())
+    assert AnalyticFunctionSpec(name="x", function="pyegeria.view.overview_metrics.growth_series").declaration is None
 
 
 def test_declaration_round_trips_on_a_spec():

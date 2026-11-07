@@ -579,7 +579,8 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         name="counts_by_type",
         function="pyegeria.view.overview_metrics.counts_by_type",
         description="Per-type element counts for a set of (label, type_name) pairs -- a breakdown/"
-                    "composition metric, e.g. the assets-by-type chart.",
+                    "composition metric, e.g. the assets-by-type chart. "
+                    "Cost: one native count per type, sub-second each in the repository population; a viewer-population count can take minutes for a large type.",
         returns="list[dict] (breakdown: {label, type, count})",
         generic=True,
         params=[
@@ -608,7 +609,8 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         name="governed_coverage",
         function="pyegeria.view.overview_metrics.governed_coverage",
         description="Share of assets carrying at least one governance classification, plus a "
-                    "by-classification / top-zones breakdown.",
+                    "by-classification / top-zones breakdown. "
+                    "Cost: one capped find (one page of elements), seconds.",
         returns="dict (governedCount, governedCapped, byClassification, topZones)",
         generic=False,
         binding_note="Fixed to GOVERNANCE_CLASSIFICATIONS: ZoneMembership, Confidentiality, "
@@ -654,7 +656,8 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                     "responsible for management/governance decisions), plus a by-owner-type "
                     "breakdown. Distinct from governed_coverage -- data mesh literature names "
                     "'clean, owned, product-based data' as its own foundation for trustworthy "
-                    "AI consumption, not a synonym for governance-classification coverage.",
+                    "AI consumption, not a synonym for governance-classification coverage. "
+                    "Cost: one capped find (one page of elements), seconds.",
         returns="dict (ownershipCount, ownershipCapped, byOwnerType)",
         generic=False,
         binding_note="Fixed to the Ownership classification -- not a parameter.",
@@ -684,7 +687,8 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                     "(Risk & Compliance, Productivity, Trust & Adoption, Cost Avoidance): "
                     "Confidentiality-classified asset count, described-asset count, "
                     "ConsolidatedDuplicate-flagged element count -- all proxies with a "
-                    "documented causal-claim caveat, not direct measures (NEXT-9).",
+                    "documented causal-claim caveat, not direct measures (NEXT-9). "
+                    "Cost: one capped Asset find plus one count, seconds.",
         returns="dict (assetTotal, assetCapped, confidentialCount, describedCount, duplicateCount)",
         generic=False,
         binding_note="Fixed to the Asset type hierarchy and Confidentiality/ConsolidatedDuplicate "
@@ -724,7 +728,8 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
     "certifications_summary": AnalyticFunctionSpec(
         name="certifications_summary",
         function="pyegeria.view.overview_metrics.certifications_summary",
-        description="Active/expiring Certification relationships, licenses, and open Exception counts.",
+        description="Active/expiring Certification relationships, licenses, and open Exception counts. "
+                    "Cost: three capped relationship pages, seconds.",
         returns="dict (active, expiring90, soon, licenses, exceptions)",
         generic=False,
         binding_note="Fixed to the Certification and Exception relationship types -- not a parameter.",
@@ -757,7 +762,8 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
     "people_counts": AnalyticFunctionSpec(
         name="people_counts",
         function="pyegeria.view.overview_metrics.people_counts",
-        description="Counts of Person / Team / Organization / ITProfile / Community actor profiles.",
+        description="Counts of Person / Team / Organization / ITProfile / Community actor profiles. "
+                    "Cost: five native counts, sub-second each in the repository population.",
         returns="dict (persons, teams, organizations, itProfiles, communities)",
         generic=False,
         binding_note="Fixed to Person/Team/Organization/ITProfile/Community -- not a parameter.",
@@ -792,7 +798,8 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         name="feedback_summary",
         function="pyegeria.view.overview_metrics.feedback_summary",
         description="Crowd-sourced feedback counts (ratings/comments/likes/tags/noteLogs) by type, "
-                    "via Collaboration OMAS relationships.",
+                    "via Collaboration OMAS relationships. "
+                    "Cost: five relationship pages (native counts when an expert client is passed), seconds.",
         returns="dict (byType, total)",
         generic=False,
         binding_note="Fixed to Collaboration OMAS's feedback relationship types -- not a parameter.",
@@ -826,7 +833,8 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         function="pyegeria.view.overview_metrics.usage_context_counts",
         description="InformationSupplyChain and SolutionBlueprint counts -- the two structures that "
                     "put assets in a business usage context (supply chain membership, blueprint "
-                    "realization).",
+                    "realization). "
+                    "Cost: two native counts, sub-second each in the repository population.",
         returns="dict (informationSupplyChains, blueprints)",
         generic=False,
         binding_note="Fixed to InformationSupplyChain and SolutionBlueprint -- not a parameter.",
@@ -856,7 +864,8 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         function="pyegeria.view.overview_metrics.semantic_grounding",
         description="SemanticAssignment relationship count and coverage percent -- the meaning layer "
                     "that grounds AI. Takes two leading clients (mgr, ce) -- the executor supplies the "
-                    "same EgeriaTech instance for both.",
+                    "same EgeriaTech instance for both. "
+                    "Cost: one count plus one capped relationship page, seconds.",
         returns="dict (groundingLinks, groundingPct)",
         generic=False,
         binding_note="Fixed to the SemanticAssignment relationship type -- not a parameter.",
@@ -891,7 +900,8 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                     "instance for both, matching semantic_grounding's convention. This function's own "
                     "aiReady stays None always by design -- it's four independent counts, and aiReady "
                     "needs a true cross-criteria intersection instead. Pair with ai_ready_assets "
-                    "(below) for that -- overview_handler.py calls both and merges the result.",
+                    "(below) for that -- overview_handler.py calls both and merges the result. "
+                    "Cost: two counts, one capped Asset find and one relationship page, seconds.",
         returns="dict (cataloged, documented, classified, lineage, aiReady)",
         generic=False,
         binding_note="Fixed 5-stage readiness definition baked into the function body -- not a parameter.",
@@ -932,7 +942,8 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                     "the fact. First real implementation of the composite/derived analytic metric "
                     "pattern -- see NEXT-18 (egeria-workspaces BACKLOG.md) for why this pattern didn't "
                     "exist here before. Takes two leading clients (mgr, ce), same convention as "
-                    "semantic_grounding/context_readiness_funnel.",
+                    "semantic_grounding/context_readiness_funnel. "
+                    "Cost: one capped Asset find plus one capped DataFlow relationship page, seconds.",
         returns="dict (aiReadyCount, total, capped)",
         generic=False,
         binding_note="Fixed to governed+documented+lineage-traced over Asset elements -- not a parameter.",
@@ -1014,7 +1025,8 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         function="pyegeria.view.overview_metrics.growth_series",
         description="Snapshot-based growth series (assets/terms/governed/products by default) via "
                     "asOfTime, one point per window step. The one shape SERIES output format "
-                    "(a Vega-Lite line chart) is proven against today.",
+                    "(a Vega-Lite line chart) is proven against today. "
+                    "Cost: one count per series per snapshot (four series by default), seconds to tens of seconds.",
         returns="list[dict] (time series: {label, date, <series_key>: count, ...})",
         generic=True,
         binding_note="type_map defaults to assets/terms/governed/products but is fully overridable.",
@@ -1026,24 +1038,76 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
             AnalyticParam(name="type_map", type="list[tuple[str, str, list[str] | None]]",
                           description="Override which series to snapshot; defaults to assets/terms/governed/products."),
         ],
+        declaration=AnalyticDeclaration(
+            result_kind="series",
+            # One row per snapshot, oldest first; the measures are the default type_map's keys.
+            measures=[
+                _measure("assets", "Assets", "assets", as_of="date"),
+                _measure("terms", "GlossaryTerm elements", "terms", as_of="date"),
+                _measure("governed", "elements of any type carrying a governance classification",
+                         "governed", as_of="date"),
+                _measure("products", "DigitalProduct elements", "products", as_of="date"),
+            ],
+            absence=_absence(
+                not_measured="The growth series was not measured: the snapshot counts failed.",
+                not_permitted="You are not permitted to count these elements, so the growth series "
+                              "was not measured.",
+                not_applicable="A growth series does not apply to this window: it needs at least two "
+                               "snapshots.",
+                nothing_found="Counted: there were no elements of these types at any snapshot in the window.",
+            ),
+            out=[
+                _field("label", "Snapshot", "string"),
+                _field("date", "Date", "string"),
+                _field("assets", "Assets", "int", unit="Assets"),
+                _field("terms", "Terms", "int", unit="elements"),
+                _field("governed", "Governed", "int", unit="elements"),
+                _field("products", "Products", "int", unit="elements"),
+            ],
+        ),
     ),
     "term_definition_completeness": AnalyticFunctionSpec(
         name="term_definition_completeness",
         function="pyegeria.view.overview_metrics.term_definition_completeness",
         description="Share of GlossaryTerms carrying a non-empty description -- a definitions-"
                     "coverage metric, distinct from semantic_grounding (term<->asset linkage, not "
-                    "whether the term itself is actually defined).",
+                    "whether the term itself is actually defined). "
+                    "Cost: one capped find, seconds.",
         returns="dict (total, defined, undefinedPct)",
         generic=False,
         binding_note="Fixed to GlossaryTerm's description property -- not a parameter.",
         params=[_as_of()],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            # One capped find; the result carries no flag saying the page cap was reached.
+            measures=[
+                _measure("terms_read", "GlossaryTerm elements, among those one capped find returned", "total",
+                         population="viewer"),
+                _measure("defined_terms", "GlossaryTerm elements with a description", "defined",
+                         population="viewer", basis=_basis("total", "terms read")),
+                _measure("undefined_percent", "percent of terms read without a description (0-100)",
+                         "undefinedPct"),
+            ],
+            absence=_absence(
+                not_measured="Term definitions were not measured: the find of glossary terms failed.",
+                not_permitted="You are not permitted to read the glossary terms.",
+                not_applicable=_always_applies("Term definition completeness"),
+                nothing_found="Read: there are no active glossary terms.",
+            ),
+            out=[
+                _field("total", "Terms read", "int", unit="elements"),
+                _field("defined", "Defined", "int", unit="elements"),
+                _field("undefinedPct", "Undefined", "int", unit="percent"),
+            ],
+        ),
     ),
     "active_contributors": AnalyticFunctionSpec(
         name="active_contributors",
         function="pyegeria.view.overview_metrics.active_contributors",
         description="Distinct usernames behind at least one feedback relationship (ratings/comments/"
                     "likes/tags/noteLogs) -- an engagement signal feedback_summary's raw relationship "
-                    "counts don't give you (one prolific commenter vs. many occasional ones).",
+                    "counts don't give you (one prolific commenter vs. many occasional ones). "
+                    "Cost: five capped relationship pages, seconds.",
         returns="dict (contributors, byType)",
         generic=False,
         binding_note="Fixed to Collaboration OMAS's feedback relationship types -- not a parameter.",
@@ -1084,7 +1148,8 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                     "counts_by_type itself (already registered above, reused as-is), analytic is a "
                     "small sum-reducer over its result; `function` above is the thin composite "
                     "wrapper that runs both via run_analytic_action, so calling it directly (the "
-                    "old, single-function path) still works exactly like every other entry here.",
+                    "old, single-function path) still works exactly like every other entry here. "
+                    "Cost: as counts_by_type: one native count per type.",
         returns="dict (total, byType)",
         generic=True,
         action=AnalyticActionSpec(
@@ -1122,7 +1187,8 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         description="Count active elements of a given type whose named string property equals a "
                     "given value -- e.g. DigitalProduct elements with deploymentStatus=ACTIVE. Same "
                     "native-count-with-fallback seam as count_elements, one cheap native COUNT call "
-                    "per distinct value, no element fetch.",
+                    "per distinct value, no element fetch. "
+                    "Cost: one native count, sub-second in the repository population; a viewer-population count can take minutes for a large type.",
         returns="scalar (int)",
         generic=True,
         params=[
@@ -1188,7 +1254,8 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                     "an ISC/blueprint' metric -- confirms some solution-design context exists, not "
                     "that the specific SolutionComponent is itself wired into an ISC/blueprint (a "
                     "second hop this function doesn't take). Takes two leading clients (mgr, ce), "
-                    "same convention as semantic_grounding.",
+                    "same convention as semantic_grounding. "
+                    "Cost: one capped relationship page plus one count, seconds.",
         returns="dict (contextualisedCount, assetTotal, contextualisedPct)",
         generic=False,
         binding_note="Fixed to the ImplementedBy relationship, filtered to Asset-subtype ends -- not a parameter.",
@@ -1252,7 +1319,8 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         function="pyegeria.view.overview_metrics.karma_leaderboard",
         description="Top-N people by karma -- one bounded ContributionRecord fetch, karmaPoints is a "
                     "scalar property on the record itself (not derived from counting related things), "
-                    "filtered to the given anchor type(s) via each record's own Anchors classification.",
+                    "filtered to the given anchor type(s) via each record's own Anchors classification. "
+                    "Cost: one capped find, seconds.",
         returns="list[dict] (name, karmaPoints, anchorGuid, anchorType), longest-karma first",
         generic=False,
         binding_note="Fixed to ContributionRecord.karmaPoints -- top_n and anchor_types tune the "
@@ -1291,7 +1359,8 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         description="Weekly-bucketed feedback-event trend (comments/ratings/likes/tags/noteLogs), "
                     "zero-filled across the trailing window -- reuses the same 5 relationship-type "
                     "queries feedback_summary() already makes, keeping createTime instead of only "
-                    "the count. Takes ce as its leading client.",
+                    "the count. Takes ce as its leading client. "
+                    "Cost: five capped relationship pages, seconds.",
         returns="list[dict] (week, comments, ratings, likes, tags, noteLogs, total), oldest week first",
         generic=False,
         binding_note="Fixed to Collaboration OMAS's 5 feedback relationship types -- weeks tunes the window, not what's measured.",
@@ -1299,6 +1368,39 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
             AnalyticParam(name="weeks", type="int", default=12, description="Trailing window size, in weeks."),
             _as_of(),
         ],
+        declaration=AnalyticDeclaration(
+            result_kind="series",
+            # One row per ISO week, oldest first, zero-filled; each type is one capped relationship page.
+            measures=[
+                _measure("feedback", "feedback relationships created in the week", "total", as_of="week",
+                         population="viewer"),
+                _measure("comments", "AttachedComment relationships created in the week", "comments",
+                         as_of="week", population="viewer"),
+                _measure("ratings", "AttachedRating relationships created in the week", "ratings",
+                         as_of="week", population="viewer"),
+                _measure("likes", "AttachedLike relationships created in the week", "likes",
+                         as_of="week", population="viewer"),
+                _measure("tags", "AttachedTag relationships created in the week", "tags",
+                         as_of="week", population="viewer"),
+                _measure("note_logs", "AttachedNoteLog relationships created in the week", "noteLogs",
+                         as_of="week", population="viewer"),
+            ],
+            absence=_absence(
+                not_measured="Engagement was not measured: the feedback relationship queries failed.",
+                not_permitted="You are not permitted to read feedback relationships.",
+                not_applicable="An engagement series does not apply to a window of no weeks.",
+                nothing_found="Counted: no feedback was attached in any week of the window.",
+            ),
+            out=[
+                _field("week", "Week", "string"),
+                _field("comments", "Comments", "int", unit="relationships"),
+                _field("ratings", "Ratings", "int", unit="relationships"),
+                _field("likes", "Likes", "int", unit="relationships"),
+                _field("tags", "Tags", "int", unit="relationships"),
+                _field("noteLogs", "Note logs", "int", unit="relationships"),
+                _field("total", "Total", "int", unit="relationships"),
+            ],
+        ),
     ),
     "orphan_glossary_terms": AnalyticFunctionSpec(
         name="orphan_glossary_terms",
@@ -1307,18 +1409,42 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                     "relationship to anything was authored but never put to use grounding the "
                     "catalog. One bounded SemanticAssignment fetch, distinct GlossaryTerm-end GUID "
                     "count is the 'referenced' set; orphan = term total - referenced. Takes two "
-                    "leading clients (mgr, ce), same convention as semantic_grounding.",
+                    "leading clients (mgr, ce), same convention as semantic_grounding. "
+                    "Cost: one count plus one capped relationship page, seconds.",
         returns="dict (termTotal, referencedCount, orphanCount)",
         generic=False,
         binding_note="Fixed to the SemanticAssignment relationship type and GlossaryTerm elements -- not a parameter.",
         params=[_as_of()],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            measures=[
+                _measure("terms", "GlossaryTerm elements", "termTotal"),
+                _measure("referenced_terms", "GlossaryTerm elements assigned to something", "referencedCount",
+                         population="viewer"),
+                _measure("orphan_terms", "GlossaryTerm elements assigned to nothing", "orphanCount",
+                         basis=_basis("termTotal", "glossary terms")),
+            ],
+            absence=_absence(
+                not_measured="Orphan terms were not measured: the term count or the SemanticAssignment "
+                             "query failed.",
+                not_permitted="You are not permitted to read the glossary terms or their assignments.",
+                not_applicable=_always_applies("Finding orphan glossary terms"),
+                nothing_found="Counted: every glossary term is assigned to something, or there are no terms.",
+            ),
+            out=[
+                _field("termTotal", "Terms", "int", unit="elements"),
+                _field("referencedCount", "Assigned", "int", unit="elements"),
+                _field("orphanCount", "Orphans", "int", unit="elements"),
+            ],
+        ),
     ),
     "stale_assets": AnalyticFunctionSpec(
         name="stale_assets",
         function="pyegeria.view.overview_metrics.stale_assets",
         description="Assets with no update in the last N days (default 180) -- candidates for "
                     "archival review. One bounded Asset element fetch, each element's own version "
-                    "metadata compared against the cutoff, no relationship traversal.",
+                    "metadata compared against the cutoff, no relationship traversal. "
+                    "Cost: one capped Asset find plus one count, seconds.",
         returns="dict (staleCount, assetTotal)",
         generic=False,
         binding_note="Fixed to the Asset type -- population isn't a parameter, but the staleness threshold (days) is.",
@@ -1326,6 +1452,25 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
             AnalyticParam(name="days", type="int", default=180, description="Staleness threshold, in days."),
             _as_of(),
         ],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            # staleCount comes from one capped find, assetTotal from a native count: no basis between them.
+            measures=[
+                _measure("stale_assets", "Assets not updated within `days`, among those one capped find returned",
+                         "staleCount", population="viewer"),
+                _measure("assets", "Assets", "assetTotal"),
+            ],
+            absence=_absence(
+                not_measured="Stale assets were not measured: the Asset find failed.",
+                not_permitted="You are not permitted to read the Assets.",
+                not_applicable=_always_applies("Finding stale assets"),
+                nothing_found="Checked: every Asset read was updated within the threshold, or there are no Assets.",
+            ),
+            out=[
+                _field("staleCount", "Stale Assets", "int", unit="Assets"),
+                _field("assetTotal", "Assets", "int", unit="Assets"),
+            ],
+        ),
     ),
     "metric_trend": AnalyticFunctionSpec(
         name="metric_trend",
@@ -1334,7 +1479,8 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                     "re-calling it once per asOfTime snapshot -- the same windowing growth_series "
                     "uses, generalized to any function here instead of one hardcoded type_map. Takes "
                     "two leading clients (mgr, ce) -- the executor supplies the same EgeriaTech "
-                    "instance for both, matching semantic_grounding's convention.",
+                    "instance for both, matching semantic_grounding's convention. "
+                    "Cost: the target routine's cost once per snapshot.",
         returns="list[dict] (time series: {label, date, **snapshot})",
         generic=True,
         params=[
@@ -1349,6 +1495,23 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                           description="Extra keyword arguments forwarded to the target function at "
                                        "every snapshot (e.g. classifications for count_elements)."),
         ],
+        declaration=AnalyticDeclaration(
+            result_kind="series",
+            # A row is the target routine's own result fields (a dict merged in) or `value` (anything
+            # else); the target's declaration says what those fields are.
+            measures=[_measure("value", "the target routine's unit", "value", as_of="date")],
+            absence=_absence(
+                not_measured="The trend was not measured: the target routine failed at every snapshot.",
+                not_permitted="You are not permitted to run the target routine, so the trend was not measured.",
+                not_applicable="A trend does not apply: the target routine does not take an as_of time.",
+                nothing_found="Measured: the target routine found nothing at any snapshot in the window.",
+            ),
+            out=[
+                _field("label", "Snapshot", "string"),
+                _field("date", "Date", "string"),
+                _field("value", "Value", "float"),
+            ],
+        ),
     ),
     "asset_composition": AnalyticFunctionSpec(
         name="asset_composition",
@@ -1359,7 +1522,8 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                     "repository - viewer. Stages (reporting model §10.8): a `typedefs` producer, two "
                     "per-row `derive`s (viewer count, repository count) and a `difference`. All counts "
                     "share one pool of `concurrency` workers (default 3, capped at 5). Takes two "
-                    "leading clients (mgr, vm); vm defaults to mgr (an EgeriaTech has both).",
+                    "leading clients (mgr, vm); vm defaults to mgr (an EgeriaTech has both). "
+                    "Cost: one count per type per population in a pool of 3-5; repository counts sub-second, viewer counts can take minutes for a large type (Process: 120 s).",
         returns="AssetComposition (dict: state, state_reason, root, depth, populations, as_of, concurrency, "
                 "rows[{type_name, parent, level, exact_type, subtypes_error, viewer?, repository?, "
                 "not_visible}], not_measured, provenance); each count cell is {value, state, "
@@ -1417,7 +1581,8 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         name="control_implementation_summary",
         function="pyegeria.view.overview_metrics.control_implementation_summary",
         description="Applicable controls in a statement of applicability, counted by implementation "
-                    "status (NOT_STARTED, PLANNED, PARTIALLY_IMPLEMENTED, IMPLEMENTED, OTHER).",
+                    "status (NOT_STARTED, PLANNED, PARTIALLY_IMPLEMENTED, IMPLEMENTED, OTHER). "
+                    "Cost: one read of one statement of applicability's control relationships, seconds.",
         returns="dict ({status: count})",
         generic=False,
         binding_note="Fixed to the ControlApplicability relationships of one StatementOfApplicability.",
@@ -1425,6 +1590,26 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
             AnalyticParam(name="soa_guid", type="str", required=True,
                           description="GUID of the statement of applicability."),
         ],
+        declaration=AnalyticDeclaration(
+            result_kind="distribution",
+            # No as_of parameter: the counts are of the moment the call ran.
+            measures=[_measure(status.lower(), "applicable controls", status)
+                      for status in ("NOT_STARTED", "PLANNED", "PARTIALLY_IMPLEMENTED", "IMPLEMENTED", "OTHER")],
+            # One control has one implementation status; controls marked not applicable are left out.
+            categories=CategoriesDeclaration(exclusive=True),
+            absence=_absence(
+                not_measured="Control implementation was not measured: the statement of applicability "
+                             "could not be read.",
+                not_permitted="You are not permitted to read this statement of applicability.",
+                not_applicable="Control implementation does not apply: the element named is not a "
+                               "statement of applicability.",
+                nothing_found="Counted: this statement of applicability has no applicable controls.",
+            ),
+            out=[_field(status, label, "int", unit="controls") for status, label in (
+                ("NOT_STARTED", "Not started"), ("PLANNED", "Planned"),
+                ("PARTIALLY_IMPLEMENTED", "Partially implemented"), ("IMPLEMENTED", "Implemented"),
+                ("OTHER", "Other"))],
+        ),
     ),
 }
 
