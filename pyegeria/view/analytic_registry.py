@@ -544,7 +544,11 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
     "count_elements": AnalyticFunctionSpec(
         name="count_elements",
         function="pyegeria.view.overview_metrics.count_elements",
-        description="Count active elements of a given type, optionally filtered by classification.",
+        description="Count active elements of a given type, optionally filtered by classification. "
+                    "Cost: one native count, sub-second in the repository population (0.2-0.8 s "
+                    "measured); a viewer-population count reads every element and can take minutes "
+                    "for a large type (Process: 120 s); a server with no native count falls back to "
+                    "a capped find.",
         returns="scalar (int)",
         generic=True,
         params=[
@@ -554,7 +558,22 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
             _strict(),
             AnalyticParam(name="classifications", type="list[str]",
                           description="Match ANY of these classification names."),
+            _population(),
         ],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            measures=[_measure("elements", "elements", "value")],
+            absence=_absence(
+                not_measured="The elements were not counted: the count query failed, or the server "
+                             "could not answer it in the population asked for.",
+                not_permitted="You are not permitted to count these elements.",
+                not_applicable="This count does not apply: the type named is not an element type "
+                               "the server knows.",
+                nothing_found="Counted: there are no active elements of this type with these "
+                              "classifications.",
+            ),
+            out=[_field("value", "Elements", "int", unit="elements")],
+        ),
     ),
     "counts_by_type": AnalyticFunctionSpec(
         name="counts_by_type",
@@ -568,7 +587,22 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                           description="(label, type_name) pairs to count, e.g. [('Data Stores', 'DataStore'), ...]."),
             _as_of(),
             _strict(),
+            _population(),
         ],
+        declaration=AnalyticDeclaration(
+            result_kind="distribution",
+            measures=[_measure("count", "elements", "count")],
+            # The caller picks the types; a supertype and its subtype may both be listed.
+            categories=CategoriesDeclaration(exclusive=False),
+            absence=_absence(
+                not_measured="The types were not counted: the count queries failed, or the server "
+                             "could not answer them in the population asked for.",
+                not_permitted="You are not permitted to count elements of these types.",
+                not_applicable="A breakdown by type does not apply: no types were given to count.",
+                nothing_found="Counted: there are no active elements of any of these types.",
+            ),
+            out=ROW_SHAPES["TypeCount"],
+        ),
     ),
     "governed_coverage": AnalyticFunctionSpec(
         name="governed_coverage",
@@ -752,6 +786,20 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                           description="(label, type_name) pairs to count and sum."),
             _as_of(),
         ],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            measures=[_measure("total", "elements", "total")],
+            absence=_absence(
+                not_measured="The total was not counted: the per-type count queries failed.",
+                not_permitted="You are not permitted to count elements of these types.",
+                not_applicable="A total does not apply: no types were given to count.",
+                nothing_found="Counted: there are no active elements of any of these types.",
+            ),
+            out=[
+                _field("total", "Total", "int", unit="elements"),
+                _field("byType", "By type", kind="dataset", shape="TypeCount"),
+            ],
+        ),
     ),
     "count_elements_by_property": AnalyticFunctionSpec(
         name="count_elements_by_property",
@@ -771,7 +819,51 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                           description="Value to match the property against, e.g. ACTIVE."),
             _as_of(),
             _strict(),
+            _population(),
         ],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            measures=[_measure("elements", "elements", "value")],
+            absence=_absence(
+                not_measured="The elements were not counted: the count query failed, or the server "
+                             "could not answer it in the population asked for.",
+                not_permitted="You are not permitted to count these elements.",
+                not_applicable="This count does not apply: the type or property named is not one "
+                               "the server knows.",
+                nothing_found="Counted: no active element of this type has this property value.",
+            ),
+            out=[_field("value", "Elements", "int", unit="elements")],
+        ),
+    ),
+    "count_relationships": AnalyticFunctionSpec(
+        name="count_relationships",
+        function="pyegeria.view.overview_metrics.count_relationships",
+        description="Count active relationships of one type. By default one capped "
+                    "get_relationships page (the path the rest of the portal uses); a native count "
+                    "when a MetadataExpert is passed as `expert` (opt-in: the two paths can disagree "
+                    "for some types, PY-18). Takes ce as its leading client. Cost: one relationship "
+                    "page, seconds; the native count is sub-second.",
+        returns="scalar (int | None)",
+        generic=True,
+        params=[
+            AnalyticParam(name="relationship_type", type="str", required=True,
+                          description="Relationship type to count, e.g. SemanticAssignment."),
+            _as_of(),
+            _population(),
+        ],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            measures=[_measure("relationships", "relationships", "value")],
+            absence=_absence(
+                not_measured="The relationships were not counted: the query failed, or a "
+                             "repository count was asked for and no native count could answer it.",
+                not_permitted="You are not permitted to read these relationships.",
+                not_applicable="This count does not apply: the relationship type named is not one "
+                               "the server knows.",
+                nothing_found="Counted: there are no active relationships of this type.",
+            ),
+            out=[_field("value", "Relationships", "int", unit="relationships")],
+        ),
     ),
     "contextualised_coverage": AnalyticFunctionSpec(
         name="contextualised_coverage",
