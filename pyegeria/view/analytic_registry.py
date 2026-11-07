@@ -761,7 +761,32 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         returns="dict (persons, teams, organizations, itProfiles, communities)",
         generic=False,
         binding_note="Fixed to Person/Team/Organization/ITProfile/Community -- not a parameter.",
-        params=[_as_of(), _strict()],
+        params=[_as_of(), _strict(), _population()],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            measures=[
+                _measure("persons", "Person profiles", "persons"),
+                _measure("teams", "Team profiles", "teams"),
+                _measure("organizations", "Organization profiles", "organizations"),
+                _measure("it_profiles", "ITProfile profiles", "itProfiles"),
+                _measure("communities", "Community profiles", "communities"),
+            ],
+            absence=_absence(
+                not_measured="The actor profiles were not counted: the count queries failed, or the "
+                             "server could not answer them in the population asked for.",
+                not_permitted="You are not permitted to count actor profiles.",
+                not_applicable=_always_applies("Counting actor profiles"),
+                nothing_found="Counted: there are no active Person, Team, Organization, ITProfile or "
+                              "Community profiles.",
+            ),
+            out=[
+                _field("persons", "People", "int", unit="profiles"),
+                _field("teams", "Teams", "int", unit="profiles"),
+                _field("organizations", "Organizations", "int", unit="profiles"),
+                _field("itProfiles", "IT profiles", "int", unit="profiles"),
+                _field("communities", "Communities", "int", unit="profiles"),
+            ],
+        ),
     ),
     "feedback_summary": AnalyticFunctionSpec(
         name="feedback_summary",
@@ -771,7 +796,30 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         returns="dict (byType, total)",
         generic=False,
         binding_note="Fixed to Collaboration OMAS's feedback relationship types -- not a parameter.",
-        params=[_as_of()],
+        params=[_as_of(), _population()],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            measures=[
+                _measure("feedback", "feedback relationships", "total"),
+                _measure("ratings", "AttachedRating relationships", "byType.ratings"),
+                _measure("comments", "AttachedComment relationships", "byType.comments"),
+                _measure("likes", "AttachedLike relationships", "byType.likes"),
+                _measure("tags", "AttachedTag relationships", "byType.tags"),
+                _measure("note_logs", "AttachedNoteLog relationships", "byType.noteLogs"),
+            ],
+            absence=_absence(
+                not_measured="Feedback was not counted: a relationship query failed, or a repository "
+                             "count was asked for without a native count to answer it.",
+                not_permitted="You are not permitted to read feedback relationships.",
+                not_applicable=_always_applies("A feedback summary"),
+                nothing_found="Counted: nothing in the catalog has been rated, commented on, liked, "
+                              "tagged or given a note log.",
+            ),
+            out=[
+                _field("total", "Feedback", "int", unit="relationships"),
+                _field("byType", "By type", "map<string,int>", unit="relationships"),
+            ],
+        ),
     ),
     "usage_context_counts": AnalyticFunctionSpec(
         name="usage_context_counts",
@@ -782,7 +830,26 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         returns="dict (informationSupplyChains, blueprints)",
         generic=False,
         binding_note="Fixed to InformationSupplyChain and SolutionBlueprint -- not a parameter.",
-        params=[_as_of(), _strict()],
+        params=[_as_of(), _strict(), _population()],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            measures=[
+                _measure("supply_chains", "InformationSupplyChain elements", "informationSupplyChains"),
+                _measure("blueprints", "SolutionBlueprint elements", "blueprints"),
+            ],
+            absence=_absence(
+                not_measured="Supply chains and blueprints were not counted: the count queries failed, "
+                             "or the server could not answer them in the population asked for.",
+                not_permitted="You are not permitted to count supply chains or blueprints.",
+                not_applicable=_always_applies("Counting supply chains and blueprints"),
+                nothing_found="Counted: there are no active information supply chains or solution "
+                              "blueprints.",
+            ),
+            out=[
+                _field("informationSupplyChains", "Information supply chains", "int", unit="elements"),
+                _field("blueprints", "Solution blueprints", "int", unit="elements"),
+            ],
+        ),
     ),
     "semantic_grounding": AnalyticFunctionSpec(
         name="semantic_grounding",
@@ -883,6 +950,32 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         generic=False,
         binding_note="Fixed to Collaboration OMAS's feedback relationship types -- not a parameter.",
         params=[_as_of()],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            # Users who attached feedback, read from relationship audit headers (createdBy).
+            measures=[
+                _measure("contributors", "distinct users who attached feedback", "contributors",
+                         population="viewer"),
+                _measure("raters", "distinct users who attached a rating", "byType.ratings", population="viewer"),
+                _measure("commenters", "distinct users who attached a comment", "byType.comments",
+                         population="viewer"),
+                _measure("likers", "distinct users who attached a like", "byType.likes", population="viewer"),
+                _measure("taggers", "distinct users who attached a tag", "byType.tags", population="viewer"),
+                _measure("note_loggers", "distinct users who attached a note log", "byType.noteLogs",
+                         population="viewer"),
+            ],
+            absence=_absence(
+                not_measured="Contributors were not counted: a feedback relationship query failed.",
+                not_permitted="You are not permitted to read feedback relationships, so contributors "
+                              "were not counted.",
+                not_applicable=_always_applies("Counting contributors"),
+                nothing_found="Counted: nobody has attached a rating, comment, like, tag or note log.",
+            ),
+            out=[
+                _field("contributors", "Contributors", "int", unit="users"),
+                _field("byType", "By feedback type", "map<string,int>", unit="users"),
+            ],
+        ),
     ),
     "sum_type_counts": AnalyticFunctionSpec(
         name="sum_type_counts",
@@ -1019,6 +1112,27 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                           description="Anchor typeName(s) to include, e.g. ['Person', 'ITProfile']."),
             _as_of(),
         ],
+        declaration=AnalyticDeclaration(
+            result_kind="list",
+            measures=[_measure("karma_points", "karma points", "karmaPoints")],
+            listing=ListDeclaration(item_fields=["name", "karmaPoints", "anchorType"],
+                                    order="most karma first", key_field="anchorGuid",
+                                    item_label="contributors"),
+            absence=_absence(
+                not_measured="The leaderboard was not read: the find of contribution records failed.",
+                not_permitted="You are not permitted to read contribution records.",
+                not_applicable="A leaderboard does not apply to these anchor types: no contribution "
+                               "record is anchored to them.",
+                nothing_found="Read: nobody of these anchor types has a contribution record with karma "
+                              "points.",
+            ),
+            out=[
+                _field("name", "Name", "string"),
+                _field("karmaPoints", "Karma points", "int", unit="karma points"),
+                _field("anchorGuid", "Profile", "guid"),
+                _field("anchorType", "Profile type", "string"),
+            ],
+        ),
     ),
     "engagement_series": AnalyticFunctionSpec(
         name="engagement_series",

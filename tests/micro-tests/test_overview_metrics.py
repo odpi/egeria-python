@@ -567,8 +567,10 @@ def test_active_contributors_degrades_per_type_on_failure():
         [], [], [],
     ]
     result = om.active_contributors(ce)
-    assert result["byType"]["ratings"] == 0
-    assert result["contributors"] == 1
+    # the failed type is unmeasured (None), and so is the union it would be part of (RS-W2-1a)
+    assert result["byType"]["ratings"] is None
+    assert result["byType"]["comments"] == 1
+    assert result["contributors"] is None
 
 
 # ── metric_trend ──────────────────────────────────────────────────────────

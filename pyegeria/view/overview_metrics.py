@@ -1794,6 +1794,10 @@ def active_contributors(ce, as_of: Optional[str] = None) -> Dict[str, Any]:
     noteLogs}} where byType is the distinct-username count per relationship
     type (one person active in two types counts once in "contributors" but
     once per type in byType).
+
+    A type whose query failed is None in byType, and `contributors` is None
+    unless every type was read -- a partial union would read as fewer people,
+    the same rule feedback_summary's `total` follows.
     """
     body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
 
@@ -1806,17 +1810,20 @@ def active_contributors(ce, as_of: Optional[str] = None) -> Dict[str, Any]:
             if (u := (rel.get("relationshipHeader") or {}).get("versions", {}).get("createdBy"))
         }
 
-    by_type: Dict[str, int] = {}
+    by_type: Dict[str, Optional[int]] = {}
     all_users: set = set()
+    measured = True
     for rel_type, key in _FEEDBACK_RELATIONSHIP_TYPES:
         try:
             users = _actor_usernames(rel_type)
         except Exception as exc:  # noqa: BLE001
             logger.debug(f"overview_metrics active_contributors: {rel_type} failed: {exc}")
-            users = set()
+            by_type[key] = None
+            measured = False
+            continue
         by_type[key] = len(users)
         all_users |= users
-    return {"contributors": len(all_users), "byType": by_type}
+    return {"contributors": len(all_users) if measured else None, "byType": by_type}
 
 
 def control_implementation_summary(client, soa_guid: str) -> Dict[str, int]:

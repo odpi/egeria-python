@@ -90,3 +90,11 @@ def test_ownership_coverage_failure_is_unmeasured():
     from pyegeria.view import overview_metrics as om
     mgr, _ = _failing_clients()
     assert om.ownership_coverage(mgr) == {"ownershipCount": None, "ownershipCapped": None, "byOwnerType": {}}
+
+
+def test_active_contributors_failure_is_unmeasured():
+    from pyegeria.view import overview_metrics as om
+    _, ce = _failing_clients()
+    result = om.active_contributors(ce)
+    assert result["contributors"] is None
+    assert set(result["byType"].values()) == {None}
