@@ -1069,4 +1069,4 @@ def test_asset_composition_is_registered_with_a_declaration():
     assert decl.result_kind == "distribution"
     assert {m.name for m in decl.measures} == {"repository_count", "viewer_count", "not_visible"}
     assert all(m.unit == "elements" and m.as_of == "as_of" for m in decl.measures)
-    assert decl.absence.measured_nothing  # RS-W1-1 PR-2 not landed: still measured_nothing
+    assert decl.absence.nothing_found

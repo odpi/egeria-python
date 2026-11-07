@@ -34,7 +34,7 @@ from pyegeria.view.base_report_formats import (
     get_report_registry,
 )
 from pyegeria.view.output_formatter import generate_output
-from pyegeria.view.analytic_registry import ABSENCE_STATES, AnalyticActionSpec
+from pyegeria.view.analytic_registry import ABSENCE_STATES, AnalyticActionSpec, canonical_absence_state
 from pyegeria.view.analytic_registry import get_analytic_registry as get_analytic_registry_functions
 from pyegeria.egeria_tech_client import EgeriaTech
 
@@ -297,8 +297,9 @@ def _result_envelope(result: Any) -> Optional[Dict[str, str]]:
         reason = str(m.get("state_reason", m.get("resultStateReason", m.get("result_state_reason", ""))) or "")
         subtitle = m.get("subtitle") or (state.replace("_", " ") + (f" \u00b7 {reason}" if reason else ""))
         found = {"state": state, "reason": reason, "subtitle": str(subtitle)}
-        if m.get("absence") in ABSENCE_STATES:  # the result says which absence (ISSUE-171)
-            found["absence"] = m["absence"]
+        claimed = canonical_absence_state(m.get("absence"))  # legacy measured_nothing reads as nothing_found
+        if claimed in ABSENCE_STATES:  # the result says which absence (ISSUE-171)
+            found["absence"] = claimed
         return found
 
     if isinstance(result, dict):
@@ -334,7 +335,7 @@ def _with_envelope(out: Dict[str, Any], envelope: Optional[Dict[str, str]]) -> D
 # not_measured unless the result itself claims not_permitted (an `absence` key);
 # the reason text is never parsed to guess which.
 _ABSENCE_FOR_STATE = {
-    "nothing_found": "measured_nothing",
+    "nothing_found": "nothing_found",
     "not_established": "not_measured",
     "not_applicable": "not_applicable",
 }
@@ -344,7 +345,7 @@ _UNDECLARED_ABSENCE_WORDS = {
     "not_measured": "Not measured",
     "not_permitted": "Not measured: not permitted",
     "not_applicable": "Does not apply",
-    "measured_nothing": "Measured; nothing found",
+    "nothing_found": "Measured; nothing found",
 }
 
 
@@ -363,7 +364,7 @@ def _absence_for(envelope: Optional[Dict[str, str]], func_decl: str) -> Optional
     one with no envelope, which keep their old shapes."""
     if not envelope or envelope["state"] not in _ABSENCE_FOR_STATE:
         return None
-    state = _ABSENCE_FOR_STATE[envelope["state"]]
+    state = canonical_absence_state(_ABSENCE_FOR_STATE[envelope["state"]])
     if state == "not_measured" and envelope.get("absence") == "not_permitted":
         state = "not_permitted"
     reason = envelope.get("reason", "")

@@ -55,6 +55,7 @@ __all__ = [
     'AbsenceSentences',
     'RESULT_KINDS',
     'ABSENCE_STATES',
+    'canonical_absence_state',
     'KNOWN_ANALYTIC_SOURCES',
     'AnalyticRegistryCollision',
     'refresh_analytic_functions',
@@ -125,9 +126,18 @@ class AnalyticActionSpec(BaseModel):
 RESULT_KINDS = ("measure", "series", "distribution", "list", "graph", "finding", "proposal", "table")
 
 #: The four ways a result can be absent, each a sentence the function declares. Envelope states
-#: map onto them: nothing_found -> measured_nothing; not_established -> not_measured (or
+#: map onto them: nothing_found -> nothing_found; not_established -> not_measured (or
 #: not_permitted, told apart by the reason); not_applicable -> not_applicable.
-ABSENCE_STATES = ("not_measured", "not_permitted", "not_applicable", "measured_nothing")
+ABSENCE_STATES = ("not_measured", "not_permitted", "not_applicable", "nothing_found")
+
+#: The word 0.2 / 6.2.22 used for `nothing_found`. Read everywhere, written nowhere (RS-W1-1).
+LEGACY_NOTHING_FOUND = "measured_nothing"
+
+
+def canonical_absence_state(state: Any) -> Any:
+    """The current absence word for `state`: the legacy `measured_nothing` reads as `nothing_found`;
+    every other value is returned unchanged."""
+    return "nothing_found" if state == LEGACY_NOTHING_FOUND else state
 
 
 def _words(value: Any) -> str:
@@ -169,7 +179,17 @@ class AbsenceSentences(BaseModel):
     not_measured: str
     not_permitted: str
     not_applicable: str
-    measured_nothing: str
+    nothing_found: str
+
+    @model_validator(mode="before")
+    @classmethod
+    def _legacy_word(cls, data: Any) -> Any:
+        """Declarations authored before RS-W1-1 say `measured_nothing`; read it as `nothing_found`."""
+        if isinstance(data, dict) and LEGACY_NOTHING_FOUND in data:
+            data = dict(data)
+            legacy = data.pop(LEGACY_NOTHING_FOUND)
+            data.setdefault("nothing_found", legacy)
+        return data
 
     @model_validator(mode="after")
     def _filled(self) -> "AbsenceSentences":
@@ -180,7 +200,7 @@ class AbsenceSentences(BaseModel):
         return self
 
     def sentence(self, state: str) -> str:
-        return getattr(self, state)
+        return getattr(self, canonical_absence_state(state))
 
 
 class AnalyticDeclaration(BaseModel):
@@ -647,14 +667,12 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                 MeasureDeclaration(name="not_visible", unit="elements", as_of="as_of",
                                    value_field="rows.not_visible.value"),
             ],
-            # RS-W1-1 PR-2 (the nothing_found rename) has not landed: the fourth word is
-            # still measured_nothing here.
             absence=AbsenceSentences(
                 not_measured="The subtype counts could not be measured: the count queries failed or "
                              "the server could not answer them.",
                 not_permitted="You are not permitted to count these elements.",
                 not_applicable="A subtype composition does not apply to this type.",
-                measured_nothing="Counted: there are no elements of this type or its subtypes.",
+                nothing_found="Counted: there are no elements of this type or its subtypes.",
             ),
         ),
     ),
