@@ -98,3 +98,25 @@ def test_active_contributors_failure_is_unmeasured():
     result = om.active_contributors(ce)
     assert result["contributors"] is None
     assert set(result["byType"].values()) == {None}
+
+
+def test_readiness_routines_failure_is_unmeasured():
+    from pyegeria.view import overview_metrics as om
+    mgr, ce = _failing_clients()
+    assert om.context_readiness_funnel(mgr, ce)["documented"] is None
+    assert om.ai_ready_assets(mgr, ce) == {"aiReadyCount": None, "total": None, "capped": None}
+    assert set(om.drl_readiness_gates(mgr, ce).values()) == {None}
+
+
+def test_drl_lineage_failure_keeps_the_asset_population():
+    from unittest.mock import MagicMock
+
+    from pyegeria.view import overview_metrics as om
+    mgr, _ = _failing_clients()
+    mgr.find_metadata_elements.side_effect = None
+    mgr.find_metadata_elements.return_value = [{"elementGUID": "a1", "type": {"typeName": "CSVFile"}}]
+    ce = MagicMock(spec=["get_relationships"])
+    ce.get_relationships.side_effect = RuntimeError("boom")
+    result = om.drl_readiness_gates(mgr, ce)
+    assert (result["total"], result["aiReadyCount"], result["aiReadyRecentCount"]) == (1, None, None)
+    assert sum(result["byModality"].values()) == 1

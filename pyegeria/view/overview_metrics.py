@@ -1001,9 +1001,9 @@ def context_readiness_funnel(mgr, ce, as_of: Optional[str] = None) -> Dict[str, 
                                  "metadataElementTypeName": "Asset"}
         if as_of:
             body["asOfTime"] = as_of
-        assets = _find(mgr, body)
-        documented = 0
-        for a in assets:
+        assets = _find_or_none(mgr, body)  # None when the find failed: documented stays None, not 0
+        documented = None if assets is None else 0
+        for a in assets or []:
             pvm = (a.get("elementProperties") or {}).get("propertyValueMap") or {}
             desc = (pvm.get("description") or {}).get("primitiveValue")
             if isinstance(desc, str) and desc.strip():
@@ -1055,17 +1055,22 @@ def ai_ready_assets(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Any]:
     `context_readiness_funnel`'s own `documented` stage) -- a floor, not
     exact, on a catalog larger than DEFAULT_CAP.
 
-    Returns {"aiReadyCount": int, "total": int, "capped": bool} -- "total" is
-    the (possibly capped) Asset population actually checked, so a caller can
-    compute a percentage without a separate cataloged-count call.
+    Returns {"aiReadyCount": int|None, "total": int|None, "capped": bool|None}
+    -- "total" is the (possibly capped) Asset population actually checked, so
+    a caller can compute a percentage without a separate cataloged-count call.
+    A failed Asset find makes all three None; a failed DataFlow query makes
+    aiReadyCount None (no asset can be shown lineage-traced, which is not the
+    same as none being so) and keeps total/capped.
     """
     body: Dict[str, Any] = {"class": "FindRequestBody", "limitResultsByStatus": ["ACTIVE"],
                              "metadataElementTypeName": "Asset"}
     if as_of:
         body["asOfTime"] = as_of
-    assets = _find(mgr, body)
+    assets = _find_or_none(mgr, body)
+    if assets is None:
+        return {"aiReadyCount": None, "total": None, "capped": None}
 
-    lineage_guids: set = set()
+    lineage_guids: Optional[set] = set()
     try:
         rel_body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
         rels = _json_list(ce.get_relationships(
@@ -1079,6 +1084,9 @@ def ai_ready_assets(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Any]:
                     lineage_guids.add(g)
     except Exception as exc:  # noqa: BLE001
         logger.debug(f"ai_ready_assets: lineage relationship query failed: {exc}")
+        lineage_guids = None
+    if lineage_guids is None:
+        return {"aiReadyCount": None, "total": len(assets), "capped": len(assets) >= DEFAULT_CAP}
 
     ai_ready = 0
     for a in assets:
@@ -1175,8 +1183,10 @@ def drl_readiness_gates(mgr, ce, as_of: Optional[str] = None, recency_days: int 
     recency_days : provisional recency window for "recent" -- not yet a
         decided band threshold, see design doc "Open decisions"
 
-    Returns {"total": int, "capped": bool, "aiReadyCount": int,
-    "aiReadyRecentCount": int, "byModality": {"tabular", "text_media", "other"}}.
+    Returns {"total": int|None, "capped": bool|None, "aiReadyCount": int|None,
+    "aiReadyRecentCount": int|None, "byModality": {"tabular", "text_media", "other"}|None}.
+    A failed Asset find makes every field None; a failed DataFlow query makes
+    aiReadyCount/aiReadyRecentCount None and keeps the rest -- unmeasured, not 0.
     """
     from datetime import datetime, timedelta, timezone
 
@@ -1184,9 +1194,12 @@ def drl_readiness_gates(mgr, ce, as_of: Optional[str] = None, recency_days: int 
                              "metadataElementTypeName": "Asset"}
     if as_of:
         body["asOfTime"] = as_of
-    assets = _find(mgr, body)
+    assets = _find_or_none(mgr, body)
+    if assets is None:
+        return {"total": None, "capped": None, "aiReadyCount": None, "aiReadyRecentCount": None,
+                "byModality": None}
 
-    lineage_guids: set = set()
+    lineage_guids: Optional[set] = set()
     try:
         rel_body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
         rels = _json_list(ce.get_relationships(
@@ -1199,6 +1212,7 @@ def drl_readiness_gates(mgr, ce, as_of: Optional[str] = None, recency_days: int 
                     lineage_guids.add(g)
     except Exception as exc:  # noqa: BLE001
         logger.debug(f"drl_readiness_gates: DataFlow relationship query failed: {exc}")
+        lineage_guids = None
 
     now = datetime.fromisoformat(as_of.replace("Z", "+00:00")) if as_of else datetime.now(timezone.utc)
     if now.tzinfo is None:
@@ -1216,7 +1230,7 @@ def drl_readiness_gates(mgr, ce, as_of: Optional[str] = None, recency_days: int 
         desc = (pvm.get("description") or {}).get("primitiveValue")
         documented = isinstance(desc, str) and bool(desc.strip())
         governed = bool(_classifications_of(a) & set(GOVERNANCE_CLASSIFICATIONS))
-        lineage_traced = guid in lineage_guids
+        lineage_traced = lineage_guids is not None and guid in lineage_guids
         if not (documented and governed and lineage_traced):
             continue
         ai_ready += 1
@@ -1228,8 +1242,8 @@ def drl_readiness_gates(mgr, ce, as_of: Optional[str] = None, recency_days: int 
     return {
         "total": len(assets),
         "capped": len(assets) >= DEFAULT_CAP,
-        "aiReadyCount": ai_ready,
-        "aiReadyRecentCount": ai_ready_recent,
+        "aiReadyCount": ai_ready if lineage_guids is not None else None,
+        "aiReadyRecentCount": ai_ready_recent if lineage_guids is not None else None,
         "byModality": by_modality,
     }
 

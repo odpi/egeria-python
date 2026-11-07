@@ -34,7 +34,9 @@ DECLARATION = {
 DECLARED_BUILTINS = {"asset_composition", "count_elements", "count_elements_by_property", "count_relationships",
                      "counts_by_type", "sum_type_counts", "governed_coverage", "ownership_coverage",
                      "business_value_signals", "certifications_summary", "semantic_grounding", "people_counts", "feedback_summary",
-                     "usage_context_counts", "active_contributors", "karma_leaderboard"}
+                     "usage_context_counts", "active_contributors", "karma_leaderboard", "context_readiness_funnel",
+                     "ai_ready_assets", "drl_readiness_gates", "contextualised_coverage",
+                     "solution_component_realisation"}
 
 
 def test_existing_specs_load_without_a_declaration():

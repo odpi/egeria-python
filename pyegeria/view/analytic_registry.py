@@ -896,6 +896,33 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         generic=False,
         binding_note="Fixed 5-stage readiness definition baked into the function body -- not a parameter.",
         params=[_as_of()],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            # Four independent counts over different populations, not nested stages of one set.
+            measures=[
+                _measure("cataloged", "Assets", "cataloged"),
+                _measure("documented", "Assets with a description, among those one capped find returned",
+                         "documented", population="viewer"),
+                _measure("classified", "elements of any type carrying a governance classification",
+                         "classified"),
+                _measure("lineage", "DataFlow relationships", "lineage", population="viewer"),
+            ],
+            absence=_absence(
+                not_measured="The readiness funnel was not measured: its counts or the Asset find failed.",
+                not_permitted="You are not permitted to read the Assets, so the readiness funnel was "
+                              "not measured.",
+                not_applicable=_always_applies("The readiness funnel"),
+                nothing_found="Counted: there are no active Assets, governed elements or DataFlow "
+                              "relationships.",
+            ),
+            out=[
+                _field("cataloged", "Cataloged", "int", unit="Assets"),
+                _field("documented", "Documented", "int", unit="Assets"),
+                _field("classified", "Classified", "int", unit="elements"),
+                _field("lineage", "Lineage-traced", "int", unit="relationships"),
+                _field("aiReady", "AI-ready (always empty here; see ai_ready_assets)", "int", unit="Assets"),
+            ],
+        ),
     ),
     "ai_ready_assets": AnalyticFunctionSpec(
         name="ai_ready_assets",
@@ -910,6 +937,77 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         generic=False,
         binding_note="Fixed to governed+documented+lineage-traced over Asset elements -- not a parameter.",
         params=[_as_of()],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            measures=[
+                _measure("assets_checked", "Assets", "total", completeness_field="capped", population="viewer"),
+                _measure("ai_ready_assets", "Assets that are governed, documented and lineage-traced",
+                         "aiReadyCount", completeness_field="capped", population="viewer",
+                         basis=_basis("total", "Assets checked")),
+            ],
+            absence=_absence(
+                not_measured="AI readiness was not measured: the Asset find or the DataFlow query failed.",
+                not_permitted="You are not permitted to read the Assets, so AI readiness was not measured.",
+                not_applicable=_always_applies("AI readiness"),
+                nothing_found="Checked: there are no active Assets to assess.",
+            ),
+            out=[
+                _field("aiReadyCount", "AI-ready Assets", "int", unit="Assets"),
+                _field("total", "Assets checked", "int", unit="Assets"),
+                _field("capped", "At least (page cap reached)", "bool"),
+            ],
+        ),
+    ),
+    "drl_readiness_gates": AnalyticFunctionSpec(
+        name="drl_readiness_gates",
+        function="pyegeria.view.overview_metrics.drl_readiness_gates",
+        description="A recency-narrowed view of ai_ready_assets plus a modality breakdown "
+                    "(tabular / text_media / other) of the Asset population -- the two Data "
+                    "Readiness Level pieces computable today. Not a DRL band distribution: "
+                    "Analytics-Ready and RAG-Ready are deliberately absent until their gates exist. "
+                    "Takes two leading clients (mgr, ce). Cost: one capped Asset find and one capped "
+                    "DataFlow relationship page, seconds.",
+        returns="dict (total, capped, aiReadyCount, aiReadyRecentCount, byModality)",
+        generic=False,
+        binding_note="Fixed to governed+documented+lineage-traced Asset elements and the "
+                     "asset_modality type lists -- recency_days tunes the window, not what is measured.",
+        params=[
+            _as_of(),
+            AnalyticParam(name="recency_days", type="int", default=180,
+                          description="Provisional recency window, in days (not yet a decided band threshold)."),
+        ],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            measures=[
+                _measure("assets_checked", "Assets", "total", completeness_field="capped", population="viewer"),
+                _measure("ai_ready_assets", "Assets that are governed, documented and lineage-traced",
+                         "aiReadyCount", completeness_field="capped", population="viewer",
+                         basis=_basis("total", "Assets checked")),
+                _measure("ai_ready_recent_assets", "AI-ready Assets updated within recency_days",
+                         "aiReadyRecentCount", completeness_field="capped", population="viewer",
+                         basis=_basis("aiReadyCount", "AI-ready Assets")),
+                _measure("tabular_assets", "tabular Assets", "byModality.tabular",
+                         completeness_field="capped", population="viewer", basis=_basis("total", "Assets checked")),
+                _measure("text_media_assets", "text and media Assets", "byModality.text_media",
+                         completeness_field="capped", population="viewer", basis=_basis("total", "Assets checked")),
+                _measure("other_assets", "Assets of other modalities", "byModality.other",
+                         completeness_field="capped", population="viewer", basis=_basis("total", "Assets checked")),
+            ],
+            absence=_absence(
+                not_measured="Readiness gates were not measured: the Asset find or the DataFlow query failed.",
+                not_permitted="You are not permitted to read the Assets, so the readiness gates were "
+                              "not measured.",
+                not_applicable=_always_applies("The readiness gates"),
+                nothing_found="Checked: there are no active Assets to assess.",
+            ),
+            out=[
+                _field("total", "Assets checked", "int", unit="Assets"),
+                _field("capped", "At least (page cap reached)", "bool"),
+                _field("aiReadyCount", "AI-ready Assets", "int", unit="Assets"),
+                _field("aiReadyRecentCount", "AI-ready and recent", "int", unit="Assets"),
+                _field("byModality", "By modality", "map<string,int>", unit="Assets"),
+            ],
+        ),
     ),
     "growth_series": AnalyticFunctionSpec(
         name="growth_series",
@@ -1095,6 +1193,59 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         generic=False,
         binding_note="Fixed to the ImplementedBy relationship, filtered to Asset-subtype ends -- not a parameter.",
         params=[_as_of()],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            measures=[
+                _measure("contextualised_assets", "Assets that implement a SolutionComponent (ImplementedBy)",
+                         "contextualisedCount", population="viewer"),
+                _measure("assets", "Assets", "assetTotal"),
+                _measure("contextualised_percent", "percent of Assets (0-100)", "contextualisedPct"),
+            ],
+            absence=_absence(
+                not_measured="Contextualised coverage was not measured: the ImplementedBy query or the "
+                             "Asset count failed.",
+                not_permitted="You are not permitted to read the ImplementedBy relationships.",
+                not_applicable=_always_applies("Contextualised coverage"),
+                nothing_found="Counted: no Asset implements a solution component.",
+            ),
+            out=[
+                _field("contextualisedCount", "Contextualised Assets", "int", unit="Assets"),
+                _field("assetTotal", "Assets", "int", unit="Assets"),
+                _field("contextualisedPct", "Contextualised", "float", unit="percent"),
+            ],
+        ),
+    ),
+    "solution_component_realisation": AnalyticFunctionSpec(
+        name="solution_component_realisation",
+        function="pyegeria.view.overview_metrics.solution_component_realisation",
+        description="SolutionComponent count and how many of them are realised (have at least one "
+                    "ImplementedBy implementation) -- the Overview's Solution Blueprints drill-down. A "
+                    "single-hop proxy: the implementation need not itself sit in the component's "
+                    "supply chain or blueprint. Takes two leading clients (mgr, ce). Cost: one native "
+                    "count plus one capped ImplementedBy relationship page, seconds.",
+        returns="dict (solutionComponentsTotal, solutionComponentsRealised)",
+        generic=False,
+        binding_note="Fixed to SolutionComponent and the ImplementedBy relationship -- not a parameter.",
+        params=[_as_of()],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            measures=[
+                _measure("solution_components", "SolutionComponent elements", "solutionComponentsTotal"),
+                _measure("realised_components", "SolutionComponents with an ImplementedBy implementation",
+                         "solutionComponentsRealised", population="viewer"),
+            ],
+            absence=_absence(
+                not_measured="Solution component realisation was not measured: the count or the "
+                             "ImplementedBy query failed.",
+                not_permitted="You are not permitted to read solution components or their implementations.",
+                not_applicable=_always_applies("Solution component realisation"),
+                nothing_found="Counted: there are no active solution components.",
+            ),
+            out=[
+                _field("solutionComponentsTotal", "Solution components", "int", unit="elements"),
+                _field("solutionComponentsRealised", "Realised", "int", unit="elements"),
+            ],
+        ),
     ),
     "karma_leaderboard": AnalyticFunctionSpec(
         name="karma_leaderboard",
