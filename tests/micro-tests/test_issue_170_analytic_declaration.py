@@ -4,11 +4,11 @@ import pytest
 from pydantic import ValidationError
 
 from pyegeria.view.analytic_registry import (
+    _BUILTINS,
     AnalyticDeclaration,
     AnalyticFunctionSpec,
     analytic_registry_payload,
     clear_runtime_analytic_functions,
-    get_analytic_registry,
     register_analytic_functions,
 )
 
@@ -32,7 +32,7 @@ DECLARATION = {
 def test_every_builtin_declares_its_results():
     """RS-W2-1a: every built-in now declares (asset_composition was the first, RS-W1-4); the field
     itself stays optional for specs registered by others."""
-    assert all(spec.declaration is not None for spec in get_analytic_registry().values())
+    assert all(spec.declaration is not None for spec in _BUILTINS.values())
     assert AnalyticFunctionSpec(name="x", function="pyegeria.view.overview_metrics.growth_series").declaration is None
 
 

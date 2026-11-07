@@ -136,15 +136,25 @@ from pyegeria.view.analytic_registry import (  # noqa: E402
     ABSENCE_STATES,
     LEGACY_NOTHING_FOUND,
     ROW_SHAPES,
+    _BUILTINS,
     get_analytic_registry,
 )
 
-BUILTINS = get_analytic_registry()
+#: pyegeria's own routines. The registry also holds entry points from installed packages
+#: (egeria-trellis-analytics, for one), whose declarations are the library's models, so the
+#: checks below that read pyegeria's declaration model run over the built-ins only.
+BUILTINS = _BUILTINS
 AS_OF = "2026-10-01T00:00:00+00:00"
 
 
-def test_every_registry_entry_is_declared():
+def test_every_builtin_is_declared():
     undeclared = sorted(name for name, spec in BUILTINS.items() if spec.declaration is None)
+    assert undeclared == []
+
+
+def test_every_registry_entry_is_declared():
+    """The census over the whole registry, entry points included: each has a declaration."""
+    undeclared = sorted(name for name, spec in get_analytic_registry().items() if spec.declaration is None)
     assert undeclared == []
 
 
