@@ -58,6 +58,49 @@ class CatalogTargetProperties(ReferenceableProperties):
     configurationProperties: dict | None = None
 
 
+
+PLACEMENT_QUERY_TYPE = "placement"
+
+
+def resolve_placement_reports(dashboard_element: dict, placement_qualified_names: list[str]) -> dict[str, dict]:
+    """Say which report each dashboard placement is bound to, from a Dashboard element retrieved with its
+    DataSetContent relationships (its "dataSetContent" list).
+
+    Every placement named gets an entry with an explicit state, never an empty value:
+      - "bound":     exactly one link; report_guid, report_name, report_qualified_name, relationship_guid
+      - "unbound":   no DataSetContent link with queryType "placement" and this queryId
+      - "ambiguous": more than one such link; all are listed under "links" and none is chosen
+    Every state carries "links" (the matching relationships, possibly empty).
+
+    Egeria omits an empty relationship list from the element, so a missing "dataSetContent" key means
+    the dashboard has no DataSetContent links and every placement is unbound. That is only true when the
+    element was retrieved with that relationship included, as AssetMaker.get_placement_reports does.
+    """
+    links_by_placement: dict[str, list[dict]] = {}
+    for rel in dashboard_element.get("dataSetContent") or []:
+        props = rel.get("relationshipProperties") or {}
+        if props.get("queryType") != PLACEMENT_QUERY_TYPE or not props.get("queryId"):
+            continue
+        related = rel.get("relatedElement") or {}
+        related_props = related.get("properties") or {}
+        links_by_placement.setdefault(props["queryId"], []).append({
+            "relationship_guid": (rel.get("relationshipHeader") or {}).get("guid"),
+            "report_guid": (related.get("elementHeader") or {}).get("guid"),
+            "report_name": related_props.get("displayName"),
+            "report_qualified_name": related_props.get("qualifiedName"),
+        })
+
+    result: dict[str, dict] = {}
+    for qn in placement_qualified_names:
+        links = links_by_placement.get(qn, [])
+        if not links:
+            result[qn] = {"state": "unbound", "links": []}
+        elif len(links) == 1:
+            result[qn] = {"state": "bound", **links[0], "links": links}
+        else:
+            result[qn] = {"state": "ambiguous", "links": links}
+    return result
+
 class AssetMaker(ServerClient):
     """AssetMaker is a class that extends the ServerClient class. The Asset Maker OMVS provides APIs for
     supporting the creation and editing of assets.
@@ -2577,6 +2620,127 @@ class AssetMaker(ServerClient):
             Additional parameters for the delete operation.
         """
         run_sync(self._async_detach_data_set_content_relationship(data_set_content_guid, body))
+
+    #
+    # Dashboard placements (Egeria 6.3). A REPORT placement on a dashboard is a DisplayDataField; the report
+    # it shows is linked by the existing DataSetContent relationship from the Dashboard to the Report, with
+    # queryId = the placement's qualifiedName and queryType = "placement" (owner decision 2026-11-07: no new
+    # relationship type). DataSetContent is multi-link, so one dashboard can show the same report in several
+    # placements; each placement is its own relationship, found by its queryId.
+    #
+
+    @dynamic_catch
+    async def _async_link_placement_report(
+        self,
+        dashboard_guid: str,
+        report_guid: str,
+        placement_qualified_name: str,
+        body: dict | NewRelationshipRequestBody | None = None,
+    ) -> str | None:
+        """Bind a dashboard placement to the report it shows. Async version.
+
+        Creates a DataSetContent relationship from the Dashboard to the Report with
+        queryId = placement_qualified_name and queryType = "placement".
+
+        Parameters
+        ----------
+        dashboard_guid: str
+            Unique identifier of the Dashboard (end 1).
+        report_guid: str
+            Unique identifier of the Report (end 2).
+        placement_qualified_name: str
+            Qualified name of the placement's DisplayDataField.
+        body: dict | NewRelationshipRequestBody, optional
+            Extra request-body fields (externalSourceGUID, effectiveTime, ...). Its properties' queryId and
+            queryType are always set from the placement, overriding anything given.
+
+        Returns
+        -------
+        str | None - the unique identifier of the new DataSetContent relationship
+        """
+        if not placement_qualified_name:
+            raise ValueError("placement_qualified_name is required to bind a placement to a report")
+        request = dict(body) if isinstance(body, dict) else (
+            body.model_dump(by_alias=True, exclude_none=True) if body is not None else {})
+        request.setdefault("class", "NewRelationshipRequestBody")
+        properties = dict(request.get("properties") or {})
+        properties.update({"class": "DataSetContentProperties",
+                           "queryId": placement_qualified_name,
+                           "queryType": PLACEMENT_QUERY_TYPE})
+        request["properties"] = properties
+        return await self._async_link_data_set_content(dashboard_guid, report_guid, request)
+
+    @dynamic_catch
+    def link_placement_report(
+        self,
+        dashboard_guid: str,
+        report_guid: str,
+        placement_qualified_name: str,
+        body: dict | NewRelationshipRequestBody | None = None,
+    ) -> str | None:
+        """Bind a dashboard placement to the report it shows. See `_async_link_placement_report`."""
+        return run_sync(self._async_link_placement_report(dashboard_guid, report_guid,
+                                                          placement_qualified_name, body))
+
+    @dynamic_catch
+    async def _async_get_placement_reports(
+        self,
+        dashboard_guid: str,
+        placement_qualified_names: list[str],
+    ) -> dict[str, dict]:
+        """Read which report each placement of a dashboard is bound to. Async version.
+
+        Returns one entry per placement qualified name; see `resolve_placement_reports` for the states.
+        Raises if the dashboard itself cannot be retrieved, rather than reporting every placement as
+        unbound: a dashboard that was never read says nothing about its placements.
+        """
+        element = await self._async_get_asset_by_guid(dashboard_guid,
+                                                      include_only_relationships=["DataSetContent"])
+        if not isinstance(element, dict):
+            raise ValueError(f"Dashboard {dashboard_guid} could not be retrieved: {element}")
+        return resolve_placement_reports(element, placement_qualified_names)
+
+    @dynamic_catch
+    def get_placement_reports(self, dashboard_guid: str, placement_qualified_names: list[str]) -> dict[str, dict]:
+        """Read which report each placement of a dashboard is bound to. See `_async_get_placement_reports`."""
+        return run_sync(self._async_get_placement_reports(dashboard_guid, placement_qualified_names))
+
+    @dynamic_catch
+    async def _async_detach_placement_report(
+        self,
+        dashboard_guid: str,
+        placement_qualified_name: str,
+        body: dict | DeleteRelationshipRequestBody | None = None,
+    ) -> int:
+        """Unbind a placement from its report. Async version.
+
+        Removes only the DataSetContent relationship(s) whose queryType is "placement" and whose queryId is
+        this placement's qualified name; any other placement showing the same report keeps its own link.
+
+        Returns
+        -------
+        int - the number of relationships removed (0 if the placement was not bound)
+        """
+        element = await self._async_get_asset_by_guid(dashboard_guid,
+                                                      include_only_relationships=["DataSetContent"])
+        if not isinstance(element, dict):
+            raise ValueError(f"Dashboard {dashboard_guid} could not be retrieved: {element}")
+        binding = resolve_placement_reports(element, [placement_qualified_name])[placement_qualified_name]
+        removed = 0
+        for link in binding.get("links", []):
+            await self._async_detach_data_set_content_relationship(link["relationship_guid"], body)
+            removed += 1
+        return removed
+
+    @dynamic_catch
+    def detach_placement_report(
+        self,
+        dashboard_guid: str,
+        placement_qualified_name: str,
+        body: dict | DeleteRelationshipRequestBody | None = None,
+    ) -> int:
+        """Unbind a placement from its report. See `_async_detach_placement_report`."""
+        return run_sync(self._async_detach_placement_report(dashboard_guid, placement_qualified_name, body))
 
     #
     # Report Methods
