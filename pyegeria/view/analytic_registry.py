@@ -38,6 +38,8 @@ Python's own TypeError.
 from __future__ import annotations
 
 import os
+import re
+import warnings
 from importlib.metadata import entry_points
 from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional, Tuple, Union
@@ -53,7 +55,17 @@ __all__ = [
     'MeasureDeclaration',
     'BasisDeclaration',
     'AbsenceSentences',
+    'FieldDeclaration',
+    'FieldCompanion',
+    'CategoriesDeclaration',
+    'ListDeclaration',
+    'ROW_SHAPES',
     'RESULT_KINDS',
+    'POPULATIONS',
+    'COMPLETENESS',
+    'FIELD_KINDS',
+    'FIELD_TYPES',
+    'CELL_COMPANIONS',
     'ABSENCE_STATES',
     'canonical_absence_state',
     'KNOWN_ANALYTIC_SOURCES',
@@ -156,14 +168,66 @@ class BasisDeclaration(BaseModel):
         return self
 
 
+#: The two populations a count can be taken over (trellis `POPULATIONS`, RS-W1-1 §5). `viewer`: what
+#: the caller may see (Egeria pushDown=false, or any find); `repository`: the whole repository, fast,
+#: with no per-element visibility check (pushDown=true).
+POPULATIONS = ("viewer", "repository")
+
+#: §5 completeness (trellis `COMPLETENESS`), replacing the boolean `capped_field`. A boolean result
+#: field still reads: true is `lower_bound`, false is `complete`.
+COMPLETENESS = ("complete", "lower_bound", "unknown")
+
+
+def _is_fraction(unit: str) -> bool:
+    """Does this unit say a share rather than a count (trellis `is_fraction`)? Its whole is in its words."""
+    u = " ".join(str(unit or "").lower().split())
+    return u.startswith(("fraction", "ratio", "percent", "share", "proportion")) or "(0-1)" in u or "%" in u
+
+
 class MeasureDeclaration(BaseModel):
-    """One number a function reports. A number never travels without its unit and its as-of."""
+    """One number a function reports. A number never travels without its unit and its as-of.
+
+    `as_of` names the result field saying when the value is of; `run.as_of` names the call's own
+    `as_of` argument (None = when it ran), for a routine whose result carries no time of its own.
+    `completeness_field` names the result field that says the value may be incomplete (one of
+    COMPLETENESS, or a boolean: true = only a lower bound). `capped_field` is its old name, read
+    with a DeprecationWarning. `population` is set when the value is always counted in one
+    population; empty when the caller chooses it or the server default applies."""
     name: str
     unit: str  # in words, plural where it counts things: "tables", "fraction of rows (0-1)"
-    as_of: str  # the result field saying when this was measured, e.g. "asOf"
+    as_of: str  # the result field saying when this was measured, e.g. "asOf"; or run.as_of
     value_field: str  # the result field holding the value; dotted for nested, trailing [] counts a list
     basis: Optional[BasisDeclaration] = None
-    capped_field: str = ""  # the result field that is true when the value is only a lower bound
+    completeness_field: str = ""
+    population: str = ""
+
+    @model_validator(mode="before")
+    @classmethod
+    def _legacy_capped_field(cls, data: Any) -> Any:
+        if isinstance(data, dict) and "capped_field" in data:
+            data = dict(data)
+            capped = data.pop("capped_field")
+            if _words(data.get("completeness_field")) and _words(capped) != _words(data["completeness_field"]):
+                raise ValueError(f"measure '{data.get('name', '')}' declares capped_field and completeness_field: "
+                                 "capped_field is the old word for completeness_field, so declare that only")
+            data["completeness_field"] = capped
+            warnings.warn(f"measure '{data.get('name', '')}': capped_field is deprecated; use completeness_field",
+                          DeprecationWarning, stacklevel=2)
+        return data
+
+    @property
+    def capped_field(self) -> str:
+        """The old name for `completeness_field`. Read-only; warns."""
+        warnings.warn("MeasureDeclaration.capped_field is deprecated; use completeness_field",
+                      DeprecationWarning, stacklevel=2)
+        return self.completeness_field
+
+    @field_validator("population")
+    @classmethod
+    def _population(cls, value: str) -> str:
+        if value and value not in POPULATIONS:
+            raise ValueError(f"population '{value}' is not one of {', '.join(POPULATIONS)}")
+        return value
 
     @model_validator(mode="after")
     def _filled(self) -> "MeasureDeclaration":
@@ -171,6 +235,110 @@ class MeasureDeclaration(BaseModel):
         if empty:
             raise ValueError(f"measure '{self.name}' declares no {', '.join(empty)}: "
                              "a number never travels without its unit and its as-of")
+        if self.basis is not None and _is_fraction(self.unit):
+            raise ValueError(f"measure '{self.name}' declares a basis on a share ('{self.unit}'): "
+                             "its whole is in its unit, so a basis belongs on a count only")
+        return self
+
+
+# ── Result fields (§5 of the report-spec pipeline model), mirrored from trellis-analytics ──
+# The library (egeria-trellis-analytics) authors this vocabulary; pyegeria keeps the same names and
+# meanings without importing it. tests/micro-tests/test_declarations_match_library.py checks every
+# built-in declaration loads in the library when it is installed.
+
+#: What a field is: plain data; a value cell with companions; a pre-built representation; nested
+#: rows of a registered shape.
+FIELD_KINDS = ("data", "cell", "representation", "dataset")
+
+#: The plain field types; `list<T>` and `map<string,T>` take one of them as T.
+FIELD_TYPES = ("string", "int", "float", "fraction", "bool", "datetime", "guid")
+
+#: The companions a value cell may carry.
+CELL_COMPANIONS = ("state", "completeness", "uncertainty", "unit", "as_of", "basis", "provenance", "score",
+                   "population")
+
+_FIELD_NAME = r"[A-Za-z_][A-Za-z0-9_]*"
+_SCALAR = "|".join(FIELD_TYPES)
+_FIELD_TYPE = re.compile(rf"(?:{_SCALAR})|list<(?:{_SCALAR})>|map<\s*string\s*,\s*(?:{_SCALAR})\s*>|"
+                         rf"representation/[A-Za-z0-9_.+-]+")
+
+
+class FieldCompanion(BaseModel):
+    """A companion a cell carries, optionally narrowed to a named state set or a list of values."""
+    name: str
+    valid_values: Optional[Union[str, List[str]]] = None
+
+
+class FieldDeclaration(BaseModel):
+    """One field of a result (trellis `Field`). `name` is the result key (an identifier; a dot is a
+    path, never part of a name), `label` the column name a person reads. A `cell` is a value with
+    companions; a `dataset` is nested rows of the registered shape it names (ROW_SHAPES)."""
+    name: str
+    label: str = ""
+    kind: Literal["data", "cell", "representation", "dataset"] = "data"
+    type: str = ""
+    unit: str = ""
+    detail_spec: str = ""
+    valid_values: Optional[Union[str, List[str]]] = None
+    shape: str = ""
+    companions: Optional[List[Union[str, FieldCompanion]]] = None
+    format: str = ""
+    measure: str = ""
+
+    @model_validator(mode="after")
+    def _shape(self) -> "FieldDeclaration":
+        label = f"field '{self.name}'"
+        if not re.fullmatch(_FIELD_NAME, self.name or ""):
+            raise ValueError(f"{label} is not an identifier: a dot is a path, never part of a name")
+        if not _words(self.label) and self.kind != "representation":
+            raise ValueError(f"{label} declares no label: say the column name a person reads")
+        if self.kind == "dataset":
+            if not _words(self.shape) or _words(self.type):
+                raise ValueError(f"{label} is a dataset: it names a shape and no type")
+        else:
+            if _words(self.shape):
+                raise ValueError(f"{label} names a shape and is a '{self.kind}' field: a shape belongs to a dataset")
+            if not _FIELD_TYPE.fullmatch(self.type or ""):
+                raise ValueError(f"{label} type '{self.type}' is not a field type ({', '.join(FIELD_TYPES)}, "
+                                 "list<T>, map<string,T>, representation/<format>)")
+            if self.type.startswith("representation/") != (self.kind == "representation"):
+                raise ValueError(f"{label}: a representation field, and only one, has type representation/<format>")
+        if self.companions is not None:
+            if self.kind != "cell":
+                raise ValueError(f"{label} declares companions and is a '{self.kind}' field: companions belong to a cell")
+            names = [c if isinstance(c, str) else c.name for c in self.companions]
+            unknown = [n for n in names if n not in CELL_COMPANIONS]
+            if unknown or len(set(names)) != len(names):
+                raise ValueError(f"{label} companions {names} must be distinct cell companions "
+                                 f"({', '.join(CELL_COMPANIONS)})")
+        return self
+
+
+class CategoriesDeclaration(BaseModel):
+    """How a distribution's or graph's categories relate (trellis `CategoriesDeclaration`): exclusive
+    when one item falls in exactly one category; `sums_to` names the field holding the stated total."""
+    exclusive: bool
+    sums_to: str = ""
+
+    @model_validator(mode="after")
+    def _sums(self) -> "CategoriesDeclaration":
+        if _words(self.sums_to) and not self.exclusive:
+            raise ValueError("categories that overlap cannot sum to a total: leave sums_to out or declare exclusive")
+        return self
+
+
+class ListDeclaration(BaseModel):
+    """A list result's items (trellis `ListDeclaration`): the fields a row shows, the order in words,
+    and the field that makes an item one item."""
+    item_fields: List[str]
+    order: str
+    key_field: str
+    item_label: str = ""
+
+    @model_validator(mode="after")
+    def _filled(self) -> "ListDeclaration":
+        if not [f for f in self.item_fields if _words(f)] or not _words(self.order) or not _words(self.key_field):
+            raise ValueError("a list declares its item_fields, its order in words and its key_field")
         return self
 
 
@@ -205,10 +373,17 @@ class AbsenceSentences(BaseModel):
 
 class AnalyticDeclaration(BaseModel):
     """What an analytic function declares about its results: the minimum is `result_kind`,
-    `measures` (required for measure/series/distribution/graph) and `absence`."""
+    `measures` (required for measure/series/distribution/graph) and `absence`.
+
+    `out` lists the result's fields (for a list or series, the fields of one row). `categories`
+    belongs to a distribution or graph and `listing` to a list, as in trellis-analytics; this model
+    accepts a declaration without them, and the built-ins all carry them."""
     result_kind: str
     measures: List[MeasureDeclaration] = Field(default_factory=list)
     absence: AbsenceSentences
+    categories: Optional[CategoriesDeclaration] = None
+    listing: Optional[ListDeclaration] = None
+    out: List[FieldDeclaration] = Field(default_factory=list)
 
     @field_validator("result_kind")
     @classmethod
@@ -295,6 +470,73 @@ def _strict() -> AnalyticParam:
                                      "(query failed, or the fallback hit the page-size cap). ISSUE-123.")
 
 
+def _population() -> AnalyticParam:
+    return AnalyticParam(name="population", type="str",
+                         description="viewer (what the caller may see) or repository (whole repository, "
+                                     "fast; native count only). Omit for the server default.")
+
+
+# ── Declaration literals (RS-W2-1a). Short builders so each entry below reads as its declaration. ──
+# `as_of="run.as_of"` names the call's own as_of argument (None = when it ran): these routines'
+# results carry no time of their own.
+
+RUN_AS_OF = "run.as_of"
+
+
+def _measure(name: str, unit: str, value_field: str, as_of: str = RUN_AS_OF, **kw: Any) -> MeasureDeclaration:
+    return MeasureDeclaration(name=name, unit=unit, as_of=as_of, value_field=value_field, **kw)
+
+
+def _basis(denominator_field: str, denominator_label: str) -> BasisDeclaration:
+    return BasisDeclaration(denominator_field=denominator_field, denominator_label=denominator_label)
+
+
+def _field(name: str, label: str, type: str = "", kind: str = "data", **kw: Any) -> FieldDeclaration:
+    return FieldDeclaration(name=name, label=label, type=type, kind=kind, **kw)
+
+
+def _absence(not_measured: str, not_permitted: str, not_applicable: str, nothing_found: str) -> AbsenceSentences:
+    return AbsenceSentences(not_measured=not_measured, not_permitted=not_permitted,
+                            not_applicable=not_applicable, nothing_found=nothing_found)
+
+
+def _always_applies(what: str) -> str:
+    """The not_applicable sentence for a routine with no input that could make it not apply."""
+    return (f"{what} applies to every catalog, so this routine never reports it as not applicable; "
+            "seeing this means the result was labelled wrongly.")
+
+
+#: Row shapes the built-in declarations name from a `dataset` field (trellis registered shapes).
+ROW_SHAPES: Dict[str, List[FieldDeclaration]] = {
+    "TypeCount": [
+        _field("label", "Label", "string"),
+        _field("type", "Type", "string"),
+        _field("count", "Count", "int", unit="elements"),
+    ],
+    "ZoneCount": [
+        _field("zone", "Zone", "string"),
+        _field("count", "Elements", "int", unit="elements"),
+    ],
+    "ExpiringCertification": [
+        _field("name", "Certification", "string"),
+        _field("days", "Days left", "int", unit="days"),
+    ],
+    "CompositionRow": [
+        _field("type_name", "Type", "string"),
+        _field("parent", "Parent", "string"),
+        _field("level", "Level", "int"),
+        _field("exact_type", "Exactly the parent type", "bool"),
+        _field("subtypes_error", "Subtypes not read", "string"),
+        _field("viewer", "Viewer count", "int", kind="cell", unit="elements",
+               companions=["state", "completeness", "as_of", "population"], measure="viewer_count"),
+        _field("repository", "Repository count", "int", kind="cell", unit="elements",
+               companions=["state", "completeness", "as_of", "population"], measure="repository_count"),
+        _field("not_visible", "Not visible to you", "int", kind="cell", unit="elements",
+               companions=["state"], measure="not_visible"),
+    ],
+}
+
+
 # ── Built-ins -- every analytic function already proven live via the Overview
 # dashboard's /api/overview/* endpoints (overview_handler.py), just not yet
 # reachable from a Dr.Egeria report spec. ──────────────────────────────────
@@ -302,7 +544,11 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
     "count_elements": AnalyticFunctionSpec(
         name="count_elements",
         function="pyegeria.view.overview_metrics.count_elements",
-        description="Count active elements of a given type, optionally filtered by classification.",
+        description="Count active elements of a given type, optionally filtered by classification. "
+                    "Cost: one native count, sub-second in the repository population (0.2-0.8 s "
+                    "measured); a viewer-population count reads every element and can take minutes "
+                    "for a large type (Process: 120 s); a server with no native count falls back to "
+                    "a capped find.",
         returns="scalar (int)",
         generic=True,
         params=[
@@ -312,13 +558,29 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
             _strict(),
             AnalyticParam(name="classifications", type="list[str]",
                           description="Match ANY of these classification names."),
+            _population(),
         ],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            measures=[_measure("elements", "elements", "value")],
+            absence=_absence(
+                not_measured="The elements were not counted: the count query failed, or the server "
+                             "could not answer it in the population asked for.",
+                not_permitted="You are not permitted to count these elements.",
+                not_applicable="This count does not apply: the type named is not an element type "
+                               "the server knows.",
+                nothing_found="Counted: there are no active elements of this type with these "
+                              "classifications.",
+            ),
+            out=[_field("value", "Elements", "int", unit="elements")],
+        ),
     ),
     "counts_by_type": AnalyticFunctionSpec(
         name="counts_by_type",
         function="pyegeria.view.overview_metrics.counts_by_type",
         description="Per-type element counts for a set of (label, type_name) pairs -- a breakdown/"
-                    "composition metric, e.g. the assets-by-type chart.",
+                    "composition metric, e.g. the assets-by-type chart. "
+                    "Cost: one native count per type, sub-second each in the repository population; a viewer-population count can take minutes for a large type.",
         returns="list[dict] (breakdown: {label, type, count})",
         generic=True,
         params=[
@@ -326,18 +588,66 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                           description="(label, type_name) pairs to count, e.g. [('Data Stores', 'DataStore'), ...]."),
             _as_of(),
             _strict(),
+            _population(),
         ],
+        declaration=AnalyticDeclaration(
+            result_kind="distribution",
+            measures=[_measure("count", "elements", "count")],
+            # The caller picks the types; a supertype and its subtype may both be listed.
+            categories=CategoriesDeclaration(exclusive=False),
+            absence=_absence(
+                not_measured="The types were not counted: the count queries failed, or the server "
+                             "could not answer them in the population asked for.",
+                not_permitted="You are not permitted to count elements of these types.",
+                not_applicable="A breakdown by type does not apply: no types were given to count.",
+                nothing_found="Counted: there are no active elements of any of these types.",
+            ),
+            out=ROW_SHAPES["TypeCount"],
+        ),
     ),
     "governed_coverage": AnalyticFunctionSpec(
         name="governed_coverage",
         function="pyegeria.view.overview_metrics.governed_coverage",
         description="Share of assets carrying at least one governance classification, plus a "
-                    "by-classification / top-zones breakdown.",
+                    "by-classification / top-zones breakdown. "
+                    "Cost: one capped find (one page of elements), seconds.",
         returns="dict (governedCount, governedCapped, byClassification, topZones)",
         generic=False,
         binding_note="Fixed to GOVERNANCE_CLASSIFICATIONS: ZoneMembership, Confidentiality, "
                      "Criticality, Impact, Retention -- not a parameter.",
         params=[_as_of()],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            # The find is not restricted to Asset: these count elements of any type.
+            measures=[
+                _measure("governed_elements", "elements of any type carrying at least one of the five "
+                         "governance classifications", "governedCount",
+                         completeness_field="governedCapped", population="viewer"),
+                _measure("fully_governed", "elements carrying Confidentiality, Criticality, Impact or "
+                         "Retention", "fullyGoverned", completeness_field="governedCapped", population="viewer",
+                         basis=_basis("governedCount", "governed elements")),
+                _measure("zone_only", "elements carrying ZoneMembership and no other governance "
+                         "classification", "partialZoneOnly", completeness_field="governedCapped",
+                         population="viewer", basis=_basis("governedCount", "governed elements")),
+            ],
+            absence=_absence(
+                not_measured="Governance coverage was not measured: the find of classified elements failed.",
+                not_permitted="You are not permitted to read the classified elements, so governance "
+                              "coverage was not measured.",
+                not_applicable=_always_applies("Governance coverage"),
+                nothing_found="Counted: no active element carries any of the five governance "
+                              "classifications (ZoneMembership, Confidentiality, Criticality, Impact, "
+                              "Retention).",
+            ),
+            out=[
+                _field("governedCount", "Governed elements", "int", unit="elements"),
+                _field("governedCapped", "At least (page cap reached)", "bool"),
+                _field("fullyGoverned", "Fully governed", "int", unit="elements"),
+                _field("partialZoneOnly", "Zone only", "int", unit="elements"),
+                _field("byClassification", "By classification", "map<string,int>", unit="elements"),
+                _field("topZones", "Top zones", kind="dataset", shape="ZoneCount"),
+            ],
+        ),
     ),
     "ownership_coverage": AnalyticFunctionSpec(
         name="ownership_coverage",
@@ -346,11 +656,29 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                     "responsible for management/governance decisions), plus a by-owner-type "
                     "breakdown. Distinct from governed_coverage -- data mesh literature names "
                     "'clean, owned, product-based data' as its own foundation for trustworthy "
-                    "AI consumption, not a synonym for governance-classification coverage.",
+                    "AI consumption, not a synonym for governance-classification coverage. "
+                    "Cost: one capped find (one page of elements), seconds.",
         returns="dict (ownershipCount, ownershipCapped, byOwnerType)",
         generic=False,
         binding_note="Fixed to the Ownership classification -- not a parameter.",
         params=[_as_of()],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            measures=[_measure("owned_elements", "elements of any type carrying an Ownership classification",
+                               "ownershipCount", completeness_field="ownershipCapped", population="viewer")],
+            absence=_absence(
+                not_measured="Ownership coverage was not measured: the find of owned elements failed.",
+                not_permitted="You are not permitted to read the owned elements, so ownership coverage "
+                              "was not measured.",
+                not_applicable=_always_applies("Ownership coverage"),
+                nothing_found="Counted: no active element carries an Ownership classification.",
+            ),
+            out=[
+                _field("ownershipCount", "Owned elements", "int", unit="elements"),
+                _field("ownershipCapped", "At least (page cap reached)", "bool"),
+                _field("byOwnerType", "By owner type", "map<string,int>", unit="elements"),
+            ],
+        ),
     ),
     "business_value_signals": AnalyticFunctionSpec(
         name="business_value_signals",
@@ -359,62 +687,210 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                     "(Risk & Compliance, Productivity, Trust & Adoption, Cost Avoidance): "
                     "Confidentiality-classified asset count, described-asset count, "
                     "ConsolidatedDuplicate-flagged element count -- all proxies with a "
-                    "documented causal-claim caveat, not direct measures (NEXT-9).",
+                    "documented causal-claim caveat, not direct measures (NEXT-9). "
+                    "Cost: one capped Asset find plus one count, seconds.",
         returns="dict (assetTotal, assetCapped, confidentialCount, describedCount, duplicateCount)",
         generic=False,
         binding_note="Fixed to the Asset type hierarchy and Confidentiality/ConsolidatedDuplicate "
                      "classifications -- not a parameter.",
-        params=[_as_of()],
+        params=[_as_of(), _population()],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            measures=[
+                _measure("assets_read", "Assets", "assetTotal", completeness_field="assetCapped",
+                         population="viewer"),
+                _measure("confidential_assets", "Assets carrying a Confidentiality classification",
+                         "confidentialCount", completeness_field="assetCapped", population="viewer",
+                         basis=_basis("assetTotal", "Assets read")),
+                _measure("described_assets", "Assets with a description", "describedCount",
+                         completeness_field="assetCapped", population="viewer",
+                         basis=_basis("assetTotal", "Assets read")),
+                _measure("duplicate_elements", "elements of any type carrying ConsolidatedDuplicate",
+                         "duplicateCount"),
+            ],
+            absence=_absence(
+                not_measured="The business-value signals were not measured: the Asset find or the "
+                             "duplicate count failed.",
+                not_permitted="You are not permitted to read the Assets, so the business-value "
+                              "signals were not measured.",
+                not_applicable=_always_applies("The business-value signals"),
+                nothing_found="Counted: there are no active Assets and no elements marked as duplicates.",
+            ),
+            out=[
+                _field("assetTotal", "Assets read", "int", unit="Assets"),
+                _field("assetCapped", "At least (page cap reached)", "bool"),
+                _field("confidentialCount", "Confidential Assets", "int", unit="Assets"),
+                _field("describedCount", "Described Assets", "int", unit="Assets"),
+                _field("duplicateCount", "Duplicates", "int", unit="elements"),
+            ],
+        ),
     ),
     "certifications_summary": AnalyticFunctionSpec(
         name="certifications_summary",
         function="pyegeria.view.overview_metrics.certifications_summary",
-        description="Active/expiring Certification relationships, licenses, and open Exception counts.",
+        description="Active/expiring Certification relationships, licenses, and open Exception counts. "
+                    "Cost: three capped relationship pages, seconds.",
         returns="dict (active, expiring90, soon, licenses, exceptions)",
         generic=False,
         binding_note="Fixed to the Certification and Exception relationship types -- not a parameter.",
         params=[_as_of()],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            # Each count is one get_relationships page (DEFAULT_CAP), with no completeness flag.
+            measures=[
+                _measure("certifications", "Certification relationships", "active", population="viewer"),
+                _measure("expiring_certifications", "Certification relationships ending within 90 days",
+                         "expiring90", population="viewer", basis=_basis("active", "certifications")),
+                _measure("licenses", "License relationships", "licenses", population="viewer"),
+                _measure("exceptions", "Exception relationships", "exceptions", population="viewer"),
+            ],
+            absence=_absence(
+                not_measured="Certifications were not measured: the relationship queries failed.",
+                not_permitted="You are not permitted to read certifications, licenses or exceptions.",
+                not_applicable=_always_applies("A certification summary"),
+                nothing_found="Counted: there are no active certifications, licenses or exceptions.",
+            ),
+            out=[
+                _field("active", "Certifications", "int", unit="relationships"),
+                _field("expiring90", "Ending within 90 days", "int", unit="relationships"),
+                _field("soon", "Ending soonest", kind="dataset", shape="ExpiringCertification"),
+                _field("licenses", "Licenses", "int", unit="relationships"),
+                _field("exceptions", "Exceptions", "int", unit="relationships"),
+            ],
+        ),
     ),
     "people_counts": AnalyticFunctionSpec(
         name="people_counts",
         function="pyegeria.view.overview_metrics.people_counts",
-        description="Counts of Person / Team / Organization / ITProfile / Community actor profiles.",
+        description="Counts of Person / Team / Organization / ITProfile / Community actor profiles. "
+                    "Cost: five native counts, sub-second each in the repository population.",
         returns="dict (persons, teams, organizations, itProfiles, communities)",
         generic=False,
         binding_note="Fixed to Person/Team/Organization/ITProfile/Community -- not a parameter.",
-        params=[_as_of(), _strict()],
+        params=[_as_of(), _strict(), _population()],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            measures=[
+                _measure("persons", "Person profiles", "persons"),
+                _measure("teams", "Team profiles", "teams"),
+                _measure("organizations", "Organization profiles", "organizations"),
+                _measure("it_profiles", "ITProfile profiles", "itProfiles"),
+                _measure("communities", "Community profiles", "communities"),
+            ],
+            absence=_absence(
+                not_measured="The actor profiles were not counted: the count queries failed, or the "
+                             "server could not answer them in the population asked for.",
+                not_permitted="You are not permitted to count actor profiles.",
+                not_applicable=_always_applies("Counting actor profiles"),
+                nothing_found="Counted: there are no active Person, Team, Organization, ITProfile or "
+                              "Community profiles.",
+            ),
+            out=[
+                _field("persons", "People", "int", unit="profiles"),
+                _field("teams", "Teams", "int", unit="profiles"),
+                _field("organizations", "Organizations", "int", unit="profiles"),
+                _field("itProfiles", "IT profiles", "int", unit="profiles"),
+                _field("communities", "Communities", "int", unit="profiles"),
+            ],
+        ),
     ),
     "feedback_summary": AnalyticFunctionSpec(
         name="feedback_summary",
         function="pyegeria.view.overview_metrics.feedback_summary",
         description="Crowd-sourced feedback counts (ratings/comments/likes/tags/noteLogs) by type, "
-                    "via Collaboration OMAS relationships.",
+                    "via Collaboration OMAS relationships. "
+                    "Cost: five relationship pages (native counts when an expert client is passed), seconds.",
         returns="dict (byType, total)",
         generic=False,
         binding_note="Fixed to Collaboration OMAS's feedback relationship types -- not a parameter.",
-        params=[_as_of()],
+        params=[_as_of(), _population()],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            measures=[
+                _measure("feedback", "feedback relationships", "total"),
+                _measure("ratings", "AttachedRating relationships", "byType.ratings"),
+                _measure("comments", "AttachedComment relationships", "byType.comments"),
+                _measure("likes", "AttachedLike relationships", "byType.likes"),
+                _measure("tags", "AttachedTag relationships", "byType.tags"),
+                _measure("note_logs", "AttachedNoteLog relationships", "byType.noteLogs"),
+            ],
+            absence=_absence(
+                not_measured="Feedback was not counted: a relationship query failed, or a repository "
+                             "count was asked for without a native count to answer it.",
+                not_permitted="You are not permitted to read feedback relationships.",
+                not_applicable=_always_applies("A feedback summary"),
+                nothing_found="Counted: nothing in the catalog has been rated, commented on, liked, "
+                              "tagged or given a note log.",
+            ),
+            out=[
+                _field("total", "Feedback", "int", unit="relationships"),
+                _field("byType", "By type", "map<string,int>", unit="relationships"),
+            ],
+        ),
     ),
     "usage_context_counts": AnalyticFunctionSpec(
         name="usage_context_counts",
         function="pyegeria.view.overview_metrics.usage_context_counts",
         description="InformationSupplyChain and SolutionBlueprint counts -- the two structures that "
                     "put assets in a business usage context (supply chain membership, blueprint "
-                    "realization).",
+                    "realization). "
+                    "Cost: two native counts, sub-second each in the repository population.",
         returns="dict (informationSupplyChains, blueprints)",
         generic=False,
         binding_note="Fixed to InformationSupplyChain and SolutionBlueprint -- not a parameter.",
-        params=[_as_of(), _strict()],
+        params=[_as_of(), _strict(), _population()],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            measures=[
+                _measure("supply_chains", "InformationSupplyChain elements", "informationSupplyChains"),
+                _measure("blueprints", "SolutionBlueprint elements", "blueprints"),
+            ],
+            absence=_absence(
+                not_measured="Supply chains and blueprints were not counted: the count queries failed, "
+                             "or the server could not answer them in the population asked for.",
+                not_permitted="You are not permitted to count supply chains or blueprints.",
+                not_applicable=_always_applies("Counting supply chains and blueprints"),
+                nothing_found="Counted: there are no active information supply chains or solution "
+                              "blueprints.",
+            ),
+            out=[
+                _field("informationSupplyChains", "Information supply chains", "int", unit="elements"),
+                _field("blueprints", "Solution blueprints", "int", unit="elements"),
+            ],
+        ),
     ),
     "semantic_grounding": AnalyticFunctionSpec(
         name="semantic_grounding",
         function="pyegeria.view.overview_metrics.semantic_grounding",
         description="SemanticAssignment relationship count and coverage percent -- the meaning layer "
                     "that grounds AI. Takes two leading clients (mgr, ce) -- the executor supplies the "
-                    "same EgeriaTech instance for both.",
+                    "same EgeriaTech instance for both. "
+                    "Cost: one count plus one capped relationship page, seconds.",
         returns="dict (groundingLinks, groundingPct)",
         generic=False,
         binding_note="Fixed to the SemanticAssignment relationship type -- not a parameter.",
         params=[_as_of()],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            measures=[
+                _measure("grounding_links", "SemanticAssignment relationships", "groundingLinks",
+                         population="viewer"),
+                # links / Assets, not the share of Assets with a link: one Asset may carry several.
+                _measure("grounding_percent", "percent: SemanticAssignment links per hundred Assets, "
+                         "at most 100", "groundingPct"),
+            ],
+            absence=_absence(
+                not_measured="Semantic grounding was not measured: the relationship query failed or "
+                             "there was no Asset count to divide by.",
+                not_permitted="You are not permitted to read the semantic assignments.",
+                not_applicable=_always_applies("Semantic grounding"),
+                nothing_found="Counted: no glossary term is assigned to anything.",
+            ),
+            out=[
+                _field("groundingLinks", "Grounding links", "int", unit="relationships"),
+                _field("groundingPct", "Links per hundred Assets", "int", unit="percent"),
+            ],
+        ),
     ),
     "context_readiness_funnel": AnalyticFunctionSpec(
         name="context_readiness_funnel",
@@ -424,11 +900,39 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                     "instance for both, matching semantic_grounding's convention. This function's own "
                     "aiReady stays None always by design -- it's four independent counts, and aiReady "
                     "needs a true cross-criteria intersection instead. Pair with ai_ready_assets "
-                    "(below) for that -- overview_handler.py calls both and merges the result.",
+                    "(below) for that -- overview_handler.py calls both and merges the result. "
+                    "Cost: two counts, one capped Asset find and one relationship page, seconds.",
         returns="dict (cataloged, documented, classified, lineage, aiReady)",
         generic=False,
         binding_note="Fixed 5-stage readiness definition baked into the function body -- not a parameter.",
         params=[_as_of()],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            # Four independent counts over different populations, not nested stages of one set.
+            measures=[
+                _measure("cataloged", "Assets", "cataloged"),
+                _measure("documented", "Assets with a description, among those one capped find returned",
+                         "documented", population="viewer"),
+                _measure("classified", "elements of any type carrying a governance classification",
+                         "classified"),
+                _measure("lineage", "DataFlow relationships", "lineage", population="viewer"),
+            ],
+            absence=_absence(
+                not_measured="The readiness funnel was not measured: its counts or the Asset find failed.",
+                not_permitted="You are not permitted to read the Assets, so the readiness funnel was "
+                              "not measured.",
+                not_applicable=_always_applies("The readiness funnel"),
+                nothing_found="Counted: there are no active Assets, governed elements or DataFlow "
+                              "relationships.",
+            ),
+            out=[
+                _field("cataloged", "Cataloged", "int", unit="Assets"),
+                _field("documented", "Documented", "int", unit="Assets"),
+                _field("classified", "Classified", "int", unit="elements"),
+                _field("lineage", "Lineage-traced", "int", unit="relationships"),
+                _field("aiReady", "AI-ready (always empty here; see ai_ready_assets)", "int", unit="Assets"),
+            ],
+        ),
     ),
     "ai_ready_assets": AnalyticFunctionSpec(
         name="ai_ready_assets",
@@ -438,18 +942,91 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                     "the fact. First real implementation of the composite/derived analytic metric "
                     "pattern -- see NEXT-18 (egeria-workspaces BACKLOG.md) for why this pattern didn't "
                     "exist here before. Takes two leading clients (mgr, ce), same convention as "
-                    "semantic_grounding/context_readiness_funnel.",
+                    "semantic_grounding/context_readiness_funnel. "
+                    "Cost: one capped Asset find plus one capped DataFlow relationship page, seconds.",
         returns="dict (aiReadyCount, total, capped)",
         generic=False,
         binding_note="Fixed to governed+documented+lineage-traced over Asset elements -- not a parameter.",
         params=[_as_of()],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            measures=[
+                _measure("assets_checked", "Assets", "total", completeness_field="capped", population="viewer"),
+                _measure("ai_ready_assets", "Assets that are governed, documented and lineage-traced",
+                         "aiReadyCount", completeness_field="capped", population="viewer",
+                         basis=_basis("total", "Assets checked")),
+            ],
+            absence=_absence(
+                not_measured="AI readiness was not measured: the Asset find or the DataFlow query failed.",
+                not_permitted="You are not permitted to read the Assets, so AI readiness was not measured.",
+                not_applicable=_always_applies("AI readiness"),
+                nothing_found="Checked: there are no active Assets to assess.",
+            ),
+            out=[
+                _field("aiReadyCount", "AI-ready Assets", "int", unit="Assets"),
+                _field("total", "Assets checked", "int", unit="Assets"),
+                _field("capped", "At least (page cap reached)", "bool"),
+            ],
+        ),
+    ),
+    "drl_readiness_gates": AnalyticFunctionSpec(
+        name="drl_readiness_gates",
+        function="pyegeria.view.overview_metrics.drl_readiness_gates",
+        description="A recency-narrowed view of ai_ready_assets plus a modality breakdown "
+                    "(tabular / text_media / other) of the Asset population -- the two Data "
+                    "Readiness Level pieces computable today. Not a DRL band distribution: "
+                    "Analytics-Ready and RAG-Ready are deliberately absent until their gates exist. "
+                    "Takes two leading clients (mgr, ce). Cost: one capped Asset find and one capped "
+                    "DataFlow relationship page, seconds.",
+        returns="dict (total, capped, aiReadyCount, aiReadyRecentCount, byModality)",
+        generic=False,
+        binding_note="Fixed to governed+documented+lineage-traced Asset elements and the "
+                     "asset_modality type lists -- recency_days tunes the window, not what is measured.",
+        params=[
+            _as_of(),
+            AnalyticParam(name="recency_days", type="int", default=180,
+                          description="Provisional recency window, in days (not yet a decided band threshold)."),
+        ],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            measures=[
+                _measure("assets_checked", "Assets", "total", completeness_field="capped", population="viewer"),
+                _measure("ai_ready_assets", "Assets that are governed, documented and lineage-traced",
+                         "aiReadyCount", completeness_field="capped", population="viewer",
+                         basis=_basis("total", "Assets checked")),
+                _measure("ai_ready_recent_assets", "AI-ready Assets updated within recency_days",
+                         "aiReadyRecentCount", completeness_field="capped", population="viewer",
+                         basis=_basis("aiReadyCount", "AI-ready Assets")),
+                _measure("tabular_assets", "tabular Assets", "byModality.tabular",
+                         completeness_field="capped", population="viewer", basis=_basis("total", "Assets checked")),
+                _measure("text_media_assets", "text and media Assets", "byModality.text_media",
+                         completeness_field="capped", population="viewer", basis=_basis("total", "Assets checked")),
+                _measure("other_assets", "Assets of other modalities", "byModality.other",
+                         completeness_field="capped", population="viewer", basis=_basis("total", "Assets checked")),
+            ],
+            absence=_absence(
+                not_measured="Readiness gates were not measured: the Asset find or the DataFlow query failed.",
+                not_permitted="You are not permitted to read the Assets, so the readiness gates were "
+                              "not measured.",
+                not_applicable=_always_applies("The readiness gates"),
+                nothing_found="Checked: there are no active Assets to assess.",
+            ),
+            out=[
+                _field("total", "Assets checked", "int", unit="Assets"),
+                _field("capped", "At least (page cap reached)", "bool"),
+                _field("aiReadyCount", "AI-ready Assets", "int", unit="Assets"),
+                _field("aiReadyRecentCount", "AI-ready and recent", "int", unit="Assets"),
+                _field("byModality", "By modality", "map<string,int>", unit="Assets"),
+            ],
+        ),
     ),
     "growth_series": AnalyticFunctionSpec(
         name="growth_series",
         function="pyegeria.view.overview_metrics.growth_series",
         description="Snapshot-based growth series (assets/terms/governed/products by default) via "
                     "asOfTime, one point per window step. The one shape SERIES output format "
-                    "(a Vega-Lite line chart) is proven against today.",
+                    "(a Vega-Lite line chart) is proven against today. "
+                    "Cost: one count per series per snapshot (four series by default), seconds to tens of seconds.",
         returns="list[dict] (time series: {label, date, <series_key>: count, ...})",
         generic=True,
         binding_note="type_map defaults to assets/terms/governed/products but is fully overridable.",
@@ -461,28 +1038,106 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
             AnalyticParam(name="type_map", type="list[tuple[str, str, list[str] | None]]",
                           description="Override which series to snapshot; defaults to assets/terms/governed/products."),
         ],
+        declaration=AnalyticDeclaration(
+            result_kind="series",
+            # One row per snapshot, oldest first; the measures are the default type_map's keys.
+            measures=[
+                _measure("assets", "Assets", "assets", as_of="date"),
+                _measure("terms", "GlossaryTerm elements", "terms", as_of="date"),
+                _measure("governed", "elements of any type carrying a governance classification",
+                         "governed", as_of="date"),
+                _measure("products", "DigitalProduct elements", "products", as_of="date"),
+            ],
+            absence=_absence(
+                not_measured="The growth series was not measured: the snapshot counts failed.",
+                not_permitted="You are not permitted to count these elements, so the growth series "
+                              "was not measured.",
+                not_applicable="A growth series does not apply to this window: it needs at least two "
+                               "snapshots.",
+                nothing_found="Counted: there were no elements of these types at any snapshot in the window.",
+            ),
+            out=[
+                _field("label", "Snapshot", "string"),
+                _field("date", "Date", "string"),
+                _field("assets", "Assets", "int", unit="Assets"),
+                _field("terms", "Terms", "int", unit="elements"),
+                _field("governed", "Governed", "int", unit="elements"),
+                _field("products", "Products", "int", unit="elements"),
+            ],
+        ),
     ),
     "term_definition_completeness": AnalyticFunctionSpec(
         name="term_definition_completeness",
         function="pyegeria.view.overview_metrics.term_definition_completeness",
         description="Share of GlossaryTerms carrying a non-empty description -- a definitions-"
                     "coverage metric, distinct from semantic_grounding (term<->asset linkage, not "
-                    "whether the term itself is actually defined).",
+                    "whether the term itself is actually defined). "
+                    "Cost: one capped find, seconds.",
         returns="dict (total, defined, undefinedPct)",
         generic=False,
         binding_note="Fixed to GlossaryTerm's description property -- not a parameter.",
         params=[_as_of()],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            # One capped find; the result carries no flag saying the page cap was reached.
+            measures=[
+                _measure("terms_read", "GlossaryTerm elements, among those one capped find returned", "total",
+                         population="viewer"),
+                _measure("defined_terms", "GlossaryTerm elements with a description", "defined",
+                         population="viewer", basis=_basis("total", "terms read")),
+                _measure("undefined_percent", "percent of terms read without a description (0-100)",
+                         "undefinedPct"),
+            ],
+            absence=_absence(
+                not_measured="Term definitions were not measured: the find of glossary terms failed.",
+                not_permitted="You are not permitted to read the glossary terms.",
+                not_applicable=_always_applies("Term definition completeness"),
+                nothing_found="Read: there are no active glossary terms.",
+            ),
+            out=[
+                _field("total", "Terms read", "int", unit="elements"),
+                _field("defined", "Defined", "int", unit="elements"),
+                _field("undefinedPct", "Undefined", "int", unit="percent"),
+            ],
+        ),
     ),
     "active_contributors": AnalyticFunctionSpec(
         name="active_contributors",
         function="pyegeria.view.overview_metrics.active_contributors",
         description="Distinct usernames behind at least one feedback relationship (ratings/comments/"
                     "likes/tags/noteLogs) -- an engagement signal feedback_summary's raw relationship "
-                    "counts don't give you (one prolific commenter vs. many occasional ones).",
+                    "counts don't give you (one prolific commenter vs. many occasional ones). "
+                    "Cost: five capped relationship pages, seconds.",
         returns="dict (contributors, byType)",
         generic=False,
         binding_note="Fixed to Collaboration OMAS's feedback relationship types -- not a parameter.",
         params=[_as_of()],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            # Users who attached feedback, read from relationship audit headers (createdBy).
+            measures=[
+                _measure("contributors", "distinct users who attached feedback", "contributors",
+                         population="viewer"),
+                _measure("raters", "distinct users who attached a rating", "byType.ratings", population="viewer"),
+                _measure("commenters", "distinct users who attached a comment", "byType.comments",
+                         population="viewer"),
+                _measure("likers", "distinct users who attached a like", "byType.likes", population="viewer"),
+                _measure("taggers", "distinct users who attached a tag", "byType.tags", population="viewer"),
+                _measure("note_loggers", "distinct users who attached a note log", "byType.noteLogs",
+                         population="viewer"),
+            ],
+            absence=_absence(
+                not_measured="Contributors were not counted: a feedback relationship query failed.",
+                not_permitted="You are not permitted to read feedback relationships, so contributors "
+                              "were not counted.",
+                not_applicable=_always_applies("Counting contributors"),
+                nothing_found="Counted: nobody has attached a rating, comment, like, tag or note log.",
+            ),
+            out=[
+                _field("contributors", "Contributors", "int", unit="users"),
+                _field("byType", "By feedback type", "map<string,int>", unit="users"),
+            ],
+        ),
     ),
     "sum_type_counts": AnalyticFunctionSpec(
         name="sum_type_counts",
@@ -493,7 +1148,8 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                     "counts_by_type itself (already registered above, reused as-is), analytic is a "
                     "small sum-reducer over its result; `function` above is the thin composite "
                     "wrapper that runs both via run_analytic_action, so calling it directly (the "
-                    "old, single-function path) still works exactly like every other entry here.",
+                    "old, single-function path) still works exactly like every other entry here. "
+                    "Cost: as counts_by_type: one native count per type.",
         returns="dict (total, byType)",
         generic=True,
         action=AnalyticActionSpec(
@@ -510,6 +1166,20 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                           description="(label, type_name) pairs to count and sum."),
             _as_of(),
         ],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            measures=[_measure("total", "elements", "total")],
+            absence=_absence(
+                not_measured="The total was not counted: the per-type count queries failed.",
+                not_permitted="You are not permitted to count elements of these types.",
+                not_applicable="A total does not apply: no types were given to count.",
+                nothing_found="Counted: there are no active elements of any of these types.",
+            ),
+            out=[
+                _field("total", "Total", "int", unit="elements"),
+                _field("byType", "By type", kind="dataset", shape="TypeCount"),
+            ],
+        ),
     ),
     "count_elements_by_property": AnalyticFunctionSpec(
         name="count_elements_by_property",
@@ -517,7 +1187,8 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         description="Count active elements of a given type whose named string property equals a "
                     "given value -- e.g. DigitalProduct elements with deploymentStatus=ACTIVE. Same "
                     "native-count-with-fallback seam as count_elements, one cheap native COUNT call "
-                    "per distinct value, no element fetch.",
+                    "per distinct value, no element fetch. "
+                    "Cost: one native count, sub-second in the repository population; a viewer-population count can take minutes for a large type.",
         returns="scalar (int)",
         generic=True,
         params=[
@@ -529,7 +1200,51 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                           description="Value to match the property against, e.g. ACTIVE."),
             _as_of(),
             _strict(),
+            _population(),
         ],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            measures=[_measure("elements", "elements", "value")],
+            absence=_absence(
+                not_measured="The elements were not counted: the count query failed, or the server "
+                             "could not answer it in the population asked for.",
+                not_permitted="You are not permitted to count these elements.",
+                not_applicable="This count does not apply: the type or property named is not one "
+                               "the server knows.",
+                nothing_found="Counted: no active element of this type has this property value.",
+            ),
+            out=[_field("value", "Elements", "int", unit="elements")],
+        ),
+    ),
+    "count_relationships": AnalyticFunctionSpec(
+        name="count_relationships",
+        function="pyegeria.view.overview_metrics.count_relationships",
+        description="Count active relationships of one type. By default one capped "
+                    "get_relationships page (the path the rest of the portal uses); a native count "
+                    "when a MetadataExpert is passed as `expert` (opt-in: the two paths can disagree "
+                    "for some types, PY-18). Takes ce as its leading client. Cost: one relationship "
+                    "page, seconds; the native count is sub-second.",
+        returns="scalar (int | None)",
+        generic=True,
+        params=[
+            AnalyticParam(name="relationship_type", type="str", required=True,
+                          description="Relationship type to count, e.g. SemanticAssignment."),
+            _as_of(),
+            _population(),
+        ],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            measures=[_measure("relationships", "relationships", "value")],
+            absence=_absence(
+                not_measured="The relationships were not counted: the query failed, or a "
+                             "repository count was asked for and no native count could answer it.",
+                not_permitted="You are not permitted to read these relationships.",
+                not_applicable="This count does not apply: the relationship type named is not one "
+                               "the server knows.",
+                nothing_found="Counted: there are no active relationships of this type.",
+            ),
+            out=[_field("value", "Relationships", "int", unit="relationships")],
+        ),
     ),
     "contextualised_coverage": AnalyticFunctionSpec(
         name="contextualised_coverage",
@@ -539,18 +1254,73 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                     "an ISC/blueprint' metric -- confirms some solution-design context exists, not "
                     "that the specific SolutionComponent is itself wired into an ISC/blueprint (a "
                     "second hop this function doesn't take). Takes two leading clients (mgr, ce), "
-                    "same convention as semantic_grounding.",
+                    "same convention as semantic_grounding. "
+                    "Cost: one capped relationship page plus one count, seconds.",
         returns="dict (contextualisedCount, assetTotal, contextualisedPct)",
         generic=False,
         binding_note="Fixed to the ImplementedBy relationship, filtered to Asset-subtype ends -- not a parameter.",
         params=[_as_of()],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            measures=[
+                _measure("contextualised_assets", "Assets that implement a SolutionComponent (ImplementedBy)",
+                         "contextualisedCount", population="viewer"),
+                _measure("assets", "Assets", "assetTotal"),
+                _measure("contextualised_percent", "percent of Assets (0-100)", "contextualisedPct"),
+            ],
+            absence=_absence(
+                not_measured="Contextualised coverage was not measured: the ImplementedBy query or the "
+                             "Asset count failed.",
+                not_permitted="You are not permitted to read the ImplementedBy relationships.",
+                not_applicable=_always_applies("Contextualised coverage"),
+                nothing_found="Counted: no Asset implements a solution component.",
+            ),
+            out=[
+                _field("contextualisedCount", "Contextualised Assets", "int", unit="Assets"),
+                _field("assetTotal", "Assets", "int", unit="Assets"),
+                _field("contextualisedPct", "Contextualised", "float", unit="percent"),
+            ],
+        ),
+    ),
+    "solution_component_realisation": AnalyticFunctionSpec(
+        name="solution_component_realisation",
+        function="pyegeria.view.overview_metrics.solution_component_realisation",
+        description="SolutionComponent count and how many of them are realised (have at least one "
+                    "ImplementedBy implementation) -- the Overview's Solution Blueprints drill-down. A "
+                    "single-hop proxy: the implementation need not itself sit in the component's "
+                    "supply chain or blueprint. Takes two leading clients (mgr, ce). Cost: one native "
+                    "count plus one capped ImplementedBy relationship page, seconds.",
+        returns="dict (solutionComponentsTotal, solutionComponentsRealised)",
+        generic=False,
+        binding_note="Fixed to SolutionComponent and the ImplementedBy relationship -- not a parameter.",
+        params=[_as_of()],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            measures=[
+                _measure("solution_components", "SolutionComponent elements", "solutionComponentsTotal"),
+                _measure("realised_components", "SolutionComponents with an ImplementedBy implementation",
+                         "solutionComponentsRealised", population="viewer"),
+            ],
+            absence=_absence(
+                not_measured="Solution component realisation was not measured: the count or the "
+                             "ImplementedBy query failed.",
+                not_permitted="You are not permitted to read solution components or their implementations.",
+                not_applicable=_always_applies("Solution component realisation"),
+                nothing_found="Counted: there are no active solution components.",
+            ),
+            out=[
+                _field("solutionComponentsTotal", "Solution components", "int", unit="elements"),
+                _field("solutionComponentsRealised", "Realised", "int", unit="elements"),
+            ],
+        ),
     ),
     "karma_leaderboard": AnalyticFunctionSpec(
         name="karma_leaderboard",
         function="pyegeria.view.overview_metrics.karma_leaderboard",
         description="Top-N people by karma -- one bounded ContributionRecord fetch, karmaPoints is a "
                     "scalar property on the record itself (not derived from counting related things), "
-                    "filtered to the given anchor type(s) via each record's own Anchors classification.",
+                    "filtered to the given anchor type(s) via each record's own Anchors classification. "
+                    "Cost: one capped find, seconds.",
         returns="list[dict] (name, karmaPoints, anchorGuid, anchorType), longest-karma first",
         generic=False,
         binding_note="Fixed to ContributionRecord.karmaPoints -- top_n and anchor_types tune the "
@@ -561,6 +1331,27 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                           description="Anchor typeName(s) to include, e.g. ['Person', 'ITProfile']."),
             _as_of(),
         ],
+        declaration=AnalyticDeclaration(
+            result_kind="list",
+            measures=[_measure("karma_points", "karma points", "karmaPoints")],
+            listing=ListDeclaration(item_fields=["name", "karmaPoints", "anchorType"],
+                                    order="most karma first", key_field="anchorGuid",
+                                    item_label="contributors"),
+            absence=_absence(
+                not_measured="The leaderboard was not read: the find of contribution records failed.",
+                not_permitted="You are not permitted to read contribution records.",
+                not_applicable="A leaderboard does not apply to these anchor types: no contribution "
+                               "record is anchored to them.",
+                nothing_found="Read: nobody of these anchor types has a contribution record with karma "
+                              "points.",
+            ),
+            out=[
+                _field("name", "Name", "string"),
+                _field("karmaPoints", "Karma points", "int", unit="karma points"),
+                _field("anchorGuid", "Profile", "guid"),
+                _field("anchorType", "Profile type", "string"),
+            ],
+        ),
     ),
     "engagement_series": AnalyticFunctionSpec(
         name="engagement_series",
@@ -568,7 +1359,8 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         description="Weekly-bucketed feedback-event trend (comments/ratings/likes/tags/noteLogs), "
                     "zero-filled across the trailing window -- reuses the same 5 relationship-type "
                     "queries feedback_summary() already makes, keeping createTime instead of only "
-                    "the count. Takes ce as its leading client.",
+                    "the count. Takes ce as its leading client. "
+                    "Cost: five capped relationship pages, seconds.",
         returns="list[dict] (week, comments, ratings, likes, tags, noteLogs, total), oldest week first",
         generic=False,
         binding_note="Fixed to Collaboration OMAS's 5 feedback relationship types -- weeks tunes the window, not what's measured.",
@@ -576,6 +1368,39 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
             AnalyticParam(name="weeks", type="int", default=12, description="Trailing window size, in weeks."),
             _as_of(),
         ],
+        declaration=AnalyticDeclaration(
+            result_kind="series",
+            # One row per ISO week, oldest first, zero-filled; each type is one capped relationship page.
+            measures=[
+                _measure("feedback", "feedback relationships created in the week", "total", as_of="week",
+                         population="viewer"),
+                _measure("comments", "AttachedComment relationships created in the week", "comments",
+                         as_of="week", population="viewer"),
+                _measure("ratings", "AttachedRating relationships created in the week", "ratings",
+                         as_of="week", population="viewer"),
+                _measure("likes", "AttachedLike relationships created in the week", "likes",
+                         as_of="week", population="viewer"),
+                _measure("tags", "AttachedTag relationships created in the week", "tags",
+                         as_of="week", population="viewer"),
+                _measure("note_logs", "AttachedNoteLog relationships created in the week", "noteLogs",
+                         as_of="week", population="viewer"),
+            ],
+            absence=_absence(
+                not_measured="Engagement was not measured: the feedback relationship queries failed.",
+                not_permitted="You are not permitted to read feedback relationships.",
+                not_applicable="An engagement series does not apply to a window of no weeks.",
+                nothing_found="Counted: no feedback was attached in any week of the window.",
+            ),
+            out=[
+                _field("week", "Week", "string"),
+                _field("comments", "Comments", "int", unit="relationships"),
+                _field("ratings", "Ratings", "int", unit="relationships"),
+                _field("likes", "Likes", "int", unit="relationships"),
+                _field("tags", "Tags", "int", unit="relationships"),
+                _field("noteLogs", "Note logs", "int", unit="relationships"),
+                _field("total", "Total", "int", unit="relationships"),
+            ],
+        ),
     ),
     "orphan_glossary_terms": AnalyticFunctionSpec(
         name="orphan_glossary_terms",
@@ -584,18 +1409,42 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                     "relationship to anything was authored but never put to use grounding the "
                     "catalog. One bounded SemanticAssignment fetch, distinct GlossaryTerm-end GUID "
                     "count is the 'referenced' set; orphan = term total - referenced. Takes two "
-                    "leading clients (mgr, ce), same convention as semantic_grounding.",
+                    "leading clients (mgr, ce), same convention as semantic_grounding. "
+                    "Cost: one count plus one capped relationship page, seconds.",
         returns="dict (termTotal, referencedCount, orphanCount)",
         generic=False,
         binding_note="Fixed to the SemanticAssignment relationship type and GlossaryTerm elements -- not a parameter.",
         params=[_as_of()],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            measures=[
+                _measure("terms", "GlossaryTerm elements", "termTotal"),
+                _measure("referenced_terms", "GlossaryTerm elements assigned to something", "referencedCount",
+                         population="viewer"),
+                _measure("orphan_terms", "GlossaryTerm elements assigned to nothing", "orphanCount",
+                         basis=_basis("termTotal", "glossary terms")),
+            ],
+            absence=_absence(
+                not_measured="Orphan terms were not measured: the term count or the SemanticAssignment "
+                             "query failed.",
+                not_permitted="You are not permitted to read the glossary terms or their assignments.",
+                not_applicable=_always_applies("Finding orphan glossary terms"),
+                nothing_found="Counted: every glossary term is assigned to something, or there are no terms.",
+            ),
+            out=[
+                _field("termTotal", "Terms", "int", unit="elements"),
+                _field("referencedCount", "Assigned", "int", unit="elements"),
+                _field("orphanCount", "Orphans", "int", unit="elements"),
+            ],
+        ),
     ),
     "stale_assets": AnalyticFunctionSpec(
         name="stale_assets",
         function="pyegeria.view.overview_metrics.stale_assets",
         description="Assets with no update in the last N days (default 180) -- candidates for "
                     "archival review. One bounded Asset element fetch, each element's own version "
-                    "metadata compared against the cutoff, no relationship traversal.",
+                    "metadata compared against the cutoff, no relationship traversal. "
+                    "Cost: one capped Asset find plus one count, seconds.",
         returns="dict (staleCount, assetTotal)",
         generic=False,
         binding_note="Fixed to the Asset type -- population isn't a parameter, but the staleness threshold (days) is.",
@@ -603,6 +1452,25 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
             AnalyticParam(name="days", type="int", default=180, description="Staleness threshold, in days."),
             _as_of(),
         ],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            # staleCount comes from one capped find, assetTotal from a native count: no basis between them.
+            measures=[
+                _measure("stale_assets", "Assets not updated within `days`, among those one capped find returned",
+                         "staleCount", population="viewer"),
+                _measure("assets", "Assets", "assetTotal"),
+            ],
+            absence=_absence(
+                not_measured="Stale assets were not measured: the Asset find failed.",
+                not_permitted="You are not permitted to read the Assets.",
+                not_applicable=_always_applies("Finding stale assets"),
+                nothing_found="Checked: every Asset read was updated within the threshold, or there are no Assets.",
+            ),
+            out=[
+                _field("staleCount", "Stale Assets", "int", unit="Assets"),
+                _field("assetTotal", "Assets", "int", unit="Assets"),
+            ],
+        ),
     ),
     "metric_trend": AnalyticFunctionSpec(
         name="metric_trend",
@@ -611,7 +1479,8 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                     "re-calling it once per asOfTime snapshot -- the same windowing growth_series "
                     "uses, generalized to any function here instead of one hardcoded type_map. Takes "
                     "two leading clients (mgr, ce) -- the executor supplies the same EgeriaTech "
-                    "instance for both, matching semantic_grounding's convention.",
+                    "instance for both, matching semantic_grounding's convention. "
+                    "Cost: the target routine's cost once per snapshot.",
         returns="list[dict] (time series: {label, date, **snapshot})",
         generic=True,
         params=[
@@ -626,6 +1495,23 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                           description="Extra keyword arguments forwarded to the target function at "
                                        "every snapshot (e.g. classifications for count_elements)."),
         ],
+        declaration=AnalyticDeclaration(
+            result_kind="series",
+            # A row is the target routine's own result fields (a dict merged in) or `value` (anything
+            # else); the target's declaration says what those fields are.
+            measures=[_measure("value", "the target routine's unit", "value", as_of="date")],
+            absence=_absence(
+                not_measured="The trend was not measured: the target routine failed at every snapshot.",
+                not_permitted="You are not permitted to run the target routine, so the trend was not measured.",
+                not_applicable="A trend does not apply: the target routine does not take an as_of time.",
+                nothing_found="Measured: the target routine found nothing at any snapshot in the window.",
+            ),
+            out=[
+                _field("label", "Snapshot", "string"),
+                _field("date", "Date", "string"),
+                _field("value", "Value", "float"),
+            ],
+        ),
     ),
     "asset_composition": AnalyticFunctionSpec(
         name="asset_composition",
@@ -636,7 +1522,8 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                     "repository - viewer. Stages (reporting model §10.8): a `typedefs` producer, two "
                     "per-row `derive`s (viewer count, repository count) and a `difference`. All counts "
                     "share one pool of `concurrency` workers (default 3, capped at 5). Takes two "
-                    "leading clients (mgr, vm); vm defaults to mgr (an EgeriaTech has both).",
+                    "leading clients (mgr, vm); vm defaults to mgr (an EgeriaTech has both). "
+                    "Cost: one count per type per population in a pool of 3-5; repository counts sub-second, viewer counts can take minutes for a large type (Process: 120 s).",
         returns="AssetComposition (dict: state, state_reason, root, depth, populations, as_of, concurrency, "
                 "rows[{type_name, parent, level, exact_type, subtypes_error, viewer?, repository?, "
                 "not_visible}], not_measured, provenance); each count cell is {value, state, "
@@ -661,12 +1548,16 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
             result_kind="distribution",
             measures=[
                 MeasureDeclaration(name="repository_count", unit="elements", as_of="as_of",
-                                   value_field="rows.repository.value"),
+                                   value_field="rows.repository.value",
+                                   completeness_field="rows.repository.completeness", population="repository"),
                 MeasureDeclaration(name="viewer_count", unit="elements", as_of="as_of",
-                                   value_field="rows.viewer.value"),
+                                   value_field="rows.viewer.value",
+                                   completeness_field="rows.viewer.completeness", population="viewer"),
                 MeasureDeclaration(name="not_visible", unit="elements", as_of="as_of",
                                    value_field="rows.not_visible.value"),
             ],
+            # A parent row counts its subtypes too, so the rows overlap and never sum.
+            categories=CategoriesDeclaration(exclusive=False),
             absence=AbsenceSentences(
                 not_measured="The subtype counts could not be measured: the count queries failed or "
                              "the server could not answer them.",
@@ -674,13 +1565,24 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                 not_applicable="A subtype composition does not apply to this type.",
                 nothing_found="Counted: there are no elements of this type or its subtypes.",
             ),
+            out=[
+                _field("state", "State", "string"),
+                _field("state_reason", "Why", "string"),
+                _field("root", "Root type", "string"),
+                _field("depth", "Depth", "int"),
+                _field("as_of", "As of", "datetime"),
+                _field("concurrency", "Counts in flight", "int"),
+                _field("rows", "Types", kind="dataset", shape="CompositionRow"),
+                _field("not_measured", "Not measured", "list<string>"),
+            ],
         ),
     ),
     "control_implementation_summary": AnalyticFunctionSpec(
         name="control_implementation_summary",
         function="pyegeria.view.overview_metrics.control_implementation_summary",
         description="Applicable controls in a statement of applicability, counted by implementation "
-                    "status (NOT_STARTED, PLANNED, PARTIALLY_IMPLEMENTED, IMPLEMENTED, OTHER).",
+                    "status (NOT_STARTED, PLANNED, PARTIALLY_IMPLEMENTED, IMPLEMENTED, OTHER). "
+                    "Cost: one read of one statement of applicability's control relationships, seconds.",
         returns="dict ({status: count})",
         generic=False,
         binding_note="Fixed to the ControlApplicability relationships of one StatementOfApplicability.",
@@ -688,6 +1590,26 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
             AnalyticParam(name="soa_guid", type="str", required=True,
                           description="GUID of the statement of applicability."),
         ],
+        declaration=AnalyticDeclaration(
+            result_kind="distribution",
+            # No as_of parameter: the counts are of the moment the call ran.
+            measures=[_measure(status.lower(), "applicable controls", status)
+                      for status in ("NOT_STARTED", "PLANNED", "PARTIALLY_IMPLEMENTED", "IMPLEMENTED", "OTHER")],
+            # One control has one implementation status; controls marked not applicable are left out.
+            categories=CategoriesDeclaration(exclusive=True),
+            absence=_absence(
+                not_measured="Control implementation was not measured: the statement of applicability "
+                             "could not be read.",
+                not_permitted="You are not permitted to read this statement of applicability.",
+                not_applicable="Control implementation does not apply: the element named is not a "
+                               "statement of applicability.",
+                nothing_found="Counted: this statement of applicability has no applicable controls.",
+            ),
+            out=[_field(status, label, "int", unit="controls") for status, label in (
+                ("NOT_STARTED", "Not started"), ("PLANNED", "Planned"),
+                ("PARTIALLY_IMPLEMENTED", "Partially implemented"), ("IMPLEMENTED", "Implemented"),
+                ("OTHER", "Other"))],
+        ),
     ),
 }
 

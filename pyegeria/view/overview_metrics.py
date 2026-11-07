@@ -677,7 +677,10 @@ def ownership_coverage(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
     data" is repeatedly named as the foundation for trustworthy AI
     consumption), not a duplicate of governance-classification coverage.
 
-    Returns {"ownershipCount": int, "ownershipCapped": bool,
+    If the find fails, ownershipCount/ownershipCapped are None (unmeasured, as in
+    governed_coverage) and byOwnerType is empty -- not 0, which read as "nothing owned".
+
+    Returns {"ownershipCount": int|None, "ownershipCapped": bool|None,
     "byOwnerType": {typeName: count}}.
     """
     body = {
@@ -690,7 +693,9 @@ def ownership_coverage(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
     }
     if as_of:
         body["asOfTime"] = as_of
-    hits = _find(mgr, body)
+    hits = _find_or_none(mgr, body)
+    if hits is None:  # query failed: unmeasured, not "nothing owned"
+        return {"ownershipCount": None, "ownershipCapped": None, "byOwnerType": {}}
 
     by_owner_type: Dict[str, int] = {}
     for el in hits:
@@ -909,7 +914,7 @@ def stale_assets(mgr, as_of: Optional[str] = None, days: int = 180) -> Dict[str,
     anchoring).
 
     Returns {"staleCount": int|None, "assetTotal": int|None}. `staleCount`
-    is None on total failure; `assetTotal` reuses `count_elements` (native,
+    is None when the Asset find fails (not 0); `assetTotal` reuses `count_elements` (native,
     unaffected by this function's own element-fetch cap).
     """
     from datetime import datetime, timezone, timedelta
@@ -923,9 +928,9 @@ def stale_assets(mgr, as_of: Optional[str] = None, days: int = 180) -> Dict[str,
         body = {"class": "FindRequestBody", "metadataElementTypeName": "Asset", "limitResultsByStatus": ["ACTIVE"]}
         if as_of:
             body["asOfTime"] = as_of
-        elements = _find(mgr, body)
-        stale_count = 0
-        for el in elements:
+        elements = _find_or_none(mgr, body)  # None when the find failed: staleCount stays None, not 0
+        stale_count = None if elements is None else 0
+        for el in elements or []:
             updated = _update_time(el)
             if updated is not None and updated < cutoff:
                 stale_count += 1
@@ -996,9 +1001,9 @@ def context_readiness_funnel(mgr, ce, as_of: Optional[str] = None) -> Dict[str, 
                                  "metadataElementTypeName": "Asset"}
         if as_of:
             body["asOfTime"] = as_of
-        assets = _find(mgr, body)
-        documented = 0
-        for a in assets:
+        assets = _find_or_none(mgr, body)  # None when the find failed: documented stays None, not 0
+        documented = None if assets is None else 0
+        for a in assets or []:
             pvm = (a.get("elementProperties") or {}).get("propertyValueMap") or {}
             desc = (pvm.get("description") or {}).get("primitiveValue")
             if isinstance(desc, str) and desc.strip():
@@ -1050,17 +1055,22 @@ def ai_ready_assets(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Any]:
     `context_readiness_funnel`'s own `documented` stage) -- a floor, not
     exact, on a catalog larger than DEFAULT_CAP.
 
-    Returns {"aiReadyCount": int, "total": int, "capped": bool} -- "total" is
-    the (possibly capped) Asset population actually checked, so a caller can
-    compute a percentage without a separate cataloged-count call.
+    Returns {"aiReadyCount": int|None, "total": int|None, "capped": bool|None}
+    -- "total" is the (possibly capped) Asset population actually checked, so
+    a caller can compute a percentage without a separate cataloged-count call.
+    A failed Asset find makes all three None; a failed DataFlow query makes
+    aiReadyCount None (no asset can be shown lineage-traced, which is not the
+    same as none being so) and keeps total/capped.
     """
     body: Dict[str, Any] = {"class": "FindRequestBody", "limitResultsByStatus": ["ACTIVE"],
                              "metadataElementTypeName": "Asset"}
     if as_of:
         body["asOfTime"] = as_of
-    assets = _find(mgr, body)
+    assets = _find_or_none(mgr, body)
+    if assets is None:
+        return {"aiReadyCount": None, "total": None, "capped": None}
 
-    lineage_guids: set = set()
+    lineage_guids: Optional[set] = set()
     try:
         rel_body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
         rels = _json_list(ce.get_relationships(
@@ -1074,6 +1084,9 @@ def ai_ready_assets(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Any]:
                     lineage_guids.add(g)
     except Exception as exc:  # noqa: BLE001
         logger.debug(f"ai_ready_assets: lineage relationship query failed: {exc}")
+        lineage_guids = None
+    if lineage_guids is None:
+        return {"aiReadyCount": None, "total": len(assets), "capped": len(assets) >= DEFAULT_CAP}
 
     ai_ready = 0
     for a in assets:
@@ -1170,8 +1183,10 @@ def drl_readiness_gates(mgr, ce, as_of: Optional[str] = None, recency_days: int 
     recency_days : provisional recency window for "recent" -- not yet a
         decided band threshold, see design doc "Open decisions"
 
-    Returns {"total": int, "capped": bool, "aiReadyCount": int,
-    "aiReadyRecentCount": int, "byModality": {"tabular", "text_media", "other"}}.
+    Returns {"total": int|None, "capped": bool|None, "aiReadyCount": int|None,
+    "aiReadyRecentCount": int|None, "byModality": {"tabular", "text_media", "other"}|None}.
+    A failed Asset find makes every field None; a failed DataFlow query makes
+    aiReadyCount/aiReadyRecentCount None and keeps the rest -- unmeasured, not 0.
     """
     from datetime import datetime, timedelta, timezone
 
@@ -1179,9 +1194,12 @@ def drl_readiness_gates(mgr, ce, as_of: Optional[str] = None, recency_days: int 
                              "metadataElementTypeName": "Asset"}
     if as_of:
         body["asOfTime"] = as_of
-    assets = _find(mgr, body)
+    assets = _find_or_none(mgr, body)
+    if assets is None:
+        return {"total": None, "capped": None, "aiReadyCount": None, "aiReadyRecentCount": None,
+                "byModality": None}
 
-    lineage_guids: set = set()
+    lineage_guids: Optional[set] = set()
     try:
         rel_body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
         rels = _json_list(ce.get_relationships(
@@ -1194,6 +1212,7 @@ def drl_readiness_gates(mgr, ce, as_of: Optional[str] = None, recency_days: int 
                     lineage_guids.add(g)
     except Exception as exc:  # noqa: BLE001
         logger.debug(f"drl_readiness_gates: DataFlow relationship query failed: {exc}")
+        lineage_guids = None
 
     now = datetime.fromisoformat(as_of.replace("Z", "+00:00")) if as_of else datetime.now(timezone.utc)
     if now.tzinfo is None:
@@ -1211,7 +1230,7 @@ def drl_readiness_gates(mgr, ce, as_of: Optional[str] = None, recency_days: int 
         desc = (pvm.get("description") or {}).get("primitiveValue")
         documented = isinstance(desc, str) and bool(desc.strip())
         governed = bool(_classifications_of(a) & set(GOVERNANCE_CLASSIFICATIONS))
-        lineage_traced = guid in lineage_guids
+        lineage_traced = lineage_guids is not None and guid in lineage_guids
         if not (documented and governed and lineage_traced):
             continue
         ai_ready += 1
@@ -1223,8 +1242,8 @@ def drl_readiness_gates(mgr, ce, as_of: Optional[str] = None, recency_days: int 
     return {
         "total": len(assets),
         "capped": len(assets) >= DEFAULT_CAP,
-        "aiReadyCount": ai_ready,
-        "aiReadyRecentCount": ai_ready_recent,
+        "aiReadyCount": ai_ready if lineage_guids is not None else None,
+        "aiReadyRecentCount": ai_ready_recent if lineage_guids is not None else None,
         "byModality": by_modality,
     }
 
@@ -1745,16 +1764,19 @@ def term_definition_completeness(mgr, as_of: Optional[str] = None) -> Dict[str, 
     output_format='JSON' relationship/report path other functions here use,
     e.g. `certifications_summary`'s `end2`, not this raw element-query path).
 
-    Returns {"total": int, "defined": int, "undefinedPct": int|None}
+    Returns {"total": int|None, "defined": int|None, "undefinedPct": int|None}
     (`undefinedPct` mirrors `semantic_grounding.groundingPct`'s naming: the
     gap, not the coverage, since a near-100%-defined glossary is the
-    uninteresting case and the gap is what's actionable).
+    uninteresting case and the gap is what's actionable). A failed find makes
+    all three None -- unmeasured, not an empty glossary.
     """
     body: Dict[str, Any] = {"class": "FindRequestBody", "limitResultsByStatus": ["ACTIVE"],
                              "metadataElementTypeName": "GlossaryTerm"}
     if as_of:
         body["asOfTime"] = as_of
-    terms = _find(mgr, body)
+    terms = _find_or_none(mgr, body)
+    if terms is None:
+        return {"total": None, "defined": None, "undefinedPct": None}
     total = len(terms)
     defined = 0
     for t in terms:
@@ -1789,6 +1811,10 @@ def active_contributors(ce, as_of: Optional[str] = None) -> Dict[str, Any]:
     noteLogs}} where byType is the distinct-username count per relationship
     type (one person active in two types counts once in "contributors" but
     once per type in byType).
+
+    A type whose query failed is None in byType, and `contributors` is None
+    unless every type was read -- a partial union would read as fewer people,
+    the same rule feedback_summary's `total` follows.
     """
     body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
 
@@ -1801,17 +1827,20 @@ def active_contributors(ce, as_of: Optional[str] = None) -> Dict[str, Any]:
             if (u := (rel.get("relationshipHeader") or {}).get("versions", {}).get("createdBy"))
         }
 
-    by_type: Dict[str, int] = {}
+    by_type: Dict[str, Optional[int]] = {}
     all_users: set = set()
+    measured = True
     for rel_type, key in _FEEDBACK_RELATIONSHIP_TYPES:
         try:
             users = _actor_usernames(rel_type)
         except Exception as exc:  # noqa: BLE001
             logger.debug(f"overview_metrics active_contributors: {rel_type} failed: {exc}")
-            users = set()
+            by_type[key] = None
+            measured = False
+            continue
         by_type[key] = len(users)
         all_users |= users
-    return {"contributors": len(all_users), "byType": by_type}
+    return {"contributors": len(all_users) if measured else None, "byType": by_type}
 
 
 def control_implementation_summary(client, soa_guid: str) -> Dict[str, int]:

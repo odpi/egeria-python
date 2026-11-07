@@ -320,7 +320,7 @@ def test_ai_ready_assets_empty_catalog():
     assert result == {"aiReadyCount": 0, "total": 0, "capped": False}
 
 
-def test_ai_ready_assets_lineage_query_failure_degrades_to_none_ai_ready():
+def test_ai_ready_assets_lineage_query_failure_is_unmeasured():
     mgr = _mgr()
     mgr.find_metadata_elements.return_value = [
         _asset("a1", "documented", ["Confidentiality"]),
@@ -328,8 +328,8 @@ def test_ai_ready_assets_lineage_query_failure_degrades_to_none_ai_ready():
     ce = MagicMock()
     ce.get_relationships.side_effect = Exception("boom")
     result = om.ai_ready_assets(mgr, ce)
-    # lineage query failed -> no asset can be lineage-traced -> 0, not a crash
-    assert result["aiReadyCount"] == 0
+    # lineage query failed -> aiReadyCount is unmeasured (None), not 0, and not a crash (RS-W2-1a)
+    assert result["aiReadyCount"] is None
     assert result["total"] == 1
 
 
@@ -567,8 +567,10 @@ def test_active_contributors_degrades_per_type_on_failure():
         [], [], [],
     ]
     result = om.active_contributors(ce)
-    assert result["byType"]["ratings"] == 0
-    assert result["contributors"] == 1
+    # the failed type is unmeasured (None), and so is the union it would be part of (RS-W2-1a)
+    assert result["byType"]["ratings"] is None
+    assert result["byType"]["comments"] == 1
+    assert result["contributors"] is None
 
 
 # ── metric_trend ──────────────────────────────────────────────────────────
