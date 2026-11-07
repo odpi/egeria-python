@@ -4,11 +4,11 @@ import pytest
 from pydantic import ValidationError
 
 from pyegeria.view.analytic_registry import (
+    _BUILTINS,
     AnalyticDeclaration,
     AnalyticFunctionSpec,
     analytic_registry_payload,
     clear_runtime_analytic_functions,
-    get_analytic_registry,
     register_analytic_functions,
 )
 
@@ -16,7 +16,7 @@ ABSENCE = {
     "not_measured": "Coverage was not measured: the catalog could not be read.",
     "not_permitted": "Coverage was not measured: reading the catalog is not permitted.",
     "not_applicable": "Coverage does not apply to this resource.",
-    "measured_nothing": "No columns were found to cover.",
+    "nothing_found": "No columns were found to cover.",
 }
 
 DECLARATION = {
@@ -29,8 +29,11 @@ DECLARATION = {
 }
 
 
-def test_existing_specs_load_without_a_declaration():
-    assert all(spec.declaration is None for spec in get_analytic_registry().values())
+def test_every_builtin_declares_its_results():
+    """RS-W2-1a: every built-in now declares (asset_composition was the first, RS-W1-4); the field
+    itself stays optional for specs registered by others."""
+    assert all(spec.declaration is not None for spec in _BUILTINS.values())
+    assert AnalyticFunctionSpec(name="x", function="pyegeria.view.overview_metrics.growth_series").declaration is None
 
 
 def test_declaration_round_trips_on_a_spec():
@@ -38,7 +41,7 @@ def test_declaration_round_trips_on_a_spec():
                                 declaration=DECLARATION)
     m = spec.declaration.measures[0]
     assert (m.unit, m.as_of, m.basis.denominator_label) == ("columns", "asOf", "columns")
-    assert spec.declaration.absence.sentence("measured_nothing") == ABSENCE["measured_nothing"]
+    assert spec.declaration.absence.sentence("nothing_found") == ABSENCE["nothing_found"]
     assert AnalyticFunctionSpec(**spec.model_dump()).declaration == spec.declaration
 
 
@@ -73,3 +76,13 @@ def test_incomplete_declarations_are_refused_with_a_sentence(bad, words):
 
 def test_unmeasured_kinds_need_no_measures():
     assert AnalyticDeclaration(result_kind="finding", absence=ABSENCE).measures == []
+
+
+def test_legacy_measured_nothing_declaration_still_loads_and_is_written_as_nothing_found():
+    legacy = dict(ABSENCE)
+    legacy["measured_nothing"] = legacy.pop("nothing_found")
+    decl = AnalyticDeclaration(**{**DECLARATION, "absence": legacy})
+    assert decl.absence.nothing_found == ABSENCE["nothing_found"]
+    assert decl.absence.sentence("measured_nothing") == ABSENCE["nothing_found"]
+    dumped = decl.model_dump()
+    assert "measured_nothing" not in dumped["absence"] and dumped["absence"]["nothing_found"]

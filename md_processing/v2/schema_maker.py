@@ -39,6 +39,11 @@ def _outer_body(attributes: dict, properties: dict) -> dict:
     }
 
 
+# SchemaAttribute subtypes created through the schema-attributes endpoint with their own
+# properties class (Egeria 6.3 report-spec formatters and dashboard layout).
+_DISPLAY_ATTRIBUTE_TYPES = {"DisplayDataContainer", "DisplayDataField"}
+
+
 class SchemaElementProcessor(AsyncBaseCommandProcessor):
     """Processor for Create/Update Schema Type and Create/Update Schema
     Attribute (both participate in the standard Create<->Update upsert
@@ -49,11 +54,16 @@ class SchemaElementProcessor(AsyncBaseCommandProcessor):
         qualified_name = self.parsed_output.get("qualified_name") or self.derive_qualified_name(attributes)
         display_name = _v(attributes, "Display Name") or qualified_name
         om_type = self.get_command_spec().get("OM_TYPE")
-        is_attribute = om_type == "SchemaAttribute"
+        is_display = om_type in _DISPLAY_ATTRIBUTE_TYPES
+        is_attribute = om_type == "SchemaAttribute" or is_display
         client = self.client.schema_maker
 
+        if is_display:
+            props_class = f"{om_type}Properties"
+        else:
+            props_class = "SchemaAttributeProperties" if is_attribute else "SchemaTypeProperties"
         props: Dict[str, Any] = {
-            "class": "SchemaAttributeProperties" if is_attribute else "SchemaTypeProperties",
+            "class": props_class,
             "typeName": om_type,
             "qualifiedName": qualified_name,
             "displayName": display_name,
@@ -77,6 +87,19 @@ class SchemaElementProcessor(AsyncBaseCommandProcessor):
                 "isOrderedValues": _v(attributes, "Is Ordered Values"),
                 "defaultValueOverride": _v(attributes, "Default Value Override"),
             })
+            if is_display:
+                # Egeria 6.3 placement attributes (odpi/egeria#9432): a leaf placement is a
+                # DisplayDataField, a sheet or nested sheet a DisplayDataContainer.
+                props.update({
+                    "placementKind": _v(attributes, "Placement Kind"),
+                    "span": _v(attributes, "Span"),
+                    "presentationStyle": _v(attributes, "Presentation Style"),
+                    "markdownContent": _v(attributes, "Markdown Content"),
+                })
+                if om_type == "DisplayDataContainer":
+                    props["renderer"] = _v(attributes, "Renderer")
+                else:
+                    props["inputField"] = _v(attributes, "Input Field")
         else:
             props.update({
                 "isDeprecated": _v(attributes, "Is Deprecated"),

@@ -102,9 +102,9 @@ ___
 
 >	**Attribute Type**: Valid Value
 
->	**Description**: Optional specification of output format for the query.
+>	**Description**: Output format for the report: one of the formats pyegeria's report-spec registry supports, plus KPI. Stored in Report.outputFormat (Egeria 6.3) and validated against Egeria's valid metadata values for outputFormat when the server has them.
 
->	**Valid Values**: LIST,FORM,REPORT,MERMAID,DICT,MD,TABLE,JSON
+>	**Valid Values**: BAR,DICT,FORM,GRAPH,HTML,JSON,KPI,LIST,MD,MERMAID,PIE,REPORT,REPORT-GRAPH,SERIES,TABLE
 
 >	**Default Value**: JSON
 

@@ -6701,7 +6701,7 @@ class ClassificationExplorer(ServerClient):
 
         url = f"{self.classification_command_root}/elements/{element_guid}/scoped-by/{scoped_by_guid}/attach"
 
-        return await self._async_new_relationship_request(url, ['ScopedBy'], body)
+        return await self._async_new_relationship_request(url, ['ScopedByProperties'], body)
 
     def add_scope_to_element(
             self,
@@ -6841,7 +6841,7 @@ class ClassificationExplorer(ServerClient):
 
         url = f"{self.classification_command_root}/elements/{element_guid}/resource-list/{resource_guid}/attach"
 
-        return await self._async_new_relationship_request(url, ['ResourceList'], body)
+        return await self._async_new_relationship_request(url, ['ResourceListProperties'], body)
 
     def add_resource_to_element(
             self,
@@ -7240,7 +7240,7 @@ class ClassificationExplorer(ServerClient):
 
         url = f"{self.classification_command_root}/elements/{element_guid}/more-information/{more_info_guid}/attach"
 
-        return await self._async_new_relationship_request(url, ['MoreInformation'], body)
+        return await self._async_new_relationship_request(url, ['MoreInformationProperties'], body)
 
     def add_more_information(
             self,

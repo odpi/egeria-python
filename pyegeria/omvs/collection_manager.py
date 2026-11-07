@@ -32,7 +32,8 @@ from pyegeria.core.async_runner import run_sync
 COLLECTION_PROPERTIES_LIST = ["CollectionProperties", "DataDictionaryProperties",
                               "DataSpecProperties", "DigitalProductProperties",
                               "AgreementProperties","RootCollectionProperties", "HomeCollectionProperties",
-                              "SkillSetProperties", "ReferenceListProperties",]
+                              "SkillSetProperties", "ReferenceListProperties",
+                              "ReportTypeProperties", "ReportSpecProperties",]
 
 AGREEMENT_PROPERTIES_LIST = ["AgreementProperties", "DigitalSubscriptionProperties",]
 
@@ -109,6 +110,20 @@ class ReportTypeProperties(CollectionProperties):
     created_time: datetime | None = None
     lastModifiedTime: datetime | None = None
     lastModifier: str | None = None
+
+
+class ReportSpecProperties(ReportTypeProperties):
+    """A ReportSpec (Egeria 6.3, ReportType subtype): a report specification held in Egeria.
+
+    microflow is the ordered list of stages with their parameters, as a JSON string; outputTypes the output
+    formats it can produce; targetTypeName the type of element it reports on.
+    """
+    class_: Annotated[Literal["ReportSpecProperties"], Field(alias="class")]
+    microflow: str | None = None
+    target_type_name: str | None = None
+    aliases: list[str] | None = None
+    output_types: list[str] | None = None
+    include_preamble: bool | None = None
 
 
 class DataDictionaryProperties(CollectionProperties):
@@ -2367,6 +2382,98 @@ class CollectionManager(ServerClient):
         return run_sync(
             self._async_create_report_type_collection(display_name, description,category,
                                                  classification_name, body))
+
+    @dynamic_catch
+    async def _async_create_report_spec(self, display_name: Optional[str] = None,
+                                        description: Optional[str] = None, category: Optional[str] = None,
+                                        microflow: Optional[str] = None, target_type_name: Optional[str] = None,
+                                        aliases: Optional[list[str]] = None,
+                                        output_types: Optional[list[str]] = None,
+                                        include_preamble: Optional[bool] = None,
+                                        body: Optional[dict | NewElementRequestBody] = None) -> str:
+        """ Create a ReportSpec (a ReportType collection subtype, Egeria 6.3). Async version.
+
+        If `body` is supplied it is sent as given (its properties class should be "ReportSpecProperties")
+        and the other arguments are ignored. Otherwise a self-anchored ReportSpec is built from the
+        arguments, with the qualified name manufactured from `display_name` ("ReportSpec::...").
+
+        Parameters
+        ----------
+        display_name: str, optional
+            The display name of the report spec; required when no body is given.
+        description: str, optional
+        category: str, optional
+            The family the spec belongs to.
+        microflow: str, optional
+            The ordered list of stages to run with their parameters, as a JSON string.
+        target_type_name: str, optional
+            The type of element the spec reports on.
+        aliases: list[str], optional
+        output_types: list[str], optional
+            The output formats the spec can produce (e.g. ["MD", "JSON"]).
+        include_preamble: bool, optional
+        body: dict | NewElementRequestBody, optional
+
+        Returns
+        -------
+        str - the guid of the created report spec
+
+        Raises
+        ------
+        PyegeriaException
+        ValidationError
+        """
+        if body:
+            validated_body = self.validate_new_element_request(body, ["ReportSpecProperties"])
+        elif display_name is not None:
+            qualified_name = self.__create_qualified_name__("ReportSpec", display_name)
+            spec_properties = ReportSpecProperties(class_="ReportSpecProperties",
+                                                   qualified_name=qualified_name,
+                                                   display_name=display_name,
+                                                   description=description,
+                                                   category=category,
+                                                   microflow=microflow,
+                                                   target_type_name=target_type_name,
+                                                   aliases=aliases,
+                                                   output_types=output_types,
+                                                   include_preamble=include_preamble)
+            body = {
+                "class": "NewElementRequestBody",
+                "isOwnAnchor": True,
+                "properties": spec_properties.model_dump(exclude_none=True),
+            }
+            validated_body = NewElementRequestBody.model_validate(body)
+        else:
+            raise PyegeriaInvalidParameterException(additional_info={"reason": "Invalid input parameters"})
+
+        url = f"{self.collection_command_root}"
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True, by_alias=True)
+        logger.info(json_body)
+        resp = await self._async_make_request("POST", url, json_body, is_json=True)
+        logger.info(f"Create report spec with GUID: {resp.json().get('guid')}")
+        return resp.json().get("guid", NO_GUID_RETURNED)
+
+    @dynamic_catch
+    def create_report_spec(self, display_name: Optional[str] = None,
+                           description: Optional[str] = None, category: Optional[str] = None,
+                           microflow: Optional[str] = None, target_type_name: Optional[str] = None,
+                           aliases: Optional[list[str]] = None,
+                           output_types: Optional[list[str]] = None,
+                           include_preamble: Optional[bool] = None,
+                           body: Optional[dict | NewElementRequestBody] = None) -> str:
+        """ Create a ReportSpec (a ReportType collection subtype, Egeria 6.3).
+
+        See `_async_create_report_spec` for the parameters. Update an existing spec with
+        `update_collection(guid, body)` using a "ReportSpecProperties" properties class.
+
+        Returns
+        -------
+        str - the guid of the created report spec
+        """
+        return run_sync(
+            self._async_create_report_spec(display_name, description, category, microflow,
+                                           target_type_name, aliases, output_types,
+                                           include_preamble, body))
 
     @dynamic_catch
     async def _async_create_question_spec_folder(self, display_name: Optional[str] = None,

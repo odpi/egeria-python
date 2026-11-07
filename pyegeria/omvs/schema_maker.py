@@ -55,6 +55,30 @@ class SchemaAttributeProperties(ReferenceableProperties):
     anchor_guid: Optional[str] = None
 
 
+class DisplayDataContainerProperties(SchemaAttributeProperties):
+    """A DisplayDataContainer: one formatter of a report spec, or a sheet (or nested sheet) of a dashboard.
+    renderer, placementKind, span, presentationStyle and markdownContent are new in Egeria 6.3. Their allowed
+    values are Egeria valid metadata values keyed by property name. Create with create_schema_attribute."""
+    class_: Annotated[Literal["DisplayDataContainerProperties"], Field(alias="class")]
+    renderer: Optional[str] = None
+    placement_kind: Optional[str] = None
+    span: Optional[str] = None
+    presentation_style: Optional[str] = None
+    markdown_content: Optional[str] = None
+
+
+class DisplayDataFieldProperties(SchemaAttributeProperties):
+    """A DisplayDataField: one column of a formatter, or a leaf placement on a dashboard sheet.
+    inputField marks a form input. placementKind, span, presentationStyle and markdownContent are new in
+    Egeria 6.3. Create with create_schema_attribute."""
+    class_: Annotated[Literal["DisplayDataFieldProperties"], Field(alias="class")]
+    input_field: Optional[bool] = None
+    placement_kind: Optional[str] = None
+    span: Optional[str] = None
+    presentation_style: Optional[str] = None
+    markdown_content: Optional[str] = None
+
+
 class SchemaMaker(ServerClient):
     """
     Client for the Schema Maker View Service.

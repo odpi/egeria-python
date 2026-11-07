@@ -22,6 +22,12 @@ from pyegeria.core.utils import dynamic_catch
 from typing import Any, Optional
 from pyegeria.core.async_runner import run_sync
 
+# Properties classes accepted by the data-value-specifications create/update endpoints. A
+# MeasurementSpecification (Egeria 6.3) is created and updated through these same endpoints with
+# "class": "MeasurementSpecificationProperties" in the body's properties.
+DATA_VALUE_SPECIFICATION_PROPERTIES_LIST = ["DataValueSpecificationProperties", "DataClassProperties",
+                                            "DataGrainProperties", "MeasurementSpecificationProperties"]
+
 
 class DataDesigner(ServerClient):
     """
@@ -361,6 +367,9 @@ class DataDesigner(ServerClient):
         """
         Create a new data value specification. Async version.
 
+        Also creates a MeasurementSpecification (Egeria 6.3): set the properties class to
+        "MeasurementSpecificationProperties" (see pyegeria.models.MeasurementSpecificationProperties).
+
         Parameters
         ----------
         body : dict | NewElementRequestBody
@@ -377,7 +386,7 @@ class DataDesigner(ServerClient):
             If there are issues in communications, message format, or Egeria errors.
         """
         url = f"{self.ref_data_designer_command_base}/data-value-specifications"
-        return await self._async_create_element_body_request(url, ["DataValueSpecification"], body)
+        return await self._async_create_element_body_request(url, DATA_VALUE_SPECIFICATION_PROPERTIES_LIST, body)
 
     @dynamic_catch
     def create_data_value_specification(self, body: dict | NewElementRequestBody) -> str:
@@ -4883,7 +4892,7 @@ class DataDesigner(ServerClient):
         None
         """
         url = f"{self.ref_data_designer_command_base}/data-value-specifications/{guid}/update"
-        await self._async_update_element_body_request(url, ["DataValueSpecification"], body)
+        await self._async_update_element_body_request(url, DATA_VALUE_SPECIFICATION_PROPERTIES_LIST, body)
 
     @dynamic_catch
     def update_data_value_specification(self, guid: str, body: dict | UpdateElementRequestBody) -> None:
@@ -5003,6 +5012,334 @@ class DataDesigner(ServerClient):
         """Detach a data structure from the schema type that defines it."""
         run_sync(self._async_detach_schema_type_definition(
             data_structure_guid, schema_type_guid, body, cascade_delete))
+
+    #
+    # Report specifications and measurements (Egeria 6.3, odpi/egeria#9432): the BasisDataField,
+    # AsOfDataField, ReportTypeInstance and ReportRunOf relationships. Same shape as
+    # _async_link_specialized_data_value_specification above.
+    #
+
+    @dynamic_catch
+    async def _async_link_basis_data_field(self, measurement_spec_guid: str, data_field_guid: str,
+                                 body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
+        """
+        Link the MeasurementSpecification to the DataField that gives the basis for the measurement (for example the denominator of a percentage) (BasisDataField relationship). Async version.
+
+        Parameters
+        ----------
+        measurement_spec_guid : str
+            The unique identifier of the MeasurementSpecification (end 1).
+        data_field_guid : str
+            The unique identifier of the DataField that gives the basis for the measurement (for example the denominator of a percentage) (end 2).
+        body : dict | NewRelationshipRequestBody, optional
+            The request body; its properties class is "BasisDataFieldProperties". If omitted, a body with no
+            relationship properties is sent.
+
+        Returns
+        -------
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        """
+        url = f"{self.ref_data_designer_command_base}/data-value-specifications/{measurement_spec_guid}/basis-data-fields/{data_field_guid}/attach"
+        return await self._async_new_relationship_request(url, ["BasisDataFieldProperties"], body)
+
+    @dynamic_catch
+    def link_basis_data_field(self, measurement_spec_guid: str, data_field_guid: str,
+                    body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
+        """
+        Link the MeasurementSpecification to the DataField that gives the basis for the measurement (for example the denominator of a percentage) (BasisDataField relationship).
+
+        See `_async_link_basis_data_field` for the parameters.
+        """
+        return run_sync(self._async_link_basis_data_field(measurement_spec_guid, data_field_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_basis_data_field(self, measurement_spec_guid: str, data_field_guid: str,
+                                   body: Optional[dict | DeleteRelationshipRequestBody] = None,
+                                   cascade_delete: bool = False) -> None:
+        """
+        Detach the MeasurementSpecification from the DataField that gives the basis for the measurement (for example the denominator of a percentage) (BasisDataField relationship). Async version.
+
+        Parameters
+        ----------
+        measurement_spec_guid : str
+            The unique identifier of the MeasurementSpecification (end 1).
+        data_field_guid : str
+            The unique identifier of the DataField that gives the basis for the measurement (for example the denominator of a percentage) (end 2).
+        body : dict | DeleteRelationshipRequestBody, optional
+            The detach request body.
+        cascade_delete : bool, default=False
+            Whether to cascade the delete.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        """
+        url = f"{self.ref_data_designer_command_base}/data-value-specifications/{measurement_spec_guid}/basis-data-fields/{data_field_guid}/detach"
+        await self._async_delete_relationship_request(url, body, cascade_delete)
+
+    @dynamic_catch
+    def detach_basis_data_field(self, measurement_spec_guid: str, data_field_guid: str,
+                      body: Optional[dict | DeleteRelationshipRequestBody] = None,
+                      cascade_delete: bool = False) -> None:
+        """
+        Detach the MeasurementSpecification from the DataField that gives the basis for the measurement (for example the denominator of a percentage) (BasisDataField relationship).
+
+        See `_async_detach_basis_data_field` for the parameters.
+        """
+        run_sync(self._async_detach_basis_data_field(measurement_spec_guid, data_field_guid, body, cascade_delete))
+
+    @dynamic_catch
+    async def _async_link_as_of_data_field(self, measurement_spec_guid: str, data_field_guid: str,
+                                 body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
+        """
+        Link the MeasurementSpecification to the DataField that gives the time of the measurement (AsOfDataField relationship). Async version.
+
+        Parameters
+        ----------
+        measurement_spec_guid : str
+            The unique identifier of the MeasurementSpecification (end 1).
+        data_field_guid : str
+            The unique identifier of the DataField that gives the time of the measurement (end 2).
+        body : dict | NewRelationshipRequestBody, optional
+            The request body; its properties class is "AsOfDataFieldProperties". If omitted, a body with no
+            relationship properties is sent.
+
+        Returns
+        -------
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        """
+        url = f"{self.ref_data_designer_command_base}/data-value-specifications/{measurement_spec_guid}/as-of-data-fields/{data_field_guid}/attach"
+        return await self._async_new_relationship_request(url, ["AsOfDataFieldProperties"], body)
+
+    @dynamic_catch
+    def link_as_of_data_field(self, measurement_spec_guid: str, data_field_guid: str,
+                    body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
+        """
+        Link the MeasurementSpecification to the DataField that gives the time of the measurement (AsOfDataField relationship).
+
+        See `_async_link_as_of_data_field` for the parameters.
+        """
+        return run_sync(self._async_link_as_of_data_field(measurement_spec_guid, data_field_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_as_of_data_field(self, measurement_spec_guid: str, data_field_guid: str,
+                                   body: Optional[dict | DeleteRelationshipRequestBody] = None,
+                                   cascade_delete: bool = False) -> None:
+        """
+        Detach the MeasurementSpecification from the DataField that gives the time of the measurement (AsOfDataField relationship). Async version.
+
+        Parameters
+        ----------
+        measurement_spec_guid : str
+            The unique identifier of the MeasurementSpecification (end 1).
+        data_field_guid : str
+            The unique identifier of the DataField that gives the time of the measurement (end 2).
+        body : dict | DeleteRelationshipRequestBody, optional
+            The detach request body.
+        cascade_delete : bool, default=False
+            Whether to cascade the delete.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        """
+        url = f"{self.ref_data_designer_command_base}/data-value-specifications/{measurement_spec_guid}/as-of-data-fields/{data_field_guid}/detach"
+        await self._async_delete_relationship_request(url, body, cascade_delete)
+
+    @dynamic_catch
+    def detach_as_of_data_field(self, measurement_spec_guid: str, data_field_guid: str,
+                      body: Optional[dict | DeleteRelationshipRequestBody] = None,
+                      cascade_delete: bool = False) -> None:
+        """
+        Detach the MeasurementSpecification from the DataField that gives the time of the measurement (AsOfDataField relationship).
+
+        See `_async_detach_as_of_data_field` for the parameters.
+        """
+        run_sync(self._async_detach_as_of_data_field(measurement_spec_guid, data_field_guid, body, cascade_delete))
+
+    @dynamic_catch
+    async def _async_link_report_type_instance(self, report_type_guid: str, report_guid: str,
+                                 body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
+        """
+        Link the ReportType (for example a ReportSpec) the report was generated from to the Report (ReportTypeInstance relationship). Async version.
+
+        Parameters
+        ----------
+        report_type_guid : str
+            The unique identifier of the ReportType (for example a ReportSpec) the report was generated from (end 1).
+        report_guid : str
+            The unique identifier of the Report (end 2).
+        body : dict | NewRelationshipRequestBody, optional
+            The request body; its properties class is "ReportTypeInstanceProperties". If omitted, a body with no
+            relationship properties is sent.
+
+        Returns
+        -------
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        """
+        url = f"{self.ref_data_designer_command_base}/report-types/{report_type_guid}/report-type-instances/{report_guid}/attach"
+        return await self._async_new_relationship_request(url, ["ReportTypeInstanceProperties"], body)
+
+    @dynamic_catch
+    def link_report_type_instance(self, report_type_guid: str, report_guid: str,
+                    body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
+        """
+        Link the ReportType (for example a ReportSpec) the report was generated from to the Report (ReportTypeInstance relationship).
+
+        See `_async_link_report_type_instance` for the parameters.
+        """
+        return run_sync(self._async_link_report_type_instance(report_type_guid, report_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_report_type_instance(self, report_type_guid: str, report_guid: str,
+                                   body: Optional[dict | DeleteRelationshipRequestBody] = None,
+                                   cascade_delete: bool = False) -> None:
+        """
+        Detach the ReportType (for example a ReportSpec) the report was generated from from the Report (ReportTypeInstance relationship). Async version.
+
+        Parameters
+        ----------
+        report_type_guid : str
+            The unique identifier of the ReportType (for example a ReportSpec) the report was generated from (end 1).
+        report_guid : str
+            The unique identifier of the Report (end 2).
+        body : dict | DeleteRelationshipRequestBody, optional
+            The detach request body.
+        cascade_delete : bool, default=False
+            Whether to cascade the delete.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        """
+        url = f"{self.ref_data_designer_command_base}/report-types/{report_type_guid}/report-type-instances/{report_guid}/detach"
+        await self._async_delete_relationship_request(url, body, cascade_delete)
+
+    @dynamic_catch
+    def detach_report_type_instance(self, report_type_guid: str, report_guid: str,
+                      body: Optional[dict | DeleteRelationshipRequestBody] = None,
+                      cascade_delete: bool = False) -> None:
+        """
+        Detach the ReportType (for example a ReportSpec) the report was generated from from the Report (ReportTypeInstance relationship).
+
+        See `_async_detach_report_type_instance` for the parameters.
+        """
+        run_sync(self._async_detach_report_type_instance(report_type_guid, report_guid, body, cascade_delete))
+
+    @dynamic_catch
+    async def _async_link_report_run_of(self, results_set_guid: str, report_guid: str,
+                                 body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
+        """
+        Link the ResultsSet holding one run's results to the Report the results set is a run of (ReportRunOf relationship). Async version.
+
+        The relationship properties (class "ReportRunOfProperties") may carry resultState,
+        resultStateReason and resultLocation for the run.
+        Parameters
+        ----------
+        results_set_guid : str
+            The unique identifier of the ResultsSet holding one run's results (end 1).
+        report_guid : str
+            The unique identifier of the Report the results set is a run of (end 2).
+        body : dict | NewRelationshipRequestBody, optional
+            The request body; its properties class is "ReportRunOfProperties". If omitted, a body with no
+            relationship properties is sent.
+
+        Returns
+        -------
+        str | None
+            The GUID of the new relationship, or None if the server did not return one.
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        """
+        url = f"{self.ref_data_designer_command_base}/results-sets/{results_set_guid}/report-runs/{report_guid}/attach"
+        return await self._async_new_relationship_request(url, ["ReportRunOfProperties"], body)
+
+    @dynamic_catch
+    def link_report_run_of(self, results_set_guid: str, report_guid: str,
+                    body: Optional[dict | NewRelationshipRequestBody] = None) -> str | None:
+        """
+        Link the ResultsSet holding one run's results to the Report the results set is a run of (ReportRunOf relationship).
+
+        See `_async_link_report_run_of` for the parameters.
+        """
+        return run_sync(self._async_link_report_run_of(results_set_guid, report_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_report_run_of(self, results_set_guid: str, report_guid: str,
+                                   body: Optional[dict | DeleteRelationshipRequestBody] = None,
+                                   cascade_delete: bool = False) -> None:
+        """
+        Detach the ResultsSet holding one run's results from the Report the results set is a run of (ReportRunOf relationship). Async version.
+
+        Parameters
+        ----------
+        results_set_guid : str
+            The unique identifier of the ResultsSet holding one run's results (end 1).
+        report_guid : str
+            The unique identifier of the Report the results set is a run of (end 2).
+        body : dict | DeleteRelationshipRequestBody, optional
+            The detach request body.
+        cascade_delete : bool, default=False
+            Whether to cascade the delete.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        """
+        url = f"{self.ref_data_designer_command_base}/results-sets/{results_set_guid}/report-runs/{report_guid}/detach"
+        await self._async_delete_relationship_request(url, body, cascade_delete)
+
+    @dynamic_catch
+    def detach_report_run_of(self, results_set_guid: str, report_guid: str,
+                      body: Optional[dict | DeleteRelationshipRequestBody] = None,
+                      cascade_delete: bool = False) -> None:
+        """
+        Detach the ResultsSet holding one run's results from the Report the results set is a run of (ReportRunOf relationship).
+
+        See `_async_detach_report_run_of` for the parameters.
+        """
+        run_sync(self._async_detach_report_run_of(results_set_guid, report_guid, body, cascade_delete))
 
 
 if __name__ == "__main__":
