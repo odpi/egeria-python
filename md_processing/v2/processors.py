@@ -27,6 +27,16 @@ from md_processing.md_processing_utils.common_md_utils import (
 # up, ambiguous" (_AMBIGUOUS) are never confused with each other.
 _NOT_CACHED = object()
 _AMBIGUOUS = object()
+# Egeria's own OMAG-GENERIC-HANDLERS-404-002 "Multiple <Type> entities where
+# found" answer: ambiguous, cached once per batch like _AMBIGUOUS, but replayed
+# silently (no error on the command) -- it has always been non-fatal, and a
+# display name shared by many elements is legitimate for most Creates.
+_AMBIGUOUS_SILENT = object()
+
+
+def _is_egeria_multiple_entities_error(exc: BaseException) -> bool:
+    text = str(exc)
+    return "404-002" in text or "entities where found" in text
 
 
 class AsyncBaseCommandProcessor(ABC):
@@ -699,8 +709,13 @@ class AsyncBaseCommandProcessor(ABC):
         # so there's nothing for this ambiguity check to catch). Skipping it
         # avoids a redundant, expensive ambiguous-Display-Name lookup on
         # every Create that already fully disambiguates its target.
+        # Action-style commands (supports_target_element_lookup() False, e.g.
+        # Create Subscription Type) never upsert by Display Name, so the
+        # check is pointless for them -- and costs ~1s per candidate when the
+        # name is shared.
         if (
-            not self.as_is_element
+            self.supports_target_element_lookup()
+            and not self.as_is_element
             and not self._user_supplied_qualified_name
             and self.command.verb in ["Create", "Define", "Register", "Add", "Upsert"]
         ):
@@ -1525,6 +1540,9 @@ class AsyncBaseCommandProcessor(ABC):
                 logger.debug(f"resolve_element_guid: cache hit (ambiguous, Pass 1) for {pass1_key!r}")
                 _report_ambiguous("Pass 1, cached")
                 return None
+            elif cached1 is _AMBIGUOUS_SILENT:
+                logger.debug(f"resolve_element_guid: cache hit (ambiguous 404-002, Pass 1) for {pass1_key!r}")
+                return None
             elif cached1 is not _NOT_CACHED:
                 logger.debug(f"resolve_element_guid: cache hit for {pass1_key!r} -> {cached1!r}")
                 res = cached1
@@ -1537,6 +1555,10 @@ class AsyncBaseCommandProcessor(ABC):
                     if "Multiple elements found" in str(e):
                         query_cache[pass1_key] = _AMBIGUOUS
                         _report_ambiguous("Pass 1")
+                        return None
+                    if _is_egeria_multiple_entities_error(e):
+                        query_cache[pass1_key] = _AMBIGUOUS_SILENT
+                        logger.debug(f"resolve_element_guid: '{name_or_guid}' is ambiguous (Pass 1): {e}")
                         return None
                     if tech_type and self._is_unsupported_type_lookup_error(e):
                         error_id = self._extract_egeria_error_id(e) or "unknown-error-id"
@@ -1564,6 +1586,9 @@ class AsyncBaseCommandProcessor(ABC):
                     logger.debug(f"resolve_element_guid: cache hit (ambiguous, Pass 2) for {pass2_key!r}")
                     _report_ambiguous("Pass 2, cached")
                     return None
+                elif cached2 is _AMBIGUOUS_SILENT:
+                    logger.debug(f"resolve_element_guid: cache hit (ambiguous 404-002, Pass 2) for {pass2_key!r}")
+                    return None
                 elif cached2 is not _NOT_CACHED:
                     logger.debug(f"resolve_element_guid: cache hit for {pass2_key!r} -> {cached2!r}")
                     res = cached2
@@ -1575,6 +1600,10 @@ class AsyncBaseCommandProcessor(ABC):
                         if "Multiple elements found" in str(e):
                             query_cache[pass2_key] = _AMBIGUOUS
                             _report_ambiguous("Pass 2")
+                            return None
+                        if _is_egeria_multiple_entities_error(e):
+                            query_cache[pass2_key] = _AMBIGUOUS_SILENT
+                            logger.debug(f"resolve_element_guid: '{name_or_guid}' is ambiguous (Pass 2): {e}")
                             return None
                         logger.debug(f"SDK strict lookup (Pass 2) failed for '{name_or_guid}': {e}")
                         if self.context.get("directive") == "validate":
