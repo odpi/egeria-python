@@ -203,7 +203,9 @@ def _native_count_method(client, candidates: Sequence[str], cache_key: str) -> O
         _count_caps[cache_key] = name
         logger.info(f"overview_metrics count seam [{cache_key}]: "
                     + (f"native via {name}" if name else "fallback to len(find/get)"))
-    return _count_caps[cache_key]
+    name = _count_caps[cache_key]
+    # The cache is per class name; a client of another class with the same name may lack the method.
+    return name if name and callable(getattr(client, name, None)) else None
 
 
 def _as_count(res) -> Optional[int]:
@@ -302,6 +304,13 @@ def _push_down(scope: Optional[str]) -> Optional[bool]:
     raise ValueError(f"scope must be None, {SCOPE_VIEWER!r} or {SCOPE_REPOSITORY!r}; got {scope!r}")
 
 
+def _pop(scope: Optional[str]) -> Dict[str, Optional[str]]:
+    """Keyword arguments that forward a composite's population to a count helper. `population=None`
+    means "not given" to the keyword wrapper (the helper's repository default then applies), so the
+    server default, scope=None, is forwarded as `scope=None` instead -- explicitly, not lost."""
+    return {"population": scope} if scope is not None else {"scope": None}
+
+
 # ── not-measured notes ─────────────────────────────────────────────────────
 # A count that comes back None is "not measured", never 0 and never the find
 # cap. The value alone cannot say why, or what lower bound the fallback did
@@ -349,6 +358,11 @@ def _native_failure_words(exc: Optional[BaseException], tried: bool) -> str:
 
 def _count_label(body: dict) -> str:
     label = body.get("metadataElementTypeName") or "elements"
+    props = ((body.get("searchProperties") or {}).get("conditions")) or []
+    words = [f"{c.get('property')} {'=' if c.get('operator') == 'EQ' else '!='} "
+             f"{((c.get('value') or {}).get('primitiveValue'))!r}" for c in props if isinstance(c, dict)]
+    if words:
+        label = f"{label} with {' and '.join(words)}"
     conditions = ((body.get("matchClassifications") or {}).get("conditions")) or []
     names = [c.get("name") for c in conditions if isinstance(c, dict) and c.get("name")]
     return f"{label} classified {'/'.join(names)}" if names else label
@@ -364,13 +378,14 @@ def _element_count(mgr, body: dict, as_of: Optional[str] = None, strict: bool = 
     """Count elements matching a FindRequestBody -- native when available, else
     len(find_metadata_elements(...)).
 
-    scope="repository": only a native push-down count can answer. The
-    len(find) fallback is always viewer-scoped, so it is NOT used -- the result
-    is None (strict) or 0 (non-strict, the historical failure value) instead of
-    a viewer number masquerading as a repository one.
+    scope="repository" (the default of every public count helper): only a
+    native push-down count can answer. The len(find) fallback is always
+    viewer-scoped, so it is NOT used -- a failed native count is None (strict
+    or not) with a note, never 0 and never a viewer number masquerading as a
+    repository one.
 
-    strict=False: 0 when the fallback query fails (the historical behaviour).
-    strict=True: None when the fallback query fails.
+    scope="viewer" or None: strict=False gives 0 when the fallback query fails
+    (the historical behaviour); strict=True gives None.
     Either way: None when the fallback returned a full page (DEFAULT_CAP). That
     is only a lower bound, never a total, so it is never returned as one; the
     bound and the reason go to `recording_unmeasured()`'s notes.
@@ -394,13 +409,10 @@ def _element_count(mgr, body: dict, as_of: Optional[str] = None, strict: bool = 
             _disable_native(mgr, exc)
     native_words = _native_failure_words(native_exc, tried)
     if scope == SCOPE_REPOSITORY:
-        if strict:
-            _not_measured(what, f"{native_words}, and a repository-population count has no fallback "
-                                f"(the find fallback is viewer-scoped)")
-            return None
-        logger.warning(f"overview_metrics: repository-scope count of {what!r} not measured -- "
-                       f"native count unavailable or failed (the find fallback is viewer-scoped)")
-        return 0
+        # Strict or not: a repository count has no fallback, and 0 here would read as an empty catalog.
+        _not_measured(what, f"{native_words}, and a repository-population count has no fallback "
+                            f"(the find fallback only sees what the viewer may see)")
+        return None
     found = _find_or_none(mgr, b)
     if found is None:
         if not strict:
@@ -420,18 +432,21 @@ def count_elements(
     as_of: Optional[str] = None,
     classifications: Optional[Sequence[str]] = None,
     strict: bool = False,
-    scope: Optional[str] = None,
+    scope: Optional[str] = SCOPE_REPOSITORY,
 ) -> Optional[int]:
     """
     Count ACTIVE elements, optionally of a given type and/or matching ANY of
-    the given classifications. Uses native `count_metadata_elements` when the
-    client + server support it, else `len(find_metadata_elements(...))`.
+    the given classifications, with native `count_metadata_elements`.
 
-    By default a failed query counts as 0, so an outage looks like an empty
-    catalog. Pass strict=True to get None instead whenever the number is not
-    known (ISSUE-123). Strict or not, a find fallback that stops at DEFAULT_CAP
-    gives None, never the cap: that page is a lower bound, not a total (its
-    bound and reason are recorded for `recording_unmeasured()`).
+    In the repository population (the default) only the native count can
+    answer: when it is unavailable, fails or times out the result is None,
+    strict or not, with its reason recorded for `recording_unmeasured()`.
+
+    Only in the viewer population (or scope=None) does a missing or failed
+    native count fall back to `len(find_metadata_elements(...))`. There a
+    failed query counts as 0 unless strict=True (ISSUE-123), and a fallback
+    that stops at DEFAULT_CAP gives None, never the cap: that page is a lower
+    bound, not a total (its bound and reason are recorded too).
 
     Parameters
     ----------
@@ -442,16 +457,19 @@ def count_elements(
         single call's worth (some connectors mishandle 2+ ANY conditions)
     strict : when True, return None (not 0) if the query failed. A fallback
         count that hit DEFAULT_CAP is None in either mode
-    scope : None (server default), "viewer" (push_down=False: only what the
-        caller may see) or "repository" (push_down=True: whole-repository raw
-        count, fast, includes elements the caller cannot see). The len(find)
+    scope : "repository" (the default: push_down=True, a whole-repository raw
+        count -- fast, and it includes elements the caller may not be able to
+        see; a deliberate interim choice, until zone-aware push-down exists),
+        "viewer" (push_down=False: only what the caller may see) or None (omit
+        push_down; the server default, which is viewer-scoped). The len(find)
         fallback always answers in viewer scope, so with scope="repository" it
-        is never used: a failed native count is None (strict) or 0 (non-strict).
+        is never used: a failed native count is None, strict or not.
 
     Returns
     -------
-    Optional[int] -- 0 on a failed query (never raises), None on a capped
-    fallback; with strict=True, None whenever the count is not measured
+    Optional[int] -- None whenever a repository count is not measured, and on
+    a capped fallback; in viewer scope a failed query is 0 unless strict=True
+    (never raises)
     """
     body: Dict[str, Any] = {"class": "FindRequestBody", "limitResultsByStatus": ["ACTIVE"]}
     if type_name:
@@ -472,16 +490,18 @@ def count_elements_by_property(
     property_value: str,
     as_of: Optional[str] = None,
     strict: bool = False,
-    scope: Optional[str] = None,
+    scope: Optional[str] = SCOPE_REPOSITORY,
+    operator: str = "EQ",
 ) -> Optional[int]:
     """
     Count ACTIVE elements of a given type whose named string property equals
     a given value -- e.g. counting DigitalProduct elements by deploymentStatus
     (Overview dashboard's Data Products tile, OVERVIEW_NEXT_STEPS.md
-    "Remaining app wiring"). Same native-count-with-fallback seam as
-    count_elements, just with a searchProperties EQ condition instead of a
-    bare type filter -- one cheap native COUNT call per distinct value, no
-    element fetch, same cost class as the plain count.
+    "Remaining app wiring"). Same count seam as count_elements -- native
+    only in the repository population, a capped-find fallback only in the
+    viewer population -- just with a searchProperties EQ (or NEQ) condition
+    instead of a bare type filter: one cheap native COUNT call per distinct
+    value, no element fetch, same cost class as the plain count.
 
     Parameters
     ----------
@@ -491,12 +511,17 @@ def count_elements_by_property(
     property_value : the exact string value to match
     as_of : ISO-8601 asOfTime for a point-in-time count (None = now)
     strict : as for count_elements -- None instead of 0 when not measured
-    scope : as for count_elements (None | "viewer" | "repository")
+    scope : as for count_elements ("repository" by default | "viewer" | None)
+    operator : "EQ" (the default: the property equals `property_value`) or
+        "NEQ" (it is set and differs -- e.g. property_value="" counts elements
+        whose property is set to something other than the empty string)
 
     Returns
     -------
     Optional[int] -- as for count_elements
     """
+    if operator not in ("EQ", "NEQ"):
+        raise ValueError(f"count_elements_by_property: operator must be 'EQ' or 'NEQ'; got {operator!r}")
     body: Dict[str, Any] = {
         "class": "FindRequestBody",
         "metadataElementTypeName": type_name,
@@ -506,7 +531,7 @@ def count_elements_by_property(
             "matchCriteria": "ALL",
             "conditions": [{
                 "property": property_name,
-                "operator": "EQ",
+                "operator": operator,
                 "value": {"class": "PrimitiveTypePropertyValue", "typeName": "string", "primitiveValue": property_value},
             }],
         },
@@ -516,7 +541,7 @@ def count_elements_by_property(
 
 @_population_keyword
 def count_relationships(ce, relationship_type: str, as_of: Optional[str] = None, expert=None,
-                        scope: Optional[str] = None) -> Optional[int]:
+                        scope: Optional[str] = SCOPE_REPOSITORY) -> Optional[int]:
     """
     Count relationships of a type, optionally as of a past time.
 
@@ -531,16 +556,22 @@ def count_relationships(ce, relationship_type: str, as_of: Optional[str] = None,
 
     Parameters
     ----------
-    ce : ClassificationExplorer (or compatible client)
+    ce : EgeriaTech (or another client with both get_relationships and the native
+        count_relationships_between_elements; a bare ClassificationExplorer has
+        only get_relationships, so it can answer a viewer count only)
     relationship_type : the relationship type name to count
     as_of : ISO-8601 asOfTime for a point-in-time count (None = now)
-    expert : optional MetadataExpert to enable the native fast-path
-    scope : None (default: today's behaviour), "viewer" (native push_down=False)
-        or "repository" (native push_down=True). Only the native path takes a
-        scope; the get_relationships path is always viewer-scoped, so with
-        scope="repository" it is never used -- a missing `expert`, an
-        unsupported server or a failed native call gives None, not a viewer
-        number.
+    expert : optional MetadataExpert to enable the native fast-path. With
+        scope="repository" and no `expert`, `ce` itself is used when it has the
+        native method (an EgeriaTech does; a bare ClassificationExplorer does not)
+    scope : "repository" (the default: native push_down=True, whole repository,
+        including relationships the caller may not be able to see), "viewer"
+        (native push_down=False) or None (the get_relationships path, unless an
+        `expert` is passed). Only the native path takes a scope; the
+        get_relationships path is always viewer-scoped, so with
+        scope="repository" it is never used -- no native method, an
+        unsupported server or a failed native call gives None with a note, not
+        a viewer number.
 
     Returns
     -------
@@ -551,6 +582,8 @@ def count_relationships(ce, relationship_type: str, as_of: Optional[str] = None,
     push_down = _push_down(scope)
     kw = {} if push_down is None else {"push_down": push_down}
     tried, native_exc = False, None
+    if expert is None and scope == SCOPE_REPOSITORY:
+        expert = ce  # only a native count can answer for the repository; ce may be able to give one
     if expert is not None and not _native_disabled(expert):
         name = _native_count_method(expert, _REL_COUNT_CANDIDATES, "rel:" + type(expert).__name__)
         if name:
@@ -567,8 +600,10 @@ def count_relationships(ce, relationship_type: str, as_of: Optional[str] = None,
                 native_exc = exc
                 _disable_native(expert, exc)
     if scope == SCOPE_REPOSITORY:
-        logger.warning(f"overview_metrics: repository-scope count of {relationship_type!r} not measured -- "
-                       f"native count unavailable or failed (get_relationships is viewer-scoped)")
+        words = (_native_failure_words(native_exc, tried) if tried
+                 else "no native relationship count is available (it needs a MetadataExpert client)")
+        _not_measured(relationship_type, f"{words}, and a repository-population count has no fallback "
+                                         f"(get_relationships only sees what the viewer may see)")
         return None
     try:
         body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
@@ -588,7 +623,7 @@ def count_relationships(ce, relationship_type: str, as_of: Optional[str] = None,
 
 @_population_keyword
 def counts_by_type(mgr, type_map: Sequence[Tuple[str, str]], as_of: Optional[str] = None,
-                   strict: bool = False, scope: Optional[str] = None) -> List[Dict[str, Any]]:
+                   strict: bool = False, scope: Optional[str] = SCOPE_REPOSITORY) -> List[Dict[str, Any]]:
     """
     Per-type counts for a set of (label, type_name) pairs -- e.g. the assets-
     by-type composition breakdown. Unknown/wrong types just yield 0 rather
@@ -599,7 +634,7 @@ def counts_by_type(mgr, type_map: Sequence[Tuple[str, str]], as_of: Optional[str
     Returns a list of {"label": ..., "type": ..., "count": ...} dicts, in the
     order given.
     """
-    return [{"label": label, "type": type_name, "count": count_elements(mgr, type_name, as_of, strict=strict, population=scope)}
+    return [{"label": label, "type": type_name, "count": count_elements(mgr, type_name, as_of, strict=strict, **_pop(scope))}
             for label, type_name in type_map]
 
 
@@ -799,7 +834,8 @@ def ownership_coverage(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
 
 
 @_population_keyword
-def business_value_signals(mgr, as_of: Optional[str] = None, scope: Optional[str] = None) -> Dict[str, Any]:
+def business_value_signals(mgr, as_of: Optional[str] = None,
+                           scope: Optional[str] = SCOPE_REPOSITORY) -> Dict[str, Any]:
     """
     Real signals behind the Overview dashboard's four "Business Value" tiles
     (NEXT-9) -- replaces the four previously-synthetic narrative numbers
@@ -810,68 +846,55 @@ def business_value_signals(mgr, as_of: Optional[str] = None, scope: Optional[str
     it (e.g. "more described assets" is a proxy for self-service findability,
     not a measure of actual query/access frequency).
 
-    A single Asset-hierarchy fetch answers two of the four fields
-    (confidentiality exposure and description coverage -- both are
-    per-element checks on the same fetched set, same "check several signals
-    from one fetch" shape `context_readiness_funnel` already uses).
+    Every field is a native count in one population, `scope` ("repository" by
+    default: the whole repository, including elements the viewer may not be
+    able to see; or "viewer"), so the asset-scoped shares never mix
+    populations:
+
+    - assetTotal: Assets (the supertype, so every subtype).
+    - confidentialCount: Assets carrying Confidentiality.
+    - describedCount: Assets whose `description` is set and not the empty
+      string (`NEQ ""`; a whitespace-only description counts as described).
+    - duplicateCount: elements of any type carrying ConsolidatedDuplicate.
 
     IMPORTANT scoping distinction from `governed_coverage`'s own
     `byClassification["Confidentiality"]`: that number is NOT Asset-scoped
     (any element type carrying the classification counts, per its own
-    documented caveat), whereas `confidentialCount` here IS Asset-scoped by
-    construction (checked only on elements this function's own Asset-
-    hierarchy fetch returned). Confirmed live 2026-08-02 on a real dataset:
-    5 total Confidentiality-classified elements exist, only 1 of which is
-    Asset-typed (a CSVFile; the other 4 are typed `Referenceable`, not under
-    `Asset`) -- the two numbers are both correct, just different
+    documented caveat), whereas `confidentialCount` here IS Asset-scoped
+    (the count names the Asset type). Confirmed live 2026-08-02 on a real
+    dataset: 5 total Confidentiality-classified elements exist, only 1 of
+    which is Asset-typed (a CSVFile; the other 4 are typed `Referenceable`,
+    not under `Asset`) -- the two numbers are both correct, just different
     populations, not a discrepancy to "fix."
 
-    Duplicate detection is a separate classification count. Data Products
-    (Trust & Adoption) is deliberately NOT duplicated here -- callers already
-    have a live `dataProducts` count from `count_elements(mgr, "DigitalProduct", as_of)`
-    elsewhere in the same request; no rating/adoption signal is wired (no
-    `AttachedRating` relationships exist against `DigitalProduct` in a typical
-    demo dataset, confirmed live -- so a rating average is honestly omitted
-    rather than faked).
+    Data Products (Trust & Adoption) is deliberately NOT duplicated here --
+    callers already have a live `dataProducts` count from
+    `count_elements(mgr, "DigitalProduct", as_of)` elsewhere in the same
+    request; no rating/adoption signal is wired (no `AttachedRating`
+    relationships exist against `DigitalProduct` in a typical demo dataset,
+    confirmed live -- so a rating average is honestly omitted rather than
+    faked).
 
-    `scope` applies to the duplicate count only; the Asset-derived fields come
-    from a find and stay viewer-scoped.
-
-    Any field whose query failed is None (unmeasured), never 0: assetTotal/
-    assetCapped/confidentialCount/describedCount when the Asset find fails,
-    duplicateCount when its (strict) count fails.
+    These figures used to come from one capped Asset find, so on a catalog
+    over DEFAULT_CAP assets they described the first page only. A count that
+    was not measured is None, never 0. `assetCapped` is kept for callers that
+    read it: False when assetTotal was measured (a native count is
+    complete), None when it was not.
 
     Returns {"assetTotal": int|None, "assetCapped": bool|None,
     "confidentialCount": int|None, "describedCount": int|None,
     "duplicateCount": int|None}.
     """
-    body = {"class": "FindRequestBody", "limitResultsByStatus": ["ACTIVE"],
-            "metadataElementTypeName": "Asset"}
-    if as_of:
-        body["asOfTime"] = as_of
-    assets = _find_or_none(mgr, body)
-
-    confidential: Optional[int] = None
-    described: Optional[int] = None
-    if assets is not None:
-        confidential = 0
-        described = 0
-    for a in assets or []:
-        if "Confidentiality" in _classifications_of(a):
-            confidential += 1
-        pvm = (a.get("elementProperties") or {}).get("propertyValueMap") or {}
-        desc = (pvm.get("description") or {}).get("primitiveValue")
-        if isinstance(desc, str) and desc.strip():
-            described += 1
-
-    duplicate = count_elements(mgr, None, as_of, classifications=["ConsolidatedDuplicate"], strict=True, population=scope)
-
+    total = count_elements(mgr, "Asset", as_of, strict=True, **_pop(scope))
     return {
-        "assetTotal": len(assets) if assets is not None else None,
-        "assetCapped": (len(assets) >= DEFAULT_CAP) if assets is not None else None,
-        "confidentialCount": confidential,
-        "describedCount": described,
-        "duplicateCount": duplicate,
+        "assetTotal": total,
+        "assetCapped": None if total is None else False,
+        "confidentialCount": count_elements(mgr, "Asset", as_of, classifications=["Confidentiality"],
+                                            strict=True, **_pop(scope)),
+        "describedCount": count_elements_by_property(mgr, "Asset", "description", "", as_of, strict=True,
+                                                     **_pop(scope), operator="NEQ"),
+        "duplicateCount": count_elements(mgr, None, as_of, classifications=["ConsolidatedDuplicate"],
+                                         strict=True, **_pop(scope)),
     }
 
 
@@ -935,8 +958,9 @@ def certifications_summary(ce, as_of: Optional[str] = None) -> Dict[str, Any]:
     except Exception as exc:  # noqa: BLE001
         logger.debug(f"overview_metrics certifications_summary: query failed: {exc}")
 
-    out["licenses"] = count_relationships(ce, "License", as_of)
-    out["exceptions"] = count_relationships(ce, "Exception", as_of)
+    # One population per payload: active/expiring come from a get_relationships page (viewer-scoped).
+    out["licenses"] = count_relationships(ce, "License", as_of, population=SCOPE_VIEWER)
+    out["exceptions"] = count_relationships(ce, "Exception", as_of, population=SCOPE_VIEWER)
     return out
 
 
@@ -962,7 +986,10 @@ def orphan_glossary_terms(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Opt
     "orphanCount": int|None}. Any field is None on total failure for its own
     step (never raises).
     """
-    term_total = count_elements(mgr, "GlossaryTerm", as_of, strict=True)
+    # One population per payload: this payload's other figures come from a find, which only sees what the
+    # viewer may see, so its native total is counted in the viewer population too (never a repository
+    # total under a viewer numerator).
+    term_total = count_elements(mgr, "GlossaryTerm", as_of, strict=True, population=SCOPE_VIEWER)
 
     referenced_count = None
     try:
@@ -1026,7 +1053,11 @@ def stale_assets(mgr, as_of: Optional[str] = None, days: int = 180) -> Dict[str,
     except Exception as exc:  # noqa: BLE001
         logger.debug(f"stale_assets: query failed: {exc}")
 
-    return {"staleCount": stale_count, "assetTotal": count_elements(mgr, "Asset", as_of, strict=True)}
+    # One population per payload: this payload's other figures come from a find, which only sees what the
+    # viewer may see, so its native total is counted in the viewer population too (never a repository
+    # total under a viewer numerator).
+    return {"staleCount": stale_count,
+            "assetTotal": count_elements(mgr, "Asset", as_of, strict=True, population=SCOPE_VIEWER)}
 
 
 def semantic_grounding(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Any]:
@@ -1035,10 +1066,15 @@ def semantic_grounding(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Any]:
     asset), as a count and as a percentage of the broad `Asset` supertype
     count -- the "meaning layer" that grounds AI context.
 
+    Both counts are native and in the repository population (the whole
+    repository, including elements the viewer may not be able to see), so the
+    percentage never divides one population by the other. `mgr` is the
+    MetadataExpert the repository relationship count needs.
+
     Returns {"groundingLinks": int|None, "groundingPct": int|None}.
     """
-    cataloged = count_elements(mgr, "Asset", as_of, strict=True)
-    links = count_relationships(ce, "SemanticAssignment", as_of)
+    cataloged = count_elements(mgr, "Asset", as_of, strict=True, population=SCOPE_REPOSITORY)
+    links = count_relationships(ce, "SemanticAssignment", as_of, expert=mgr, population=SCOPE_REPOSITORY)
     pct = min(100, round(100 * links / cataloged)) if cataloged and links is not None else None
     return {"groundingLinks": links, "groundingPct": pct}
 
@@ -1048,11 +1084,14 @@ def context_readiness_funnel(mgr, ce, as_of: Optional[str] = None) -> Dict[str, 
     Context-readiness funnel stages: how much cataloged data becomes
     trustworthy AI context.
 
-    `documented` -- count of `Asset` elements carrying a non-empty
-    `description`, same field-value-check approach `term_definition_completeness`
-    uses for GlossaryTerm (fetches element bodies via `_find`, capped at
-    DEFAULT_CAP -- no native count exists for "has a description", same
-    tradeoff `governed_coverage`'s by-classification breakdown already accepts).
+    Every stage is a native count in the repository population (the whole
+    repository, including elements the viewer may not be able to see), so the
+    stages can be compared without mixing populations.
+
+    `documented` -- count of `Asset` elements whose `description` is set and
+    not the empty string (a native `NEQ ""` property count, the same one
+    `term_definition_completeness` uses; a whitespace-only description counts
+    as documented).
 
     `lineage` -- count of `DataFlow` relationships (design/business lineage --
     literal data-movement edges between assets/processes; distinct from
@@ -1081,26 +1120,13 @@ def context_readiness_funnel(mgr, ce, as_of: Optional[str] = None) -> Dict[str, 
     Returns {"cataloged": int|None, "documented": int|None, "classified": int|None,
     "lineage": int|None, "aiReady": None}.
     """
-    cataloged = count_elements(mgr, "Asset", as_of, strict=True)
-    classified = count_elements(mgr, None, as_of, classifications=GOVERNANCE_CLASSIFICATIONS, strict=True)
-
-    documented = None
-    try:
-        body: Dict[str, Any] = {"class": "FindRequestBody", "limitResultsByStatus": ["ACTIVE"],
-                                 "metadataElementTypeName": "Asset"}
-        if as_of:
-            body["asOfTime"] = as_of
-        assets = _find_or_none(mgr, body)  # None when the find failed: documented stays None, not 0
-        documented = None if assets is None else 0
-        for a in assets or []:
-            pvm = (a.get("elementProperties") or {}).get("propertyValueMap") or {}
-            desc = (pvm.get("description") or {}).get("primitiveValue")
-            if isinstance(desc, str) and desc.strip():
-                documented += 1
-    except Exception as exc:  # noqa: BLE001
-        logger.debug(f"context_readiness_funnel: documented query failed: {exc}")
-
-    lineage = count_relationships(ce, "DataFlow", as_of)
+    pop = SCOPE_REPOSITORY
+    cataloged = count_elements(mgr, "Asset", as_of, strict=True, population=pop)
+    classified = count_elements(mgr, None, as_of, classifications=GOVERNANCE_CLASSIFICATIONS, strict=True,
+                                population=pop)
+    documented = count_elements_by_property(mgr, "Asset", "description", "", as_of, strict=True,
+                                            population=pop, operator="NEQ")
+    lineage = count_relationships(ce, "DataFlow", as_of, expert=mgr, population=pop)
 
     return {
         "cataloged": cataloged,
@@ -1352,7 +1378,7 @@ def _update_time(el: dict):
 
 
 @_population_keyword
-def people_counts(mgr, as_of: Optional[str] = None, strict: bool = False, scope: Optional[str] = None) -> Dict[str, Optional[int]]:
+def people_counts(mgr, as_of: Optional[str] = None, strict: bool = False, scope: Optional[str] = SCOPE_REPOSITORY) -> Dict[str, Optional[int]]:
     """
     Person / Team / Organization / ITProfile / Community counts via native
     element counts (sub-second where an older find-and-bucket approach would
@@ -1366,11 +1392,11 @@ def people_counts(mgr, as_of: Optional[str] = None, strict: bool = False, scope:
     could not be measured is None (see count_elements).
     """
     return {
-        "persons": count_elements(mgr, "Person", as_of, strict=strict, population=scope),
-        "teams": count_elements(mgr, "Team", as_of, strict=strict, population=scope),
-        "organizations": count_elements(mgr, "Organization", as_of, strict=strict, population=scope),
-        "itProfiles": count_elements(mgr, "ITProfile", as_of, strict=strict, population=scope),
-        "communities": count_elements(mgr, "Community", as_of, strict=strict, population=scope),
+        "persons": count_elements(mgr, "Person", as_of, strict=strict, **_pop(scope)),
+        "teams": count_elements(mgr, "Team", as_of, strict=strict, **_pop(scope)),
+        "organizations": count_elements(mgr, "Organization", as_of, strict=strict, **_pop(scope)),
+        "itProfiles": count_elements(mgr, "ITProfile", as_of, strict=strict, **_pop(scope)),
+        "communities": count_elements(mgr, "Community", as_of, strict=strict, **_pop(scope)),
     }
 
 
@@ -1384,7 +1410,7 @@ _FEEDBACK_RELATIONSHIP_TYPES = (
 
 
 @_population_keyword
-def feedback_summary(ce, as_of: Optional[str] = None, scope: Optional[str] = None, expert=None) -> Dict[str, Any]:
+def feedback_summary(ce, as_of: Optional[str] = None, scope: Optional[str] = SCOPE_REPOSITORY, expert=None) -> Dict[str, Any]:
     """
     Crowd-sourced feedback tally -- ratings/comments/likes/tags/note-logs
     (Collaboration OMAS relationship counts). Often sparse in demo data, but
@@ -1400,13 +1426,13 @@ def feedback_summary(ce, as_of: Optional[str] = None, scope: Optional[str] = Non
     Returns {"byType": {ratings, comments, likes, tags, noteLogs: int|None},
     "total": int|None}.
     """
-    by_type = {key: count_relationships(ce, rel, as_of, expert=expert, population=scope) for rel, key in _FEEDBACK_RELATIONSHIP_TYPES}
+    by_type = {key: count_relationships(ce, rel, as_of, expert=expert, **_pop(scope)) for rel, key in _FEEDBACK_RELATIONSHIP_TYPES}
     measured = all(v is not None for v in by_type.values())
     return {"byType": by_type, "total": sum(by_type.values()) if measured else None}
 
 
 @_population_keyword
-def usage_context_counts(mgr, as_of: Optional[str] = None, strict: bool = False, scope: Optional[str] = None) -> Dict[str, Optional[int]]:
+def usage_context_counts(mgr, as_of: Optional[str] = None, strict: bool = False, scope: Optional[str] = SCOPE_REPOSITORY) -> Dict[str, Optional[int]]:
     """
     InformationSupplyChain and SolutionBlueprint counts -- what puts assets
     in a *usage context* ("this store feeds the Clinical Trial supply
@@ -1416,8 +1442,8 @@ def usage_context_counts(mgr, as_of: Optional[str] = None, strict: bool = False,
     strict=True, a count that could not be measured is None (see count_elements).
     """
     return {
-        "informationSupplyChains": count_elements(mgr, "InformationSupplyChain", as_of, strict=strict, population=scope),
-        "blueprints": count_elements(mgr, "SolutionBlueprint", as_of, strict=strict, population=scope),
+        "informationSupplyChains": count_elements(mgr, "InformationSupplyChain", as_of, strict=strict, **_pop(scope)),
+        "blueprints": count_elements(mgr, "SolutionBlueprint", as_of, strict=strict, **_pop(scope)),
     }
 
 
@@ -1478,7 +1504,10 @@ def contextualised_coverage(mgr, ce, as_of: Optional[str] = None) -> Dict[str, O
     except Exception as exc:  # noqa: BLE001
         logger.debug(f"contextualised_coverage: ImplementedBy query failed: {exc}")
 
-    asset_total = count_elements(mgr, "Asset", as_of, strict=True)
+    # One population per payload: this payload's other figures come from a find, which only sees what the
+    # viewer may see, so its native total is counted in the viewer population too (never a repository
+    # total under a viewer numerator).
+    asset_total = count_elements(mgr, "Asset", as_of, strict=True, population=SCOPE_VIEWER)
 
     pct = None
     if contextualised_count is not None and asset_total:
@@ -1523,7 +1552,10 @@ def solution_component_realisation(mgr, ce, as_of: Optional[str] = None) -> Dict
     int|None}. Either field is None on total failure for its own step (never
     raises).
     """
-    total = count_elements(mgr, "SolutionComponent", as_of, strict=True)
+    # One population per payload: this payload's other figures come from a find, which only sees what the
+    # viewer may see, so its native total is counted in the viewer population too (never a repository
+    # total under a viewer numerator).
+    total = count_elements(mgr, "SolutionComponent", as_of, strict=True, population=SCOPE_VIEWER)
 
     realised_count = None
     try:
@@ -1694,6 +1726,7 @@ def growth_series(
     window: str = "6mo",
     points: Optional[int] = None,
     type_map: Optional[Sequence[Tuple[str, Optional[str], Optional[Sequence[str]]]]] = None,
+    population: str = SCOPE_REPOSITORY,
 ) -> List[Dict[str, Any]]:
     """
     A real growth series -- one snapshot per point, using Egeria's native
@@ -1707,6 +1740,8 @@ def growth_series(
     type_map : what to snapshot at each point, as (series_key, type_name,
         classifications) triples. Defaults to the Overview dashboard's own
         four series: assets/terms/governed/products.
+    population : "repository" (the default: whole-repository native counts,
+        including elements the viewer may not be able to see) or "viewer"
 
     Returns a list of dicts, oldest first, each
     {"label": ..., "date": ..., <series_key>: count, ...}.
@@ -1721,6 +1756,7 @@ def growth_series(
             ("products", "DigitalProduct", None),
         ]
 
+    _push_down(population)  # ValueError for an unknown population, before any count
     span_s, default_pts = WINDOWS.get(window, WINDOWS["6mo"])
     n = points or default_pts
 
@@ -1738,7 +1774,8 @@ def growth_series(
         point = {"label": growth_label(d, span_s), "date": d.strftime(date_fmt)}
         try:
             for key, type_name, classifications in type_map:
-                point[key] = count_elements(mgr, type_name, as_of, classifications=classifications, strict=True)
+                point[key] = count_elements(mgr, type_name, as_of, classifications=classifications, strict=True,
+                                            **_pop(population))
         except Exception as exc:  # noqa: BLE001
             logger.debug(f"overview_metrics growth_series: snapshot {i} failed: {exc}")
             for key, _, _ in type_map:
@@ -1780,6 +1817,11 @@ def metric_trend(
     Pass both `mgr` and `ce` regardless of what the target function actually
     needs -- only the client parameter names it declares (by leading
     positional parameter named "mgr"/"ce") are bound; the other is unused.
+    `mgr` is an EgeriaTech: a slot the target declares as
+    `egeria_client:EgeriaTech` gets `mgr`, even one named `ce` --
+    feedback_summary and count_relationships count repository relationships
+    through `ce`, which needs MetadataExpert's native count, and a
+    ClassificationExplorer lacks it.
 
     `metric_params` are extra keyword arguments forwarded to the target
     function at every snapshot (e.g. `classifications` for `count_elements`);
@@ -1797,12 +1839,17 @@ def metric_trend(
     func = resolve_report_spec_function(metric_path)
 
     clients = {"mgr": mgr, "ce": ce}
+    from pyegeria.view.analytic_registry import get_analytic_registry  # lazy, as above
+    target = get_analytic_registry().get(metric_path)
+    declared = list(getattr(target, "inputs", None) or [])
     bound_args = []
     for pname, param in inspect.signature(func).parameters.items():
         if pname in _CLIENT_PARAM_NAMES and param.kind in (
             inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD,
         ):
-            bound_args.append(clients[pname])
+            i = len(bound_args)
+            wants_tech = i < len(declared) and declared[i] == "egeria_client:EgeriaTech"
+            bound_args.append(mgr if wants_tech else clients[pname])
         else:
             break
 
@@ -1840,40 +1887,29 @@ def term_definition_completeness(mgr, as_of: Optional[str] = None) -> Dict[str, 
     `semantic_grounding` (which measures term<->asset linkage, not whether
     the term itself is actually defined).
 
-    Unlike `count_elements`'s classification-only filter, "has a
-    description" is a field-value check, so this fetches term bodies (via
-    `_find`, same `FindRequestBody`/`metadataElementTypeName` shape
-    `count_elements` uses) rather than using a native count -- no fast
-    native-count path exists for this, same tradeoff `governed_coverage`
-    accepts for its by-classification breakdown. `description` is read the
-    same way `_zone_names` reads `zoneMembership`: verified live against a
-    running server that `find_metadata_elements` returns raw
-    `elementProperties.propertyValueMap.description.primitiveValue`, not a
-    flat `properties.description` (that flatter shape belongs to the
-    output_format='JSON' relationship/report path other functions here use,
-    e.g. `certifications_summary`'s `end2`, not this raw element-query path).
+    Both numbers are native counts in the repository population (the whole
+    repository, including terms the viewer may not be able to see), so the
+    ratio never divides a viewer-scoped numerator by a repository total:
+    `total` counts GlossaryTerms, `defined` those whose `description` is set
+    and not the empty string (`NEQ ""`). A whitespace-only description counts
+    as defined -- Egeria's LIKE (regex) condition counted 0 for every pattern
+    tried live (2026-11-08), so "not blank" cannot be counted natively; live,
+    9 of 1061 terms differ. This used to scan one page of terms, so on a
+    glossary over DEFAULT_CAP terms the total was the page size, not the total.
 
     Returns {"total": int|None, "defined": int|None, "undefinedPct": int|None}
     (`undefinedPct` mirrors `semantic_grounding.groundingPct`'s naming: the
     gap, not the coverage, since a near-100%-defined glossary is the
-    uninteresting case and the gap is what's actionable). A failed find makes
-    all three None -- unmeasured, not an empty glossary.
+    uninteresting case and the gap is what's actionable). A count that was not
+    measured is None, and so is the percentage -- unmeasured, not an empty
+    glossary.
     """
-    body: Dict[str, Any] = {"class": "FindRequestBody", "limitResultsByStatus": ["ACTIVE"],
-                             "metadataElementTypeName": "GlossaryTerm"}
-    if as_of:
-        body["asOfTime"] = as_of
-    terms = _find_or_none(mgr, body)
-    if terms is None:
-        return {"total": None, "defined": None, "undefinedPct": None}
-    total = len(terms)
-    defined = 0
-    for t in terms:
-        pvm = (t.get("elementProperties") or {}).get("propertyValueMap") or {}
-        desc = (pvm.get("description") or {}).get("primitiveValue")
-        if isinstance(desc, str) and desc.strip():
-            defined += 1
-    undefined_pct = round(100 * (total - defined) / total) if total else None
+    pop = SCOPE_REPOSITORY
+    total = count_elements(mgr, "GlossaryTerm", as_of, strict=True, population=pop)
+    defined = count_elements_by_property(mgr, "GlossaryTerm", "description", "", as_of, strict=True,
+                                         population=pop, operator="NEQ")
+    undefined_pct = (round(100 * (total - defined) / total)
+                     if total and defined is not None else None)
     return {"total": total, "defined": defined, "undefinedPct": undefined_pct}
 
 
@@ -2099,7 +2135,7 @@ def _count_cell(mgr, type_name: str, as_of: Optional[str], scope: str, stamp: st
     reason = ""
     try:
         with recording_unmeasured() as notes:
-            value = count_elements(mgr, type_name, as_of, strict=True, population=scope)
+            value = count_elements(mgr, type_name, as_of, strict=True, **_pop(scope))
         if value is None:
             reason = (f"the {scope} count of {type_name} could not be measured: "
                       + ("; ".join(n["reason"] for n in notes) if notes

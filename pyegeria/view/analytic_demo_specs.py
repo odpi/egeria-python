@@ -116,10 +116,10 @@ _DEMOS: Dict[str, FormatSet] = {
     "Analytic Demo - Business Value Signals": _demo(
         heading="Business Value Signals",
         what="Real signals behind the Overview dashboard's four Business Value tiles "
-             "(NEXT-9): confidentialCount and describedCount come from a single "
-             "Asset-hierarchy fetch (assetTotal is that fetch's size, assetCapped=true "
-             "if it hit DEFAULT_CAP); duplicateCount is a separate ConsolidatedDuplicate "
-             "classification count. Each is a documented proxy, not a direct measure -- "
+             "(NEXT-9): assetTotal, confidentialCount (Assets classified Confidentiality), "
+             "describedCount (Assets whose description is set and not empty) and duplicateCount "
+             "(ConsolidatedDuplicate elements) are native counts over the whole repository, "
+             "including elements the viewer may not be able to see. Each is a documented proxy, not a direct measure -- "
              "see business_value_signals()'s docstring for the causal-claim caveat that "
              "belongs with each field before treating it as more than that.",
         analytic_function_name="business_value_signals",
@@ -181,7 +181,8 @@ _DEMOS: Dict[str, FormatSet] = {
     "Analytic Demo - Semantic Grounding": _demo(
         heading="Semantic Grounding Coverage",
         what="groundingLinks = count of SemanticAssignment relationships (term<->asset). "
-             "groundingPct = that count as a percent of the broad Asset supertype count "
+             "groundingPct = that count as a percent of the broad Asset supertype count; both are "
+             "native counts over the whole repository, including elements the viewer may not see "
              "(i.e. 'percent of Assets' as the denominator, capped at 100 -- an asset with "
              "multiple assignments can push the raw ratio over 100%, which is why it's capped, "
              "not because grounding coverage is literally bounded there). A per-asset detail "
@@ -193,12 +194,13 @@ _DEMOS: Dict[str, FormatSet] = {
     ),
     "Analytic Demo - AI Context Readiness": _demo(
         heading="AI Context Readiness Funnel",
-        what="'cataloged' (Asset supertype count), 'documented' (Assets with a non-empty "
-             "description, capped at DEFAULT_CAP -- a floor, not exact, on a large catalog), "
+        what="'cataloged' (Asset supertype count), 'documented' (Assets whose description is "
+             "set and not empty), "
              "'classified' (elements matching ANY of the same governance classifications "
              "governed_coverage uses), and 'lineage' (count of DataFlow relationships -- design/ "
-             "business lineage, distinct from OpenLineage's operational lineage) are all computed "
-             "as of 2026-08-01. 'aiReady' stays None from this function ALWAYS, by design -- these "
+             "business lineage, distinct from OpenLineage's operational lineage) are all native counts "
+             "over the whole repository (including elements the viewer may not be able to see), "
+             "computed as of 2026-08-01. 'aiReady' stays None from this function ALWAYS, by design -- these "
              "four are independent counts, not a per-asset check, so they can't answer 'how many "
              "assets are ALL of these at once'. See 'Analytic Demo - AI-Ready Assets' (below) for "
              "that -- a genuinely different function, not a missing field on this one.",
@@ -226,7 +228,8 @@ _DEMOS: Dict[str, FormatSet] = {
     "Analytic Demo - Catalog Growth Trend": _demo(
         heading="Catalog Growth Trend (6 Month)",
         what="Snapshot-based growth series -- assets/terms/governed/products, one point "
-             "per window step. Run with output_format SERIES for a Vega-Lite line chart.",
+             "per window step, each a native count over the whole repository (including elements "
+             "the viewer may not be able to see). Run with output_format SERIES for a Vega-Lite line chart.",
         analytic_function_name="growth_series",
         demo_params={"window": "6mo"},
         result_shape="list[dict] (time series: {label, date, <series_key>: count, ...})",
@@ -234,7 +237,9 @@ _DEMOS: Dict[str, FormatSet] = {
     ),
     "Analytic Demo - Term Definition Completeness": _demo(
         heading="Term Definition Completeness",
-        what="Share of GlossaryTerms carrying a non-empty description. undefinedPct is the gap "
+        what="Share of GlossaryTerms whose description is set and not empty; total and defined are "
+             "native counts over the whole repository (including terms the viewer may not be able to "
+             "see). undefinedPct is the gap "
              "(not the coverage) -- a near-100%-defined glossary is the uninteresting case, and "
              "the gap is what's actionable.",
         analytic_function_name="term_definition_completeness",
