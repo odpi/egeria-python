@@ -992,15 +992,15 @@ AnalyticFunctionSpec(
 )
 ```
 
-The role words are `egeria_client:<Class>`, `reader:<name>`, `viewer` and `subject`. The executor asks a role supply for each input before the routine runs and passes them positionally; declared params follow by name. No parameter name is read to decide what to pass. `exec_report_spec(..., supply=...)` takes an environment's own supply (`pyegeria.view.role_supply.RoleSupply`). Without one, `PlainSupply` hands the caller's single `EgeriaTech` to every `egeria_client` input whose class it serves, and refuses readers, the viewer and the subject. A role the supply cannot provide raises `RoleRefused` with the supply's words before any stage runs. A routine that declares no `egeria_client` input still connects to nothing (ISSUE-137).
+The role words are `egeria_client:<Class>`, `reader:<name>`, `viewer` and `subject`. Full detail, a custom supply and the errors are under [Routines, declarations and roles](#routines-declarations-and-roles). The executor asks a role supply for each input before the routine runs and passes them positionally; declared params follow by name. No parameter name is read to decide what to pass. `exec_report_spec(..., supply=...)` takes an environment's own supply (`pyegeria.view.role_supply.RoleSupply`). Without one, `PlainSupply` hands the caller's single `EgeriaTech` to every `egeria_client` input whose class it serves, and refuses readers, the viewer and the subject. A role the supply cannot provide raises `RoleRefused` with the supply's words before any stage runs. A routine that declares no `egeria_client` input still connects to nothing (ISSUE-137).
 
-Check 5 refuses, at load and at run with the same words, a routine whose binding takes leading `mgr`/`ce`/`expert`/`client` arguments that its `inputs` do not declare. The fix is to declare them.
+Check 5 refuses, at load and at run with the same words, a routine whose binding takes leading `mgr`/`ce`/`expert`/`client` arguments that its `inputs` do not declare. The fix is to declare them. See the compatibility note under [Routines, declarations and roles](#routines-declarations-and-roles) and the checks under [Will this spec run?](#will-this-spec-run-load-time-resolution).
 
-`analytic_binders` (ISSUE-138's factories) was removed in RS-W2-3 PR-B. For one release a spec that still carries the key loads, and the key is ignored: silently when empty, with a `DeprecationWarning` and a logged warning when not. Declare a reader as a `reader:<name>` input instead, and have the environment's supply provide it.
+`analytic_binders` (ISSUE-138's factories) was removed in RS-W2-3 PR-B. For one release a spec that still carries the key loads, and the key is ignored: silently when empty, with a `DeprecationWarning` and a logged warning when not. Declare a reader as a `reader:<name>` input instead, and have the environment's supply provide it. The recipe is under [Routines, declarations and roles](#routines-declarations-and-roles); the key will be refused in a later release.
 
 **`analytic_spec_params` are defaults, not pins.** Unlike the find path's `spec_params` (always fixed — a caller-supplied value for the same key is silently overridden), `analytic_spec_params` set a *default* that a caller-supplied value for the same key overrides. This is what lets a report spec like the demo "Element Count by Type" (which pins `type_name: "GlossaryTerm"` as its default) actually be re-pointed at a different type at run time instead of being permanently locked to the demo's own default.
 
-**The analytic function registry** (`pyegeria/view/analytic_registry.py`) is a separate, hand-written catalog of every analytic function available to point `analytic_function` at — `AnalyticFunctionSpec` entries carry `function` (dotted import path), `description`, `returns` (result shape), `params`, and a `generic: bool` flag with a `binding_note`:
+**The analytic function registry** (`pyegeria/view/analytic_registry.py`) is a separate, hand-written catalog of every analytic function available to point `analytic_function` at — `AnalyticFunctionSpec` entries carry `function` (dotted import path, which is the entry's one python binding), `description`, `returns` (result shape), `params`, `inputs` (role words) and a `generic: bool` flag with a `binding_note`; each entry is also a `RoutineDeclaration` (see [Routines, declarations and roles](#routines-declarations-and-roles)):
 - `generic=True` — what the function counts/aggregates is itself a parameter (e.g. `count_elements(type_name=...)`), freely retargetable at any element type via `analytic_spec_params`.
 - `generic=False` — the vocabulary is hardcoded in the function body (e.g. `governed_coverage` always counts a fixed set of governance classifications); a report spec can still point at it, but always gets that one fixed metric.
 
@@ -1091,6 +1091,174 @@ my_pkg = "my_pkg.manifests:ANALYTICS"
 
 **Dashboard authoring** — a `Report` (a real Egeria asset naming a report spec plus default execution params, created via Dr.Egeria's `Create Report`) can be placed on a user-authored Dashboard Sheet (`Create Dashboard Sheet` / `Link Report to Dashboard Sheet`), alongside literal markdown text placements (`Add Text on Dashboard Sheet`) for section headers and explanations. See the "Report" family in `docs/dr_egeria_manual.md` and `pyegeria/view/_output_dashboard_sheet_models.py`.
 
+#### Counts: not measured, and whose population
+
+A count a routine could not establish is `None`, never `0` and never the cap (#555, 6.2.27). A native count that fails or times out, or a find fallback that stopped at its page cap (`DEFAULT_CAP`, 500, which is a lower bound and not a total), records a note: `{"count", "reason", "at_least"}`. `exec_report_spec` collects the notes around an analytic routine (`overview_metrics.recording_unmeasured`), and then:
+
+- the output gains `"unmeasured": [ ...the notes... ]` beside `kind`;
+- a scalar result that is such a count becomes `kind: "absent"`, with the reason, and the lower bound if there is one, in `content`;
+- a `SERIES`/`BAR`/`PIE` over a result that holds one becomes `kind: "absent"` too: a missing bar, or a pie re-proportioned without its missing slice, would read as an answer;
+- a dict or list result keeps its measured values; the unmeasured ones are `None` and the notes name each one.
+
+Measured results are unchanged.
+
+**Population (#556, 6.2.27).** The count routines take `population=` (`"viewer"` or `"repository"`; `scope=` is a deprecated alias and passing both with different values is a `ValueError`). They now default to `"repository"`: totals count the whole repository, **including elements the viewer may not be able to see**, via the native push-down count. This is a deliberate interim choice until zone-aware push-down exists, and the registry descriptions say so. `"viewer"` is an explicit opt-in; `scope=None` omits the argument and takes the server default. A failed repository count has no find fallback, so it is `None` with a note, strict or not. Routines that scan elements (for example `certifications_summary`, `orphan_glossary_terms`, `stale_assets`) stay viewer-scoped, and no payload mixes the two populations in one ratio.
+
+#### Routines, declarations and roles
+
+A routine is a registry entry (`AnalyticFunctionSpec` in `pyegeria/view/analytic_registry.py`) that says how it is called and what it returns. The declaration lives in the registry, **not in the report spec**: a spec only names the routine (`action.analytic_function`) and supplies parameters. The model behind it is `RoutineDeclaration`; `AnalyticFunctionSpec.routine()` returns an entry as one, and `get_routine_registry()` returns them all (an entry that breaks a declaration rule is listed by `routine_declaration_errors()` instead of raising).
+
+A routine declares:
+
+| Field | Meaning |
+|---|---|
+| `bindings` | How it is reached: a list of `Binding(kind, target)`, `kind` one of `python`, `egeria_query`, `sql`, `step`. At most one `python` binding; `function` and the python binding are one value (name it once). pyegeria runs `python` bindings only: a routine with none is listed as unrunnable (check 1), by name. |
+| `inputs` | Role words, one per leading positional argument, in order (below). |
+| `params` | `ParamDeclaration(name, type, default, required, category, description)`, bound **by name** after the inputs. `category` is `content` (what data comes back), `shape` (how it is arranged) or `performance` (operational tuning); the default is `content`. A parameter is required or has a default, never both. |
+| `declaration` | What the results mean (see [Declaring what results mean](#declaring-what-results-mean)), including `out`. |
+| `tile_safe` | `TileSafety(safe, cap, reason)`: may it run on a tile's request path? `cap` (param to value) says within what it is safe; `reason` is the evidence and is required. |
+| `admission` | `Admission(resource_types, test_only)`: where the routine may be offered (`[]` = any type). |
+| `constants` | Values fixed for every call. A name is never both a constant and a parameter. |
+
+**`out`** names the fields of the result (for a list or series, the fields of one row). `AnalyticDeclaration.out` takes three forms, and you always read it through `declaration.out_fields()`, never by iterating `out`:
+
+- a list of field declarations (`out=[...]`, as the example below; every built-in does this);
+- the name of a registered row shape (a string looked up in `ROW_SHAPES`);
+- an inline shape, `{"fields": [...]}`, kept as data. A field that is an `include`, and a shape name pyegeria does not hold, are not resolved here and read as no fields.
+
+When `out_fields()` is empty the routine declares no result fields, and check 4 notes that its columns are not checked, rather than failing them. Otherwise check 4 compares every column an analytic spec lists with these names.
+
+**One worked declaration**, abridged from the built-in `semantic_grounding` (`analytic_registry.py`), which takes two client arguments (`...` marks what is left out; this block is illustrative, not runnable as written):
+
+```python
+AnalyticFunctionSpec(
+    name="semantic_grounding",
+    function="pyegeria.view.overview_metrics.semantic_grounding",
+    inputs=["egeria_client:MetadataExpert", "egeria_client:ClassificationExplorer"],
+    params=[_as_of()],            # a ParamDeclaration-shaped AnalyticParam; category defaults to "content"
+    returns="dict (groundingLinks, groundingPct)",
+    generic=False,
+    binding_note="Fixed to the SemanticAssignment relationship type -- not a parameter.",
+    declaration=AnalyticDeclaration(
+        result_kind="measure",
+        measures=[...],           # groundingLinks, groundingPct, each with unit, as_of and population
+        absence=_absence(...),    # the four sentences
+        out=[_field("groundingLinks", "Grounding links", "int", unit="relationships"),
+             _field("groundingPct", "Links per hundred Assets", "int", unit="percent")],
+    ),
+)
+```
+
+(`_as_of`, `_absence` and `_field` are the short builders at the top of the built-ins; in your own entry write `AnalyticParam(...)`, `AnalyticDeclaration(...)` and `FieldDeclaration(...)` directly.)
+
+**The role vocabulary.** Each `inputs` entry is one of:
+
+| Role word | What the routine receives | From |
+|---|---|---|
+| `egeria_client:<Class>` | a client whose methods the routine calls, e.g. `egeria_client:MetadataExpert` | `supply.client(<Class>)` |
+| `viewer` | who is looking: a `Viewer(user_id, is_admin, display_name)`; a field the environment does not know is `None`, not guessed | `supply.viewer()` |
+| `subject` | the resource in view: a `Subject(guid, type_name, display_name)` | `supply.subject()` |
+| `reader:<name>` | a reader the environment owns (a lowercase name) | `supply.reader(<name>)` |
+| `param` | not an input: a parameter is declared under `params` and bound by name | the caller |
+
+An `egeria_client:<Class>` names the class whose methods that argument calls; use `EgeriaTech` only for an argument that calls across several classes. An input may be declared only once, and a word that is not one of these is refused with a sentence naming it (by `AnalyticFunctionSpec.routine()`, and by check 5 at load and at run).
+
+**Binding.** Inputs are bound to the routine's leading positional parameters in declared order; declared `params` follow by name. No parameter name is read to decide what to pass. Every input is obtained before the routine's first stage runs, so a role the environment cannot provide refuses the run before anything is called.
+
+**`PlainSupply`** (`pyegeria/view/role_supply.py`) is what plain pyegeria uses when you pass no `supply=`. It holds the caller's single `EgeriaTech`, or a factory that builds one on the first request. A routine that declares no `egeria_client` input therefore never connects or mints a token (ISSUE-137). For `EgeriaTech` and every class it proxies to (`egeria_tech_classes()`), `client(cls)` returns that one `EgeriaTech` itself, not a separate subclient (handing out per-class clients is later work). It supplies **no readers**, no viewer, and no subject: a routine that declares one runs only where an environment's own supply provides it (Resource Explorer or the Portal, or your own supply).
+
+**A minimal custom supply** has five methods (`RoleSupply` is a runtime-checkable `Protocol`). It must return a role or raise `RoleRefused`, or a subclass, whose words say why:
+
+```python
+from pyegeria.view.role_supply import RoleRefused, NoSuchReader, Viewer
+from pyegeria.view.format_set_executor import exec_report_spec
+
+class MySupply:
+    def client(self, cls):  raise RoleRefused("this environment supplies no clients")
+    def viewer(self):       return Viewer(user_id="erinoverview", is_admin=False)
+    def reader(self, source):
+        if source != "ods":
+            raise NoSuchReader(f"no reader '{source}'")
+        return MyOdsReader()
+    def subject(self):      return None            # None = no resource in view; the run is refused
+    def refusal_words(self, kind):                  # the environment's own sentence for a missing role
+        return f"My environment does not supply '{kind}'."
+
+result = exec_report_spec("My Report Spec", params={"depth": 3}, supply=MySupply())
+```
+
+`exec_report_spec(..., supply=)` hands the supply to the analytic routine. **A find-method spec (no analytic routine) ignores `supply`:** it builds its client class from the `view_server` / `user` / `token` arguments, as before.
+
+The errors are all `ValueError`s (`RoleRefused` subclasses it):
+
+- `RoleRefused`: a declared input the supply cannot provide.
+- `NoSuchReader(RoleRefused)`: the environment has no reader of that name.
+- `CallerTokenExpired(RoleRefused)`: the environment cannot mint or refresh a client for the caller, for example because the token has expired. Only an environment's supply raises it; plain pyegeria never does.
+
+The words a person sees are `Routine '<name>' cannot run: its declared input '<role>' is not supplied (<the supply's words>)`, built from your supply's own sentence, and the exception carries `.words`, `.role`, `.routine` and `.reason`. Subject to the same wrapping, a `viewer` input under plain pyegeria reads:
+
+> Routine 'who_am_i' cannot run: its declared input 'viewer' is not supplied (Plain pyegeria does not know who is viewing; run this routine where the viewer is supplied (Resource Explorer or the Portal).)
+
+> **Compatibility (6.2.26).** A routine registered from outside pyegeria (CONFIG JSON, an installed entry point, or at runtime) whose function takes leading client arguments (`mgr`, `ce`, `expert`, `client`) but declares no `inputs` is refused from 6.2.26. Before, it was bound by argument name. **Fix: declare its inputs.** The refusal reads:
+>
+> Routine 'uses_client' cannot run: routine uses_client's binding takes 1 leading client argument(s) and its declaration lists 0 egeria_client input(s).
+>
+> It is the same sentence at load (listed as unrunnable, check 5) and at run (raised as `RoleRefused`), because the resolver and the executor share one function, `spec_resolver.declared_inputs`. The built-in entries all declare theirs.
+
+**Migrating off `analytic_binders`.** A binder `{"ods": "pkg.Reader"}` on an action becomes a declared `reader:ods` input on the routine that needed it, and the environment's supply provides the reader. See the paragraph above for the one-release grace; the warning's own words are *"analytic_binders is no longer supported and is ignored (binders for: ods). ... The key will be refused in a later release."* Remove the key from specs you own. Plain pyegeria's `PlainSupply` provides no readers (above), so a routine that needs one runs only where a supply provides it. The release that will refuse the key outright is not yet named; it is "a later release".
+
+#### Will this spec run? Load-time resolution
+
+A report spec is resolved **when it is loaded**, not when it is run (`pyegeria/view/spec_resolver.py`). `resolve(spec)` runs seven checks and returns a `ResolvedSpec`, or an `Unrunnable` carrying one sentence per failed check, each naming its check. An unrunnable spec is **still listed**; it is not deleted, and resolution never stops loading or changes what a run does (check 5 is the one check the executor repeats, with the same words). Each sentence reads `Spec '<name>' cannot run (check N): ...`.
+
+| # | Check | Example of its words |
+|---|---|---|
+| 1 | **Names.** The find method exists on the client class the executor would use; the analytic routine is a registered name with a python binding that imports; function-valued parameters (`metric_path`) name a registered routine. | `its find method 'ServerClient.get_asset_graph' does not exist: EgeriaTech or any client it proxies to has no '_async_get_asset_graph'` |
+| 2 | **Parameters.** What the executor always sends (required params, `spec_params`, `output_format`, `report_spec`) is accepted by the find method; every `analytic_spec_params` key is a parameter the routine declares. An optional parameter the method does not accept is a warning, not a failure. | `its analytic_spec_params nope is not declared by routine 'count_elements' (declared: type_name, as_of, strict, classifications, population)` |
+| 3 | **Stage shapes.** Today's specs are single-stage, so there is no previous stage to check against; this is recorded as a note, not run. | (note: `a single stage, so there is no previous stage's shape to check against`) |
+| 4 | **Formatter vs `out`.** Every output format is one the executor knows; a chart format needs an analytic routine; every column an analytic spec lists is a field the routine declares in `out`; every column's `detail_spec` is a registered spec. A find method declares no `out`, so a find spec's columns are not checked. | `its column 'X' reads field 'nope', which routine 'semantic_grounding' does not declare in out (declared: groundingLinks, groundingPct)` |
+| 5 | **Role inputs.** The declared inputs agree with the leading client arguments the python binding takes (see the compatibility box). Which environment supplies each role is the run's, not the load's. | `routine uses_client's binding takes 1 leading client argument(s) and its declaration lists 0 egeria_client input(s)` |
+| 6 | **Admission and `tile_safe`.** Recorded from the routine's declaration, never a failure. | (note: `routine 'x' declares no tile_safe`) |
+| 7 | **Seeding.** The find method a spec may be seeded by is recorded. | (recorded in `ResolvedSpec.seeds`) |
+
+Check 1 on a report spec that names a dotted path says, for example: *Report spec names analytic function 'pyegeria.view.overview_metrics.count_elements', which is not a registered name; use its registered name 'count_elements'. ...*
+
+**Three states.**
+
+- **Runnable:** a `ResolvedSpec`. Its `notes` say which checks did not run and why; its `warnings` are defects that bite only when a caller uses an optional parameter.
+- **Unrunnable:** an `Unrunnable` with `words` and `checks`. It failed at least one check.
+- **Format-only:** an `Unrunnable` of `kind="format_only"` with `checks=[1]`: the spec has no `action`, so it formats elements another call fetched (a detail view, or a command's output format). **This is not broken**: the words say `it has no action, so it formats elements another call fetched`. On the registry as of 6.2.27 there are 374 runnable, 61 format-only and 2 unrunnable specs.
+
+**Listing them.**
+
+```python
+from pyegeria.view.base_report_formats import list_report_specs
+from pyegeria.view.spec_resolver import unrunnable_specs
+
+list_report_specs(with_status=True)
+# [{"name": "Referenceable", "runnable": False, "unrunnable_reason": "Spec 'Referenceable' cannot run on its own: it has no action, ..."}, ...]
+
+for name, spec in unrunnable_specs().items():          # format-only left out; pass include_format_only=True for them
+    print(name, spec.checks, spec.words)
+```
+
+**When resolution runs.** Results are cached per spec and re-resolved when the spec object, the set of registered spec names, or the analytic registry changes. A summary (how many cannot run, and each one's words; at WARNING when any cannot, otherwise INFO) is logged on:
+
+- the first registry load (`get_report_registry()`, which also auto-loads the CONFIG tier);
+- `refresh_report_specs()`, once the first load is done;
+- `load_egeria_report_specs()` (the Egeria question-spec load);
+- `commands/tech/refresh_specs.py`, which resolves everything after regenerating and logs the count.
+
+**Reading the words: the two specs that are unrunnable today.** Both fail check 1, both are `find` specs, and both name a find method that does not exist, so the words tell you exactly what to fix:
+
+- `Spec 'Asset-Graph' cannot run (check 1): its find method 'ServerClient.get_asset_graph' does not exist: EgeriaTech or any client it proxies to has no '_async_get_asset_graph'.`
+- `Spec 'Data-Classes' cannot run (check 1): its find method 'DataDesigner.find_data_classes' does not exist: client class DataDesigner has no '_async_find_data_classes'.`
+
+Read it left to right: *the check* (1, names), *the thing named* (`ServerClient.get_asset_graph`), *where the resolver looked* (the client class the executor would use for that name, here EgeriaTech and everything it proxies to), and *what was missing* (an `_async_` method of that name). They are listed with these words by `list_report_specs(with_status=True)` rather than being left to fail when someone runs them.
+
+> **Planned, not shipped.** Report specs held in Egeria itself (synced, cached and addressed as `egeria:...`) are being built in a first stage; see `portal-docs/Internals/report-spec-pipeline-model.md` (v5.5) in egeria-workspaces. This section describes only specs loaded from files, entry points and the runtime registry.
+
+
 ---
 
 ### Troubleshooting
@@ -1099,6 +1267,10 @@ my_pkg = "my_pkg.manifests:ANALYTICS"
 - Detail link not shown: the master column has `detail_spec` but the value is empty. Ensure nested elements are materialized and (for generic promotion) that the linked spec’s `target_type` matches the nested element’s `type`.
 - GUID not visible: include a `Column(name="GUID", key="guid", format=True)` in the detail spec. The formatter maps `guid` and formats it safely for tables/links.
 - FORM output shows summaries only: this is by design to keep forms concise and editable.
+- `Spec '<name>' cannot run (check N): ...` (in `list_report_specs(with_status=True)`, `unrunnable_specs()` or the log): the spec failed load-time resolution. The check number says what to look at; see [Will this spec run?](#will-this-spec-run-load-time-resolution). For check 1, fix the name (the words say what is missing or which registered name to use); for check 2, add the parameter to the routine's `params` or remove it from the spec; for check 4, correct the column `key` to a field in the routine's `out`; for check 5, declare the routine's `inputs`. A spec with `it has no action` is format-only, not broken.
+- `RoleRefused`: `Routine '<name>' cannot run: its declared input '<role>' is not supplied (...)`. The environment's supply cannot provide a role the routine declares (plain pyegeria's `PlainSupply` provides the caller's `EgeriaTech` only, no readers, viewer or subject). Run the report spec where its supply provides the role, or pass `exec_report_spec(..., supply=...)` with your own. `NoSuchReader` is the same error for a `reader:<name>` the environment does not hold.
+- `CallerTokenExpired`: raised by an environment's supply (never by plain pyegeria) when it cannot mint or refresh a client for the caller. Sign in again, or pass a fresh `token`. It is a `RoleRefused`, so `except RoleRefused` catches it too.
+- A count shows `kind: "absent"` with `Not measured: ...`, or `unmeasured` notes: a count failed, timed out or stopped at its 500-element page cap and was not reported as a total. See [Counts: not measured, and whose population](#counts-not-measured-and-whose-population).
 - Pydantic validation failures in report execution: these are surfaced with structured validation details (via `print_validation_error`) before being re-raised. Start by checking field names and expected types in the printed validation table.
 
 ---
@@ -1153,6 +1325,8 @@ guide, and `docs/design/REPORT_SPEC_BUILDER_DESIGN.md` for the design reference.
 - Pydantic models for specs: `pyegeria/view/_output_format_models.py`
 - Example built‑ins (including My-User‑MD): `pyegeria/view/base_report_formats.py`
 - Report spec + analytic-function execution: `pyegeria/view/format_set_executor.py`
+- Role supply (`RoleSupply`, `PlainSupply`, `RoleRefused`): `pyegeria/view/role_supply.py`
+- Load-time resolution (`resolve`, `unrunnable_specs`, checks 1–7): `pyegeria/view/spec_resolver.py`
 - Analytic function registry: `pyegeria/view/analytic_registry.py`
 - Analytic function demo report specs: `pyegeria/view/analytic_demo_specs.py`
 - Analytic functions themselves: `pyegeria/view/overview_metrics.py`
