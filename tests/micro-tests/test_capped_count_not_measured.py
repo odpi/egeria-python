@@ -8,6 +8,11 @@ timed out at the client's 30 s limit, `_element_count` fell back to len(find), t
 at DEFAULT_CAP, and the Portal tile showed "Total Cataloged Assets = 500". A full page is a lower
 bound, never a total: the count is None ("not measured"), and the reason with the bound it saw
 reaches the output. Every branch is executed here, not read.
+
+Since 2026-11-08 the count helpers default to the repository population (push_down=True), which
+has no find fallback at all: a failed repository count is None with its reason, never 0 and never a
+viewer number. The fallback and its lower bound now only arise in the viewer population, so the
+seam tests below ask for it explicitly.
 """
 import json
 from unittest.mock import MagicMock
@@ -19,6 +24,8 @@ from pyegeria.view import overview_metrics as om
 from pyegeria.view.role_supply import Subject, Viewer
 
 CAP = om.DEFAULT_CAP
+REPO_TIMEOUT = ("the native count timed out, and a repository-population count has no fallback "
+                "(the find fallback only sees what the viewer may see)")
 TIMEOUT = RuntimeError("TIMEOUT_ERROR_408 the request to .../by-search-conditions/count timed out")
 
 
@@ -56,7 +63,7 @@ def test_a_timeout_whose_fallback_hits_the_cap_is_not_measured_with_its_lower_bo
     mgr = _mgr(native=MagicMock(side_effect=TIMEOUT), find_result=_page(CAP))
     with om.recording_unmeasured() as notes:
         for strict in (True, False):
-            assert om.count_elements(mgr, "Asset", strict=strict) is None  # never CAP
+            assert om.count_elements(mgr, "Asset", strict=strict, population="viewer") is None  # never CAP
     assert notes == [{"count": "Asset", "at_least": CAP,
                       "reason": f"the native count timed out, and the find fallback stopped at its "
                                 f"{CAP}-element page cap, so there are at least {CAP}"}] * 2
@@ -65,9 +72,18 @@ def test_a_timeout_whose_fallback_hits_the_cap_is_not_measured_with_its_lower_bo
 def test_a_timeout_whose_fallback_fails_is_not_measured_strict():
     mgr = _mgr(native=MagicMock(side_effect=TIMEOUT), find_error=RuntimeError("boom"))
     with om.recording_unmeasured() as notes:
-        assert om.count_elements(mgr, "Process", strict=True) is None
+        assert om.count_elements(mgr, "Process", strict=True, population="viewer") is None
     assert notes == [{"count": "Process", "at_least": None,
                       "reason": "the native count timed out, and the find fallback failed"}]
+
+
+def test_a_timed_out_repository_count_is_not_measured_and_never_asks_the_find():
+    mgr = _mgr(native=MagicMock(side_effect=TIMEOUT), find_result=_page(3))
+    with om.recording_unmeasured() as notes:
+        for strict in (True, False):
+            assert om.count_elements(mgr, "Asset", strict=strict) is None  # never 0, never a viewer 3
+    mgr.find_metadata_elements.assert_not_called()
+    assert notes == [{"count": "Asset", "at_least": None, "reason": REPO_TIMEOUT}] * 2
 
 
 def test_the_timeout_leaves_native_enabled_for_the_next_count():
@@ -80,8 +96,8 @@ def test_the_timeout_leaves_native_enabled_for_the_next_count():
 def test_a_short_fallback_page_is_a_measured_count_and_records_nothing():
     mgr = _mgr(native=MagicMock(side_effect=TIMEOUT), find_result=_page(CAP - 1))
     with om.recording_unmeasured() as notes:
-        assert om.count_elements(mgr, "Asset") == CAP - 1
-        assert om.count_elements(mgr, "Asset", strict=True) == CAP - 1
+        assert om.count_elements(mgr, "Asset", population="viewer") == CAP - 1
+        assert om.count_elements(mgr, "Asset", strict=True, population="viewer") == CAP - 1
     assert notes == []
 
 
@@ -91,8 +107,8 @@ def test_a_native_count_above_the_cap_is_trusted():
     assert notes == []
 
 
-def test_non_strict_failure_keeps_its_historical_zero():
-    assert om.count_elements(_mgr(find_error=RuntimeError("boom")), "Asset") == 0
+def test_non_strict_viewer_failure_keeps_its_historical_zero():
+    assert om.count_elements(_mgr(find_error=RuntimeError("boom")), "Asset", population="viewer") == 0
 
 
 def test_a_classification_count_names_what_it_counted():
@@ -118,10 +134,10 @@ def test_a_full_relationship_page_is_not_a_relationship_count():
     ce = MagicMock()
     ce.get_relationships.return_value = [{"guid": f"r{i}"} for i in range(CAP)]
     with om.recording_unmeasured() as notes:
-        assert om.count_relationships(ce, "SemanticAssignment") is None
+        assert om.count_relationships(ce, "SemanticAssignment", population="viewer") is None
     assert notes[0]["count"] == "SemanticAssignment" and notes[0]["at_least"] == CAP
     ce.get_relationships.return_value = [{"guid": "r1"}]
-    assert om.count_relationships(ce, "SemanticAssignment") == 1
+    assert om.count_relationships(ce, "SemanticAssignment", population="viewer") == 1
 
 
 def test_semantic_grounding_no_longer_reports_500_links_100_percent():
@@ -194,14 +210,26 @@ def _exec(label, fmt="DICT", **params):
                                 user="u", user_pass="p", supply=_Supply())
 
 
-def test_the_total_cataloged_assets_tile_says_not_measured_with_at_least_500():
+def test_the_total_cataloged_assets_tile_says_not_measured_and_why():
     out = _exec("Analytic Demo - Element Count by Type", type_name="Asset")
     assert out["kind"] == "absent" and "data" not in out
     assert out["absence"]["state"] == "not_measured"
+    assert out["unmeasured"] == [{"count": "Asset", "at_least": None, "reason": REPO_TIMEOUT}]
+    assert "Asset: the native count timed out" in out["content"]
+
+
+def test_a_non_strict_dashboard_count_is_never_a_confident_zero():
+    out = _exec("Analytic Demo - Element Count by Type", type_name="Asset", strict=False)
+    assert out["kind"] == "absent" and "data" not in out
+    assert out["unmeasured"][0]["reason"] == REPO_TIMEOUT
+
+
+def test_a_viewer_tile_still_says_at_least_500():
+    out = _exec("Analytic Demo - Element Count by Type", type_name="Asset", population="viewer")
+    assert out["kind"] == "absent"
     assert out["unmeasured"] == [{"count": "Asset", "at_least": CAP, "reason": (
         f"the native count timed out, and the find fallback stopped at its {CAP}-element page cap, "
         f"so there are at least {CAP}")}]
-    assert "Asset: the native count timed out" in out["content"]
     assert f"at least {CAP}" in out["content"]
 
 
@@ -215,7 +243,7 @@ def test_the_breakdown_rows_keep_measured_counts_and_name_the_unmeasured_one():
     assert out["kind"] == "json"
     assert out["data"] == [{"label": "Data Stores", "type": "DataStore", "count": 843},
                            {"label": "Processes", "type": "Process", "count": None}]
-    assert [(n["count"], n["at_least"]) for n in out["unmeasured"]] == [("Process", CAP)]
+    assert [(n["count"], n["at_least"]) for n in out["unmeasured"]] == [("Process", None)]
     assert CAP not in [r["count"] for r in out["data"]]
 
 
@@ -232,7 +260,8 @@ def test_semantic_grounding_spec_reports_nulls_and_why():
     out = _exec("Analytic Demo - Semantic Grounding")
     assert out["data"] == {"groundingLinks": None, "groundingPct": None}
     assert {n["count"] for n in out["unmeasured"]} == {"Asset", "SemanticAssignment"}
-    assert all(n["at_least"] == CAP for n in out["unmeasured"])
+    rel = next(n for n in out["unmeasured"] if n["count"] == "SemanticAssignment")
+    assert rel["reason"].startswith("no native relationship count is available")
 
 
 def test_a_series_repeats_no_note():

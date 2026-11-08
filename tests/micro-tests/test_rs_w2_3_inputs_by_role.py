@@ -52,6 +52,10 @@ class _FakeTech:
         self.calls.append(("count_metadata_elements", body.get("metadataElementTypeName")))
         return 7
 
+    def count_relationships_between_elements(self, body, **kw):
+        self.calls.append(("count_relationships_between_elements", body.get("relationshipTypeName")))
+        return 3
+
     def get_relationships(self, relationship_type=None, **kw):
         self.calls.append(("get_relationships", relationship_type))
         return [{"relationshipHeader": {"guid": "r1"}, "end1": {"guid": "g1"}, "end2": {"guid": "g2"}}]
@@ -263,7 +267,8 @@ def test_end_to_end_a_two_client_routine_gets_the_callers_one_client_in_both_slo
     assert result["kind"] == "json" and set(result["data"]) == {"groundingLinks", "groundingPct"}
     assert len(fake_tech) == 1 and fake_tech[0].tokens == ["caller-token"] and fake_tech[0].minted == 0
     assert seen["mgr"] is seen["ce"] is fake_tech[0]
-    assert {c[0] for c in fake_tech[0].calls} == {"count_metadata_elements", "get_relationships"}
+    # both counts native in the repository population; the relationship count goes through mgr (R4)
+    assert {c[0] for c in fake_tech[0].calls} == {"count_metadata_elements", "count_relationships_between_elements"}
 
 
 def test_end_to_end_an_environment_supply_is_asked_by_declared_class_in_order(fake_tech):

@@ -204,8 +204,10 @@ class MeasureDeclaration(BaseModel):
     `as_of` argument (None = when it ran), for a routine whose result carries no time of its own.
     `completeness_field` names the result field that says the value may be incomplete (one of
     COMPLETENESS, or a boolean: true = only a lower bound). `capped_field` is its old name, read
-    with a DeprecationWarning. `population` is set when the value is always counted in one
-    population; empty when the caller chooses it or the server default applies."""
+    with a DeprecationWarning. `population` is the population the value is counted in: always,
+    or by default when the routine takes a `population` parameter (the caller may pass the other
+    one). Empty when the server default applies. A `repository` value includes elements the viewer
+    may not be able to see."""
     name: str
     unit: str  # in words, plural where it counts things: "tables", "fraction of rows (0-1)"
     as_of: str  # the result field saying when this was measured, e.g. "asOf"; or run.as_of
@@ -764,9 +766,16 @@ def _strict() -> AnalyticParam:
 
 
 def _population() -> AnalyticParam:
-    return AnalyticParam(name="population", type="str",
-                         description="viewer (what the caller may see) or repository (whole repository, "
-                                     "fast; native count only). Omit for the server default.")
+    return AnalyticParam(name="population", type="str", default="repository",
+                         description="repository (the default: the whole repository, including elements "
+                                     "the caller may not be able to see -- fast, native count only) or "
+                                     "viewer (only what the caller may see; can take minutes for a large type).")
+
+
+#: Said by every routine whose totals count the whole repository (owner decision 2026-11-08, an interim
+#: choice until zone-aware push-down exists).
+REPOSITORY_WORDS = (" Its totals count the whole repository (population=repository), including elements you may not be able to "
+                    "see (a deliberate interim choice until zone-aware push-down exists).")
 
 
 # ── Declaration literals (RS-W2-1a). Short builders so each entry below reads as its declaration. ──
@@ -842,7 +851,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                     "Cost: one native count, sub-second in the repository population (0.2-0.8 s "
                     "measured); a viewer-population count reads every element and can take minutes "
                     "for a large type (Process: 120 s); a server with no native count falls back to "
-                    "a capped find.",
+                    "a capped find." + REPOSITORY_WORDS,
         returns="scalar (int)",
         generic=True,
         params=[
@@ -856,7 +865,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         ],
         declaration=AnalyticDeclaration(
             result_kind="measure",
-            measures=[_measure("elements", "elements", "value")],
+            measures=[_measure("elements", "elements", "value", population="repository")],
             absence=_absence(
                 not_measured="The elements were not counted: the count query failed or timed out, or "
                              "the server could not answer it in the population asked for. A fallback "
@@ -876,7 +885,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         inputs=["egeria_client:MetadataExpert"],
         description="Per-type element counts for a set of (label, type_name) pairs -- a breakdown/"
                     "composition metric, e.g. the assets-by-type chart. "
-                    "Cost: one native count per type, sub-second each in the repository population; a viewer-population count can take minutes for a large type.",
+                    "Cost: one native count per type, sub-second each in the repository population; a viewer-population count can take minutes for a large type." + REPOSITORY_WORDS,
         returns="list[dict] (breakdown: {label, type, count})",
         generic=True,
         params=[
@@ -888,7 +897,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         ],
         declaration=AnalyticDeclaration(
             result_kind="distribution",
-            measures=[_measure("count", "elements", "count")],
+            measures=[_measure("count", "elements", "count", population="repository")],
             # The caller picks the types; a supertype and its subtype may both be listed.
             categories=CategoriesDeclaration(exclusive=False),
             absence=_absence(
@@ -988,7 +997,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                     "Confidentiality-classified asset count, described-asset count, "
                     "ConsolidatedDuplicate-flagged element count -- all proxies with a "
                     "documented causal-claim caveat, not direct measures (NEXT-9). "
-                    "Cost: one capped Asset find plus one count, seconds.",
+                    "Cost: four native counts, sub-second each in the repository population." + REPOSITORY_WORDS,
         returns="dict (assetTotal, assetCapped, confidentialCount, describedCount, duplicateCount)",
         generic=False,
         binding_note="Fixed to the Asset type hierarchy and Confidentiality/ConsolidatedDuplicate "
@@ -997,28 +1006,28 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         declaration=AnalyticDeclaration(
             result_kind="measure",
             measures=[
-                _measure("assets_read", "Assets", "assetTotal", completeness_field="assetCapped",
-                         population="viewer"),
+                _measure("assets", "Assets", "assetTotal", completeness_field="assetCapped",
+                         population="repository"),
                 _measure("confidential_assets", "Assets carrying a Confidentiality classification",
-                         "confidentialCount", completeness_field="assetCapped", population="viewer",
-                         basis=_basis("assetTotal", "Assets read")),
-                _measure("described_assets", "Assets with a description", "describedCount",
-                         completeness_field="assetCapped", population="viewer",
-                         basis=_basis("assetTotal", "Assets read")),
+                         "confidentialCount", completeness_field="assetCapped", population="repository",
+                         basis=_basis("assetTotal", "Assets")),
+                _measure("described_assets", "Assets with a description (set, not empty)", "describedCount",
+                         completeness_field="assetCapped", population="repository",
+                         basis=_basis("assetTotal", "Assets")),
                 _measure("duplicate_elements", "elements of any type carrying ConsolidatedDuplicate",
-                         "duplicateCount"),
+                         "duplicateCount", population="repository"),
             ],
             absence=_absence(
-                not_measured="The business-value signals were not measured: the Asset find or the "
-                             "duplicate count failed.",
+                not_measured="The business-value signals were not measured: their counts failed, or "
+                             "the server could not answer them in the population asked for.",
                 not_permitted="You are not permitted to read the Assets, so the business-value "
                               "signals were not measured.",
                 not_applicable=_always_applies("The business-value signals"),
                 nothing_found="Counted: there are no active Assets and no elements marked as duplicates.",
             ),
             out=[
-                _field("assetTotal", "Assets read", "int", unit="Assets"),
-                _field("assetCapped", "At least (page cap reached)", "bool"),
+                _field("assetTotal", "Assets", "int", unit="Assets"),
+                _field("assetCapped", "At least (always false: a native count is complete)", "bool"),
                 _field("confidentialCount", "Confidential Assets", "int", unit="Assets"),
                 _field("describedCount", "Described Assets", "int", unit="Assets"),
                 _field("duplicateCount", "Duplicates", "int", unit="elements"),
@@ -1065,7 +1074,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         function="pyegeria.view.overview_metrics.people_counts",
         inputs=["egeria_client:MetadataExpert"],
         description="Counts of Person / Team / Organization / ITProfile / Community actor profiles. "
-                    "Cost: five native counts, sub-second each in the repository population.",
+                    "Cost: five native counts, sub-second each in the repository population." + REPOSITORY_WORDS,
         returns="dict (persons, teams, organizations, itProfiles, communities)",
         generic=False,
         binding_note="Fixed to Person/Team/Organization/ITProfile/Community -- not a parameter.",
@@ -1073,11 +1082,11 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         declaration=AnalyticDeclaration(
             result_kind="measure",
             measures=[
-                _measure("persons", "Person profiles", "persons"),
-                _measure("teams", "Team profiles", "teams"),
-                _measure("organizations", "Organization profiles", "organizations"),
-                _measure("it_profiles", "ITProfile profiles", "itProfiles"),
-                _measure("communities", "Community profiles", "communities"),
+                _measure("persons", "Person profiles", "persons", population="repository"),
+                _measure("teams", "Team profiles", "teams", population="repository"),
+                _measure("organizations", "Organization profiles", "organizations", population="repository"),
+                _measure("it_profiles", "ITProfile profiles", "itProfiles", population="repository"),
+                _measure("communities", "Community profiles", "communities", population="repository"),
             ],
             absence=_absence(
                 not_measured="The actor profiles were not counted: the count queries failed, or the "
@@ -1102,7 +1111,8 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         inputs=["egeria_client:ClassificationExplorer"],
         description="Crowd-sourced feedback counts (ratings/comments/likes/tags/noteLogs) by type, "
                     "via Collaboration OMAS relationships. "
-                    "Cost: five relationship pages (native counts when an expert client is passed), seconds.",
+                    "Cost: five native counts, sub-second each in the repository population; population=viewer "
+                    "without a MetadataExpert reads five capped relationship pages instead." + REPOSITORY_WORDS,
         returns="dict (byType, total)",
         generic=False,
         binding_note="Fixed to Collaboration OMAS's feedback relationship types -- not a parameter.",
@@ -1110,16 +1120,17 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         declaration=AnalyticDeclaration(
             result_kind="measure",
             measures=[
-                _measure("feedback", "feedback relationships", "total"),
-                _measure("ratings", "AttachedRating relationships", "byType.ratings"),
-                _measure("comments", "AttachedComment relationships", "byType.comments"),
-                _measure("likes", "AttachedLike relationships", "byType.likes"),
-                _measure("tags", "AttachedTag relationships", "byType.tags"),
-                _measure("note_logs", "AttachedNoteLog relationships", "byType.noteLogs"),
+                _measure("feedback", "feedback relationships", "total", population="repository"),
+                _measure("ratings", "AttachedRating relationships", "byType.ratings", population="repository"),
+                _measure("comments", "AttachedComment relationships", "byType.comments", population="repository"),
+                _measure("likes", "AttachedLike relationships", "byType.likes", population="repository"),
+                _measure("tags", "AttachedTag relationships", "byType.tags", population="repository"),
+                _measure("note_logs", "AttachedNoteLog relationships", "byType.noteLogs", population="repository"),
             ],
             absence=_absence(
                 not_measured="Feedback was not counted: a relationship query failed, or a repository "
-                             "count was asked for without a native count to answer it.",
+                             "count was asked for and no native count could answer it (the client "
+                             "has none, or it failed or timed out).",
                 not_permitted="You are not permitted to read feedback relationships.",
                 not_applicable=_always_applies("A feedback summary"),
                 nothing_found="Counted: nothing in the catalog has been rated, commented on, liked, "
@@ -1138,7 +1149,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         description="InformationSupplyChain and SolutionBlueprint counts -- the two structures that "
                     "put assets in a business usage context (supply chain membership, blueprint "
                     "realization). "
-                    "Cost: two native counts, sub-second each in the repository population.",
+                    "Cost: two native counts, sub-second each in the repository population." + REPOSITORY_WORDS,
         returns="dict (informationSupplyChains, blueprints)",
         generic=False,
         binding_note="Fixed to InformationSupplyChain and SolutionBlueprint -- not a parameter.",
@@ -1146,8 +1157,8 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         declaration=AnalyticDeclaration(
             result_kind="measure",
             measures=[
-                _measure("supply_chains", "InformationSupplyChain elements", "informationSupplyChains"),
-                _measure("blueprints", "SolutionBlueprint elements", "blueprints"),
+                _measure("supply_chains", "InformationSupplyChain elements", "informationSupplyChains", population="repository"),
+                _measure("blueprints", "SolutionBlueprint elements", "blueprints", population="repository"),
             ],
             absence=_absence(
                 not_measured="Supply chains and blueprints were not counted: the count queries failed, "
@@ -1170,7 +1181,9 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         description="SemanticAssignment relationship count and coverage percent -- the meaning layer "
                     "that grounds AI. Takes two leading clients (mgr, ce) -- the executor supplies the "
                     "same EgeriaTech instance for both. "
-                    "Cost: one count plus one capped relationship page, seconds.",
+                    "Both counts are native, in the repository population, so the percentage never divides "
+                    "one population by the other. "
+                    "Cost: two native counts, sub-second each." + REPOSITORY_WORDS,
         returns="dict (groundingLinks, groundingPct)",
         generic=False,
         binding_note="Fixed to the SemanticAssignment relationship type -- not a parameter.",
@@ -1179,15 +1192,15 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
             result_kind="measure",
             measures=[
                 _measure("grounding_links", "SemanticAssignment relationships", "groundingLinks",
-                         population="viewer"),
+                         population="repository"),
                 # links / Assets, not the share of Assets with a link: one Asset may carry several.
                 _measure("grounding_percent", "percent: SemanticAssignment links per hundred Assets, "
-                         "at most 100", "groundingPct"),
+                         "at most 100", "groundingPct", population="repository"),
             ],
             absence=_absence(
                 not_measured="Semantic grounding was not measured: the SemanticAssignment count or the "
-                             "Asset count to divide by failed, timed out, or stopped at its page cap "
-                             "(a lower bound, never a total).",
+                             "Asset count to divide by failed or timed out, or the server could not "
+                             "answer it in the repository population.",
                 not_permitted="You are not permitted to read the semantic assignments.",
                 not_applicable=_always_applies("Semantic grounding"),
                 nothing_found="Counted: no glossary term is assigned to anything.",
@@ -1208,24 +1221,26 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                     "aiReady stays None always by design -- it's four independent counts, and aiReady "
                     "needs a true cross-criteria intersection instead. Pair with ai_ready_assets "
                     "(below) for that -- overview_handler.py calls both and merges the result. "
-                    "Cost: two counts, one capped Asset find and one relationship page, seconds.",
+                    "Every stage is a native count in the repository population. "
+                    "Cost: four native counts, sub-second each." + REPOSITORY_WORDS,
         returns="dict (cataloged, documented, classified, lineage, aiReady)",
         generic=False,
         binding_note="Fixed 5-stage readiness definition baked into the function body -- not a parameter.",
         params=[_as_of()],
         declaration=AnalyticDeclaration(
             result_kind="measure",
-            # Four independent counts over different populations, not nested stages of one set.
+            # Four independent native counts in one population, not nested stages of one set.
             measures=[
-                _measure("cataloged", "Assets", "cataloged"),
-                _measure("documented", "Assets with a description, among those one capped find returned",
-                         "documented", population="viewer"),
+                _measure("cataloged", "Assets", "cataloged", population="repository"),
+                _measure("documented", "Assets with a description (set, not empty)", "documented",
+                         population="repository"),
                 _measure("classified", "elements of any type carrying a governance classification",
-                         "classified"),
-                _measure("lineage", "DataFlow relationships", "lineage", population="viewer"),
+                         "classified", population="repository"),
+                _measure("lineage", "DataFlow relationships", "lineage", population="repository"),
             ],
             absence=_absence(
-                not_measured="The readiness funnel was not measured: its counts or the Asset find failed.",
+                not_measured="The readiness funnel was not measured: its counts failed, or the server "
+                             "could not answer them in the repository population.",
                 not_permitted="You are not permitted to read the Assets, so the readiness funnel was "
                               "not measured.",
                 not_applicable=_always_applies("The readiness funnel"),
@@ -1336,7 +1351,8 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         description="Snapshot-based growth series (assets/terms/governed/products by default) via "
                     "asOfTime, one point per window step. The one shape SERIES output format "
                     "(a Vega-Lite line chart) is proven against today. "
-                    "Cost: one count per series per snapshot (four series by default), seconds to tens of seconds.",
+                    "Cost: one native count per series per snapshot (four series by default), sub-second each "
+                    "in the repository population." + REPOSITORY_WORDS,
         returns="list[dict] (time series: {label, date, <series_key>: count, ...})",
         # Generic: what it counts is type_map. (Its binding_note used to repeat type_map's own
         # description; a generic routine fixes nothing, so it declares no note -- RS-W2-2.)
@@ -1348,16 +1364,17 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                           description="Override the number of snapshots (2-24)."),
             AnalyticParam(name="type_map", type="list[tuple[str, str, list[str] | None]]",
                           description="Override which series to snapshot; defaults to assets/terms/governed/products."),
+            _population(),
         ],
         declaration=AnalyticDeclaration(
             result_kind="series",
             # One row per snapshot, oldest first; the measures are the default type_map's keys.
             measures=[
-                _measure("assets", "Assets", "assets", as_of="date"),
-                _measure("terms", "GlossaryTerm elements", "terms", as_of="date"),
+                _measure("assets", "Assets", "assets", as_of="date", population="repository"),
+                _measure("terms", "GlossaryTerm elements", "terms", as_of="date", population="repository"),
                 _measure("governed", "elements of any type carrying a governance classification",
-                         "governed", as_of="date"),
-                _measure("products", "DigitalProduct elements", "products", as_of="date"),
+                         "governed", as_of="date", population="repository"),
+                _measure("products", "DigitalProduct elements", "products", as_of="date", population="repository"),
             ],
             absence=_absence(
                 not_measured="The growth series was not measured: the snapshot counts failed.",
@@ -1381,33 +1398,35 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         name="term_definition_completeness",
         function="pyegeria.view.overview_metrics.term_definition_completeness",
         inputs=["egeria_client:MetadataExpert"],
-        description="Share of GlossaryTerms carrying a non-empty description -- a definitions-"
+        description="Share of GlossaryTerms whose description is set and not empty -- a definitions-"
                     "coverage metric, distinct from semantic_grounding (term<->asset linkage, not "
                     "whether the term itself is actually defined). "
-                    "Cost: one capped find, seconds.",
+                    "Both numbers are native counts in the repository population, so the share never mixes "
+                    "populations; a whitespace-only description counts as defined. "
+                    "Cost: two native counts, sub-second each." + REPOSITORY_WORDS,
         returns="dict (total, defined, undefinedPct)",
         generic=False,
         binding_note="Fixed to GlossaryTerm's description property -- not a parameter.",
         params=[_as_of()],
         declaration=AnalyticDeclaration(
             result_kind="measure",
-            # One capped find; the result carries no flag saying the page cap was reached.
+            # Two native counts in one population: the share never divides across populations.
             measures=[
-                _measure("terms_read", "GlossaryTerm elements, among those one capped find returned", "total",
-                         population="viewer"),
-                _measure("defined_terms", "GlossaryTerm elements with a description", "defined",
-                         population="viewer", basis=_basis("total", "terms read")),
-                _measure("undefined_percent", "percent of terms read without a description (0-100)",
-                         "undefinedPct"),
+                _measure("terms", "GlossaryTerm elements", "total", population="repository"),
+                _measure("defined_terms", "GlossaryTerm elements with a description (set, not empty)", "defined",
+                         population="repository", basis=_basis("total", "terms")),
+                _measure("undefined_percent", "percent of terms without a description (0-100)",
+                         "undefinedPct", population="repository"),
             ],
             absence=_absence(
-                not_measured="Term definitions were not measured: the find of glossary terms failed.",
+                not_measured="Term definitions were not measured: a count failed, or the server could not "
+                             "answer it in the repository population.",
                 not_permitted="You are not permitted to read the glossary terms.",
                 not_applicable=_always_applies("Term definition completeness"),
-                nothing_found="Read: there are no active glossary terms.",
+                nothing_found="Counted: there are no active glossary terms.",
             ),
             out=[
-                _field("total", "Terms read", "int", unit="elements"),
+                _field("total", "Terms", "int", unit="elements"),
                 _field("defined", "Defined", "int", unit="elements"),
                 _field("undefinedPct", "Undefined", "int", unit="percent"),
             ],
@@ -1463,7 +1482,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                     "small sum-reducer over its result; `function` above is the thin composite "
                     "wrapper that runs both via run_analytic_action, so calling it directly (the "
                     "old, single-function path) still works exactly like every other entry here. "
-                    "Cost: as counts_by_type: one native count per type.",
+                    "Cost: as counts_by_type: one native count per type." + REPOSITORY_WORDS,
         returns="dict (total, byType)",
         generic=True,
         action=AnalyticActionSpec(
@@ -1482,7 +1501,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         ],
         declaration=AnalyticDeclaration(
             result_kind="measure",
-            measures=[_measure("total", "elements", "total")],
+            measures=[_measure("total", "elements", "total", population="repository")],
             absence=_absence(
                 not_measured="The total was not counted: the per-type count queries failed.",
                 not_permitted="You are not permitted to count elements of these types.",
@@ -1503,7 +1522,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                     "given value -- e.g. DigitalProduct elements with deploymentStatus=ACTIVE. Same "
                     "native-count-with-fallback seam as count_elements, one cheap native COUNT call "
                     "per distinct value, no element fetch. "
-                    "Cost: one native count, sub-second in the repository population; a viewer-population count can take minutes for a large type.",
+                    "Cost: one native count, sub-second in the repository population; a viewer-population count can take minutes for a large type." + REPOSITORY_WORDS,
         returns="scalar (int)",
         generic=True,
         params=[
@@ -1513,13 +1532,16 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                           description="String property to match, e.g. deploymentStatus."),
             AnalyticParam(name="property_value", type="str", required=True,
                           description="Value to match the property against, e.g. ACTIVE."),
+            AnalyticParam(name="operator", type="str", default="EQ",
+                          description="EQ (equals the value) or NEQ (set, and not the value; "
+                                      "property_value='' counts elements with the property set and not empty)."),
             _as_of(),
             _strict(),
             _population(),
         ],
         declaration=AnalyticDeclaration(
             result_kind="measure",
-            measures=[_measure("elements", "elements", "value")],
+            measures=[_measure("elements", "elements", "value", population="repository")],
             absence=_absence(
                 not_measured="The elements were not counted: the count query failed or timed out, or "
                              "the server could not answer it in the population asked for. A fallback "
@@ -1536,11 +1558,12 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         name="count_relationships",
         function="pyegeria.view.overview_metrics.count_relationships",
         inputs=["egeria_client:ClassificationExplorer"],
-        description="Count active relationships of one type. By default one capped "
-                    "get_relationships page (the path the rest of the portal uses); a native count "
-                    "when a MetadataExpert is passed as `expert` (opt-in: the two paths can disagree "
-                    "for some types, PY-18). Takes ce as its leading client. Cost: one relationship "
-                    "page, seconds; the native count is sub-second.",
+        description="Count active relationships of one type. By default a native count over the "
+                    "whole repository, which needs a client with the native count (EgeriaTech has it; "
+                    "a bare ClassificationExplorer does not, and gives not measured). population=viewer "
+                    "without a MetadataExpert reads one capped get_relationships page instead (the two "
+                    "paths can disagree for some types, PY-18). Takes ce as its leading client. "
+                    "Cost: the native count is sub-second; a relationship page takes seconds." + REPOSITORY_WORDS,
         returns="scalar (int | None)",
         generic=True,
         params=[
@@ -1551,7 +1574,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         ],
         declaration=AnalyticDeclaration(
             result_kind="measure",
-            measures=[_measure("relationships", "relationships", "value")],
+            measures=[_measure("relationships", "relationships", "value", population="repository")],
             absence=_absence(
                 not_measured="The relationships were not counted: the query failed, or a "
                              "repository count was asked for and no native count could answer it.",
