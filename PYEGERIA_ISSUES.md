@@ -1292,6 +1292,8 @@ constructed from params.
 
 **Fixed 2026-10-13:** `ActionParameter.analytic_binders` maps a parameter name to a factory's dotted path (`pkg.mod.Factory` or `pkg.mod:Factory`). `_apply_analytic_binders` (format_set_executor.py) calls the factory with the call params its signature names, consuming them unless the routine also takes them, and passes the result to the routine by name. trellis can then name `trellis_analytics.routines.curation_coverage` directly, with `analytic_binders={"ods": "trellis_analytics.readers.ods.OdsReader"}` and the caller passing `url`. Tests: `tests/micro-tests/test_issue_138_140_149_analytic_envelope.py`. Documented in `docs/output-formats-and-report-specs.md`.
 
+**Superseded 2026-11-08 (RS-W2-3 PR-B):** `analytic_binders` and `_apply_analytic_binders` are removed. A reader is now a declared `reader:<name>` input that the environment's role supply provides (RS-W2-3 PR-A). For one release `ActionParameter` accepts the key and ignores it, with a `DeprecationWarning` when it is non-empty. No built-in, demo or library 0.4.0 spec set it.
+
 ---
 
 ### ISSUE-151: `AutomatedCuration.get_engine_actions()` calls `automated-curation/engine-actions`, which the View Server doesn't have (404, reported as "unable to connect"); `find_engine_actions("*")` is the working list-all

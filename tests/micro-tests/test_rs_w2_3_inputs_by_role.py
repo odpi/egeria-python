@@ -303,3 +303,41 @@ def test_every_demo_spec_lists_its_declared_inputs_at_load():
         assert result.runnable, result.unrunnable_reason
         entry = BUILTIN_ANALYTIC_FUNCTIONS[spec.action.analytic_function]
         assert result.role_inputs == entry.inputs
+
+
+# ── PR-B: the binder is gone; the key is accepted and ignored for one release ──
+
+def test_a_spec_still_carrying_analytic_binders_loads_with_a_deprecation_warning():
+    with pytest.warns(DeprecationWarning, match=r"analytic_binders is no longer supported .*binders for: ods"):
+        action = ActionParameter(analytic_function="count_elements",
+                                 analytic_binders={"ods": "trellis_analytics.readers.ods.OdsReader"})
+    assert "analytic_binders" not in action.model_dump()
+
+
+def test_an_empty_analytic_binders_key_is_dropped_silently():
+    import warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        action = ActionParameter.model_validate({"analytic_function": "count_elements", "analytic_binders": {}})
+    assert "analytic_binders" not in action.model_dump()
+
+
+def test_a_spec_with_a_binder_runs_on_declared_inputs_alone(monkeypatch, fake_tech):
+    """The ignored binder neither builds nor replaces anything: the routine gets its declared inputs."""
+    seen = {}
+
+    def probe(mgr, type_name="x"):
+        seen["args"] = (mgr, type_name)
+        return {"count": 1}
+
+    _routine(monkeypatch, "binder_probe", probe, ["egeria_client:MetadataExpert"])
+    with pytest.warns(DeprecationWarning):
+        action = ActionParameter(analytic_function="binder_probe", analytic_binders={"mgr": "os.getcwd"})
+    brf.register_report_specs({"W23-Binder": FormatSet(
+        heading="W23-Binder", description="probe", target_type="Referenceable", action=action,
+        formats=[Format(types=["DICT"], attributes=[])])}, source="test")
+    assert sr.resolve(brf.get_report_registry()["W23-Binder"], "W23-Binder").runnable
+    result = _run("W23-Binder", params={"type_name": "Asset"})
+    assert result == {"kind": "json", "data": {"count": 1}}
+    assert len(fake_tech) == 1 and seen["args"] == (fake_tech[0], "Asset")  # the caller's client, not os.getcwd()
+    assert not hasattr(fse, "_apply_analytic_binders")
