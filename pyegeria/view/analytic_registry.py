@@ -26,8 +26,8 @@ Each `AnalyticFunctionSpec.function` is a dotted import path, exactly the
 string a FormatSet's `extra_find` (compiled into `ActionParameter.analytic_function`)
 carries, and exactly what `format_set_executor._resolve_analytic_function`
 resolves at call time. `params` documents the function's real keyword
-arguments (excluding its leading client argument(s) -- `format_set_executor`
-binds those automatically, see `_bind_client_args`) for anything that wants
+arguments (excluding its leading client argument(s) -- those are its declared
+`inputs`, which the executor supplies by role, see `role_supply`) for anything that wants
 to render a param-entry form (Egeria Advisor) or a reference doc (Egeria
 Explorer), not for validation -- there is deliberately no fixed
 required/optional whitelist enforced at call time (see `ActionParameter`'s
@@ -119,10 +119,10 @@ class AnalyticActionSpec(BaseModel):
     a relationship to enrich -- exactly what `ai_ready_assets` already does
     inline, just as an undeclared implementation detail rather than a named
     step). Both `fetch` and `analytic` are dotted import paths, resolved and
-    client-bound the same way a plain `AnalyticFunctionSpec.function` always
-    has been (see `format_set_executor._resolve_analytic_function`/
-    `_bind_client_args`, and its `run_analytic_action` for the two-step
-    invocation itself).
+    client-bound the same way a plain `AnalyticFunctionSpec.function` is:
+    by the fetch routine's declared `inputs` (see
+    `format_set_executor.run_analytic_action` for the two-step invocation
+    itself, and `role_supply` for how inputs are supplied).
 
     Deliberately *not* concerned with which of the resulting attributes
     appear in a given output (TABLE/REPORT/KPI/...) -- that selection is
@@ -450,6 +450,10 @@ BINDING_KINDS = ("python", "egeria_query", "sql", "step")
 PARAM_CATEGORIES = ("content", "shape", "performance")
 
 #: The role words a routine's `inputs` use. `egeria_client` and `reader` take a qualifier.
+#: The executor supplies each declared input from the environment's `role_supply.RoleSupply` and
+#: binds it to the routine's leading positional parameters in declared order (RS-W2-3). An
+#: `egeria_client:<Class>` names the class whose methods that argument calls; `EgeriaTech` only for
+#: an argument that calls across several classes. Each input is declared once.
 INPUT_ROLES = ("egeria_client", "reader", "viewer", "subject")
 
 _INPUT_ROLE = re.compile(r"^(?:egeria_client:[A-Za-z_][A-Za-z0-9_]*|reader:[a-z_][a-z0-9_]*|viewer|subject)$")
@@ -833,6 +837,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
     "count_elements": AnalyticFunctionSpec(
         name="count_elements",
         function="pyegeria.view.overview_metrics.count_elements",
+        inputs=["egeria_client:MetadataExpert"],
         description="Count active elements of a given type, optionally filtered by classification. "
                     "Cost: one native count, sub-second in the repository population (0.2-0.8 s "
                     "measured); a viewer-population count reads every element and can take minutes "
@@ -867,6 +872,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
     "counts_by_type": AnalyticFunctionSpec(
         name="counts_by_type",
         function="pyegeria.view.overview_metrics.counts_by_type",
+        inputs=["egeria_client:MetadataExpert"],
         description="Per-type element counts for a set of (label, type_name) pairs -- a breakdown/"
                     "composition metric, e.g. the assets-by-type chart. "
                     "Cost: one native count per type, sub-second each in the repository population; a viewer-population count can take minutes for a large type.",
@@ -897,6 +903,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
     "governed_coverage": AnalyticFunctionSpec(
         name="governed_coverage",
         function="pyegeria.view.overview_metrics.governed_coverage",
+        inputs=["egeria_client:MetadataExpert"],
         description="Share of assets carrying at least one governance classification, plus a "
                     "by-classification / top-zones breakdown. "
                     "Cost: one capped find (one page of elements), seconds.",
@@ -941,6 +948,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
     "ownership_coverage": AnalyticFunctionSpec(
         name="ownership_coverage",
         function="pyegeria.view.overview_metrics.ownership_coverage",
+        inputs=["egeria_client:MetadataExpert"],
         description="Share of assets carrying an Ownership classification (a named owner "
                     "responsible for management/governance decisions), plus a by-owner-type "
                     "breakdown. Distinct from governed_coverage -- data mesh literature names "
@@ -972,6 +980,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
     "business_value_signals": AnalyticFunctionSpec(
         name="business_value_signals",
         function="pyegeria.view.overview_metrics.business_value_signals",
+        inputs=["egeria_client:MetadataExpert"],
         description="Real signals behind the four Overview dashboard Business Value tiles "
                     "(Risk & Compliance, Productivity, Trust & Adoption, Cost Avoidance): "
                     "Confidentiality-classified asset count, described-asset count, "
@@ -1017,6 +1026,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
     "certifications_summary": AnalyticFunctionSpec(
         name="certifications_summary",
         function="pyegeria.view.overview_metrics.certifications_summary",
+        inputs=["egeria_client:ClassificationExplorer"],
         description="Active/expiring Certification relationships, licenses, and open Exception counts. "
                     "Cost: three capped relationship pages, seconds.",
         returns="dict (active, expiring90, soon, licenses, exceptions)",
@@ -1051,6 +1061,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
     "people_counts": AnalyticFunctionSpec(
         name="people_counts",
         function="pyegeria.view.overview_metrics.people_counts",
+        inputs=["egeria_client:MetadataExpert"],
         description="Counts of Person / Team / Organization / ITProfile / Community actor profiles. "
                     "Cost: five native counts, sub-second each in the repository population.",
         returns="dict (persons, teams, organizations, itProfiles, communities)",
@@ -1086,6 +1097,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
     "feedback_summary": AnalyticFunctionSpec(
         name="feedback_summary",
         function="pyegeria.view.overview_metrics.feedback_summary",
+        inputs=["egeria_client:ClassificationExplorer"],
         description="Crowd-sourced feedback counts (ratings/comments/likes/tags/noteLogs) by type, "
                     "via Collaboration OMAS relationships. "
                     "Cost: five relationship pages (native counts when an expert client is passed), seconds.",
@@ -1120,6 +1132,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
     "usage_context_counts": AnalyticFunctionSpec(
         name="usage_context_counts",
         function="pyegeria.view.overview_metrics.usage_context_counts",
+        inputs=["egeria_client:MetadataExpert"],
         description="InformationSupplyChain and SolutionBlueprint counts -- the two structures that "
                     "put assets in a business usage context (supply chain membership, blueprint "
                     "realization). "
@@ -1151,6 +1164,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
     "semantic_grounding": AnalyticFunctionSpec(
         name="semantic_grounding",
         function="pyegeria.view.overview_metrics.semantic_grounding",
+        inputs=["egeria_client:MetadataExpert", "egeria_client:ClassificationExplorer"],
         description="SemanticAssignment relationship count and coverage percent -- the meaning layer "
                     "that grounds AI. Takes two leading clients (mgr, ce) -- the executor supplies the "
                     "same EgeriaTech instance for both. "
@@ -1184,6 +1198,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
     "context_readiness_funnel": AnalyticFunctionSpec(
         name="context_readiness_funnel",
         function="pyegeria.view.overview_metrics.context_readiness_funnel",
+        inputs=["egeria_client:MetadataExpert", "egeria_client:ClassificationExplorer"],
         description="Cataloged -> Documented -> Classified -> Lineage-traced -> AI-Ready funnel counts. "
                     "Takes two leading clients (mgr, ce) -- the executor supplies the same EgeriaTech "
                     "instance for both, matching semantic_grounding's convention. This function's own "
@@ -1226,6 +1241,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
     "ai_ready_assets": AnalyticFunctionSpec(
         name="ai_ready_assets",
         function="pyegeria.view.overview_metrics.ai_ready_assets",
+        inputs=["egeria_client:MetadataExpert", "egeria_client:ClassificationExplorer"],
         description="The true 'AI-Ready' composite: Asset elements that are governed AND documented "
                     "AND lineage-traced simultaneously, not three independent counts intersected after "
                     "the fact. First real implementation of the composite/derived analytic metric "
@@ -1261,6 +1277,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
     "drl_readiness_gates": AnalyticFunctionSpec(
         name="drl_readiness_gates",
         function="pyegeria.view.overview_metrics.drl_readiness_gates",
+        inputs=["egeria_client:MetadataExpert", "egeria_client:ClassificationExplorer"],
         description="A recency-narrowed view of ai_ready_assets plus a modality breakdown "
                     "(tabular / text_media / other) of the Asset population -- the two Data "
                     "Readiness Level pieces computable today. Not a DRL band distribution: "
@@ -1312,6 +1329,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
     "growth_series": AnalyticFunctionSpec(
         name="growth_series",
         function="pyegeria.view.overview_metrics.growth_series",
+        inputs=["egeria_client:MetadataExpert"],
         description="Snapshot-based growth series (assets/terms/governed/products by default) via "
                     "asOfTime, one point per window step. The one shape SERIES output format "
                     "(a Vega-Lite line chart) is proven against today. "
@@ -1359,6 +1377,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
     "term_definition_completeness": AnalyticFunctionSpec(
         name="term_definition_completeness",
         function="pyegeria.view.overview_metrics.term_definition_completeness",
+        inputs=["egeria_client:MetadataExpert"],
         description="Share of GlossaryTerms carrying a non-empty description -- a definitions-"
                     "coverage metric, distinct from semantic_grounding (term<->asset linkage, not "
                     "whether the term itself is actually defined). "
@@ -1394,6 +1413,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
     "active_contributors": AnalyticFunctionSpec(
         name="active_contributors",
         function="pyegeria.view.overview_metrics.active_contributors",
+        inputs=["egeria_client:ClassificationExplorer"],
         description="Distinct usernames behind at least one feedback relationship (ratings/comments/"
                     "likes/tags/noteLogs) -- an engagement signal feedback_summary's raw relationship "
                     "counts don't give you (one prolific commenter vs. many occasional ones). "
@@ -1432,6 +1452,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
     "sum_type_counts": AnalyticFunctionSpec(
         name="sum_type_counts",
         function="pyegeria.view.overview_metrics.sum_type_counts",
+        inputs=["egeria_client:MetadataExpert"],
         description="Sum of counts_by_type() across a caller-given (label, type_name) list -- "
                     "e.g. the Overview dashboard's 'Cataloged Assets' total. First real registered "
                     "user of the fetch+analytic action shape (see AnalyticActionSpec) -- fetch is "
@@ -1474,6 +1495,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
     "count_elements_by_property": AnalyticFunctionSpec(
         name="count_elements_by_property",
         function="pyegeria.view.overview_metrics.count_elements_by_property",
+        inputs=["egeria_client:MetadataExpert"],
         description="Count active elements of a given type whose named string property equals a "
                     "given value -- e.g. DigitalProduct elements with deploymentStatus=ACTIVE. Same "
                     "native-count-with-fallback seam as count_elements, one cheap native COUNT call "
@@ -1509,6 +1531,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
     "count_relationships": AnalyticFunctionSpec(
         name="count_relationships",
         function="pyegeria.view.overview_metrics.count_relationships",
+        inputs=["egeria_client:ClassificationExplorer"],
         description="Count active relationships of one type. By default one capped "
                     "get_relationships page (the path the rest of the portal uses); a native count "
                     "when a MetadataExpert is passed as `expert` (opt-in: the two paths can disagree "
@@ -1539,6 +1562,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
     "contextualised_coverage": AnalyticFunctionSpec(
         name="contextualised_coverage",
         function="pyegeria.view.overview_metrics.contextualised_coverage",
+        inputs=["egeria_client:MetadataExpert", "egeria_client:ClassificationExplorer"],
         description="Percent of Assets given business/solution-design context via an ImplementedBy "
                     "relationship to a SolutionComponent. A proxy, not the literal 'participates in "
                     "an ISC/blueprint' metric -- confirms some solution-design context exists, not "
@@ -1575,6 +1599,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
     "solution_component_realisation": AnalyticFunctionSpec(
         name="solution_component_realisation",
         function="pyegeria.view.overview_metrics.solution_component_realisation",
+        inputs=["egeria_client:MetadataExpert", "egeria_client:ClassificationExplorer"],
         description="SolutionComponent count and how many of them are realised (have at least one "
                     "ImplementedBy implementation) -- the Overview's Solution Blueprints drill-down. A "
                     "single-hop proxy: the implementation need not itself sit in the component's "
@@ -1607,6 +1632,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
     "karma_leaderboard": AnalyticFunctionSpec(
         name="karma_leaderboard",
         function="pyegeria.view.overview_metrics.karma_leaderboard",
+        inputs=["egeria_client:MetadataExpert"],
         description="Top-N people by karma -- one bounded ContributionRecord fetch, karmaPoints is a "
                     "scalar property on the record itself (not derived from counting related things), "
                     "filtered to the given anchor type(s) via each record's own Anchors classification. "
@@ -1646,6 +1672,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
     "engagement_series": AnalyticFunctionSpec(
         name="engagement_series",
         function="pyegeria.view.overview_metrics.engagement_series",
+        inputs=["egeria_client:ClassificationExplorer"],
         description="Weekly-bucketed feedback-event trend (comments/ratings/likes/tags/noteLogs), "
                     "zero-filled across the trailing window -- reuses the same 5 relationship-type "
                     "queries feedback_summary() already makes, keeping createTime instead of only "
@@ -1695,6 +1722,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
     "orphan_glossary_terms": AnalyticFunctionSpec(
         name="orphan_glossary_terms",
         function="pyegeria.view.overview_metrics.orphan_glossary_terms",
+        inputs=["egeria_client:MetadataExpert", "egeria_client:ClassificationExplorer"],
         description="Approved-but-unassigned glossary terms -- a term with no SemanticAssignment "
                     "relationship to anything was authored but never put to use grounding the "
                     "catalog. One bounded SemanticAssignment fetch, distinct GlossaryTerm-end GUID "
@@ -1731,6 +1759,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
     "stale_assets": AnalyticFunctionSpec(
         name="stale_assets",
         function="pyegeria.view.overview_metrics.stale_assets",
+        inputs=["egeria_client:MetadataExpert"],
         description="Assets with no update in the last N days (default 180) -- candidates for "
                     "archival review. One bounded Asset element fetch, each element's own version "
                     "metadata compared against the cutoff, no relationship traversal. "
@@ -1765,6 +1794,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
     "metric_trend": AnalyticFunctionSpec(
         name="metric_trend",
         function="pyegeria.view.overview_metrics.metric_trend",
+        inputs=["egeria_client:EgeriaTech", "egeria_client:ClassificationExplorer"],
         description="Turn any single-snapshot function in this module into a time series, by "
                     "re-calling it once per asOfTime snapshot -- the same windowing growth_series "
                     "uses, generalized to any function here instead of one hardcoded type_map. Takes "
@@ -1806,6 +1836,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
     "asset_composition": AnalyticFunctionSpec(
         name="asset_composition",
         function="pyegeria.view.overview_metrics.asset_composition",
+        inputs=["egeria_client:EgeriaTech"],
         description="The composition of a type (default Asset) by subtype: one row per type in its "
                     "subtype tree to `depth`, each counted in viewer and/or repository scope, an "
                     "`other` row per parent (elements typed as exactly the parent), and not_visible = "
@@ -1870,6 +1901,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
     "control_implementation_summary": AnalyticFunctionSpec(
         name="control_implementation_summary",
         function="pyegeria.view.overview_metrics.control_implementation_summary",
+        inputs=["egeria_client:SecurityOfficer"],
         description="Applicable controls in a statement of applicability, counted by implementation "
                     "status (NOT_STARTED, PLANNED, PARTIALLY_IMPLEMENTED, IMPLEMENTED, OTHER). "
                     "Cost: one read of one statement of applicability's control relationships, seconds.",

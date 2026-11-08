@@ -45,21 +45,31 @@ def fake_egeria_tech(monkeypatch):
     return instances
 
 
+def _dummy(client):
+    return {"count": 1}
+
+
+@pytest.fixture
+def dummy_routine(monkeypatch):
+    """A registered routine that declares one Egeria client input (RS-W2-3: the executor supplies
+    declared inputs; it no longer reads parameter names)."""
+    from pyegeria.view.analytic_registry import (AnalyticFunctionSpec, clear_runtime_analytic_functions,
+                                                 register_analytic_functions)
+    register_analytic_functions({"token_probe": AnalyticFunctionSpec(
+        name="token_probe", function="pyegeria.view.overview_metrics.count_elements",
+        inputs=["egeria_client:EgeriaTech"])})
+    monkeypatch.setattr(fse, "resolve_report_spec_function", lambda decl: _dummy)
+    yield
+    clear_runtime_analytic_functions()
+
+
 def _dummy_analytic_action():
-    def _dummy(client):
-        return {"count": 1}
-    return {"analytic_function": _dummy, "analytic_spec_params": {}}
+    return {"analytic_function": "token_probe", "analytic_spec_params": {}}
 
 
-def test_run_analytic_function_uses_token_when_given(fake_egeria_tech, monkeypatch):
+def test_run_analytic_function_uses_token_when_given(fake_egeria_tech, dummy_routine):
     """When a token is supplied, set_bearer_token(token) is used -- not
     create_egeria_bearer_token()."""
-    monkeypatch.setattr(
-        fse, "resolve_report_spec_function", lambda decl: decl
-    )
-    monkeypatch.setattr(
-        fse, "_bind_client_args", lambda func, client: (client,)
-    )
 
     action = _dummy_analytic_action()
     result = fse._run_analytic_function(
@@ -74,15 +84,9 @@ def test_run_analytic_function_uses_token_when_given(fake_egeria_tech, monkeypat
     assert client.create_egeria_bearer_token_calls == 0
 
 
-def test_run_analytic_function_mints_token_when_none_given(fake_egeria_tech, monkeypatch):
+def test_run_analytic_function_mints_token_when_none_given(fake_egeria_tech, dummy_routine):
     """Backward compatible: with no token, the old create_egeria_bearer_token()
     path from user/user_pass is used unchanged."""
-    monkeypatch.setattr(
-        fse, "resolve_report_spec_function", lambda decl: decl
-    )
-    monkeypatch.setattr(
-        fse, "_bind_client_args", lambda func, client: (client,)
-    )
 
     action = _dummy_analytic_action()
     result = fse._run_analytic_function(
