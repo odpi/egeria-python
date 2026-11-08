@@ -221,7 +221,9 @@ def test_list_report_specs_is_unchanged_by_default_and_gains_status_on_request()
     assert status["Data-Classes"]["runnable"] is False
     assert "check 1" in status["Data-Classes"]["unrunnable_reason"]
     assert status["Analytic Demo - Element Count by Type"] == {
-        "name": "Analytic Demo - Element Count by Type", "runnable": True, "unrunnable_reason": ""}
+        "name": "Analytic Demo - Element Count by Type", "runnable": True, "unrunnable_reason": "",
+        # RS-EGERIA-TIER: where the spec comes from, and whether it shadows or is shadowed
+        "source": "local", "shadowed_by": None, "shadows": None, "cache_age_s": None}
 
 
 def test_results_are_cached_and_a_registry_change_invalidates():

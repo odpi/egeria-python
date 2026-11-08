@@ -146,7 +146,11 @@ class EnvironmentConfig(BaseModel):
     # that the setting is ignored. Use the `pyegeria.report_specs` entry-point
     # group or register_report_specs() instead.
     pyegeria_report_spec_modules: List[str] = Field(default_factory=list, alias="Pyegeria Report Spec Modules")
-    
+    # CollectionFolder qualified names a plain `pyegeria report-specs sync` takes (O-H5;
+    # RS-EGERIA-TIER stage 1). PYEGERIA_REPORT_SPEC_FOLDERS (comma-separated) overrides it.
+    # Empty by default: a sync never takes "every ReportSpec visible".
+    pyegeria_report_spec_folders: List[str] = Field(default_factory=list, alias="Pyegeria Report Spec Folders")
+
     model_config = ConfigDict(populate_by_name=True, extra='allow')
 
 

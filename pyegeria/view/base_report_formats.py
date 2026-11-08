@@ -3656,7 +3656,12 @@ def get_report_spec_heading(format_set: str) -> str:
     Returns:
         str: The heading of the format set
     """
-    return report_specs[format_set].heading
+    fs = report_specs.get(format_set) if isinstance(format_set, str) and ":" not in format_set else None
+    if fs is None:
+        fs = lookup_report_spec(format_set)[0]
+        if fs is None:
+            raise KeyError(format_set)
+    return fs.heading
 
 
 def get_report_spec_description(format_set: str) -> str:
@@ -3669,7 +3674,12 @@ def get_report_spec_description(format_set: str) -> str:
     Returns:
         str: The description of the format set
     """
-    return report_specs[format_set].description
+    fs = report_specs.get(format_set) if isinstance(format_set, str) and ":" not in format_set else None
+    if fs is None:
+        fs = lookup_report_spec(format_set)[0]
+        if fs is None:
+            raise KeyError(format_set)
+    return fs.description
 
 
 def get_report_spec_match(format_set: Union[dict, FormatSet], output_format: str) -> dict:
@@ -3733,7 +3743,9 @@ def get_report_spec_match(format_set: Union[dict, FormatSet], output_format: str
             value = None
             spec_name = format_set_dict.get("_report_spec_name")
             if spec_name:
-                value = report_specs.get(spec_name)
+                value = report_specs.get(spec_name) if ":" not in str(spec_name) else None
+                if value is None:
+                    value = lookup_report_spec(spec_name)[0]
 
             if value is None and "heading" in format_set_dict and "description" in format_set_dict:
                 # Try to find the format set by heading (legacy fallback, ambiguous)
@@ -4083,9 +4095,199 @@ def get_report_registry() -> FormatSetDict:
     combined = FormatSetDict()
     _add_with_collision_check(combined, base_report_specs, source="BUILTINS")
     _add_with_collision_check(combined, generated_format_sets, source="GENERATED")
-    _add_with_collision_check(combined, _CONFIG_REPORT_FORMATS, source="CONFIG")
-    _add_with_collision_check(combined, _RUNTIME_REPORT_FORMATS, source="RUNTIME")
+    tiers: Dict[str, str] = {k: "builtin" for k in combined.keys()}
+    shadows: Dict[str, Dict[str, str]] = {}
+
+    local = FormatSetDict()
+    _add_with_collision_check(local, _CONFIG_REPORT_FORMATS, source="CONFIG")
+    _add_with_collision_check(local, _RUNTIME_REPORT_FORMATS, source="RUNTIME")
+
+    # EGERIA tier (RS-EGERIA-TIER stage 1): above the built-ins, below local specs. A label held by
+    # a higher tier shadows the lower one, with one warning per label per process; never raised.
+    for label, fs in _egeria_tier_view(combined, local).items():
+        if label in local.keys():
+            _note_shadow(label, "local", "egeria", local[label], fs, shadows)
+            continue
+        if label in combined.keys():
+            _note_shadow(label, "egeria", "builtin", fs, combined[label], shadows)
+        combined[label] = fs
+        tiers[label] = "egeria"
+    for label, fs in local.items():
+        combined[label] = fs
+        tiers[label] = "local"
+    _REGISTRY_TIERS.clear()
+    _REGISTRY_TIERS.update(tiers)
+    _REGISTRY_SHADOWS.clear()
+    _REGISTRY_SHADOWS.update(shadows)
     return combined
+
+
+# ── The EGERIA tier, shadowing and tier addressing (RS-EGERIA-TIER stage 1) ──
+
+#: label -> "builtin" | "egeria" | "local", for the registry last built.
+_REGISTRY_TIERS: Dict[str, str] = {}
+#: label -> {"winner", "loser", "differ"} for every shadowed label in the registry last built.
+_REGISTRY_SHADOWS: Dict[str, Dict[str, Any]] = {}
+_SHADOW_WARNED: set = set()
+_EGERIA_VIEW_CACHE: Dict[str, Tuple[Tuple, FormatSet]] = {}
+_ALIAS_WARNED: set = set()
+
+
+def _egeria_tier():
+    try:
+        from pyegeria.view.egeria_spec_cache import egeria_tier
+        return egeria_tier()
+    except Exception as exc:  # noqa: BLE001 -- the cache must never take the registry down
+        logger.warning(f"Report spec EGERIA tier unavailable: {exc}")
+        return FormatSetDict()
+
+
+def _differs(a: FormatSet, b: FormatSet) -> bool:
+    def core(fs):
+        d = fs.model_dump()
+        return d.get("action"), d.get("formats"), d.get("target_type")
+    try:
+        return core(a) != core(b)
+    except Exception:  # noqa: BLE001
+        return True
+
+
+def _note_shadow(label: str, winner: str, loser: str, win_fs: FormatSet, lose_fs: FormatSet,
+                 shadows: Dict[str, Dict[str, Any]]) -> None:
+    differ = _differs(win_fs, lose_fs)
+    shadows[label] = {"winner": winner, "loser": loser, "differ": differ}
+    key = (label, winner, loser)
+    if key in _SHADOW_WARNED:
+        return
+    _SHADOW_WARNED.add(key)
+    address = "egeria:" if loser == "egeria" else "builtin:"
+    logger.warning(f"Report spec '{label}': the {winner} copy shadows the {loser} copy "
+                   f"({'they differ' if differ else 'they are the same'}); the {loser} copy stays addressable "
+                   f"as '{address}{label}'.")
+
+
+def _egeria_tier_view(lower: FormatSetDict, local: FormatSetDict) -> FormatSetDict:
+    """The EGERIA tier as it enters the registry: an alias that clashes with a label or alias held by
+    another tier is dropped, with a warning, so an Egeria copy never takes over another spec's
+    alias; a label that is a local spec's alias is shadowed by that local spec. Copies are cached so
+    the resolver's per-object cache stays valid."""
+    tier = _egeria_tier()
+    if not tier:
+        return FormatSetDict()
+    view = FormatSetDict()
+    local_aliases = {a for fs in local.values() for a in (fs.aliases or [])}
+    for label, fs in tier.items():
+        if label in local_aliases:
+            owner = next(k for k, v in local.items() if label in (v.aliases or []))
+            _note_shadow(label, "local", "egeria", local[owner], fs, {})
+            continue
+        others: set = set(local.keys()) | local_aliases
+        for k, v in lower.items():
+            if k == label:
+                continue  # the built-in this copy shadows takes its aliases with it
+            others.add(k)
+            others.update(v.aliases or [])
+        others.update(k for k in tier.keys() if k != label)
+        dropped = [a for a in (fs.aliases or []) if a in others]
+        key = (id(fs), tuple(dropped))
+        cached = _EGERIA_VIEW_CACHE.get(label)
+        if cached and cached[0] == key:
+            view[label] = cached[1]
+            continue
+        if dropped:
+            if (label, tuple(dropped)) not in _ALIAS_WARNED:
+                _ALIAS_WARNED.add((label, tuple(dropped)))
+                logger.warning(f"Report spec '{label}' (Egeria): alias(es) {', '.join(dropped)} dropped; another "
+                               f"spec already holds each as a label or alias.")
+            fs = fs.model_copy(update={"aliases": [a for a in fs.aliases if a not in dropped]})
+        _EGERIA_VIEW_CACHE[label] = (key, fs)
+        view[label] = fs
+    return view
+
+
+def _builtin_tier() -> FormatSetDict:
+    combined = FormatSetDict()
+    combined.update(base_report_specs)
+    combined.update(generated_format_sets)
+    return combined
+
+
+def lookup_report_spec(name: Any) -> Tuple[Optional[FormatSet], Optional[str], Optional[str]]:
+    """`(FormatSet, tier, label)` for a spec name, alias, or tier-addressed name, else
+    `(None, None, None)`. `egeria:<label>` and `builtin:<label>` (or `seed:<label>`) resolve directly
+    to that tier; an unprefixed name resolves through precedence (local > egeria > builtin)."""
+    from pyegeria.view.egeria_spec_cache import fetched_spec, split_tier_prefix
+    if not isinstance(name, str) or not name:
+        return None, None, None
+    tier, rest = split_tier_prefix(name)
+    if tier == "egeria":
+        fs = fetched_spec(rest)
+        if fs is not None:
+            return fs, "egeria", rest.rsplit("@v", 1)[0]
+        egeria = _egeria_tier()
+        fs = egeria.get(rest)
+        if fs is None:
+            return None, None, None
+        label = rest if rest in egeria.keys() else next(k for k, v in egeria.items() if v is fs)
+        return fs, "egeria", label
+    if tier == "builtin":
+        builtins = _builtin_tier()
+        fs = builtins.get(rest)
+        if fs is None:
+            return None, None, None
+        label = rest if rest in builtins.keys() else next(k for k, v in builtins.items() if v is fs)
+        return fs, "builtin", label
+    registry = get_report_registry()
+    fs = registry.get(name)
+    if fs is None:
+        return None, None, None
+    label = name if name in registry.keys() else next((k for k, v in registry.items() if v is fs), name)
+    return fs, _REGISTRY_TIERS.get(label, "local"), label
+
+
+def report_spec_source(name: Any) -> Optional[Dict[str, Any]]:
+    """The run envelope's `spec_source` for a spec name: `{"tier", "label", "version", "guid"?,
+    "synced_at"?}` (tier is "local", "egeria" or "builtin"). None if the name resolves to nothing."""
+    from pyegeria.view.egeria_spec_cache import egeria_tier_info, split_tier_prefix
+    fs, tier, label = lookup_report_spec(name)
+    if fs is None:
+        return None
+    if tier != "egeria":
+        return {"tier": tier, "label": label, "version": None}
+    _, rest = split_tier_prefix(name)
+    info = egeria_tier_info(rest if "@v" in str(rest) else label) or {}
+    out = {"tier": "egeria", "label": label, "version": info.get("version")}
+    if info.get("guid"):
+        out["guid"] = info["guid"]
+    if info.get("synced_at") and not info.get("fetched"):
+        out["synced_at"] = info["synced_at"]
+    if info.get("fetched"):
+        out["fetched_at"] = info.get("fetched_at")
+    return out
+
+
+def report_spec_footer(name: Any) -> Optional[str]:
+    """The REPORT/MD/HTML provenance footer line for an Egeria-held spec, else None."""
+    from pyegeria.view.egeria_spec_cache import egeria_tier_info, spec_footer, split_tier_prefix
+    fs, tier, label = lookup_report_spec(name)
+    if fs is None or tier != "egeria":
+        return None
+    _, rest = split_tier_prefix(name)
+    return spec_footer(egeria_tier_info(rest if "@v" in str(rest) else label))
+
+
+def add_spec_footer(content: Any, name: Any, output_format: str) -> Any:
+    """Append the provenance footer to REPORT/MD/HTML text for an Egeria-held spec (idempotent).
+    Every other format, and every local or built-in spec, is returned unchanged."""
+    fmt = (output_format or "").upper()
+    if not isinstance(content, str) or fmt not in ("REPORT", "MD", "HTML", "MARKDOWN"):
+        return content
+    footer = report_spec_footer(name)
+    if not footer or footer in content[-(len(footer) + 64):]:
+        return content
+    if fmt == "HTML":
+        return f"{content.rstrip()}\n<p class=\"spec-source\"><em>{footer}</em></p>\n"
+    return f"{content.rstrip()}\n\n_{footer}_\n"
 
 
 def find_report_specs_by_perspective(perspective: str, *, case_insensitive: bool = True) -> list[dict]:
@@ -4277,6 +4479,8 @@ def register_report_specs(new_formats: Union[FormatSetDict, dict], *, source: st
         new_formats = FormatSetDict(new_formats)
     existing = get_report_registry()
     for label in new_formats.keys():
+        if _REGISTRY_TIERS.get(label) == "egeria":
+            continue  # a local spec shadows an Egeria-held one (RS-EGERIA-TIER); it does not clash
         if label in existing.keys() and _RUNTIME_REPORT_SOURCES.get(label) != source:
             raise ReportFormatCollision(
                 f"Report format label '{label}' already exists; cannot register from {source}")
@@ -4302,8 +4506,30 @@ def list_report_specs(*, with_status: bool = False) -> list:
     if not with_status:
         return list(get_report_registry().keys())
     from pyegeria.view.spec_resolver import resolve_all
-    return [{"name": label, "runnable": result.runnable, "unrunnable_reason": result.unrunnable_reason}
-            for label, result in resolve_all().items()]
+    from pyegeria.view.egeria_spec_cache import tier_cache_age_s
+    results = resolve_all()
+    out = []
+    for label, result in results.items():
+        tier = _REGISTRY_TIERS.get(label, "local")
+        row = {"name": label, "runnable": result.runnable, "unrunnable_reason": result.unrunnable_reason,
+               "source": tier, "shadowed_by": None, "shadows": None,
+               "cache_age_s": tier_cache_age_s(label) if tier == "egeria" else None}
+        shadow = _REGISTRY_SHADOWS.get(label)
+        if shadow:
+            row["shadows"] = shadow["loser"]
+        out.append(row)
+    # A shadowed copy is listed under its tier address, so it is never invisible.
+    from pyegeria.view.spec_resolver import resolve
+    names = set(results)
+    for label, shadow in _REGISTRY_SHADOWS.items():
+        prefix = "egeria:" if shadow["loser"] == "egeria" else "builtin:"
+        fs = lookup_report_spec(f"{prefix}{label}")[0]
+        result = resolve(fs, f"{prefix}{label}", registry_names=names) if fs is not None else None
+        out.append({"name": f"{prefix}{label}", "runnable": bool(result and result.runnable),
+                    "unrunnable_reason": result.unrunnable_reason if result else "not loaded",
+                    "source": shadow["loser"], "shadowed_by": shadow["winner"], "shadows": None,
+                    "cache_age_s": tier_cache_age_s(label) if shadow["loser"] == "egeria" else None})
+    return out
 
 
 # ── Built-in report specs for viewing question spec entities ──────────────────
@@ -4624,6 +4850,11 @@ def _select_from_registry(registry: FormatSetDict, kind: str, output_type: str) 
         raise PyegeriaInvalidParameterException(context={"reason": reason})
 
     output_type = output_type.upper()
+    from pyegeria.view.egeria_spec_cache import split_tier_prefix
+    if split_tier_prefix(kind)[0] is not None:
+        # Tier addressing (RS-EGERIA-TIER): egeria:/builtin:/seed:<label> resolves in that tier only.
+        tier_fs, _tier, _label = lookup_report_spec(kind)
+        registry = FormatSetDict({kind: tier_fs}) if tier_fs is not None else FormatSetDict()
     resolved_key = kind if kind in registry else None
     element: Optional[FormatSet] = registry.get(kind)
     if element is None:
@@ -4692,6 +4923,9 @@ def report_format_list() -> list[str]:
 
 
 def get_report_format_heading(fmt_name: str) -> Optional[str]:
+    if isinstance(fmt_name, str) and ":" in fmt_name:
+        fs = lookup_report_spec(fmt_name)[0]
+        return fs.heading if fs else None
     reg = get_report_registry()
     fs = reg.get(fmt_name)
     if fs is None:
@@ -4703,6 +4937,9 @@ def get_report_format_heading(fmt_name: str) -> Optional[str]:
 
 
 def get_report_format_description(fmt_name: str) -> Optional[str]:
+    if isinstance(fmt_name, str) and ":" in fmt_name:
+        fs = lookup_report_spec(fmt_name)[0]
+        return fs.description if fs else None
     reg = get_report_registry()
     fs = reg.get(fmt_name)
     if fs is None:

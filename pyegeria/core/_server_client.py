@@ -1843,6 +1843,18 @@ class ServerClient(BaseServerClient):
 
         return resp
 
+    async def _async_refresh_report_spec(self, report_spec: Any, kwargs: dict) -> Any:
+        """Fetch-on-call (RS-EGERIA-TIER, §7a): pop `refresh_spec` from a request's kwargs and, when it
+        is true, fetch the named report spec from Egeria for this call. Returns the name the call should
+        use (an in-process "egeria:<label>@v<N>" for a fetched spec). A failed fetch raises with words;
+        it never falls back to the cached copy."""
+        if not kwargs.pop("refresh_spec", False):
+            return report_spec
+        if not isinstance(report_spec, str) or not report_spec:
+            raise ValueError("refresh_spec=True needs report_spec to name a report spec")
+        from pyegeria.view.egeria_spec_cache import async_fetch_spec_for_call
+        return await async_fetch_spec_for_call(self, report_spec)
+
     def _generate_formatted_output(
             self,
             elements: dict | list[dict],
@@ -1896,7 +1908,7 @@ class ServerClient(BaseServerClient):
                     'get_additional_props_func', 'columns_struct']:
             kwargs.pop(key, None)
 
-        return generate_output(
+        result = generate_output(
             elements=elements,
             search_string=query_string,
             entity_type=entity_type,
@@ -1906,6 +1918,11 @@ class ServerClient(BaseServerClient):
             columns_struct=output_formats,
             **kwargs
         )
+        if isinstance(report_spec, str) and isinstance(result, str):
+            # Provenance footer for an Egeria-held spec on REPORT/MD/HTML (RS-EGERIA-TIER §7a).
+            from pyegeria.view.base_report_formats import add_spec_footer
+            result = add_spec_footer(result, report_spec, output_format)
+        return result
 
     def _generate_comment_output(self, elements: dict | list[dict], search_string: Optional[str] = None,
                                  element_type_name: Optional[str] = None,
@@ -6462,6 +6479,7 @@ class ServerClient(BaseServerClient):
                                   property_names: Optional[list[str]] = None,
                                   body: dict | SearchStringRequestBody | FindPropertyNamesRequestBody = None,
                                   **kwargs) -> Any:
+        report_spec = await self._async_refresh_report_spec(report_spec, kwargs)  # refresh_spec=True (RS-EGERIA-TIER)
 
         effective_search_string = None if search_string == '*' else search_string
 
@@ -6568,6 +6586,7 @@ class ServerClient(BaseServerClient):
                                       report_spec: Optional[str | dict] = None,
                                       body: Optional[dict | FilterRequestBody] = None,
                                       max_mermaid_node_count=10, **kwargs) -> Any:
+        report_spec = await self._async_refresh_report_spec(report_spec, kwargs)  # refresh_spec=True (RS-EGERIA-TIER)
 
         # _async_find_request spells this argument `metadata_element_type`; a wrapper copied from a find_*
         # sibling passed that spelling here, where it fell into **kwargs and FilterRequestBody silently
@@ -6640,6 +6659,7 @@ class ServerClient(BaseServerClient):
         rather than switching to _async_get_results_body_request, because only
         this helper understands the singular "elementGraph" response key.
         """
+        report_spec = await self._async_refresh_report_spec(report_spec, kwargs)  # refresh_spec=True (RS-EGERIA-TIER)
         if isinstance(body, (GetRequestBody, ResultsRequestBody)):
             validated_body = body
         elif isinstance(body, dict):
@@ -6702,6 +6722,7 @@ class ServerClient(BaseServerClient):
             max_mermaid_node_count ():
             graph_query_depth ():
         """
+        report_spec = await self._async_refresh_report_spec(report_spec, kwargs)  # refresh_spec=True (RS-EGERIA-TIER)
         if isinstance(body, GetRequestBody):
             validated_body = body
         elif isinstance(body, dict):
@@ -7175,6 +7196,7 @@ class ServerClient(BaseServerClient):
         `filter_results_by_type=False` when `_type` is only a rendering hint, so the
         default request body doesn't wrongly filter results by it.
         """
+        report_spec = await self._async_refresh_report_spec(report_spec, kwargs)  # refresh_spec=True (RS-EGERIA-TIER)
         if isinstance(body, ResultsRequestBody):
             validated_body = body
         elif isinstance(body, dict):
