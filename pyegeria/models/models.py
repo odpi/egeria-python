@@ -1198,6 +1198,12 @@ class NewSubscriptionTypeRequestBody(RequestBody):
     @model_validator(mode="after")
     def _send_both_interval_names(self) -> "NewSubscriptionTypeRequestBody":
         # TRANSITIONAL (see notification_interval above): mirror whichever name the caller set.
+        if (self.minimum_notification_interval is not None and self.notification_interval is not None
+                and self.minimum_notification_interval != self.notification_interval):
+            # A pre-rename platform would use one value and a post-rename platform the other.
+            raise ValueError(
+                f"minimumNotificationInterval ({self.minimum_notification_interval}) and notificationInterval "
+                f"({self.notification_interval}) differ; set only minimumNotificationInterval.")
         if self.minimum_notification_interval is None:
             self.minimum_notification_interval = self.notification_interval
         elif self.notification_interval is None:
