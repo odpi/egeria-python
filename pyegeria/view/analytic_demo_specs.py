@@ -85,7 +85,7 @@ _DEMOS: Dict[str, FormatSet] = {
         heading="Element Count by Type",
         what="Counts active GlossaryTerm elements.",
         analytic_function_name="count_elements",
-        demo_params={"type_name": "GlossaryTerm"},
+        demo_params={"type_name": "GlossaryTerm", "strict": True},
         result_shape="scalar (int)",
     ),
     "Analytic Demo - Assets by Type Breakdown": _demo(
@@ -96,7 +96,7 @@ _DEMOS: Dict[str, FormatSet] = {
         demo_params={"type_map": [
             ["Data Stores", "DataStore"], ["Data Sets", "DataSet"],
             ["Software Components", "DeployedSoftwareComponent"],
-        ]},
+        ], "strict": True},
         result_shape="list[dict] ({label, type, count})",
         chart_types=["BAR", "PIE"],
     ),
@@ -156,7 +156,7 @@ _DEMOS: Dict[str, FormatSet] = {
         heading="People & Community Counts",
         what="Counts of Person/Team/Organization/ITProfile/Community actor profiles.",
         analytic_function_name="people_counts",
-        demo_params={},
+        demo_params={"strict": True},
         result_shape="dict (persons, teams, organizations, itProfiles, communities)",
         chart_types=["BAR", "PIE"],
     ),
@@ -175,7 +175,7 @@ _DEMOS: Dict[str, FormatSet] = {
         what="InformationSupplyChain and SolutionBlueprint counts -- the two structures that put "
              "assets in a business usage context (supply chain membership, blueprint realization).",
         analytic_function_name="usage_context_counts",
-        demo_params={},
+        demo_params={"strict": True},
         result_shape="dict (informationSupplyChains, blueprints)",
     ),
     "Analytic Demo - Semantic Grounding": _demo(
@@ -274,7 +274,8 @@ _DEMOS: Dict[str, FormatSet] = {
         heading="Count Elements by Property",
         what="Counts active DigitalProduct elements with deploymentStatus=ACTIVE.",
         analytic_function_name="count_elements_by_property",
-        demo_params={"type_name": "DigitalProduct", "property_name": "deploymentStatus", "property_value": "ACTIVE"},
+        demo_params={"type_name": "DigitalProduct", "property_name": "deploymentStatus", "property_value": "ACTIVE",
+                     "strict": True},
         result_shape="scalar (int)",
     ),
     "Analytic Demo - Contextualised Coverage": _demo(

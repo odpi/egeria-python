@@ -24,6 +24,8 @@ concerns. `overview_handler.py` is the reference caller; see its git history
 for the original inline versions this was extracted from.
 """
 
+import contextlib
+import contextvars
 import functools
 import inspect
 import time
@@ -42,6 +44,7 @@ from pyegeria.core._globals import max_paging_size
 
 __all__ = [
     "DEFAULT_CAP",
+    "recording_unmeasured",
     "GOVERNANCE_CLASSIFICATIONS",
     "count_elements",
     "count_relationships",
@@ -299,6 +302,63 @@ def _push_down(scope: Optional[str]) -> Optional[bool]:
     raise ValueError(f"scope must be None, {SCOPE_VIEWER!r} or {SCOPE_REPOSITORY!r}; got {scope!r}")
 
 
+# ── not-measured notes ─────────────────────────────────────────────────────
+# A count that comes back None is "not measured", never 0 and never the find
+# cap. The value alone cannot say why, or what lower bound the fallback did
+# see, so every count that returns None for that reason also records a note
+# here; `recording_unmeasured()` collects them for whoever wants the words
+# (the report-spec executor puts them on its output, see format_set_executor).
+_UNMEASURED: "contextvars.ContextVar[Optional[List[Dict[str, Any]]]]" = contextvars.ContextVar(
+    "pyegeria_unmeasured_counts", default=None)
+
+
+@contextlib.contextmanager
+def recording_unmeasured():
+    """Collect a note for every count that is not measured while the block runs.
+
+    Yields a list that fills with {"count": what was counted, "reason": why it is
+    not measured, "at_least": the lower bound the find fallback saw, or None}.
+    Notes are per context (a ContextVar), so a worker thread records into its own
+    block, not its caller's."""
+    notes: List[Dict[str, Any]] = []
+    token = _UNMEASURED.set(notes)
+    try:
+        yield notes
+    finally:
+        _UNMEASURED.reset(token)
+
+
+def _not_measured(what: str, reason: str, at_least: Optional[int] = None) -> None:
+    logger.warning(f"overview_metrics: count of {what!r} not measured -- {reason}")
+    notes = _UNMEASURED.get()
+    if notes is not None:
+        notes.append({"count": what, "reason": reason, "at_least": at_least})
+
+
+def _native_failure_words(exc: Optional[BaseException], tried: bool) -> str:
+    """What happened to the native count, in words, for a not-measured reason."""
+    if not tried:
+        return "no native count is available"
+    if exc is None:
+        return "the native count gave no number"
+    text = str(exc).lower()
+    if isinstance(exc, PyegeriaTimeoutException) or "timed out" in text or "timeout" in text or "408" in text:
+        return "the native count timed out"
+    return f"the native count failed ({type(exc).__name__})"
+
+
+def _count_label(body: dict) -> str:
+    label = body.get("metadataElementTypeName") or "elements"
+    conditions = ((body.get("matchClassifications") or {}).get("conditions")) or []
+    names = [c.get("name") for c in conditions if isinstance(c, dict) and c.get("name")]
+    return f"{label} classified {'/'.join(names)}" if names else label
+
+
+def _capped_reason(native_words: str, n: int) -> str:
+    return (f"{native_words}, and the find fallback stopped at its {DEFAULT_CAP}-element page cap, "
+            f"so there are at least {n}")
+
+
 def _element_count(mgr, body: dict, as_of: Optional[str] = None, strict: bool = False,
                    scope: Optional[str] = None) -> Optional[int]:
     """Count elements matching a FindRequestBody -- native when available, else
@@ -310,37 +370,45 @@ def _element_count(mgr, body: dict, as_of: Optional[str] = None, strict: bool = 
     a viewer number masquerading as a repository one.
 
     strict=False: 0 when the fallback query fails (the historical behaviour).
-    strict=True: None when the count is not known -- the fallback query failed,
-    or it returned a full page (DEFAULT_CAP), which is only a lower bound.
+    strict=True: None when the fallback query fails.
+    Either way: None when the fallback returned a full page (DEFAULT_CAP). That
+    is only a lower bound, never a total, so it is never returned as one; the
+    bound and the reason go to `recording_unmeasured()`'s notes.
     """
     push_down = _push_down(scope)
     kw = {} if push_down is None else {"push_down": push_down}
     b = dict(body)
     if as_of:
         b["asOfTime"] = as_of
+    what = _count_label(body)
     name = _native_count_method(mgr, _ELEMENT_COUNT_CANDIDATES, "elem:" + type(mgr).__name__)
+    tried, native_exc = False, None
     if name and not _native_disabled(mgr):
+        tried = True
         try:
             c = _as_count(getattr(mgr, name)(b, **kw))
             if c is not None:
                 return c
         except Exception as exc:  # noqa: BLE001 -- old server: mark unsupported, fall back
+            native_exc = exc
             _disable_native(mgr, exc)
+    native_words = _native_failure_words(native_exc, tried)
     if scope == SCOPE_REPOSITORY:
-        logger.warning(f"overview_metrics: repository-scope count of "
-                       f"{body.get('metadataElementTypeName') or 'elements'!r} not measured -- "
+        if strict:
+            _not_measured(what, f"{native_words}, and a repository-population count has no fallback "
+                                f"(the find fallback is viewer-scoped)")
+            return None
+        logger.warning(f"overview_metrics: repository-scope count of {what!r} not measured -- "
                        f"native count unavailable or failed (the find fallback is viewer-scoped)")
-        return None if strict else 0
-    if not strict:
-        return len(_find(mgr, b))
+        return 0
     found = _find_or_none(mgr, b)
     if found is None:
-        logger.warning(f"overview_metrics: count of {body.get('metadataElementTypeName') or 'elements'!r} "
-                       f"not measured -- the query failed")
+        if not strict:
+            return 0
+        _not_measured(what, f"{native_words}, and the find fallback failed")
         return None
-    if len(found) >= DEFAULT_CAP:
-        logger.warning(f"overview_metrics: count of {body.get('metadataElementTypeName') or 'elements'!r} "
-                       f"not measured -- the fallback hit the {DEFAULT_CAP} cap, so {len(found)} is only a lower bound")
+    if len(found) >= DEFAULT_CAP:  # a full page is a lower bound, never a total (strict or not)
+        _not_measured(what, _capped_reason(native_words, len(found)), at_least=len(found))
         return None
     return len(found)
 
@@ -361,7 +429,9 @@ def count_elements(
 
     By default a failed query counts as 0, so an outage looks like an empty
     catalog. Pass strict=True to get None instead whenever the number is not
-    known (ISSUE-123).
+    known (ISSUE-123). Strict or not, a find fallback that stops at DEFAULT_CAP
+    gives None, never the cap: that page is a lower bound, not a total (its
+    bound and reason are recorded for `recording_unmeasured()`).
 
     Parameters
     ----------
@@ -370,8 +440,8 @@ def count_elements(
     as_of : ISO-8601 asOfTime for a point-in-time count (None = now)
     classifications : classification names to match ANY of -- keep to a
         single call's worth (some connectors mishandle 2+ ANY conditions)
-    strict : when True, return None if the query failed, or if the fallback
-        count hit DEFAULT_CAP (a lower bound, not a total)
+    strict : when True, return None (not 0) if the query failed. A fallback
+        count that hit DEFAULT_CAP is None in either mode
     scope : None (server default), "viewer" (push_down=False: only what the
         caller may see) or "repository" (push_down=True: whole-repository raw
         count, fast, includes elements the caller cannot see). The len(find)
@@ -380,7 +450,8 @@ def count_elements(
 
     Returns
     -------
-    int -- 0 on any failure (never raises); with strict=True, Optional[int]
+    Optional[int] -- 0 on a failed query (never raises), None on a capped
+    fallback; with strict=True, None whenever the count is not measured
     """
     body: Dict[str, Any] = {"class": "FindRequestBody", "limitResultsByStatus": ["ACTIVE"]}
     if type_name:
@@ -424,7 +495,7 @@ def count_elements_by_property(
 
     Returns
     -------
-    int -- 0 on any failure (never raises); with strict=True, Optional[int]
+    Optional[int] -- as for count_elements
     """
     body: Dict[str, Any] = {
         "class": "FindRequestBody",
@@ -473,13 +544,17 @@ def count_relationships(ce, relationship_type: str, as_of: Optional[str] = None,
 
     Returns
     -------
-    Optional[int] -- None on total failure (never raises)
+    Optional[int] -- None on total failure, and None when the get_relationships
+    page came back full (DEFAULT_CAP): that is a lower bound, never a total
+    (its bound and reason are recorded for `recording_unmeasured()`). Never raises.
     """
     push_down = _push_down(scope)
     kw = {} if push_down is None else {"push_down": push_down}
+    tried, native_exc = False, None
     if expert is not None and not _native_disabled(expert):
         name = _native_count_method(expert, _REL_COUNT_CANDIDATES, "rel:" + type(expert).__name__)
         if name:
+            tried = True
             body = {"class": "FindRelationshipRequestBody", "relationshipTypeName": relationship_type,
                     "limitResultsByStatus": ["ACTIVE"]}
             if as_of:
@@ -489,6 +564,7 @@ def count_relationships(ce, relationship_type: str, as_of: Optional[str] = None,
                 if c is not None:
                     return c
             except Exception as exc:  # noqa: BLE001
+                native_exc = exc
                 _disable_native(expert, exc)
     if scope == SCOPE_REPOSITORY:
         logger.warning(f"overview_metrics: repository-scope count of {relationship_type!r} not measured -- "
@@ -496,12 +572,18 @@ def count_relationships(ce, relationship_type: str, as_of: Optional[str] = None,
         return None
     try:
         body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
-        return len(_json_list(ce.get_relationships(
+        n = len(_json_list(ce.get_relationships(
             relationship_type=relationship_type, output_format="JSON",
             start_from=0, page_size=DEFAULT_CAP, body=body)))
     except Exception as exc:  # noqa: BLE001
         logger.debug(f"overview_metrics count_relationships({relationship_type}) failed: {exc}")
         return None
+    if n >= DEFAULT_CAP:
+        page = f"get_relationships stopped at its {DEFAULT_CAP}-relationship page cap, so there are at least {n}"
+        _not_measured(relationship_type, (f"{_native_failure_words(native_exc, tried)}, and {page}" if tried
+                                          else f"{page} (no native count was asked for)"), at_least=n)
+        return None
+    return n
 
 
 @_population_keyword
@@ -511,7 +593,8 @@ def counts_by_type(mgr, type_map: Sequence[Tuple[str, str]], as_of: Optional[str
     Per-type counts for a set of (label, type_name) pairs -- e.g. the assets-
     by-type composition breakdown. Unknown/wrong types just yield 0 rather
     than failing the whole call. With strict=True, a count that could not be
-    measured is None (see count_elements). `scope` is passed to count_elements.
+    measured is None (see count_elements); a capped fallback is None either
+    way, never the cap. `scope` is passed to count_elements.
 
     Returns a list of {"label": ..., "type": ..., "count": ...} dicts, in the
     order given.
@@ -547,7 +630,8 @@ def sum_type_counts(mgr, type_map: Sequence[Tuple[str, str]], as_of: Optional[st
         fetch="pyegeria.view.overview_metrics.counts_by_type",
         analytic="pyegeria.view.overview_metrics.sum_counts",
     )
-    return run_analytic_action(spec, mgr, fetch_kwargs={"type_map": type_map, "as_of": as_of})
+    # strict: a failed count is None, not 0, so the total is None rather than an undercount.
+    return run_analytic_action(spec, mgr, fetch_kwargs={"type_map": type_map, "as_of": as_of, "strict": True})
 
 
 def sum_counts(by_type: List[Dict[str, Any]], mgr=None) -> Dict[str, Any]:
@@ -557,8 +641,13 @@ def sum_counts(by_type: List[Dict[str, Any]], mgr=None) -> Dict[str, Any]:
     analytic step that DOES need to fetch more -- e.g. following a
     relationship to enrich, the pattern `ai_ready_assets` already uses
     inline). Also directly reusable on a `by_type` result a caller already
-    has, without re-fetching (see `sum_type_counts`'s docstring)."""
-    return {"total": sum(r["count"] for r in by_type), "byType": by_type}
+    has, without re-fetching (see `sum_type_counts`'s docstring).
+
+    `total` is None when any row's count is None (not measured): a sum over
+    the measured rows only would read as the whole total."""
+    counts = [r["count"] for r in by_type]
+    total = None if any(c is None for c in counts) else sum(counts)
+    return {"total": total, "byType": by_type}
 
 
 def _classifications_of(el: dict) -> set:
@@ -873,7 +962,7 @@ def orphan_glossary_terms(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Opt
     "orphanCount": int|None}. Any field is None on total failure for its own
     step (never raises).
     """
-    term_total = count_elements(mgr, "GlossaryTerm", as_of)
+    term_total = count_elements(mgr, "GlossaryTerm", as_of, strict=True)
 
     referenced_count = None
     try:
@@ -937,7 +1026,7 @@ def stale_assets(mgr, as_of: Optional[str] = None, days: int = 180) -> Dict[str,
     except Exception as exc:  # noqa: BLE001
         logger.debug(f"stale_assets: query failed: {exc}")
 
-    return {"staleCount": stale_count, "assetTotal": count_elements(mgr, "Asset", as_of)}
+    return {"staleCount": stale_count, "assetTotal": count_elements(mgr, "Asset", as_of, strict=True)}
 
 
 def semantic_grounding(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Any]:
@@ -948,7 +1037,7 @@ def semantic_grounding(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Any]:
 
     Returns {"groundingLinks": int|None, "groundingPct": int|None}.
     """
-    cataloged = count_elements(mgr, "Asset", as_of)
+    cataloged = count_elements(mgr, "Asset", as_of, strict=True)
     links = count_relationships(ce, "SemanticAssignment", as_of)
     pct = min(100, round(100 * links / cataloged)) if cataloged and links is not None else None
     return {"groundingLinks": links, "groundingPct": pct}
@@ -1389,7 +1478,7 @@ def contextualised_coverage(mgr, ce, as_of: Optional[str] = None) -> Dict[str, O
     except Exception as exc:  # noqa: BLE001
         logger.debug(f"contextualised_coverage: ImplementedBy query failed: {exc}")
 
-    asset_total = count_elements(mgr, "Asset", as_of)
+    asset_total = count_elements(mgr, "Asset", as_of, strict=True)
 
     pct = None
     if contextualised_count is not None and asset_total:
@@ -1434,7 +1523,7 @@ def solution_component_realisation(mgr, ce, as_of: Optional[str] = None) -> Dict
     int|None}. Either field is None on total failure for its own step (never
     raises).
     """
-    total = count_elements(mgr, "SolutionComponent", as_of)
+    total = count_elements(mgr, "SolutionComponent", as_of, strict=True)
 
     realised_count = None
     try:
@@ -1649,7 +1738,7 @@ def growth_series(
         point = {"label": growth_label(d, span_s), "date": d.strftime(date_fmt)}
         try:
             for key, type_name, classifications in type_map:
-                point[key] = count_elements(mgr, type_name, as_of, classifications=classifications)
+                point[key] = count_elements(mgr, type_name, as_of, classifications=classifications, strict=True)
         except Exception as exc:  # noqa: BLE001
             logger.debug(f"overview_metrics growth_series: snapshot {i} failed: {exc}")
             for key, _, _ in type_map:
@@ -2009,10 +2098,12 @@ def _count_cell(mgr, type_name: str, as_of: Optional[str], scope: str, stamp: st
     started = time.monotonic()
     reason = ""
     try:
-        value = count_elements(mgr, type_name, as_of, strict=True, population=scope)
+        with recording_unmeasured() as notes:
+            value = count_elements(mgr, type_name, as_of, strict=True, population=scope)
         if value is None:
-            reason = (f"the {scope} count of {type_name} could not be measured "
-                      f"(query failed, native count unavailable, or the fallback hit its cap)")
+            reason = (f"the {scope} count of {type_name} could not be measured: "
+                      + ("; ".join(n["reason"] for n in notes) if notes
+                         else "query failed, native count unavailable, or the fallback hit its cap"))
     except Exception as exc:  # noqa: BLE001 -- the exception's words become the reason
         value = None
         reason = f"the {scope} count of {type_name} failed: {exc}"

@@ -858,8 +858,9 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
             result_kind="measure",
             measures=[_measure("elements", "elements", "value")],
             absence=_absence(
-                not_measured="The elements were not counted: the count query failed, or the server "
-                             "could not answer it in the population asked for.",
+                not_measured="The elements were not counted: the count query failed or timed out, or "
+                             "the server could not answer it in the population asked for. A fallback "
+                             "that stopped at its page cap is a lower bound, never a total.",
                 not_permitted="You are not permitted to count these elements.",
                 not_applicable="This count does not apply: the type named is not an element type "
                                "the server knows.",
@@ -891,8 +892,9 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
             # The caller picks the types; a supertype and its subtype may both be listed.
             categories=CategoriesDeclaration(exclusive=False),
             absence=_absence(
-                not_measured="The types were not counted: the count queries failed, or the server "
-                             "could not answer them in the population asked for.",
+                not_measured="The types were not counted: the count queries failed or timed out, or "
+                             "the server could not answer them in the population asked for. A fallback "
+                             "that stopped at its page cap is a lower bound, never a total.",
                 not_permitted="You are not permitted to count elements of these types.",
                 not_applicable="A breakdown by type does not apply: no types were given to count.",
                 nothing_found="Counted: there are no active elements of any of these types.",
@@ -1183,8 +1185,9 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                          "at most 100", "groundingPct"),
             ],
             absence=_absence(
-                not_measured="Semantic grounding was not measured: the relationship query failed or "
-                             "there was no Asset count to divide by.",
+                not_measured="Semantic grounding was not measured: the SemanticAssignment count or the "
+                             "Asset count to divide by failed, timed out, or stopped at its page cap "
+                             "(a lower bound, never a total).",
                 not_permitted="You are not permitted to read the semantic assignments.",
                 not_applicable=_always_applies("Semantic grounding"),
                 nothing_found="Counted: no glossary term is assigned to anything.",
@@ -1518,8 +1521,9 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
             result_kind="measure",
             measures=[_measure("elements", "elements", "value")],
             absence=_absence(
-                not_measured="The elements were not counted: the count query failed, or the server "
-                             "could not answer it in the population asked for.",
+                not_measured="The elements were not counted: the count query failed or timed out, or "
+                             "the server could not answer it in the population asked for. A fallback "
+                             "that stopped at its page cap is a lower bound, never a total.",
                 not_permitted="You are not permitted to count these elements.",
                 not_applicable="This count does not apply: the type or property named is not one "
                                "the server knows.",

@@ -56,9 +56,10 @@ def test_strict_real_zero_is_zero():
     assert om.count_elements(_mgr(find_result=[]), "Asset", strict=True) == 0
 
 
-def test_strict_returns_none_for_a_capped_fallback():
+def test_a_capped_fallback_is_none_in_either_mode_never_the_cap():
+    # A full page is a lower bound, never a total: non-strict no longer returns the cap.
     full_page = [{"i": i} for i in range(om.DEFAULT_CAP)]
-    assert om.count_elements(_mgr(find_result=full_page), "Asset") == om.DEFAULT_CAP
+    assert om.count_elements(_mgr(find_result=full_page), "Asset") is None
     assert om.count_elements(_mgr(find_result=full_page), "Asset", strict=True) is None
 
 

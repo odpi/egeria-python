@@ -1,0 +1,254 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright Contributors to the ODPi Egeria project.
+"""
+A count that timed out is never reported as a measured total.
+
+Live (2026-11-08, platform build 082ecd44): the native count of a supertype (Asset, Process)
+timed out at the client's 30 s limit, `_element_count` fell back to len(find), the find stopped
+at DEFAULT_CAP, and the Portal tile showed "Total Cataloged Assets = 500". A full page is a lower
+bound, never a total: the count is None ("not measured"), and the reason with the bound it saw
+reaches the output. Every branch is executed here, not read.
+"""
+import json
+from unittest.mock import MagicMock
+
+import pytest
+
+from pyegeria.view import format_set_executor as fse
+from pyegeria.view import overview_metrics as om
+from pyegeria.view.role_supply import Subject, Viewer
+
+CAP = om.DEFAULT_CAP
+TIMEOUT = RuntimeError("TIMEOUT_ERROR_408 the request to .../by-search-conditions/count timed out")
+
+
+@pytest.fixture(autouse=True)
+def _reset_seam_caches():
+    om._count_caps.clear()
+    om._native_server_ok.clear()
+    yield
+    om._count_caps.clear()
+    om._native_server_ok.clear()
+
+
+def _mgr(native=None, find_result=None, find_error=None):
+    attrs = ["platform_url", "view_server", "find_metadata_elements"]
+    if native is not None:
+        attrs.append("count_metadata_elements")
+    m = MagicMock(spec=attrs)
+    m.platform_url, m.view_server = "https://localhost:9443", "test-server"
+    if native is not None:
+        m.count_metadata_elements = native
+    if find_error is not None:
+        m.find_metadata_elements.side_effect = find_error
+    else:
+        m.find_metadata_elements.return_value = find_result
+    return m
+
+
+def _page(n):
+    return [{"elementGUID": f"g{i}"} for i in range(n)]
+
+
+# ── the count seam ──
+
+def test_a_timeout_whose_fallback_hits_the_cap_is_not_measured_with_its_lower_bound():
+    mgr = _mgr(native=MagicMock(side_effect=TIMEOUT), find_result=_page(CAP))
+    with om.recording_unmeasured() as notes:
+        for strict in (True, False):
+            assert om.count_elements(mgr, "Asset", strict=strict) is None  # never CAP
+    assert notes == [{"count": "Asset", "at_least": CAP,
+                      "reason": f"the native count timed out, and the find fallback stopped at its "
+                                f"{CAP}-element page cap, so there are at least {CAP}"}] * 2
+
+
+def test_a_timeout_whose_fallback_fails_is_not_measured_strict():
+    mgr = _mgr(native=MagicMock(side_effect=TIMEOUT), find_error=RuntimeError("boom"))
+    with om.recording_unmeasured() as notes:
+        assert om.count_elements(mgr, "Process", strict=True) is None
+    assert notes == [{"count": "Process", "at_least": None,
+                      "reason": "the native count timed out, and the find fallback failed"}]
+
+
+def test_the_timeout_leaves_native_enabled_for_the_next_count():
+    native = MagicMock(side_effect=[TIMEOUT, {"count": 7}])
+    mgr = _mgr(native=native, find_result=_page(CAP))
+    assert om.count_elements(mgr, "Asset", strict=True) is None
+    assert om.count_elements(mgr, "DataStore", strict=True) == 7
+
+
+def test_a_short_fallback_page_is_a_measured_count_and_records_nothing():
+    mgr = _mgr(native=MagicMock(side_effect=TIMEOUT), find_result=_page(CAP - 1))
+    with om.recording_unmeasured() as notes:
+        assert om.count_elements(mgr, "Asset") == CAP - 1
+        assert om.count_elements(mgr, "Asset", strict=True) == CAP - 1
+    assert notes == []
+
+
+def test_a_native_count_above_the_cap_is_trusted():
+    with om.recording_unmeasured() as notes:
+        assert om.count_elements(_mgr(native=MagicMock(return_value={"count": 1061})), "GlossaryTerm") == 1061
+    assert notes == []
+
+
+def test_non_strict_failure_keeps_its_historical_zero():
+    assert om.count_elements(_mgr(find_error=RuntimeError("boom")), "Asset") == 0
+
+
+def test_a_classification_count_names_what_it_counted():
+    mgr = _mgr(find_result=_page(CAP))
+    with om.recording_unmeasured() as notes:
+        assert om.count_elements(mgr, None, classifications=["Confidentiality", "Impact"]) is None
+    assert notes[0]["count"] == "elements classified Confidentiality/Impact"
+    assert notes[0]["reason"].startswith("no native count is available")
+
+
+def test_notes_are_only_kept_inside_a_recording_block():
+    mgr = _mgr(find_result=_page(CAP))
+    assert om.count_elements(mgr, "Asset") is None  # no block: nothing to append to, no error
+    with om.recording_unmeasured() as outer:
+        with om.recording_unmeasured() as inner:
+            om.count_elements(mgr, "Asset")
+        om.count_elements(mgr, "Process")
+    assert [n["count"] for n in inner] == ["Asset"]
+    assert [n["count"] for n in outer] == ["Process"]
+
+
+def test_a_full_relationship_page_is_not_a_relationship_count():
+    ce = MagicMock()
+    ce.get_relationships.return_value = [{"guid": f"r{i}"} for i in range(CAP)]
+    with om.recording_unmeasured() as notes:
+        assert om.count_relationships(ce, "SemanticAssignment") is None
+    assert notes[0]["count"] == "SemanticAssignment" and notes[0]["at_least"] == CAP
+    ce.get_relationships.return_value = [{"guid": "r1"}]
+    assert om.count_relationships(ce, "SemanticAssignment") == 1
+
+
+def test_semantic_grounding_no_longer_reports_500_links_100_percent():
+    mgr = _mgr(native=MagicMock(side_effect=TIMEOUT), find_result=_page(CAP))
+    ce = MagicMock()
+    ce.get_relationships.return_value = [{"guid": f"r{i}"} for i in range(CAP)]
+    with om.recording_unmeasured() as notes:
+        assert om.semantic_grounding(mgr, ce) == {"groundingLinks": None, "groundingPct": None}
+    assert {n["count"] for n in notes} == {"Asset", "SemanticAssignment"}
+
+
+def test_counts_by_type_and_its_sum_never_add_a_lower_bound_into_a_total():
+    native = MagicMock(side_effect=lambda body, **kw: (
+        {"count": 843} if body["metadataElementTypeName"] == "DataStore" else (_ for _ in ()).throw(TIMEOUT)))
+    mgr = _mgr(native=native, find_result=_page(CAP))
+    rows = om.counts_by_type(mgr, [("Data Stores", "DataStore"), ("Processes", "Process")])
+    assert rows == [{"label": "Data Stores", "type": "DataStore", "count": 843},
+                    {"label": "Processes", "type": "Process", "count": None}]
+    assert om.sum_counts(rows)["total"] is None
+    assert om.sum_counts(rows[:1])["total"] == 843
+
+
+def test_an_asset_composition_cell_carries_the_lower_bound_in_its_reason():
+    mgr = _mgr(native=MagicMock(side_effect=TIMEOUT), find_result=_page(CAP))
+    cell = om._count_cell(mgr, "Asset", None, "viewer", "now")
+    assert cell["value"] is None and cell["state"] == om.CELL_NOT_MEASURED
+    assert f"so there are at least {CAP}" in cell["reason"]
+
+
+# ── what a reader sees through exec_report_spec ──
+
+class _Fake:
+    """Native element counts time out except DataStore; the find fallback returns a full page."""
+    platform_url, view_server = "https://fake:9443", "fake"
+
+    def count_metadata_elements(self, body, **kw):
+        if body.get("metadataElementTypeName") == "DataStore":
+            return {"count": 843}
+        raise TIMEOUT
+
+    def find_metadata_elements(self, body, *a, **kw):
+        return _page(min(CAP, body.get("pageSize") or CAP))
+
+    def get_relationships(self, *a, page_size=None, **kw):
+        return [{"guid": f"r{i}"} for i in range(min(CAP, page_size or CAP))]
+
+
+class _Supply:
+    def __init__(self):
+        self.fake = _Fake()
+
+    def client(self, cls):
+        return self.fake
+
+    def viewer(self):
+        return Viewer(user_id="u", is_admin=False, display_name="U")
+
+    def reader(self, source):
+        return None
+
+    def subject(self):
+        return Subject(guid="g", type_name="Asset")
+
+    def refusal_words(self, kind):
+        return f"cannot supply {kind}"
+
+
+def _exec(label, fmt="DICT", **params):
+    return fse.exec_report_spec(label, output_format=fmt, params=params, view_server="vs", view_url="https://x",
+                                user="u", user_pass="p", supply=_Supply())
+
+
+def test_the_total_cataloged_assets_tile_says_not_measured_with_at_least_500():
+    out = _exec("Analytic Demo - Element Count by Type", type_name="Asset")
+    assert out["kind"] == "absent" and "data" not in out
+    assert out["absence"]["state"] == "not_measured"
+    assert out["unmeasured"] == [{"count": "Asset", "at_least": CAP, "reason": (
+        f"the native count timed out, and the find fallback stopped at its {CAP}-element page cap, "
+        f"so there are at least {CAP}")}]
+    assert "Asset: the native count timed out" in out["content"]
+    assert f"at least {CAP}" in out["content"]
+
+
+def test_a_measured_tile_is_unchanged():
+    assert _exec("Analytic Demo - Element Count by Type", type_name="DataStore") == {"kind": "json", "data": 843}
+
+
+def test_the_breakdown_rows_keep_measured_counts_and_name_the_unmeasured_one():
+    out = _exec("Analytic Demo - Assets by Type Breakdown",
+                type_map=[["Data Stores", "DataStore"], ["Processes", "Process"]])
+    assert out["kind"] == "json"
+    assert out["data"] == [{"label": "Data Stores", "type": "DataStore", "count": 843},
+                           {"label": "Processes", "type": "Process", "count": None}]
+    assert [(n["count"], n["at_least"]) for n in out["unmeasured"]] == [("Process", CAP)]
+    assert CAP not in [r["count"] for r in out["data"]]
+
+
+@pytest.mark.parametrize("fmt", ["BAR", "PIE"])
+def test_no_chart_is_drawn_over_an_unmeasured_count(fmt):
+    out = _exec("Analytic Demo - Assets by Type Breakdown", fmt,
+                type_map=[["Data Stores", "DataStore"], ["Processes", "Process"]])
+    assert out["kind"] == "absent" and "data" not in out  # no vega spec: a missing bar would read as 0
+    assert out["detail"][1] == {"label": "Processes", "type": "Process", "count": None}
+    assert "Process: the native count timed out" in out["content"]
+
+
+def test_semantic_grounding_spec_reports_nulls_and_why():
+    out = _exec("Analytic Demo - Semantic Grounding")
+    assert out["data"] == {"groundingLinks": None, "groundingPct": None}
+    assert {n["count"] for n in out["unmeasured"]} == {"Asset", "SemanticAssignment"}
+    assert all(n["at_least"] == CAP for n in out["unmeasured"])
+
+
+def test_a_series_repeats_no_note():
+    out = _exec("Analytic Demo - Catalog Growth Trend", "SERIES")
+    assert out["kind"] == "absent"
+    keys = [json.dumps(n, sort_keys=True) for n in out["unmeasured"]]
+    assert len(keys) == len(set(keys))
+
+
+def test_no_rendered_output_carries_the_cap_as_a_count():
+    for label, fmt, params in [
+        ("Analytic Demo - Element Count by Type", "DICT", {"type_name": "Asset"}),
+        ("Analytic Demo - Assets by Type Breakdown", "DICT", {"type_map": [["P", "Process"]]}),
+        ("Analytic Demo - Assets by Type Breakdown", "BAR", {"type_map": [["P", "Process"]]}),
+        ("Analytic Demo - People and Community", "PIE", {}),
+    ]:
+        out = _exec(label, fmt, **params)
+        shown = {k: v for k, v in out.items() if k not in ("unmeasured", "absence", "envelope", "content", "detail")}
+        assert str(CAP) not in json.dumps(shown), (label, fmt, out)
