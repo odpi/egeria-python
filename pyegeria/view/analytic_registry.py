@@ -850,8 +850,9 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         description="Count active elements of a given type, optionally filtered by classification. "
                     "Cost: one native count, sub-second in the repository population (0.2-0.8 s "
                     "measured); a viewer-population count reads every element and can take minutes "
-                    "for a large type (Process: 120 s); a server with no native count falls back to "
-                    "a capped find." + REPOSITORY_WORDS,
+                    "for a large type (Process: 120 s). Only in the viewer population does a server "
+                    "with no native count fall back to a capped find; a repository count has no "
+                    "fallback and is not measured instead." + REPOSITORY_WORDS,
         returns="scalar (int)",
         generic=True,
         params=[
@@ -1027,7 +1028,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
             ),
             out=[
                 _field("assetTotal", "Assets", "int", unit="Assets"),
-                _field("assetCapped", "At least (always false: a native count is complete)", "bool"),
+                _field("assetCapped", "At least (false when counted: a native count is complete; empty when not measured)", "bool"),
                 _field("confidentialCount", "Confidential Assets", "int", unit="Assets"),
                 _field("describedCount", "Described Assets", "int", unit="Assets"),
                 _field("duplicateCount", "Duplicates", "int", unit="elements"),
@@ -1108,11 +1109,15 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
     "feedback_summary": AnalyticFunctionSpec(
         name="feedback_summary",
         function="pyegeria.view.overview_metrics.feedback_summary",
-        inputs=["egeria_client:ClassificationExplorer"],
+        # EgeriaTech, not ClassificationExplorer: a repository count needs the native relationship count
+        # (MetadataExpert's), which a ClassificationExplorer lacks; EgeriaTech has both it and get_relationships.
+        inputs=["egeria_client:EgeriaTech"],
         description="Crowd-sourced feedback counts (ratings/comments/likes/tags/noteLogs) by type, "
                     "via Collaboration OMAS relationships. "
+                    "Takes an EgeriaTech: the repository count is MetadataExpert's native relationship count, "
+                    "and the viewer path is ClassificationExplorer's get_relationships. "
                     "Cost: five native counts, sub-second each in the repository population; population=viewer "
-                    "without a MetadataExpert reads five capped relationship pages instead." + REPOSITORY_WORDS,
+                    "reads five capped relationship pages instead." + REPOSITORY_WORDS,
         returns="dict (byType, total)",
         generic=False,
         binding_note="Fixed to Collaboration OMAS's feedback relationship types -- not a parameter.",
@@ -1519,9 +1524,10 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         function="pyegeria.view.overview_metrics.count_elements_by_property",
         inputs=["egeria_client:MetadataExpert"],
         description="Count active elements of a given type whose named string property equals a "
-                    "given value -- e.g. DigitalProduct elements with deploymentStatus=ACTIVE. Same "
-                    "native-count-with-fallback seam as count_elements, one cheap native COUNT call "
-                    "per distinct value, no element fetch. "
+                    "given value (or, with operator NEQ, is set and differs) -- e.g. DigitalProduct elements with "
+                    "deploymentStatus=ACTIVE. Same count seam as count_elements: one cheap native COUNT "
+                    "call per distinct value, no element fetch; a capped-find fallback only in the "
+                    "viewer population. "
                     "Cost: one native count, sub-second in the repository population; a viewer-population count can take minutes for a large type." + REPOSITORY_WORDS,
         returns="scalar (int)",
         generic=True,
@@ -1557,12 +1563,13 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
     "count_relationships": AnalyticFunctionSpec(
         name="count_relationships",
         function="pyegeria.view.overview_metrics.count_relationships",
-        inputs=["egeria_client:ClassificationExplorer"],
+        # EgeriaTech, as for feedback_summary: the repository count needs MetadataExpert's native method.
+        inputs=["egeria_client:EgeriaTech"],
         description="Count active relationships of one type. By default a native count over the "
                     "whole repository, which needs a client with the native count (EgeriaTech has it; "
                     "a bare ClassificationExplorer does not, and gives not measured). population=viewer "
                     "without a MetadataExpert reads one capped get_relationships page instead (the two "
-                    "paths can disagree for some types, PY-18). Takes ce as its leading client. "
+                    "paths can disagree for some types, PY-18). Takes an EgeriaTech as its leading client. "
                     "Cost: the native count is sub-second; a relationship page takes seconds." + REPOSITORY_WORDS,
         returns="scalar (int | None)",
         generic=True,
@@ -1821,6 +1828,8 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
     "metric_trend": AnalyticFunctionSpec(
         name="metric_trend",
         function="pyegeria.view.overview_metrics.metric_trend",
+        # A target that declares EgeriaTech for a slot (feedback_summary, count_relationships: a repository
+        # relationship count needs MetadataExpert's native method) gets the EgeriaTech in that slot.
         inputs=["egeria_client:EgeriaTech", "egeria_client:ClassificationExplorer"],
         description="Turn any single-snapshot function in this module into a time series, by "
                     "re-calling it once per asOfTime snapshot -- the same windowing growth_series "

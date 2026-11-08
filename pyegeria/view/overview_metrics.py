@@ -304,6 +304,13 @@ def _push_down(scope: Optional[str]) -> Optional[bool]:
     raise ValueError(f"scope must be None, {SCOPE_VIEWER!r} or {SCOPE_REPOSITORY!r}; got {scope!r}")
 
 
+def _pop(scope: Optional[str]) -> Dict[str, Optional[str]]:
+    """Keyword arguments that forward a composite's population to a count helper. `population=None`
+    means "not given" to the keyword wrapper (the helper's repository default then applies), so the
+    server default, scope=None, is forwarded as `scope=None` instead -- explicitly, not lost."""
+    return {"population": scope} if scope is not None else {"scope": None}
+
+
 # ── not-measured notes ─────────────────────────────────────────────────────
 # A count that comes back None is "not measured", never 0 and never the find
 # cap. The value alone cannot say why, or what lower bound the fallback did
@@ -429,14 +436,17 @@ def count_elements(
 ) -> Optional[int]:
     """
     Count ACTIVE elements, optionally of a given type and/or matching ANY of
-    the given classifications. Uses native `count_metadata_elements` when the
-    client + server support it, else `len(find_metadata_elements(...))`.
+    the given classifications, with native `count_metadata_elements`.
 
-    By default a failed query counts as 0, so an outage looks like an empty
-    catalog. Pass strict=True to get None instead whenever the number is not
-    known (ISSUE-123). Strict or not, a find fallback that stops at DEFAULT_CAP
-    gives None, never the cap: that page is a lower bound, not a total (its
-    bound and reason are recorded for `recording_unmeasured()`).
+    In the repository population (the default) only the native count can
+    answer: when it is unavailable, fails or times out the result is None,
+    strict or not, with its reason recorded for `recording_unmeasured()`.
+
+    Only in the viewer population (or scope=None) does a missing or failed
+    native count fall back to `len(find_metadata_elements(...))`. There a
+    failed query counts as 0 unless strict=True (ISSUE-123), and a fallback
+    that stops at DEFAULT_CAP gives None, never the cap: that page is a lower
+    bound, not a total (its bound and reason are recorded too).
 
     Parameters
     ----------
@@ -487,10 +497,11 @@ def count_elements_by_property(
     Count ACTIVE elements of a given type whose named string property equals
     a given value -- e.g. counting DigitalProduct elements by deploymentStatus
     (Overview dashboard's Data Products tile, OVERVIEW_NEXT_STEPS.md
-    "Remaining app wiring"). Same native-count-with-fallback seam as
-    count_elements, just with a searchProperties EQ condition instead of a
-    bare type filter -- one cheap native COUNT call per distinct value, no
-    element fetch, same cost class as the plain count.
+    "Remaining app wiring"). Same count seam as count_elements -- native
+    only in the repository population, a capped-find fallback only in the
+    viewer population -- just with a searchProperties EQ (or NEQ) condition
+    instead of a bare type filter: one cheap native COUNT call per distinct
+    value, no element fetch, same cost class as the plain count.
 
     Parameters
     ----------
@@ -545,7 +556,9 @@ def count_relationships(ce, relationship_type: str, as_of: Optional[str] = None,
 
     Parameters
     ----------
-    ce : ClassificationExplorer (or compatible client)
+    ce : EgeriaTech (or another client with both get_relationships and the native
+        count_relationships_between_elements; a bare ClassificationExplorer has
+        only get_relationships, so it can answer a viewer count only)
     relationship_type : the relationship type name to count
     as_of : ISO-8601 asOfTime for a point-in-time count (None = now)
     expert : optional MetadataExpert to enable the native fast-path. With
@@ -621,7 +634,7 @@ def counts_by_type(mgr, type_map: Sequence[Tuple[str, str]], as_of: Optional[str
     Returns a list of {"label": ..., "type": ..., "count": ...} dicts, in the
     order given.
     """
-    return [{"label": label, "type": type_name, "count": count_elements(mgr, type_name, as_of, strict=strict, population=scope)}
+    return [{"label": label, "type": type_name, "count": count_elements(mgr, type_name, as_of, strict=strict, **_pop(scope))}
             for label, type_name in type_map]
 
 
@@ -872,16 +885,16 @@ def business_value_signals(mgr, as_of: Optional[str] = None,
     "confidentialCount": int|None, "describedCount": int|None,
     "duplicateCount": int|None}.
     """
-    total = count_elements(mgr, "Asset", as_of, strict=True, population=scope)
+    total = count_elements(mgr, "Asset", as_of, strict=True, **_pop(scope))
     return {
         "assetTotal": total,
         "assetCapped": None if total is None else False,
         "confidentialCount": count_elements(mgr, "Asset", as_of, classifications=["Confidentiality"],
-                                            strict=True, population=scope),
+                                            strict=True, **_pop(scope)),
         "describedCount": count_elements_by_property(mgr, "Asset", "description", "", as_of, strict=True,
-                                                     population=scope, operator="NEQ"),
+                                                     **_pop(scope), operator="NEQ"),
         "duplicateCount": count_elements(mgr, None, as_of, classifications=["ConsolidatedDuplicate"],
-                                         strict=True, population=scope),
+                                         strict=True, **_pop(scope)),
     }
 
 
@@ -1379,11 +1392,11 @@ def people_counts(mgr, as_of: Optional[str] = None, strict: bool = False, scope:
     could not be measured is None (see count_elements).
     """
     return {
-        "persons": count_elements(mgr, "Person", as_of, strict=strict, population=scope),
-        "teams": count_elements(mgr, "Team", as_of, strict=strict, population=scope),
-        "organizations": count_elements(mgr, "Organization", as_of, strict=strict, population=scope),
-        "itProfiles": count_elements(mgr, "ITProfile", as_of, strict=strict, population=scope),
-        "communities": count_elements(mgr, "Community", as_of, strict=strict, population=scope),
+        "persons": count_elements(mgr, "Person", as_of, strict=strict, **_pop(scope)),
+        "teams": count_elements(mgr, "Team", as_of, strict=strict, **_pop(scope)),
+        "organizations": count_elements(mgr, "Organization", as_of, strict=strict, **_pop(scope)),
+        "itProfiles": count_elements(mgr, "ITProfile", as_of, strict=strict, **_pop(scope)),
+        "communities": count_elements(mgr, "Community", as_of, strict=strict, **_pop(scope)),
     }
 
 
@@ -1413,7 +1426,7 @@ def feedback_summary(ce, as_of: Optional[str] = None, scope: Optional[str] = SCO
     Returns {"byType": {ratings, comments, likes, tags, noteLogs: int|None},
     "total": int|None}.
     """
-    by_type = {key: count_relationships(ce, rel, as_of, expert=expert, population=scope) for rel, key in _FEEDBACK_RELATIONSHIP_TYPES}
+    by_type = {key: count_relationships(ce, rel, as_of, expert=expert, **_pop(scope)) for rel, key in _FEEDBACK_RELATIONSHIP_TYPES}
     measured = all(v is not None for v in by_type.values())
     return {"byType": by_type, "total": sum(by_type.values()) if measured else None}
 
@@ -1429,8 +1442,8 @@ def usage_context_counts(mgr, as_of: Optional[str] = None, strict: bool = False,
     strict=True, a count that could not be measured is None (see count_elements).
     """
     return {
-        "informationSupplyChains": count_elements(mgr, "InformationSupplyChain", as_of, strict=strict, population=scope),
-        "blueprints": count_elements(mgr, "SolutionBlueprint", as_of, strict=strict, population=scope),
+        "informationSupplyChains": count_elements(mgr, "InformationSupplyChain", as_of, strict=strict, **_pop(scope)),
+        "blueprints": count_elements(mgr, "SolutionBlueprint", as_of, strict=strict, **_pop(scope)),
     }
 
 
@@ -1762,7 +1775,7 @@ def growth_series(
         try:
             for key, type_name, classifications in type_map:
                 point[key] = count_elements(mgr, type_name, as_of, classifications=classifications, strict=True,
-                                            population=population)
+                                            **_pop(population))
         except Exception as exc:  # noqa: BLE001
             logger.debug(f"overview_metrics growth_series: snapshot {i} failed: {exc}")
             for key, _, _ in type_map:
@@ -1804,6 +1817,11 @@ def metric_trend(
     Pass both `mgr` and `ce` regardless of what the target function actually
     needs -- only the client parameter names it declares (by leading
     positional parameter named "mgr"/"ce") are bound; the other is unused.
+    `mgr` is an EgeriaTech: a slot the target declares as
+    `egeria_client:EgeriaTech` gets `mgr`, even one named `ce` --
+    feedback_summary and count_relationships count repository relationships
+    through `ce`, which needs MetadataExpert's native count, and a
+    ClassificationExplorer lacks it.
 
     `metric_params` are extra keyword arguments forwarded to the target
     function at every snapshot (e.g. `classifications` for `count_elements`);
@@ -1821,12 +1839,17 @@ def metric_trend(
     func = resolve_report_spec_function(metric_path)
 
     clients = {"mgr": mgr, "ce": ce}
+    from pyegeria.view.analytic_registry import get_analytic_registry  # lazy, as above
+    target = get_analytic_registry().get(metric_path)
+    declared = list(getattr(target, "inputs", None) or [])
     bound_args = []
     for pname, param in inspect.signature(func).parameters.items():
         if pname in _CLIENT_PARAM_NAMES and param.kind in (
             inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD,
         ):
-            bound_args.append(clients[pname])
+            i = len(bound_args)
+            wants_tech = i < len(declared) and declared[i] == "egeria_client:EgeriaTech"
+            bound_args.append(mgr if wants_tech else clients[pname])
         else:
             break
 
@@ -2112,7 +2135,7 @@ def _count_cell(mgr, type_name: str, as_of: Optional[str], scope: str, stamp: st
     reason = ""
     try:
         with recording_unmeasured() as notes:
-            value = count_elements(mgr, type_name, as_of, strict=True, population=scope)
+            value = count_elements(mgr, type_name, as_of, strict=True, **_pop(scope))
         if value is None:
             reason = (f"the {scope} count of {type_name} could not be measured: "
                       + ("; ".join(n["reason"] for n in notes) if notes

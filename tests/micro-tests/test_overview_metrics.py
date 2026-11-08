@@ -1174,3 +1174,19 @@ def test_asset_composition_scopes_alias_warns_and_matches_populations():
     assert old["populations"] == old["scopes"] == ["repository"]
     with pytest.raises(ValueError, match="disagree"):
         om.asset_composition(MagicMock(), _FakeVM(), depth=1, scopes=("viewer",), populations=("repository",))
+
+
+def test_scope_none_reaches_the_server_default_through_every_composite():
+    # population=None means "not given" to the keyword wrapper, so a composite must forward the
+    # server default as scope=None explicitly, or its counts silently become repository counts.
+    mgr = _mgr(count_metadata_elements=MagicMock(return_value=2))
+    om.counts_by_type(mgr, [("A", "Asset")], scope=None)
+    om.people_counts(mgr, scope=None)
+    om.usage_context_counts(mgr, scope=None)
+    om.business_value_signals(mgr, scope=None)
+    om.growth_series(mgr, window="7d", points=2, population=None)
+    calls = mgr.count_metadata_elements.call_args_list
+    assert len(calls) == 1 + 5 + 2 + 4 + 2 * 4 and all(c.kwargs == {} for c in calls)
+    ce = MagicMock()
+    ce.get_relationships.return_value = [{}] * 2
+    assert om.feedback_summary(ce, scope=None)["total"] == 10   # the get_relationships path, not None
