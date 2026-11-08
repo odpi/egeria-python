@@ -4,8 +4,9 @@
 Regression tests for the analytic executor and registry changes requested by
 trellis-analytics (PYEGERIA_ISSUES.md):
 
-- ISSUE-138: `analytic_binders` builds a non-JSON argument (e.g. a reader) from
-  the call params, so a routine can be named by its own dotted path.
+- ISSUE-138: a routine that takes a non-JSON argument (e.g. a reader) gets it.
+  Since RS-W2-3 PR-B that is a declared `reader:<name>` input, supplied by the
+  environment's role supply; the old `analytic_binders` factories are gone.
 - ISSUE-139: a result's state envelope is returned on every output and put on
   the chart as a subtitle.
 - ISSUE-140: no chart is drawn unless the state is `measured`.
@@ -99,20 +100,38 @@ def _use_spec(monkeypatch, action: dict):
     monkeypatch.setattr(fse, "select_report_spec", lambda name, fmt_type: fmt)
 
 
-# ISSUE-138
-def test_binder_builds_the_reader_from_params(monkeypatch):
-    _use_spec(monkeypatch, {"analytic_function": f"{MOD}.read_with",
-                            "analytic_binders": {"ods": f"{MOD}.Reader"}})
-    out = fse.exec_report_spec("tile", output_format="DICT", params={"slug": "db1", "url": "pg://x"})
-    assert out["data"]["url"] == "pg://x"  # the factory got url
+# ISSUE-138, as RS-W2-3 PR-B leaves it: the reader is a declared input the environment supplies.
+class _ReaderSupply:
+    def __init__(self):
+        self.asked = []
+
+    def client(self, cls):
+        raise AssertionError("a routine that declares no client must not be given one")
+
+    def viewer(self):
+        raise AssertionError("not declared")
+
+    def reader(self, source):
+        self.asked.append(source)
+        return Reader(url=f"pg://{source}")
+
+    def subject(self):
+        return None
+
+    def refusal_words(self, kind):
+        return f"no {kind} here"
+
+
+def test_a_declared_reader_input_is_supplied_by_the_environment(monkeypatch):
+    register_analytic_functions({"t138-reader": {"name": "t138-reader", "function": f"{MOD}.read_with",
+                                                 "inputs": ["reader:ods"]}})
+    fmt = {"target_type": None, "action": {"function": None, "analytic_function": "t138-reader"}}
+    monkeypatch.setattr(fse, "select_report_spec", lambda name, fmt_type: fmt)
+    supply = _ReaderSupply()
+    out = fse.exec_report_spec("tile", output_format="DICT", params={"slug": "db1"}, supply=supply)
+    assert supply.asked == ["ods"]
+    assert out["data"]["url"] == "pg://ods"  # the supply built the reader, not a factory named in the spec
     assert out["data"]["slug"] == "db1"  # the routine still got its own param
-
-
-def test_binder_accepts_colon_form(monkeypatch):
-    _use_spec(monkeypatch, {"analytic_function": f"{MOD}.read_with",
-                            "analytic_binders": {"ods": f"{MOD}:Reader"}})
-    out = fse.exec_report_spec("tile", output_format="DICT", params={"slug": "db1"})
-    assert out["data"]["url"] == ""
 
 
 # ISSUE-139 / ISSUE-140

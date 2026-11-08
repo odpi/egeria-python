@@ -84,7 +84,6 @@ def test_every_analytic_demo_spec_is_runnable():
     (_analytic("pyegeria.view.overview_metrics.count_elements"), "use its registered name 'count_elements'"),
     (_analytic("metric_trend", analytic_spec_params={"metric_path": "nope"}),
      "its metric_path 'nope' is not a registered routine name"),
-    (_analytic("count_elements", analytic_binders={"type_name": "os.getcwd"}), "its binder for type_name is refused"),
 ])
 def test_check_1_names(action, words):
     result = sr.resolve(_spec(action), "Probe")

@@ -14,7 +14,7 @@ Today's specs are single-stage: one find method (`action.function`) or one analy
 (`action.analytic_function`). For them the §2c checks are:
 
   1. names: the find method resolves on the client class the executor would use; the analytic
-     routine is a registered name with a python binding that imports; binder and function-valued
+     routine is a registered name with a python binding that imports; function-valued
      parameters name what they must.
   2. parameters: every parameter the executor always sends (required params, spec_params,
      output_format, report_spec) is one the find method accepts; every analytic_spec_params key
@@ -285,7 +285,7 @@ def _check_analytic(name: str, action: Dict[str, Any], fail, notes, warns, out: 
     """Checks 1, 2, 5, 6 for the analytic stage. Returns the routine's declaration, or None."""
     from pyegeria.view.analytic_registry import get_analytic_registry
     from pyegeria.view.format_set_executor import (AnalyticFunctionRefused, _import_callable,
-                                                   _resolve_analytic_function, resolve_report_spec_function)
+                                                   resolve_report_spec_function)
     from pyegeria.view.role_supply import RoleRefused
 
     func_decl = action["analytic_function"]
@@ -313,19 +313,10 @@ def _check_analytic(name: str, action: Dict[str, Any], fail, notes, warns, out: 
         notes.append(f"check 3: routine '{func_decl}' runs fetch {entry.action.fetch} then analytic "
                      f"{entry.action.analytic}; neither step declares its shapes, so the hand-off is not checked")
 
-    for param, binder in (action.get("analytic_binders") or {}).items():
-        try:
-            _resolve_analytic_function(binder)
-        except AnalyticFunctionRefused as exc:
-            fail(1, f"its binder for {param} is refused: {exc}")
-        except Exception as exc:  # noqa: BLE001
-            fail(1, f"its binder for {param} ('{binder}') cannot be imported: {exc}")
-
     declared = [p.name for p in entry.params]
     out["params"].extend(p for p in declared if p not in out["params"])
     spec_params = action.get("analytic_spec_params") or {}
-    binders = set((action.get("analytic_binders") or {}).keys())
-    unknown = [k for k in spec_params if k not in declared and k not in binders]
+    unknown = [k for k in spec_params if k not in declared]
     if unknown and not declared:
         # A routine that declares no parameters at all is silent about them, not declaring none:
         # the spec runs today, so this is the declaration's gap, said as a warning.

@@ -66,6 +66,7 @@ The following exceptions may be raised by functions and classes in this module:
 
 import json
 import os
+import warnings
 from pathlib import Path
 from typing import Dict, List, Optional, Union, Any
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -247,10 +248,12 @@ class ActionParameter(BaseModel):
         analytic_spec_params: Parameters fixed for this action, for `analytic_function`
             (from `extra_constraints`) -- layered under whatever arbitrary
             parameters the caller supplies at execution time.
-        analytic_binders: Parameter name -> dotted path of a factory that builds that
-            argument (e.g. a reader object) for `analytic_function` (ISSUE-138). The
-            factory's own parameters are filled from the call params by name, so a
-            routine that takes a non-JSON object can be named by its own dotted path.
+
+    RS-W2-3 PR-B: the former `analytic_binders` field is gone. A routine's non-JSON
+    arguments (clients, readers, viewer, subject) are its declared `inputs`, which the
+    executor's role supply provides. For one release a spec that still carries the key is
+    accepted and the key ignored, with a DeprecationWarning when it is non-empty
+    (`_drop_deprecated_binders`).
     """
     function: Optional[str] = None
     required_params: List[str] = Field(default_factory=list)
@@ -258,7 +261,29 @@ class ActionParameter(BaseModel):
     spec_params: Dict[str, Any] = Field(default_factory=dict)
     analytic_function: Optional[str] = None
     analytic_spec_params: Dict[str, Any] = Field(default_factory=dict)
-    analytic_binders: Dict[str, str] = Field(default_factory=dict)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _drop_deprecated_binders(cls, values):
+        """Accept and ignore the removed `analytic_binders` key for one release (RS-W2-3 PR-B).
+
+        An empty mapping (what older generated specs serialise) is dropped silently. A non-empty
+        one is dropped with a DeprecationWarning and a log warning naming the parameters: the
+        routine must declare them as `inputs` instead, or its call will lack them.
+        """
+        if isinstance(values, dict) and "analytic_binders" in values:
+            values = dict(values)
+            binders = values.pop("analytic_binders")
+            if binders:
+                names = ", ".join(sorted(binders)) if isinstance(binders, dict) else repr(binders)
+                message = (
+                    f"analytic_binders is no longer supported and is ignored (binders for: {names}). "
+                    f"Declare these arguments as the routine's inputs (reader:<name>, viewer, subject, "
+                    f"egeria_client:<Class>); the environment's role supply provides them. "
+                    f"The key will be refused in a later release.")
+                warnings.warn(message, DeprecationWarning, stacklevel=2)
+                logger.warning(message)
+        return values
 
     @model_validator(mode="before")
     @classmethod

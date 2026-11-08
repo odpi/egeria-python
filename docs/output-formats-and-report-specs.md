@@ -982,17 +982,21 @@ The `absence` states are the four of trellis-analytics: `not_measured`, `not_per
 
 A result without an envelope is returned exactly as before. A result that is a pydantic model is returned as plain data (`model_dump`). See ISSUE-139/140/171.
 
-**Building non-JSON arguments (`analytic_binders`).** Report-spec params are JSON, and only leading parameters named `mgr`/`ce`/`expert`/`client` get an Egeria client. To name a routine that takes some other object (e.g. a reader) by its own dotted path, map the parameter to a factory:
+**Non-JSON arguments are declared `inputs` (RS-W2-3).** Report-spec params are JSON. A routine's other arguments (Egeria clients, readers, the viewer, the subject in view) are its registry entry's `inputs`, one role word per leading positional argument, in order:
 
 ```python
-ActionParameter(
-    analytic_function="trellis_analytics.routines.curation_coverage",
-    analytic_binders={"ods": "trellis_analytics.readers.ods.OdsReader"},
-    analytic_spec_params={"resource_type": "database"},
+AnalyticFunctionSpec(
+    name="semantic_grounding",
+    function="pyegeria.view.overview_metrics.semantic_grounding",
+    inputs=["egeria_client:MetadataExpert", "egeria_client:ClassificationExplorer"],
 )
 ```
 
-Here `OdsReader(url)` takes `url`, so the caller passes `url` and the routine receives the built reader as `ods`. The factory is called with the call params its own signature names, and those params are consumed unless the routine also takes them. A routine with no client parameter still connects to nothing (ISSUE-137, ISSUE-138).
+The role words are `egeria_client:<Class>`, `reader:<name>`, `viewer` and `subject`. The executor asks a role supply for each input before the routine runs and passes them positionally; declared params follow by name. No parameter name is read to decide what to pass. `exec_report_spec(..., supply=...)` takes an environment's own supply (`pyegeria.view.role_supply.RoleSupply`). Without one, `PlainSupply` hands the caller's single `EgeriaTech` to every `egeria_client` input whose class it serves, and refuses readers, the viewer and the subject. A role the supply cannot provide raises `RoleRefused` with the supply's words before any stage runs. A routine that declares no `egeria_client` input still connects to nothing (ISSUE-137).
+
+Check 5 refuses, at load and at run with the same words, a routine whose binding takes leading `mgr`/`ce`/`expert`/`client` arguments that its `inputs` do not declare. The fix is to declare them.
+
+`analytic_binders` (ISSUE-138's factories) was removed in RS-W2-3 PR-B. For one release a spec that still carries the key loads, and the key is ignored: silently when empty, with a `DeprecationWarning` and a logged warning when not. Declare a reader as a `reader:<name>` input instead, and have the environment's supply provide it.
 
 **`analytic_spec_params` are defaults, not pins.** Unlike the find path's `spec_params` (always fixed — a caller-supplied value for the same key is silently overridden), `analytic_spec_params` set a *default* that a caller-supplied value for the same key overrides. This is what lets a report spec like the demo "Element Count by Type" (which pins `type_name: "GlossaryTerm"` as its default) actually be re-pointed at a different type at run time instead of being permanently locked to the demo's own default.
 
@@ -1020,7 +1024,7 @@ A name defined twice raises `AnalyticRegistryCollision`, except that an installe
 
 #### Which functions a report spec may name
 
-A report spec is data: it can come from a user's report-spec directory or a config file. So `exec_report_spec` does not import whatever it names (ISSUE-169). `analytic_function`, an action's `fetch`/`analytic` steps and `analytic_binders` factories are resolved in this order:
+A report spec is data: it can come from a user's report-spec directory or a config file. So `exec_report_spec` does not import whatever it names (ISSUE-169). `analytic_function` and an action's `fetch`/`analytic` steps are resolved in this order:
 
 1. **A registered name** resolves to that entry's `function`. This is the form report specs use.
 2. **A dotted path that a registered entry declares** is trusted, but not in a report spec (below).
@@ -1029,7 +1033,7 @@ A report spec is data: it can come from a user's report-spec directory or a conf
 
 To use a function from your own package, register it (any tier above, usually an entry point), or add your package to `PYEGERIA_ANALYTIC_MODULE_PREFIXES`. Registering is better: the function then appears in the registry for authoring tools, and it can carry a declaration.
 
-**Report specs name functions by registered name (ISSUE-173).** A report spec's `analytic_function`, or a function-valued parameter such as `metric_trend`'s `metric_path`, must be a registered name. From 6.2.19 anything else, including a dotted path that steps 2 and 3 would accept, raises `AnalyticFunctionRefused` before any import. The message names the registered name to use or, if there is none, says to register the function. (6.2.18 still resolved dotted paths with a `DeprecationWarning`.) Steps 2 and 3 still apply to code rather than report-spec data: registry entries themselves (`AnalyticFunctionSpec.function`, an action's `fetch`/`analytic`) and `analytic_binders` factories keep their dotted paths.
+**Report specs name functions by registered name (ISSUE-173).** A report spec's `analytic_function`, or a function-valued parameter such as `metric_trend`'s `metric_path`, must be a registered name. From 6.2.19 anything else, including a dotted path that steps 2 and 3 would accept, raises `AnalyticFunctionRefused` before any import. The message names the registered name to use or, if there is none, says to register the function. (6.2.18 still resolved dotted paths with a `DeprecationWarning`.) Steps 2 and 3 still apply to code rather than report-spec data: registry entries themselves (`AnalyticFunctionSpec.function`, an action's `fetch`/`analytic`) keep their dotted paths.
 
 #### Declaring what results mean
 

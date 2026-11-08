@@ -142,7 +142,7 @@ def _import_callable(func_decl: str):
 
 def _resolve_analytic_function(func_decl: str):
     """Return the callable a report spec's analytic_function (or an action's
-    fetch/analytic step, or a binder factory) names.
+    fetch/analytic step) names.
 
     Unlike `function` (find_method), `analytic_function` (extra_find) targets a
     plain module-level function, not a client class method -- overview_metrics.py's
@@ -157,8 +157,8 @@ def _resolve_analytic_function(func_decl: str):
       3. Any other dotted path must sit under an allowed module prefix
          (`python_binding_allowed`); anything else raises
          AnalyticFunctionRefused before any import happens.
-    Cases 2 and 3 are binding targets (an action's fetch/analytic step, a binder
-    factory): a report spec never reaches them, because
+    Cases 2 and 3 are binding targets (an action's fetch/analytic step): a report
+    spec never reaches them, because
     `resolve_report_spec_function` accepts registered names only (ISSUE-173).
     """
     if not isinstance(func_decl, str) or not func_decl.strip():
@@ -252,34 +252,6 @@ def run_analytic_action(
 
     analytic_func = _resolve_analytic_function(action.analytic)
     return analytic_func(raw_result, *fetch_args, **(analytic_kwargs or {}))
-
-
-def _apply_analytic_binders(func, binders: Dict[str, str], call_params: Dict[str, Any]) -> Dict[str, Any]:
-    """Build non-JSON arguments for an analytic function from its call params (ISSUE-138).
-
-    `binders` maps a parameter name of `func` to the dotted path of a factory
-    (e.g. `{"ods": "trellis_analytics.readers.ods.OdsReader"}`). Each factory is
-    called with the call params its own signature names; those params are
-    consumed unless `func` also takes them. A param the caller already supplied
-    under the bound name wins over the factory.
-    """
-    if not binders:
-        return call_params
-    params = dict(call_params)
-    func_params = set(inspect.signature(func).parameters)
-    for target, factory_decl in binders.items():
-        if target in params:
-            continue
-        factory = _resolve_analytic_function(factory_decl.replace(":", "."))
-        factory_sig = inspect.signature(factory)
-        accepts_any = any(p.kind is inspect.Parameter.VAR_KEYWORD for p in factory_sig.parameters.values())
-        names = set(params) if accepts_any else set(factory_sig.parameters) & set(params)
-        kwargs = {n: params[n] for n in names}
-        for n in names:
-            if n not in func_params:
-                params.pop(n)
-        params[target] = factory(**kwargs)
-    return params
 
 
 # Result-state envelope (ISSUE-139/140). A routine that reports how sure it is
@@ -443,12 +415,11 @@ def _run_analytic_function(
     func = resolve_report_spec_function(func_decl)
     from pyegeria.view.spec_resolver import declared_inputs  # lazy: the resolver imports this module
     inputs = declared_inputs(func_decl, func)  # check 5: the same function the resolver runs at load
-    call_params = _apply_analytic_binders(func, action.get("analytic_binders") or {}, call_params)
     if supply is None:
         supply = PlainSupply(client_factory=lambda: _plain_client(view_server, view_url, user, user_pass, token))
     # Every role is obtained here, before the routine runs; a routine that declares no
     # egeria_client input never connects or mints a token (ISSUE-137).
-    args = supply_inputs(getattr(func_decl, "__name__", func_decl), inputs, supply)
+    args = supply_inputs(func_decl, inputs, supply)
     return func(*args, **call_params)
 
 
