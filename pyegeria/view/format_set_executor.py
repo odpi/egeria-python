@@ -18,7 +18,7 @@ import inspect
 import json
 import os
 import sys
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from loguru import logger
 from pydantic import ValidationError
@@ -38,6 +38,7 @@ from pyegeria.view.analytic_registry import ABSENCE_STATES, AnalyticActionSpec, 
 from pyegeria.view.analytic_registry import get_analytic_registry as get_analytic_registry_functions
 from pyegeria.egeria_tech_client import EgeriaTech
 from pyegeria.view.role_supply import PlainSupply, RoleRefused, RoleSupply, supply_inputs
+from pyegeria.view.overview_metrics import recording_unmeasured
 
 _CLIENT_CLASS_MAP = {
     "CollectionManager": "pyegeria.omvs.collection_manager.CollectionManager",
@@ -359,13 +360,40 @@ def _absence_for(envelope: Optional[Dict[str, str]], func_decl: str) -> Optional
             "declared": False}
 
 
-def _absent_output(result: Any, envelope: Dict[str, str], absence: Dict[str, Any]) -> Dict[str, Any]:
+def _run_recording_unmeasured(action: dict, **kwargs: Any) -> Tuple[Any, List[Dict[str, Any]]]:
+    """Run the analytic routine and collect a note for every count in it that was not measured
+    (a failed or timed-out count, or a find fallback that stopped at its page cap -- a lower
+    bound, never a total). See overview_metrics.recording_unmeasured."""
+    with recording_unmeasured() as notes:
+        result = _run_analytic_function(action, **kwargs)
+    unique: List[Dict[str, Any]] = []  # a series repeats the same note once per point
+    for note in notes:
+        if note not in unique:
+            unique.append(note)
+    return result, unique
+
+
+def _unmeasured_envelope(notes: List[Dict[str, Any]]) -> Dict[str, str]:
+    """The not_established envelope for a result whose value is a count that was not measured;
+    the reason is each note's own words, so the lower bound ("at least 500") reaches the reader."""
+    reason = "; ".join(f"{n['count']}: {n['reason']}" for n in notes)
+    return {"state": "not_established", "reason": reason, "subtitle": f"not established \u00b7 {reason}"}
+
+
+def _absent_output(result: Any, envelope: Dict[str, str], absence: Dict[str, Any],
+                   notes: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
     """Output for a result whose value is not established or does not apply: the sentence,
     never top-level data a chart or table would draw as an answer. Any partial result rides
-    under `detail`."""
-    out: Dict[str, Any] = {"kind": "absent", "content": absence["sentence"], "absence": absence}
+    under `detail`. With `notes` (counts that were not measured), `content` also says which
+    and why, lower bound included, and the notes ride under `unmeasured`."""
+    content = absence["sentence"]
+    if notes:
+        content = f"{content} Not measured: " + "; ".join(f"{n['count']}: {n['reason']}" for n in notes) + "."
+    out: Dict[str, Any] = {"kind": "absent", "content": content, "absence": absence}
     if result not in (None, [], {}):
         out["detail"] = result
+    if notes:
+        out["unmeasured"] = notes
     return _with_envelope(out, envelope)
 
 
@@ -867,18 +895,22 @@ def _exec_analytic_chart(
             f"{chart_kind.upper()} output isn't supported for this spec."
         )
 
-    result = _run_analytic_function(
+    result, notes = _run_recording_unmeasured(
         action, params=params, view_server=view_server, view_url=view_url,
         user=user, user_pass=user_pass, token=token, supply=supply,
     )
     envelope = _result_envelope(result)
     result = _jsonable(result)
+    # A count in the result was not measured: its value is None, and a chart would draw that as
+    # a missing bar, a gap or a re-proportioned pie. Withhold the chart and say why instead.
+    if notes and (envelope is None or envelope["state"] in CHARTABLE_STATES):
+        envelope = _unmeasured_envelope(notes)
     absence = _absence_for(envelope, action["analytic_function"])
     # Chart only an established answer (ISSUE-140): measured, or nothing_found (a real
     # zero). For not_established / not_applicable the numbers aren't known, so say so
     # (ISSUE-171), never a chart whose zeros would read as an answer.
     if envelope and envelope["state"] not in CHARTABLE_STATES:
-        return _absent_output(result, envelope, absence)
+        return _absent_output(result, envelope, absence, notes)
     if not result:
         return _with_envelope({"kind": "empty", **({"absence": absence} if absence else {})}, envelope)
 
@@ -984,6 +1016,14 @@ def exec_report_spec(
     SERIES/BAR/PIE the subtitle is put on the chart, and no chart is drawn
     unless the state is `measured` or `nothing_found` (ISSUE-140).
 
+    A count inside an analytic result that was not measured -- it failed, timed out, or its
+    find fallback stopped at the page cap, which is a lower bound and never a total -- is
+    None in the data, never 0 or the cap, and the output carries `"unmeasured": [{"count",
+    "reason", "at_least"}, ...]` naming each one. A scalar result that is such a count, and
+    any SERIES/BAR/PIE whose result holds one, come back as `kind: "absent"` (no chart: a
+    missing bar or a re-proportioned pie would read as an answer), with the reason and the
+    lower bound in `content`.
+
     ISSUE-86: `token`, when given, authenticates the client(s) built here with
     `set_bearer_token(token)` instead of minting a fresh token from
     `user`/`user_pass` via `create_egeria_bearer_token()`. Use this when the
@@ -1074,19 +1114,25 @@ def exec_report_spec(
     # docstring describes) still falls through to the find path below for
     # anything other than SERIES, unchanged.
     if action.get("analytic_function") and not func_decl:
-        result = _run_analytic_function(
+        result, notes = _run_recording_unmeasured(
             action, params=params, view_server=view_server, view_url=view_url,
             user=user, user_pass=user_pass, token=token, supply=supply,
         )
         envelope = _result_envelope(result)
         result = _jsonable(result)
+        # The value itself is a count that was not measured (a scalar None): say so, with the
+        # reason and any lower bound, never "empty". A dict or list keeps its measured values;
+        # its unmeasured ones are None and the notes below name each one.
+        if notes and envelope is None and result is None:
+            envelope = _unmeasured_envelope(notes)
+        unmeasured = {"unmeasured": notes} if notes else {}
         absence = _absence_for(envelope, action["analytic_function"])
         if envelope and envelope["state"] not in CHARTABLE_STATES:
-            return _absent_output(result, envelope, absence)  # ISSUE-171
+            return _absent_output(result, envelope, absence, notes)  # ISSUE-171
         extra = {"absence": absence} if absence else {}
         if result is None or result == [] or result == {}:
-            return _with_envelope({"kind": "empty", **extra}, envelope)
-        return _with_envelope({"kind": "json", "data": result, **extra}, envelope)
+            return _with_envelope({"kind": "empty", **extra, **unmeasured}, envelope)
+        return _with_envelope({"kind": "json", "data": result, **extra, **unmeasured}, envelope)
 
     required_params = action.get("required_params", action.get("user_params", [])) or []
     optional_params = action.get("optional_params", []) or []
