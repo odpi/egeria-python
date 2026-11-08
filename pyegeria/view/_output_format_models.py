@@ -333,7 +333,21 @@ class FormatSet(BaseModel):
         if isinstance(values, dict):
             if 'entity_type' in values and 'target_type' not in values:
                 values['target_type'] = values.pop('entity_type')
+            # Egeria's ReportSpec property, and the canonical JSON key (ws #794, RS-W2-2 PR-B).
+            # `target_type` stays this model's field name until the generator moves (§9.6).
+            if 'target_type_name' in values:
+                values = dict(values)
+                canonical = values.pop('target_type_name')
+                if values.get('target_type') not in (None, canonical):
+                    raise ValueError(f"target_type_name '{canonical}' and target_type '{values['target_type']}' "
+                                     "disagree: they are one value (target_type is its old key)")
+                values['target_type'] = canonical
         return values
+
+    @property
+    def target_type_name(self) -> Optional[str]:
+        """Egeria's name for `target_type` (the ReportSpec property targetTypeName)."""
+        return self.target_type
 
     @field_validator('formats', mode='before')
     @classmethod

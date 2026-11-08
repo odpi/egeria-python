@@ -4045,10 +4045,23 @@ def refresh_report_specs() -> List[Tuple[str, str]]:
         except Exception as exc:  # noqa: BLE001 -- one bad entry must not block the rest
             logger.warning(f"Skipping report spec source {source}: {exc}")
             skipped.append((source, str(exc)))
+    if _startup_resolution_done:  # an explicit refresh after startup re-resolves and says so
+        _log_spec_resolution("refresh_report_specs", force=True)
     return skipped
 
 
 _config_report_specs_loaded = False
+_startup_resolution_done = False
+
+
+def _log_spec_resolution(where: str, *, force: bool = False) -> None:
+    """Resolve every spec at load (RS-W2-2 PR-B, note §2c) and log how many cannot run, with
+    each one's words. Never raises: resolution lists a spec as unrunnable, it never blocks loading."""
+    try:
+        from pyegeria.view.spec_resolver import log_resolution_summary
+        log_resolution_summary(force=force, where=where)
+    except Exception as exc:  # noqa: BLE001 -- e.g. a partial import during module initialisation
+        logger.debug(f"Report spec resolution at {where} skipped: {exc}")
 
 
 def get_report_registry() -> FormatSetDict:
@@ -4057,13 +4070,15 @@ def get_report_registry() -> FormatSetDict:
     (`refresh_report_specs()`) is auto-loaded on first call -- no consumer
     needs to remember to call it explicitly.
     """
-    global _config_report_specs_loaded
+    global _config_report_specs_loaded, _startup_resolution_done
     if not _config_report_specs_loaded:
         _config_report_specs_loaded = True
         try:
             refresh_report_specs()
         except Exception as exc:  # noqa: BLE001 -- a misconfigured entry shouldn't break the registry
             logger.warning(f"refresh_report_specs() failed during auto-load: {exc}")
+        _log_spec_resolution("startup")
+        _startup_resolution_done = True
 
     combined = FormatSetDict()
     _add_with_collision_check(combined, base_report_specs, source="BUILTINS")
@@ -4280,8 +4295,15 @@ def clear_runtime_report_specs() -> None:
     _RUNTIME_REPORT_SOURCES.clear()
 
 
-def list_report_specs() -> list[str]:
-    return list(get_report_registry().keys())
+def list_report_specs(*, with_status: bool = False) -> list:
+    """The registered report spec labels. With `with_status`, one dict per spec instead:
+    `{"name", "runnable", "unrunnable_reason"}` from load-time resolution (RS-W2-2 PR-B). An
+    unrunnable spec is still listed, with the words saying why it cannot run."""
+    if not with_status:
+        return list(get_report_registry().keys())
+    from pyegeria.view.spec_resolver import resolve_all
+    return [{"name": label, "runnable": result.runnable, "unrunnable_reason": result.unrunnable_reason}
+            for label, result in resolve_all().items()]
 
 
 # ── Built-in report specs for viewing question spec entities ──────────────────
@@ -4590,6 +4612,7 @@ def load_egeria_report_specs(
 
     _EGERIA_SPECS_LOADED_AT = datetime.now(timezone.utc)
     logger.debug(f"load_egeria_report_specs: registry updated, cache set at {_EGERIA_SPECS_LOADED_AT.isoformat()}")
+    _log_spec_resolution("Egeria archive load", force=True)
     return True
 
 
