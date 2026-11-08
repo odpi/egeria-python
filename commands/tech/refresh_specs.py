@@ -99,6 +99,13 @@ def main():
 
     run_command(cmd_reports, "Report Specifications Generation")
 
+    # 4. Resolve every report spec (RS-W2-2 PR-B, note §2c) and say which cannot run, and why.
+    # Imported here, after the generation subprocess, so the freshly written specs are the ones read.
+    from pyegeria.view.spec_resolver import log_resolution_summary
+    unrunnable = log_resolution_summary(force=True, where="refresh_specs")
+    logger.info(f"Report spec resolution: {len(unrunnable)} spec(s) cannot run"
+                + ("; their reasons are logged above." if unrunnable else "."))
+
     logger.info("All regeneration tasks have completed successfully.")
 
 if __name__ == "__main__":
