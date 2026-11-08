@@ -185,6 +185,11 @@ class AsyncBaseCommandProcessor(ABC):
             return "".join(w[0].upper() + w[1:] for w in words)
         return self.canonical_object_type or None
 
+    def check_parsed_attributes(self, attributes: Dict[str, Any]) -> List[str]:
+        """Command-specific value checks run right after parsing; returns error sentences. None by
+        default; a processor overrides it for attributes whose value has its own syntax."""
+        return []
+
     def is_report_view_command(self) -> bool:
         """True when this command is a report runner, not an element-targeting command."""
         return self.command.verb.lower() == "view" and self.command.object_type.strip().lower() == "report"
@@ -616,6 +621,12 @@ class AsyncBaseCommandProcessor(ABC):
         explicit_request_id = attributes.get("Request ID", {}).get("value")
         if explicit_request_id:
             self.context["request_id"] = explicit_request_id
+
+        # Command-specific checks of attribute values (e.g. a Report Spec's Microflow JSON); an
+        # error here fails pre-flight validation (step 2) with its words.
+        for msg in self.check_parsed_attributes(attributes) or []:
+            self.parsed_output["valid"] = False
+            self.parsed_output.setdefault("errors", []).append(msg)
 
         # Extract Display Name if present
         if self.is_report_view_command():

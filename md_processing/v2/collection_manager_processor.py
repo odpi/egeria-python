@@ -10,7 +10,7 @@ from md_processing.md_processing_utils.common_md_utils import (
     update_element_dictionary,
     set_collection_manager_body, set_rel_request_body, set_delete_request_body,
     set_delete_rel_request_body,
-    async_add_note_in_dr_e, set_object_classifications
+    async_add_note_in_dr_e, set_object_classifications, report_spec_microflow
 )
 from pyegeria.core.utils import body_slimmer
 from md_processing.v2.multilink import async_link_or_update, update_body
@@ -21,6 +21,18 @@ class CollectionManagerProcessor(AsyncBaseCommandProcessor):
     Unified Processor for Collection Manager elements (Collections, Products, Agreements, etc.).
     Supports subtypes like Folders, Root Collections, Digital Products, and Agreements.
     """
+
+    def check_parsed_attributes(self, attributes: Dict[str, Any]) -> list:
+        """A Report Spec's Microflow must be valid JSON: a microflow/1 object, or a bare list
+        (format 0), which is converted to microflow/1 when written (RS-EGERIA-TIER)."""
+        object_type = getattr(self, 'canonical_object_type', self.command.object_type)
+        if object_type not in ("Report Spec", "ReportSpec"):
+            return []
+        try:
+            report_spec_microflow(attributes)
+        except ValueError as exc:
+            return [f"Report Spec '{attributes.get('Display Name', {}).get('value')}': {exc}"]
+        return []
 
     async def _async_resolve_agreement_actor_relationship_guid(
             self, agreement_guid: str, actor_guid: str) -> Optional[str]:
