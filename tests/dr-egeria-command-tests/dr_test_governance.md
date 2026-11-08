@@ -730,8 +730,10 @@ ___
 
 > Planned Start Date, Planned Completion Date — Simple (ISO-8601 date string)
 > Multiple Notifications Permitted — Bool
-> Notification Interval, Minimum Notification Interval — Simple Int (milliseconds)
-> Next Scheduled Notification — Simple (ISO-8601 datetime string)
+> Minimum Notification Interval — Simple Int (minutes; the period for a type with no monitored
+>   resources, a throttle for one with monitored resources)
+> (Notification Interval was removed in Egeria 6.3; Next Scheduled Notification is informational
+>  only, maintained by the notification manager, so neither is set here.)
 > Notification Count — Simple Int
 
 ## Create Notification Type
@@ -754,14 +756,8 @@ DATA
 ### Multiple Notifications Permitted
 True
 
-### Notification Interval
-86400000
-
 ### Minimum Notification Interval
-3600000
-
-### Next Scheduled Notification
-2026-04-01T07:00:00Z
+1440
 
 ### Notification Count
 0

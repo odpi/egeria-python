@@ -1187,8 +1187,22 @@ class NewSubscriptionTypeRequestBody(RequestBody):
     description: str | None = None
     license_type_guid: str | None = None
     service_level_objective_guid: str | None = None
-    notification_interval: int | None = None  # minutes
+    # Minutes: the delivery interval of a PERIODIC type, the minimum interval of an ONGOING_UPDATE one.
+    minimum_notification_interval: int | None = None
+    # TRANSITIONAL -- remove with the validator below once Egeria's oak2026 change lands. That change renames
+    # this request field notificationInterval -> minimumNotificationInterval; a server on either side of it
+    # reads only its own name and treats the other as interval 0, so both are sent until it merges.
+    notification_interval: int | None = None
     monitored_resource_guids: list[str] | None = Field(None, alias="monitoredResourceGUIDs")
+
+    @model_validator(mode="after")
+    def _send_both_interval_names(self) -> "NewSubscriptionTypeRequestBody":
+        # TRANSITIONAL (see notification_interval above): mirror whichever name the caller set.
+        if self.minimum_notification_interval is None:
+            self.minimum_notification_interval = self.notification_interval
+        elif self.notification_interval is None:
+            self.notification_interval = self.minimum_notification_interval
+        return self
 
 
 # ---------------------------------------------------------------------------

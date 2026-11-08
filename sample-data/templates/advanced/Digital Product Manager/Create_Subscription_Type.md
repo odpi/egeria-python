@@ -16,7 +16,7 @@ ___
 
 >	**Attribute Type**: Valid Value
 
->	**Description**: How often subscribers are notified, and so how often the product's data is delivered: ONE_TIME (a single delivery, typically to evaluate the product), PERIODIC (every Subscription Notification Interval minutes) or ONGOING_UPDATE (when a Monitored Resource changes, but no more often than every Subscription Notification Interval minutes).
+>	**Description**: How often subscribers are notified, and so how often the product's data is delivered: ONE_TIME (a single delivery, typically to evaluate the product), PERIODIC (every Minimum Notification Interval minutes) or ONGOING_UPDATE (when a Monitored Resource changes, but no more often than every Minimum Notification Interval minutes).
 
 >	**Valid Values**: ONE_TIME,PERIODIC,ONGOING_UPDATE
 
@@ -67,12 +67,14 @@ ___
 >	**Description**: A unique qualified name for the element. Generated using the qualified name pattern  if not user specified.
 
 
-### Subscription Notification Interval
+### Minimum Notification Interval
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple Int
 
->	**Description**: Minutes between notifications -- the delivery interval for a PERIODIC subscription, the minimum interval for an ONGOING_UPDATE one. In MINUTES (unlike the Governance Officer family's 'Notification Interval', which is milliseconds).
+>	**Description**: Minimum minutes between notifications. For a Notification Type with no monitored resources it is the period between notifications; with monitored resources it throttles how often notifications are sent. For a Subscription Type it is the delivery interval of a PERIODIC subscription and the minimum interval of an ONGOING_UPDATE one. In MINUTES.
+
+>	**Alternative Labels**: Subscription Notification Interval
 
 
 ### Monitored Resources

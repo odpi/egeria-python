@@ -689,9 +689,11 @@ def update_gov_body_for_type(object_type: str, body: dict, attributes: dict) -> 
     elif gov_def_name == "NotificationType":
         body['plannedCompletionDate'] = attributes.get('Planned Completion Date', {}).get('value', None)
         body['multipleNotificationsPermitted'] = attributes.get('Multiple Notifications Permitted', {}).get('value', None)
-        body['nextScheduledNotification'] = attributes.get('Next Scheduled Notification', {}).get('value', None)
+        # nextScheduledNotification is informational only (maintained by the notification manager), so it is
+        # never sent. notificationInterval was removed in Egeria 6.3 (deprecated in 6.2, ignored if sent):
+        # minimumNotificationInterval (minutes) is the period for a type with no monitored resources and a
+        # throttle for one with monitored resources.
         body['notificationCount'] = attributes.get('Notification Count', {}).get('value', None)
-        body['notificationInterval'] = attributes.get('Notification Interval', {}).get('value', None)
         body['minimumNotificationInterval'] = attributes.get('Minimum Notification Interval', {}).get('value', None)
         body['plannedStartDate'] = attributes.get('Planned Start Date', {}).get('value', None)
         return body

@@ -101991,8 +101991,8 @@
             "valid_values": []
           },
           {
-            "name": "Subscription Notification Interval",
-            "key": "subscription_notification_interval",
+            "name": "Minimum Notification Interval",
+            "key": "minimum_notification_interval",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -102045,8 +102045,8 @@
             "valid_values": []
           },
           {
-            "name": "Subscription Notification Interval",
-            "key": "subscription_notification_interval",
+            "name": "Minimum Notification Interval",
+            "key": "minimum_notification_interval",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -102104,8 +102104,8 @@
             "valid_values": []
           },
           {
-            "name": "Subscription Notification Interval",
-            "key": "subscription_notification_interval",
+            "name": "Minimum Notification Interval",
+            "key": "minimum_notification_interval",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -102158,8 +102158,8 @@
             "valid_values": []
           },
           {
-            "name": "Subscription Notification Interval",
-            "key": "subscription_notification_interval",
+            "name": "Minimum Notification Interval",
+            "key": "minimum_notification_interval",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -102262,8 +102262,8 @@
             "valid_values": []
           },
           {
-            "name": "Subscription Notification Interval",
-            "key": "subscription_notification_interval",
+            "name": "Minimum Notification Interval",
+            "key": "minimum_notification_interval",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -102372,8 +102372,8 @@
             "valid_values": []
           },
           {
-            "name": "Subscription Notification Interval",
-            "key": "subscription_notification_interval",
+            "name": "Minimum Notification Interval",
+            "key": "minimum_notification_interval",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -102487,8 +102487,8 @@
             "valid_values": []
           },
           {
-            "name": "Subscription Notification Interval",
-            "key": "subscription_notification_interval",
+            "name": "Minimum Notification Interval",
+            "key": "minimum_notification_interval",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -102597,8 +102597,8 @@
             "valid_values": []
           },
           {
-            "name": "Subscription Notification Interval",
-            "key": "subscription_notification_interval",
+            "name": "Minimum Notification Interval",
+            "key": "minimum_notification_interval",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -176267,24 +176267,8 @@
             "valid_values": []
           },
           {
-            "name": "Next Scheduled Notification",
-            "key": "next_scheduled_notification",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Notification Count",
             "key": "notification_count",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Notification Interval",
-            "key": "notification_interval",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -176488,24 +176472,8 @@
             "valid_values": []
           },
           {
-            "name": "Next Scheduled Notification",
-            "key": "next_scheduled_notification",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Notification Count",
             "key": "notification_count",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Notification Interval",
-            "key": "notification_interval",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -176755,24 +176723,8 @@
             "valid_values": []
           },
           {
-            "name": "Next Scheduled Notification",
-            "key": "next_scheduled_notification",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Notification Count",
             "key": "notification_count",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Notification Interval",
-            "key": "notification_interval",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -176984,24 +176936,8 @@
             "valid_values": []
           },
           {
-            "name": "Next Scheduled Notification",
-            "key": "next_scheduled_notification",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Notification Count",
             "key": "notification_count",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Notification Interval",
-            "key": "notification_interval",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -177370,24 +177306,8 @@
             "valid_values": []
           },
           {
-            "name": "Next Scheduled Notification",
-            "key": "next_scheduled_notification",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Notification Count",
             "key": "notification_count",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Notification Interval",
-            "key": "notification_interval",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -177764,24 +177684,8 @@
             "valid_values": []
           },
           {
-            "name": "Next Scheduled Notification",
-            "key": "next_scheduled_notification",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Notification Count",
             "key": "notification_count",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Notification Interval",
-            "key": "notification_interval",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -178220,24 +178124,8 @@
             "valid_values": []
           },
           {
-            "name": "Next Scheduled Notification",
-            "key": "next_scheduled_notification",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Notification Count",
             "key": "notification_count",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Notification Interval",
-            "key": "notification_interval",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -178622,24 +178510,8 @@
             "valid_values": []
           },
           {
-            "name": "Next Scheduled Notification",
-            "key": "next_scheduled_notification",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
             "name": "Notification Count",
             "key": "notification_count",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": []
-          },
-          {
-            "name": "Notification Interval",
-            "key": "notification_interval",
             "value": null,
             "format": false,
             "detail_spec": null,

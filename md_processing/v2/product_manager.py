@@ -91,17 +91,17 @@ class SubscriptionTypeProcessor(ProductManagerProcessor):
         if not product_guid:
             raise ValueError("'Digital Product' could not be resolved to an existing digital product.")
         kind = normalize_subscription_kind(_v(attributes, "Subscription Kind"))
-        interval = _v(attributes, "Subscription Notification Interval")
+        interval = _v(attributes, "Minimum Notification Interval")
         monitored = _guid_list(attributes, "Monitored Resources")
 
         if kind == "PERIODIC" and not interval:
-            raise ValueError("A PERIODIC subscription type needs a 'Subscription Notification Interval' (minutes).")
+            raise ValueError("A PERIODIC subscription type needs a 'Minimum Notification Interval' (minutes).")
         if kind == "ONGOING_UPDATE" and not monitored:
             raise ValueError(
                 "An ONGOING_UPDATE subscription type needs at least one 'Monitored Resources' element "
                 "(typically the product's asset).")
         if kind == "ONE_TIME" and (interval or monitored):
-            self._add_warning("A ONE_TIME subscription type ignores 'Subscription Notification Interval' and "
+            self._add_warning("A ONE_TIME subscription type ignores 'Minimum Notification Interval' and "
                               "'Monitored Resources'; Egeria will not use them.")
         if kind == "PERIODIC" and monitored:
             self._add_warning("A PERIODIC subscription type ignores 'Monitored Resources'.")
@@ -115,7 +115,8 @@ class SubscriptionTypeProcessor(ProductManagerProcessor):
             "serviceLevelObjectiveGUID": _guid(attributes, "Subscription Service Level Objective"),
         }
         if kind != "ONE_TIME" and interval:
-            body["notificationInterval"] = int(interval)
+            # NewSubscriptionTypeRequestBody also sends it as notificationInterval until Egeria's rename lands.
+            body["minimumNotificationInterval"] = int(interval)
         if kind == "ONGOING_UPDATE":
             body["monitoredResourceGUIDs"] = monitored
         return product_guid, kind, {k: v for k, v in body.items() if v is not None}

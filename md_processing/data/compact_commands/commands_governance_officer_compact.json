@@ -3077,12 +3077,12 @@
     "Minimum Notification Interval": {
       "variable_name": "minimum_notification_interval",
       "inUpdate": true,
-      "attr_labels": "",
+      "attr_labels": "Subscription Notification Interval",
       "examples": "",
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "The minimum interval between notifications in milliseconds.",
+      "description": "Minimum minutes between notifications. For a Notification Type with no monitored resources it is the period between notifications; with monitored resources it throttles how often notifications are sent. For a Subscription Type it is the delivery interval of a PERIODIC subscription and the minimum interval of an ONGOING_UPDATE one. In MINUTES.",
       "generated": false,
       "style": "Simple Int",
       "user_specified": true,
@@ -3090,8 +3090,8 @@
       "input_required": false,
       "min_cardinality": 0,
       "max_cardinality": 1,
-      "level": "Domain",
-      "Journal Entry": ""
+      "level": "Basic",
+      "Journal Entry": "2026-11-08 -- Egeria 6.3: notificationInterval removed; minimumNotificationInterval (minutes) is the period or throttle."
     },
     "Monitored Resource": {
       "variable_name": "monitored_resource",
@@ -3150,25 +3150,6 @@
       "level": "Domain",
       "Journal Entry": ""
     },
-    "Next Scheduled Notification": {
-      "variable_name": "next_scheduled_notification",
-      "inUpdate": true,
-      "attr_labels": "",
-      "examples": "",
-      "default_value": "",
-      "valid_values": [],
-      "existing_element": "",
-      "description": "The date of the next scheduled notification.",
-      "generated": false,
-      "style": "Simple",
-      "user_specified": true,
-      "unique": false,
-      "input_required": false,
-      "min_cardinality": 0,
-      "max_cardinality": 1,
-      "level": "Domain",
-      "Journal Entry": ""
-    },
     "Notification Count": {
       "variable_name": "notification_count",
       "inUpdate": true,
@@ -3178,25 +3159,6 @@
       "valid_values": [],
       "existing_element": "",
       "description": "The number of notifications sent so far.",
-      "generated": false,
-      "style": "Simple Int",
-      "user_specified": true,
-      "unique": false,
-      "input_required": false,
-      "min_cardinality": 0,
-      "max_cardinality": 1,
-      "level": "Domain",
-      "Journal Entry": ""
-    },
-    "Notification Interval": {
-      "variable_name": "notification_interval",
-      "inUpdate": true,
-      "attr_labels": "",
-      "examples": "",
-      "default_value": "",
-      "valid_values": [],
-      "existing_element": "",
-      "description": "The interval between scheduled notifications in milliseconds.",
       "generated": false,
       "style": "Simple Int",
       "user_specified": true,
@@ -4271,9 +4233,7 @@
       "custom_attributes": [
         "Planned Completion Date",
         "Multiple Notifications Permitted",
-        "Next Scheduled Notification",
         "Notification Count",
-        "Notification Interval",
         "Minimum Notification Interval",
         "Planned Start Date"
       ],

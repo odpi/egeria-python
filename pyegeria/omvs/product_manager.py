@@ -1797,7 +1797,11 @@ class ProductManager(CollectionManager):
     async def _async_new_subscription_type(self, digital_product_guid: str, kind: str,
                                            body: Optional[dict | NewSubscriptionTypeRequestBody]) -> Optional[str]:
         """POST a (optional) NewSubscriptionTypeRequestBody to .../subscription-types/{kind}; return the GUID of
-        the governance action process that creates a subscription of this type."""
+        the governance action process that creates a subscription of this type.
+
+        Until Egeria's oak2026 change (notificationInterval renamed minimumNotificationInterval in this request
+        body) merges, NewSubscriptionTypeRequestBody sends the interval under both names, so either a pre- or a
+        post-rename platform gets it; an interval given under either name is accepted."""
         url = (f"{self.product_manager_command_root}/digital-products/"
                f"{digital_product_guid}/subscription-types/{kind}")
         payload = None
@@ -1860,7 +1864,7 @@ class ProductManager(CollectionManager):
         self, digital_product_guid: str, body: Optional[dict | NewSubscriptionTypeRequestBody] = None
     ) -> Optional[str]:
         """Add a periodic subscription type to a digital product: subscribers receive a notification, and so a
-        delivery of the product's data, every `notificationInterval` minutes. A product offering more than one
+        delivery of the product's data, every `minimumNotificationInterval` minutes. A product offering more than one
         periodic subscription type (daily and weekly, say) needs a distinct `identifier` for each. Async version.
 
         Returns
@@ -1877,7 +1881,7 @@ class ProductManager(CollectionManager):
           "identifier" : "DAILY-REFRESH-SUBSCRIPTION",
           "displayName" : "Daily refresh subscription",
           "description" : "Delivers the data once a day.",
-          "notificationInterval" : 1440
+          "minimumNotificationInterval" : 1440
         }
         ```
         """
@@ -1897,7 +1901,7 @@ class ProductManager(CollectionManager):
     ) -> Optional[str]:
         """Add an ongoing-update subscription type to a digital product: subscribers receive a notification, and
         so a delivery of the product's data, whenever one of the `monitoredResourceGUIDs` changes - but no more
-        often than every `notificationInterval` minutes. The monitored resource is typically the product's
+        often than every `minimumNotificationInterval` minutes. The monitored resource is typically the product's
         asset. Async version.
 
         Returns
@@ -1915,7 +1919,7 @@ class ProductManager(CollectionManager):
           "displayName" : "Ongoing update subscription",
           "description" : "Delivers data updates within an hour of receiving the new data.",
           "monitoredResourceGUIDs" : [ "add asset guid here" ],
-          "notificationInterval" : 10
+          "minimumNotificationInterval" : 10
         }
         ```
         """
