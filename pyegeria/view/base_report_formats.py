@@ -4174,21 +4174,29 @@ def _egeria_tier_view(lower: FormatSetDict, local: FormatSetDict) -> FormatSetDi
     tier = _egeria_tier()
     if not tier:
         return FormatSetDict()
+    from collections import Counter
     view = FormatSetDict()
     local_aliases = {a for fs in local.values() for a in (fs.aliases or [])}
+    # Every name (label or alias) another spec holds, counted once per holder, built in one pass.
+    held: Counter = Counter()
+    for k, v in lower.items():
+        held[k] += 1
+        held.update(set(v.aliases or []) - {k})
+    for k in tier.keys():
+        held[k] += 1
+    taken_locally = set(local.keys()) | local_aliases
     for label, fs in tier.items():
         if label in local_aliases:
             owner = next(k for k, v in local.items() if label in (v.aliases or []))
             _note_shadow(label, "local", "egeria", local[owner], fs, {})
             continue
-        others: set = set(local.keys()) | local_aliases
-        for k, v in lower.items():
-            if k == label:
-                continue  # the built-in this copy shadows takes its aliases with it
-            others.add(k)
-            others.update(v.aliases or [])
-        others.update(k for k in tier.keys() if k != label)
-        dropped = [a for a in (fs.aliases or []) if a in others]
+        mine: Counter = Counter({label: 1})  # this copy's own label
+        if label in lower.keys():
+            # the built-in this copy shadows takes its label and aliases with it
+            shadowed = lower[label]
+            mine[label] += 1
+            mine.update(set(shadowed.aliases or []) - {label})
+        dropped = [a for a in (fs.aliases or []) if a in taken_locally or held[a] - mine[a] > 0]
         key = (id(fs), tuple(dropped))
         cached = _EGERIA_VIEW_CACHE.get(label)
         if cached and cached[0] == key:
