@@ -138,7 +138,8 @@ def test_check_2_analytic_param_not_declared_is_refused_with_the_declared_list()
 
 def test_check_2_a_routine_that_declares_no_params_warns_instead():
     register_analytic_functions({"silent": AnalyticFunctionSpec(
-        name="silent", function="pyegeria.view.overview_metrics.count_elements")})
+        name="silent", function="pyegeria.view.overview_metrics.count_elements",
+        inputs=["egeria_client:MetadataExpert"])})
     result = sr.resolve(_spec(_analytic("silent", analytic_spec_params={"type_name": "Asset"})))
     assert result.runnable
     assert any("routine 'silent' declares no parameters" in w for w in result.warnings)
@@ -186,7 +187,9 @@ def test_an_analytic_spec_records_role_inputs_admission_and_tile_safe():
     assert result.stages == [{"kind": "routine", "name": "count_elements",
                               "binding": "python pyegeria.view.overview_metrics.count_elements"}]
     assert result.admission == {"resource_types": [], "test_only": False} and result.tile_safe is None
-    assert any(n.startswith("check 5:") and "(W2-3)" in n for n in result.notes)
+    assert result.role_inputs == ["egeria_client:MetadataExpert"]
+    assert "check 5: role inputs egeria_client:MetadataExpert; the environment's supply provides each before the " \
+           "first stage runs" in result.notes
     assert any("declares no tile_safe" in n for n in result.notes)
     assert "type_name" in result.params
 
@@ -228,7 +231,8 @@ def test_results_are_cached_and_a_registry_change_invalidates():
     brf.register_report_specs({"Probe-Spec": _spec(_analytic("not_yet_registered"))}, source="test")
     assert not sr.resolve_all()["Probe-Spec"].runnable
     register_analytic_functions({"not_yet_registered": AnalyticFunctionSpec(
-        name="not_yet_registered", function="pyegeria.view.overview_metrics.count_elements")})
+        name="not_yet_registered", function="pyegeria.view.overview_metrics.count_elements",
+        inputs=["egeria_client:MetadataExpert"])})
     assert sr.resolve_all()["Probe-Spec"].runnable
     brf.unregister_report_spec("Probe-Spec")
     assert "Probe-Spec" not in sr.resolve_all()

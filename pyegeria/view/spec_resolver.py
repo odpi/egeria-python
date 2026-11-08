@@ -24,8 +24,11 @@ Today's specs are single-stage: one find method (`action.function`) or one analy
      analytic routine; every column an analytic spec lists is a field the routine declares in
      `out`; every column's detail_spec names a registered spec. A find method declares no `out`,
      so a find spec's columns are not checked (recorded).
-  5. role inputs: listed from the routine's declaration; which environment supplies each is
-     W2-3's (declared, not checked here).
+  5. role inputs: the routine's declared inputs, read by `declared_inputs`, the function the
+     executor calls before it binds them (RS-W2-3). A declaration whose egeria_client inputs do
+     not match the leading client arguments its python binding takes is refused, at load and at
+     run, with the same words. Which environment supplies each role is the run's: a role the
+     supply cannot provide refuses the run before its first stage (`role_supply.supply_inputs`).
   6. admission and tile_safe: recorded from the routine's declaration.
   7. seeding: the find method a spec may be seeded by is recorded.
 
@@ -53,6 +56,8 @@ __all__ = [
     "OUTPUT_FORMATS",
     "CHART_FORMATS",
     "FUNCTION_VALUED_PARAMS",
+    "declared_inputs",
+    "routine_entry",
 ]
 
 #: Output formats the executor renders from a Format row ("ALL" means every one of them).
@@ -113,18 +118,83 @@ Resolution = Union[ResolvedSpec, Unrunnable]
 
 # ── Client classes, as the executor resolves them ──
 
-_EGERIA_TECH_CLASSES: Optional[List[type]] = None
-
-
 def _egeria_tech_classes() -> List[type]:
-    """EgeriaTech plus every subclient class it proxies to (its `__getattr__` looks there)."""
-    global _EGERIA_TECH_CLASSES
-    if _EGERIA_TECH_CLASSES is None:
-        from pyegeria.egeria_tech_client import EgeriaTech
-        # Construction sets attributes only; nothing connects.
-        probe = EgeriaTech("spec-resolver", "https://localhost:9443", user_id="spec-resolver", user_pwd="")
-        _EGERIA_TECH_CLASSES = [EgeriaTech] + list(dict.fromkeys(probe._subclient_map.values()))
-    return _EGERIA_TECH_CLASSES
+    """EgeriaTech plus every subclient class it proxies to: the one list `PlainSupply` serves."""
+    from pyegeria.view.role_supply import egeria_tech_classes
+    return egeria_tech_classes()
+
+
+# ── Check 5: a routine's declared inputs, for the resolver and the executor alike ──
+
+#: The leading parameter names the pre-W2-3 executor bound a client to by name. Read here ONLY to
+#: check a declaration against its python binding (check 5); nothing binds by these names.
+_BINDING_CLIENT_PARAM_NAMES = ("mgr", "ce", "expert", "client")
+
+
+def _binding_client_slots(func: Any) -> int:
+    """How many leading client arguments a python binding takes (check 5's consistency count)."""
+    try:
+        params = inspect.signature(func).parameters.values()
+    except (TypeError, ValueError):
+        return 0
+    count = 0
+    for param in params:
+        if param.name in _BINDING_CLIENT_PARAM_NAMES and param.kind in (
+                inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD):
+            count += 1
+        else:
+            break
+    return count
+
+
+def routine_entry(func_decl: Any) -> Any:
+    """The registry entry a routine reference names: by registered name, else the entry whose
+    python binding is that dotted path (a fetch step names its function by path). None if none."""
+    from pyegeria.view.analytic_registry import get_analytic_registry
+    registry = get_analytic_registry()
+    if isinstance(func_decl, str):
+        if func_decl in registry:
+            return registry[func_decl]
+        return next((s for s in registry.values() if s.python_target() == func_decl), None)
+    return None
+
+
+def declared_inputs(func_decl: Any, func: Any = None) -> List[str]:
+    """The inputs a routine declares, in declared order: what the executor supplies and binds to
+    its leading positional parameters. The resolver's check 5 and the executor both call this, so
+    a routine refused at load is refused at run with the same words.
+
+    Raises `role_supply.RoleRefused` when the routine is not registered (so it declares nothing),
+    when an input is not a role word or is repeated, or when its python binding (`func`, imported
+    from the entry when not given) takes a different number of leading client arguments than the
+    declaration lists egeria_client inputs."""
+    from pyegeria.view.analytic_registry import _INPUT_ROLE
+    from pyegeria.view.role_supply import RoleRefused, role_kind
+
+    name = getattr(func_decl, "__name__", func_decl)
+    def refuse(reason: str) -> None:
+        raise RoleRefused(f"Routine '{name}' cannot run: {reason}.", routine=str(name), reason=reason)
+
+    entry = routine_entry(func_decl)
+    if entry is None:
+        refuse(f"'{name}' is not a registered routine, so it declares no inputs for the executor to supply")
+    name = entry.name
+    inputs = list(entry.inputs)
+    bad = [i for i in inputs if not _INPUT_ROLE.fullmatch(i or "")]
+    if bad:
+        refuse(f"routine {name}'s input {', '.join(repr(b) for b in bad)} is not a role word "
+               "(egeria_client:<Class>, reader:<name>, viewer, subject)")
+    if len(set(inputs)) != len(inputs):
+        refuse(f"routine {name} declares an input more than once")
+    if func is None:
+        from pyegeria.view.format_set_executor import _import_callable
+        func = _import_callable(entry.python_target())
+    slots = _binding_client_slots(func)
+    clients = sum(1 for i in inputs if role_kind(i) == "egeria_client")
+    if slots != clients:
+        refuse(f"routine {name}'s binding takes {slots} leading client argument(s) and its declaration "
+               f"lists {clients} egeria_client input(s)")
+    return inputs
 
 
 def _find_method(func_decl: str) -> Tuple[Optional[Any], str]:
@@ -216,6 +286,7 @@ def _check_analytic(name: str, action: Dict[str, Any], fail, notes, warns, out: 
     from pyegeria.view.analytic_registry import get_analytic_registry
     from pyegeria.view.format_set_executor import (AnalyticFunctionRefused, _import_callable,
                                                    _resolve_analytic_function, resolve_report_spec_function)
+    from pyegeria.view.role_supply import RoleRefused
 
     func_decl = action["analytic_function"]
     registry = get_analytic_registry()
@@ -270,17 +341,22 @@ def _check_analytic(name: str, action: Dict[str, Any], fail, notes, warns, out: 
                     f"registered name only)")
 
     try:
+        out["role_inputs"] = declared_inputs(func_decl)
+    except RoleRefused as exc:
+        fail(5, exc.reason)
+    else:
+        notes.append("check 5: " + (f"role inputs {', '.join(out['role_inputs'])}" if out["role_inputs"] else
+                                    f"routine '{func_decl}' declares no role inputs")
+                     + "; the environment's supply provides each before the first stage runs")
+
+    try:
         routine = entry.routine()
     except ValueError as exc:
-        notes.append(f"checks 5-6: routine '{func_decl}' is not a valid routine declaration, so its inputs, "
+        notes.append(f"check 6: routine '{func_decl}' is not a valid routine declaration, so its "
                      f"admission and tile_safe are not recorded: {exc}")
         return entry.declaration
-    out["role_inputs"] = list(routine.inputs)
     out["tile_safe"] = routine.tile_safe.model_dump() if routine.tile_safe else None
     out["admission"] = routine.admission.model_dump()
-    notes.append("check 5: " + (f"role inputs {', '.join(routine.inputs)}" if routine.inputs else
-                                f"routine '{func_decl}' declares no role inputs")
-                 + "; which environment supplies each is not checked here (W2-3)")
     if routine.tile_safe is None:
         notes.append(f"check 6: routine '{func_decl}' declares no tile_safe")
     return routine.declaration

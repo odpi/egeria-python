@@ -37,6 +37,7 @@ from pyegeria.view.output_formatter import generate_output
 from pyegeria.view.analytic_registry import ABSENCE_STATES, AnalyticActionSpec, canonical_absence_state
 from pyegeria.view.analytic_registry import get_analytic_registry as get_analytic_registry_functions
 from pyegeria.egeria_tech_client import EgeriaTech
+from pyegeria.view.role_supply import PlainSupply, RoleRefused, RoleSupply, supply_inputs
 
 _CLIENT_CLASS_MAP = {
     "CollectionManager": "pyegeria.omvs.collection_manager.CollectionManager",
@@ -203,38 +204,24 @@ def resolve_report_spec_function(func_decl: str):
         f"from pyegeria 6.2.19).")
 
 
-# Parameter names an analytic function uses for its leading client argument(s)
-# -- pyegeria.view.overview_metrics's functions take one (`mgr` or `ce`) or,
-# for semantic_grounding, two (`mgr`, `ce`) positional clients before their
-# real parameters. EgeriaTech is a facade that proxies to every subclient via
-# __getattr__ (see egeria_tech_client.py), so the same instance satisfies
-# either role -- no need to construct a second client.
-_ANALYTIC_CLIENT_PARAM_NAMES = {"mgr", "ce", "expert", "client"}
-
-
-def _count_client_params(func) -> int:
-    """Number of leading parameters named like a client (mgr/ce/expert/client)."""
-    count = 0
-    for name, param in inspect.signature(func).parameters.items():
-        if name in _ANALYTIC_CLIENT_PARAM_NAMES and param.kind in (
-            inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD,
-        ):
-            count += 1
-        else:
-            break
-    return count
-
-
-def _bind_client_args(func, client: Any) -> list:
-    """Return the positional args to pass before **kwargs: one copy of `client`
-    per leading parameter named like a client (mgr/ce/expert/client)."""
-    return [client] * _count_client_params(func)
+def _plain_client(view_server: str, view_url: str, user: str, user_pass: str,
+                  token: Optional[str] = None) -> Any:
+    """The caller's EgeriaTech, authenticated: with `token` when given (ISSUE-86), else a token
+    minted from `user`/`user_pass`. `PlainSupply` calls this at most once per run, and only when a
+    routine declares an egeria_client input (ISSUE-137: no client, no connection)."""
+    client = EgeriaTech(view_server, view_url, user_id=user, user_pwd=user_pass)
+    if token:
+        client.set_bearer_token(token)
+    else:
+        client.create_egeria_bearer_token()
+    return client
 
 
 def run_analytic_action(
-    action: AnalyticActionSpec, client: Any, *,
+    action: AnalyticActionSpec, client: Any = None, *,
     fetch_kwargs: Optional[Dict[str, Any]] = None,
     analytic_kwargs: Optional[Dict[str, Any]] = None,
+    supply: Optional[RoleSupply] = None,
 ) -> Any:
     """Run an `analytic_registry.AnalyticActionSpec`'s fetch step, then (if
     declared) its analytic step over the fetch's raw result -- the executor
@@ -246,24 +233,25 @@ def run_analytic_action(
     below exactly as before -- this is a separate, additive entry point, not
     a replacement.
 
-    `client` is resolved once by the caller (same convention as
-    `_run_analytic_function`) and bound positionally to both steps' leading
-    client-shaped parameters -- `fetch` via the usual signature introspection
-    (`_bind_client_args`), `analytic` via the SAME resolved client args
-    (not re-introspected from `analytic`'s own signature, since its first
-    positional parameter is the fetch result, not a client) -- so `analytic`
-    can itself make a further client call (e.g. follow a relationship to
-    enrich) using the identical already-authenticated client `fetch` used.
+    The fetch step must be a registered routine (by name or by its python binding's path): its
+    declared `inputs` are supplied, in declared order, from `supply` -- or, when none is given,
+    from `PlainSupply(client)`, the caller's already-authenticated client (RS-W2-3: inputs by
+    role, never by parameter name). The analytic step gets the fetch's raw result followed by the
+    SAME supplied arguments, so it can itself make a further client call (e.g. follow a
+    relationship to enrich) with the identical client the fetch used.
     """
+    from pyegeria.view.spec_resolver import declared_inputs  # lazy: the resolver imports this module
     fetch_func = _resolve_analytic_function(action.fetch)
-    fetch_clients = _bind_client_args(fetch_func, client)
-    raw_result = fetch_func(*fetch_clients, **(fetch_kwargs or {}))
+    if supply is None:
+        supply = PlainSupply(client)
+    fetch_args = supply_inputs(action.fetch, declared_inputs(action.fetch, fetch_func), supply)
+    raw_result = fetch_func(*fetch_args, **(fetch_kwargs or {}))
 
     if not action.analytic:
         return raw_result
 
     analytic_func = _resolve_analytic_function(action.analytic)
-    return analytic_func(raw_result, *fetch_clients, **(analytic_kwargs or {}))
+    return analytic_func(raw_result, *fetch_args, **(analytic_kwargs or {}))
 
 
 def _apply_analytic_binders(func, binders: Dict[str, str], call_params: Dict[str, Any]) -> Dict[str, Any]:
@@ -413,6 +401,7 @@ def _run_analytic_function(
     action: dict, *, params: Dict[str, Any],
     view_server: str, view_url: str, user: str, user_pass: str,
     token: Optional[str] = None,
+    supply: Optional[RoleSupply] = None,
 ) -> Any:
     """Resolve and call a report spec action's `analytic_function` (extra_find),
     returning the function's raw result -- no chart-wrapping, no output_format
@@ -427,6 +416,12 @@ def _run_analytic_function(
     as that user instead of falling back to the `user`/`user_pass` service
     account. Backward compatible: `user`/`user_pass` keep working exactly as
     before when no token is given.
+
+    RS-W2-3: the routine's leading arguments are its declared `inputs`, in declared order, each
+    asked of `supply` (default: `PlainSupply` over the caller's client built from the arguments
+    above). Every input is obtained before the routine runs, so a role the supply cannot provide
+    -- or a declaration that does not match its binding (check 5) -- raises `RoleRefused` with
+    its words before any stage. No parameter name is read to decide what to pass.
     """
     func_decl = action.get("analytic_function")
     if not func_decl:
@@ -446,17 +441,15 @@ def _run_analytic_function(
     call_params.update({k: v for k, v in params.items() if v not in (None, "")})
 
     func = resolve_report_spec_function(func_decl)
+    from pyegeria.view.spec_resolver import declared_inputs  # lazy: the resolver imports this module
+    inputs = declared_inputs(func_decl, func)  # check 5: the same function the resolver runs at load
     call_params = _apply_analytic_binders(func, action.get("analytic_binders") or {}, call_params)
-    n_clients = _count_client_params(func)
-    if n_clients == 0:
-        # The routine takes no client, so don't connect to Egeria or mint a token (ISSUE-137).
-        return func(**call_params)
-    client = EgeriaTech(view_server, view_url, user_id=user, user_pwd=user_pass)
-    if token:
-        client.set_bearer_token(token)
-    else:
-        client.create_egeria_bearer_token()
-    return func(*([client] * n_clients), **call_params)
+    if supply is None:
+        supply = PlainSupply(client_factory=lambda: _plain_client(view_server, view_url, user, user_pass, token))
+    # Every role is obtained here, before the routine runs; a routine that declares no
+    # egeria_client input never connects or mints a token (ISSUE-137).
+    args = supply_inputs(getattr(func_decl, "__name__", func_decl), inputs, supply)
+    return func(*args, **call_params)
 
 
 def _resolve_action_target_client(egeria_client: EgeriaTech, client_class: type) -> Any:
@@ -870,6 +863,7 @@ def _exec_analytic_chart(
     user: str,
     user_pass: str,
     token: Optional[str] = None,
+    supply: Optional[RoleSupply] = None,
 ) -> Dict[str, Any]:
     """Run a report spec's `analytic_function` (extra_find) and wrap the
     result as a Vega-Lite chart -- `chart_kind` picks which:
@@ -904,7 +898,7 @@ def _exec_analytic_chart(
 
     result = _run_analytic_function(
         action, params=params, view_server=view_server, view_url=view_url,
-        user=user, user_pass=user_pass, token=token,
+        user=user, user_pass=user_pass, token=token, supply=supply,
     )
     envelope = _result_envelope(result)
     result = _jsonable(result)
@@ -1003,6 +997,7 @@ def exec_report_spec(
     user: str = settings.User_Profile.user_name,
     user_pass: str = settings.User_Profile.user_pwd,
     token: Optional[str] = None,
+    supply: Optional[RoleSupply] = None,
 ) -> Dict[str, Any]:
     """
     Execute the action for a given format set and return a normalized result structure.
@@ -1026,6 +1021,13 @@ def exec_report_spec(
     report execution -- and its provenance -- reflects that user, not a
     fallback service account. `user`/`user_pass` remain fully backward
     compatible when `token` is not given.
+
+    RS-W2-3: `supply` (a `role_supply.RoleSupply`) provides an analytic routine's declared inputs
+    -- its Egeria client(s), and any reader, viewer or subject it declares. Omitted, plain
+    pyegeria's `PlainSupply` is built from the arguments above and supplies the caller's
+    EgeriaTech only. A role the supply cannot provide raises `role_supply.RoleRefused`, with the
+    environment's words, before the routine runs. A find-method spec (no analytic routine) does
+    not read `supply`: it builds its client class from the arguments above, as before.
     """
     output_format = (output_format or "DICT").upper()
     params = _normalize_report_params(dict(params or {}), action_mode="find")
@@ -1041,7 +1043,7 @@ def exec_report_spec(
         return _exec_analytic_chart(
             format_set_name, chart_kind=_CHART_KINDS[output_format], params=params,
             view_server=view_server, view_url=view_url, user=user, user_pass=user_pass,
-            token=token,
+            token=token, supply=supply,
         )
 
     # Resolve the format set and action
@@ -1103,7 +1105,7 @@ def exec_report_spec(
     if action.get("analytic_function") and not func_decl:
         result = _run_analytic_function(
             action, params=params, view_server=view_server, view_url=view_url,
-            user=user, user_pass=user_pass, token=token,
+            user=user, user_pass=user_pass, token=token, supply=supply,
         )
         envelope = _result_envelope(result)
         result = _jsonable(result)

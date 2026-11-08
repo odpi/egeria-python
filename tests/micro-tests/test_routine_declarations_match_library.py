@@ -55,7 +55,11 @@ def test_builtin_routine_loads_in_the_library(name):
 @pytest.mark.parametrize("name", sorted(_BUILTINS))
 def test_the_library_reads_a_pyegeria_entry_as_pyegeria_does(name):
     spec = _BUILTINS[name]
-    theirs = routine_lib.routine_declaration(spec).model_dump(by_alias=True, exclude={"declaration"})
+    # The library's routine_declaration() takes what a manifest does not carry through `extra`, and
+    # 0.4 lists `inputs` there (RS-W2-3 declares them on every built-in), so they are handed over
+    # the documented way. A release that reads them from the manifest gets the same value.
+    theirs = routine_lib.routine_declaration(spec, inputs=list(spec.inputs)).model_dump(
+        by_alias=True, exclude={"declaration"})
     ours = spec.routine().model_dump(by_alias=True, exclude={"declaration"})
     assert theirs == ours
 

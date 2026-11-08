@@ -224,6 +224,21 @@ async def test_async_run_report_coerces_inherited_list_filters_from_strings(monk
 # dotted-path resolution) rather than a local test-module path, since
 # "micro-tests" isn't a valid dotted package segment.
 
+def _register_fetch(path):
+    """A fetch step is a registered routine: its declared inputs are what run_analytic_action
+    supplies (RS-W2-3), here the caller's client from PlainSupply."""
+    from pyegeria.view.analytic_registry import AnalyticFunctionSpec, register_analytic_functions
+    register_analytic_functions({"fetch_probe": AnalyticFunctionSpec(
+        name="fetch_probe", function=path, inputs=["egeria_client:MetadataExpert"])})
+
+
+@pytest.fixture(autouse=True)
+def _clear_runtime_routines():
+    yield
+    from pyegeria.view.analytic_registry import clear_runtime_analytic_functions
+    clear_runtime_analytic_functions()
+
+
 def test_run_analytic_action_runs_fetch_then_analytic_with_same_client(monkeypatch):
     import pyegeria.view.overview_metrics as om_module
 
@@ -239,6 +254,7 @@ def test_run_analytic_action_runs_fetch_then_analytic_with_same_client(monkeypat
 
     monkeypatch.setattr(om_module, "_fetch_for_test", _fetch, raising=False)
     monkeypatch.setattr(om_module, "_analytic_for_test", _analytic, raising=False)
+    _register_fetch("pyegeria.view.overview_metrics._fetch_for_test")
 
     spec = AnalyticActionSpec(
         fetch="pyegeria.view.overview_metrics._fetch_for_test",
@@ -260,6 +276,7 @@ def test_run_analytic_action_returns_raw_fetch_when_no_analytic_declared(monkeyp
         return [{"label": l, "type": t} for l, t in type_map]
 
     monkeypatch.setattr(om_module, "_fetch_only_for_test", _fetch_only, raising=False)
+    _register_fetch("pyegeria.view.overview_metrics._fetch_only_for_test")
 
     spec = AnalyticActionSpec(fetch="pyegeria.view.overview_metrics._fetch_only_for_test")
     result = fse.run_analytic_action(spec, "CLIENT-42", fetch_kwargs={"type_map": [("A", "Alpha")]})
