@@ -188,7 +188,6 @@ class TestGovernanceOfficer:
                     "importance": "Moderate",
                     "multipleNotificationsPermitted": True,
                     "minimumNotificationInterval": 60,
-                    "notificationInterval": 100,
                     "plannedStartDate": "2026-01-31",
                     "plannedCompletionDate": "2027-01-31"
                 }

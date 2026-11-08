@@ -50989,12 +50989,6 @@
             "detail_spec": null
           },
           {
-            "name": "Notification Interval",
-            "key": "notification_interval",
-            "format": false,
-            "detail_spec": null
-          },
-          {
             "name": "Minimum Notification Interval",
             "key": "minimum_notification_interval",
             "format": false,
@@ -51149,12 +51143,6 @@
           {
             "name": "Notification Count",
             "key": "notification_count",
-            "format": false,
-            "detail_spec": null
-          },
-          {
-            "name": "Notification Interval",
-            "key": "notification_interval",
             "format": false,
             "detail_spec": null
           },
@@ -51547,12 +51535,6 @@
             "detail_spec": null
           },
           {
-            "name": "Notification Interval",
-            "key": "notification_interval",
-            "format": false,
-            "detail_spec": null
-          },
-          {
             "name": "Minimum Notification Interval",
             "key": "minimum_notification_interval",
             "format": false,
@@ -51899,12 +51881,6 @@
           {
             "name": "Notification Count",
             "key": "notification_count",
-            "format": false,
-            "detail_spec": null
-          },
-          {
-            "name": "Notification Interval",
-            "key": "notification_interval",
             "format": false,
             "detail_spec": null
           },
