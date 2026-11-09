@@ -39,6 +39,7 @@ __all__ = [
     "FIND_METHOD_ALLOWLIST",
     "FIND_METHOD_ADDITIONS",
     "FIND_METHOD_DENYLIST",
+    "ADDITIONAL_PROPS_HOOKS",
     "LEGACY_CLASS_ALIASES",
     "ParamDecl",
     "Stage",
@@ -54,6 +55,7 @@ __all__ = [
     "format_set_to_microflow",
     "check_allowlist",
     "find_method_allowed",
+    "additional_props_allowed",
 ]
 
 MICROFLOW_FORMAT = "microflow/1"
@@ -144,6 +146,18 @@ FIND_METHOD_DENYLIST: frozenset = frozenset({
 })
 _DENIED_METHOD_NAMES = frozenset(e.rsplit(".", 1)[-1] for e in FIND_METHOD_DENYLIST)
 
+#: The functions a find stage's `additional_props` key may name (RS-EGERIA-TIER stage 2, brief
+#: decision 4). `additional_props` carries today's `FormatSet.get_additional_props`: a client method
+#: the formatter calls per element for extra properties. It names code, so it is a closed list, held
+#: here beside the find-method allowlist: exactly the functions the built-in specs name on
+#: 2026-11-09 (5 specs: Search-Keywords; Digital-Products, -MyE and -Slim; Agreements). Any other
+#: name is refused, by `check_allowlist` and by `microflow_to_format_set`, with words.
+ADDITIONAL_PROPS_HOOKS: frozenset = frozenset({
+    "_client_extract_element_properties_for_keyword",
+    "CollectionManager._extract_digital_product_properties",
+    "CollectionManager._extract_agreement_properties",
+})
+
 #: Legacy class names that today's built-in specs use and the executor maps to a client class
 #: (`_resolve_client_and_method` falls back to EgeriaTech for an unknown name). Listed explicitly so
 #: the allowlist accepts exactly these, and no other unknown name.
@@ -204,16 +218,25 @@ ColumnItem = Union[str, Dict[str, Any]]
 
 class Formatter(BaseModel):
     """One output format's formatter: `columns` (a list of field keys or column objects, or "*"
-    for every field of the shape), or one `field` (for example MERMAID's `mermaidGraph`)."""
+    for every field of the shape), or one `field` (for example MERMAID's `mermaidGraph`), or
+    `same_as`: the name of an earlier output format whose formatter this one shares (stage 2). A
+    spec that renders several output formats with one column list (a `Format` with several `types`)
+    writes the list once, under its first type, and `{"same_as": "<that type>"}` for the others, so
+    the list is not repeated and the converted `FormatSet` groups them as one `Format` again."""
     model_config = ConfigDict(extra="allow")
     columns: Optional[Union[Literal["*"], List[ColumnItem]]] = None
     field: Optional[str] = None
     label: Optional[str] = None
+    same_as: Optional[str] = None
 
     @model_validator(mode="after")
     def _one_of(self):
+        if self.same_as is not None:
+            if self.columns is not None or self.field is not None:
+                raise ValueError("a formatter with 'same_as' carries no 'columns' or 'field' of its own")
+            return self
         if self.columns is None and self.field is None:
-            raise ValueError("a formatter needs 'columns' or 'field'")
+            raise ValueError("a formatter needs 'columns', 'field' or 'same_as'")
         if isinstance(self.columns, list):
             for item in self.columns:
                 if isinstance(item, dict) and not isinstance(item.get("field"), str):
@@ -231,17 +254,40 @@ class MicroflowV1(BaseModel):
     stages: List[Stage]
     formatters: Dict[str, Formatter] = Field(default_factory=dict)
 
-    @field_validator("stages")
-    @classmethod
-    def _at_least_one(cls, v):
-        if not v:
-            raise ValueError("a micro-flow needs at least one stage")
-        return v
-
     @field_validator("formatters")
     @classmethod
     def _upper_keys(cls, v):
         return {str(k).upper(): f for k, f in v.items()}
+
+    @model_validator(mode="after")
+    def _stages_or_format_only(self):
+        """At least one stage, except for a format-only spec (owner decision S2-1, 2026-11-09): a
+        spec with no action, which other specs name as a `detail_spec` or render with data they
+        already hold. It has `"stages": []`, no `params`, and at least one formatter."""
+        if not self.stages:
+            if self.params:
+                raise ValueError("a micro-flow with no stages (a format-only spec) declares no params")
+            if not self.formatters:
+                raise ValueError("a micro-flow needs at least one stage, or (a format-only spec) at least one "
+                                 "formatter")
+        return self
+
+    @model_validator(mode="after")
+    def _same_as_targets(self):
+        """`same_as` names an output format written earlier in `formatters` that has columns or a
+        field of its own (never another `same_as`)."""
+        seen: Dict[str, Formatter] = {}
+        for out_type, f in self.formatters.items():
+            if f.same_as is not None:
+                target = seen.get(str(f.same_as).upper())
+                if target is None:
+                    raise ValueError(f"formatter {out_type} is same_as '{f.same_as}', which is not an output "
+                                     f"format written before it")
+                if target.same_as is not None:
+                    raise ValueError(f"formatter {out_type} is same_as '{f.same_as}', which is itself a "
+                                     f"same_as; name the formatter that holds the columns")
+            seen[out_type] = f
+        return self
 
     def to_json(self) -> str:
         return json.dumps(self.model_dump(mode="json", exclude_none=True), ensure_ascii=False)
@@ -407,6 +453,18 @@ def _analytic_allowed(name: Any) -> Tuple[bool, str]:
     return True, ""
 
 
+def additional_props_allowed(stage: Stage, name: Any) -> Tuple[bool, str]:
+    """Whether a stage may carry `additional_props` naming `name`: only a find stage, and only a
+    name on `ADDITIONAL_PROPS_HOOKS`."""
+    if stage.stage != _FIND_STAGE:
+        return False, (f"'additional_props' belongs on the find stage ({_FIND_STAGE}), not on a "
+                       f"{stage.stage} stage")
+    if not isinstance(name, str) or name not in ADDITIONAL_PROPS_HOOKS:
+        return False, (f"its additional_props hook {name!r} is not on ADDITIONAL_PROPS_HOOKS (the client "
+                       f"functions today's built-in specs name: {', '.join(sorted(ADDITIONAL_PROPS_HOOKS))})")
+    return True, ""
+
+
 def check_allowlist(mf: MicroflowV1) -> None:
     """Raise `AllowlistRefusal` naming the first stage that names something an Egeria-held spec
     may not name. Never imports or calls anything a stage names."""
@@ -415,6 +473,10 @@ def check_allowlist(mf: MicroflowV1) -> None:
         if "python" in extra or "binding" in extra or "module" in extra:
             raise AllowlistRefusal(f"stage {i} ({stage.stage}) carries a python binding; a spec held in Egeria "
                                    f"may never name one")
+        if "additional_props" in extra:
+            ok, why = additional_props_allowed(stage, extra["additional_props"])
+            if not ok:
+                raise AllowlistRefusal(f"stage {i}: {why}")
         if stage.stage == _FIND_STAGE:
             if stage.function is not None:
                 ok, why = find_method_allowed(stage.function)
@@ -465,7 +527,17 @@ def _title(key: str) -> str:
     return " ".join(w[:1].upper() + w[1:] for w in words if w) or key
 
 
-def _to_column(item: ColumnItem):
+def _to_column(item: ColumnItem, cache: Optional[Dict[Any, Any]] = None):
+    """The `Column` for a formatter's column item. With `cache` (the seed loader passes one for the whole
+    seed), an identical item yields the one shared `Column`, as the Python constants share theirs: 15,475
+    columns in the 437 shipped specs are 642 distinct ones. Nothing changes a Column after it is built."""
+    if cache is not None:
+        key = item if isinstance(item, str) else (item.get("field"), item.get("label"), item.get("format"),
+                                                  item.get("detail_spec"), repr(item.get("valid_values")))
+        col = cache.get(key)
+        if col is None:
+            col = cache[key] = _to_column(item)
+        return col
     from pyegeria.view._output_format_models import Column
     if isinstance(item, str):
         known = _column_catalog().get(item)
@@ -503,18 +575,31 @@ def microflow_to_format_set(mf: MicroflowV1, *, label: str, heading: Optional[st
                             description: str = "", target_type: Optional[str] = None,
                             aliases: Optional[List[str]] = None, family: Optional[str] = None,
                             annotations: Optional[Dict[str, List[str]]] = None,
-                            notes: Optional[List[str]] = None):
+                            question_spec: Optional[List[Any]] = None,
+                            notes: Optional[List[str]] = None,
+                            column_cache: Optional[Dict[Any, Any]] = None):
     """Convert a `microflow/1` into today's `FormatSet`. A pure function: it imports nothing a
     stage names. Raises `CannotRunYet` for stages stage 1 cannot run, `MicroflowError` for an
-    inconsistent micro-flow."""
+    inconsistent micro-flow.
+
+    A micro-flow with no stages is a format-only spec (S2-1): its `FormatSet` has no action. A find
+    stage's `additional_props` becomes `FormatSet.get_additional_props` (only a name on
+    `ADDITIONAL_PROPS_HOOKS`). Formatters joined by `same_as` become one `Format` with several types."""
     from pyegeria.view._output_format_models import ActionParameter, Format, FormatSet
 
     notes = notes if notes is not None else []
     stages = list(mf.stages)
     kinds = [s.stage for s in stages]
     binders: Dict[str, Any] = {}
+    hook: Optional[str] = None
     for i, s in enumerate(stages):
         extra = dict(s.model_extra or {})
+        if "additional_props" in extra:
+            name = extra.pop("additional_props")
+            ok, why = additional_props_allowed(s, name)
+            if not ok:
+                raise MicroflowError(f"stage {i}: {why}")
+            hook = name
         # A stage's `analytic_binders` (removed in RS-W2-3 PR-B) is passed on to the action, so the
         # ActionParameter shim drops it there and records the names, and the spec resolver warns
         # with BINDERS_DEPRECATED_PREFIX (owner decision O1-a): exactly as for a local spec. An
@@ -571,21 +656,31 @@ def microflow_to_format_set(mf: MicroflowV1, *, label: str, heading: Optional[st
         action["analytic_binders"] = binders
 
     formats = []
+    by_type: Dict[str, Any] = {}
     for out_type, f in mf.formatters.items():
+        if f.same_as is not None:
+            fmt = by_type[str(f.same_as).upper()]
+            fmt.types.append(out_type)
+            by_type[out_type] = fmt
+            continue
         if f.columns == "*":
             raise CannotRunYet(f"formatter {out_type} uses columns '*', which needs a registered shape")
         if f.columns is not None:
-            cols = [_to_column(c) for c in f.columns]
+            cols = [_to_column(c, column_cache) for c in f.columns]
         else:
-            cols = [_to_column({"field": f.field, "label": f.label} if f.label else f.field)]
-        formats.append(Format(types=[out_type], attributes=cols))
+            cols = [_to_column({"field": f.field, "label": f.label} if f.label else f.field, column_cache)]
+        fmt = Format(types=[out_type], attributes=cols)
+        formats.append(fmt)
+        by_type[out_type] = fmt
     if not formats:
         raise MicroflowError("the micro-flow has no formatters, so no output format can be rendered")
 
     return FormatSet(target_type=target_type, heading=heading or label, description=description or "",
                      aliases=list(aliases or []), family=family, formats=formats,
                      annotations=dict(annotations or {}),
-                     action=ActionParameter(**action) if action else None)
+                     action=ActionParameter(**action) if action else None,
+                     get_additional_props=ActionParameter(function=hook) if hook else None,
+                     question_spec=question_spec)
 
 
 # ── FormatSet -> microflow/1 (used to write the canonical text; W3, Dr.Egeria tests) ──
@@ -593,11 +688,30 @@ def microflow_to_format_set(mf: MicroflowV1, *, label: str, heading: Optional[st
 def format_set_to_microflow(fs) -> MicroflowV1:
     """The `microflow/1` that converts back to the same `FormatSet` action and formats. Every
     column is written as an object carrying its label (and format/detail_spec when set), so the
-    round trip does not depend on the column catalog."""
+    round trip does not depend on the column catalog.
+
+    - A spec with no action (format-only) is written with `"stages": []` (S2-1).
+    - `get_additional_props` is written as the find stage's `additional_props` (only a bare function
+      name on `ADDITIONAL_PROPS_HOOKS`; anything else raises, so nothing is dropped silently).
+    - A `Format` with several types is written once, under its first type, and `same_as` for the rest.
+    - An output type that two `Format`s both list raises: the executor uses the first, and writing
+      only that one would drop the second without a word."""
     action = fs.action
     action = action if isinstance(action, dict) or action is None else action.model_dump()
+    hook = getattr(fs, "get_additional_props", None)
+    hook = hook if isinstance(hook, dict) or hook is None else hook.model_dump()
+    hook_name: Optional[str] = None
+    if hook:
+        hook_name = hook.get("function")
+        rest = {k: v for k, v in hook.items() if k != "function" and v not in (None, [], {})}
+        if rest or not isinstance(hook_name, str) or hook_name not in ADDITIONAL_PROPS_HOOKS:
+            raise MicroflowError(f"get_additional_props {hook!r} is not a bare function on ADDITIONAL_PROPS_HOOKS, "
+                                 f"so microflow/1 cannot carry it")
+        if not (action and action.get("function")):
+            raise MicroflowError("get_additional_props needs a find stage to carry it, and the spec has none")
     if not action:
-        raise MicroflowError("the spec has no action; a format-only spec has no micro-flow")
+        return MicroflowV1.model_validate({"format": MICROFLOW_FORMAT, "params": {}, "stages": [],
+                                          "formatters": _formatters_of(fs)})
     params: Dict[str, Dict[str, Any]] = {}
     for n in action.get("required_params") or []:
         params[n] = {"type": "string", "required": True}
@@ -610,15 +724,25 @@ def format_set_to_microflow(fs) -> MicroflowV1:
         stage = {"stage": _FIND_STAGE, "function": action["function"], "params": bind}
         if fs.target_type:
             stage["type"] = fs.target_type
+        if hook_name:
+            stage["additional_props"] = hook_name
         stages.append(stage)
     if action.get("analytic_function"):
         stages.append({"stage": _ANALYTIC_STAGE, "function": action["analytic_function"],
                        "params": dict(action.get("analytic_spec_params") or {})})
+    return MicroflowV1.model_validate({"format": MICROFLOW_FORMAT, "params": params, "stages": stages,
+                                      "formatters": _formatters_of(fs)})
+
+
+def _formatters_of(fs) -> Dict[str, Dict[str, Any]]:
     formatters: Dict[str, Dict[str, Any]] = {}
     for fmt in fs.formats or []:
+        fmt = fmt if isinstance(fmt, dict) else fmt.model_dump()
         cols = []
-        for col in fmt.attributes:
-            c = col if isinstance(col, dict) else col.model_dump()
+        for c in fmt["attributes"]:
+            c = c if isinstance(c, dict) else c.model_dump()
+            if c.get("value") is not None:
+                raise MicroflowError(f"column '{c['key']}' carries a constant value, which microflow/1 cannot carry")
             item: Dict[str, Any] = {"field": c["key"], "label": c["name"]}
             if c.get("format"):
                 item["format"] = c["format"]
@@ -627,7 +751,12 @@ def format_set_to_microflow(fs) -> MicroflowV1:
             if c.get("valid_values"):
                 item["valid_values"] = c["valid_values"]
             cols.append(item)
-        for t in fmt.types:
-            formatters.setdefault(t.upper(), {"columns": cols})
-    return MicroflowV1.model_validate({"format": MICROFLOW_FORMAT, "params": params, "stages": stages,
-                                      "formatters": formatters})
+        first: Optional[str] = None
+        for t in fmt["types"]:
+            key = t.upper()
+            if key in formatters:
+                raise MicroflowError(f"output type {key} is listed by two formats; microflow/1 holds one formatter "
+                                     f"per output type")
+            formatters[key] = {"columns": cols} if first is None else {"same_as": first}
+            first = first or key
+    return formatters

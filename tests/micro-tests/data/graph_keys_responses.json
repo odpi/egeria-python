@@ -1,0 +1,853 @@
+{
+ "_recorded": "qs-view-server, read only, 2026-11-09 (pyegeria 6.2.29 work). 'zone' is one element of GovernanceOfficer.find_governance_definitions(metadata_element_subtypes=['GovernanceZone']); 'lineage' is AssetCatalog.get_asset_lineage_graph_by_guid for one asset. The platform did not yet return activityMermaidGraph, collectionMermaidMindMap, zoneProfileAnchoredMermaidPieChart, the userAccount*Profile pie charts, fieldLevelLineageGraph or localLineageGraph; the tests add those to copies of these elements.",
+ "zone": {
+  "class": "OpenMetadataRootElement",
+  "elementHeader": {
+   "class": "ElementHeader",
+   "headerVersion": 0,
+   "status": "ACTIVE",
+   "type": {
+    "typeId": "290a192b-42a7-449a-935a-269ca62cfdac",
+    "typeName": "GovernanceZone",
+    "superTypeNames": [
+     "SecurityAccessControl",
+     "GovernanceControl",
+     "GovernanceDefinition",
+     "AuthoredReferenceable",
+     "Referenceable",
+     "OpenMetadataRoot"
+    ],
+    "typeVersion": 1,
+    "typeDescription": "Defines a collection of elements that are suitable for a particular usage or are governed by a particular process.",
+    "typeCategory": "ENTITY_DEF"
+   },
+   "origin": {
+    "sourceServer": "qs-metadata-store",
+    "originCategory": "LOCAL_COHORT",
+    "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+    "homeMetadataCollectionName": "qs-metadata-store"
+   },
+   "versions": {
+    "createdBy": "secretsstorecatnpa",
+    "updatedBy": "secretsstorecatnpa",
+    "maintainedBy": [
+     "secretsstorecatnpa"
+    ],
+    "createTime": "2026-11-07T15:10:24.790+00:00",
+    "updateTime": "2026-11-07T15:10:24.790+00:00",
+    "version": 1,
+    "lastRequestId": "1f6914b1-4b30-4645-bda8-c65ebd055112"
+   },
+   "guid": "5f33bf8e-d6eb-421b-9a97-b58d56223999",
+   "anchor": {
+    "class": "ElementClassification",
+    "headerVersion": 0,
+    "status": "ACTIVE",
+    "type": {
+     "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+     "typeName": "Anchors",
+     "typeVersion": 1,
+     "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+     "typeCategory": "CLASSIFICATION_DEF"
+    },
+    "origin": {
+     "sourceServer": "qs-metadata-store",
+     "originCategory": "LOCAL_COHORT",
+     "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+     "homeMetadataCollectionName": "qs-metadata-store"
+    },
+    "versions": {
+     "createdBy": "secretsstorecatnpa",
+     "updatedBy": "secretsstorecatnpa",
+     "maintainedBy": [
+      "secretsstorecatnpa"
+     ],
+     "createTime": "2026-11-07T15:10:24.786+00:00",
+     "updateTime": "2026-11-07T15:10:24.786+00:00",
+     "version": 1,
+     "lastRequestId": "1f6914b1-4b30-4645-bda8-c65ebd055112"
+    },
+    "classificationOrigin": "ASSIGNED",
+    "classificationName": "Anchors",
+    "classificationProperties": {
+     "class": "AnchorsProperties",
+     "typeName": "Anchors",
+     "anchorGUID": "68894392-8508-4252-bde6-ed378e2e3e69",
+     "anchorTypeName": "SecretsCollection",
+     "anchorDomainName": "Asset"
+    }
+   },
+   "zoneMembershipProfile": {
+    "class": "ElementClassification",
+    "headerVersion": 0,
+    "status": "ACTIVE",
+    "type": {
+     "typeId": "b01d574f-5987-4849-a6b3-1f27b79e8ed5",
+     "typeName": "ZoneMembershipProfile",
+     "typeVersion": 2,
+     "typeDescription": "Statistics covering the membership of the governance zone.",
+     "typeCategory": "CLASSIFICATION_DEF"
+    },
+    "origin": {
+     "sourceServer": "qs-metadata-store",
+     "originCategory": "LOCAL_COHORT",
+     "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+     "homeMetadataCollectionName": "qs-metadata-store"
+    },
+    "versions": {
+     "createdBy": "egeriagovernanceengine",
+     "updatedBy": "egeriagovernanceengine",
+     "maintainedBy": [
+      "egeriagovernanceengine"
+     ],
+     "createTime": "2026-11-07T15:10:41.997+00:00",
+     "updateTime": "2026-11-09T17:44:15.691+00:00",
+     "version": 94,
+     "lastRequestId": "dc170caa-c370-4be1-b867-25a089ed4cc3"
+    },
+    "classificationOrigin": "ASSIGNED",
+    "classificationName": "ZoneMembershipProfile",
+    "classificationProperties": {
+     "class": "ZoneMembershipProfileProperties",
+     "typeName": "ZoneMembershipProfile",
+     "totalMembership": 9,
+     "typeMembership": {
+      "SoftwareServer": 9
+     },
+     "anchoredTotalMembership": 0,
+     "allTotalMembership": 9,
+     "allTypeMembership": {
+      "SoftwareServer": 9
+     },
+     "analysisTime": "2026-11-09T17:44:15.573+00:00"
+    }
+   }
+  },
+  "definedInSecretsCollection": [
+   {
+    "class": "RelatedMetadataElementSummary",
+    "relationshipHeader": {
+     "class": "ElementHeader",
+     "headerVersion": 0,
+     "status": "ACTIVE",
+     "type": {
+      "typeId": "f7416148-c8ca-42e4-bbf0-2e536b7ecd21",
+      "typeName": "ResourcePermissions",
+      "typeVersion": 1,
+      "typeDescription": "Links a secrets collection to a security access control.",
+      "typeCategory": "RELATIONSHIP_DEF"
+     },
+     "origin": {
+      "sourceServer": "qs-metadata-store",
+      "originCategory": "LOCAL_COHORT",
+      "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+      "homeMetadataCollectionName": "qs-metadata-store"
+     },
+     "versions": {
+      "createdBy": "secretsstorecatnpa",
+      "updatedBy": "secretsstorecatnpa",
+      "maintainedBy": [
+       "secretsstorecatnpa"
+      ],
+      "createTime": "2026-11-07T15:10:24.846+00:00",
+      "updateTime": "2026-11-07T15:10:24.846+00:00",
+      "version": 1,
+      "lastRequestId": "1f6914b1-4b30-4645-bda8-c65ebd055112"
+     },
+     "guid": "399d8694-4adc-4ef1-86c4-8cf955d98567"
+    },
+    "relatedElement": {
+     "elementHeader": {
+      "class": "ElementHeader",
+      "headerVersion": 0,
+      "status": "ACTIVE",
+      "type": {
+       "typeId": "979d97dd-6782-4648-8e2a-8982994533e6",
+       "typeName": "SecretsCollection",
+       "superTypeNames": [
+        "DataSet",
+        "DataAsset",
+        "Asset",
+        "Referenceable",
+        "OpenMetadataRoot"
+       ],
+       "typeVersion": 1,
+       "typeDescription": "A data set containing authentication and related security information.",
+       "typeCategory": "ENTITY_DEF"
+      },
+      "origin": {
+       "sourceServer": "qs-metadata-store",
+       "originCategory": "LOCAL_COHORT",
+       "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+       "homeMetadataCollectionName": "qs-metadata-store"
+      },
+      "versions": {
+       "createdBy": "secretsstorecatnpa",
+       "updatedBy": "secretsstorecatnpa",
+       "maintainedBy": [
+        "secretsstorecatnpa"
+       ],
+       "createTime": "2026-11-07T15:09:41.796+00:00",
+       "updateTime": "2026-11-07T15:09:41.796+00:00",
+       "version": 1,
+       "lastRequestId": "1f6914b1-4b30-4645-bda8-c65ebd055112"
+      },
+      "guid": "68894392-8508-4252-bde6-ed378e2e3e69",
+      "anchor": {
+       "class": "ElementClassification",
+       "headerVersion": 0,
+       "status": "ACTIVE",
+       "type": {
+        "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+        "typeName": "Anchors",
+        "typeVersion": 1,
+        "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+        "typeCategory": "CLASSIFICATION_DEF"
+       },
+       "origin": {
+        "sourceServer": "qs-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+        "homeMetadataCollectionName": "qs-metadata-store"
+       },
+       "versions": {
+        "createdBy": "secretsstorecatnpa",
+        "updatedBy": "secretsstorecatnpa",
+        "maintainedBy": [
+         "secretsstorecatnpa"
+        ],
+        "createTime": "2026-11-07T15:09:41.789+00:00",
+        "updateTime": "2026-11-07T15:09:41.789+00:00",
+        "version": 1,
+        "lastRequestId": "1f6914b1-4b30-4645-bda8-c65ebd055112"
+       },
+       "classificationOrigin": "ASSIGNED",
+       "classificationName": "Anchors",
+       "classificationProperties": {
+        "class": "AnchorsProperties",
+        "typeName": "Anchors",
+        "anchorTypeName": "SecretsCollection",
+        "anchorDomainName": "Asset"
+       }
+      },
+      "usageActivity": {
+       "class": "ElementClassification",
+       "headerVersion": 0,
+       "status": "ACTIVE",
+       "type": {
+        "typeId": "cfae23a1-8020-431f-a603-1f1bb0e01cb3",
+        "typeName": "UsageActivity",
+        "typeVersion": 1,
+        "typeDescription": "Describes the usage activity around an anchor element and its anchored elements: how often it is explicitly retrieved, found through searches, has its properties updated, and has its attachments and feedback updated or deleted.",
+        "typeCategory": "CLASSIFICATION_DEF"
+       },
+       "origin": {
+        "sourceServer": "qs-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+        "homeMetadataCollectionName": "qs-metadata-store"
+       },
+       "versions": {
+        "createdBy": "pepysnpa",
+        "updatedBy": "pepysnpa",
+        "maintainedBy": [
+         "pepysnpa"
+        ],
+        "createTime": "2026-11-07T16:17:45.461+00:00",
+        "updateTime": "2026-11-09T16:06:14.907+00:00",
+        "version": 10,
+        "lastRequestId": "9cb9e734-9c44-49fb-9f9f-7810807c2fa5"
+       },
+       "classificationOrigin": "ASSIGNED",
+       "classificationName": "UsageActivity",
+       "classificationProperties": {
+        "class": "UsageActivityProperties",
+        "typeName": "UsageActivity",
+        "explicitGetCount": 0,
+        "findCount": 29,
+        "updatePropertyCount": 0,
+        "updateAttachmentCount": 0,
+        "updateFeedbackCount": 0,
+        "deleteAttachmentCount": 0,
+        "deleteFeedbackCount": 0
+       }
+      },
+      "userAccountProfile": {
+       "class": "ElementClassification",
+       "headerVersion": 0,
+       "status": "ACTIVE",
+       "type": {
+        "typeId": "131d849f-f3c4-4ec8-b130-47a5e32affa8",
+        "typeName": "UserAccountProfile",
+        "typeVersion": 1,
+        "typeDescription": "A description of the types of user accounts and their status found in the attached secrets collection.",
+        "typeCategory": "CLASSIFICATION_DEF"
+       },
+       "origin": {
+        "sourceServer": "qs-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+        "homeMetadataCollectionName": "qs-metadata-store"
+       },
+       "versions": {
+        "createdBy": "secretsstorecatnpa",
+        "updatedBy": "secretsstorecatnpa",
+        "maintainedBy": [
+         "secretsstorecatnpa"
+        ],
+        "createTime": "2026-11-07T15:09:41.993+00:00",
+        "updateTime": "2026-11-07T15:09:41.993+00:00",
+        "version": 1,
+        "lastRequestId": "1f6914b1-4b30-4645-bda8-c65ebd055112"
+       },
+       "classificationOrigin": "ASSIGNED",
+       "classificationName": "UserAccountProfile",
+       "classificationProperties": {
+        "class": "UserAccountProfileProperties",
+        "typeName": "UserAccountProfile",
+        "userAccountCount": 329,
+        "employeeAccountCount": 243,
+        "contractorAccountCount": 2,
+        "externalAccountCount": 5,
+        "digitalAccountCount": 79,
+        "activeAccountCount": 329,
+        "expiredAccountCount": 0,
+        "lockedAccountCount": 0,
+        "disabledAccountCount": 0,
+        "userAccountTypes": {
+         "Employee": 243,
+         "Contractor": 2,
+         "External": 5,
+         "Digital": 79
+        },
+        "userAccountStatuses": {
+         "Locked": 0,
+         "Prepared": 0,
+         "Available": 329,
+         "Disabled": 0
+        }
+       }
+      }
+     },
+     "properties": {
+      "class": "SecretsCollectionProperties",
+      "typeName": "SecretsCollection",
+      "qualifiedName": "SecretsCollection::2cf9aa3c-6537-4983-8282-162e2dee2961::cocoUserDirectory",
+      "displayName": "cocoUserDirectory",
+      "additionalProperties": {
+       "refreshTimeInterval": "10"
+      },
+      "resourceName": "cocoUserDirectory"
+     }
+    },
+    "relatedElementAtEnd1": true
+   }
+  ],
+  "properties": {
+   "class": "GovernanceZoneProperties",
+   "typeName": "GovernanceZone",
+   "qualifiedName": "GovernanceZone::68894392-8508-4252-bde6-ed378e2e3e69::sustainability",
+   "identifier": "sustainability",
+   "displayName": "Sustainability Zone",
+   "description": "Resources used to build reports that illustrate the status of Coco Pharmaceuticals' greenhouse gas emissions and sustainability initiatives.",
+   "domainIdentifier": 9,
+   "criteria": "Activity data that relates to sustainability."
+  },
+  "mermaidGraph": "---\ntitle: GovernanceZone - Sustainability Zone [5f33bf8e-d6eb-421b-9a97-b58d56223999]\n---\nflowchart TD\n%%{init: {\"flowchart\": {\"htmlLabels\": false}} }%%\n\n1@{ shape: rounded, label: \"*Governance Zone*\n**Sustainability Zone**\"}\n2@{ shape: cyl, label: \"*Secrets Collection*\n**cocoUserDirectory**\"}\n2==>|\"Resource Permissions\"|1\nstyle 1 color:#000000, fill:#e0ab18, stroke:#004563\nstyle 2 color:#000000, fill:#BDB76B, stroke:#004563\n",
+  "zoneProfileMermaidPieChart": "pie\ntitle Membership of Sustainability Zone\n\"SoftwareServer (9)\" : 9\n",
+  "zoneProfileAllMermaidPieChart": "pie\ntitle All Elements of Sustainability Zone\n\"SoftwareServer (9)\" : 9\n"
+ },
+ "lineage": {
+  "class": "AssetLineageGraph",
+  "elementHeader": {
+   "class": "ElementHeader",
+   "headerVersion": 0,
+   "status": "ACTIVE",
+   "type": {
+    "typeId": "206a6e44-ffe7-408b-8e59-79842d362776",
+    "typeName": "GovernanceActionProcessInstance",
+    "superTypeNames": [
+     "TransientEmbeddedProcess",
+     "EmbeddedProcess",
+     "Action",
+     "Process",
+     "Asset",
+     "Referenceable",
+     "OpenMetadataRoot"
+    ],
+    "typeVersion": 1,
+    "typeDescription": "Represents a single run of a governance action process.  It is linked to the parent governance action process using the GovernedBy relationship.",
+    "typeCategory": "ENTITY_DEF"
+   },
+   "origin": {
+    "sourceServer": "qs-metadata-store",
+    "originCategory": "LOCAL_COHORT",
+    "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+    "homeMetadataCollectionName": "qs-metadata-store"
+   },
+   "versions": {
+    "createdBy": "baudotnpa",
+    "updatedBy": "egeriagovernanceengine",
+    "maintainedBy": [
+     "baudotnpa",
+     "egeriagovernanceengine"
+    ],
+    "createTime": "2026-11-09T17:57:09.491+00:00",
+    "updateTime": "2026-11-09T17:57:14.984+00:00",
+    "version": 4,
+    "lastRequestId": "b8cedf83-7396-4801-adcc-697621dfde12"
+   },
+   "guid": "6605ec5b-7b10-4bef-96b0-75015518f450",
+   "anchor": {
+    "class": "ElementClassification",
+    "headerVersion": 0,
+    "status": "ACTIVE",
+    "type": {
+     "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+     "typeName": "Anchors",
+     "typeVersion": 1,
+     "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+     "typeCategory": "CLASSIFICATION_DEF"
+    },
+    "origin": {
+     "sourceServer": "qs-metadata-store",
+     "originCategory": "LOCAL_COHORT",
+     "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+     "homeMetadataCollectionName": "qs-metadata-store"
+    },
+    "versions": {
+     "createdBy": "baudotnpa",
+     "updatedBy": "baudotnpa",
+     "maintainedBy": [
+      "baudotnpa"
+     ],
+     "createTime": "2026-11-09T17:57:09.483+00:00",
+     "updateTime": "2026-11-09T17:57:09.483+00:00",
+     "version": 1,
+     "lastRequestId": "5f961c08-c252-4b84-95c7-3c2c64697747"
+    },
+    "classificationOrigin": "ASSIGNED",
+    "classificationName": "Anchors",
+    "classificationProperties": {
+     "class": "AnchorsProperties",
+     "typeName": "Anchors",
+     "anchorGUID": "16421df9-c1e5-4887-b033-788fb3ce7d7c",
+     "anchorTypeName": "ProvisioningActionProcess",
+     "anchorDomainName": "AuthoredReferenceable"
+    }
+   }
+  },
+  "requestedActions": [
+   {
+    "class": "RelatedMetadataElementSummary",
+    "relationshipHeader": {
+     "class": "ElementHeader",
+     "headerVersion": 0,
+     "status": "ACTIVE",
+     "type": {
+      "typeId": "a0b7ba50-4c97-4b76-9a7d-c6a00e1be646",
+      "typeName": "ActionRequester",
+      "superTypeNames": [
+       "LineageRelationship",
+       "LabeledRelationship"
+      ],
+      "typeVersion": 2,
+      "typeDescription": "The source of the action, such as a person, meeting or a governance action.",
+      "typeCategory": "RELATIONSHIP_DEF"
+     },
+     "origin": {
+      "sourceServer": "qs-metadata-store",
+      "originCategory": "LOCAL_COHORT",
+      "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+      "homeMetadataCollectionName": "qs-metadata-store"
+     },
+     "versions": {
+      "createdBy": "baudotnpa",
+      "updatedBy": "baudotnpa",
+      "maintainedBy": [
+       "baudotnpa"
+      ],
+      "createTime": "2026-11-09T17:57:12.323+00:00",
+      "updateTime": "2026-11-09T17:57:12.323+00:00",
+      "version": 1,
+      "lastRequestId": "5f961c08-c252-4b84-95c7-3c2c64697747"
+     },
+     "guid": "30cff080-d2c1-4175-af9c-60e28ab10cfe"
+    },
+    "relatedElement": {
+     "elementHeader": {
+      "class": "ElementHeader",
+      "headerVersion": 0,
+      "status": "ACTIVE",
+      "type": {
+       "typeId": "c976d88a-2b11-4b40-b972-c38d41bfc6be",
+       "typeName": "EngineAction",
+       "superTypeNames": [
+        "Action",
+        "Process",
+        "Asset",
+        "Referenceable",
+        "OpenMetadataRoot"
+       ],
+       "typeVersion": 2,
+       "typeDescription": "An engine action that has been created to support the active governance of the open metadata ecosystem and/or digital landscape.",
+       "typeCategory": "ENTITY_DEF"
+      },
+      "origin": {
+       "sourceServer": "qs-metadata-store",
+       "originCategory": "LOCAL_COHORT",
+       "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+       "homeMetadataCollectionName": "qs-metadata-store"
+      },
+      "versions": {
+       "createdBy": "baudotnpa",
+       "updatedBy": "egeriagovernanceengine",
+       "maintainedBy": [
+        "baudotnpa",
+        "egeriagovernanceengine"
+       ],
+       "createTime": "2026-11-09T17:57:10.043+00:00",
+       "updateTime": "2026-11-09T17:57:14.712+00:00",
+       "version": 4,
+       "lastRequestId": "b8cedf83-7396-4801-adcc-697621dfde12"
+      },
+      "guid": "d4f23ebb-36ae-47e8-b1f3-0f711eb060ad",
+      "anchor": {
+       "class": "ElementClassification",
+       "headerVersion": 0,
+       "status": "ACTIVE",
+       "type": {
+        "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+        "typeName": "Anchors",
+        "typeVersion": 1,
+        "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+        "typeCategory": "CLASSIFICATION_DEF"
+       },
+       "origin": {
+        "sourceServer": "qs-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+        "homeMetadataCollectionName": "qs-metadata-store"
+       },
+       "versions": {
+        "createdBy": "baudotnpa",
+        "updatedBy": "baudotnpa",
+        "maintainedBy": [
+         "baudotnpa"
+        ],
+        "createTime": "2026-11-09T17:57:10.035+00:00",
+        "updateTime": "2026-11-09T17:57:10.035+00:00",
+        "version": 1,
+        "lastRequestId": "5f961c08-c252-4b84-95c7-3c2c64697747"
+       },
+       "classificationOrigin": "ASSIGNED",
+       "classificationName": "Anchors",
+       "classificationProperties": {
+        "class": "AnchorsProperties",
+        "typeName": "Anchors",
+        "anchorGUID": "6605ec5b-7b10-4bef-96b0-75015518f450",
+        "anchorTypeName": "GovernanceActionProcessInstance",
+        "anchorDomainName": "Asset"
+       }
+      }
+     },
+     "properties": {
+      "class": "EngineActionProperties",
+      "typeName": "EngineAction",
+      "qualifiedName": "ProvisioningActionProcess::provisioningGovernanceActionType::b23ba8f1-dd5a-40d5-a154-ad00475b996b:processStep1::7269bb32-1650-4102-9c6c-53a3e5a0c771",
+      "displayName": "provision-subscription (EgeriaGovernance)",
+      "description": "Governance Action Service that provisions the data identified in a digital subscription to the requested destination.",
+      "requestedStartTime": "2026-11-09T17:57:09.737+00:00",
+      "startTime": "2026-11-09T17:57:14.616+00:00",
+      "activityStatus": "IN_PROGRESS",
+      "domainIdentifier": 8,
+      "executorEngineGUID": "81d0292d-f074-41e3-93ec-dbecc45cc0c1",
+      "executorEngineName": "EgeriaGovernance",
+      "processName": "ProvisioningActionProcess::provisioningGovernanceActionType::b23ba8f1-dd5a-40d5-a154-ad00475b996b@1794247029462::6224fcbf-72e9-41cf-ad78-8518f15d0676",
+      "processStepGUID": "f261b73a-8683-4013-8a3d-8efa184cc8da",
+      "processStepName": "ProvisioningActionProcess::provisioningGovernanceActionType::b23ba8f1-dd5a-40d5-a154-ad00475b996b:processStep1",
+      "requesterUserId": "baudotnpa",
+      "requestType": "provision-subscription",
+      "requestParameters": {
+       "topLevelProcessLineageOnly": "true"
+      },
+      "processingEngineUserId": "egeriagovernanceengine"
+     }
+    },
+    "relatedElementAtEnd1": false
+   }
+  ],
+  "properties": {
+   "class": "GovernanceActionProcessInstanceProperties",
+   "typeName": "GovernanceActionProcessInstance",
+   "qualifiedName": "ProvisioningActionProcess::provisioningGovernanceActionType::b23ba8f1-dd5a-40d5-a154-ad00475b996b@1794247029462::6224fcbf-72e9-41cf-ad78-8518f15d0676",
+   "displayName": "provisioningGovernanceActionType@Mon Nov 09 17:57:09 GMT 2026",
+   "requestedTime": "2026-11-09T17:57:09.462+00:00",
+   "requestedStartTime": "2026-11-09T17:57:09.737+00:00",
+   "startTime": "2026-11-09T17:57:14.616+00:00",
+   "activityStatus": "IN_PROGRESS"
+  },
+  "mermaidGraph": "---\ntitle: GovernanceActionProcessInstance - provisioningGovernanceActionType@Mon Nov 09 17:57:09 GMT 2026 [6605ec5b-7b10-4bef-96b0-75015518f450]\n---\nflowchart TD\n%%{init: {\"flowchart\": {\"htmlLabels\": false}} }%%\n\n1@{ shape: rounded, label: \"*Governance Action Process Instance*\n**provisioningGovernanceActionType@Mon Nov 09 17:57:09 GMT 2026**\"}\n2@{ shape: trap-t, label: \"*Engine Action*\n**provision-subscription (EgeriaGovernance)**\"}\n1==>|\"Action Requester\"|2\nstyle 1 color:#000000, fill:#e0ab18, stroke:#004563\nstyle 2 color:#000000, fill:#7fffd4, stroke:#000000\n",
+  "upstreamRelationships": [],
+  "downstreamRelationships": [
+   {
+    "class": "RelatedMetadataNodeSummary",
+    "relationshipHeader": {
+     "class": "ElementHeader",
+     "headerVersion": 0,
+     "status": "ACTIVE",
+     "type": {
+      "typeId": "a0b7ba50-4c97-4b76-9a7d-c6a00e1be646",
+      "typeName": "ActionRequester",
+      "superTypeNames": [
+       "LineageRelationship",
+       "LabeledRelationship"
+      ],
+      "typeVersion": 2,
+      "typeDescription": "The source of the action, such as a person, meeting or a governance action.",
+      "typeCategory": "RELATIONSHIP_DEF"
+     },
+     "origin": {
+      "sourceServer": "qs-metadata-store",
+      "originCategory": "LOCAL_COHORT",
+      "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+      "homeMetadataCollectionName": "qs-metadata-store"
+     },
+     "versions": {
+      "createdBy": "baudotnpa",
+      "updatedBy": "baudotnpa",
+      "maintainedBy": [
+       "baudotnpa"
+      ],
+      "createTime": "2026-11-09T17:57:12.323+00:00",
+      "updateTime": "2026-11-09T17:57:12.323+00:00",
+      "version": 1,
+      "lastRequestId": "5f961c08-c252-4b84-95c7-3c2c64697747"
+     },
+     "guid": "30cff080-d2c1-4175-af9c-60e28ab10cfe"
+    },
+    "relatedElement": {
+     "elementHeader": {
+      "class": "ElementHeader",
+      "headerVersion": 0,
+      "status": "ACTIVE",
+      "type": {
+       "typeId": "c976d88a-2b11-4b40-b972-c38d41bfc6be",
+       "typeName": "EngineAction",
+       "superTypeNames": [
+        "Action",
+        "Process",
+        "Asset",
+        "Referenceable",
+        "OpenMetadataRoot"
+       ],
+       "typeVersion": 2,
+       "typeDescription": "An engine action that has been created to support the active governance of the open metadata ecosystem and/or digital landscape.",
+       "typeCategory": "ENTITY_DEF"
+      },
+      "origin": {
+       "sourceServer": "qs-metadata-store",
+       "originCategory": "LOCAL_COHORT",
+       "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+       "homeMetadataCollectionName": "qs-metadata-store"
+      },
+      "versions": {
+       "createdBy": "baudotnpa",
+       "updatedBy": "egeriagovernanceengine",
+       "maintainedBy": [
+        "baudotnpa",
+        "egeriagovernanceengine"
+       ],
+       "createTime": "2026-11-09T17:57:10.043+00:00",
+       "updateTime": "2026-11-09T17:57:14.712+00:00",
+       "version": 4,
+       "lastRequestId": "b8cedf83-7396-4801-adcc-697621dfde12"
+      },
+      "guid": "d4f23ebb-36ae-47e8-b1f3-0f711eb060ad",
+      "anchor": {
+       "class": "ElementClassification",
+       "headerVersion": 0,
+       "status": "ACTIVE",
+       "type": {
+        "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+        "typeName": "Anchors",
+        "typeVersion": 1,
+        "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+        "typeCategory": "CLASSIFICATION_DEF"
+       },
+       "origin": {
+        "sourceServer": "qs-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+        "homeMetadataCollectionName": "qs-metadata-store"
+       },
+       "versions": {
+        "createdBy": "baudotnpa",
+        "updatedBy": "baudotnpa",
+        "maintainedBy": [
+         "baudotnpa"
+        ],
+        "createTime": "2026-11-09T17:57:10.035+00:00",
+        "updateTime": "2026-11-09T17:57:10.035+00:00",
+        "version": 1,
+        "lastRequestId": "5f961c08-c252-4b84-95c7-3c2c64697747"
+       },
+       "classificationOrigin": "ASSIGNED",
+       "classificationName": "Anchors",
+       "classificationProperties": {
+        "class": "AnchorsProperties",
+        "typeName": "Anchors",
+        "anchorGUID": "6605ec5b-7b10-4bef-96b0-75015518f450",
+        "anchorTypeName": "GovernanceActionProcessInstance",
+        "anchorDomainName": "Asset"
+       }
+      }
+     },
+     "properties": {
+      "class": "EngineActionProperties",
+      "typeName": "EngineAction",
+      "qualifiedName": "ProvisioningActionProcess::provisioningGovernanceActionType::b23ba8f1-dd5a-40d5-a154-ad00475b996b:processStep1::7269bb32-1650-4102-9c6c-53a3e5a0c771",
+      "displayName": "provision-subscription (EgeriaGovernance)",
+      "description": "Governance Action Service that provisions the data identified in a digital subscription to the requested destination.",
+      "requestedStartTime": "2026-11-09T17:57:09.737+00:00",
+      "startTime": "2026-11-09T17:57:14.616+00:00",
+      "activityStatus": "IN_PROGRESS",
+      "domainIdentifier": 8,
+      "executorEngineGUID": "81d0292d-f074-41e3-93ec-dbecc45cc0c1",
+      "executorEngineName": "EgeriaGovernance",
+      "processName": "ProvisioningActionProcess::provisioningGovernanceActionType::b23ba8f1-dd5a-40d5-a154-ad00475b996b@1794247029462::6224fcbf-72e9-41cf-ad78-8518f15d0676",
+      "processStepGUID": "f261b73a-8683-4013-8a3d-8efa184cc8da",
+      "processStepName": "ProvisioningActionProcess::provisioningGovernanceActionType::b23ba8f1-dd5a-40d5-a154-ad00475b996b:processStep1",
+      "requesterUserId": "baudotnpa",
+      "requestType": "provision-subscription",
+      "requestParameters": {
+       "topLevelProcessLineageOnly": "true"
+      },
+      "processingEngineUserId": "egeriagovernanceengine"
+     }
+    },
+    "relatedElementAtEnd1": false,
+    "startingElementGUID": "6605ec5b-7b10-4bef-96b0-75015518f450"
+   }
+  ],
+  "internalRelationships": [],
+  "hopsFromStart": 0,
+  "hopLimitReached": false,
+  "linkedAssets": [
+   {
+    "class": "AssetLineageGraphNode",
+    "elementHeader": {
+     "class": "ElementHeader",
+     "headerVersion": 0,
+     "status": "ACTIVE",
+     "type": {
+      "typeId": "c976d88a-2b11-4b40-b972-c38d41bfc6be",
+      "typeName": "EngineAction",
+      "superTypeNames": [
+       "Action",
+       "Process",
+       "Asset",
+       "Referenceable",
+       "OpenMetadataRoot"
+      ],
+      "typeVersion": 2,
+      "typeDescription": "An engine action that has been created to support the active governance of the open metadata ecosystem and/or digital landscape.",
+      "typeCategory": "ENTITY_DEF"
+     },
+     "origin": {
+      "sourceServer": "qs-metadata-store",
+      "originCategory": "LOCAL_COHORT",
+      "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+      "homeMetadataCollectionName": "qs-metadata-store"
+     },
+     "versions": {
+      "createdBy": "baudotnpa",
+      "updatedBy": "egeriagovernanceengine",
+      "maintainedBy": [
+       "baudotnpa",
+       "egeriagovernanceengine"
+      ],
+      "createTime": "2026-11-09T17:57:10.043+00:00",
+      "updateTime": "2026-11-09T17:57:14.712+00:00",
+      "version": 4,
+      "lastRequestId": "b8cedf83-7396-4801-adcc-697621dfde12"
+     },
+     "guid": "d4f23ebb-36ae-47e8-b1f3-0f711eb060ad",
+     "anchor": {
+      "class": "ElementClassification",
+      "headerVersion": 0,
+      "status": "ACTIVE",
+      "type": {
+       "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+       "typeName": "Anchors",
+       "typeVersion": 1,
+       "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+       "typeCategory": "CLASSIFICATION_DEF"
+      },
+      "origin": {
+       "sourceServer": "qs-metadata-store",
+       "originCategory": "LOCAL_COHORT",
+       "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+       "homeMetadataCollectionName": "qs-metadata-store"
+      },
+      "versions": {
+       "createdBy": "baudotnpa",
+       "updatedBy": "baudotnpa",
+       "maintainedBy": [
+        "baudotnpa"
+       ],
+       "createTime": "2026-11-09T17:57:10.035+00:00",
+       "updateTime": "2026-11-09T17:57:10.035+00:00",
+       "version": 1,
+       "lastRequestId": "5f961c08-c252-4b84-95c7-3c2c64697747"
+      },
+      "classificationOrigin": "ASSIGNED",
+      "classificationName": "Anchors",
+      "classificationProperties": {
+       "class": "AnchorsProperties",
+       "typeName": "Anchors",
+       "anchorGUID": "6605ec5b-7b10-4bef-96b0-75015518f450",
+       "anchorTypeName": "GovernanceActionProcessInstance",
+       "anchorDomainName": "Asset"
+      }
+     }
+    },
+    "properties": {
+     "class": "EngineActionProperties",
+     "typeName": "EngineAction",
+     "qualifiedName": "ProvisioningActionProcess::provisioningGovernanceActionType::b23ba8f1-dd5a-40d5-a154-ad00475b996b:processStep1::7269bb32-1650-4102-9c6c-53a3e5a0c771",
+     "displayName": "provision-subscription (EgeriaGovernance)",
+     "description": "Governance Action Service that provisions the data identified in a digital subscription to the requested destination.",
+     "requestedStartTime": "2026-11-09T17:57:09.737+00:00",
+     "startTime": "2026-11-09T17:57:14.616+00:00",
+     "activityStatus": "IN_PROGRESS",
+     "domainIdentifier": 8,
+     "executorEngineGUID": "81d0292d-f074-41e3-93ec-dbecc45cc0c1",
+     "executorEngineName": "EgeriaGovernance",
+     "processName": "ProvisioningActionProcess::provisioningGovernanceActionType::b23ba8f1-dd5a-40d5-a154-ad00475b996b@1794247029462::6224fcbf-72e9-41cf-ad78-8518f15d0676",
+     "processStepGUID": "f261b73a-8683-4013-8a3d-8efa184cc8da",
+     "processStepName": "ProvisioningActionProcess::provisioningGovernanceActionType::b23ba8f1-dd5a-40d5-a154-ad00475b996b:processStep1",
+     "requesterUserId": "baudotnpa",
+     "requestType": "provision-subscription",
+     "requestParameters": {
+      "topLevelProcessLineageOnly": "true"
+     },
+     "processingEngineUserId": "egeriagovernanceengine"
+    },
+    "hopsFromStart": 1,
+    "hopLimitReached": false
+   }
+  ],
+  "lineageRelationships": [
+   {
+    "relationshipTypes": [
+     "ActionRequester"
+    ],
+    "end1AssetGUID": "6605ec5b-7b10-4bef-96b0-75015518f450",
+    "end2AssetGUID": "d4f23ebb-36ae-47e8-b1f3-0f711eb060ad"
+   }
+  ],
+  "fullLineageMermaidGraph": "---\ntitle: Lineage Analysis Graph for Asset - provisioningGovernanceActionType@Mon Nov 09 17:57:09 GMT 2026 [6605ec5b-7b10-4bef-96b0-75015518f450]\n---\nflowchart TD\n%%{init: {\"flowchart\": {\"htmlLabels\": false}} }%%\n\n1@{ shape: hex, label: \"*Governance Action Process Instance*\n**provisioningGovernanceActionType@Mon Nov 09 17:57:09 GMT 2026**\"}\n2@{ shape: trap-t, label: \"*Engine Action*\n**provision-subscription (EgeriaGovernance)**\"}\n1==>|\"ActionRequester\"|2\nstyle 1 color:#000000, fill:#e0ab18, stroke:#004563\nstyle 2 color:#000000, fill:#7fffd4, stroke:#000000\n",
+  "edgeMermaidGraph": "---\ntitle: Lineage Edge Analysis Graph for Asset - provisioningGovernanceActionType@Mon Nov 09 17:57:09 GMT 2026 [6605ec5b-7b10-4bef-96b0-75015518f450]\n---\nflowchart LR\n%%{init: {\"flowchart\": {\"htmlLabels\": false}} }%%\n\n1@{ shape: subproc, label: \"*Governance Action Process Instance*\n**provisioningGovernanceActionType@Mon Nov 09 17:57:09 GMT 2026**\"}\n2@{ shape: trap-t, label: \"*Engine Action*\n**provision-subscription (EgeriaGovernance)**\"}\n1==>|\"UltimateDestination\"|2\nstyle 1 color:#000000, fill:#BDB76B, stroke:#004563\nstyle 2 color:#000000, fill:#7fffd4, stroke:#000000\n"
+ }
+}

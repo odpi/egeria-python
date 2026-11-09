@@ -1,0 +1,49 @@
+{
+ "format": "pyegeria-seed/1",
+ "family": "AutomatedCuration",
+ "specs": [
+  {
+   "label": "Engine-Actions",
+   "envelope": {
+    "heading": "Engine Actions",
+    "description": "A Display of Engine Actions",
+    "family": "AutomatedCuration",
+    "target_type_name": "Referenceable",
+    "aliases": ["Engine Actions"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "guid", "label": "GUID", "format": true},
+       {"field": "metadata_collection_id", "label": "Metadata Collection ID", "format": true},
+       {"field": "metadata_collection_name", "label": "Metadata Collection Name", "format": true},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "created_by", "label": "Created By"},
+       {"field": "create_time", "label": "Create Time"},
+       {"field": "updated_by", "label": "Updated By"},
+       {"field": "update_time", "label": "Update Time"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "version", "label": "Version"},
+       {"field": "type_name", "label": "Open Metadata Type Name"},
+       {"field": "action_targets", "label": "Action Targets", "detail_spec": "Action-Targets-Detail"},
+       {"field": "action_request_sources", "label": "Action Request Sources", "detail_spec": "Action-Request-Sources-Detail"}
+      ]
+     }
+    }
+   }
+  }
+ ]
+}

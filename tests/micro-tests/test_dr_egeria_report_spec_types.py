@@ -44,6 +44,7 @@ class _FakeClient(_Recorder):
         super().__init__()
         self.data_designer = _Recorder()
         self.schema_maker = _Recorder()
+        self.classification_manager = _Recorder()
 
 
 def _processor(cls, verb, object_type, om_type, attributes, as_is=None):

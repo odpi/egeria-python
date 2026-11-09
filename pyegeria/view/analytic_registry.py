@@ -1761,10 +1761,11 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         inputs=["egeria_client:MetadataExpert", "egeria_client:ClassificationExplorer"],
         description="Approved-but-unassigned glossary terms -- a term with no SemanticAssignment "
                     "relationship to anything was authored but never put to use grounding the "
-                    "catalog. One bounded SemanticAssignment fetch, distinct GlossaryTerm-end GUID "
-                    "count is the 'referenced' set; orphan = term total - referenced. Takes two "
+                    "catalog. Every SemanticAssignment relationship, paged until Egeria returns an empty "
+                    "page; the distinct GlossaryTerm-end GUID count is the 'referenced' set (Egeria cannot "
+                    "count distinct relationship ends natively); orphan = term total - referenced. Takes two "
                     "leading clients (mgr, ce), same convention as semantic_grounding. "
-                    "Cost: one count plus one relationship scan, paged until Egeria returns an empty page, seconds.",
+                    "Cost: one viewer count, run at the same time as one relationship scan, seconds.",
         returns="dict (termTotal, referencedCount, orphanCount)",
         generic=False,
         binding_note="Fixed to the SemanticAssignment relationship type and GlossaryTerm elements -- not a parameter.",
@@ -1797,10 +1798,13 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         function="pyegeria.view.overview_metrics.stale_assets",
         inputs=["egeria_client:MetadataExpert"],
         description="Assets with no update in the last N days (default 180) -- candidates for "
-                    "archival review. One bounded Asset element fetch, each element's own version "
-                    "metadata compared against the cutoff, no relationship traversal. "
-                    "Cost: one Asset find page (a full page is a sample, so staleCount is not measured) plus one "
-                    "count, seconds.",
+                    "archival review. Egeria cannot count by update time, but it sorts by it, so the "
+                    "stale count is a bisection over the Assets' offsets in update-time order, using "
+                    "one-row reads, never a page of Assets."
+                    + REPOSITORY_WORDS +
+                    " Cost: one native count plus about log2(Assets / 25) one-row reads and one 25-row read (12 for "
+                    "37,000 Assets), "
+                    "seconds.",
         returns="dict (staleCount, assetTotal)",
         generic=False,
         binding_note="Fixed to the Asset type -- population isn't a parameter, but the staleness threshold (days) is.",
@@ -1810,18 +1814,18 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         ],
         declaration=AnalyticDeclaration(
             result_kind="measure",
-            # staleCount comes from one find page (None when full), assetTotal from a native count: no basis.
+            # Both in the repository population: the bisection's offsets are the repository's own rows.
             measures=[
-                _measure("stale_assets", "Assets not updated within `days` (not measured when the Asset find fills its page)",
-                         "staleCount", population="viewer"),
-                _measure("assets", "Assets", "assetTotal"),
+                _measure("stale_assets", "Assets not updated within `days`", "staleCount",
+                         population="repository", basis=_basis("assetTotal", "Assets")),
+                _measure("assets", "Assets", "assetTotal", population="repository"),
             ],
             absence=_absence(
-                not_measured="Stale assets were not measured: the Asset find failed, or it filled its page, "
-                             "so it held only some of the Assets.",
+                not_measured="Stale assets were not measured: the Asset count or a read in update-time order "
+                             "failed, or Assets you cannot see sit exactly at the cutoff (the note gives the range).",
                 not_permitted="You are not permitted to read the Assets.",
                 not_applicable=_always_applies("Finding stale assets"),
-                nothing_found="Checked: every Asset read was updated within the threshold, or there are no Assets.",
+                nothing_found="Counted: every Asset was updated within the threshold, or there are no Assets.",
             ),
             out=[
                 _field("staleCount", "Stale Assets", "int", unit="Assets"),

@@ -61,6 +61,7 @@ __all__ = [
     "SearchFilters",
     "FindFilters",
     "UnknownFilterWarning",
+    "SearchRefused",
     "FilterKind",
     "valid_filter_names",
     "filter_body_kwargs",
@@ -72,6 +73,12 @@ __all__ = [
     "deprecated_names",
     "canonicalize_names",
 ]
+
+
+class SearchRefused(ValueError):
+    """A find_* call refused a search it should not send, such as '*' with no type or a root type
+    (it would list every element). A ``ValueError``, so ``except ValueError`` still catches it; the
+    report executor logs it at WARNING, as an expected refusal."""
 
 
 class UnknownFilterWarning(UserWarning):

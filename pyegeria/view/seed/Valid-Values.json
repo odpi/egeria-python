@@ -1,0 +1,51 @@
+{
+ "format": "pyegeria-seed/1",
+ "family": "Valid-Values",
+ "specs": [
+  {
+   "label": "Valid-Values",
+   "envelope": {
+    "heading": "Valid Values",
+    "description": "Attributes that describe valid values used by Egeria for metadata governance.",
+    "family": "Valid-Values",
+    "target_type_name": "Valid-Values",
+    "aliases": ["Valid Values"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "property_name": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "as_of_time": {"type": "string", "required": false},
+     "effective_time": {"type": "string", "required": false},
+     "type_name": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Valid-Values",
+      "function": "ValidMetadataManager.get_valid_metadata_values",
+      "params": {"property_name": "$property_name"}
+     }
+    ],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "property_name", "label": "Property Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "preferred_value", "label": "Preferred Value"},
+       {"field": "dataType", "label": "Data Type"},
+       {"field": "is_case_sensitive", "label": "Is Case Sensitive"},
+       {"field": "additional_properties", "label": "Additional Properties"}
+      ]
+     }
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,111 @@
+{
+ "format": "pyegeria-seed/1",
+ "family": "RuntimeManager",
+ "specs": [
+  {
+   "label": "Platforms",
+   "envelope": {
+    "heading": "OMAG Server Platform",
+    "description": "Details of an OMAG Server Platform",
+    "family": "RuntimeManager",
+    "target_type_name": "Platform",
+    "aliases": []
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "platform_url_root", "label": "Platform URL"},
+       {"field": "version", "label": "Platform Version"},
+       {"field": "platform_origin", "label": "Platform Origin"},
+       {"field": "platform_start_time", "label": "Platform Start Time"},
+       {"field": "platform_build_properties", "label": "Build Properties"},
+       {"field": "omag_servers", "label": "Servers"}
+      ]
+     },
+     "TABLE": {"same_as": "ALL"},
+     "DICT": {"same_as": "ALL"}
+    }
+   }
+  },
+  {
+   "label": "OMAGServers",
+   "envelope": {
+    "heading": "OMAG Server",
+    "description": "Details of an OMAG Server",
+    "family": "RuntimeManager",
+    "target_type_name": "OMAGServer",
+    "aliases": []
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "server_name", "label": "Server Name"},
+       {"field": "server_type", "label": "Server Type"},
+       {"field": "server_active_status", "label": "Server Status"},
+       {"field": "server_configuration", "label": "Server Config"}
+      ]
+     },
+     "TABLE": {"same_as": "ALL"},
+     "DICT": {"same_as": "ALL"}
+    }
+   }
+  },
+  {
+   "label": "IntegrationConnectors",
+   "envelope": {
+    "heading": "Integration Connector",
+    "description": "Details of an Integration Connector",
+    "family": "RuntimeManager",
+    "target_type_name": "IntegrationConnector",
+    "aliases": []
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "connector_name", "label": "Connector Name"},
+       {"field": "connector_type", "label": "Connector Type"},
+       {"field": "metadata_source_qualified_name", "label": "Metadata Source"},
+       {"field": "status", "label": "Status"},
+       {"field": "last_status_change", "label": "Last Status Change"}
+      ]
+     },
+     "TABLE": {"same_as": "ALL"},
+     "DICT": {"same_as": "ALL"}
+    }
+   }
+  }
+ ]
+}

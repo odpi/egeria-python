@@ -1,0 +1,60 @@
+{
+ "format": "pyegeria-seed/1",
+ "family": "Platform",
+ "specs": [
+  {
+   "label": "Registered-Services",
+   "envelope": {
+    "heading": "Registered Services",
+    "description": "Registered services on the OMAG Server Platform.",
+    "family": "Platform",
+    "target_type_name": "Registered-Services",
+    "aliases": ["Registered Services"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "service_name", "label": "Service Name"},
+       {"field": "service_description", "label": "Description"},
+       {"field": "service_url_marker", "label": "URL Marker"},
+       {"field": "service_type", "label": "Service Type"},
+       {"field": "service_wiki", "label": "Wiki"},
+       {"field": "conformance_profile", "label": "Conformance Profile"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Severity-Definitions",
+   "envelope": {
+    "heading": "Audit Log Severity Definitions",
+    "description": "Severity definitions available in the OMAG Server.",
+    "family": "Platform",
+    "target_type_name": "Severity-Definitions",
+    "aliases": ["Severity Definitions"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "name", "label": "Name"},
+       {"field": "ordinal", "label": "Ordinal"},
+       {"field": "description", "label": "Description"},
+       {"field": "severity_code", "label": "Severity Code"},
+       {"field": "system_action", "label": "System Action"},
+       {"field": "user_action", "label": "User Action"}
+      ]
+     }
+    }
+   }
+  }
+ ]
+}

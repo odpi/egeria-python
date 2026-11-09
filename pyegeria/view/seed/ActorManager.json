@@ -1,0 +1,381 @@
+{
+ "format": "pyegeria-seed/1",
+ "family": "ActorManager",
+ "specs": [
+  {
+   "label": "Actor-Profiles",
+   "envelope": {
+    "heading": "Actor Profile",
+    "description": "Actor Profile Information",
+    "family": "ActorManager",
+    "target_type_name": "Actor Profile",
+    "aliases": ["Actor Profiles"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "as_of_time": {"type": "string", "required": false},
+     "effective_time": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Actor Profile",
+      "function": "ActorManager.find_actor_profiles",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "type_name", "label": "Open Metadata Type Name"},
+       {"field": "GUID", "label": "GUID"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Actor-Profiles-Assigned-MD",
+   "envelope": {
+    "heading": "Actor Profile - Assigned Actors",
+    "description": "Actor Profile Assigned Actor Information",
+    "family": "ActorManager",
+    "target_type_name": "Actor Profile",
+    "aliases": ["Actor Profiles Assigned MD"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "as_of_time": {"type": "string", "required": false},
+     "effective_time": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Actor Profile",
+      "function": "ActorManager.find_actor_profiles",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "type_name", "label": "Open Metadata Type Name"},
+       {"field": "GUID", "label": "GUID"},
+       {"field": "sideLinks", "label": "Assigned Actors", "detail_spec": "Profile-Team-Detail"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Profile-Team-Detail",
+   "envelope": {
+    "heading": "Assigned Actors",
+    "description": "Assigned Actors",
+    "family": "ActorManager",
+    "target_type_name": "Actor Profile",
+    "aliases": ["Profile Team Detail"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "displayName", "label": "Name"},
+       {"field": "qualifiedName", "label": "Qualified Name"},
+       {"field": "employeeType", "label": "Employee Type"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "employeeNumber", "label": "Employee Number"}
+      ]
+     },
+     "REPORT": {"same_as": "LIST"},
+     "DICT": {"same_as": "LIST"},
+     "TABLE": {"same_as": "LIST"}
+    }
+   }
+  },
+  {
+   "label": "Actor-Roles",
+   "envelope": {
+    "heading": "Actor Profile",
+    "description": "Actor Profile Information",
+    "family": "ActorManager",
+    "target_type_name": "Actor Profile",
+    "aliases": ["Actor Roles"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "as_of_time": {"type": "string", "required": false},
+     "effective_time": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Actor Profile",
+      "function": "ActorManager.find_actor_roles",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "guid", "label": "GUID", "format": true},
+       {"field": "metadata_collection_id", "label": "Metadata Collection ID", "format": true},
+       {"field": "metadata_collection_name", "label": "Metadata Collection Name", "format": true},
+       {"field": "scope", "label": "Scope"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Team-Members",
+   "envelope": {
+    "heading": "Team Members",
+    "description": "Team Members and Leaders Information",
+    "family": "ActorManager",
+    "target_type_name": "Team",
+    "aliases": ["Team Members"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "as_of_time": {"type": "string", "required": false},
+     "effective_time": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Team",
+      "function": "ActorManager.find_actor_profiles",
+      "params": {"search_string": "$search_string", "metadata_element_type": "Team"}
+     }
+    ],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "team_type", "label": "Team Type"},
+       {"field": "assigned_actors", "label": "Members", "detail_spec": "Team-Member-Role-Detail"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Team-Member-Role-Detail",
+   "envelope": {
+    "heading": "Team Members",
+    "description": "Assigned Actors and Individuals",
+    "family": "ActorManager",
+    "target_type_name": "Actor Role",
+    "aliases": ["Team Member Role Detail"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "name", "label": "Role"},
+       {"field": "assignment_type", "label": "Assignment Type"},
+       {"field": "individual_name", "label": "Individual"},
+       {"field": "individual_guid", "label": "Individual GUID"}
+      ]
+     },
+     "REPORT": {"same_as": "LIST"},
+     "DICT": {"same_as": "LIST"},
+     "TABLE": {"same_as": "LIST"}
+    }
+   }
+  },
+  {
+   "label": "User-Identities",
+   "envelope": {
+    "heading": "User Identity Information",
+    "description": "User Identity Information",
+    "family": "ActorManager",
+    "target_type_name": "User-Identity",
+    "aliases": ["User Identities"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "as_of_time": {"type": "string", "required": false},
+     "effective_time": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "User-Identity",
+      "function": "ActorManager.find_user_identities",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "guid", "label": "GUID", "format": true},
+       {"field": "metadata_collection_id", "label": "Metadata Collection ID", "format": true},
+       {"field": "metadata_collection_name", "label": "Metadata Collection Name", "format": true},
+       {"field": "user_id", "label": "User ID"},
+       {"field": "distinguished_name", "label": "Distinguished Name"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Perspectives",
+   "envelope": {
+    "heading": "Perspectives",
+    "description": "Perspective Information",
+    "family": "ActorManager",
+    "target_type_name": "Perspective",
+    "aliases": []
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "as_of_time": {"type": "string", "required": false},
+     "effective_time": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Perspective",
+      "function": "ActorManager.find_perspectives",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "guid", "label": "GUID", "format": true},
+       {"field": "metadata_collection_id", "label": "Metadata Collection ID", "format": true},
+       {"field": "metadata_collection_name", "label": "Metadata Collection Name", "format": true},
+       {"field": "additional_properties", "label": "Additional Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Skills",
+   "envelope": {
+    "heading": "Skills",
+    "description": "Skill Information",
+    "family": "ActorManager",
+    "target_type_name": "Skill",
+    "aliases": []
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "as_of_time": {"type": "string", "required": false},
+     "effective_time": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Skill",
+      "function": "ActorManager.find_skills",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "guid", "label": "GUID", "format": true},
+       {"field": "metadata_collection_id", "label": "Metadata Collection ID", "format": true},
+       {"field": "metadata_collection_name", "label": "Metadata Collection Name", "format": true},
+       {"field": "additional_properties", "label": "Additional Properties"}
+      ]
+     }
+    }
+   }
+  }
+ ]
+}

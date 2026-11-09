@@ -406,15 +406,16 @@ def test_every_generic_search_spec_names_a_type():
 
 
 def test_untyped_star_is_refused_with_words(explorer, monkeypatch):
+    from pyegeria.core.request_filters import SearchRefused
     from pyegeria.omvs.metadata_expert import MetadataExpert
 
-    with pytest.raises(ValueError, match="give a search string or a"):
+    with pytest.raises(SearchRefused, match="give a search string or a"):
         explorer.find_elements_by_property_value("*", ["displayName"])
     assert not explorer.sent
 
     monkeypatch.setattr(MetadataExpert, "check_connection", lambda self: "test")
     expert = MetadataExpert("view-server", "https://egeria.example:9443", "user", "pwd")
-    with pytest.raises(ValueError, match="give a search string or a type"):
+    with pytest.raises(SearchRefused, match="give a search string or a type"):
         expert.find_metadata_elements_with_string("*")
 
 
@@ -557,7 +558,8 @@ def test_exec_report_spec_surfaces_a_refusal(monkeypatch):
             pass
 
         def find_things(self, search_string="*", **kwargs):
-            raise ValueError("give a search string or a narrower type")
+            from pyegeria.core.request_filters import SearchRefused
+            raise SearchRefused("give a search string or a narrower type")
 
     fmt = {"action": {"function": "X.find_things", "required_params": ["search_string"], "spec_params": {}}}
     monkeypatch.setattr(fse, "select_report_spec", lambda name, kind: fmt)

@@ -17,6 +17,7 @@ from typing import Unpack
 from pyegeria.core.request_filters import deprecated_names
 from pyegeria.core.request_filters import GetFilters, ListFilters, SearchFilters
 from pyegeria.core.request_filters import filter_body_kwargs
+from pyegeria.core.request_filters import SearchRefused
 from pyegeria.core._exceptions import PyegeriaException, PyegeriaInvalidParameterException
 from pyegeria.core._server_client import ServerClient
 from pyegeria.core._globals import default_timeout, NO_ELEMENTS_FOUND
@@ -3128,7 +3129,7 @@ class ClassificationExplorer(ServerClient):
             if not metadata_element_type or metadata_element_type in _ROOT_TYPES:
                 # A root type is no narrower than no type: listing every element of the repository
                 # ran the quickstart platform out of heap (2026-11-09), so it is refused like '*'.
-                raise ValueError("find_elements_by_property_value: give a search string or a narrower type "
+                raise SearchRefused("find_elements_by_property_value: give a search string or a narrower type "
                                  "('*' with no metadata_element_type, or with "
                                  f"{'/'.join(sorted(_ROOT_TYPES))}, would list every element)")
             # Never fetch a whole type in one call: one page of at most STAR_PAGE_MAX, paged by start_from.

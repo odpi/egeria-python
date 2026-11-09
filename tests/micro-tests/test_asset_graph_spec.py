@@ -1,6 +1,7 @@
 """The Asset-Graph report spec (6.2.28): DICT and JSON for code, REPORT, HTML and MERMAID for people.
 DICT is the asset itself with its graph fields, JSON the full graph response, REPORT/HTML the
-asset's fields with its graphs rendered, MERMAID the graph. Any other format is refused with words.
+asset's fields with its graphs rendered, MERMAID the graph (and, from 6.2.29, the action and
+activity graphs the element carries). Any other format is refused with words.
 The edge helper (pyegeria/view/asset_graph.py), kept for the Wave 3 edge-table spec, is tested
 directly at the end, not through the spec.
 
@@ -144,15 +145,20 @@ def test_html_carries_the_graphs(offline_asset_catalog):
     assert "search string" not in content
 
 
-def test_mermaid_is_the_asset_graph(offline_asset_catalog):
+def test_mermaid_is_the_asset_graph_then_its_action_graph(offline_asset_catalog):
+    # 6.2.29: the action (and activity) graph follows the context graph when the element carries
+    # it, because Egeria's mermaidGraph leaves out Action and Activity relationships.
     result = _run("MERMAID")
     assert result["kind"] == "text"
     content = result["content"]
-    assert content.count("```mermaid") == 1
+    assert "activityMermaidGraph" not in RECORDED  # recorded before Egeria shipped it
+    assert content.count("```mermaid") == 2
     from pyegeria.view.output_formatter import _format_mermaid_value
-    assert _format_mermaid_value(RECORDED["mermaidGraph"]) in content
-    for other in ("anchorMermaidGraph", "actionMermaidGraph"):
-        assert _format_mermaid_value(RECORDED[other]) not in content
+    context = _format_mermaid_value(RECORDED["mermaidGraph"])
+    action = _format_mermaid_value(RECORDED["actionMermaidGraph"])
+    assert context in content and action in content
+    assert content.index(context) < content.index(action)
+    assert _format_mermaid_value(RECORDED["anchorMermaidGraph"]) not in content
 
 
 @pytest.mark.parametrize("fmt", ["TABLE", "LIST", "MD", "FORM", "ALL"])

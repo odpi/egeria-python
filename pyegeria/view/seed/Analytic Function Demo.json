@@ -1,0 +1,654 @@
+{
+ "format": "pyegeria-seed/1",
+ "family": "Analytic Function Demo",
+ "specs": [
+  {
+   "label": "Analytic Demo - Element Count by Type",
+   "envelope": {
+    "heading": "Element Count by Type",
+    "description": "Counts active GlossaryTerm elements. GENERIC function -- the metric this counts is a parameter (`analytic_spec_params`), not fixed. This spec shows one example binding; copy it and change the params to count something else entirely with the same function. Result shape: scalar (int). Default params (edit/override at run time): {'type_name': 'GlossaryTerm', 'strict': True}.",
+    "family": "Analytic Function Demo",
+    "target_type_name": null,
+    "aliases": []
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [
+     {
+      "stage": "producer/analytic",
+      "function": "count_elements",
+      "params": {"type_name": "GlossaryTerm", "strict": true}
+     }
+    ],
+    "formatters": {
+     "DICT": {
+      "columns": []
+     },
+     "JSON": {"same_as": "DICT"}
+    }
+   }
+  },
+  {
+   "label": "Analytic Demo - Assets by Type Breakdown",
+   "envelope": {
+    "heading": "Assets by Type Breakdown",
+    "description": "Per-type counts across the core asset/infrastructure types -- pick BAR or PIE below for a chart, DICT/JSON for the raw {label, type, count} rows. GENERIC function -- the metric this counts is a parameter (`analytic_spec_params`), not fixed. This spec shows one example binding; copy it and change the params to count something else entirely with the same function. Result shape: list[dict] ({label, type, count}). Default params (edit/override at run time): {'type_map': [['Data Stores', 'DataStore'], ['Data Sets', 'DataSet'], ['Software Components', 'DeployedSoftwareComponent']], 'strict': True}.",
+    "family": "Analytic Function Demo",
+    "target_type_name": null,
+    "aliases": []
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [
+     {
+      "stage": "producer/analytic",
+      "function": "counts_by_type",
+      "params": {
+       "type_map": [
+        ["Data Stores", "DataStore"],
+        ["Data Sets", "DataSet"],
+        ["Software Components", "DeployedSoftwareComponent"]
+       ],
+       "strict": true
+      }
+     }
+    ],
+    "formatters": {
+     "DICT": {
+      "columns": []
+     },
+     "JSON": {"same_as": "DICT"},
+     "BAR": {"same_as": "DICT"},
+     "PIE": {"same_as": "DICT"}
+    }
+   }
+  },
+  {
+   "label": "Analytic Demo - Ownership Coverage",
+   "envelope": {
+    "heading": "Ownership Coverage",
+    "description": "Count of elements carrying an Ownership classification -- NOT a percentage, same caveat as Governance Coverage (no cheap total-elements denominator yet). The find is paged until Egeria returns an empty page, so ownershipCount is every owned element (ownershipCapped is false when measured; an incomplete scan is not measured). byOwnerType is a nested breakdown of the same ownershipCount elements by the owner's type (Person, Team, SolutionActorRole, ...) -- pick BAR below for a chart of byOwnerType. FIXED metric -- Fixed to the Ownership classification -- not a parameter. This spec always returns that one metric. Result shape: dict (ownershipCount, ownershipCapped, byOwnerType).",
+    "family": "Analytic Function Demo",
+    "target_type_name": null,
+    "aliases": []
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [
+     {
+      "stage": "producer/analytic",
+      "function": "ownership_coverage",
+      "params": {}
+     }
+    ],
+    "formatters": {
+     "DICT": {
+      "columns": []
+     },
+     "JSON": {"same_as": "DICT"},
+     "BAR": {"same_as": "DICT"}
+    }
+   }
+  },
+  {
+   "label": "Analytic Demo - Business Value Signals",
+   "envelope": {
+    "heading": "Business Value Signals",
+    "description": "Real signals behind the Overview dashboard's four Business Value tiles (NEXT-9): assetTotal, confidentialCount (Assets classified Confidentiality), describedCount (Assets whose description is set and not empty) and duplicateCount (ConsolidatedDuplicate elements) are native counts over the whole repository, including elements the viewer may not be able to see. Each is a documented proxy, not a direct measure -- see business_value_signals()'s docstring for the causal-claim caveat that belongs with each field before treating it as more than that. FIXED metric -- Fixed to the Asset type hierarchy and Confidentiality/ConsolidatedDuplicate classifications -- not a parameter. This spec always returns that one metric. Result shape: dict (assetTotal, assetCapped, confidentialCount, describedCount, duplicateCount).",
+    "family": "Analytic Function Demo",
+    "target_type_name": null,
+    "aliases": []
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [
+     {
+      "stage": "producer/analytic",
+      "function": "business_value_signals",
+      "params": {}
+     }
+    ],
+    "formatters": {
+     "DICT": {
+      "columns": []
+     },
+     "JSON": {"same_as": "DICT"},
+     "BAR": {"same_as": "DICT"}
+    }
+   }
+  },
+  {
+   "label": "Analytic Demo - Governance Coverage",
+   "envelope": {
+    "heading": "Governance Classification Coverage",
+    "description": "Count of elements carrying at least one governance classification (ZoneMembership/Confidentiality/Criticality/Impact/Retention) -- NOT a percentage despite 'coverage' in the name (there's no cheap total-elements denominator to divide by yet). The find is paged until Egeria returns an empty page, so governedCount is every governed element (governedCapped is false when measured). byClassification and topZones are nested breakdowns of the same governedCount elements -- pick BAR below for a chart of byClassification. FIXED metric -- Fixed to GOVERNANCE_CLASSIFICATIONS: ZoneMembership, Confidentiality, Criticality, Impact, Retention -- not a parameter. This spec always returns that one metric. Result shape: dict (governedCount, governedCapped, byClassification, topZones).",
+    "family": "Analytic Function Demo",
+    "target_type_name": null,
+    "aliases": []
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [
+     {
+      "stage": "producer/analytic",
+      "function": "governed_coverage",
+      "params": {}
+     }
+    ],
+    "formatters": {
+     "DICT": {
+      "columns": []
+     },
+     "JSON": {"same_as": "DICT"},
+     "BAR": {"same_as": "DICT"}
+    }
+   }
+  },
+  {
+   "label": "Analytic Demo - Certifications and Exceptions",
+   "envelope": {
+    "heading": "Certifications & Exceptions Summary",
+    "description": "Active/expiring Certification relationships and License counts. 'exceptions' is a GENERAL open-governance-Exception count (any Exception relationship in the repository) -- it is NOT scoped to certifications/licenses specifically, despite sitting in this same summary; treat it as a separate metric riding along here. FIXED metric -- Fixed to the Certification and Exception relationship types -- not a parameter. This spec always returns that one metric. Result shape: dict (active, expiring90, soon, licenses, exceptions).",
+    "family": "Analytic Function Demo",
+    "target_type_name": null,
+    "aliases": []
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [
+     {
+      "stage": "producer/analytic",
+      "function": "certifications_summary",
+      "params": {}
+     }
+    ],
+    "formatters": {
+     "DICT": {
+      "columns": []
+     },
+     "JSON": {"same_as": "DICT"},
+     "BAR": {"same_as": "DICT"}
+    }
+   }
+  },
+  {
+   "label": "Analytic Demo - People and Community",
+   "envelope": {
+    "heading": "People & Community Counts",
+    "description": "Counts of Person/Team/Organization/ITProfile/Community actor profiles. FIXED metric -- Fixed to Person/Team/Organization/ITProfile/Community -- not a parameter. This spec always returns that one metric. Result shape: dict (persons, teams, organizations, itProfiles, communities). Default params (edit/override at run time): {'strict': True}.",
+    "family": "Analytic Function Demo",
+    "target_type_name": null,
+    "aliases": []
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [
+     {
+      "stage": "producer/analytic",
+      "function": "people_counts",
+      "params": {"strict": true}
+     }
+    ],
+    "formatters": {
+     "DICT": {
+      "columns": []
+     },
+     "JSON": {"same_as": "DICT"},
+     "BAR": {"same_as": "DICT"},
+     "PIE": {"same_as": "DICT"}
+    }
+   }
+  },
+  {
+   "label": "Analytic Demo - Feedback Summary",
+   "envelope": {
+    "heading": "Crowd-sourced Feedback Summary",
+    "description": "Ratings/comments/likes/tags/noteLogs counts by type -- pick BAR below for a by-type breakdown chart. A trend over time isn't available from this metric yet (feedback_summary is a point-in-time snapshot, not a series) -- a real gap for later. FIXED metric -- Fixed to Collaboration OMAS's feedback relationship types -- not a parameter. This spec always returns that one metric. Result shape: dict (byType, total).",
+    "family": "Analytic Function Demo",
+    "target_type_name": null,
+    "aliases": []
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [
+     {
+      "stage": "producer/analytic",
+      "function": "feedback_summary",
+      "params": {}
+     }
+    ],
+    "formatters": {
+     "DICT": {
+      "columns": []
+     },
+     "JSON": {"same_as": "DICT"},
+     "BAR": {"same_as": "DICT"}
+    }
+   }
+  },
+  {
+   "label": "Analytic Demo - Usage Context: Supply Chains & Blueprints",
+   "envelope": {
+    "heading": "Usage Context: Supply Chains & Blueprints",
+    "description": "InformationSupplyChain and SolutionBlueprint counts -- the two structures that put assets in a business usage context (supply chain membership, blueprint realization). FIXED metric -- Fixed to InformationSupplyChain and SolutionBlueprint -- not a parameter. This spec always returns that one metric. Result shape: dict (informationSupplyChains, blueprints). Default params (edit/override at run time): {'strict': True}.",
+    "family": "Analytic Function Demo",
+    "target_type_name": null,
+    "aliases": []
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [
+     {
+      "stage": "producer/analytic",
+      "function": "usage_context_counts",
+      "params": {"strict": true}
+     }
+    ],
+    "formatters": {
+     "DICT": {
+      "columns": []
+     },
+     "JSON": {"same_as": "DICT"}
+    }
+   }
+  },
+  {
+   "label": "Analytic Demo - Semantic Grounding",
+   "envelope": {
+    "heading": "Semantic Grounding Coverage",
+    "description": "groundingLinks = count of SemanticAssignment relationships (term<->asset). groundingPct = that count as a percent of the broad Asset supertype count; both are native counts over the whole repository, including elements the viewer may not see (i.e. 'percent of Assets' as the denominator, capped at 100 -- an asset with multiple assignments can push the raw ratio over 100%, which is why it's capped, not because grounding coverage is literally bounded there). A per-asset detail breakdown (which assets are/aren't grounded) isn't available from this metric --  a real gap for later. FIXED metric -- Fixed to the SemanticAssignment relationship type -- not a parameter. This spec always returns that one metric. Result shape: dict (groundingLinks, groundingPct).",
+    "family": "Analytic Function Demo",
+    "target_type_name": null,
+    "aliases": []
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [
+     {
+      "stage": "producer/analytic",
+      "function": "semantic_grounding",
+      "params": {}
+     }
+    ],
+    "formatters": {
+     "DICT": {
+      "columns": []
+     },
+     "JSON": {"same_as": "DICT"}
+    }
+   }
+  },
+  {
+   "label": "Analytic Demo - AI Context Readiness",
+   "envelope": {
+    "heading": "AI Context Readiness Funnel",
+    "description": "'cataloged' (Asset supertype count), 'documented' (Assets whose description is set and not empty), 'classified' (elements matching ANY of the same governance classifications governed_coverage uses), and 'lineage' (count of DataFlow relationships -- design/ business lineage, distinct from OpenLineage's operational lineage) are all native counts over the whole repository (including elements the viewer may not be able to see), computed as of 2026-08-01. 'aiReady' stays None from this function ALWAYS, by design -- these four are independent counts, not a per-asset check, so they can't answer 'how many assets are ALL of these at once'. See 'Analytic Demo - AI-Ready Assets' (below) for that -- a genuinely different function, not a missing field on this one. FIXED metric -- Fixed 5-stage readiness definition baked into the function body -- not a parameter. This spec always returns that one metric. Result shape: dict (cataloged, documented, classified, lineage, aiReady).",
+    "family": "Analytic Function Demo",
+    "target_type_name": null,
+    "aliases": []
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [
+     {
+      "stage": "producer/analytic",
+      "function": "context_readiness_funnel",
+      "params": {}
+     }
+    ],
+    "formatters": {
+     "DICT": {
+      "columns": []
+     },
+     "JSON": {"same_as": "DICT"}
+    }
+   }
+  },
+  {
+   "label": "Analytic Demo - AI-Ready Assets",
+   "envelope": {
+    "heading": "AI-Ready Assets (Composite)",
+    "description": "The actual per-asset intersection context_readiness_funnel's 'aiReady' field can't give you: Asset elements that are governed AND documented AND lineage-traced, all three, checked per element from one Asset find page plus every DataFlow relationship (not three separate counts intersected client-side after the fact -- see the function's own docstring for the exact field-name gotchas this hit while being built, e.g. find_metadata_elements results key their GUID as 'elementGUID' but a relationship end's GUID is plain 'guid'). 'total' is the Asset population checked. A full Asset page is a sample, not the catalog, so then nothing is measured (capped=true, with a note); otherwise divide aiReadyCount by total for a percentage. First worked example of the composite/derived analytic metric pattern NEXT-18 (egeria-workspaces BACKLOG.md) flagged as missing. FIXED metric -- Fixed to governed+documented+lineage-traced over Asset elements -- not a parameter. This spec always returns that one metric. Result shape: dict (aiReadyCount, total, capped).",
+    "family": "Analytic Function Demo",
+    "target_type_name": null,
+    "aliases": []
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [
+     {
+      "stage": "producer/analytic",
+      "function": "ai_ready_assets",
+      "params": {}
+     }
+    ],
+    "formatters": {
+     "DICT": {
+      "columns": []
+     },
+     "JSON": {"same_as": "DICT"}
+    }
+   }
+  },
+  {
+   "label": "Analytic Demo - Catalog Growth Trend",
+   "envelope": {
+    "heading": "Catalog Growth Trend (6 Month)",
+    "description": "Snapshot-based growth series -- assets/terms/governed/products, one point per window step, each a native count over the whole repository (including elements the viewer may not be able to see). Run with output_format SERIES for a Vega-Lite line chart. GENERIC function -- the metric this counts is a parameter (`analytic_spec_params`), not fixed. This spec shows one example binding; copy it and change the params to count something else entirely with the same function. Result shape: list[dict] (time series: {label, date, <series_key>: count, ...}). Default params (edit/override at run time): {'window': '6mo'}.",
+    "family": "Analytic Function Demo",
+    "target_type_name": null,
+    "aliases": []
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [
+     {
+      "stage": "producer/analytic",
+      "function": "growth_series",
+      "params": {"window": "6mo"}
+     }
+    ],
+    "formatters": {
+     "DICT": {
+      "columns": []
+     },
+     "JSON": {"same_as": "DICT"},
+     "SERIES": {"same_as": "DICT"}
+    }
+   }
+  },
+  {
+   "label": "Analytic Demo - Term Definition Completeness",
+   "envelope": {
+    "heading": "Term Definition Completeness",
+    "description": "Share of GlossaryTerms whose description is set and not empty; total and defined are native counts over the whole repository (including terms the viewer may not be able to see). undefinedPct is the gap (not the coverage) -- a near-100%-defined glossary is the uninteresting case, and the gap is what's actionable. FIXED metric -- Fixed to GlossaryTerm's description property -- not a parameter. This spec always returns that one metric. Result shape: dict (total, defined, undefinedPct).",
+    "family": "Analytic Function Demo",
+    "target_type_name": null,
+    "aliases": []
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [
+     {
+      "stage": "producer/analytic",
+      "function": "term_definition_completeness",
+      "params": {}
+     }
+    ],
+    "formatters": {
+     "DICT": {
+      "columns": []
+     },
+     "JSON": {"same_as": "DICT"}
+    }
+   }
+  },
+  {
+   "label": "Analytic Demo - Active Contributors",
+   "envelope": {
+    "heading": "Active Contributors",
+    "description": "Distinct usernames behind at least one feedback relationship (ratings/comments/likes/tags/noteLogs) -- pick BAR below for a by-type breakdown. A real engagement signal Feedback Summary's raw relationship counts don't give you: ten comments from one person and ten comments from ten people both show up as '10' there, but differently here. FIXED metric -- Fixed to Collaboration OMAS's feedback relationship types -- not a parameter. This spec always returns that one metric. Result shape: dict (contributors, byType).",
+    "family": "Analytic Function Demo",
+    "target_type_name": null,
+    "aliases": []
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [
+     {
+      "stage": "producer/analytic",
+      "function": "active_contributors",
+      "params": {}
+     }
+    ],
+    "formatters": {
+     "DICT": {
+      "columns": []
+     },
+     "JSON": {"same_as": "DICT"},
+     "BAR": {"same_as": "DICT"}
+    }
+   }
+  },
+  {
+   "label": "Analytic Demo - Assets by Type Total (Composite)",
+   "envelope": {
+    "heading": "Assets by Type Total (Composite)",
+    "description": "Sum of counts_by_type() across a caller-given (label, type_name) list -- e.g. the Overview dashboard's 'Cataloged Assets' total. First real registered user of the fetch+analytic action shape (NEXT-18, egeria-workspaces BACKLOG.md): fetch is counts_by_type itself (see 'Analytic Demo - Assets by Type Breakdown' above, same function), analytic is a small sum-reducer over its result -- see AnalyticActionSpec/run_analytic_action (format_set_executor.py) for the two-step mechanism this exercises end to end. byType in the result is counts_by_type's own unmodified rows, same shape as that demo's result. GENERIC function -- the metric this counts is a parameter (`analytic_spec_params`), not fixed. This spec shows one example binding; copy it and change the params to count something else entirely with the same function. Result shape: dict (total, byType). Default params (edit/override at run time): {'type_map': [['Data Stores', 'DataStore'], ['Data Sets', 'DataSet'], ['Software Components', 'DeployedSoftwareComponent']]}.",
+    "family": "Analytic Function Demo",
+    "target_type_name": null,
+    "aliases": []
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [
+     {
+      "stage": "producer/analytic",
+      "function": "sum_type_counts",
+      "params": {
+       "type_map": [
+        ["Data Stores", "DataStore"],
+        ["Data Sets", "DataSet"],
+        ["Software Components", "DeployedSoftwareComponent"]
+       ]
+      }
+     }
+    ],
+    "formatters": {
+     "DICT": {
+      "columns": []
+     },
+     "JSON": {"same_as": "DICT"}
+    }
+   }
+  },
+  {
+   "label": "Analytic Demo - Count by Property",
+   "envelope": {
+    "heading": "Count Elements by Property",
+    "description": "Counts active DigitalProduct elements with deploymentStatus=ACTIVE. GENERIC function -- the metric this counts is a parameter (`analytic_spec_params`), not fixed. This spec shows one example binding; copy it and change the params to count something else entirely with the same function. Result shape: scalar (int). Default params (edit/override at run time): {'type_name': 'DigitalProduct', 'property_name': 'deploymentStatus', 'property_value': 'ACTIVE', 'strict': True}.",
+    "family": "Analytic Function Demo",
+    "target_type_name": null,
+    "aliases": []
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [
+     {
+      "stage": "producer/analytic",
+      "function": "count_elements_by_property",
+      "params": {"type_name": "DigitalProduct", "property_name": "deploymentStatus", "property_value": "ACTIVE", "strict": true}
+     }
+    ],
+    "formatters": {
+     "DICT": {
+      "columns": []
+     },
+     "JSON": {"same_as": "DICT"}
+    }
+   }
+  },
+  {
+   "label": "Analytic Demo - Contextualised Coverage",
+   "envelope": {
+    "heading": "Usage Context Coverage",
+    "description": "Percent of Assets connected to a SolutionComponent via ImplementedBy -- a proxy for 'has some solution-design context', not the literal 'participates in an ISC/blueprint'. FIXED metric -- Fixed to the ImplementedBy relationship, filtered to Asset-subtype ends -- not a parameter. This spec always returns that one metric. Result shape: dict (contextualisedCount, assetTotal, contextualisedPct).",
+    "family": "Analytic Function Demo",
+    "target_type_name": null,
+    "aliases": []
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [
+     {
+      "stage": "producer/analytic",
+      "function": "contextualised_coverage",
+      "params": {}
+     }
+    ],
+    "formatters": {
+     "DICT": {
+      "columns": []
+     },
+     "JSON": {"same_as": "DICT"}
+    }
+   }
+  },
+  {
+   "label": "Analytic Demo - Karma Leaderboard",
+   "envelope": {
+    "heading": "Karma Leaderboard",
+    "description": "Top-N people by karma (ContributionRecord.karmaPoints, anchored via Anchors classification). FIXED metric -- Fixed to ContributionRecord.karmaPoints -- top_n and anchor_types tune the result but don't change what's being measured. This spec always returns that one metric. Result shape: list[dict] (name, karmaPoints, anchorGuid, anchorType). Default params (edit/override at run time): {'top_n': 10}.",
+    "family": "Analytic Function Demo",
+    "target_type_name": null,
+    "aliases": []
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [
+     {
+      "stage": "producer/analytic",
+      "function": "karma_leaderboard",
+      "params": {"top_n": 10}
+     }
+    ],
+    "formatters": {
+     "DICT": {
+      "columns": []
+     },
+     "JSON": {"same_as": "DICT"},
+     "BAR": {"same_as": "DICT"}
+    }
+   }
+  },
+  {
+   "label": "Analytic Demo - Engagement Over Time",
+   "envelope": {
+    "heading": "Engagement Over Time",
+    "description": "Weekly-bucketed feedback-event trend (comments/ratings/likes/tags/noteLogs), zero-filled across the trailing window. Run with output_format SERIES for a chart. FIXED metric -- Fixed to Collaboration OMAS's 5 feedback relationship types -- weeks tunes the window, not what's measured. This spec always returns that one metric. Result shape: list[dict] (time series: {week, comments, ratings, likes, tags, noteLogs, total}). Default params (edit/override at run time): {'weeks': 12}.",
+    "family": "Analytic Function Demo",
+    "target_type_name": null,
+    "aliases": []
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [
+     {
+      "stage": "producer/analytic",
+      "function": "engagement_series",
+      "params": {"weeks": 12}
+     }
+    ],
+    "formatters": {
+     "DICT": {
+      "columns": []
+     },
+     "JSON": {"same_as": "DICT"},
+     "SERIES": {"same_as": "DICT"}
+    }
+   }
+  },
+  {
+   "label": "Analytic Demo - Orphan Glossary Terms",
+   "envelope": {
+    "heading": "Orphan Glossary Terms",
+    "description": "Approved-but-unassigned glossary terms -- terms with no SemanticAssignment relationship to anything. orphanCount = termTotal - referencedCount. FIXED metric -- Fixed to the SemanticAssignment relationship type and GlossaryTerm elements -- not a parameter. This spec always returns that one metric. Result shape: dict (termTotal, referencedCount, orphanCount).",
+    "family": "Analytic Function Demo",
+    "target_type_name": null,
+    "aliases": []
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [
+     {
+      "stage": "producer/analytic",
+      "function": "orphan_glossary_terms",
+      "params": {}
+     }
+    ],
+    "formatters": {
+     "DICT": {
+      "columns": []
+     },
+     "JSON": {"same_as": "DICT"}
+    }
+   }
+  },
+  {
+   "label": "Analytic Demo - Stale Assets",
+   "envelope": {
+    "heading": "Stale Assets (No Update in 180 Days)",
+    "description": "Assets with no update in the last N days (default 180) -- candidates for archival review. FIXED metric -- Fixed to the Asset type -- population isn't a parameter, but the staleness threshold (days) is. This spec always returns that one metric. Result shape: dict (staleCount, assetTotal). Default params (edit/override at run time): {'days': 180}.",
+    "family": "Analytic Function Demo",
+    "target_type_name": null,
+    "aliases": []
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [
+     {
+      "stage": "producer/analytic",
+      "function": "stale_assets",
+      "params": {"days": 180}
+     }
+    ],
+    "formatters": {
+     "DICT": {
+      "columns": []
+     },
+     "JSON": {"same_as": "DICT"}
+    }
+   }
+  },
+  {
+   "label": "Analytic Demo - Metric Trend (Governance Coverage)",
+   "envelope": {
+    "heading": "Metric Trend: Governance Coverage Over Time",
+    "description": "governed_coverage re-run at each snapshot, turning a point-in-time metric into a series -- copy this spec and change metric_path in analytic_spec_params to trend any other function in this module (e.g. people_counts, feedback_summary) the same way. Run with output_format SERIES for a Vega-Lite line chart of governedCount. GENERIC function -- the metric this counts is a parameter (`analytic_spec_params`), not fixed. This spec shows one example binding; copy it and change the params to count something else entirely with the same function. Result shape: list[dict] (time series: {label, date, **snapshot}). Default params (edit/override at run time): {'metric_path': 'governed_coverage', 'window': '6mo'}.",
+    "family": "Analytic Function Demo",
+    "target_type_name": null,
+    "aliases": []
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [
+     {
+      "stage": "producer/analytic",
+      "function": "metric_trend",
+      "params": {"metric_path": "governed_coverage", "window": "6mo"}
+     }
+    ],
+    "formatters": {
+     "DICT": {
+      "columns": []
+     },
+     "JSON": {"same_as": "DICT"},
+     "SERIES": {"same_as": "DICT"}
+    }
+   }
+  }
+ ]
+}
