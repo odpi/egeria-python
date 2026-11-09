@@ -628,6 +628,22 @@ COMMON_ANNOTATIONS = {
 
 TIME_PARAMETERS = ["as_of_time", "effective_time"]
 
+#: The Asset-Graph spec's columns: the asset's own fields, then the graphs
+#: get_asset_graph_by_guid returns at the top level of its response (keys as Egeria writes them).
+ASSET_GRAPH_COLUMNS = COMMON_COLUMNS + COMMON_METADATA_COLUMNS + [
+    Column(name="Classifications", key='classifications'),
+    Column(name="Created By", key='created_by'),
+    Column(name="Create Time", key='create_time'),
+    Column(name="Updated By", key='updated_by'),
+    Column(name="Update Time", key='update_time'),
+    Column(name="Version", key='version'),
+    Column(name="Open Metadata Type Name", key='type_name'),
+    Column(name="Mermaid Graph", key='mermaidGraph'),
+    Column(name="Anchor Graph", key='anchorMermaidGraph'),
+    Column(name="Action Graph", key='actionMermaidGraph'),
+    Column(name="Field Level Lineage Graph", key='fieldLevelLineageGraph'),
+]
+
 # Modularized report_specs
 base_report_specs = FormatSetDict({
     "Referenceable": FormatSet(
@@ -1402,30 +1418,30 @@ base_report_specs = FormatSetDict({
     "Asset-Graph": FormatSet(
         target_type="Asset",
         heading="Asset Graph",
-        description="Attributes that apply to all Assets",
+        description=("An asset, the elements anchored to it and their relationships, as Egeria's asset graph "
+                     "(AssetCatalog.get_asset_graph_by_guid)."),
         annotations={},  # No specific annotations
         family="AssetCatalog",
+        # Declared formats (6.2.28): DICT and JSON for code, REPORT, HTML and MERMAID for people.
+        # - DICT: the asset itself, one row, with its own fields and its graph fields (as text);
+        # - JSON: the full graph response;
+        # - REPORT/HTML: the asset's fields with the asset, anchor and action graphs rendered as mermaid;
+        # - MERMAID: the asset graph.
+        # TABLE, LIST, MD, FORM and ALL are not declared: a table of a graph is its edges, which is planned
+        # as its own spec in Wave 3 (built by a processor stage; pyegeria/view/asset_graph.py holds the
+        # edge helper); MD and FORM are Dr.Egeria update forms; ALL rendered only the asset's name. A
+        # format not listed here is an error with words (the executor names the declared formats).
         formats=[
-            Format(
-                types=["ALL"],
-                attributes=COMMON_COLUMNS + COMMON_METADATA_COLUMNS + [
-                    Column(name="Classifications", key='classifications'),
-                    Column(name="Created By", key='created_by'),
-                    Column(name="Create Time", key='create_time'),
-                    Column(name="Updated By", key='updated_by'),
-                    Column(name="Update Time", key='update_time'),
-                    Column(name="Version", key='version'),
-                    Column(name="Open Metadata Type Name", key='type_name'),
-                    Column(name="Mermaid Graph", key='mermaidGraph'),
-                    Column(name="Anchor Graph", key='anchorMermaidGRaph'),
-                    Column(name="Field Level Lineage Graph", key='fieldLevelLineageGraph'),
-                ],
-            )
+            Format(types=["DICT", "JSON"], attributes=ASSET_GRAPH_COLUMNS),
+            Format(types=["REPORT", "HTML"], attributes=ASSET_GRAPH_COLUMNS),
+            Format(types=["MERMAID"], attributes=[Column(name="Mermaid Graph", key='mermaidGraph')]),
         ],
         action=ActionParameter(
-            function="ServerClient.get_asset_graph",
-            optional_params=OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
-            required_params=["asset_guid"],
+            # ServerClient.get_asset_graph no longer exists; the asset graph is AssetCatalog's
+            # assets/{guid}/as-graph (6.2.28).
+            function="AssetCatalog.get_asset_graph_by_guid",
+            required_params=["guid"],
+            optional_params=["start_from", "page_size"],
             spec_params={},
         )
     ),
@@ -2949,9 +2965,14 @@ formats=[
                         )],
 
         action=ActionParameter(
-            function="DataDesigner.find_data_classes",
+            # DataDesigner.find_data_classes no longer exists. DataClass is a subtype of
+            # DataValueSpecification and shares its search endpoint; the subtype filter travels in the
+            # search body as metadataElementSubtypeNames (6.2.28).
+            function="DataDesigner.find_data_value_specifications",
             required_params=["search_string"],
-            spec_params={},
+            optional_params=[p for p in OPTIONAL_SEARCH_PARAMS
+                             if p not in ("metadata_element_subtypes", "metadata_element_type")],
+            spec_params={"metadata_element_subtypes": ["DataClass"]},
         )
     ),
 "Data-Value-Spec": FormatSet(
@@ -4850,6 +4871,12 @@ def load_egeria_report_specs(
     return True
 
 
+#: Specs whose TABLE requests are refused instead of falling back to their DICT format. A table of
+#: an asset graph is its edges, not the asset's one DICT row; that edge table is planned as its own
+#: spec in Wave 3 (6.2.28). The label is matched with any tier prefix (egeria:/builtin:) removed.
+NO_TABLE_FALLBACK = frozenset({"Asset-Graph"})
+
+
 def _select_from_registry(registry: FormatSetDict, kind: str, output_type: str) -> dict | None:
     # Normalize
     if output_type is None:
@@ -4905,8 +4932,8 @@ def _select_from_registry(registry: FormatSetDict, kind: str, output_type: str) 
             output_struct["formats"] = fmt.dict()
             return output_struct
 
-    # Fallback for TABLE -> DICT
-    if output_type == "TABLE":
+    # Fallback for TABLE -> DICT, except for the specs in NO_TABLE_FALLBACK, which refuse TABLE.
+    if output_type == "TABLE" and split_tier_prefix(resolved_key or kind)[1] not in NO_TABLE_FALLBACK:
         for fmt in element.formats:
             if "DICT" in fmt.types:
                 output_struct["formats"] = fmt.dict()

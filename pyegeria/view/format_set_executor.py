@@ -1377,10 +1377,10 @@ def _exec_report_spec_impl(
     except ValidationError as e:
         print_validation_error(e)
         raise
-    except ValueError:
-        # Re-raise, as the async path does: this used to print the traceback and return None, so a
-        # plain-words refusal (e.g. "give a search string or a narrower type") reached the caller as
-        # "no result" -- an absence that looked like an answer.
+    except ValueError as e:
+        # Never a silent None (6.2.28): the caller gets the error and its words.
+        logger.error(f"Report spec '{format_set_name}' ({output_format}) failed: {e}")
+        # Re-raised, as the async path does: a plain-words refusal must not reach the caller as "no result".
         raise
 
     finally:

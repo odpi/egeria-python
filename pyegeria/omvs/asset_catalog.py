@@ -177,6 +177,14 @@ class AssetCatalog(ServerClient):
             **kwargs
         )
 
+    def _generate_asset_graph_output(self, elements: dict | list[dict], filter_string: Optional[str] = None,
+                                     element_type_name: Optional[str] = None, output_format: str = "DICT",
+                                     report_spec: dict | str | None = None, **kwargs) -> str | list[dict]:
+        """Output for get_asset_graph_by_guid: the generic asset output, without a search string. A fetch
+        by GUID is not a search, so its REPORT does not say "found from the search string" (6.2.28)."""
+        return self._generate_asset_output(elements, None, element_type_name, output_format, report_spec,
+                                           **kwargs)
+
     @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_find_in_asset_domain(
@@ -422,7 +430,7 @@ class AssetCatalog(ServerClient):
         response = await self._async_get_results_body_request(
             url=url,
             _type="Asset",
-            _gen_output=self._generate_asset_output,
+            _gen_output=self._generate_asset_graph_output,
             start_from=start_from,
             page_size=page_size,
             output_format=output_format,

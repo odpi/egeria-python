@@ -21,9 +21,9 @@ Stage 1 runs a subset: `microflow_to_format_set` converts what today's executor 
 `producer/analytic` stage) and raises `CannotRunYet` with words for anything else.
 
 Every Egeria-held spec is untrusted input. `check_allowlist` enforces §7a "Safety": a find stage
-may name only `Class.method` on an EgeriaTech client class, read-only by name (`find_`, `get_`,
-`list_`); an analytic stage only a registered analytic name; never a dotted module path or a
-`python` binding.
+may name only a `Class.method` on `FIND_METHOD_ALLOWLIST` (a positive list: the methods today's
+built-in specs name, plus reviewed additions) and never one on `FIND_METHOD_DENYLIST`; an analytic
+stage only a registered analytic name; never a dotted module path or a `python` binding.
 """
 
 from __future__ import annotations
@@ -36,6 +36,8 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_valida
 
 __all__ = [
     "MICROFLOW_FORMAT",
+    "FIND_METHOD_ALLOWLIST",
+    "FIND_METHOD_ADDITIONS",
     "FIND_METHOD_DENYLIST",
     "LEGACY_CLASS_ALIASES",
     "ParamDecl",
@@ -56,12 +58,86 @@ __all__ = [
 
 MICROFLOW_FORMAT = "microflow/1"
 
-#: Find methods an Egeria-held spec may never name even though they pass the name rules (§7a
-#: "Safety"). A name prefix is not proof a method is read-only: each entry here starts with get_,
-#: find_ or list_ but writes to Egeria. An entry denies the method on every class that has it (and its
-#: `_async_` twin), since EgeriaTech and its subclasses inherit it. The micro-test
-#: `test_no_allowlisted_method_reads_as_a_write` scans every method that passes the rules for write
-#: words and fails on any hit that is neither here nor in its reviewed list.
+#: The find methods a spec held in Egeria may name, as `Class.method` exactly as the spec writes it
+#: (an `_async_` twin of an entry is allowed too). A POSITIVE list: a method that is not on it is
+#: refused, whatever its name (a find_/get_/list_ prefix is not proof that a method only reads; see
+#: FIND_METHOD_DENYLIST). It is the union of two named parts:
+#:
+#: - `_CENSUS_FIND_METHODS`: every find method a runnable built-in or generated spec names, taken from
+#:   the 437-spec census on 2026-11-09 (47 methods, every spec runnable since 6.2.28 repointed
+#:   Asset-Graph and Data-Classes). The micro-test `test_every_runnable_builtin_spec_function_is_on_the_allowlist`
+#:   fails when a built-in or generated spec names one that is missing, so the stage-2 seed (today's
+#:   built-ins written into Egeria) can never be refused.
+#: - `FIND_METHOD_ADDITIONS`: methods no built-in names yet, each added after reading it.
+#:
+#: Every entry is scanned for write words in its name and docstring by
+#: `test_no_allowlisted_method_reads_as_a_write`; a hit must be reviewed there, by Class.method.
+_CENSUS_FIND_METHODS: frozenset = frozenset({
+    "ActorManager.find_actor_profiles",
+    "ActorManager.find_actor_roles",
+    "ActorManager.find_perspectives",
+    "ActorManager.find_skills",
+    "ActorManager.find_user_identities",
+    "AssetCatalog.get_asset_graph_by_guid",
+    "AssetMaker.find_assets",
+    "ClassificationExplorer.find_elements_by_property_value",  # the 40 generic-search DrE specs (6.2.28)
+    "ClassificationExplorer.get_elements",
+    "ClassificationExplorer.get_owners_elements",
+    "CollectionManager.find_collections",
+    "CollectionManager.get_collection_members",
+    "DataDesigner.find_data_fields",
+    "DataDesigner.find_data_structures",
+    "DataDesigner.find_data_value_specifications",
+    "DataDiscovery.get_security_findings",
+    "DataDiscovery.get_security_posture_history",
+    "EgeriaTech.get_elements_by_property_value",
+    "EgeriaTech.get_technology_type_elements",
+    "ExternalReference.find_external_identifiers",
+    "ExternalReference.find_external_references",
+    "ExternalReferences.find_external_references",
+    "GlossaryManager.find_glossaries",
+    "GlossaryManager.find_glossary_terms",
+    "GovernanceOfficer.find_governance_definitions",
+    "MetadataExpert.find_metadata_elements_with_string",
+    "MyProfile.get_my_profile",
+    "MyProfile.get_my_to_dos",
+    "ProjectManager.find_projects",
+    "ReferenceDataManager.find_valid_value_definitions",
+    "SecurityOfficer.find_statements_of_applicability",
+    "SecurityOfficer.get_statement_of_applicability_controls",
+    "ServerClient.find_comments",
+    "ServerClient.find_notes",
+    "ServerClient.find_tags",
+    "ServerClient.find_technology_types",
+    "ServerClient.get_attached_comments",
+    "ServerClient.get_tech_type_detail",
+    "SolutionArchitect.find_concept_model_elements",
+    "SolutionArchitect.find_design_patterns",
+    "SolutionArchitect.find_information_supply_chains",
+    "SolutionArchitect.find_solution_blueprints",
+    "SolutionArchitect.find_solution_components",
+    "SolutionArchitect.find_solution_roles",
+    "ValidMetadataManager.get_valid_metadata_values",
+    "_client_new.find_search_keywords",
+    "reference_data.find_valid_value_definitions",
+})
+
+#: Reviewed additions: find methods no built-in spec names yet. Add an entry only after reading the
+#: method (it must only read), and give the reason in a comment beside it.
+FIND_METHOD_ADDITIONS: frozenset = frozenset({
+    # Read only: POSTs a FindRequestBody to .../elements/by-complex-query and returns the elements.
+    # find_elements_by_property_value calls it for the technology specs (deployedImplementationType
+    # EQ the technology AND the name match, evaluated by Egeria in one query).
+    "ClassificationExplorer.find_root_elements",
+})
+
+FIND_METHOD_ALLOWLIST: frozenset = _CENSUS_FIND_METHODS | FIND_METHOD_ADDITIONS
+
+#: Find methods an Egeria-held spec may never name. Kept beside the positive allowlist as a second,
+#: independent check (belt and braces): an entry here is refused even if it is ever added to the
+#: allowlist by mistake, and the micro-tests fail if the two lists overlap. Each entry here reads
+#: like a find but writes to Egeria. An entry denies the method on every class that has it (and its
+#: `_async_` twin), since EgeriaTech and its subclasses inherit it.
 FIND_METHOD_DENYLIST: frozenset = frozenset({
     # "Create a CSV file element from a template if it doesn't exist": an Egeria write.
     "AutomatedCuration.get_create_csv_data_file_element_from_template",
@@ -73,7 +149,6 @@ _DENIED_METHOD_NAMES = frozenset(e.rsplit(".", 1)[-1] for e in FIND_METHOD_DENYL
 #: the allowlist accepts exactly these, and no other unknown name.
 LEGACY_CLASS_ALIASES: Dict[str, str] = {"_client_new": "EgeriaTech"}
 
-_READ_ONLY_PREFIXES = ("find_", "get_", "list_")
 _FIND_STAGE = "producer/find"
 _ANALYTIC_STAGE = "producer/analytic"
 _STAGE_KINDS_RUNNABLE = (_FIND_STAGE, _ANALYTIC_STAGE)
@@ -283,9 +358,9 @@ def find_method_allowed(func_decl: Any) -> Tuple[bool, str]:
     """Whether an Egeria-held spec may name `func_decl` as its find method, and the words why not.
 
     Allowed: `Class.method` (exactly one dot) where `Class` is an EgeriaTech client class (or a
-    name the executor maps to one, `_CLIENT_CLASS_MAP` / `LEGACY_CLASS_ALIASES`), the method exists
-    there, its name starts with find_, get_ or list_, and it is not on `FIND_METHOD_DENYLIST` (on any
-    class)."""
+    name the executor maps to one, `_CLIENT_CLASS_MAP` / `LEGACY_CLASS_ALIASES`), `Class.method`
+    (or the method's `_async_` twin) is on `FIND_METHOD_ALLOWLIST`, it is not on
+    `FIND_METHOD_DENYLIST` (on any class), and the method exists there."""
     from pyegeria.view.format_set_executor import _CLIENT_CLASS_MAP
     from pyegeria.view.spec_resolver import _find_method
 
@@ -307,12 +382,13 @@ def find_method_allowed(func_decl: Any) -> Tuple[bool, str]:
         pass
     else:
         return False, f"its find method's class '{class_name}' is not an EgeriaTech client class"
-    if not bare.startswith(_READ_ONLY_PREFIXES):
-        return False, (f"its find method '{func_decl}' is not read-only by name (it must start with "
-                       f"{', '.join(_READ_ONLY_PREFIXES)})")
     if (func_decl in FIND_METHOD_DENYLIST or f"{class_name}.{bare}" in FIND_METHOD_DENYLIST
             or bare in _DENIED_METHOD_NAMES):
         return False, f"its find method '{func_decl}' is on the denylist"
+    if f"{class_name}.{bare}" not in FIND_METHOD_ALLOWLIST:
+        return False, (f"its find method '{func_decl}' is not on the allowlist of find methods a spec held in "
+                       f"Egeria may name (FIND_METHOD_ALLOWLIST: the methods today's built-in specs name, "
+                       f"plus reviewed additions)")
     method, why = _find_method(f"{class_name}.{bare}")
     if method is None:
         return False, why
@@ -436,8 +512,20 @@ def microflow_to_format_set(mf: MicroflowV1, *, label: str, heading: Optional[st
     notes = notes if notes is not None else []
     stages = list(mf.stages)
     kinds = [s.stage for s in stages]
+    binders: Dict[str, Any] = {}
     for i, s in enumerate(stages):
-        unknown = sorted((s.model_extra or {}).keys())
+        extra = dict(s.model_extra or {})
+        # A stage's `analytic_binders` (removed in RS-W2-3 PR-B) is passed on to the action, so the
+        # ActionParameter shim drops it there and records the names, and the spec resolver warns
+        # with BINDERS_DEPRECATED_PREFIX (owner decision O1-a): exactly as for a local spec. An
+        # empty one is dropped silently, as the shim does.
+        stage_binders = extra.pop("analytic_binders", None)
+        if stage_binders:
+            if isinstance(stage_binders, dict):
+                binders.update(stage_binders)
+            else:
+                binders[repr(stage_binders)] = stage_binders
+        unknown = sorted(extra.keys())
         if unknown:
             notes.append(f"stage {i} ({s.stage}) carries key(s) this pyegeria does not read: "
                          f"{', '.join(unknown)}; ignored")
@@ -478,6 +566,9 @@ def microflow_to_format_set(mf: MicroflowV1, *, label: str, heading: Optional[st
                                           if not (isinstance(v, str) and v.startswith("$"))}
         if not finds:
             action.update(required_params=required, optional_params=optional)
+
+    if binders and action:
+        action["analytic_binders"] = binders
 
     formats = []
     for out_type, f in mf.formatters.items():
