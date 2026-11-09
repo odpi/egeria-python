@@ -277,3 +277,112 @@ def test_the_analytic_demo_entry_point_is_gone():
     from importlib.metadata import entry_points
     names = [ep.value for ep in entry_points(group=brf.REPORT_SPEC_ENTRY_POINT_GROUP)]
     assert "pyegeria.view.analytic_demo_specs:get_analytic_demo_specs" not in names
+
+
+# ── Precedence: local > egeria > builtin (owner, 2026-11-09: "Yes, local overrides") ──
+
+@pytest.fixture
+def local_tier(monkeypatch, tmp_path):
+    """An empty user specs directory and Egeria cache; CONFIG/RUNTIME reloaded from them; warnings reset."""
+    import pyegeria.view.egeria_spec_cache as esc
+    from pyegeria.view._output_format_models import FormatSetDict
+    user = tmp_path / "user_specs"
+    user.mkdir()
+    monkeypatch.setenv(esc.CACHE_DIR_ENV, str(tmp_path / "cache"))
+    monkeypatch.setenv("PYEGERIA_USER_REPORT_SPECS_DIR", str(user))
+    monkeypatch.delenv("PYEGERIA_USER_FORMAT_SETS_DIR", raising=False)
+    monkeypatch.delenv(esc.FOLDERS_ENV, raising=False)
+    monkeypatch.setattr(brf, "_CONFIG_REPORT_FORMATS", FormatSetDict())
+    monkeypatch.setattr(brf, "_config_report_specs_loaded", True)
+    monkeypatch.setattr(brf, "_SHADOW_WARNED", set())
+    monkeypatch.setattr(brf, "_ALIAS_WARNED", set())
+    esc._invalidate_tier()
+    assert brf.refresh_report_specs() == []
+    yield user
+    for label in ("Referenceable", "Probe-Alias-Thief"):
+        brf.unregister_report_spec(label)
+    monkeypatch.setattr(brf, "_CONFIG_REPORT_FORMATS", FormatSetDict())
+    esc._invalidate_tier()
+
+
+@pytest.fixture
+def warnings_logged():
+    from loguru import logger
+    lines = []
+    logger.enable("pyegeria")
+    sink = logger.add(lambda m: lines.append(m.record["message"]), level="WARNING")
+    yield lines
+    logger.remove(sink)
+
+
+def _local_copy(label: str, heading: str):
+    return seed.seed_report_specs()[label].model_copy(update={"heading": heading})
+
+
+def test_census_is_unchanged_with_an_empty_user_dir(local_tier):
+    registry = brf.get_report_registry()
+    assert list(registry.keys()) == list(seed.seed_report_specs().keys())
+    assert set(brf._REGISTRY_TIERS.values()) == {"builtin"}
+    assert brf._REGISTRY_SHADOWS == {}
+    manifest = json.loads((seed.SEED_DIR / seed.MANIFEST).read_text(encoding="utf-8"))
+    assert seed._census(registry) == manifest["census"]
+
+
+def test_a_user_dir_copy_of_a_former_local_spec_wins_with_one_warning(local_tier, warnings_logged):
+    from pyegeria.view._output_format_models import FormatSetDict
+    FormatSetDict({"Questions": _local_copy("Questions", "My Questions")}).save_to_json(
+        str(local_tier / "mine.json"))
+    assert brf.refresh_report_specs() == []          # not a clash any more
+    for _ in range(3):
+        registry = brf.get_report_registry()
+    assert registry["Questions"].heading == "My Questions"
+    assert brf._REGISTRY_TIERS["Questions"] == "local"
+    assert brf._REGISTRY_SHADOWS["Questions"] == {"winner": "local", "loser": "builtin", "differ": False}
+    shadow = [w for w in warnings_logged if "'Questions'" in w and "shadows" in w]
+    assert shadow == ["Report spec 'Questions': the local copy shadows the builtin copy (they are the same); "
+                      "the builtin copy stays addressable as 'builtin:Questions'."]
+    # builtin: still reaches the seed's copy
+    fs, tier, label = brf.lookup_report_spec("builtin:Questions")
+    assert (fs.heading, tier, label) == ("Questions", "builtin", "Questions")
+    assert brf.select_report_format("builtin:Questions", "DICT")["heading"] == "Questions"
+    assert brf.report_spec_source("Questions") == {"tier": "local", "label": "Questions", "version": None}
+    rows = {r["name"]: r for r in brf.list_report_specs(with_status=True)}
+    assert rows["Questions"]["source"] == "local" and rows["builtin:Questions"]["shadowed_by"] == "local"
+    # the census of the other 436 is unchanged
+    assert [k for k, t in brf._REGISTRY_TIERS.items() if t != "builtin"] == ["Questions"]
+
+
+def test_a_runtime_copy_of_a_core_builtin_wins_with_one_warning(local_tier, warnings_logged):
+    assert seed.is_bootstrap_core("Referenceable")
+    brf.register_report_specs({"Referenceable": _local_copy("Referenceable", "My Referenceable")}, source="probe")
+    for _ in range(3):
+        registry = brf.get_report_registry()
+    assert registry["Referenceable"].heading == "My Referenceable"
+    assert brf._REGISTRY_TIERS["Referenceable"] == "local"
+    shadow = [w for w in warnings_logged if "'Referenceable'" in w and "shadows" in w]
+    assert len(shadow) == 1 and "the local copy shadows the builtin copy" in shadow[0]
+    assert brf.lookup_report_spec("builtin:Referenceable")[0] is seed.seed_report_specs()["Referenceable"]
+    # another source still may not take a label the local tier holds
+    with pytest.raises(brf.ReportFormatCollision):
+        brf.register_report_specs({"Referenceable": _local_copy("Referenceable", "X")}, source="other")
+
+
+def test_a_local_alias_held_by_a_builtin_is_dropped_from_the_local_copy(local_tier, warnings_logged):
+    thief = _local_copy("Referenceable", "Thief").model_copy(update={"aliases": ["Collection", "Mine-Only"]})
+    brf.register_report_specs({"Probe-Alias-Thief": thief}, source="probe")
+    registry = brf.get_report_registry()
+    assert registry["Probe-Alias-Thief"].aliases == ["Mine-Only"]
+    assert registry.get("Collection") is seed.seed_report_specs()["Collections"]
+    assert sum("alias(es) Collection dropped" in w for w in warnings_logged) == 1
+    brf.get_report_registry()
+    assert sum("alias(es) Collection dropped" in w for w in warnings_logged) == 1
+
+
+def test_a_local_copy_keeps_the_aliases_of_the_builtin_it_shadows(local_tier):
+    from pyegeria.view._output_format_models import FormatSetDict
+    copy_fs = _local_copy("Collections", "My Collections")
+    FormatSetDict({"Collections": copy_fs}).save_to_json(str(local_tier / "c.json"))
+    brf.refresh_report_specs()
+    registry = brf.get_report_registry()
+    assert registry["Collections"].aliases == copy_fs.aliases
+    assert registry.get("Collection").heading == "My Collections"

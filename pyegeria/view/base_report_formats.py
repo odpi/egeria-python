@@ -4029,10 +4029,16 @@ def refresh_report_specs() -> List[Tuple[str, str]]:
     If any of the first four is still set, a refresh logs one warning naming it.
 
     Each entry is loaded independently: an entry that fails to load, or that
-    defines a label already present (in an earlier entry, or in the BUILTINS/
-    GENERATED/RUNTIME tiers), is skipped as a whole with a logged warning and
-    every other entry still loads. Returns the skipped entries as
-    `(source, reason)` pairs; an empty list means everything loaded.
+    defines a label already present (in an earlier entry, or in the RUNTIME
+    tier), is skipped as a whole with a logged warning and every other entry
+    still loads. Returns the skipped entries as `(source, reason)` pairs; an
+    empty list means everything loaded.
+
+    A CONFIG label that a built-in (seed) or Egeria-held spec also has is NOT a
+    clash: precedence is local > egeria > builtin (owner, 2026-11-09: "Yes, local
+    overrides"), so the local spec wins in `get_report_registry()` with one
+    warning per label per process, and `builtin:<label>` / `egeria:<label>` still
+    reach the shadowed copy.
     """
     global _CONFIG_REPORT_FORMATS
     _CONFIG_REPORT_FORMATS = FormatSetDict()
@@ -4056,9 +4062,10 @@ def refresh_report_specs() -> List[Tuple[str, str]]:
         entries.append((f"ENTRY_POINT:{group}:{ep.name}", ep, _load_entry_point))
     entries.extend((f"JSON:{p}", p, _load_json_file) for p in _user_report_spec_files())
 
-    # A CONFIG label that duplicates another tier would make get_report_registry()
-    # itself raise, taking every report spec down with it -- reject it here instead.
-    other_tiers = set(_builtin_tier().keys()) | set(_RUNTIME_REPORT_FORMATS.keys())
+    # A CONFIG label that a RUNTIME registration also holds would make get_report_registry()
+    # itself raise (both are the local tier), taking every report spec down with it -- reject it
+    # here instead. A built-in's label is not a clash: the local spec shadows it.
+    other_tiers = set(_RUNTIME_REPORT_FORMATS.keys())
 
     skipped: List[Tuple[str, str]] = []
     seen_json: set = set()
@@ -4073,7 +4080,7 @@ def refresh_report_specs() -> List[Tuple[str, str]]:
             clashes = sorted(set(loaded.keys()) & other_tiers)
             if clashes:
                 raise ReportFormatCollision(
-                    f"Report format label(s) {clashes} already defined by a built-in, generated, or runtime spec")
+                    f"Report format label(s) {clashes} already defined by a runtime spec")
             _add_with_collision_check(_CONFIG_REPORT_FORMATS, loaded, source=source)
         except Exception as exc:  # noqa: BLE001 -- one bad entry must not block the rest
             logger.warning(f"Skipping report spec source {source}: {exc}")
@@ -4133,7 +4140,13 @@ def get_report_registry() -> FormatSetDict:
             _note_shadow(label, "egeria", "builtin", fs, combined[label], shadows)
         combined[label] = fs
         tiers[label] = "egeria"
-    for label, fs in local.items():
+    # LOCAL tier: shadows both lower tiers (local > egeria > builtin; owner, 2026-11-09: "Yes, local
+    # overrides"). Same words and the same alias rule as the EGERIA tier above.
+    for label, fs in _local_tier_view(combined, local).items():
+        if label in combined.keys() and tiers.get(label) in ("builtin", "egeria"):
+            loser = tiers[label]
+            _note_shadow(label, "local", loser, fs, combined[label],
+                         shadows if label not in shadows else {})
         combined[label] = fs
         tiers[label] = "local"
     _REGISTRY_TIERS.clear()
@@ -4231,6 +4244,52 @@ def _egeria_tier_view(lower: FormatSetDict, local: FormatSetDict) -> FormatSetDi
             fs = fs.model_copy(update={"aliases": [a for a in fs.aliases if a not in dropped]})
         _EGERIA_VIEW_CACHE[label] = (key, fs)
         view[label] = fs
+    return view
+
+
+_LOCAL_VIEW_CACHE: Dict[str, Tuple[Tuple, FormatSet]] = {}
+
+
+def _local_tier_view(lower: FormatSetDict, local: FormatSetDict) -> FormatSetDict:
+    """The LOCAL tier as it enters the registry, by the EGERIA tier's alias rule: an alias of a local
+    spec that a lower-tier spec (built-in or Egeria-held) holds as its label or alias is dropped from
+    the local copy, with one warning, so a local spec never takes over another spec's name. The
+    lower-tier spec a local copy shadows takes its own label and aliases with it, so the local copy
+    may keep those. Copies are cached so the resolver's per-object cache stays valid."""
+    if not local:
+        return local
+    from collections import Counter
+    held: Counter = Counter()
+    for k, v in lower.items():
+        held[k] += 1
+        held.update(set(v.aliases or []) - {k})
+    view = FormatSetDict()
+    for label, fs in local.items():
+        aliases = list(fs.aliases or [])
+        if not aliases:
+            view[label] = fs
+            continue
+        mine: Counter = Counter()
+        if label in lower.keys():
+            shadowed = lower[label]
+            mine[label] += 1
+            mine.update(set(shadowed.aliases or []) - {label})
+        dropped = [a for a in aliases if a != label and held[a] - mine[a] > 0]
+        if not dropped:
+            view[label] = fs
+            continue
+        key = (id(fs), tuple(dropped))
+        cached = _LOCAL_VIEW_CACHE.get(label)
+        if cached and cached[0] == key:
+            view[label] = cached[1]
+            continue
+        if (label, tuple(dropped)) not in _ALIAS_WARNED:
+            _ALIAS_WARNED.add((label, tuple(dropped)))
+            logger.warning(f"Report spec '{label}' (local): alias(es) {', '.join(dropped)} dropped; a built-in or "
+                           f"Egeria-held spec already holds each as a label or alias.")
+        copy_fs = fs.model_copy(update={"aliases": [a for a in aliases if a not in dropped]})
+        _LOCAL_VIEW_CACHE[label] = (key, copy_fs)
+        view[label] = copy_fs
     return view
 
 
@@ -4506,15 +4565,17 @@ def register_report_specs(new_formats: Union[FormatSetDict, dict], *, source: st
 
     Registering a label again from the same `source` replaces that spec and is
     not an error, so calling this on every handler load is safe. A label that
-    another source, or a built-in, generated or config spec, already defines
-    raises ReportFormatCollision and nothing from this call is registered.
+    another source or a config spec (the local tier) already defines raises
+    ReportFormatCollision and nothing from this call is registered. A label a
+    built-in or Egeria-held spec has is not a clash: the runtime spec shadows it
+    (local > egeria > builtin), with one warning per label per process.
     """
     if not isinstance(new_formats, FormatSetDict):
         new_formats = FormatSetDict(new_formats)
     existing = get_report_registry()
     for label in new_formats.keys():
-        if _REGISTRY_TIERS.get(label) == "egeria":
-            continue  # a local spec shadows an Egeria-held one (RS-EGERIA-TIER); it does not clash
+        if _REGISTRY_TIERS.get(label) in ("egeria", "builtin"):
+            continue  # a local spec shadows an Egeria-held or built-in one (RS-EGERIA-TIER); it does not clash
         if label in existing.keys() and _RUNTIME_REPORT_SOURCES.get(label) != source:
             raise ReportFormatCollision(
                 f"Report format label '{label}' already exists; cannot register from {source}")

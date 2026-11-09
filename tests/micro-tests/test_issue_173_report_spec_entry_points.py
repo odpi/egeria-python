@@ -96,7 +96,10 @@ def test_broken_or_clashing_entry_point_is_skipped_and_the_rest_load(isolated):
                   _ep("tile", f"{mod}:tile_specs"))
     skipped = dict(_refresh_no_deprecation())
     assert "cannot build specs" in skipped[f"ENTRY_POINT:{brf.REPORT_SPEC_ENTRY_POINT_GROUP}:broken"]
-    assert "Referenceable" in skipped[f"ENTRY_POINT:{brf.REPORT_SPEC_ENTRY_POINT_GROUP}:clash"]
+    # local > egeria > builtin (owner, 2026-11-09): a built-in's label is not a clash; the entry shadows it.
+    assert f"ENTRY_POINT:{brf.REPORT_SPEC_ENTRY_POINT_GROUP}:clash" not in skipped
+    assert brf.get_report_registry()["Referenceable"].heading == "clash"
+    assert brf.lookup_report_spec("builtin:Referenceable")[0].heading != "clash"
     assert "EP-Tile" in brf.get_report_registry()
 
 
@@ -149,8 +152,20 @@ def test_registering_a_label_from_another_source_raises(isolated):
         brf.register_report_specs(tile_specs(), source="someone-else")
 
 
-def test_registering_a_builtin_label_raises_and_registers_nothing(isolated):
+def test_registering_a_builtin_label_shadows_the_builtin(isolated):
+    """local > egeria > builtin (owner, 2026-11-09: "Yes, local overrides"); builtin: still reaches it."""
     specs = FormatSetDict({"EP-New": _spec("EP-New"), "Referenceable": _spec("clash")})
+    brf.register_report_specs(specs, source="portal")
+    registry = brf.get_report_registry()
+    assert "EP-New" in registry and registry["Referenceable"].heading == "clash"
+    assert brf._REGISTRY_TIERS["Referenceable"] == "local"
+    assert brf.lookup_report_spec("builtin:Referenceable")[0].heading != "clash"
+
+
+def test_registering_a_config_label_raises_and_registers_nothing(isolated):
+    _entry_points(isolated, _ep("tile", f"{__name__}:tile_specs"))
+    _refresh_no_deprecation()
+    specs = FormatSetDict({"EP-New": _spec("EP-New"), "EP-Tile": _spec("clash")})
     with pytest.raises(brf.ReportFormatCollision):
         brf.register_report_specs(specs, source="portal")
     assert "EP-New" not in brf.get_report_registry()
