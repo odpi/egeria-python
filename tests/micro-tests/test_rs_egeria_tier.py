@@ -392,14 +392,78 @@ def test_no_allowlisted_method_reads_as_a_write():
     assert not stale, f"reviewed entries no longer hit (remove them): {sorted(stale)}"
 
 
-def test_unknown_stage_keys_are_recorded_as_notes():
+def test_unknown_stage_keys_are_recorded_as_notes_and_binders_go_to_the_action():
+    import warnings
     mf, _, _ = mfm.parse_microflow({"format": "microflow/1", "stages": [
         {"stage": "producer/find", "function": "CollectionManager.find_collections",
          "analytic_binders": {"x": 1}, "colour": "blue"}],
         "formatters": {"DICT": {"columns": ["display_name"]}}})
     notes = []
-    mfm.microflow_to_format_set(mf, label="T", notes=notes)
-    assert any("stage 0 (producer/find)" in n and "analytic_binders, colour" in n for n in notes), notes
+    with warnings.catch_warnings(record=True):
+        warnings.simplefilter("always")
+        fs = mfm.microflow_to_format_set(mf, label="T", notes=notes)
+    assert any("stage 0 (producer/find)" in n and n.endswith("colour; ignored") for n in notes), notes
+    assert not any("analytic_binders" in n for n in notes), notes
+    assert fs.action._dropped_binders == ["x"]
+    assert "analytic_binders" not in fs.model_dump()["action"]
+
+
+# ── 2b. A binder on an Egeria-held spec warns exactly as #561 does for a local one (O1-a) ──
+
+def _binder_text(names):
+    from pyegeria.view import spec_resolver as sr
+    return (f"{sr.BINDERS_DEPRECATED_PREFIX} (binders for: {names}); declare these arguments as the routine's "
+            f"inputs, which the environment's role supply provides")
+
+
+def _binder_microflow(fmt, binders):
+    stage = {"stage": "producer/find", "type": "Collection", "function": "CollectionManager.find_collections",
+             "params": {"search_string": "$search_string"}}
+    if binders is not _ABSENT:
+        stage["analytic_binders"] = binders
+    if fmt == 0:
+        return json.dumps([dict(stage, required_params=["search_string"], columns=["display_name"])])
+    return json.dumps({"format": "microflow/1", "params": {"search_string": {"type": "string", "required": True}},
+                       "stages": [stage], "formatters": {"ALL": {"columns": ["display_name"]}}})
+
+
+_ABSENT = object()
+_BINDER_GUID = "b1d0e400-0000-0000-0000-000000000002"
+
+
+def _sync_and_resolve(fmt, binders):
+    import warnings
+    from pyegeria.view import spec_resolver as sr
+    eg = FakeEgeria()
+    eg.put(spec_element("E-Binder", guid=_BINDER_GUID, microflow=_binder_microflow(fmt, binders), aliases=[]))
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        report = esc.sync_report_specs(eg, folders=[FOLDER_QN])
+        assert report.added == ["E-Binder"] and not report.skipped, report.render()
+        esc._invalidate_tier()
+        assert brf.report_spec_source("E-Binder")["tier"] == "egeria"
+        result = sr.resolve_all()["E-Binder"]
+    found = [w for w in result.warnings if w.startswith(sr.BINDERS_DEPRECATED_PREFIX)]
+    deprecations = [w for w in caught if issubclass(w.category, DeprecationWarning)
+                    and "analytic_binders" in str(w.message)]
+    brf.unregister_report_spec("E-Binder")
+    return found, deprecations, report
+
+
+@pytest.mark.parametrize("fmt", [0, 1])
+def test_egeria_held_spec_with_a_binder_resolves_with_exactly_the_561_warning(tier, fmt):
+    found, deprecations, report = _sync_and_resolve(fmt, {"ods": "x.OdsReader", "mgr": "os.getcwd"})
+    assert found == [_binder_text("mgr, ods")]
+    assert deprecations  # the PR-B shim's DeprecationWarning fired on the Egeria-held spec too
+    assert not any("analytic_binders" in n and "ignored" in n and "does not read" in n for n in report.notes)
+
+
+@pytest.mark.parametrize("fmt", [0, 1])
+@pytest.mark.parametrize("empty", [{}, None, [], _ABSENT])
+def test_egeria_held_spec_with_an_empty_binder_stays_silent(tier, fmt, empty):
+    found, deprecations, report = _sync_and_resolve(fmt, empty)
+    assert found == [] and deprecations == []
+    assert not any("analytic_binders" in n for n in report.notes)
 
 
 # ── 3. The sync ──

@@ -436,8 +436,20 @@ def microflow_to_format_set(mf: MicroflowV1, *, label: str, heading: Optional[st
     notes = notes if notes is not None else []
     stages = list(mf.stages)
     kinds = [s.stage for s in stages]
+    binders: Dict[str, Any] = {}
     for i, s in enumerate(stages):
-        unknown = sorted((s.model_extra or {}).keys())
+        extra = dict(s.model_extra or {})
+        # A stage's `analytic_binders` (removed in RS-W2-3 PR-B) is passed on to the action, so the
+        # ActionParameter shim drops it there and records the names, and the spec resolver warns
+        # with BINDERS_DEPRECATED_PREFIX (owner decision O1-a): exactly as for a local spec. An
+        # empty one is dropped silently, as the shim does.
+        stage_binders = extra.pop("analytic_binders", None)
+        if stage_binders:
+            if isinstance(stage_binders, dict):
+                binders.update(stage_binders)
+            else:
+                binders[repr(stage_binders)] = stage_binders
+        unknown = sorted(extra.keys())
         if unknown:
             notes.append(f"stage {i} ({s.stage}) carries key(s) this pyegeria does not read: "
                          f"{', '.join(unknown)}; ignored")
@@ -478,6 +490,9 @@ def microflow_to_format_set(mf: MicroflowV1, *, label: str, heading: Optional[st
                                           if not (isinstance(v, str) and v.startswith("$"))}
         if not finds:
             action.update(required_params=required, optional_params=optional)
+
+    if binders and action:
+        action["analytic_binders"] = binders
 
     formats = []
     for out_type, f in mf.formatters.items():

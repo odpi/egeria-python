@@ -273,6 +273,12 @@ class ActionParameter(BaseModel):
         one is dropped with a DeprecationWarning and a log warning naming the parameters: the
         routine must declare them as `inputs` instead, or its call will lack them. The names are
         kept on the model (`_dropped_binders`) so the spec resolver can report them as a warning.
+
+        The marker is a private attribute: it survives `model_copy`, but NOT `model_dump` and a
+        reload (`model_validate_json(fs.model_dump_json())` has no marker and so no warning), since
+        the dump no longer holds the key. Resolve the loaded spec, not a serialised copy of it. The
+        EGERIA tier rebuilds its specs from the cached micro-flow text, which keeps the key, so
+        its marker is set afresh on every load.
         """
         names: List[str] = []
         if isinstance(values, dict) and "analytic_binders" in values:
