@@ -1,0 +1,62 @@
+{
+ "format": "pyegeria-seed/1",
+ "family": "Project Manager",
+ "specs": [
+  {
+   "label": "Projects",
+   "envelope": {
+    "heading": "Project Attributes",
+    "description": "Attributes that apply to all Projects.",
+    "family": "Project Manager",
+    "target_type_name": "Project",
+    "aliases": []
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Project",
+      "function": "ProjectManager.find_projects",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "priority", "label": "Priority"},
+       {"field": "project_status", "label": "Project Status"},
+       {"field": "status", "label": "Element Status"},
+       {"field": "start_date", "label": "Start Date"},
+       {"field": "assigned_actors", "label": "Assigned Actors"},
+       {"field": "resource_list", "label": "Resources"},
+       {"field": "project_roles", "label": "Project Roles"},
+       {"field": "managed_projects", "label": "Managed Projects"}
+      ]
+     },
+     "LIST": {"same_as": "ALL"}
+    }
+   }
+  }
+ ]
+}

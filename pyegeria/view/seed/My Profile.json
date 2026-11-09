@@ -1,0 +1,93 @@
+{
+ "format": "pyegeria-seed/1",
+ "family": "My Profile",
+ "specs": [
+  {
+   "label": "ToDo-DrE",
+   "envelope": {
+    "heading": "ToDo",
+    "description": "Details of a ToDo action.",
+    "family": "My Profile",
+    "target_type_name": "ToDo",
+    "aliases": ["ToDo DrE"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "situation", "label": "Situation"},
+       {"field": "activity_status", "label": "Activity Status"},
+       {"field": "priority", "label": "Priority"},
+       {"field": "requested_time", "label": "Requested Time"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Meeting-DrE",
+   "envelope": {
+    "heading": "Meeting",
+    "description": "Details of a Meeting action.",
+    "family": "My Profile",
+    "target_type_name": "Meeting",
+    "aliases": ["Meeting DrE"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "situation", "label": "Situation"},
+       {"field": "activity_status", "label": "Activity Status"},
+       {"field": "priority", "label": "Priority"},
+       {"field": "requested_time", "label": "Requested Time"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Review-DrE",
+   "envelope": {
+    "heading": "Review",
+    "description": "Details of a Review action.",
+    "family": "My Profile",
+    "target_type_name": "Review",
+    "aliases": ["Review DrE"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "situation", "label": "Situation"},
+       {"field": "activity_status", "label": "Activity Status"},
+       {"field": "priority", "label": "Priority"},
+       {"field": "requested_time", "label": "Requested Time"}
+      ]
+     }
+    }
+   }
+  }
+ ]
+}

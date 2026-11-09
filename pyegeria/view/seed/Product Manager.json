@@ -1,0 +1,466 @@
+{
+ "format": "pyegeria-seed/1",
+ "family": "Product Manager",
+ "specs": [
+  {
+   "label": "Digital-Product-Catalog",
+   "envelope": {
+    "heading": "Catalogs for Digital Products",
+    "description": "Attributes generic to all Digital Product Catalogs..",
+    "family": "Product Manager",
+    "target_type_name": "DigitalProductCatalog",
+    "aliases": ["Product Catalog", "DataProductCatalog", "Digital Product Catalog"],
+    "annotations": {
+     "Wikilinks": ["[[Digital Products]]"]
+    }
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false},
+     "body": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "DigitalProductCatalog",
+      "function": "CollectionManager.find_collections",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "DICT": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "created_by", "label": "Created By"},
+       {"field": "create_time", "label": "Create Time"},
+       {"field": "updated_by", "label": "Updated By"},
+       {"field": "update_time", "label": "Update Time"},
+       {"field": "collection_members", "label": "Containing Members"},
+       {"field": "member_of_collections", "label": "Member Of"}
+      ]
+     },
+     "TABLE": {"same_as": "DICT"},
+     "LIST": {"same_as": "DICT"},
+     "MD": {"same_as": "DICT"},
+     "FORM": {"same_as": "DICT"},
+     "REPORT-GRAPH": {"same_as": "DICT"},
+     "REPORT": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "created_by", "label": "Created By"},
+       {"field": "create_time", "label": "Create Time"},
+       {"field": "updated_by", "label": "Updated By"},
+       {"field": "update_time", "label": "Update Time"},
+       {"field": "collection_members", "label": "Containing Members"},
+       {"field": "member_of_collections", "label": "Member Of"},
+       {"field": "GUID", "label": "GUID"},
+       {"field": "mermaidGraph", "label": "Mermaid"}
+      ]
+     },
+     "HTML": {"same_as": "REPORT"},
+     "MERMAID": {
+      "columns": [
+       {"field": "mermaidGraph", "label": "Mermaid"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Digital-Product-Catalog-MyE",
+   "envelope": {
+    "heading": "Catalogs for Digital Products",
+    "description": "Attributes generic to all Digital Product Catalogs..",
+    "family": "Product Manager",
+    "target_type_name": "DigitalProductCatalog",
+    "aliases": ["Digital Product Catalog MyE"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "DigitalProductCatalog",
+      "function": "CollectionManager.find_collections",
+      "params": {"search_string": "$search_string", "metadata_element_type": "DigitalProductCatalog", "_type": "DigitalProductCatalog"}
+     }
+    ],
+    "formatters": {
+     "DICT": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "GUID", "label": "GUID"},
+       {"field": "collection_members", "label": "Containing Members"},
+       {"field": "member_of_collections", "label": "Member Of"}
+      ]
+     },
+     "TABLE": {"same_as": "DICT"},
+     "LIST": {"same_as": "DICT"},
+     "MD": {"same_as": "DICT"},
+     "FORM": {"same_as": "DICT"},
+     "REPORT": {"same_as": "DICT"}
+    }
+   }
+  },
+  {
+   "label": "Digital-Products",
+   "envelope": {
+    "heading": "Digital Product Information",
+    "description": "Attributes useful to Digital Products.",
+    "family": "Product Manager",
+    "target_type_name": "DigitalProduct",
+    "aliases": ["DigitalProduct", "DataProducts", "Digital Products"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "DigitalProduct",
+      "function": "CollectionManager.find_collections",
+      "params": {
+       "search_string": "$search_string",
+       "metadata_element_subtypes": ["DigitalProduct"],
+       "_type": "DigitalProduct"
+      },
+      "additional_props": "CollectionManager._extract_digital_product_properties"
+     }
+    ],
+    "formatters": {
+     "FORM": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "status", "label": "Status"},
+       {"field": "product_name", "label": "Product Name"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "maturity", "label": "Maturity"},
+       {"field": "service_life", "label": "Service Life"},
+       {"field": "next_version", "label": "Next Version"},
+       {"field": "withdraw_date", "label": "Withdraw Date"},
+       {"field": "members", "label": "Members", "format": true},
+       {"field": "uses_digital_products", "label": "Uses Products"},
+       {"field": "used_by_digital_products", "label": "Used by Products"},
+       {"field": "assigned_actors", "label": "Product Manager"},
+       {"field": "governed_by", "label": "License"},
+       {"field": "solution_designs", "label": "Solution Blueprint"}
+      ]
+     },
+     "DICT": {"same_as": "FORM"},
+     "TABLE": {"same_as": "FORM"},
+     "LIST": {"same_as": "FORM"},
+     "REPORT": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "status", "label": "Status"},
+       {"field": "product_name", "label": "Product Name"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "maturity", "label": "Maturity"},
+       {"field": "service_life", "label": "Service Life"},
+       {"field": "next_version", "label": "Next Version"},
+       {"field": "withdraw_date", "label": "Withdraw Date"},
+       {"field": "members", "label": "Members", "format": true},
+       {"field": "uses_digital_products", "label": "Uses Products"},
+       {"field": "used_by_digital_products", "label": "Used by Products"},
+       {"field": "assigned_actors", "label": "Product Manager"},
+       {"field": "governed_by", "label": "License"},
+       {"field": "solution_designs", "label": "Solution Blueprint"},
+       {"field": "mermaid", "label": "Mermaid"}
+      ]
+     },
+     "HTML": {"same_as": "REPORT"}
+    }
+   }
+  },
+  {
+   "label": "Digital-Products-MyE",
+   "envelope": {
+    "heading": "Digital Product Information",
+    "description": "Attributes useful to Digital Products.",
+    "family": "Product Manager",
+    "target_type_name": "DigitalProduct",
+    "aliases": ["Digital Products MyE"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "DigitalProduct",
+      "function": "CollectionManager.find_collections",
+      "params": {
+       "search_string": "$search_string",
+       "_type": "DigitalProductProperties",
+       "metadata_element_subtypes": ["DigitalProduct"],
+       "metadata_element_type": "DigitalProduct"
+      },
+      "additional_props": "CollectionManager._extract_digital_product_properties"
+     }
+    ],
+    "formatters": {
+     "FORM": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "status", "label": "Status"},
+       {"field": "product_name", "label": "Product Name"},
+       {"field": "members", "label": "Members", "format": true},
+       {"field": "assigned_actors", "label": "Product Manager"}
+      ]
+     },
+     "DICT": {"same_as": "FORM"},
+     "TABLE": {"same_as": "FORM"},
+     "LIST": {"same_as": "FORM"},
+     "MD": {"same_as": "FORM"},
+     "REPORT": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "status", "label": "Status"},
+       {"field": "product_name", "label": "Product Name"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "maturity", "label": "Maturity"},
+       {"field": "service_life", "label": "Service Life"},
+       {"field": "next_version", "label": "Next Version"},
+       {"field": "withdraw_date", "label": "Withdraw Date"},
+       {"field": "members", "label": "Members", "format": true},
+       {"field": "uses_digital_products", "label": "Uses Products"},
+       {"field": "used_by_digital_products", "label": "Used by Products"},
+       {"field": "assigned_actors", "label": "Product Manager"},
+       {"field": "governed_by", "label": "License"},
+       {"field": "solution_designs", "label": "Solution Blueprint"},
+       {"field": "mermaid", "label": "Mermaid"}
+      ]
+     },
+     "HTML": {"same_as": "REPORT"}
+    }
+   }
+  },
+  {
+   "label": "Digital-Products-Slim",
+   "envelope": {
+    "heading": "Digital Product Information",
+    "description": "Attributes useful to Digital Products.",
+    "family": "Product Manager",
+    "target_type_name": "DigitalProduct",
+    "aliases": ["Digital Products Slim"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "DigitalProduct",
+      "function": "CollectionManager.find_collections",
+      "params": {
+       "search_string": "$search_string",
+       "_type": "DigitalProductProperties",
+       "metadata_element_subtypes": ["DigitalProduct"],
+       "metadata_element_type": "DigitalProduct"
+      },
+      "additional_props": "CollectionManager._extract_digital_product_properties"
+     }
+    ],
+    "formatters": {
+     "FORM": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "content_status", "label": "Content Status"},
+       {"field": "deployment_status", "label": "Deployment Status"},
+       {"field": "product_name", "label": "Product Name"},
+       {"field": "members", "label": "Members", "format": true},
+       {"field": "actor_list", "label": "Contacts"}
+      ]
+     },
+     "TABLE": {"same_as": "FORM"},
+     "LIST": {"same_as": "FORM"},
+     "MD": {"same_as": "FORM"},
+     "REPORT": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "status", "label": "Status"},
+       {"field": "product_name", "label": "Product Name"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "maturity", "label": "Maturity"},
+       {"field": "service_life", "label": "Service Life"},
+       {"field": "next_version", "label": "Next Version"},
+       {"field": "withdraw_date", "label": "Withdraw Date"},
+       {"field": "members", "label": "Members", "format": true},
+       {"field": "uses_digital_products", "label": "Uses Products"},
+       {"field": "used_by_digital_products", "label": "Used by Products"},
+       {"field": "assigned_actors", "label": "Product Manager"},
+       {"field": "governed_by", "label": "License"},
+       {"field": "solution_designs", "label": "Solution Blueprint"},
+       {"field": "mermaid", "label": "Mermaid"}
+      ]
+     },
+     "HTML": {"same_as": "REPORT"}
+    }
+   }
+  },
+  {
+   "label": "Agreements",
+   "envelope": {
+    "heading": "General Agreement Information",
+    "description": "Attributes generic to all Agreements.",
+    "family": "Product Manager",
+    "target_type_name": "Agreement",
+    "aliases": ["DataSharingAgreement", "Agreement", "Subscriptions"],
+    "annotations": {
+     "wikilinks": ["[[Agreements]]", "[[Egeria]]"]
+    }
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Agreement",
+      "function": "CollectionManager.find_collections",
+      "params": {
+       "search_string": "$search_string",
+       "metadata_element_subtypes": ["Agreement"]
+      },
+      "additional_props": "CollectionManager._extract_agreement_properties"
+     }
+    ],
+    "formatters": {
+     "REPORT": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "created_by", "label": "Created By"},
+       {"field": "create_time", "label": "Create Time"},
+       {"field": "updated_by", "label": "Updated By"},
+       {"field": "update_time", "label": "Update Time"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "version", "label": "Version"},
+       {"field": "type_name", "label": "Open Metadata Type Name"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "support_level", "label": "Support Level"},
+       {"field": "service_levels", "label": "service Levels"},
+       {"field": "agreement_items", "label": "Agreement Items", "format": true},
+       {"field": "members", "label": "Members", "format": true}
+      ]
+     },
+     "DICT": {"same_as": "REPORT"},
+     "TABLE": {"same_as": "REPORT"},
+     "LIST": {"same_as": "REPORT"},
+     "FORM": {"same_as": "REPORT"}
+    }
+   }
+  }
+ ]
+}

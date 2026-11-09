@@ -434,7 +434,7 @@ def _build(el: Dict[str, Any], *, folders: List[str], identity: str, registry_na
 def _known_names() -> set:
     """Spec names a detail_spec may name, without building the full registry (which reads this tier)."""
     from pyegeria.view import base_report_formats as brf
-    names = set(brf.base_report_specs.keys()) | set(brf.generated_format_sets.keys())
+    names = set(brf._builtin_tier().keys())
     names |= set(brf._CONFIG_REPORT_FORMATS.keys()) | set(brf._RUNTIME_REPORT_FORMATS.keys())
     names |= set(_TIER.get("specs", {}).keys())
     return names

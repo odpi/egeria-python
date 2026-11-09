@@ -1,0 +1,1811 @@
+{
+ "format": "pyegeria-seed/1",
+ "family": "Solution Architect",
+ "specs": [
+  {
+   "label": "Solution-Blueprint-Mermaid",
+   "envelope": {
+    "heading": "Solution Blueprint Mermaid",
+    "description": "Details of a Solution Blueprint.",
+    "family": "Solution Architect",
+    "target_type_name": "SolutionBlueprint",
+    "aliases": ["Solution Blueprint Mermaid"],
+    "annotations": {
+     "Wikilinks": ["[[Solution-Blueprint-Mermaid]]"]
+    }
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "SolutionBlueprint",
+      "function": "SolutionArchitect.find_solution_blueprints",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "DICT": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "created_by", "label": "Created By"},
+       {"field": "create_time", "label": "Create Time"},
+       {"field": "updated_by", "label": "Updated By"},
+       {"field": "update_time", "label": "Update Time"},
+       {"field": "collection_members", "label": "Containing Members"},
+       {"field": "member_of_collections", "label": "Member Of"}
+      ]
+     },
+     "TABLE": {"same_as": "DICT"},
+     "LIST": {"same_as": "DICT"},
+     "MD": {"same_as": "DICT"},
+     "FORM": {"same_as": "DICT"},
+     "REPORT": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "created_by", "label": "Created By"},
+       {"field": "create_time", "label": "Create Time"},
+       {"field": "updated_by", "label": "Updated By"},
+       {"field": "update_time", "label": "Update Time"},
+       {"field": "collection_members", "label": "Containing Members"},
+       {"field": "member_of_collections", "label": "Member Of"},
+       {"field": "GUID", "label": "GUID"},
+       {"field": "mermaidGraph", "label": "Mermaid"},
+       {"field": "solutionBlueprintMermaidGraph", "label": "Solution Blueprint Mermaid Graph"}
+      ]
+     },
+     "HTML": {"same_as": "REPORT"},
+     "MERMAID": {
+      "columns": [
+       {"field": "solutionBlueprintMermaidGraph", "label": "Solution Blueprint Mermaid Graph"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Solution-Blueprint",
+   "envelope": {
+    "heading": "Solution Blueprint Report",
+    "description": "Details of a Solution Blueprint.",
+    "family": "Solution Architect",
+    "target_type_name": "SolutionBlueprint",
+    "aliases": ["Solution Blueprint"],
+    "annotations": {
+     "Wikilinks": ["[[Solution-Blueprint]]"]
+    }
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "SolutionBlueprint",
+      "function": "SolutionArchitect.find_solution_blueprints",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "DICT": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "created_by", "label": "Created By"},
+       {"field": "create_time", "label": "Create Time"},
+       {"field": "updated_by", "label": "Updated By"},
+       {"field": "update_time", "label": "Update Time"},
+       {"field": "collection_members", "label": "Containing Members"},
+       {"field": "member_of_collections", "label": "Member Of"}
+      ]
+     },
+     "TABLE": {"same_as": "DICT"},
+     "LIST": {"same_as": "DICT"},
+     "MD": {"same_as": "DICT"},
+     "FORM": {"same_as": "DICT"},
+     "REPORT": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "created_by", "label": "Created By"},
+       {"field": "create_time", "label": "Create Time"},
+       {"field": "updated_by", "label": "Updated By"},
+       {"field": "update_time", "label": "Update Time"},
+       {"field": "collection_members", "label": "Containing Members"},
+       {"field": "member_of_collections", "label": "Member Of"},
+       {"field": "GUID", "label": "GUID"},
+       {"field": "mermaidGraph", "label": "Mermaid"},
+       {"field": "solutionBlueprintMermaidGraph", "label": "Solution Blueprint Mermaid Graph"}
+      ]
+     },
+     "HTML": {"same_as": "REPORT"},
+     "MERMAID": {
+      "columns": [
+       {"field": "mermaidGraph", "label": "Mermaid"},
+       {"field": "solutionBlueprintMermaidGraph", "label": "Solution Blueprint Mermaid Graph"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Concept-Bead-Attribute-DrE-Advanced",
+   "envelope": {
+    "heading": "Concept-Bead-Attribute-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Concept Bead Attribute (Create, Advanced).",
+    "family": "Solution Architect",
+    "target_type_name": "Concept Bead Attribute",
+    "aliases": ["Concept Bead Attribute DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Concept Bead Attribute",
+      "function": "SolutionArchitect.find_concept_model_elements",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "status", "label": "Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "status", "label": "Status"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "category", "label": "Category"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Concept-Bead-Attribute-DrE-Basic",
+   "envelope": {
+    "heading": "Concept-Bead-Attribute-DrE-Basic Attributes",
+    "description": "Auto-generated format for Concept Bead Attribute (Create, Basic).",
+    "family": "Solution Architect",
+    "target_type_name": "Concept Bead Attribute",
+    "aliases": ["Concept Bead Attribute DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Concept Bead Attribute",
+      "function": "SolutionArchitect.find_concept_model_elements",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Concept-Bead-DrE-Advanced",
+   "envelope": {
+    "heading": "Concept-Bead-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Concept Bead (Create, Advanced).",
+    "family": "Solution Architect",
+    "target_type_name": "Concept Bead",
+    "aliases": ["Concept Bead DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Concept Bead",
+      "function": "SolutionArchitect.find_concept_model_elements",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "status", "label": "Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "status", "label": "Status"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "category", "label": "Category"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Concept-Bead-DrE-Basic",
+   "envelope": {
+    "heading": "Concept-Bead-DrE-Basic Attributes",
+    "description": "Auto-generated format for Concept Bead (Create, Basic).",
+    "family": "Solution Architect",
+    "target_type_name": "Concept Bead",
+    "aliases": ["Concept Bead DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Concept Bead",
+      "function": "SolutionArchitect.find_concept_model_elements",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Concept-Bead-Relationship-DrE-Advanced",
+   "envelope": {
+    "heading": "Concept-Bead-Relationship-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Concept Bead Relationship (Create, Advanced).",
+    "family": "Solution Architect",
+    "target_type_name": "Concept Bead Relationship",
+    "aliases": ["Concept Bead Relationship DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Concept Bead Relationship",
+      "function": "SolutionArchitect.find_concept_model_elements",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "status", "label": "Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "status", "label": "Status"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "category", "label": "Category"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Concept-Bead-Relationship-DrE-Basic",
+   "envelope": {
+    "heading": "Concept-Bead-Relationship-DrE-Basic Attributes",
+    "description": "Auto-generated format for Concept Bead Relationship (Create, Basic).",
+    "family": "Solution Architect",
+    "target_type_name": "Concept Bead Relationship",
+    "aliases": ["Concept Bead Relationship DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Concept Bead Relationship",
+      "function": "SolutionArchitect.find_concept_model_elements",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Concept-Model-DrE-Advanced",
+   "envelope": {
+    "heading": "Concept-Model-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Concept Model (Create, Advanced).",
+    "family": "Solution Architect",
+    "target_type_name": "Concept Model",
+    "aliases": ["Concept Model DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Concept Model",
+      "function": "CollectionManager.find_collections",
+      "params": {"search_string": "$search_string", "metadata_element_type": "ConceptModel"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "status", "label": "Status"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "status", "label": "Status"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "category", "label": "Category"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Concept-Model-DrE-Basic",
+   "envelope": {
+    "heading": "Concept-Model-DrE-Basic Attributes",
+    "description": "Auto-generated format for Concept Model (Create, Basic).",
+    "family": "Solution Architect",
+    "target_type_name": "Concept Model",
+    "aliases": ["Concept Model DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Concept Model",
+      "function": "CollectionManager.find_collections",
+      "params": {"search_string": "$search_string", "metadata_element_type": "ConceptModel"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "purpose", "label": "Purpose"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Design-Pattern-DrE-Advanced",
+   "envelope": {
+    "heading": "Design-Pattern-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Design Pattern (Create, Advanced).",
+    "family": "Solution Architect",
+    "target_type_name": "Design Pattern",
+    "aliases": ["Design Pattern DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Design Pattern",
+      "function": "SolutionArchitect.find_design_patterns",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "benefits", "label": "Benefits"},
+       {"field": "context", "label": "Context"},
+       {"field": "forces", "label": "Forces"},
+       {"field": "liabilities", "label": "Liabilities"},
+       {"field": "problem_example", "label": "Problem Example"},
+       {"field": "problem_statement", "label": "Problem Statement"},
+       {"field": "solution_description", "label": "Solution Description"},
+       {"field": "solution_example", "label": "Solution Example"},
+       {"field": "usage", "label": "Usage"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "status", "label": "Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "status", "label": "Status"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "category", "label": "Category"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "benefits", "label": "Benefits"},
+       {"field": "context", "label": "Context"},
+       {"field": "forces", "label": "Forces"},
+       {"field": "liabilities", "label": "Liabilities"},
+       {"field": "problem_example", "label": "Problem Example"},
+       {"field": "problem_statement", "label": "Problem Statement"},
+       {"field": "solution_description", "label": "Solution Description"},
+       {"field": "solution_example", "label": "Solution Example"},
+       {"field": "usage", "label": "Usage"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Design-Pattern-DrE-Basic",
+   "envelope": {
+    "heading": "Design-Pattern-DrE-Basic Attributes",
+    "description": "Auto-generated format for Design Pattern (Create, Basic).",
+    "family": "Solution Architect",
+    "target_type_name": "Design Pattern",
+    "aliases": ["Design Pattern DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Design Pattern",
+      "function": "SolutionArchitect.find_design_patterns",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "benefits", "label": "Benefits"},
+       {"field": "context", "label": "Context"},
+       {"field": "forces", "label": "Forces"},
+       {"field": "liabilities", "label": "Liabilities"},
+       {"field": "problem_example", "label": "Problem Example"},
+       {"field": "problem_statement", "label": "Problem Statement"},
+       {"field": "solution_description", "label": "Solution Description"},
+       {"field": "solution_example", "label": "Solution Example"},
+       {"field": "usage", "label": "Usage"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "benefits", "label": "Benefits"},
+       {"field": "context", "label": "Context"},
+       {"field": "forces", "label": "Forces"},
+       {"field": "liabilities", "label": "Liabilities"},
+       {"field": "problem_example", "label": "Problem Example"},
+       {"field": "problem_statement", "label": "Problem Statement"},
+       {"field": "solution_description", "label": "Solution Description"},
+       {"field": "solution_example", "label": "Solution Example"},
+       {"field": "usage", "label": "Usage"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Information-Supply-Chain-DrE-Advanced",
+   "envelope": {
+    "heading": "Information-Supply-Chain-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Information Supply Chain (Create, Advanced).",
+    "family": "Solution Architect",
+    "target_type_name": "Information Supply Chain",
+    "aliases": ["Information Supply Chain DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Information Supply Chain",
+      "function": "SolutionArchitect.find_information_supply_chains",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "estimated_volumetrics", "label": "Estimated Volumetrics"},
+       {"field": "in_supply_chain", "label": "In Information Supply Chain"},
+       {"field": "integration_style", "label": "Integration Style"},
+       {"field": "nested_info_supply_chains", "label": "Nested Information Supply Chains"},
+       {"field": "purposes", "label": "Purposes"},
+       {"field": "scope", "label": "Scope"},
+       {"field": "implemented_by", "label": "Implemented By"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "status", "label": "Status"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "status", "label": "Status"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "category", "label": "Category"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "estimated_volumetrics", "label": "Estimated Volumetrics"},
+       {"field": "in_supply_chain", "label": "In Information Supply Chain"},
+       {"field": "integration_style", "label": "Integration Style"},
+       {"field": "nested_info_supply_chains", "label": "Nested Information Supply Chains"},
+       {"field": "purposes", "label": "Purposes"},
+       {"field": "scope", "label": "Scope"},
+       {"field": "implemented_by", "label": "Implemented By"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"},
+       {"field": "iscImplementationMermaidGraph", "label": "ISC Implementation Graph"},
+       {"field": "iscDataMeshMermaidGraph", "label": "ISC Data Mesh Graph"},
+       {"field": "iscSystemFabricMermaidGraph", "label": "ISC System Fabric Graph"},
+       {"field": "iscDataFabricMermaidGraph", "label": "ISC Data Fabric Graph"},
+       {"field": "iscDataMappingMermaidGraph", "label": "ISC Data Mapping Graph"}
+      ]
+     },
+     "MERMAID": {
+      "columns": [
+       {"field": "iscImplementationMermaidGraph", "label": "ISC Implementation Graph"},
+       {"field": "iscDataMeshMermaidGraph", "label": "ISC Data Mesh Graph"},
+       {"field": "iscSystemFabricMermaidGraph", "label": "ISC System Fabric Graph"},
+       {"field": "iscDataFabricMermaidGraph", "label": "ISC Data Fabric Graph"},
+       {"field": "iscDataMappingMermaidGraph", "label": "ISC Data Mapping Graph"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Information-Supply-Chain-DrE-Basic",
+   "envelope": {
+    "heading": "Information-Supply-Chain-DrE-Basic Attributes",
+    "description": "Auto-generated format for Information Supply Chain (Create, Basic).",
+    "family": "Solution Architect",
+    "target_type_name": "Information Supply Chain",
+    "aliases": ["Information Supply Chain DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Information Supply Chain",
+      "function": "SolutionArchitect.find_information_supply_chains",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "in_supply_chain", "label": "In Information Supply Chain"},
+       {"field": "integration_style", "label": "Integration Style"},
+       {"field": "nested_info_supply_chains", "label": "Nested Information Supply Chains"},
+       {"field": "purposes", "label": "Purposes"},
+       {"field": "scope", "label": "Scope"},
+       {"field": "implemented_by", "label": "Implemented By"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "in_supply_chain", "label": "In Information Supply Chain"},
+       {"field": "integration_style", "label": "Integration Style"},
+       {"field": "nested_info_supply_chains", "label": "Nested Information Supply Chains"},
+       {"field": "purposes", "label": "Purposes"},
+       {"field": "scope", "label": "Scope"},
+       {"field": "implemented_by", "label": "Implemented By"},
+       {"field": "iscImplementationMermaidGraph", "label": "ISC Implementation Graph"},
+       {"field": "iscDataMeshMermaidGraph", "label": "ISC Data Mesh Graph"},
+       {"field": "iscSystemFabricMermaidGraph", "label": "ISC System Fabric Graph"},
+       {"field": "iscDataFabricMermaidGraph", "label": "ISC Data Fabric Graph"},
+       {"field": "iscDataMappingMermaidGraph", "label": "ISC Data Mapping Graph"}
+      ]
+     },
+     "MERMAID": {
+      "columns": [
+       {"field": "iscImplementationMermaidGraph", "label": "ISC Implementation Graph"},
+       {"field": "iscDataMeshMermaidGraph", "label": "ISC Data Mesh Graph"},
+       {"field": "iscSystemFabricMermaidGraph", "label": "ISC System Fabric Graph"},
+       {"field": "iscDataFabricMermaidGraph", "label": "ISC Data Fabric Graph"},
+       {"field": "iscDataMappingMermaidGraph", "label": "ISC Data Mapping Graph"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Solution-Blueprint-DrE-Advanced",
+   "envelope": {
+    "heading": "Solution-Blueprint-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Solution Blueprint (Create, Advanced).",
+    "family": "Solution Architect",
+    "target_type_name": "Solution Blueprint",
+    "aliases": ["Solution Blueprint DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Solution Blueprint",
+      "function": "SolutionArchitect.find_solution_blueprints",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "role_list", "label": "Role List"},
+       {"field": "solution_components", "label": "Solution Components"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "status", "label": "Status"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "status", "label": "Status"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "category", "label": "Category"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "role_list", "label": "Role List"},
+       {"field": "solution_components", "label": "Solution Components"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Solution-Blueprint-DrE-Basic",
+   "envelope": {
+    "heading": "Solution-Blueprint-DrE-Basic Attributes",
+    "description": "Auto-generated format for Solution Blueprint (Create, Basic).",
+    "family": "Solution Architect",
+    "target_type_name": "Solution Blueprint",
+    "aliases": ["Solution Blueprint DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Solution Blueprint",
+      "function": "SolutionArchitect.find_solution_blueprints",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "role_list", "label": "Role List"},
+       {"field": "solution_components", "label": "Solution Components"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "role_list", "label": "Role List"},
+       {"field": "solution_components", "label": "Solution Components"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Solution-Component-DrE-Advanced",
+   "envelope": {
+    "heading": "Solution-Component-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Solution Component (Create, Advanced).",
+    "family": "Solution Architect",
+    "target_type_name": "Solution Component",
+    "aliases": ["Solution Component DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Solution Component",
+      "function": "SolutionArchitect.find_solution_components",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "actors", "label": "Actors"},
+       {"field": "canonical_name", "label": "Canonical Name"},
+       {"field": "in_supply_chain", "label": "In Information Supply Chain"},
+       {"field": "in_solution_blueprints", "label": "In Solution Blueprints"},
+       {"field": "in_components", "label": "In Solution Components"},
+       {"field": "planned_deployed_impl_type", "label": "Planned Deployed Implementation Type"},
+       {"field": "solution_component_type", "label": "Solution Component Type"},
+       {"field": "solution_sub_components", "label": "Solution SubComponents"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "status", "label": "Status"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "deployment_status", "label": "Deployment Status", "valid_values": ["PROPOSED", "UNDER_DEVELOPMENT", "DEVELOPMENT_COMPLETE", "APPROVED_FOR_DEPLOYMENT", "REJECTED", "STANDBY", "ACTIVE", "DISABLED", "FAILED", "OTHER"]},
+       {"field": "user_defined_deployment_status", "label": "User Defined Deployment Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "status", "label": "Status"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "category", "label": "Category"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "actors", "label": "Actors"},
+       {"field": "canonical_name", "label": "Canonical Name"},
+       {"field": "in_supply_chain", "label": "In Information Supply Chain"},
+       {"field": "in_solution_blueprints", "label": "In Solution Blueprints"},
+       {"field": "in_components", "label": "In Solution Components"},
+       {"field": "planned_deployed_impl_type", "label": "Planned Deployed Implementation Type"},
+       {"field": "solution_component_type", "label": "Solution Component Type"},
+       {"field": "solution_sub_components", "label": "Solution SubComponents"},
+       {"field": "deployment_status", "label": "Deployment Status", "valid_values": ["PROPOSED", "UNDER_DEVELOPMENT", "DEVELOPMENT_COMPLETE", "APPROVED_FOR_DEPLOYMENT", "REJECTED", "STANDBY", "ACTIVE", "DISABLED", "FAILED", "OTHER"]},
+       {"field": "user_defined_deployment_status", "label": "User Defined Deployment Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Solution-Component-DrE-Basic",
+   "envelope": {
+    "heading": "Solution-Component-DrE-Basic Attributes",
+    "description": "Auto-generated format for Solution Component (Create, Basic).",
+    "family": "Solution Architect",
+    "target_type_name": "Solution Component",
+    "aliases": ["Solution Component DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Solution Component",
+      "function": "SolutionArchitect.find_solution_components",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "actors", "label": "Actors"},
+       {"field": "in_supply_chain", "label": "In Information Supply Chain"},
+       {"field": "in_solution_blueprints", "label": "In Solution Blueprints"},
+       {"field": "in_components", "label": "In Solution Components"},
+       {"field": "planned_deployed_impl_type", "label": "Planned Deployed Implementation Type"},
+       {"field": "solution_component_type", "label": "Solution Component Type"},
+       {"field": "solution_sub_components", "label": "Solution SubComponents"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "deployment_status", "label": "Deployment Status", "valid_values": ["PROPOSED", "UNDER_DEVELOPMENT", "DEVELOPMENT_COMPLETE", "APPROVED_FOR_DEPLOYMENT", "REJECTED", "STANDBY", "ACTIVE", "DISABLED", "FAILED", "OTHER"]},
+       {"field": "user_defined_deployment_status", "label": "User Defined Deployment Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "actors", "label": "Actors"},
+       {"field": "in_supply_chain", "label": "In Information Supply Chain"},
+       {"field": "in_solution_blueprints", "label": "In Solution Blueprints"},
+       {"field": "in_components", "label": "In Solution Components"},
+       {"field": "planned_deployed_impl_type", "label": "Planned Deployed Implementation Type"},
+       {"field": "solution_component_type", "label": "Solution Component Type"},
+       {"field": "solution_sub_components", "label": "Solution SubComponents"},
+       {"field": "deployment_status", "label": "Deployment Status", "valid_values": ["PROPOSED", "UNDER_DEVELOPMENT", "DEVELOPMENT_COMPLETE", "APPROVED_FOR_DEPLOYMENT", "REJECTED", "STANDBY", "ACTIVE", "DISABLED", "FAILED", "OTHER"]},
+       {"field": "user_defined_deployment_status", "label": "User Defined Deployment Status"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Solution-Role-DrE-Advanced",
+   "envelope": {
+    "heading": "Solution-Role-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Solution Role (Create, Advanced).",
+    "family": "Solution Architect",
+    "target_type_name": "Solution Role",
+    "aliases": ["Solution Role DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Solution Role",
+      "function": "SolutionArchitect.find_solution_roles",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "role_domain_identifier", "label": "Role Domain Identifier", "valid_values": ["All Domains", "Data", "Privacy", "Security", "IT Infrastructure", "Software Development", "Corporate", "Asset Management", "Other"]},
+       {"field": "scope", "label": "Scope"},
+       {"field": "title", "label": "Title"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "status", "label": "Status"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "status", "label": "Status"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "category", "label": "Category"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "role_domain_identifier", "label": "Role Domain Identifier", "valid_values": ["All Domains", "Data", "Privacy", "Security", "IT Infrastructure", "Software Development", "Corporate", "Asset Management", "Other"]},
+       {"field": "scope", "label": "Scope"},
+       {"field": "title", "label": "Title"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Solution-Role-DrE-Basic",
+   "envelope": {
+    "heading": "Solution-Role-DrE-Basic Attributes",
+    "description": "Auto-generated format for Solution Role (Create, Basic).",
+    "family": "Solution Architect",
+    "target_type_name": "Solution Role",
+    "aliases": ["Solution Role DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Solution Role",
+      "function": "SolutionArchitect.find_solution_roles",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "role_domain_identifier", "label": "Role Domain Identifier", "valid_values": ["All Domains", "Data", "Privacy", "Security", "IT Infrastructure", "Software Development", "Corporate", "Asset Management", "Other"]},
+       {"field": "scope", "label": "Scope"},
+       {"field": "title", "label": "Title"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "role_domain_identifier", "label": "Role Domain Identifier", "valid_values": ["All Domains", "Data", "Privacy", "Security", "IT Infrastructure", "Software Development", "Corporate", "Asset Management", "Other"]},
+       {"field": "scope", "label": "Scope"},
+       {"field": "title", "label": "Title"}
+      ]
+     }
+    }
+   }
+  }
+ ]
+}

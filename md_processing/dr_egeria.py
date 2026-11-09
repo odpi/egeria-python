@@ -3,11 +3,11 @@ from md_processing.md_processing_utils.md_processing_constants import load_comma
 # Ensure compact command specs are loaded before any v2 processing
 load_commands()
 
-# Analytic Function Demo report specs (pyegeria.view.analytic_demo_specs) --
-# and any other extra report-spec source -- are auto-loaded by
-# get_report_registry() itself (CONFIG tier, through pyegeria's own
-# `pyegeria.report_specs` entry point, ISSUE-173) the first time anything calls it. No explicit
-# registration call needed here anymore.
+# Analytic Function Demo report specs (pyegeria.view.analytic_demo_specs) ship in the
+# report-spec seed (builtin tier, RS-EGERIA-TIER stage 2); any other extra report-spec
+# source is auto-loaded by get_report_registry() itself (CONFIG tier, through
+# `pyegeria.report_specs` entry points, ISSUE-173) the first time anything calls it. No
+# explicit registration call needed here.
 """
 This is an ongoing experiment in parsing and playing with Dr.Egeria docs
 """

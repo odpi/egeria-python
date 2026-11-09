@@ -1,0 +1,120 @@
+{
+ "format": "pyegeria-seed/1",
+ "family": "Glossary Manager",
+ "specs": [
+  {
+   "label": "Glossaries",
+   "envelope": {
+    "heading": "Glossary Attributes",
+    "description": "Attributes that apply to all Glossaries.",
+    "family": "Glossary Manager",
+    "target_type_name": "Glossary",
+    "aliases": [],
+    "annotations": {
+     "wikilinks": ["[[Glossaries]]"]
+    }
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Glossary",
+      "function": "GlossaryManager.find_glossaries",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "language", "label": "Language"},
+       {"field": "usage", "label": "Usage"},
+       {"field": "folder_display_names", "label": "Folders"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Glossary-Terms",
+   "envelope": {
+    "heading": "Basic Glossary Term Attributes",
+    "description": "Attributes that apply to all Basic Glossary Terms.",
+    "family": "Glossary Manager",
+    "target_type_name": "Term",
+    "aliases": ["Terms", "Glossary Terms"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Term",
+      "function": "GlossaryManager.find_glossary_terms",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "guid", "label": "GUID", "format": true},
+       {"field": "metadata_collection_id", "label": "Metadata Collection ID", "format": true},
+       {"field": "metadata_collection_name", "label": "Metadata Collection Name", "format": true},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "summary", "label": "Summary"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "example", "label": "Example"},
+       {"field": "usage", "label": "Usage"},
+       {"field": "updated_by", "label": "Updated By"},
+       {"field": "update_time", "label": "Update Time"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "type_name", "label": "Open Metadata Type Name"},
+       {"field": "parent_glossary", "label": "Glossary"},
+       {"field": "subject_area", "label": "Subject Area"}
+      ]
+     }
+    }
+   }
+  }
+ ]
+}

@@ -9,6 +9,7 @@ This script executes the following generation processes in order:
 1. Markdown command templates generation (generate_md_cmd_templates)
 2. Dr. Egeria help documentation generation (generate_dr_help)
 3. Report FormatSet specifications generation (gen_report_specs)
+4. The report-spec seed (python -m pyegeria.view.seed build), which the builtin tier loads
 
 Usage:
   uv run python refresh_specs.py [options]
@@ -98,6 +99,11 @@ def main():
         cmd_reports.append("--merge")
 
     run_command(cmd_reports, "Report Specifications Generation")
+
+    # 3b. Rebuild the report-spec seed (RS-EGERIA-TIER stage 2): the builtin tier loads from the packaged
+    # JSON in pyegeria/view/seed, generated from the Python constants. A fresh process, so it reads the
+    # generated section just written. Until stage 4 the constants stay the source.
+    run_command([python_exec, "-m", "pyegeria.view.seed", "build"], "Report Spec Seed Build")
 
     # 4. Resolve every report spec (RS-W2-2 PR-B, note §2c) and say which cannot run, and why.
     # Imported here, after the generation subprocess, so the freshly written specs are the ones read.
