@@ -228,7 +228,8 @@ def test_list_report_specs_is_unchanged_by_default_and_gains_status_on_request()
     assert status["Analytic Demo - Element Count by Type"] == {
         "name": "Analytic Demo - Element Count by Type", "runnable": True, "unrunnable_reason": "",
         # RS-EGERIA-TIER: where the spec comes from, and whether it shadows or is shadowed
-        "source": "local", "shadowed_by": None, "shadows": None, "cache_age_s": None}
+        # RS-EGERIA-TIER stage 2 (S2-2): the analytic demos ship in the seed, so their tier is builtin.
+        "source": "builtin", "shadowed_by": None, "shadows": None, "cache_age_s": None}
 
 
 def test_results_are_cached_and_a_registry_change_invalidates():

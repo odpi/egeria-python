@@ -1,0 +1,54 @@
+{
+ "format": "pyegeria-seed/1",
+ "family": "GlossaryManager",
+ "specs": [
+  {
+   "label": "Questions",
+   "envelope": {
+    "heading": "Questions",
+    "description": "GlossaryTerms classified as Questions",
+    "family": "GlossaryManager",
+    "target_type_name": "GlossaryTerm",
+    "aliases": []
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "as_of_time": {"type": "string", "required": false},
+     "effective_time": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "GlossaryTerm",
+      "function": "GlossaryManager.find_glossary_terms",
+      "params": {
+       "search_string": "$search_string",
+       "include_only_classified_elements": ["Question"]
+      }
+     }
+    ],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "description", "label": "Description"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "classifications", "label": "Classifications"}
+      ]
+     }
+    }
+   }
+  }
+ ]
+}

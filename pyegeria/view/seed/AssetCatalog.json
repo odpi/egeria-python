@@ -1,0 +1,141 @@
+{
+ "format": "pyegeria-seed/1",
+ "family": "AssetCatalog",
+ "specs": [
+  {
+   "label": "Asset-Graph",
+   "envelope": {
+    "heading": "Asset Graph",
+    "description": "An asset, the elements anchored to it and their relationships, as Egeria's asset graph (AssetCatalog.get_asset_graph_by_guid).",
+    "family": "AssetCatalog",
+    "target_type_name": "Asset",
+    "aliases": ["Asset Graph"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "guid": {"type": "string", "required": true},
+     "start_from": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Asset",
+      "function": "AssetCatalog.get_asset_graph_by_guid",
+      "params": {"guid": "$guid"}
+     }
+    ],
+    "formatters": {
+     "DICT": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "guid", "label": "GUID", "format": true},
+       {"field": "metadata_collection_id", "label": "Metadata Collection ID", "format": true},
+       {"field": "metadata_collection_name", "label": "Metadata Collection Name", "format": true},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "created_by", "label": "Created By"},
+       {"field": "create_time", "label": "Create Time"},
+       {"field": "updated_by", "label": "Updated By"},
+       {"field": "update_time", "label": "Update Time"},
+       {"field": "version", "label": "Version"},
+       {"field": "type_name", "label": "Open Metadata Type Name"},
+       {"field": "mermaidGraph", "label": "Mermaid Graph"},
+       {"field": "anchorMermaidGraph", "label": "Anchor Graph"},
+       {"field": "actionMermaidGraph", "label": "Action Graph"},
+       {"field": "fieldLevelLineageGraph", "label": "Field Level Lineage Graph"}
+      ]
+     },
+     "JSON": {"same_as": "DICT"},
+     "REPORT": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "guid", "label": "GUID", "format": true},
+       {"field": "metadata_collection_id", "label": "Metadata Collection ID", "format": true},
+       {"field": "metadata_collection_name", "label": "Metadata Collection Name", "format": true},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "created_by", "label": "Created By"},
+       {"field": "create_time", "label": "Create Time"},
+       {"field": "updated_by", "label": "Updated By"},
+       {"field": "update_time", "label": "Update Time"},
+       {"field": "version", "label": "Version"},
+       {"field": "type_name", "label": "Open Metadata Type Name"},
+       {"field": "mermaidGraph", "label": "Mermaid Graph"},
+       {"field": "anchorMermaidGraph", "label": "Anchor Graph"},
+       {"field": "actionMermaidGraph", "label": "Action Graph"},
+       {"field": "fieldLevelLineageGraph", "label": "Field Level Lineage Graph"}
+      ]
+     },
+     "HTML": {"same_as": "REPORT"},
+     "MERMAID": {
+      "columns": [
+       {"field": "mermaidGraph", "label": "Mermaid Graph"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Asset-Lineage-Hops",
+   "envelope": {
+    "heading": "Asset Lineage Hops",
+    "description": "One row per element of an asset lineage graph, with how many hops it is from the asset and whether its lineage continues past Egeria's hop limit (Egeria 6.3+). AssetCatalog.get_asset_lineage_graph_by_guid heads the output with a line saying whether, and where, the graph was cut.",
+    "family": "AssetCatalog",
+    "target_type_name": "Asset",
+    "aliases": ["Asset Lineage Hops"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "hopsFromStart", "label": "Hops From Start"},
+       {"field": "hopLimitReached", "label": "Hop Limit Reached"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Asset-Types",
+   "envelope": {
+    "heading": "Asset Types",
+    "description": "Types of assets available in the catalog.",
+    "family": "AssetCatalog",
+    "target_type_name": "Asset-Types",
+    "aliases": ["Asset Types"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "super_type", "label": "Super Type"}
+      ]
+     }
+    }
+   }
+  }
+ ]
+}

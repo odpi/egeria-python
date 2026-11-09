@@ -854,7 +854,9 @@ def test_spec_source_is_beside_kind_and_never_inside_data(tier, monkeypatch):
     assert out["spec_source"] == {"tier": "egeria", "label": "E-Collections", "version": "1.0", "guid": E_GUID,
                                   "synced_at": out["spec_source"]["synced_at"]}
     out = fse.exec_report_spec("Collections", output_format="DICT", params={})
-    assert out["spec_source"] == {"tier": "builtin", "label": "Collections", "version": None}
+    # RS-EGERIA-TIER stage 2: a builtin spec also names the seed file it was loaded from.
+    assert out["spec_source"] == {"tier": "builtin", "label": "Collections", "version": None,
+                                  "seed": "Collection Manager.json"}
 
 
 def test_footer_on_report_md_html_only_for_egeria_specs(tier, monkeypatch):

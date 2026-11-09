@@ -1,0 +1,461 @@
+{
+ "format": "pyegeria-seed/1",
+ "family": "External References",
+ "specs": [
+  {
+   "label": "ExternalReference",
+   "envelope": {
+    "heading": "External Reference Attributes",
+    "description": "Attributes that apply to all External References.",
+    "family": "External References",
+    "target_type_name": "External Reference",
+    "aliases": ["ExternalDataSource", "ExternalModelSource", "External References"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "External Reference",
+      "function": "ExternalReference.find_external_references",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "reference_title", "label": "Reference Title"},
+       {"field": "reference_abstract", "label": "Reference Abstract"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "organization", "label": "Organization"},
+       {"field": "reference_url", "label": "Reference URL"},
+       {"field": "sources", "label": "Sources"},
+       {"field": "license", "label": "License"},
+       {"field": "copyright", "label": "Copyright"},
+       {"field": "attribution", "label": "Attribution"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "ExternalIdentifier",
+   "envelope": {
+    "heading": "External Identifier Attributes",
+    "description": "Attributes that apply to External Identifiers.",
+    "family": "External References",
+    "target_type_name": "External Identifier",
+    "aliases": []
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "External Identifier",
+      "function": "ExternalReference.find_external_identifiers",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "key", "label": "Key"},
+       {"field": "key_pattern", "label": "Key Pattern"},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "external_instance_type_name", "label": "External Instance Type Name"},
+       {"field": "external_instance_created_by", "label": "External Instance Created By"},
+       {"field": "external_instance_creation_time", "label": "External Instance Creation Time"},
+       {"field": "external_instance_last_updated_by", "label": "External Instance Last Updated By"},
+       {"field": "external_instance_last_update_time", "label": "External Instance Last Update Time"},
+       {"field": "external_instance_version", "label": "External Instance Version"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "RelatedMedia",
+   "envelope": {
+    "heading": "Related Media Attributes",
+    "description": "Attributes that apply to related media.",
+    "family": "External References",
+    "target_type_name": "Related Media",
+    "aliases": []
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Related Media",
+      "function": "ExternalReference.find_external_references",
+      "params": {
+       "search_string": "$search_string",
+       "metadata_element_subtypes": ["RelatedMedia"]
+      }
+     }
+    ],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "reference_title", "label": "Reference Title"},
+       {"field": "reference_abstract", "label": "Reference Abstract"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "organization", "label": "Organization"},
+       {"field": "reference_url", "label": "Reference URL"},
+       {"field": "sources", "label": "Sources"},
+       {"field": "license", "label": "License"},
+       {"field": "copyright", "label": "Copyright"},
+       {"field": "attribution", "label": "Attribution"},
+       {"field": "media_type", "label": "Media Type"},
+       {"field": "media_type_other_id", "label": "Media Type Other Id"},
+       {"field": "default_media_usage", "label": "Default Media Usage"},
+       {"field": "default_media_usage_other_id", "label": "Default Media Usage Other Id"}
+      ]
+     },
+     "LIST": {"same_as": "ALL"}
+    }
+   }
+  },
+  {
+   "label": "CitedDocument",
+   "envelope": {
+    "heading": "Cited Document Attributes",
+    "description": "Attributes that apply to all Cited Documents.",
+    "family": "External References",
+    "target_type_name": "Cited Document",
+    "aliases": []
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Cited Document",
+      "function": "ExternalReference.find_external_references",
+      "params": {
+       "search_string": "$search_string",
+       "metadata_element_subtypes": ["CitedDocument"]
+      }
+     }
+    ],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "reference_title", "label": "Reference Title"},
+       {"field": "reference_abstract", "label": "Reference Abstract"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "organization", "label": "Organization"},
+       {"field": "reference_url", "label": "Reference URL"},
+       {"field": "sources", "label": "Sources"},
+       {"field": "license", "label": "License"},
+       {"field": "copyright", "label": "Copyright"},
+       {"field": "attribution", "label": "Attribution"},
+       {"field": "number_of_pages", "label": "Number of Pages"},
+       {"field": "page_range", "label": "Page Range"},
+       {"field": "publication_series", "label": "Publication Series"},
+       {"field": "publication_series_volume", "label": "Publication Series Volume"},
+       {"field": "publisher", "label": "Publisher"},
+       {"field": "edition", "label": "Edition"},
+       {"field": "first_publication_date", "label": "First Publication Date"},
+       {"field": "publication_date", "label": "Publication Date"},
+       {"field": "publication_city", "label": "Publication City"},
+       {"field": "publication_year", "label": "Publication Year"},
+       {"field": "publication_numbers", "label": "Publication Numbers"}
+      ]
+     },
+     "LIST": {"same_as": "ALL"}
+    }
+   }
+  },
+  {
+   "label": "Folders",
+   "envelope": {
+    "heading": "Common Folder Information",
+    "description": "Attributes generic to all Folders.",
+    "family": "External References",
+    "target_type_name": "Folder",
+    "aliases": [],
+    "annotations": {
+     "wikilinks": ["[[Commons]]"]
+    }
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Folder",
+      "function": "CollectionManager.find_collections",
+      "params": {"search_string": "$search_string", "metadata_element_type": "FolderCollection"}
+     }
+    ],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "collection_members", "label": "Containing Members", "format": "bulleted-list"},
+       {"field": "member_of_collections", "label": "Member Of"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Collection Members",
+   "envelope": {
+    "heading": "Collection Membership Information",
+    "description": "Attributes about all CollectionMembers.",
+    "family": "External References",
+    "target_type_name": "Collection",
+    "aliases": ["CollectionMember", "Member", "Members", "Collection Members"],
+    "annotations": {
+     "wikilinks": ["[[CollectionMembers]]"]
+    }
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "collection_guid": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "as_of_time": {"type": "string", "required": false},
+     "effective_time": {"type": "string", "required": false},
+     "body": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Collection",
+      "function": "CollectionManager.get_collection_members",
+      "params": {"collection_guid": "$collection_guid", "output_format": "DICT"}
+     }
+    ],
+    "formatters": {
+     "DICT": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "created_by", "label": "Created By"},
+       {"field": "create_time", "label": "Create Time"},
+       {"field": "updated_by", "label": "Updated By"},
+       {"field": "update_time", "label": "Update Time"},
+       {"field": "collection_members", "label": "Containing Members"},
+       {"field": "member_of_collections", "label": "Member Of"},
+       {"field": "GUID", "label": "GUID"}
+      ]
+     },
+     "TABLE": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "created_by", "label": "Created By"},
+       {"field": "create_time", "label": "Create Time"},
+       {"field": "updated_by", "label": "Updated By"},
+       {"field": "update_time", "label": "Update Time"},
+       {"field": "collection_members", "label": "Containing Members"},
+       {"field": "member_of_collections", "label": "Member Of"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "External-References",
+   "envelope": {
+    "heading": "External-Reference Attributes",
+    "description": "External References",
+    "family": "External References",
+    "target_type_name": "External-Reference",
+    "aliases": ["External References"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "External-Reference",
+      "function": "ExternalReference.find_external_references",
+      "params": {
+       "search_string": "$search_string",
+       "metadata_element_subtypes": ["ExternalReference"]
+      }
+     }
+    ],
+    "formatters": {
+     "MD": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "category", "label": "Category"},
+       {"field": "reference_title", "label": "Reference Title"},
+       {"field": "reference_abstract", "label": "Reference Abstract"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "organization", "label": "Organization"},
+       {"field": "reference_url", "label": "URL"},
+       {"field": "reference_sources", "label": "Sources"},
+       {"field": "license", "label": "License"},
+       {"field": "copyright", "label": "Copyright"},
+       {"field": "number_of_pages", "label": "Number of Pages"},
+       {"field": "page_range", "label": "Page Range"},
+       {"field": "publication_series", "label": "Publication Series"},
+       {"field": "pub_series_volume", "label": "Publication Series Volume"},
+       {"field": "publisher", "label": "Publisher"},
+       {"field": "first_pub_date", "label": "First Publication Date"},
+       {"field": "pub_date", "label": "Publication Date"},
+       {"field": "pub_city", "label": "Publication City"},
+       {"field": "pub_year", "label": "Publication Year"},
+       {"field": "pub_numbers", "label": "Publication Numbers"},
+       {"field": "current_version", "label": "Version Identifier"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"}
+      ]
+     },
+     "FORM": {"same_as": "MD"},
+     "DICT": {"same_as": "MD"},
+     "TABLE": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "reference_title", "label": "Reference Title"},
+       {"field": "reference_sources", "label": "Sources"},
+       {"field": "license", "label": "License"},
+       {"field": "qualified_name", "label": "Qualified Name"}
+      ]
+     },
+     "LIST": {"same_as": "TABLE"},
+     "REPORT": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "category", "label": "Category"},
+       {"field": "reference_title", "label": "Reference Title"},
+       {"field": "reference_abstract", "label": "Reference Abstract"},
+       {"field": "organization", "label": "Organization"},
+       {"field": "reference_url", "label": "URL"},
+       {"field": "reference_sources", "label": "Sources"},
+       {"field": "license", "label": "License"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "mermaidGraph", "label": "Mermaid"}
+      ]
+     },
+     "MERMAID": {
+      "columns": [
+       {"field": "mermaidGraph", "label": "Mermaid"}
+      ]
+     }
+    }
+   }
+  }
+ ]
+}

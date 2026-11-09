@@ -1,0 +1,218 @@
+{
+ "format": "pyegeria-seed/1",
+ "family": "Collection Manager",
+ "specs": [
+  {
+   "label": "Collections",
+   "envelope": {
+    "heading": "Common Collection Information",
+    "description": "Attributes generic to all Collections.",
+    "family": "Collection Manager",
+    "target_type_name": "Collection",
+    "aliases": ["Collection", "RootCollection", "Folder", "ReferenceList", "HomeCollection", "ResultsSet", "RecentAccess", "WorkItemList", "Namespace"],
+    "annotations": {
+     "wikilinks": ["[[Commons]]"]
+    }
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Collection",
+      "function": "CollectionManager.find_collections",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "MERMAID": {
+      "columns": [
+       {"field": "mermaidGraph", "label": "Mermaid"}
+      ]
+     },
+     "DICT": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "created_by", "label": "Created By"},
+       {"field": "create_time", "label": "Create Time"},
+       {"field": "updated_by", "label": "Updated By"},
+       {"field": "update_time", "label": "Update Time"},
+       {"field": "collection_members", "label": "Containing Members"},
+       {"field": "member_of_collections", "label": "Member Of"},
+       {"field": "GUID", "label": "GUID"}
+      ]
+     },
+     "TABLE": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "created_by", "label": "Created By"},
+       {"field": "create_time", "label": "Create Time"},
+       {"field": "updated_by", "label": "Updated By"},
+       {"field": "update_time", "label": "Update Time"},
+       {"field": "collection_members", "label": "Containing Members"},
+       {"field": "member_of_collections", "label": "Member Of"}
+      ]
+     },
+     "REPORT": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "created_by", "label": "Created By"},
+       {"field": "create_time", "label": "Create Time"},
+       {"field": "updated_by", "label": "Updated By"},
+       {"field": "update_time", "label": "Update Time"},
+       {"field": "collection_members", "label": "Containing Members"},
+       {"field": "member_of_collections", "label": "Member Of"},
+       {"field": "GUID", "label": "GUID"},
+       {"field": "mermaidGraph", "label": "Mermaid"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Collection-MindMap",
+   "envelope": {
+    "heading": "Collection Mind Map",
+    "description": "Displays the collection Mermaid mind map.",
+    "family": "Collection Manager",
+    "target_type_name": "Collection",
+    "aliases": ["Collection MindMap"],
+    "annotations": {
+     "wikilinks": ["[[Commons]]"]
+    }
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Collection",
+      "function": "CollectionManager.find_collections",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "REPORT": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "collectionMermaidMindMap", "label": "Collection Mermaid Mind Map"}
+      ]
+     },
+     "MERMAID": {
+      "columns": [
+       {"field": "collectionMermaidMindMap", "label": "Collection Mermaid Mind Map"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "BasicCollections",
+   "envelope": {
+    "heading": "Common Collection Information",
+    "description": "Attributes generic to all Collections.",
+    "family": "Collection Manager",
+    "target_type_name": "Collection",
+    "aliases": [],
+    "annotations": {
+     "wikilinks": ["[[Commons]]"]
+    }
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Collection",
+      "function": "CollectionManager.find_collections",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "collection_members", "label": "Containing Members", "format": "bulleted-list"},
+       {"field": "member_of_collections", "label": "Member Of"}
+      ]
+     }
+    }
+   }
+  }
+ ]
+}
