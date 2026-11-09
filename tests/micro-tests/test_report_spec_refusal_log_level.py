@@ -13,6 +13,7 @@ from pyegeria.omvs.asset_catalog import AssetCatalog
 from pyegeria.view.format_set_executor import AnalyticFunctionRefused, exec_report_spec
 from pyegeria.view.microflow import AllowlistRefusal, CannotRunYet, MicroflowError
 from pyegeria.view.role_supply import RoleRefused
+from pyegeria.core.request_filters import SearchRefused
 
 pytestmark = pytest.mark.unit
 
@@ -70,6 +71,7 @@ def _failed_lines(records):
     RoleRefused("Routine 'x' cannot run: no reader."),
     CannotRunYet("producer/join"),
     MicroflowError("not valid JSON"),
+    SearchRefused("give a search string or a narrower type"),
 ], ids=lambda e: type(e).__name__)
 def test_a_refusal_logs_at_warning_and_is_raised(raising_asset_catalog, log_records, exc):
     raising_asset_catalog["exc"] = exc
@@ -85,3 +87,26 @@ def test_an_unexpected_value_error_still_logs_at_error(raising_asset_catalog, lo
     with pytest.raises(ValueError, match="something broke"):
         _run()
     assert [level for level, _ in _failed_lines(log_records)] == ["ERROR"]
+
+
+def test_search_refused_is_a_value_error():
+    assert issubclass(SearchRefused, ValueError)
+
+
+def test_star_on_a_root_type_logs_at_warning_through_exec_report_spec(monkeypatch, log_records):
+    """End to end: Element-DrE-Basic searches OpenMetadataRoot; '*' is refused before any request."""
+    from pyegeria.omvs.classification_explorer import ClassificationExplorer
+
+    async def _no_request(self, *a, **k):
+        raise AssertionError("the refusal should come before any request")
+
+    monkeypatch.setattr(ClassificationExplorer, "_async_make_request", _no_request)
+    monkeypatch.setattr(EgeriaTech, "close_session", lambda self: None, raising=False)
+    with pytest.raises(ValueError) as exc:
+        exec_report_spec("Element-DrE-Basic", output_format="DICT", params={"search_string": "*"},
+                         view_server="qs-view-server", view_url="https://localhost:9443",
+                         user="tester", user_pass="unused", token="offline-token")
+    assert isinstance(exc.value, SearchRefused)
+    assert "give a search string or a narrower type" in str(exc.value)
+    lines = [(level, msg) for level, msg in log_records if "Report spec 'Element-DrE-Basic' (DICT) failed:" in msg]
+    assert [level for level, _ in lines] == ["WARNING"]

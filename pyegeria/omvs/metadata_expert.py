@@ -13,6 +13,7 @@ from typing import Unpack
 from pyegeria.core.request_filters import deprecated_names
 from pyegeria.core.request_filters import FindFilters
 from pyegeria.core.request_filters import filter_body_kwargs
+from pyegeria.core.request_filters import SearchRefused
 from pyegeria.models import (NewOpenMetadataElementRequestBody, TemplateRequestBody,
                              UpdatePropertiesRequestBody, MetadataSourceRequestBody,
                              ReIdentifyRequestBody, ReTypeRequestBody, ReHomeRequestBody,
@@ -2266,7 +2267,7 @@ class MetadataExpert(ServerClient):
         if search_string in (None, "", "*") and body is None and not (
                 metadata_element_type or metadata_element_subtypes or include_only_classified_elements):
             # Egeria refuses this with "searchString is null" (OMAG-COMMON-400-022); say why in plain words.
-            raise ValueError("find_metadata_elements_with_string: give a search string or a type "
+            raise SearchRefused("find_metadata_elements_with_string: give a search string or a type "
                              "(metadata_element_type, metadata_element_subtypes or "
                              "include_only_classified_elements); '*' alone is not a search")
         url = (

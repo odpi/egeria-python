@@ -106,10 +106,13 @@ def _is_spec_refusal(exc: BaseException) -> bool:
 
     The refusals are the allowlist's (AllowlistRefusal), the analytic-function resolver's
     (AnalyticFunctionRefused), a declared input the environment cannot supply (RoleRefused),
-    and a microflow this pyegeria cannot run or parse (CannotRunYet, MicroflowError).
+    a microflow this pyegeria cannot run or parse (CannotRunYet, MicroflowError), and a search a
+    find method refuses to send (SearchRefused: '*' with no type or a root type).
     """
     from pyegeria.view.microflow import AllowlistRefusal, CannotRunYet, MicroflowError  # lazy: microflow imports this module
-    return isinstance(exc, (AllowlistRefusal, AnalyticFunctionRefused, RoleRefused, CannotRunYet, MicroflowError))
+    from pyegeria.core.request_filters import SearchRefused
+    return isinstance(exc, (AllowlistRefusal, AnalyticFunctionRefused, RoleRefused, CannotRunYet, MicroflowError,
+                            SearchRefused))
 
 
 def analytic_module_prefixes() -> tuple:
