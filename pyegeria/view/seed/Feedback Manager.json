@@ -1,0 +1,143 @@
+{
+ "format": "pyegeria-seed/1",
+ "family": "Feedback Manager",
+ "specs": [
+  {
+   "label": "Search-Keywords",
+   "envelope": {
+    "heading": "Search Keyword Report",
+    "description": "A report of elements with search keywords matching the specified string",
+    "family": "Feedback Manager",
+    "target_type_name": null,
+    "aliases": ["Search Keywords"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "function": "_client_new.find_search_keywords",
+      "params": {"search_string": "$search_string"},
+      "additional_props": "_client_extract_element_properties_for_keyword"
+     }
+    ],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "displayName", "label": "Search Keyword"},
+       {"field": "guid", "label": "Search Keyword GUID"},
+       {"field": "element_display_name", "label": "Element Display Name"},
+       {"field": "element_guid", "label": "Element GUID"},
+       {"field": "element_type", "label": "Element Type"},
+       {"field": "element_description", "label": "Element Description"},
+       {"field": "element_category", "label": "Element Category"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Journal-Entry-DrE",
+   "envelope": {
+    "heading": "Journal Entry",
+    "description": "Details of a journal entry.",
+    "family": "Feedback Manager",
+    "target_type_name": "Notification",
+    "aliases": ["Journal Entry DrE"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Notification",
+      "function": "ServerClient.find_notes",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "note_log_name", "label": "Journal Name"},
+       {"field": "note_log_qualified_name", "label": "Journal Qualified Name"},
+       {"field": "qualified_name", "label": "Journal Entry Qualified Name"},
+       {"field": "guid", "label": "Journal Entry GUID"},
+       {"field": "description", "label": "Journal Entry"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Informal-Tags-DrE",
+   "envelope": {
+    "heading": "Informal Tags",
+    "description": "Details of Informal Tags.",
+    "family": "Feedback Manager",
+    "target_type_name": "Informal Tag",
+    "aliases": ["Informal Tags DrE"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Informal Tag",
+      "function": "ServerClient.find_tags",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Tag Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "tagged_elements", "label": "Tagged Elements"}
+      ]
+     }
+    }
+   }
+  }
+ ]
+}

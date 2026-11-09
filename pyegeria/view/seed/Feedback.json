@@ -1,0 +1,922 @@
+{
+ "format": "pyegeria-seed/1",
+ "family": "Feedback",
+ "specs": [
+  {
+   "label": "Activity-Entry-DrE-Advanced",
+   "envelope": {
+    "heading": "Activity-Entry-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Activity Entry (Create, Advanced).",
+    "family": "Feedback",
+    "target_type_name": "Activity Entry",
+    "aliases": ["Activity Entry DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "description", "label": "Description"},
+       {"field": "situation", "label": "Situation"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "situation", "label": "Situation"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Activity-Entry-DrE-Basic",
+   "envelope": {
+    "heading": "Activity-Entry-DrE-Basic Attributes",
+    "description": "Auto-generated format for Activity Entry (Create, Basic).",
+    "family": "Feedback",
+    "target_type_name": "Activity Entry",
+    "aliases": ["Activity Entry DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "situation", "label": "Situation"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "situation", "label": "Situation"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Blog-Entry-DrE-Advanced",
+   "envelope": {
+    "heading": "Blog-Entry-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Blog Entry (Create, Advanced).",
+    "family": "Feedback",
+    "target_type_name": "Blog Entry",
+    "aliases": ["Blog Entry DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "description", "label": "Description"},
+       {"field": "situation", "label": "Situation"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "situation", "label": "Situation"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Blog-Entry-DrE-Basic",
+   "envelope": {
+    "heading": "Blog-Entry-DrE-Basic Attributes",
+    "description": "Auto-generated format for Blog Entry (Create, Basic).",
+    "family": "Feedback",
+    "target_type_name": "Blog Entry",
+    "aliases": ["Blog Entry DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "situation", "label": "Situation"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "situation", "label": "Situation"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Comment-DrE-Advanced",
+   "envelope": {
+    "heading": "Comment-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Comment (Create, Advanced).",
+    "family": "Feedback",
+    "target_type_name": "Comment",
+    "aliases": ["Comment DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Comment",
+      "function": "ServerClient.find_comments",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "commented_on_element", "label": "Commented On Element"},
+       {"field": "comment_type", "label": "Comment Type", "valid_values": ["STANDARD_COMMENT", "QUESTION", "ANSWER", "SUGGESTION", "USAGE_EXPERIENCE", "REQUIREMENT", "OTHER"]},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "status", "label": "Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "status", "label": "Status"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "category", "label": "Category"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "commented_on_element", "label": "Commented On Element"},
+       {"field": "comment_type", "label": "Comment Type", "valid_values": ["STANDARD_COMMENT", "QUESTION", "ANSWER", "SUGGESTION", "USAGE_EXPERIENCE", "REQUIREMENT", "OTHER"]},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Comment-DrE-Basic",
+   "envelope": {
+    "heading": "Comment-DrE-Basic Attributes",
+    "description": "Auto-generated format for Comment (Create, Basic).",
+    "family": "Feedback",
+    "target_type_name": "Comment",
+    "aliases": ["Comment DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Comment",
+      "function": "ServerClient.find_comments",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "commented_on_element", "label": "Commented On Element"},
+       {"field": "comment_type", "label": "Comment Type", "valid_values": ["STANDARD_COMMENT", "QUESTION", "ANSWER", "SUGGESTION", "USAGE_EXPERIENCE", "REQUIREMENT", "OTHER"]},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "commented_on_element", "label": "Commented On Element"},
+       {"field": "comment_type", "label": "Comment Type", "valid_values": ["STANDARD_COMMENT", "QUESTION", "ANSWER", "SUGGESTION", "USAGE_EXPERIENCE", "REQUIREMENT", "OTHER"]}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Informal-Tag-DrE-Advanced",
+   "envelope": {
+    "heading": "Informal-Tag-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Informal Tag (Create, Advanced).",
+    "family": "Feedback",
+    "target_type_name": "Informal Tag",
+    "aliases": ["Informal Tag DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Informal Tag",
+      "function": "ServerClient.find_tags",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "status", "label": "Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "status", "label": "Status"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "category", "label": "Category"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Informal-Tag-DrE-Basic",
+   "envelope": {
+    "heading": "Informal-Tag-DrE-Basic Attributes",
+    "description": "Auto-generated format for Informal Tag (Create, Basic).",
+    "family": "Feedback",
+    "target_type_name": "Informal Tag",
+    "aliases": ["Informal Tag DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Informal Tag",
+      "function": "ServerClient.find_tags",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Journal-Entry-DrE-Advanced",
+   "envelope": {
+    "heading": "Journal-Entry-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Journal Entry (Create, Advanced).",
+    "family": "Feedback",
+    "target_type_name": "Journal Entry",
+    "aliases": ["Journal Entry DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "description", "label": "Description"},
+       {"field": "situation", "label": "Situation"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "situation", "label": "Situation"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Journal-Entry-DrE-Basic",
+   "envelope": {
+    "heading": "Journal-Entry-DrE-Basic Attributes",
+    "description": "Auto-generated format for Journal Entry (Create, Basic).",
+    "family": "Feedback",
+    "target_type_name": "Journal Entry",
+    "aliases": ["Journal Entry DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "situation", "label": "Situation"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "situation", "label": "Situation"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Like-DrE-Advanced",
+   "envelope": {
+    "heading": "Like-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Like (Create, Advanced).",
+    "family": "Feedback",
+    "target_type_name": "Like",
+    "aliases": ["Like DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "current_version", "label": "Version Identifier"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "parent_rel_type_name", "label": "Parent Relationship Type Name"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "parent_end1", "label": "Parent at End1"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"},
+       {"field": "element_status", "label": "Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "element_status", "label": "Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"},
+       {"field": "current_version", "label": "Version Identifier"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "parent_rel_type_name", "label": "Parent Relationship Type Name"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "parent_end1", "label": "Parent at End1"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "url", "label": "URL"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Like-DrE-Basic",
+   "envelope": {
+    "heading": "Like-DrE-Basic Attributes",
+    "description": "Auto-generated format for Like (Create, Basic).",
+    "family": "Feedback",
+    "target_type_name": "Like",
+    "aliases": ["Like DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "current_version", "label": "Version Identifier"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "category", "label": "Category"},
+       {"field": "current_version", "label": "Version Identifier"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "url", "label": "URL"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Note-DrE-Advanced",
+   "envelope": {
+    "heading": "Note-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Note (Create, Advanced).",
+    "family": "Feedback",
+    "target_type_name": "Note",
+    "aliases": ["Note DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "description", "label": "Description"},
+       {"field": "situation", "label": "Situation"},
+       {"field": "objective", "label": "Objective"},
+       {"field": "priority", "label": "Priority"},
+       {"field": "commented_on_element", "label": "Commented On Element"},
+       {"field": "activity_status", "label": "Activity Status", "valid_values": ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRESS", "PAUSED", "COMPLETED", "INVALID", "IGNORED", "FAILED", "CANCELLED", "ABANDONED", "OTHER"]}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "situation", "label": "Situation"},
+       {"field": "objective", "label": "Objective"},
+       {"field": "priority", "label": "Priority"},
+       {"field": "activity_status", "label": "Activity Status", "valid_values": ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRESS", "PAUSED", "COMPLETED", "INVALID", "IGNORED", "FAILED", "CANCELLED", "ABANDONED", "OTHER"]},
+       {"field": "commented_on_element", "label": "Commented On Element"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Note-DrE-Basic",
+   "envelope": {
+    "heading": "Note-DrE-Basic Attributes",
+    "description": "Auto-generated format for Note (Create, Basic).",
+    "family": "Feedback",
+    "target_type_name": "Note",
+    "aliases": ["Note DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "situation", "label": "Situation"},
+       {"field": "objective", "label": "Objective"},
+       {"field": "priority", "label": "Priority"},
+       {"field": "commented_on_element", "label": "Commented On Element"},
+       {"field": "activity_status", "label": "Activity Status", "valid_values": ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRESS", "PAUSED", "COMPLETED", "INVALID", "IGNORED", "FAILED", "CANCELLED", "ABANDONED", "OTHER"]}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "situation", "label": "Situation"},
+       {"field": "objective", "label": "Objective"},
+       {"field": "priority", "label": "Priority"},
+       {"field": "activity_status", "label": "Activity Status", "valid_values": ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRESS", "PAUSED", "COMPLETED", "INVALID", "IGNORED", "FAILED", "CANCELLED", "ABANDONED", "OTHER"]},
+       {"field": "commented_on_element", "label": "Commented On Element"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Rating-DrE-Advanced",
+   "envelope": {
+    "heading": "Rating-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Rating (Create, Advanced).",
+    "family": "Feedback",
+    "target_type_name": "Rating",
+    "aliases": ["Rating DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "stars", "label": "Stars", "valid_values": ["NO_RECOMMENDATION", "ONE_STAR", "TWO_STARS", "THREE_STARS", "FOUR_STARS", "FIVE_STARS"]},
+       {"field": "review", "label": "Review"},
+       {"field": "current_version", "label": "Version Identifier"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "parent_rel_type_name", "label": "Parent Relationship Type Name"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "parent_end1", "label": "Parent at End1"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"},
+       {"field": "element_status", "label": "Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "stars", "label": "Stars", "valid_values": ["NO_RECOMMENDATION", "ONE_STAR", "TWO_STARS", "THREE_STARS", "FOUR_STARS", "FIVE_STARS"]},
+       {"field": "review", "label": "Review"},
+       {"field": "element_status", "label": "Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"},
+       {"field": "current_version", "label": "Version Identifier"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "parent_rel_type_name", "label": "Parent Relationship Type Name"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "parent_end1", "label": "Parent at End1"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "url", "label": "URL"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Rating-DrE-Basic",
+   "envelope": {
+    "heading": "Rating-DrE-Basic Attributes",
+    "description": "Auto-generated format for Rating (Create, Basic).",
+    "family": "Feedback",
+    "target_type_name": "Rating",
+    "aliases": ["Rating DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "stars", "label": "Stars", "valid_values": ["NO_RECOMMENDATION", "ONE_STAR", "TWO_STARS", "THREE_STARS", "FOUR_STARS", "FIVE_STARS"]},
+       {"field": "review", "label": "Review"},
+       {"field": "current_version", "label": "Version Identifier"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "stars", "label": "Stars", "valid_values": ["NO_RECOMMENDATION", "ONE_STAR", "TWO_STARS", "THREE_STARS", "FOUR_STARS", "FIVE_STARS"]},
+       {"field": "review", "label": "Review"},
+       {"field": "category", "label": "Category"},
+       {"field": "current_version", "label": "Version Identifier"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "url", "label": "URL"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Review-DrE-Advanced",
+   "envelope": {
+    "heading": "Review-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Review (Create, Advanced).",
+    "family": "Feedback",
+    "target_type_name": "Review",
+    "aliases": ["Review DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "description", "label": "Description"},
+       {"field": "situation", "label": "Situation"},
+       {"field": "objective", "label": "Objective"},
+       {"field": "priority", "label": "Priority"},
+       {"field": "activity_status", "label": "Activity Status", "valid_values": ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRESS", "PAUSED", "COMPLETED", "INVALID", "IGNORED", "FAILED", "CANCELLED", "ABANDONED", "OTHER"]}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "situation", "label": "Situation"},
+       {"field": "objective", "label": "Objective"},
+       {"field": "priority", "label": "Priority"},
+       {"field": "activity_status", "label": "Activity Status", "valid_values": ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRESS", "PAUSED", "COMPLETED", "INVALID", "IGNORED", "FAILED", "CANCELLED", "ABANDONED", "OTHER"]}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Review-DrE-Basic",
+   "envelope": {
+    "heading": "Review-DrE-Basic Attributes",
+    "description": "Auto-generated format for Review (Create, Basic).",
+    "family": "Feedback",
+    "target_type_name": "Review",
+    "aliases": ["Review DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "situation", "label": "Situation"},
+       {"field": "objective", "label": "Objective"},
+       {"field": "priority", "label": "Priority"},
+       {"field": "activity_status", "label": "Activity Status", "valid_values": ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRESS", "PAUSED", "COMPLETED", "INVALID", "IGNORED", "FAILED", "CANCELLED", "ABANDONED", "OTHER"]}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "situation", "label": "Situation"},
+       {"field": "objective", "label": "Objective"},
+       {"field": "priority", "label": "Priority"},
+       {"field": "activity_status", "label": "Activity Status", "valid_values": ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRESS", "PAUSED", "COMPLETED", "INVALID", "IGNORED", "FAILED", "CANCELLED", "ABANDONED", "OTHER"]}
+      ]
+     }
+    }
+   }
+  }
+ ]
+}

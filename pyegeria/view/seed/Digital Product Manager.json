@@ -1,0 +1,1180 @@
+{
+ "format": "pyegeria-seed/1",
+ "family": "Digital Product Manager",
+ "specs": [
+  {
+   "label": "Agreement-DrE-Advanced",
+   "envelope": {
+    "heading": "Agreement-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Agreement (Create, Advanced).",
+    "family": "Digital Product Manager",
+    "target_type_name": "Agreement",
+    "aliases": ["Agreement DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Agreement",
+      "function": "CollectionManager.find_collections",
+      "params": {"search_string": "$search_string", "metadata_element_type": "Agreement"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "status", "label": "Status"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "status", "label": "Status"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "category", "label": "Category"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Agreement-DrE-Basic",
+   "envelope": {
+    "heading": "Agreement-DrE-Basic Attributes",
+    "description": "Auto-generated format for Agreement (Create, Basic).",
+    "family": "Digital Product Manager",
+    "target_type_name": "Agreement",
+    "aliases": ["Agreement DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Agreement",
+      "function": "CollectionManager.find_collections",
+      "params": {"search_string": "$search_string", "metadata_element_type": "Agreement"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "purpose", "label": "Purpose"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "CSV-File-DrE-Advanced",
+   "envelope": {
+    "heading": "CSV-File-DrE-Advanced Attributes",
+    "description": "Auto-generated format for CSV File (Create, Advanced).",
+    "family": "Digital Product Manager",
+    "target_type_name": "CSV File",
+    "aliases": ["CSV File DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "CSV File",
+      "function": "AssetMaker.find_assets",
+      "params": {"search_string": "$search_string", "metadata_element_type": "CSVFile"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "file_encoding", "label": "File Encoding"},
+       {"field": "file_extension", "label": "File Extension"},
+       {"field": "file_path", "label": "File Path"},
+       {"field": "file_system_name", "label": "File System Name"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "status", "label": "Status"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "status", "label": "Status"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "category", "label": "Category"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "file_encoding", "label": "File Encoding"},
+       {"field": "file_extension", "label": "File Extension"},
+       {"field": "file_path", "label": "File Path"},
+       {"field": "file_system_name", "label": "File System Name"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "CSV-File-DrE-Basic",
+   "envelope": {
+    "heading": "CSV-File-DrE-Basic Attributes",
+    "description": "Auto-generated format for CSV File (Create, Basic).",
+    "family": "Digital Product Manager",
+    "target_type_name": "CSV File",
+    "aliases": ["CSV File DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "CSV File",
+      "function": "AssetMaker.find_assets",
+      "params": {"search_string": "$search_string", "metadata_element_type": "CSVFile"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "file_encoding", "label": "File Encoding"},
+       {"field": "file_extension", "label": "File Extension"},
+       {"field": "file_path", "label": "File Path"},
+       {"field": "file_system_name", "label": "File System Name"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "file_encoding", "label": "File Encoding"},
+       {"field": "file_extension", "label": "File Extension"},
+       {"field": "file_path", "label": "File Path"},
+       {"field": "file_system_name", "label": "File System Name"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Data-Sharing-Agreement-DrE-Advanced",
+   "envelope": {
+    "heading": "Data-Sharing-Agreement-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Data Sharing Agreement (Create, Advanced).",
+    "family": "Digital Product Manager",
+    "target_type_name": "Data Sharing Agreement",
+    "aliases": ["Data Sharing Agreement DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Data Sharing Agreement",
+      "function": "CollectionManager.find_collections",
+      "params": {
+       "search_string": "$search_string",
+       "classification_names": ["DataSharingAgreement"]
+      }
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "status", "label": "Status"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "status", "label": "Status"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "category", "label": "Category"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Data-Sharing-Agreement-DrE-Basic",
+   "envelope": {
+    "heading": "Data-Sharing-Agreement-DrE-Basic Attributes",
+    "description": "Auto-generated format for Data Sharing Agreement (Create, Basic).",
+    "family": "Digital Product Manager",
+    "target_type_name": "Data Sharing Agreement",
+    "aliases": ["Data Sharing Agreement DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Data Sharing Agreement",
+      "function": "CollectionManager.find_collections",
+      "params": {
+       "search_string": "$search_string",
+       "classification_names": ["DataSharingAgreement"]
+      }
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "purpose", "label": "Purpose"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Digital-Product-Catalog-DrE-Advanced",
+   "envelope": {
+    "heading": "Digital-Product-Catalog-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Digital Product Catalog (Create, Advanced).",
+    "family": "Digital Product Manager",
+    "target_type_name": "Digital Product Catalog",
+    "aliases": ["Digital Product Catalog DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Digital Product Catalog",
+      "function": "CollectionManager.find_collections",
+      "params": {"search_string": "$search_string", "metadata_element_type": "DigitalProductCatalog"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "status", "label": "Status"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "status", "label": "Status"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "category", "label": "Category"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Digital-Product-Catalog-DrE-Basic",
+   "envelope": {
+    "heading": "Digital-Product-Catalog-DrE-Basic Attributes",
+    "description": "Auto-generated format for Digital Product Catalog (Create, Basic).",
+    "family": "Digital Product Manager",
+    "target_type_name": "Digital Product Catalog",
+    "aliases": ["Digital Product Catalog DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Digital Product Catalog",
+      "function": "CollectionManager.find_collections",
+      "params": {"search_string": "$search_string", "metadata_element_type": "DigitalProductCatalog"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "purpose", "label": "Purpose"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Digital-Product-DrE-Advanced",
+   "envelope": {
+    "heading": "Digital-Product-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Digital Product (Create, Advanced).",
+    "family": "Digital Product Manager",
+    "target_type_name": "Digital Product",
+    "aliases": ["Digital Product DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Digital Product",
+      "function": "CollectionManager.find_collections",
+      "params": {"search_string": "$search_string", "metadata_element_type": "DigitalProduct"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "current_version", "label": "Current Version"},
+       {"field": "introduction_date", "label": "Introduction Date"},
+       {"field": "maturity", "label": "Maturity"},
+       {"field": "next_version_date", "label": "Next Version Date"},
+       {"field": "product_name", "label": "Product Name"},
+       {"field": "service_life", "label": "Service Life"},
+       {"field": "withdrawal_date", "label": "Withdrawal Date"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "status", "label": "Status"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "status", "label": "Status"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "category", "label": "Category"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "current_version", "label": "Current Version"},
+       {"field": "introduction_date", "label": "Introduction Date"},
+       {"field": "maturity", "label": "Maturity"},
+       {"field": "next_version_date", "label": "Next Version Date"},
+       {"field": "product_name", "label": "Product Name"},
+       {"field": "service_life", "label": "Service Life"},
+       {"field": "withdrawal_date", "label": "Withdrawal Date"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Digital-Product-DrE-Basic",
+   "envelope": {
+    "heading": "Digital-Product-DrE-Basic Attributes",
+    "description": "Auto-generated format for Digital Product (Create, Basic).",
+    "family": "Digital Product Manager",
+    "target_type_name": "Digital Product",
+    "aliases": ["Digital Product DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Digital Product",
+      "function": "CollectionManager.find_collections",
+      "params": {"search_string": "$search_string", "metadata_element_type": "DigitalProduct"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "current_version", "label": "Current Version"},
+       {"field": "introduction_date", "label": "Introduction Date"},
+       {"field": "maturity", "label": "Maturity"},
+       {"field": "next_version_date", "label": "Next Version Date"},
+       {"field": "product_name", "label": "Product Name"},
+       {"field": "service_life", "label": "Service Life"},
+       {"field": "withdrawal_date", "label": "Withdrawal Date"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "current_version", "label": "Current Version"},
+       {"field": "introduction_date", "label": "Introduction Date"},
+       {"field": "maturity", "label": "Maturity"},
+       {"field": "next_version_date", "label": "Next Version Date"},
+       {"field": "product_name", "label": "Product Name"},
+       {"field": "service_life", "label": "Service Life"},
+       {"field": "withdrawal_date", "label": "Withdrawal Date"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Digital-Subscription-DrE-Advanced",
+   "envelope": {
+    "heading": "Digital-Subscription-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Digital Subscription (Create, Advanced).",
+    "family": "Digital Product Manager",
+    "target_type_name": "Digital Subscription",
+    "aliases": ["Digital Subscription DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Digital Subscription",
+      "function": "CollectionManager.find_collections",
+      "params": {"search_string": "$search_string", "metadata_element_type": "DigitalSubscription"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "support_level", "label": "Support Level"},
+       {"field": "service_levels", "label": "Service Levels"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "status", "label": "Status"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "status", "label": "Status"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "category", "label": "Category"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "support_level", "label": "Support Level"},
+       {"field": "service_levels", "label": "Service Levels"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Digital-Subscription-DrE-Basic",
+   "envelope": {
+    "heading": "Digital-Subscription-DrE-Basic Attributes",
+    "description": "Auto-generated format for Digital Subscription (Create, Basic).",
+    "family": "Digital Product Manager",
+    "target_type_name": "Digital Subscription",
+    "aliases": ["Digital Subscription DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Digital Subscription",
+      "function": "CollectionManager.find_collections",
+      "params": {"search_string": "$search_string", "metadata_element_type": "DigitalSubscription"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "support_level", "label": "Support Level"},
+       {"field": "service_levels", "label": "Service Levels"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "support_level", "label": "Support Level"},
+       {"field": "service_levels", "label": "Service Levels"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Subscription-Type-DrE-Advanced",
+   "envelope": {
+    "heading": "Subscription-Type-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Subscription Type (Create, Advanced).",
+    "family": "Digital Product Manager",
+    "target_type_name": "Subscription Type",
+    "aliases": ["Subscription Type DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "digital_product", "label": "Digital Product"},
+       {"field": "subscription_kind", "label": "Subscription Kind", "valid_values": ["ONE_TIME", "PERIODIC", "ONGOING_UPDATE"]},
+       {"field": "description", "label": "Description"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "minimum_notification_interval", "label": "Minimum Notification Interval"},
+       {"field": "monitored_resources", "label": "Monitored Resources"},
+       {"field": "subscription_manager", "label": "Subscription Manager"},
+       {"field": "subscription_license_type", "label": "Subscription License Type"},
+       {"field": "subscription_service_level_objective", "label": "Subscription Service Level Objective"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "digital_product", "label": "Digital Product"},
+       {"field": "subscription_kind", "label": "Subscription Kind", "valid_values": ["ONE_TIME", "PERIODIC", "ONGOING_UPDATE"]},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "minimum_notification_interval", "label": "Minimum Notification Interval"},
+       {"field": "monitored_resources", "label": "Monitored Resources"},
+       {"field": "subscription_manager", "label": "Subscription Manager"},
+       {"field": "subscription_license_type", "label": "Subscription License Type"},
+       {"field": "subscription_service_level_objective", "label": "Subscription Service Level Objective"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Subscription-Type-DrE-Basic",
+   "envelope": {
+    "heading": "Subscription-Type-DrE-Basic Attributes",
+    "description": "Auto-generated format for Subscription Type (Create, Basic).",
+    "family": "Digital Product Manager",
+    "target_type_name": "Subscription Type",
+    "aliases": ["Subscription Type DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "digital_product", "label": "Digital Product"},
+       {"field": "subscription_kind", "label": "Subscription Kind", "valid_values": ["ONE_TIME", "PERIODIC", "ONGOING_UPDATE"]},
+       {"field": "description", "label": "Description"},
+       {"field": "minimum_notification_interval", "label": "Minimum Notification Interval"},
+       {"field": "monitored_resources", "label": "Monitored Resources"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "digital_product", "label": "Digital Product"},
+       {"field": "subscription_kind", "label": "Subscription Kind", "valid_values": ["ONE_TIME", "PERIODIC", "ONGOING_UPDATE"]},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "minimum_notification_interval", "label": "Minimum Notification Interval"},
+       {"field": "monitored_resources", "label": "Monitored Resources"}
+      ]
+     }
+    }
+   }
+  }
+ ]
+}

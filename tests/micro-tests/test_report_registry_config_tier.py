@@ -79,9 +79,23 @@ def test_colliding_entry_skipped_whole_others_kept(isolated, user_dir):
     assert "ConfigTier-OnlySecond" not in registry
 
 
-def test_entry_duplicating_builtin_is_skipped_and_registry_still_works(isolated, user_dir):
+def test_entry_duplicating_builtin_shadows_it(isolated, user_dir):
+    """local > egeria > builtin (owner, 2026-11-09: "Yes, local overrides"): a user file with a built-in's
+    label wins, and builtin:<label> still reaches the built-in."""
     builtin_label = next(iter(brf.base_report_specs.keys()))
-    clash = _write_specs(user_dir / "clash.json", builtin_label, "ConfigTier-WithClash")
+    _write_specs(user_dir / "clash.json", builtin_label, "ConfigTier-WithClash")
+    _write_specs(user_dir / "ok.json", "ConfigTier-Ok")
+
+    assert brf.refresh_report_specs() == []
+    registry = brf.get_report_registry()
+    assert "ConfigTier-Ok" in registry and "ConfigTier-WithClash" in registry
+    assert registry[builtin_label].heading == builtin_label
+    assert brf.lookup_report_spec(f"builtin:{builtin_label}")[0].heading != builtin_label
+
+
+def test_entry_duplicating_a_runtime_label_is_skipped_and_registry_still_works(isolated, user_dir):
+    brf.register_report_specs(FormatSetDict({"ConfigTier-Runtime": _spec("ConfigTier-Runtime")}), source="probe")
+    clash = _write_specs(user_dir / "clash.json", "ConfigTier-Runtime", "ConfigTier-WithClash")
     _write_specs(user_dir / "ok.json", "ConfigTier-Ok")
 
     skipped = brf.refresh_report_specs()
@@ -90,6 +104,7 @@ def test_entry_duplicating_builtin_is_skipped_and_registry_still_works(isolated,
     registry = brf.get_report_registry()
     assert "ConfigTier-Ok" in registry
     assert "ConfigTier-WithClash" not in registry
+    brf.unregister_report_spec("ConfigTier-Runtime")
 
 
 def test_all_entries_good_returns_no_skips(isolated, user_dir):

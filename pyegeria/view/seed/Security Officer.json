@@ -1,0 +1,1314 @@
+{
+ "format": "pyegeria-seed/1",
+ "family": "Security Officer",
+ "specs": [
+  {
+   "label": "Security-Findings",
+   "envelope": {
+    "heading": "Security Findings",
+    "description": "Security findings from one survey report, or about one element, most severe first. A blank CVSS score, Exploit Available or Patch Available means not recorded. Findings written before Egeria 6.3 may show 0 or false for a value that was never set.",
+    "family": "Security Officer",
+    "target_type_name": "SecurityFindingAnnotation",
+    "aliases": ["Vulnerabilities", "Security Finding", "Security Findings"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "report_guid": {"type": "string", "required": false},
+     "element_guid": {"type": "string", "required": false},
+     "min_severity": {"type": "string", "required": false},
+     "finding_types": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "SecurityFindingAnnotation",
+      "function": "DataDiscovery.get_security_findings",
+      "params": {"output_format": "DICT"}
+     }
+    ],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Finding"},
+       {"field": "finding_type", "label": "Type"},
+       {"field": "severity", "label": "Severity"},
+       {"field": "cvss_score", "label": "CVSS Score"},
+       {"field": "vulnerability_identifiers", "label": "Vulnerabilities"},
+       {"field": "weakness_identifiers", "label": "Weaknesses"},
+       {"field": "affected_location", "label": "Affected Location"},
+       {"field": "exploit_available", "label": "Exploit Available"},
+       {"field": "package_url", "label": "Package URL"},
+       {"field": "installed_version", "label": "Installed Version"},
+       {"field": "fixed_version", "label": "Fixed Version"},
+       {"field": "patch_available", "label": "Patch Available"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "report_name", "label": "Report"},
+       {"field": "GUID", "label": "GUID"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Penetration-Test-Findings",
+   "envelope": {
+    "heading": "Penetration Test Findings",
+    "description": "The findings of a penetration test, most severe first - the view the tester hands back. A blank CVSS score means not recorded; before Egeria 6.3 it showed as 0.",
+    "family": "Security Officer",
+    "target_type_name": "PenetrationTestFindingAnnotation",
+    "aliases": ["Pen Test Findings", "Penetration Test Findings"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "report_guid": {"type": "string", "required": false},
+     "element_guid": {"type": "string", "required": false},
+     "min_severity": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "PenetrationTestFindingAnnotation",
+      "function": "DataDiscovery.get_security_findings",
+      "params": {
+       "output_format": "DICT",
+       "finding_types": ["PenetrationTestFindingAnnotation"]
+      }
+     }
+    ],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Finding"},
+       {"field": "severity", "label": "Severity"},
+       {"field": "cvss_score", "label": "CVSS Score"},
+       {"field": "attack_vector", "label": "Attack Vector"},
+       {"field": "attack_techniques", "label": "ATT&CK Techniques"},
+       {"field": "privileges_gained", "label": "Privileges Gained"},
+       {"field": "compromised_resources", "label": "Compromised Resources"},
+       {"field": "remediation", "label": "Remediation"},
+       {"field": "reproduction_steps", "label": "Reproduction Steps"},
+       {"field": "report_name", "label": "Report"},
+       {"field": "GUID", "label": "GUID"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Security-Posture",
+   "envelope": {
+    "heading": "Security Posture",
+    "description": "One row per security test run, oldest first, to show whether the estate is getting more secure. Blank severity counts mean the run recorded no counts; any other blank count was not recorded. Runs written before Egeria 6.3 may show 0 for a count that was never set.",
+    "family": "Security Officer",
+    "target_type_name": "SecurityPostureAnnotation",
+    "aliases": ["Security Posture History", "Security Posture"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "report_qualified_name_prefix": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "SecurityPostureAnnotation",
+      "function": "DataDiscovery.get_security_posture_history",
+      "params": {"output_format": "DICT"}
+     }
+    ],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "report_name", "label": "Report"},
+       {"field": "report_completion_time", "label": "Completed"},
+       {"field": "critical_findings", "label": "Critical"},
+       {"field": "high_findings", "label": "High"},
+       {"field": "medium_findings", "label": "Medium"},
+       {"field": "low_findings", "label": "Low"},
+       {"field": "none_findings", "label": "None"},
+       {"field": "resources_in_scope_count", "label": "Resources In Scope"},
+       {"field": "resources_tested_count", "label": "Resources Tested"},
+       {"field": "new_finding_count", "label": "New Findings"},
+       {"field": "resolved_finding_count", "label": "Resolved Findings"},
+       {"field": "GUID", "label": "GUID"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Statement-of-Applicability-Controls",
+   "envelope": {
+    "heading": "Statement of Applicability Controls",
+    "description": "The controls assessed in one statement of applicability, one row per control, with whether each applies, why, and how far it is implemented.",
+    "family": "Security Officer",
+    "target_type_name": "ControlApplicability",
+    "aliases": ["SoA Controls", "Control Applicability", "Statement of Applicability Controls"],
+    "annotations": {
+     "wikilinks": ["[[Statement of Applicability]]"]
+    }
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "soa_guid": {"type": "string", "required": true},
+     "body": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "ControlApplicability",
+      "function": "SecurityOfficer.get_statement_of_applicability_controls",
+      "params": {"soa_guid": "$soa_guid", "output_format": "DICT"}
+     }
+    ],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "label", "label": "Control"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "is_applicable", "label": "Applicable"},
+       {"field": "implementation_status", "label": "Implementation Status"},
+       {"field": "justification", "label": "Justification"},
+       {"field": "inclusion_reasons", "label": "Inclusion Reasons"},
+       {"field": "review_date", "label": "Review Date"},
+       {"field": "implementation_description", "label": "Implementation Description"},
+       {"field": "notes", "label": "Notes"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "GUID", "label": "GUID"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Statement-of-Applicability-Implementation-Summary",
+   "envelope": {
+    "heading": "Control Implementation Summary",
+    "description": "Applicable controls in a statement of applicability, counted by implementation status. Use BAR or PIE output for a chart.",
+    "family": "Security Officer",
+    "target_type_name": "StatementOfApplicability",
+    "aliases": ["SoA Summary", "Statement of Applicability Implementation Summary"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "soa_guid": {"type": "string", "required": true}
+    },
+    "stages": [
+     {
+      "stage": "producer/analytic",
+      "function": "control_implementation_summary",
+      "params": {}
+     }
+    ],
+    "formatters": {
+     "DICT": {
+      "columns": []
+     },
+     "JSON": {"same_as": "DICT"}
+    }
+   }
+  },
+  {
+   "label": "Penetration-Test-Finding-DrE-Advanced",
+   "envelope": {
+    "heading": "Penetration-Test-Finding-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Penetration Test Finding (Create, Advanced).",
+    "family": "Security Officer",
+    "target_type_name": "Penetration Test Finding",
+    "aliases": ["Penetration Test Finding DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "survey_report", "label": "Survey Report"},
+       {"field": "summary", "label": "Summary"},
+       {"field": "severity", "label": "Severity", "valid_values": ["None", "Low", "Medium", "High", "Critical"]},
+       {"field": "cvss_score", "label": "CVSS Score"},
+       {"field": "cvss_vector", "label": "CVSS Vector"},
+       {"field": "vulnerability_identifiers", "label": "Vulnerability Identifiers"},
+       {"field": "weakness_identifiers", "label": "Weakness Identifiers"},
+       {"field": "affected_location", "label": "Affected Location"},
+       {"field": "evidence", "label": "Evidence"},
+       {"field": "remediation", "label": "Remediation"},
+       {"field": "exploit_available", "label": "Exploit Available"},
+       {"field": "affected_elements", "label": "Affected Elements"},
+       {"field": "previous_finding", "label": "Previous Finding"},
+       {"field": "vulnerability_type", "label": "Vulnerability Type"},
+       {"field": "attack_vector", "label": "Attack Vector"},
+       {"field": "attack_techniques", "label": "Attack Techniques"},
+       {"field": "privileges_gained", "label": "Privileges Gained"},
+       {"field": "compromised_resources", "label": "Compromised Resources"},
+       {"field": "reproduction_steps", "label": "Reproduction Steps"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "status", "label": "Status"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "status", "label": "Status"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "category", "label": "Category"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "survey_report", "label": "Survey Report"},
+       {"field": "summary", "label": "Summary"},
+       {"field": "severity", "label": "Severity", "valid_values": ["None", "Low", "Medium", "High", "Critical"]},
+       {"field": "cvss_score", "label": "CVSS Score"},
+       {"field": "cvss_vector", "label": "CVSS Vector"},
+       {"field": "vulnerability_identifiers", "label": "Vulnerability Identifiers"},
+       {"field": "weakness_identifiers", "label": "Weakness Identifiers"},
+       {"field": "affected_location", "label": "Affected Location"},
+       {"field": "evidence", "label": "Evidence"},
+       {"field": "remediation", "label": "Remediation"},
+       {"field": "exploit_available", "label": "Exploit Available"},
+       {"field": "affected_elements", "label": "Affected Elements"},
+       {"field": "previous_finding", "label": "Previous Finding"},
+       {"field": "vulnerability_type", "label": "Vulnerability Type"},
+       {"field": "attack_vector", "label": "Attack Vector"},
+       {"field": "attack_techniques", "label": "Attack Techniques"},
+       {"field": "privileges_gained", "label": "Privileges Gained"},
+       {"field": "compromised_resources", "label": "Compromised Resources"},
+       {"field": "reproduction_steps", "label": "Reproduction Steps"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Penetration-Test-Finding-DrE-Basic",
+   "envelope": {
+    "heading": "Penetration-Test-Finding-DrE-Basic Attributes",
+    "description": "Auto-generated format for Penetration Test Finding (Create, Basic).",
+    "family": "Security Officer",
+    "target_type_name": "Penetration Test Finding",
+    "aliases": ["Penetration Test Finding DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "survey_report", "label": "Survey Report"},
+       {"field": "summary", "label": "Summary"},
+       {"field": "severity", "label": "Severity", "valid_values": ["None", "Low", "Medium", "High", "Critical"]},
+       {"field": "cvss_score", "label": "CVSS Score"},
+       {"field": "vulnerability_identifiers", "label": "Vulnerability Identifiers"},
+       {"field": "weakness_identifiers", "label": "Weakness Identifiers"},
+       {"field": "affected_location", "label": "Affected Location"},
+       {"field": "evidence", "label": "Evidence"},
+       {"field": "remediation", "label": "Remediation"},
+       {"field": "exploit_available", "label": "Exploit Available"},
+       {"field": "affected_elements", "label": "Affected Elements"},
+       {"field": "previous_finding", "label": "Previous Finding"},
+       {"field": "attack_vector", "label": "Attack Vector"},
+       {"field": "attack_techniques", "label": "Attack Techniques"},
+       {"field": "privileges_gained", "label": "Privileges Gained"},
+       {"field": "compromised_resources", "label": "Compromised Resources"},
+       {"field": "reproduction_steps", "label": "Reproduction Steps"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "survey_report", "label": "Survey Report"},
+       {"field": "summary", "label": "Summary"},
+       {"field": "severity", "label": "Severity", "valid_values": ["None", "Low", "Medium", "High", "Critical"]},
+       {"field": "cvss_score", "label": "CVSS Score"},
+       {"field": "vulnerability_identifiers", "label": "Vulnerability Identifiers"},
+       {"field": "weakness_identifiers", "label": "Weakness Identifiers"},
+       {"field": "affected_location", "label": "Affected Location"},
+       {"field": "evidence", "label": "Evidence"},
+       {"field": "remediation", "label": "Remediation"},
+       {"field": "exploit_available", "label": "Exploit Available"},
+       {"field": "affected_elements", "label": "Affected Elements"},
+       {"field": "previous_finding", "label": "Previous Finding"},
+       {"field": "attack_vector", "label": "Attack Vector"},
+       {"field": "attack_techniques", "label": "Attack Techniques"},
+       {"field": "privileges_gained", "label": "Privileges Gained"},
+       {"field": "compromised_resources", "label": "Compromised Resources"},
+       {"field": "reproduction_steps", "label": "Reproduction Steps"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Security-Finding-DrE-Advanced",
+   "envelope": {
+    "heading": "Security-Finding-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Security Finding (Create, Advanced).",
+    "family": "Security Officer",
+    "target_type_name": "Security Finding",
+    "aliases": ["Security Finding DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "survey_report", "label": "Survey Report"},
+       {"field": "summary", "label": "Summary"},
+       {"field": "severity", "label": "Severity", "valid_values": ["None", "Low", "Medium", "High", "Critical"]},
+       {"field": "cvss_score", "label": "CVSS Score"},
+       {"field": "cvss_vector", "label": "CVSS Vector"},
+       {"field": "vulnerability_identifiers", "label": "Vulnerability Identifiers"},
+       {"field": "weakness_identifiers", "label": "Weakness Identifiers"},
+       {"field": "affected_location", "label": "Affected Location"},
+       {"field": "evidence", "label": "Evidence"},
+       {"field": "remediation", "label": "Remediation"},
+       {"field": "exploit_available", "label": "Exploit Available"},
+       {"field": "affected_elements", "label": "Affected Elements"},
+       {"field": "previous_finding", "label": "Previous Finding"},
+       {"field": "vulnerability_type", "label": "Vulnerability Type"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "status", "label": "Status"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "status", "label": "Status"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "category", "label": "Category"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "survey_report", "label": "Survey Report"},
+       {"field": "summary", "label": "Summary"},
+       {"field": "severity", "label": "Severity", "valid_values": ["None", "Low", "Medium", "High", "Critical"]},
+       {"field": "cvss_score", "label": "CVSS Score"},
+       {"field": "cvss_vector", "label": "CVSS Vector"},
+       {"field": "vulnerability_identifiers", "label": "Vulnerability Identifiers"},
+       {"field": "weakness_identifiers", "label": "Weakness Identifiers"},
+       {"field": "affected_location", "label": "Affected Location"},
+       {"field": "evidence", "label": "Evidence"},
+       {"field": "remediation", "label": "Remediation"},
+       {"field": "exploit_available", "label": "Exploit Available"},
+       {"field": "affected_elements", "label": "Affected Elements"},
+       {"field": "previous_finding", "label": "Previous Finding"},
+       {"field": "vulnerability_type", "label": "Vulnerability Type"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Security-Finding-DrE-Basic",
+   "envelope": {
+    "heading": "Security-Finding-DrE-Basic Attributes",
+    "description": "Auto-generated format for Security Finding (Create, Basic).",
+    "family": "Security Officer",
+    "target_type_name": "Security Finding",
+    "aliases": ["Security Finding DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "survey_report", "label": "Survey Report"},
+       {"field": "summary", "label": "Summary"},
+       {"field": "severity", "label": "Severity", "valid_values": ["None", "Low", "Medium", "High", "Critical"]},
+       {"field": "cvss_score", "label": "CVSS Score"},
+       {"field": "vulnerability_identifiers", "label": "Vulnerability Identifiers"},
+       {"field": "weakness_identifiers", "label": "Weakness Identifiers"},
+       {"field": "affected_location", "label": "Affected Location"},
+       {"field": "evidence", "label": "Evidence"},
+       {"field": "remediation", "label": "Remediation"},
+       {"field": "exploit_available", "label": "Exploit Available"},
+       {"field": "affected_elements", "label": "Affected Elements"},
+       {"field": "previous_finding", "label": "Previous Finding"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "survey_report", "label": "Survey Report"},
+       {"field": "summary", "label": "Summary"},
+       {"field": "severity", "label": "Severity", "valid_values": ["None", "Low", "Medium", "High", "Critical"]},
+       {"field": "cvss_score", "label": "CVSS Score"},
+       {"field": "vulnerability_identifiers", "label": "Vulnerability Identifiers"},
+       {"field": "weakness_identifiers", "label": "Weakness Identifiers"},
+       {"field": "affected_location", "label": "Affected Location"},
+       {"field": "evidence", "label": "Evidence"},
+       {"field": "remediation", "label": "Remediation"},
+       {"field": "exploit_available", "label": "Exploit Available"},
+       {"field": "affected_elements", "label": "Affected Elements"},
+       {"field": "previous_finding", "label": "Previous Finding"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Security-Posture-Summary-DrE-Advanced",
+   "envelope": {
+    "heading": "Security-Posture-Summary-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Security Posture Summary (Create, Advanced).",
+    "family": "Security Officer",
+    "target_type_name": "Security Posture Summary",
+    "aliases": ["Security Posture Summary DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "survey_report", "label": "Survey Report"},
+       {"field": "summary", "label": "Summary"},
+       {"field": "finding_counts_by_severity", "label": "Finding Counts By Severity"},
+       {"field": "resources_in_scope_count", "label": "Resources In Scope Count"},
+       {"field": "resources_tested_count", "label": "Resources Tested Count"},
+       {"field": "new_finding_count", "label": "New Finding Count"},
+       {"field": "resolved_finding_count", "label": "Resolved Finding Count"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "status", "label": "Status"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "status", "label": "Status"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "category", "label": "Category"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "survey_report", "label": "Survey Report"},
+       {"field": "summary", "label": "Summary"},
+       {"field": "finding_counts_by_severity", "label": "Finding Counts By Severity"},
+       {"field": "resources_in_scope_count", "label": "Resources In Scope Count"},
+       {"field": "resources_tested_count", "label": "Resources Tested Count"},
+       {"field": "new_finding_count", "label": "New Finding Count"},
+       {"field": "resolved_finding_count", "label": "Resolved Finding Count"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Security-Posture-Summary-DrE-Basic",
+   "envelope": {
+    "heading": "Security-Posture-Summary-DrE-Basic Attributes",
+    "description": "Auto-generated format for Security Posture Summary (Create, Basic).",
+    "family": "Security Officer",
+    "target_type_name": "Security Posture Summary",
+    "aliases": ["Security Posture Summary DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "survey_report", "label": "Survey Report"},
+       {"field": "summary", "label": "Summary"},
+       {"field": "finding_counts_by_severity", "label": "Finding Counts By Severity"},
+       {"field": "resources_in_scope_count", "label": "Resources In Scope Count"},
+       {"field": "resources_tested_count", "label": "Resources Tested Count"},
+       {"field": "new_finding_count", "label": "New Finding Count"},
+       {"field": "resolved_finding_count", "label": "Resolved Finding Count"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "survey_report", "label": "Survey Report"},
+       {"field": "summary", "label": "Summary"},
+       {"field": "finding_counts_by_severity", "label": "Finding Counts By Severity"},
+       {"field": "resources_in_scope_count", "label": "Resources In Scope Count"},
+       {"field": "resources_tested_count", "label": "Resources Tested Count"},
+       {"field": "new_finding_count", "label": "New Finding Count"},
+       {"field": "resolved_finding_count", "label": "Resolved Finding Count"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Statement-of-Applicability-DrE-Advanced",
+   "envelope": {
+    "heading": "Statement-of-Applicability-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Statement of Applicability (Create, Advanced).",
+    "family": "Security Officer",
+    "target_type_name": "Statement of Applicability",
+    "aliases": ["Statement of Applicability DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Statement of Applicability",
+      "function": "SecurityOfficer.find_statements_of_applicability",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "scope", "label": "Scope"},
+       {"field": "review_date", "label": "Review Date"},
+       {"field": "certification_standard", "label": "Certification Standard"},
+       {"field": "scoped_by", "label": "Scoped By"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "status", "label": "Status"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "status", "label": "Status"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "category", "label": "Category"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "scope", "label": "Scope"},
+       {"field": "review_date", "label": "Review Date"},
+       {"field": "certification_standard", "label": "Certification Standard"},
+       {"field": "scoped_by", "label": "Scoped By"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Statement-of-Applicability-DrE-Basic",
+   "envelope": {
+    "heading": "Statement-of-Applicability-DrE-Basic Attributes",
+    "description": "Auto-generated format for Statement of Applicability (Create, Basic).",
+    "family": "Security Officer",
+    "target_type_name": "Statement of Applicability",
+    "aliases": ["Statement of Applicability DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Statement of Applicability",
+      "function": "SecurityOfficer.find_statements_of_applicability",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "scope", "label": "Scope"},
+       {"field": "review_date", "label": "Review Date"},
+       {"field": "certification_standard", "label": "Certification Standard"},
+       {"field": "scoped_by", "label": "Scoped By"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "scope", "label": "Scope"},
+       {"field": "review_date", "label": "Review Date"},
+       {"field": "certification_standard", "label": "Certification Standard"},
+       {"field": "scoped_by", "label": "Scoped By"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Survey-Report-DrE-Advanced",
+   "envelope": {
+    "heading": "Survey-Report-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Survey Report (Create, Advanced).",
+    "family": "Security Officer",
+    "target_type_name": "Survey Report",
+    "aliases": ["Survey Report DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Survey Report",
+      "function": "AssetMaker.find_assets",
+      "params": {"search_string": "$search_string", "metadata_element_type": "SurveyReport"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "start_time", "label": "Start Time"},
+       {"field": "completion_time", "label": "Completion Time"},
+       {"field": "report_subjects", "label": "Report Subjects"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "status", "label": "Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "status", "label": "Status"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "category", "label": "Category"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "start_time", "label": "Start Time"},
+       {"field": "completion_time", "label": "Completion Time"},
+       {"field": "report_subjects", "label": "Report Subjects"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Survey-Report-DrE-Basic",
+   "envelope": {
+    "heading": "Survey-Report-DrE-Basic Attributes",
+    "description": "Auto-generated format for Survey Report (Create, Basic).",
+    "family": "Security Officer",
+    "target_type_name": "Survey Report",
+    "aliases": ["Survey Report DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Survey Report",
+      "function": "AssetMaker.find_assets",
+      "params": {"search_string": "$search_string", "metadata_element_type": "SurveyReport"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "start_time", "label": "Start Time"},
+       {"field": "completion_time", "label": "Completion Time"},
+       {"field": "report_subjects", "label": "Report Subjects"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "start_time", "label": "Start Time"},
+       {"field": "completion_time", "label": "Completion Time"},
+       {"field": "report_subjects", "label": "Report Subjects"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Vulnerability-Finding-DrE-Advanced",
+   "envelope": {
+    "heading": "Vulnerability-Finding-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Vulnerability Finding (Create, Advanced).",
+    "family": "Security Officer",
+    "target_type_name": "Vulnerability Finding",
+    "aliases": ["Vulnerability Finding DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "survey_report", "label": "Survey Report"},
+       {"field": "summary", "label": "Summary"},
+       {"field": "severity", "label": "Severity", "valid_values": ["None", "Low", "Medium", "High", "Critical"]},
+       {"field": "cvss_score", "label": "CVSS Score"},
+       {"field": "cvss_vector", "label": "CVSS Vector"},
+       {"field": "vulnerability_identifiers", "label": "Vulnerability Identifiers"},
+       {"field": "weakness_identifiers", "label": "Weakness Identifiers"},
+       {"field": "affected_location", "label": "Affected Location"},
+       {"field": "evidence", "label": "Evidence"},
+       {"field": "remediation", "label": "Remediation"},
+       {"field": "exploit_available", "label": "Exploit Available"},
+       {"field": "affected_elements", "label": "Affected Elements"},
+       {"field": "previous_finding", "label": "Previous Finding"},
+       {"field": "vulnerability_type", "label": "Vulnerability Type"},
+       {"field": "package_url", "label": "Package URL"},
+       {"field": "installed_version", "label": "Installed Version"},
+       {"field": "fixed_version", "label": "Fixed Version"},
+       {"field": "patch_available", "label": "Patch Available"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "status", "label": "Status"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "status", "label": "Status"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "category", "label": "Category"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "survey_report", "label": "Survey Report"},
+       {"field": "summary", "label": "Summary"},
+       {"field": "severity", "label": "Severity", "valid_values": ["None", "Low", "Medium", "High", "Critical"]},
+       {"field": "cvss_score", "label": "CVSS Score"},
+       {"field": "cvss_vector", "label": "CVSS Vector"},
+       {"field": "vulnerability_identifiers", "label": "Vulnerability Identifiers"},
+       {"field": "weakness_identifiers", "label": "Weakness Identifiers"},
+       {"field": "affected_location", "label": "Affected Location"},
+       {"field": "evidence", "label": "Evidence"},
+       {"field": "remediation", "label": "Remediation"},
+       {"field": "exploit_available", "label": "Exploit Available"},
+       {"field": "affected_elements", "label": "Affected Elements"},
+       {"field": "previous_finding", "label": "Previous Finding"},
+       {"field": "vulnerability_type", "label": "Vulnerability Type"},
+       {"field": "package_url", "label": "Package URL"},
+       {"field": "installed_version", "label": "Installed Version"},
+       {"field": "fixed_version", "label": "Fixed Version"},
+       {"field": "patch_available", "label": "Patch Available"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Vulnerability-Finding-DrE-Basic",
+   "envelope": {
+    "heading": "Vulnerability-Finding-DrE-Basic Attributes",
+    "description": "Auto-generated format for Vulnerability Finding (Create, Basic).",
+    "family": "Security Officer",
+    "target_type_name": "Vulnerability Finding",
+    "aliases": ["Vulnerability Finding DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "survey_report", "label": "Survey Report"},
+       {"field": "summary", "label": "Summary"},
+       {"field": "severity", "label": "Severity", "valid_values": ["None", "Low", "Medium", "High", "Critical"]},
+       {"field": "cvss_score", "label": "CVSS Score"},
+       {"field": "vulnerability_identifiers", "label": "Vulnerability Identifiers"},
+       {"field": "weakness_identifiers", "label": "Weakness Identifiers"},
+       {"field": "affected_location", "label": "Affected Location"},
+       {"field": "evidence", "label": "Evidence"},
+       {"field": "remediation", "label": "Remediation"},
+       {"field": "exploit_available", "label": "Exploit Available"},
+       {"field": "affected_elements", "label": "Affected Elements"},
+       {"field": "previous_finding", "label": "Previous Finding"},
+       {"field": "package_url", "label": "Package URL"},
+       {"field": "installed_version", "label": "Installed Version"},
+       {"field": "fixed_version", "label": "Fixed Version"},
+       {"field": "patch_available", "label": "Patch Available"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "survey_report", "label": "Survey Report"},
+       {"field": "summary", "label": "Summary"},
+       {"field": "severity", "label": "Severity", "valid_values": ["None", "Low", "Medium", "High", "Critical"]},
+       {"field": "cvss_score", "label": "CVSS Score"},
+       {"field": "vulnerability_identifiers", "label": "Vulnerability Identifiers"},
+       {"field": "weakness_identifiers", "label": "Weakness Identifiers"},
+       {"field": "affected_location", "label": "Affected Location"},
+       {"field": "evidence", "label": "Evidence"},
+       {"field": "remediation", "label": "Remediation"},
+       {"field": "exploit_available", "label": "Exploit Available"},
+       {"field": "affected_elements", "label": "Affected Elements"},
+       {"field": "previous_finding", "label": "Previous Finding"},
+       {"field": "package_url", "label": "Package URL"},
+       {"field": "installed_version", "label": "Installed Version"},
+       {"field": "fixed_version", "label": "Fixed Version"},
+       {"field": "patch_available", "label": "Patch Available"}
+      ]
+     }
+    }
+   }
+  }
+ ]
+}

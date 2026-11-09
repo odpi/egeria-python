@@ -272,7 +272,8 @@ def test_a_viewer_tile_still_says_at_least_500():
 
 def test_a_measured_tile_is_unchanged():
     out = _exec("Analytic Demo - Element Count by Type", type_name="DataStore")
-    assert out.pop("spec_source")["tier"] == "local"  # RS-EGERIA-TIER: provenance beside kind, not in data
+    # RS-EGERIA-TIER: provenance beside kind, not in data. Stage 2 (S2-2): the analytic demos ship in the seed.
+    assert out.pop("spec_source")["tier"] == "builtin"
     assert out == {"kind": "json", "data": 843}
 
 

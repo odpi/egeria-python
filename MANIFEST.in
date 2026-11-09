@@ -4,3 +4,5 @@
    recursive-include md_processing/md_commands *.py
    recursive-include md_processing/md_processing_utils/tests *.csv *.md *.txt
    recursive-include tests *.py *.ini *.ipynb *.md *.txt
+   recursive-include pyegeria/view/schemas *.json
+   recursive-include pyegeria/view/seed *.json
