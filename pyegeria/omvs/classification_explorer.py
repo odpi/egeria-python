@@ -37,6 +37,12 @@ from pyegeria.core.async_runner import run_sync
 
 
 
+
+# Types every element has: '*' with one of these lists the whole repository.
+_ROOT_TYPES = frozenset({"OpenMetadataRoot", "Referenceable"})
+# '*' lists a type page by page: the caller's page_size, 100 when none is given, never more than 100.
+STAR_PAGE_MAX = 100
+
 class ClassificationExplorer(ServerClient):
     """
     Client for the Classification Explorer OMVS.
@@ -2945,6 +2951,7 @@ class ClassificationExplorer(ServerClient):
         page_size: int = 0,
         timeout: int = default_timeout,
         body: Optional[dict | FindPropertyNamesRequestBody] = None,
+        deployed_implementation_type: Optional[str] = None,
         **kwargs,
     ) -> list | str:
         """
@@ -2957,7 +2964,9 @@ class ClassificationExplorer(ServerClient):
         Parameters
         ----------
         property_value: str
-            - property value to be searched.
+            - property value to be searched. '*' (or empty) with a metadata_element_type returns every element of that type (via get_elements); '*' without a type is refused.
+        deployed_implementation_type: str, optional
+            - with '*', list only elements of this technology (Egeria matches deployedImplementationType containing it, case-insensitive) within metadata_element_type. Ignored for any other search string, which matches property_names within the whole type.
         property_names: list[str]
             - property names to search in.
         metadata_element_type : str, default = None
@@ -3050,6 +3059,43 @@ class ClassificationExplorer(ServerClient):
         #         "effectiveTime": effective_time,
         #     }
 
+        if property_value in (None, "", "*") and body is None:
+            # Egeria's property-value search refuses a null value (OPEN-METADATA-400-002), and pyegeria
+            # sends '*' as null. '*' with a type therefore means "every element of that type"; without
+            # a type there is nothing to ask for.
+            if not metadata_element_type or (metadata_element_type in _ROOT_TYPES and not deployed_implementation_type):
+                # A root type is no narrower than no type: listing every element of the repository
+                # ran the quickstart platform out of heap (2026-11-09), so it is refused like '*'.
+                raise ValueError("find_elements_by_property_value: give a search string or a narrower type "
+                                 "('*' with no metadata_element_type, or with "
+                                 f"{'/'.join(sorted(_ROOT_TYPES))}, would list every element)")
+            # Never fetch a whole type in one call: one page of at most STAR_PAGE_MAX, paged by start_from.
+            page_size = min(page_size or STAR_PAGE_MAX, STAR_PAGE_MAX)
+            list_filters = {
+                "anchor_domain": anchor_domain, "metadata_element_subtypes": metadata_element_subtypes,
+                "skip_relationships": skip_relationships,
+                "include_only_relationships": include_only_relationships,
+                "skip_classified_elements": skip_classified_elements,
+                "include_only_classified_elements": include_only_classified_elements,
+                "governance_zone_filter": governance_zone_filter, "as_of_time": as_of_time,
+                "limit_results_by_status": limit_results_by_status, "sequencing_order": sequencing_order,
+                "sequencing_property": sequencing_property, "graph_query_depth": graph_query_depth,
+            }
+            if deployed_implementation_type:
+                # One technology within a shared supertype (e.g. "PostgreSQL Server" among the
+                # SoftwareServers): Egeria matches deployedImplementationType containing this name
+                # (literal, case-insensitive -- checked live). Done by Egeria, so paging stays correct;
+                # a client-side filter would make a short page look like the last one.
+                return await self._async_find_elements_by_property_value(
+                    deployed_implementation_type, ["deployedImplementationType"], metadata_element_type,
+                    start_from=start_from, page_size=page_size, output_format=output_format,
+                    report_spec=report_spec, timeout=timeout,
+                    **{k: v for k, v in list_filters.items() if v is not None}, **kwargs)
+            return await self._async_get_elements(
+                metadata_element_type=metadata_element_type, start_from=start_from, page_size=page_size,
+                output_format=output_format, report_spec=report_spec,
+                **{k: v for k, v in list_filters.items() if v is not None}, **kwargs)
+
         url = f"{self.classification_command_root}/elements/by-property-value-search"
 
         params = {
@@ -3111,6 +3157,7 @@ class ClassificationExplorer(ServerClient):
         page_size: int = 0,
         timeout: int = default_timeout,
         body: Optional[dict | FindPropertyNamesRequestBody] = None,
+        deployed_implementation_type: Optional[str] = None,
         **kwargs,
     ) -> list | str:
         """
@@ -3123,7 +3170,9 @@ class ClassificationExplorer(ServerClient):
         Parameters
         ----------
         property_value: str
-            - property value to be searched.
+            - property value to be searched. '*' (or empty) with a metadata_element_type returns every element of that type (via get_elements); '*' without a type is refused.
+        deployed_implementation_type: str, optional
+            - with '*', list only elements of this technology (Egeria matches deployedImplementationType containing it, case-insensitive) within metadata_element_type. Ignored for any other search string, which matches property_names within the whole type.
         property_names: list[str]
             - property names to search in.
         metadata_element_type : str, default = None
@@ -3197,6 +3246,7 @@ class ClassificationExplorer(ServerClient):
                 page_size=page_size,
                 timeout=timeout,
                 body=body,
+                deployed_implementation_type=deployed_implementation_type,
                 **kwargs
             )
         )

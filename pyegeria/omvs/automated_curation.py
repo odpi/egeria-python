@@ -39,6 +39,23 @@ from pyegeria.core.async_runner import run_sync
 settings.Logging.console_logging_level = "ERROR"
 
 
+
+# The deployed implementation type (Egeria technology type) of the catalog template each
+# create_<key>_element_from_template method instantiates. One source: Dr.Egeria's Asset Maker
+# commands create elements through these methods, and gen_report_specs reads this table so the
+# matching report specs list exactly that technology ("Create UC Table Element" -> "uc_table").
+ELEMENT_TEMPLATE_TECHNOLOGY: dict[str, str] = {
+    "kafka_server": "Apache Kafka Server",
+    "postgres_server": "PostgreSQL Server",
+    "postgres_database": "PostgreSQL Relational Database",
+    "uc_server": "Unity Catalog Server",
+    "uc_catalog": "Unity Catalog Catalog",
+    "uc_schema": "Unity Catalog Schema",
+    "uc_table": "Unity Catalog Table",
+    "uc_function": "Unity Catalog Function",
+    "uc_volume": "Unity Catalog Volume",
+}
+
 class AutomatedCuration(ServerClient):
     """
     Client for the Automated Curation View Service.
@@ -893,7 +910,7 @@ class AutomatedCuration(ServerClient):
         str
             The GUID of the Kafka server element.
         """
-        template_guid = await self._async_get_template_guid_for_technology_type("Apache Kafka Server")
+        template_guid = await self._async_get_template_guid_for_technology_type(ELEMENT_TEMPLATE_TECHNOLOGY["kafka_server"])
         body = {
             "class": "TemplateRequestBody",
             "templateGUID": template_guid,
@@ -1242,7 +1259,7 @@ class AutomatedCuration(ServerClient):
             # are no longer template placeholders, so these values are not sent.
             warnings.warn("db_user and db_pwd are deprecated and ignored; pass secrets_store_path_name "
                           "and secrets_collection_name instead (ISSUE-160)", DeprecationWarning, stacklevel=2)
-        template_guid = await self._async_get_template_guid_for_technology_type("PostgreSQL Server")
+        template_guid = await self._async_get_template_guid_for_technology_type(ELEMENT_TEMPLATE_TECHNOLOGY["postgres_server"])
 
         body = {
             "class": "TemplateRequestBody",
@@ -1380,7 +1397,7 @@ class AutomatedCuration(ServerClient):
             # are no longer template placeholders, so these values are not sent.
             warnings.warn("db_user and db_pwd are deprecated and ignored; pass secrets_store_path_name "
                           "and secrets_collection_name instead (ISSUE-160)", DeprecationWarning, stacklevel=2)
-        template_guid = await self._async_get_template_guid_for_technology_type("PostgreSQL Relational Database")
+        template_guid = await self._async_get_template_guid_for_technology_type(ELEMENT_TEMPLATE_TECHNOLOGY["postgres_database"])
 
         body = {
             "class": "TemplateRequestBody",
@@ -1620,7 +1637,7 @@ class AutomatedCuration(ServerClient):
         str
             The GUID of the File Folder element.
         """
-        template_guid = await self._async_get_template_guid_for_technology_type("Unity Catalog Server")
+        template_guid = await self._async_get_template_guid_for_technology_type(ELEMENT_TEMPLATE_TECHNOLOGY["uc_server"])
 
         body = {
             "class": "TemplateRequestBody",
@@ -1718,7 +1735,7 @@ class AutomatedCuration(ServerClient):
         str
             The GUID of the File Folder element.
         """
-        template_guid = await self._async_get_template_guid_for_technology_type("Unity Catalog Catalog")
+        template_guid = await self._async_get_template_guid_for_technology_type(ELEMENT_TEMPLATE_TECHNOLOGY["uc_catalog"])
 
         body = {
             "class": "TemplateRequestBody",
@@ -1812,7 +1829,7 @@ class AutomatedCuration(ServerClient):
         str
             The GUID of the File Folder element.
         """
-        template_guid = await self._async_get_template_guid_for_technology_type("Unity Catalog Schema")
+        template_guid = await self._async_get_template_guid_for_technology_type(ELEMENT_TEMPLATE_TECHNOLOGY["uc_schema"])
 
         body = {
             "class": "TemplateRequestBody",
@@ -1921,7 +1938,7 @@ class AutomatedCuration(ServerClient):
         str
             The GUID of the File Folder element.
         """
-        template_guid = await self._async_get_template_guid_for_technology_type("Unity Catalog Table")
+        template_guid = await self._async_get_template_guid_for_technology_type(ELEMENT_TEMPLATE_TECHNOLOGY["uc_table"])
 
         body = {
             "class": "TemplateRequestBody",
@@ -2052,7 +2069,7 @@ class AutomatedCuration(ServerClient):
         str
             The GUID of the File Folder element.
         """
-        template_guid = await self._async_get_template_guid_for_technology_type("Unity Catalog Function")
+        template_guid = await self._async_get_template_guid_for_technology_type(ELEMENT_TEMPLATE_TECHNOLOGY["uc_function"])
 
         body = {
             "class": "TemplateRequestBody",
@@ -2178,7 +2195,7 @@ class AutomatedCuration(ServerClient):
         str
             The GUID of the File Folder element.
         """
-        template_guid = await self._async_get_template_guid_for_technology_type("Unity Catalog Volume")
+        template_guid = await self._async_get_template_guid_for_technology_type(ELEMENT_TEMPLATE_TECHNOLOGY["uc_volume"])
 
         body = {
             "class": "TemplateRequestBody",

@@ -7501,7 +7501,7 @@
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -7517,7 +7517,13 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "EmbeddedProcess",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ]
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },
@@ -8836,7 +8842,7 @@
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -8852,7 +8858,13 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "EmbeddedProcess",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ]
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },
@@ -23739,7 +23751,7 @@
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -23755,7 +23767,13 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "SecretsCollection",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ]
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },
@@ -24046,7 +24064,7 @@
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -24062,7 +24080,13 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "SecretsCollection",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ]
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },
@@ -24113,6 +24137,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ],
         "columns": [
@@ -24147,6 +24179,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ]
       },
@@ -24186,6 +24226,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ],
         "columns": [
@@ -24220,12 +24268,20 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ]
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -24241,7 +24297,14 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "SoftwareServer",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ],
+        "deployed_implementation_type": "Apache Kafka Server"
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },
@@ -24292,6 +24355,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ],
         "columns": [
@@ -24326,6 +24397,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ]
       },
@@ -24365,6 +24444,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ],
         "columns": [
@@ -24399,12 +24486,20 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ]
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -24420,7 +24515,14 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "SoftwareServer",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ],
+        "deployed_implementation_type": "Apache Kafka Server"
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },
@@ -24711,7 +24813,7 @@
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -24727,7 +24829,13 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "CSVFile",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ]
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },
@@ -25018,7 +25126,7 @@
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -25034,7 +25142,13 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "CSVFile",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ]
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },
@@ -25111,6 +25225,14 @@
             "valid_values": []
           },
           {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
             "name": "Version Identifier",
             "key": "version_identifier",
             "value": null,
@@ -25175,6 +25297,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           },
           {
             "name": "Version Identifier",
@@ -25254,6 +25384,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ],
         "columns": [
@@ -25320,12 +25458,20 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ]
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -25341,7 +25487,14 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "SoftwareServer",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ],
+        "deployed_implementation_type": "PostgreSQL Server"
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },
@@ -25418,6 +25571,14 @@
             "valid_values": []
           },
           {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
             "name": "Version Identifier",
             "key": "version_identifier",
             "value": null,
@@ -25482,6 +25643,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           },
           {
             "name": "Version Identifier",
@@ -25561,6 +25730,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ],
         "columns": [
@@ -25627,12 +25804,20 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ]
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -25648,7 +25833,14 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "SoftwareServer",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ],
+        "deployed_implementation_type": "PostgreSQL Server"
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },
@@ -25725,6 +25917,14 @@
             "valid_values": []
           },
           {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
             "name": "Version Identifier",
             "key": "version_identifier",
             "value": null,
@@ -25789,6 +25989,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           },
           {
             "name": "Version Identifier",
@@ -25868,6 +26076,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ],
         "columns": [
@@ -25934,12 +26150,20 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ]
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -25955,7 +26179,14 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "RelationalDatabase",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ],
+        "deployed_implementation_type": "PostgreSQL Relational Database"
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },
@@ -26032,6 +26263,14 @@
             "valid_values": []
           },
           {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
             "name": "Version Identifier",
             "key": "version_identifier",
             "value": null,
@@ -26096,6 +26335,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           },
           {
             "name": "Version Identifier",
@@ -26175,6 +26422,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ],
         "columns": [
@@ -26241,12 +26496,20 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ]
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -26262,7 +26525,14 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "RelationalDatabase",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ],
+        "deployed_implementation_type": "PostgreSQL Relational Database"
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },
@@ -26457,7 +26727,7 @@
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -26473,7 +26743,13 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "DataFolder",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ]
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },
@@ -26668,7 +26944,7 @@
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -26684,7 +26960,13 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "DataFolder",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ]
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },
@@ -26737,6 +27019,14 @@
             "valid_values": []
           },
           {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
             "name": "Version Identifier",
             "key": "version_identifier",
             "value": null,
@@ -26777,6 +27067,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           },
           {
             "name": "Version Identifier",
@@ -26832,6 +27130,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ],
         "columns": [
@@ -26874,12 +27180,20 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ]
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -26895,7 +27209,14 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "SoftwareServer",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ],
+        "deployed_implementation_type": "Unity Catalog Server"
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },
@@ -26948,6 +27269,14 @@
             "valid_values": []
           },
           {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
             "name": "Version Identifier",
             "key": "version_identifier",
             "value": null,
@@ -26988,6 +27317,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           },
           {
             "name": "Version Identifier",
@@ -27043,6 +27380,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ],
         "columns": [
@@ -27085,12 +27430,20 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ]
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -27106,7 +27459,14 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "SoftwareServer",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ],
+        "deployed_implementation_type": "Unity Catalog Server"
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },
@@ -27151,6 +27511,14 @@
             "valid_values": []
           },
           {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
             "name": "Version Identifier",
             "key": "version_identifier",
             "value": null,
@@ -27183,6 +27551,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           },
           {
             "name": "Version Identifier",
@@ -27230,6 +27606,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ],
         "columns": [
@@ -27264,12 +27648,20 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ]
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -27285,7 +27677,14 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "SoftwareCapability",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ],
+        "deployed_implementation_type": "Unity Catalog Catalog"
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },
@@ -27330,6 +27729,14 @@
             "valid_values": []
           },
           {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
             "name": "Version Identifier",
             "key": "version_identifier",
             "value": null,
@@ -27362,6 +27769,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           },
           {
             "name": "Version Identifier",
@@ -27409,6 +27824,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ],
         "columns": [
@@ -27443,12 +27866,20 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ]
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -27464,7 +27895,14 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "SoftwareCapability",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ],
+        "deployed_implementation_type": "Unity Catalog Catalog"
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },
@@ -27517,6 +27955,14 @@
             "valid_values": []
           },
           {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
             "name": "Version Identifier",
             "key": "version_identifier",
             "value": null,
@@ -27557,6 +28003,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           },
           {
             "name": "Version Identifier",
@@ -27612,6 +28066,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ],
         "columns": [
@@ -27654,12 +28116,20 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ]
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -27675,7 +28145,14 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "DeployedDatabaseSchema",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ],
+        "deployed_implementation_type": "Unity Catalog Schema"
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },
@@ -27728,6 +28205,14 @@
             "valid_values": []
           },
           {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
             "name": "Version Identifier",
             "key": "version_identifier",
             "value": null,
@@ -27768,6 +28253,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           },
           {
             "name": "Version Identifier",
@@ -27823,6 +28316,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ],
         "columns": [
@@ -27865,12 +28366,20 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ]
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -27886,7 +28395,14 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "DeployedDatabaseSchema",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ],
+        "deployed_implementation_type": "Unity Catalog Schema"
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },
@@ -27982,6 +28498,14 @@
             "valid_values": []
           },
           {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
             "name": "Version Identifier",
             "key": "version_identifier",
             "value": null,
@@ -28065,6 +28589,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           },
           {
             "name": "Version Identifier",
@@ -28163,6 +28695,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ],
         "columns": [
@@ -28248,12 +28788,20 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ]
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -28269,7 +28817,14 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "RelationalTable",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ],
+        "deployed_implementation_type": "Unity Catalog Table"
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },
@@ -28365,6 +28920,14 @@
             "valid_values": []
           },
           {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
             "name": "Version Identifier",
             "key": "version_identifier",
             "value": null,
@@ -28448,6 +29011,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           },
           {
             "name": "Version Identifier",
@@ -28546,6 +29117,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ],
         "columns": [
@@ -28631,12 +29210,20 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ]
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -28652,7 +29239,14 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "RelationalTable",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ],
+        "deployed_implementation_type": "Unity Catalog Table"
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },
@@ -28713,6 +29307,14 @@
             "valid_values": []
           },
           {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
             "name": "Version Identifier",
             "key": "version_identifier",
             "value": null,
@@ -28761,6 +29363,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           },
           {
             "name": "Version Identifier",
@@ -28824,6 +29434,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ],
         "columns": [
@@ -28874,12 +29492,20 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ]
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -28895,7 +29521,14 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "DeployedAPI",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ],
+        "deployed_implementation_type": "Unity Catalog Function"
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },
@@ -28956,6 +29589,14 @@
             "valid_values": []
           },
           {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
             "name": "Version Identifier",
             "key": "version_identifier",
             "value": null,
@@ -29004,6 +29645,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           },
           {
             "name": "Version Identifier",
@@ -29067,6 +29716,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ],
         "columns": [
@@ -29117,12 +29774,20 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ]
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -29138,7 +29803,14 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "DeployedAPI",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ],
+        "deployed_implementation_type": "Unity Catalog Function"
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },
@@ -29218,6 +29890,14 @@
             "valid_values": []
           },
           {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
             "name": "Version Identifier",
             "key": "version_identifier",
             "value": null,
@@ -29285,6 +29965,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           },
           {
             "name": "Version Identifier",
@@ -29367,6 +30055,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ],
         "columns": [
@@ -29436,12 +30132,20 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ]
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -29457,7 +30161,14 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "StorageVolume",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ],
+        "deployed_implementation_type": "Unity Catalog Volume"
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },
@@ -29537,6 +30248,14 @@
             "valid_values": []
           },
           {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
+          },
+          {
             "name": "Version Identifier",
             "key": "version_identifier",
             "value": null,
@@ -29604,6 +30323,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           },
           {
             "name": "Version Identifier",
@@ -29686,6 +30413,14 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ],
         "columns": [
@@ -29755,12 +30490,20 @@
             "format": false,
             "detail_spec": null,
             "valid_values": []
+          },
+          {
+            "name": "Deployed Implementation Type",
+            "key": "deployed_implementation_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null
           }
         ]
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -29776,7 +30519,14 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "StorageVolume",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ],
+        "deployed_implementation_type": "Unity Catalog Volume"
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },
@@ -29907,7 +30657,7 @@
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -29923,7 +30673,13 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "OpenMetadataRoot",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ]
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },
@@ -30346,7 +31102,7 @@
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -30362,7 +31118,13 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "OpenMetadataRoot",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ]
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },
@@ -225157,7 +225919,7 @@
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -225173,7 +225935,13 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "Report",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ]
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },
@@ -227240,7 +228008,7 @@
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -227256,7 +228024,13 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "Report",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ]
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },
@@ -229445,7 +230219,7 @@
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -229461,7 +230235,13 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "SavedQuery",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ]
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },
@@ -230716,7 +231496,7 @@
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -230732,7 +231512,13 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "SavedQuery",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ]
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },
@@ -235047,7 +235833,7 @@
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -235063,7 +235849,13 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "SchemaType",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ]
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },
@@ -235950,7 +236742,7 @@
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -235966,7 +236758,13 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "SchemaType",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ]
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },
@@ -236097,7 +236895,7 @@
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -236113,7 +236911,13 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "SchemaType",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ]
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },
@@ -236244,7 +237048,7 @@
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -236260,7 +237064,13 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "SchemaType",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ]
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },
@@ -236891,7 +237701,7 @@
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -236907,7 +237717,13 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "SchemaAttribute",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ]
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },
@@ -237858,7 +238674,7 @@
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -237874,7 +238690,13 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "SchemaAttribute",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ]
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },
@@ -238005,7 +238827,7 @@
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -238021,7 +238843,13 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "SchemaAttribute",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ]
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },
@@ -238152,7 +238980,7 @@
       }
     ],
     "action": {
-      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
       "required_params": [
         "search_string"
       ],
@@ -238168,7 +238996,13 @@
         "metadata_element_subtypes",
         "metadata_element_type"
       ],
-      "spec_params": {},
+      "spec_params": {
+        "metadata_element_type": "SchemaAttribute",
+        "property_names": [
+          "displayName",
+          "qualifiedName"
+        ]
+      },
       "analytic_function": null,
       "analytic_spec_params": {}
     },

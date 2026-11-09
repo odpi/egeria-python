@@ -296,6 +296,45 @@ def _build_generated_formats(columns: List[Column], default_types: Optional[List
     return formats
 
 
+# Report specs whose find method is a generic, all-types search. Each gets its command's own
+# type from OM_TYPE (OpenMetadataRoot when the command has none), so the spec cannot list every
+# element of the repository -- and with '*' Egeria refuses an untyped search outright.
+GENERIC_SEARCH_METHODS = {
+    "ClassificationExplorer.find_elements_by_property_value",
+    "MetadataExpert.find_metadata_elements_with_string",
+}
+_TYPE_FILTER_KEYS = {"metadata_element_type", "metadata_element_subtypes", "include_only_classified_elements",
+                     "classification_names"}
+GENERIC_PROPERTY_NAMES = ["displayName", "qualifiedName"]
+TECHNOLOGY_COLUMN = Column(name="Deployed Implementation Type", key="deployed_implementation_type")
+
+
+def _technology_for_command(cmd_key: str) -> Optional[str]:
+    """The deployed implementation type a Create command's element is made with, from the same
+    table Dr.Egeria's create-from-template calls use ("Create UC Table Element" -> "uc_table")."""
+    from pyegeria.omvs.automated_curation import ELEMENT_TEMPLATE_TECHNOLOGY
+
+    m = re.fullmatch(r"Create (.+) Element", cmd_key.strip())
+    if not m:
+        return None
+    return ELEMENT_TEMPLATE_TECHNOLOGY.get(re.sub(r"\s+", "_", m.group(1).strip().lower()))
+
+
+def _generic_search_constraints(cmd_key: str, cmd_obj: dict, find_method: str, constraints: dict) -> dict:
+    """spec_params for a generic-search spec: the command's type (and technology), derived here."""
+    if find_method not in GENERIC_SEARCH_METHODS:
+        return constraints
+    out = dict(constraints or {})
+    if not _TYPE_FILTER_KEYS & set(out):
+        out["metadata_element_type"] = (cmd_obj.get("OM_TYPE") or "").strip() or "OpenMetadataRoot"
+    if find_method.startswith("ClassificationExplorer."):
+        out.setdefault("property_names", list(GENERIC_PROPERTY_NAMES))
+        technology = _technology_for_command(cmd_key)
+        if technology:
+            out.setdefault("deployed_implementation_type", technology)
+    return out
+
+
 def _derive_target_type(cmd_key: str, cmd_obj: dict) -> str:
     display_name = str(cmd_obj.get("display_name", "")).strip()
     if isinstance(cmd_key, str):
@@ -395,7 +434,11 @@ def build_format_sets_from_commands(
                     continue
 
             find_method = cmd_obj.get("find_method") or ""
-            constraints = _safe_parse_constraints(cmd_obj.get("find_constraints"))
+            constraints = _generic_search_constraints(
+                cmd_key, cmd_obj, find_method, _safe_parse_constraints(cmd_obj.get("find_constraints")))
+            if "deployed_implementation_type" in constraints and \
+                    all(c.key != TECHNOLOGY_COLUMN.key for c in columns):
+                columns = [*columns, Column(**TECHNOLOGY_COLUMN.model_dump())]
             extra_find = cmd_obj.get("extra_find") or ""
             extra_constraints = _safe_parse_constraints(cmd_obj.get("extra_constraints"))
             action = None

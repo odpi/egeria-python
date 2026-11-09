@@ -118,6 +118,35 @@ through the report executor, with the method's name in the message:
 )
 ```
 
+### Which wins: a report spec's `spec_params` or the caller's parameters
+
+A report spec's `spec_params` are pinned: when a caller passes the same parameter to
+`run_report` / `exec_report_spec`, **the spec's value wins** (the spec is what the report *is*;
+see the design note §9.13). A caller's parameter that the report does not take at all is
+dropped, and now says so with an `UnknownFilterWarning` naming it and listing what the report
+does take.
+
+### Generic searches name a type
+
+`ClassificationExplorer.find_elements_by_property_value` searches `property_names` (for report
+specs: `displayName` and `qualifiedName`) within `metadata_element_type`.
+
+- `'*'` with a type lists the elements of that type (it calls `get_elements`), one page at a
+  time: the caller's `page_size`, 100 when none is given, never more than 100 per call — page on
+  with `start_from`. `'*'` with no type, or with a root type (`OpenMetadataRoot`,
+  `Referenceable`), is refused: "give a search string or a narrower type".
+- `deployed_implementation_type="PostgreSQL Server"` with `'*'` lists only that technology
+  within the type (Egeria matches `deployedImplementationType` containing the name; the
+  filtering is Egeria's, so paging stays correct).
+- **Limit:** with any other search string the technology is not applied — Egeria cannot
+  combine the two in one query — so results may include other technologies of the same
+  supertype (e.g. a Kafka server whose name matches, in a Postgres-Server report). The
+  technology report specs show a *Deployed Implementation Type* column so each row's
+  technology is visible.
+
+`MetadataExpert.find_metadata_elements_with_string("*")` with no type is refused with
+"give a search string or a type" instead of passing Egeria's "searchString is null" through.
+
 ### Notes
 
 - `None` means "not set": a filter passed as `None` never overrides the method's own default.

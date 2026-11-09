@@ -378,3 +378,167 @@ def test_report_executor_canonicalizes_quietly():
                                             "metadata_element_subtype_names": "A,B"}, action_mode="find")
     assert out["metadata_element_type"] == "X" and out["metadata_element_subtypes"] == ["A", "B"]
     assert "metadata_element_type_name" not in out and "metadata_element_subtype_names" not in out
+
+
+# ---------------------------------------------------------------------------- generic-search specs
+
+# (ClassificationExplorer.get_elements is not here: it always sends a type, Referenceable by default.)
+GENERIC_SEARCH_FUNCTIONS = {
+    "MetadataExpert.find_metadata_elements_with_string",
+    "ClassificationExplorer.find_elements_by_property_value",
+}
+TYPE_FILTERS = {"metadata_element_type", "metadata_element_subtypes", "include_only_classified_elements"}
+
+
+def test_every_generic_search_spec_names_a_type():
+    """A generic search with no type lists whatever matches across the whole repository, and with
+    '*' Egeria refuses it outright ("searchString is null"). Each such report spec must say which
+    type (or classification) it is about -- set it in the Dr.Egeria command's find_constraints."""
+    from pyegeria.view.base_report_formats import get_report_registry
+
+    untyped = []
+    for name, fs in get_report_registry().items():
+        action = getattr(fs, "action", None)
+        if getattr(action, "function", None) in GENERIC_SEARCH_FUNCTIONS:
+            if not TYPE_FILTERS & set(getattr(action, "spec_params", None) or {}):
+                untyped.append(f"{name} -> {action.function}")
+    assert not untyped, "generic-search report specs with no type filter:\n" + "\n".join(sorted(untyped))
+
+
+def test_untyped_star_is_refused_with_words(explorer, monkeypatch):
+    from pyegeria.omvs.metadata_expert import MetadataExpert
+
+    with pytest.raises(ValueError, match="give a search string or a"):
+        explorer.find_elements_by_property_value("*", ["displayName"])
+    assert not explorer.sent
+
+    monkeypatch.setattr(MetadataExpert, "check_connection", lambda self: "test")
+    expert = MetadataExpert("view-server", "https://egeria.example:9443", "user", "pwd")
+    with pytest.raises(ValueError, match="give a search string or a type"):
+        expert.find_metadata_elements_with_string("*")
+
+
+def test_typed_star_lists_every_element_of_the_type(explorer):
+    explorer.find_elements_by_property_value("*", ["displayName", "qualifiedName"],
+                                             metadata_element_type="EmbeddedProcess", page_size=5)
+    body = explorer.sent[-1]
+    assert body["metadataElementTypeName"] == "EmbeddedProcess"
+    assert "propertyValue" not in body and "searchString" not in body  # sent as a by-type list
+
+
+def test_report_search_string_reaches_property_value():
+    import pyegeria.view.format_set_executor as fse
+    from pyegeria.omvs.classification_explorer import ClassificationExplorer
+
+    out = fse._bind_search_parameter(ClassificationExplorer.find_elements_by_property_value,
+                                     {"search_string": "pump", "property_names": ["displayName"]})
+    assert out == {"property_value": "pump", "property_names": ["displayName"]}
+
+
+def test_star_with_a_technology_lists_exactly_that_technology(explorer):
+    explorer.find_elements_by_property_value("*", ["displayName", "qualifiedName"],
+                                             metadata_element_type="SoftwareServer",
+                                             deployed_implementation_type="PostgreSQL Server")
+    body = explorer.sent[-1]
+    assert body["metadataElementTypeName"] == "SoftwareServer"
+    assert body["propertyNames"] == ["deployedImplementationType"]
+    assert body["propertyValue"] == "PostgreSQL Server"  # matched by Egeria, so paging stays right
+
+
+def test_search_string_with_a_technology_searches_names_within_the_type(explorer):
+    # The documented limit: a real search string matches displayName/qualifiedName within the
+    # supertype; the technology is not applied (it cannot be combined in one Egeria query).
+    explorer.find_elements_by_property_value("orders", ["displayName", "qualifiedName"],
+                                             metadata_element_type="SoftwareServer",
+                                             deployed_implementation_type="PostgreSQL Server")
+    body = explorer.sent[-1]
+    assert body["propertyNames"] == ["displayName", "qualifiedName"]
+    assert body["metadataElementTypeName"] == "SoftwareServer"
+
+
+def test_generator_derives_type_and_technology_from_the_command():
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("gen_report_specs", REPO / "commands" / "tech" / "gen_report_specs.py")
+    gen = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(gen)
+    ce = "ClassificationExplorer.find_elements_by_property_value"
+    assert gen._generic_search_constraints("Create Postgres Server Element", {"OM_TYPE": "SoftwareServer"}, ce, {}) == {
+        "metadata_element_type": "SoftwareServer", "property_names": ["displayName", "qualifiedName"],
+        "deployed_implementation_type": "PostgreSQL Server"}
+    assert gen._generic_search_constraints("Create Element", {"OM_TYPE": ""}, ce, {})["metadata_element_type"] \
+        == "OpenMetadataRoot"
+    # an explicit type in find_constraints is kept; other find methods are untouched
+    assert gen._generic_search_constraints("Create X", {"OM_TYPE": "A"}, ce, {"metadata_element_type": "B"})[
+        "metadata_element_type"] == "B"
+    assert gen._generic_search_constraints("Create X", {"OM_TYPE": "A"}, "GlossaryManager.find_glossaries", {}) == {}
+
+
+def test_technology_specs_show_the_technology_column():
+    from pyegeria.view.base_report_formats import get_report_registry
+
+    fs = get_report_registry()["Postgres-Server-Element-DrE-Basic"]
+    assert fs.action.spec_params["deployed_implementation_type"] == "PostgreSQL Server"
+    assert any(c.key == "deployed_implementation_type" for c in fs.formats[0].attributes)
+
+
+def test_report_run_param_typo_warns(monkeypatch):
+    """P3: exec_report_spec passes only the report's declared parameters; a caller's typo used to vanish."""
+    import pyegeria.view.format_set_executor as fse
+
+    with pytest.warns(UnknownFilterWarning, match=r"report 'R': parameter\(s\) 'metadata_element_subtipes' ignored"):
+        fse._warn_dropped_params("R", {"search_string": "*", "metadata_element_subtipes": ["X"], "page_size": 5},
+                                 {"search_string": "*", "page_size": 5}, ["search_string", "page_size"])
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", UnknownFilterWarning)
+        fse._warn_dropped_params("R", {"search_string": "*", "sort_order": "ANY"}, {"property_value": "*"},
+                                 ["search_string"])
+
+
+@pytest.mark.parametrize("root", ["OpenMetadataRoot", "Referenceable"])
+def test_star_on_a_root_type_is_refused(explorer, root):
+    # get_elements(OpenMetadataRoot, page_size=1000) ran the quickstart platform out of heap.
+    with pytest.raises(ValueError, match="give a search string or a narrower type"):
+        explorer.find_elements_by_property_value("*", ["displayName"], metadata_element_type=root)
+    assert not explorer.sent
+    explorer.find_elements_by_property_value("pump", ["displayName"], metadata_element_type=root)
+    assert explorer.sent[-1]["propertyValue"] == "pump"
+
+
+@pytest.mark.parametrize("asked, sent", [(0, 100), (None, 100), (1000, 100), (25, 25)])
+def test_star_pages_never_more_than_100(explorer, asked, sent):
+    explorer.find_elements_by_property_value("*", ["displayName"], metadata_element_type="EmbeddedProcess",
+                                             page_size=asked, start_from=200)
+    body = explorer.sent[-1]
+    assert body["pageSize"] == sent and body["startFrom"] == 200
+
+
+def test_technology_star_pages_never_more_than_100(explorer):
+    explorer.find_elements_by_property_value("*", ["displayName"], metadata_element_type="SoftwareServer",
+                                             deployed_implementation_type="PostgreSQL Server", page_size=1000)
+    assert explorer.sent[-1]["pageSize"] == 100
+
+
+def test_exec_report_spec_surfaces_a_refusal(monkeypatch):
+    """The sync executor used to swallow ValueError and return None."""
+    import pyegeria.view.format_set_executor as fse
+
+    class _Client:
+        def __init__(self, *a, **k):
+            pass
+
+        def set_bearer_token(self, token):
+            pass
+
+        def close_session(self):
+            pass
+
+        def find_things(self, search_string="*", **kwargs):
+            raise ValueError("give a search string or a narrower type")
+
+    fmt = {"action": {"function": "X.find_things", "required_params": ["search_string"], "spec_params": {}}}
+    monkeypatch.setattr(fse, "select_report_spec", lambda name, kind: fmt)
+    monkeypatch.setattr(fse, "_resolve_client_and_method", lambda decl: (_Client, "find_things"))
+    with pytest.raises(ValueError, match="narrower type"):
+        fse.exec_report_spec("R", output_format="DICT", params={"search_string": "*"},
+                             view_server="v", view_url="https://x", user="u", user_pass="p", token="t")

@@ -18,7 +18,7 @@ import inspect
 import json
 import os
 import sys
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 from loguru import logger
 from pydantic import ValidationError
@@ -550,6 +550,53 @@ def _normalize_report_params(params: Dict[str, Any], action_mode: str = "generic
     return _canonical_param_names(cleaned)
 
 
+# Run-parameter names that are aliases or rendering options rather than parameters of the report:
+# consumed under another name, so never reported as dropped.
+_RUN_PARAM_ALIASES = frozenset({
+    "search_string", "filter_string", "property_value", "filter", "output_format", "report_spec",
+    "graph_query_depth", "metadata_element_name", "limit_result_by_status", "sort_order",
+    "output_sort_order", "order_property_name", "anchor_scope_id",
+})
+
+
+def _warn_dropped_params(report_name: str, params: Dict[str, Any], call_params: Dict[str, Any],
+                         declared: Iterable[str]) -> None:
+    """A caller's run parameter that the report does not take is dropped; say so (P3: never silent).
+
+    Same warning class as an unknown filter on a method call (UnknownFilterWarning), plus a log line.
+    """
+    import warnings
+    from pyegeria.core.request_filters import (DEPRECATED_NAMES, LEGACY_ALIASES, RENDER_OPTIONS,
+                                               UnknownFilterWarning, _SKIP_PREFIXES)
+
+    known = _RUN_PARAM_ALIASES | RENDER_OPTIONS | set(DEPRECATED_NAMES) | set(LEGACY_ALIASES)
+    dropped = sorted(k for k in (params or {}) if k not in call_params and k not in known)
+    if not dropped:
+        return
+    takes = ", ".join(sorted(set(declared))) or "no parameters"
+    msg = (f"report '{report_name}': parameter(s) {', '.join(repr(k) for k in dropped)} ignored -- "
+           f"not parameters of this report (it takes: {takes}). "
+           f"(pyegeria will raise an error for unknown parameters in a future release.)")
+    logger.warning(msg)
+    warnings.warn(msg, UnknownFilterWarning, skip_file_prefixes=_SKIP_PREFIXES)
+
+
+def _bind_search_parameter(func: Any, call_params: Dict[str, Any]) -> Dict[str, Any]:
+    """Generated report specs always pass the user's text as `search_string`. A method that takes it
+    as `property_value` instead (ClassificationExplorer.find_elements_by_property_value) gets it
+    under that name."""
+    try:
+        names = inspect.signature(func).parameters
+    except (TypeError, ValueError):
+        return call_params
+    if "search_string" in call_params and "search_string" not in names and "property_value" in names \
+            and "property_value" not in call_params:
+        out = dict(call_params)
+        out["property_value"] = out.pop("search_string")
+        return out
+    return call_params
+
+
 def _canonical_param_names(params: Dict[str, Any]) -> Dict[str, Any]:
     """Rename deprecated filter spellings (metadata_element_type_name, ...) to the canonical
     names, quietly: a report spec or Dr.Egeria parameter list is not the caller's code, so it
@@ -843,6 +890,9 @@ async def _async_run_report_impl(
             )
 
         call_params = _merge_signature_params(func, params, call_params)
+        call_params = _bind_search_parameter(func, call_params)
+        _warn_dropped_params(report_name, params, call_params,
+                             [*required_params, *optional_params, *spec_params])
         # Only (re)create a bearer token if one is not already set on the client.
         try:
             existing_token = None
@@ -1281,6 +1331,9 @@ def _exec_report_spec_impl(
             )
 
         call_params = _add_request_options(func, params, call_params)
+        call_params = _bind_search_parameter(func, call_params)
+        _warn_dropped_params(format_set_name, params, call_params,
+                             [*required_params, *optional_params, *spec_params])
         result = func(**call_params)
 
         if not result or result == NO_ELEMENTS_FOUND:
@@ -1324,9 +1377,11 @@ def _exec_report_spec_impl(
     except ValidationError as e:
         print_validation_error(e)
         raise
-    except ValueError as e:
-        import traceback
-        traceback.print_exc()
+    except ValueError:
+        # Re-raise, as the async path does: this used to print the traceback and return None, so a
+        # plain-words refusal (e.g. "give a search string or a narrower type") reached the caller as
+        # "no result" -- an absence that looked like an answer.
+        raise
 
     finally:
         try:

@@ -2263,6 +2263,12 @@ class MetadataExpert(ServerClient):
                 where the output is serialized in text format.
         """
 
+        if search_string in (None, "", "*") and body is None and not (
+                metadata_element_type or metadata_element_subtypes or include_only_classified_elements):
+            # Egeria refuses this with "searchString is null" (OMAG-COMMON-400-022); say why in plain words.
+            raise ValueError("find_metadata_elements_with_string: give a search string or a type "
+                             "(metadata_element_type, metadata_element_subtypes or "
+                             "include_only_classified_elements); '*' alone is not a search")
         url = (
             f"{base_path(self, self.view_server)}/metadata-elements/by-search-string"
         )
