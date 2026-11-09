@@ -154,6 +154,11 @@ class FakeEgeria:
         page = hits[start_from:start_from + page_size] if page_size else hits[start_from:]
         return page if page else "No elements found"
 
+    async def _async_get_elements(self, metadata_element_type="Referenceable", start_from=0, page_size=10, **kwargs):
+        hits = [self.element(g) for g, e in self.entities.items() if e["type"] == metadata_element_type]
+        page = hits[start_from:start_from + page_size] if page_size else hits[start_from:]
+        return page if page else "No elements found"
+
     async def _async_get_placement_reports(self, dashboard_guid, placement_qualified_names, **kwargs):
         element = self.element(dashboard_guid)
         links = []
