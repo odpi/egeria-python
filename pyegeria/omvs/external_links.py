@@ -2155,8 +2155,8 @@ class ExternalReferences(ServerClient):
 
         url = f"{self.command_root}/external-identifiers/by-name"
         return await self._async_get_name_request(url, "ExternalId", self._generate_external_identifier_output,
-                                                    filter_string=name, start_from=start_from, page_size=page_size,
-                                                    output_format=output_format, report_spec=report_spec, body=body, **kwargs)
+                                                    start_from=start_from, page_size=page_size,
+                                                    output_format=output_format, report_spec=report_spec, body=body, **{"filter_string": name, **kwargs})
 
     @dynamic_catch
     def get_external_identifiers_by_name(self, name: str = "*",

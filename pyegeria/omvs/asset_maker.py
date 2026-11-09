@@ -692,13 +692,12 @@ class AssetMaker(ServerClient):
                                                   filter_string=filter_string,
                                                   metadata_element_type_name=metadata_element_type_name,
                                                   metadata_element_subtypes=metadata_element_subtypes,
-                                                  classification_names=include_only_classified_elements,
                                                   include_only_relationships=include_only_relationships,
                                                   skip_relationships=skip_relationships,
                                                   graph_query_depth=graph_query_depth,
                                                   start_from=start_from,
                                                   page_size=page_size, output_format=output_format,
-                                                  report_spec=report_spec, body=body, **kwargs)
+                                                  report_spec=report_spec, body=body, **{"classification_names": include_only_classified_elements, **kwargs})
 
     @dynamic_catch
     def get_assets_by_name(
@@ -2306,7 +2305,6 @@ class AssetMaker(ServerClient):
             url,
             _type="DataAsset",
             _gen_output=self._generate_referenceable_output,
-            filter_string=category,
             content_status_list=content_status_list,
             graph_query_depth=graph_query_depth,
             start_from=start_from,
@@ -2314,7 +2312,7 @@ class AssetMaker(ServerClient):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **kwargs
+            **{"filter_string": category, **kwargs}
         )
 
     @dynamic_catch
@@ -2736,7 +2734,7 @@ class AssetMaker(ServerClient):
         in ``pyegeria.core.request_filters``).
         """
         element = await self._async_get_asset_by_guid(dashboard_guid,
-                                                      include_only_relationships=["DataSetContent"], **kwargs)
+                                                      **{"include_only_relationships": ["DataSetContent"], **kwargs})
         if not isinstance(element, dict):
             raise ValueError(f"Dashboard {dashboard_guid} could not be retrieved: {element}")
         return resolve_placement_reports(element, placement_qualified_names)
@@ -3574,7 +3572,6 @@ class AssetMaker(ServerClient):
             url,
             _type="Infrastructure",
             _gen_output=self._generate_referenceable_output,
-            filter_string=category,
             deployment_status_list=deployment_status_list,
             graph_query_depth=graph_query_depth,
             start_from=start_from,
@@ -3582,7 +3579,7 @@ class AssetMaker(ServerClient):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **kwargs
+            **{"filter_string": category, **kwargs}
         )
 
     @dynamic_catch
@@ -4246,7 +4243,6 @@ class AssetMaker(ServerClient):
             url,
             _type="Process",
             _gen_output=self._generate_referenceable_output,
-            filter_string=category,
             activity_status_list=activity_status_list,
             graph_query_depth=graph_query_depth,
             start_from=start_from,
@@ -4254,7 +4250,7 @@ class AssetMaker(ServerClient):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **kwargs
+            **{"filter_string": category, **kwargs}
         )
 
     @dynamic_catch
@@ -6215,7 +6211,6 @@ class AssetMaker(ServerClient):
             url,
             _type="SoftwareCapability",
             _gen_output=self._generate_referenceable_output,
-            filter_string=name,
             metadata_element_type_name=metadata_element_type_name,
             graph_query_depth=graph_query_depth,
             start_from=start_from,
@@ -6223,7 +6218,7 @@ class AssetMaker(ServerClient):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **kwargs
+            **{"filter_string": name, **kwargs}
         )
 
     @dynamic_catch
@@ -6339,7 +6334,6 @@ class AssetMaker(ServerClient):
             url,
             _type="SoftwareCapability",
             _gen_output=self._generate_referenceable_output,
-            filter_string=deployed_implementation_type,
             metadata_element_type_name=metadata_element_type_name,
             graph_query_depth=graph_query_depth,
             start_from=start_from,
@@ -6347,7 +6341,7 @@ class AssetMaker(ServerClient):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **kwargs
+            **{"filter_string": deployed_implementation_type, **kwargs}
         )
 
     @dynamic_catch

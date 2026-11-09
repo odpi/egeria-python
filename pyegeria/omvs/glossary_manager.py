@@ -3483,7 +3483,6 @@ class GlossaryManager(CollectionManager):
             starts_with=starts_with,
             ends_with=ends_with,
             ignore_case=ignore_case,
-            metadata_element_type=metadata_element_type_name,
             metadata_element_subtypes=metadata_element_subtypes,
             include_only_relationships=include_only_relationships,
             skip_relationships=skip_relationships,
@@ -3496,7 +3495,7 @@ class GlossaryManager(CollectionManager):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **kwargs,
+            **{"metadata_element_type": metadata_element_type_name, **kwargs},
         )
         return response
 
@@ -3572,7 +3571,6 @@ class GlossaryManager(CollectionManager):
             _type="Glossary",
             _gen_output=self._generate_glossary_output,
             filter_string=filter_string,
-            metadata_element_type_name="Glossary",
             metadata_element_subtypes=metadata_element_subtypes,
             classification_names=classification_names,
             include_only_relationships=include_only_relationships,
@@ -3583,7 +3581,7 @@ class GlossaryManager(CollectionManager):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **kwargs,
+            **{"metadata_element_type_name": "Glossary", **kwargs},
         )
         return response
 
@@ -3878,7 +3876,6 @@ class GlossaryManager(CollectionManager):
             starts_with=starts_with,
             ends_with=ends_with,
             ignore_case=ignore_case,
-            metadata_element_type=metadata_element_type_name,
             metadata_element_subtypes=metadata_element_subtypes,
             include_only_relationships=include_only_relationships,
             skip_relationships=skip_relationships,
@@ -3891,7 +3888,7 @@ class GlossaryManager(CollectionManager):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **kwargs,
+            **{"metadata_element_type": metadata_element_type_name, **kwargs},
         )
 
         return response

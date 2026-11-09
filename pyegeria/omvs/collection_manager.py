@@ -1032,9 +1032,9 @@ class CollectionManager(ServerClient):
         url = str(HttpUrl(f"{self.collection_command_root}/by-collection-category"))
         response = await self._async_get_name_request(url, _type="Collection",
                                                       _gen_output=self._generate_collection_output,
-                                                      filter_string=category, classification_names=classification_names,
+                                                      classification_names=classification_names,
                                                       start_from=start_from, page_size=page_size,
-                                                      output_format=output_format, report_spec=report_spec, body=body, **kwargs)
+                                                      output_format=output_format, report_spec=report_spec, body=body, **{"filter_string": category, **kwargs})
 
         return response
 

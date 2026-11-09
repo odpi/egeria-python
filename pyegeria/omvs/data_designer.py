@@ -943,10 +943,9 @@ class DataDesigner(ServerClient):
 
         """
 
-        return await self._async_find_data_structures(search_string="*",
-                                                      metadata_element_type="DataStructure",
+        return await self._async_find_data_structures(
                                                       output_format=output_format,
-                                                      report_spec=report_spec, **kwargs)
+                                                      report_spec=report_spec, **{"search_string": "*", "metadata_element_type": "DataStructure", **kwargs})
 
     @dynamic_catch
     def find_all_data_structures(self, graph_query_depth: int = 3, output_format: str = 'JSON', report_spec: str | dict = None, **kwargs: Unpack[SearchFilters]) -> list | str:
@@ -2683,10 +2682,9 @@ class DataDesigner(ServerClient):
 
         """
 
-        return await self._async_find_data_fields(search_string="*",
-                                                  metadata_element_type="DataField",
+        return await self._async_find_data_fields(
                                                   output_format=output_format,
-                                                  report_spec=report_spec, body=body, **kwargs)
+                                                  report_spec=report_spec, body=body, **{"search_string": "*", "metadata_element_type": "DataField", **kwargs})
 
     @dynamic_catch
     def find_all_data_fields(self, graph_query_depth: int = 3, output_format: str = 'JSON', report_spec: str | dict = None,

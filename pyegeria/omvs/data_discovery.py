@@ -1042,13 +1042,12 @@ class DataDiscovery(ServerClient):
             url,
             _type="Annotation",
             _gen_output=self._generate_annotation_output,
-            filter_string=analysis_step,
             start_from=start_from,
             page_size=page_size,
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **kwargs,
+            **{"filter_string": analysis_step, **kwargs},
         )
 
     def get_annotations_by_analysis_step(
@@ -1105,13 +1104,12 @@ class DataDiscovery(ServerClient):
             url,
             _type="Annotation",
             _gen_output=self._generate_annotation_output,
-            filter_string=annotation_type,
             start_from=start_from,
             page_size=page_size,
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **kwargs,
+            **{"filter_string": annotation_type, **kwargs},
         )
 
     def get_annotations_by_annotation_type(

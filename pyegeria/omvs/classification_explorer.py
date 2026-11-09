@@ -438,11 +438,10 @@ class ClassificationExplorer(ServerClient):
             url=url,
             _type="Referenceable",
             _gen_output=self._generate_referenceable_output,
-            filter_string=owner_name,
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **kwargs
+            **{"filter_string": owner_name, **kwargs}
         )
         return response
 
@@ -565,11 +564,10 @@ class ClassificationExplorer(ServerClient):
             url=url,
             _type="Referenceable",
             _gen_output=self._generate_referenceable_output,
-            filter_string=category,
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **kwargs
+            **{"filter_string": category, **kwargs}
         )
         return response
 
@@ -693,11 +691,10 @@ class ClassificationExplorer(ServerClient):
             url=url,
             _type="Referenceable",
             _gen_output=self._generate_referenceable_output,
-            filter_string=subject_area,
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **kwargs
+            **{"filter_string": subject_area, **kwargs}
         )
         return response
 
@@ -2766,7 +2763,7 @@ class ClassificationExplorer(ServerClient):
 
         return await self._async_find_request(url, "Referenceable", self._generate_referenceable_output, property_value,
                                               starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
-                                              anchor_domain=anchor_domain, metadata_element_type=metadata_element_name,
+                                              anchor_domain=anchor_domain, 
                                               anchor_scope_guid=anchor_scope_guid,
                                               metadata_element_subtypes=metadata_element_subtypes,
                                               skip_relationships=skip_relationships,
@@ -2781,7 +2778,7 @@ class ClassificationExplorer(ServerClient):
                                               sequencing_order=sequencing_order,
                                               sequencing_property=sequencing_property, output_format=output_format,
                                               report_spec=report_spec, start_from=start_from, page_size=page_size,
-                                              property_names=property_names, body=body, **kwargs)
+                                              property_names=property_names, body=body, **{"metadata_element_type": metadata_element_name, **kwargs})
 
     def get_elements_by_property_value(
             self,
@@ -3831,7 +3828,6 @@ class ClassificationExplorer(ServerClient):
         return await self._async_find_request(url, "Referenceable", self._generate_referenceable_output, property_value,
                                               starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
                                               anchor_domain=anchor_domain,
-                                              metadata_element_type=metadata_element_type_name,
                                               metadata_element_subtypes=metadata_element_subtypes,
                                               skip_relationships=skip_relationships,
                                               include_only_relationships=include_only_relationships,
@@ -3845,7 +3841,7 @@ class ClassificationExplorer(ServerClient):
                                               sequencing_order=sequencing_order,
                                               sequencing_property=sequencing_property, output_format=output_format,
                                               report_spec=report_spec, start_from=start_from, page_size=page_size,
-                                              property_names=property_names, body=body, **kwargs)
+                                              property_names=property_names, body=body, **{"metadata_element_type": metadata_element_type_name, **kwargs})
 
     def get_elements_by_classification_with_property_value(
             self,
@@ -4488,7 +4484,6 @@ class ClassificationExplorer(ServerClient):
         return await self._async_find_request(url, "Referenceable", self._generate_referenceable_output, property_value,
                                               starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
                                               anchor_domain=anchor_domain,
-                                              metadata_element_type=metadata_element_type_name,
                                               metadata_element_subtypes=metadata_element_subtypes,
                                               skip_relationships=skip_relationships,
                                               include_only_relationships=include_only_relationships,
@@ -4502,7 +4497,7 @@ class ClassificationExplorer(ServerClient):
                                               sequencing_order=sequencing_order,
                                               sequencing_property=sequencing_property, output_format=output_format,
                                               report_spec=report_spec, start_from=start_from, page_size=page_size,
-                                              property_names=property_names, body=body, **kwargs)
+                                              property_names=property_names, body=body, **{"metadata_element_type": metadata_element_type_name, **kwargs})
 
     def get_related_elements_with_property_value(
             self,
@@ -5296,9 +5291,8 @@ class ClassificationExplorer(ServerClient):
 
         return await self._async_find_request(url, _type=relationship_type or "Relationship",
                                               _gen_output=self._generate_referenceable_output,
-                                              search_string=property_value, starts_with=starts_with,
+                                              starts_with=starts_with,
                                               ends_with=ends_with, ignore_case=ignore_case, anchor_domain=anchor_domain,
-                                              metadata_element_type=None,
                                               metadata_element_subtypes=metadata_element_subtypes,
                                               skip_relationships=skip_relationships,
                                               include_only_relationships=include_only_relationships,
@@ -5311,7 +5305,7 @@ class ClassificationExplorer(ServerClient):
                                               sequencing_order=sequencing_order,
                                               sequencing_property=sequencing_property, output_format=output_format,
                                               report_spec=report_spec, start_from=start_from, page_size=page_size,
-                                              property_names=property_names, body=body, **kwargs)
+                                              property_names=property_names, body=body, **{"search_string": property_value, "metadata_element_type": None, **kwargs})
 
     def find_relationships_with_property_value(
             self,

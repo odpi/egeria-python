@@ -301,7 +301,6 @@ class CommunityMatters(ServerClient):
             starts_with=starts_with,
             ends_with=ends_with,
             ignore_case=ignore_case,
-            metadata_element_type=metadata_element_type_name,
             metadata_element_subtypes=metadata_element_subtypes,
             include_only_relationships=include_only_relationships,
             skip_relationships=skip_relationships,
@@ -314,7 +313,7 @@ class CommunityMatters(ServerClient):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **kwargs,
+            **{"metadata_element_type": metadata_element_type_name, **kwargs},
         )
 
         return response

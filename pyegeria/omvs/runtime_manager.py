@@ -2299,9 +2299,9 @@ class RuntimeManager(ServerClient):
 
 
         return await self._async_get_name_request(url, _type="Platforms", _gen_output=self._generate_platform_output,
-                                                  filter_string=filter_string, classification_names=["Template"],
+                                                  filter_string=filter_string, 
                                                   start_from=start_from, page_size=page_size,
-                                                  output_format=output_format, report_spec=report_spec, body=body, **kwargs)
+                                                  output_format=output_format, report_spec=report_spec, body=body, **{"classification_names": ["Template"], **kwargs})
 
     def get_platform_templates_by_type(
         self,
@@ -2918,9 +2918,9 @@ class RuntimeManager(ServerClient):
 
         return await self._async_get_name_request(url, _type="OMAGServers",
                                                   _gen_output=self._generate_omag_server_output,
-                                                  filter_string=filter_string, classification_names=["Template"],
+                                                  filter_string=filter_string, 
                                                   start_from=start_from, page_size=page_size,
-                                                  output_format=output_format, report_spec=report_spec, body=body, **kwargs)
+                                                  output_format=output_format, report_spec=report_spec, body=body, **{"classification_names": ["Template"], **kwargs})
 
 
     def get_server_templates_by_dep_impl_type(
@@ -3976,7 +3976,6 @@ class RuntimeManager(ServerClient):
             url,
             _type="Referenceable",
             _gen_output=self._generate_referenceable_output,
-            filter_string=category,
             start_from=start_from,
             page_size=page_size,
             skip_relationships=skip_relationships,
@@ -3984,7 +3983,7 @@ class RuntimeManager(ServerClient):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **kwargs,
+            **{"filter_string": category, **kwargs},
         )
 
     @dynamic_catch

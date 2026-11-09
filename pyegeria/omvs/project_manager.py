@@ -265,9 +265,9 @@ class ProjectManager(ServerClient):
             f"projects/by-classifications"
         )
         response = await self._async_get_name_request(url, "Project", self._extract_project_properties,
-                                                      filter_string=project_classification, start_from=start_from,
+                                                      start_from=start_from,
                                                       page_size=page_size, output_format=output_format,
-                                                      report_spec=report_spec, body=body, **kwargs)
+                                                      report_spec=report_spec, body=body, **{"filter_string": project_classification, **kwargs})
         return response
 
     @dynamic_catch
@@ -929,7 +929,6 @@ class ProjectManager(ServerClient):
             starts_with=starts_with,
             ends_with=ends_with,
             ignore_case=ignore_case,
-            metadata_element_type=metadata_element_type_name,
             metadata_element_subtypes=metadata_element_subtypes,
             include_only_relationships=include_only_relationships,
             skip_relationships=skip_relationships,
@@ -942,7 +941,7 @@ class ProjectManager(ServerClient):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **kwargs,
+            **{"metadata_element_type": metadata_element_type_name, **kwargs},
         )
 
         return response

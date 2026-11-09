@@ -91,8 +91,8 @@ class ProductCatalog(CollectionManager):
         return await self._async_find_request(
             url, _type=metadata_element_type_name, _gen_output=self._generate_collection_output,
             search_string=search_string, starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
-            metadata_element_type=metadata_element_type_name, start_from=start_from, page_size=page_size,
-            output_format=output_format, report_spec=report_spec, body=body, **kwargs)
+            start_from=start_from, page_size=page_size,
+            output_format=output_format, report_spec=report_spec, body=body, **{"metadata_element_type": metadata_element_type_name, **kwargs})
 
     @dynamic_catch
     def find_digital_product_catalogs(

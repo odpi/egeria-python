@@ -2272,20 +2272,18 @@ class MetadataExpert(ServerClient):
                                                   ends_with=ends_with, ignore_case=ignore_case,
                                                   anchor_domain=anchor_domain,
                                                   metadata_element_type=metadata_element_type,
-                                                  metadata_element_subtypes=metadata_element_sub_type,
                                                   skip_relationships=skip_relationships,
                                                   include_only_relationships=include_only_relationships,
                                                   skip_classified_elements=skip_classified_elements,
                                                   include_only_classified_elements=include_only_classified_elements,
                                                   graph_query_depth=graph_query_depth,
-                                                  governance_zone_filter=zone_filter, as_of_time=as_of_time,
-                                                  effective_time=effective_time,
+                                                  as_of_time=as_of_time,
                                                   relationship_page_size=relationship_page_size,
                                                   limit_results_by_status=limit_results_by_status,
                                                   sequencing_order=sequencing_order,
                                                   sequencing_property=sequencing_property, output_format=output_format,
                                                   report_spec=report_spec, start_from=start_from, page_size=page_size,
-                                                  body=body, **kwargs)
+                                                  body=body, **{"metadata_element_subtypes": metadata_element_sub_type, "governance_zone_filter": zone_filter, "effective_time": effective_time, **kwargs})
         return response
 
     @dynamic_catch
@@ -2462,20 +2460,18 @@ class MetadataExpert(ServerClient):
                                                   _gen_output=self._generate_referenceable_output,
                                                   search_string=search_string, anchor_domain=anchor_domain,
                                                   metadata_element_type=metadata_element_type,
-                                                  metadata_element_subtypes=metadata_element_sub_type,
                                                   skip_relationships=skip_relationships,
                                                   include_only_relationships=include_only_relationships,
                                                   skip_classified_elements=skip_classified_elements,
                                                   include_only_classified_elements=include_only_classified_elements,
                                                   graph_query_depth=graph_query_depth,
-                                                  governance_zone_filter=zone_filter, as_of_time=as_of_time,
-                                                  effective_time=effective_time,
+                                                  as_of_time=as_of_time,
                                                   relationship_page_size=relationship_page_size,
                                                   limit_results_by_status=limit_results_by_status,
                                                   sequencing_order=sequencing_order,
                                                   sequencing_property=sequencing_property, output_format=output_format,
                                                   report_spec=report_spec, start_from=start_from, page_size=page_size,
-                                                  body=body, **kwargs)
+                                                  body=body, **{"metadata_element_subtypes": metadata_element_sub_type, "governance_zone_filter": zone_filter, "effective_time": effective_time, **kwargs})
         return response
 
     @dynamic_catch
@@ -2650,20 +2646,18 @@ class MetadataExpert(ServerClient):
                                                   ends_with=ends_with, ignore_case=ignore_case,
                                                   anchor_domain=anchor_domain,
                                                   metadata_element_type=metadata_element_type,
-                                                  metadata_element_subtypes=metadata_element_sub_type,
                                                   skip_relationships=skip_relationships,
                                                   include_only_relationships=include_only_relationships,
                                                   skip_classified_elements=skip_classified_elements,
                                                   include_only_classified_elements=include_only_classified_elements,
                                                   graph_query_depth=graph_query_depth,
-                                                  governance_zone_filter=zone_filter, as_of_time=as_of_time,
-                                                  effective_time=effective_time,
+                                                  as_of_time=as_of_time,
                                                   relationship_page_size=relationship_page_size,
                                                   limit_results_by_status=limit_results_by_status,
                                                   sequencing_order=sequencing_order,
                                                   sequencing_property=sequencing_property, output_format=output_format,
                                                   report_spec=report_spec, start_from=start_from, page_size=page_size,
-                                                  body=body, **kwargs)
+                                                  body=body, **{"metadata_element_subtypes": metadata_element_sub_type, "governance_zone_filter": zone_filter, "effective_time": effective_time, **kwargs})
         return response
 
     @dynamic_catch
@@ -2841,20 +2835,18 @@ class MetadataExpert(ServerClient):
                                                   ends_with=ends_with, ignore_case=ignore_case,
                                                   anchor_domain=anchor_domain,
                                                   metadata_element_type=metadata_element_type,
-                                                  metadata_element_subtypes=metadata_element_sub_type,
                                                   skip_relationships=skip_relationships,
                                                   include_only_relationships=include_only_relationships,
                                                   skip_classified_elements=skip_classified_elements,
                                                   include_only_classified_elements=include_only_classified_elements,
                                                   graph_query_depth=graph_query_depth,
-                                                  governance_zone_filter=zone_filter, as_of_time=as_of_time,
-                                                  effective_time=effective_time,
+                                                  as_of_time=as_of_time,
                                                   relationship_page_size=relationship_page_size,
                                                   limit_results_by_status=limit_results_by_status,
                                                   sequencing_order=sequencing_order,
                                                   sequencing_property=sequencing_property, output_format=output_format,
                                                   report_spec=report_spec, start_from=start_from, page_size=page_size,
-                                                  body=body, **kwargs)
+                                                  body=body, **{"metadata_element_subtypes": metadata_element_sub_type, "governance_zone_filter": zone_filter, "effective_time": effective_time, **kwargs})
         return response
 
     @dynamic_catch

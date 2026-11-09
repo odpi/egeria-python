@@ -108106,9 +108106,7 @@
         "metadata_element_type"
       ],
       "spec_params": {
-        "metadata_element_types": [
-          "ExternalDataSource"
-        ]
+        "metadata_element_type": "ExternalDataSource"
       },
       "analytic_function": null,
       "analytic_spec_params": {}
@@ -109545,9 +109543,7 @@
         "metadata_element_type"
       ],
       "spec_params": {
-        "metadata_element_types": [
-          "ExternalDataSource"
-        ]
+        "metadata_element_type": "ExternalDataSource"
       },
       "analytic_function": null,
       "analytic_spec_params": {}
@@ -110164,9 +110160,7 @@
         "metadata_element_type"
       ],
       "spec_params": {
-        "metadata_element_types": [
-          "ExternalModelSource"
-        ]
+        "metadata_element_type": "ExternalModelSource"
       },
       "analytic_function": null,
       "analytic_spec_params": {}
@@ -111603,9 +111597,7 @@
         "metadata_element_type"
       ],
       "spec_params": {
-        "metadata_element_types": [
-          "ExternalModelSource"
-        ]
+        "metadata_element_type": "ExternalModelSource"
       },
       "analytic_function": null,
       "analytic_spec_params": {}
@@ -112222,9 +112214,7 @@
         "metadata_element_type"
       ],
       "spec_params": {
-        "metadata_element_types": [
-          "ExternalSourceCode"
-        ]
+        "metadata_element_type": "ExternalSourceCode"
       },
       "analytic_function": null,
       "analytic_spec_params": {}
@@ -113661,9 +113651,7 @@
         "metadata_element_type"
       ],
       "spec_params": {
-        "metadata_element_types": [
-          "ExternalSourceCode"
-        ]
+        "metadata_element_type": "ExternalSourceCode"
       },
       "analytic_function": null,
       "analytic_spec_params": {}
@@ -114456,9 +114444,7 @@
         "metadata_element_type"
       ],
       "spec_params": {
-        "metadata_element_types": [
-          "RelatedMedia"
-        ]
+        "metadata_element_type": "RelatedMedia"
       },
       "analytic_function": null,
       "analytic_spec_params": {}
@@ -116071,9 +116057,7 @@
         "metadata_element_type"
       ],
       "spec_params": {
-        "metadata_element_types": [
-          "RelatedMedia"
-        ]
+        "metadata_element_type": "RelatedMedia"
       },
       "analytic_function": null,
       "analytic_spec_params": {}
@@ -117042,9 +117026,7 @@
         "metadata_element_type"
       ],
       "spec_params": {
-        "metadata_element_types": [
-          "CitedDocument"
-        ]
+        "metadata_element_type": "CitedDocument"
       },
       "analytic_function": null,
       "analytic_spec_params": {}
@@ -118833,9 +118815,7 @@
         "metadata_element_type"
       ],
       "spec_params": {
-        "metadata_element_types": [
-          "CitedDocument"
-        ]
+        "metadata_element_type": "CitedDocument"
       },
       "analytic_function": null,
       "analytic_spec_params": {}
@@ -119452,9 +119432,7 @@
         "metadata_element_type"
       ],
       "spec_params": {
-        "metadata_element_types": [
-          "ExternalStandard"
-        ]
+        "metadata_element_type": "ExternalStandard"
       },
       "analytic_function": null,
       "analytic_spec_params": {}
@@ -120891,9 +120869,7 @@
         "metadata_element_type"
       ],
       "spec_params": {
-        "metadata_element_types": [
-          "ExternalStandard"
-        ]
+        "metadata_element_type": "ExternalStandard"
       },
       "analytic_function": null,
       "analytic_spec_params": {}
@@ -133285,7 +133261,9 @@
       ],
       "spec_params": {
         "metadata_element_type": "GlossaryTerm",
-        "classification": "Question"
+        "include_only_classified_elements": [
+          "Question"
+        ]
       },
       "analytic_function": null,
       "analytic_spec_params": {}
@@ -135007,7 +134985,9 @@
       ],
       "spec_params": {
         "metadata_element_type": "GlossaryTerm",
-        "classification": "Question"
+        "include_only_classified_elements": [
+          "Question"
+        ]
       },
       "analytic_function": null,
       "analytic_spec_params": {}

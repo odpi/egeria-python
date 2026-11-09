@@ -1680,7 +1680,6 @@ class SolutionArchitect(ServerClient):
         # all-positional call here silently mismatched almost every argument (and, once this
         # method also grew a `body` parameter, overflowed to a TypeError on every call).
         return self.find_information_supply_chains(
-            search_string="*",
             add_implementation=add_implementation,
             body=body,
             starts_with=starts_with,
@@ -1706,7 +1705,7 @@ class SolutionArchitect(ServerClient):
             start_from=start_from,
             page_size=page_size,
             property_names=property_names,
-            **kwargs
+            **{"search_string": "*", **kwargs}
         )
 
     async def _async_find_information_supply_chains(
@@ -3281,7 +3280,6 @@ class SolutionArchitect(ServerClient):
         # call here silently mismatched every argument after search_string and, once this
         # method also grew a `body` parameter, overflowed to a TypeError on every call.
         return self.find_solution_blueprints(
-            search_string="*",
             body=body,
             starts_with=starts_with,
             ends_with=ends_with,
@@ -3292,8 +3290,7 @@ class SolutionArchitect(ServerClient):
             output_format=output_format,
             report_spec=report_spec,
             metadata_element_subtypes=metadata_element_subtypes,
-            skip_classified_elements=classification_names,
-            **kwargs
+            **{"search_string": "*", "skip_classified_elements": classification_names, **kwargs}
         )
 
 
@@ -4877,7 +4874,6 @@ class SolutionArchitect(ServerClient):
         # for why an all-positional call here is unsafe (parameter orders don't match, and it
         # overflows to a TypeError on every call once `body` is included positionally).
         return self.find_solution_components(
-            search_string="*",
             body=body,
             starts_with=starts_with,
             ends_with=ends_with,
@@ -4888,8 +4884,7 @@ class SolutionArchitect(ServerClient):
             output_format=output_format,
             report_spec=report_spec,
             metadata_element_subtypes=metadata_element_subtypes,
-            skip_classified_elements=classification_names,
-            **kwargs
+            **{"search_string": "*", "skip_classified_elements": classification_names, **kwargs}
         )
 
 
@@ -6341,7 +6336,6 @@ class SolutionArchitect(ServerClient):
         in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
         """
         return self.find_solution_roles(
-            search_string="*",
             body=body,
             starts_with=starts_with,
             ends_with=ends_with,
@@ -6351,9 +6345,8 @@ class SolutionArchitect(ServerClient):
             graph_query_depth=graph_query_depth,
             output_format=output_format,
             report_spec=report_spec,
-            skip_classified_elements=classification_names,
             metadata_element_subtypes=metadata_element_subtypes,
-            **kwargs
+            **{"search_string": "*", "skip_classified_elements": classification_names, **kwargs}
         )
 
 
@@ -6743,8 +6736,8 @@ class SolutionArchitect(ServerClient):
         url = f"{self.solution_architect_command_root}/concept-model-elements/by-name"
         return await self._async_get_name_request(
             url, _type="ConceptModelElement", _gen_output=self._generate_concept_model_element_output,
-            filter_string=name, body=body, start_from=start_from, page_size=page_size,
-            output_format=output_format, report_spec=report_spec, **kwargs)
+            body=body, start_from=start_from, page_size=page_size,
+            output_format=output_format, report_spec=report_spec, **{"filter_string": name, **kwargs})
 
     @dynamic_catch
     def get_concept_model_elements_by_name(self, name: str | None = None,
@@ -7051,10 +7044,10 @@ class SolutionArchitect(ServerClient):
         url = f"{self.solution_architect_command_root}/solution-ports/by-name"
         return await self._async_get_name_request(url, _type="SolutionPort",
                                                   _gen_output=self._generate_referenceable_output,
-                                                  filter_string=name, graph_query_depth=graph_query_depth,
+                                                  graph_query_depth=graph_query_depth,
                                                   start_from=start_from, page_size=page_size,
                                                   output_format=output_format, report_spec=report_spec,
-                                                  body=body, **kwargs)
+                                                  body=body, **{"filter_string": name, **kwargs})
 
     @dynamic_catch
     def get_solution_ports_by_name(self, name: str | None = None,

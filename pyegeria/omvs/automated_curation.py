@@ -3979,8 +3979,8 @@ class AutomatedCuration(ServerClient):
 
         response = await self._async_get_name_request(url, _type=self.CATALOG_TARGET_LABEL,
                                                       _gen_output=self._generate_catalog_target_output,
-                                                      filter_string=None, start_from=start_from, page_size=page_size,
-                                                      output_format=output_format, report_spec=report_spec, body=body, **kwargs)
+                                                      start_from=start_from, page_size=page_size,
+                                                      output_format=output_format, report_spec=report_spec, body=body, **{"filter_string": None, **kwargs})
 
         return response
 
@@ -4501,9 +4501,9 @@ class AutomatedCuration(ServerClient):
         url = f"{self.ref_curation_command_base}/open-metadata-types/{type_name}/technology-types"
         response = await self._async_get_name_request(url, _type=self.TECH_TYPE_ENTITY_LABEL,
                                                       _gen_output=self._generate_tech_type_output,
-                                                      filter_string=tech_name, start_from=start_from,
+                                                      start_from=start_from,
                                                       page_size=page_size, output_format=output_format,
-                                                      report_spec=report_spec, body=body, **kwargs)
+                                                      report_spec=report_spec, body=body, **{"filter_string": tech_name, **kwargs})
 
         return response
 
@@ -5060,7 +5060,6 @@ class AutomatedCuration(ServerClient):
             ends_with=ends_with,
             ignore_case=ignore_case,
             anchor_domain=anchor_domain,
-            metadata_element_type=metadata_element_type,
             metadata_element_subtypes=metadata_element_subtypes,
             skip_relationships=skip_relationships,
             include_only_relationships=include_only_relationships,
@@ -5079,7 +5078,7 @@ class AutomatedCuration(ServerClient):
             page_size=page_size,
             property_names=property_names,
             body=body,
-            **kwargs
+            **{"metadata_element_type": metadata_element_type, **kwargs}
         )
 
 
@@ -5246,9 +5245,9 @@ class AutomatedCuration(ServerClient):
         list | str
             List of all technology types.
         """
-        return await self._async_find_technology_types(search_string="*", start_from=start_from,
+        return await self._async_find_technology_types(start_from=start_from,
                                                        page_size=page_size, output_format=output_format,
-                                                       report_spec=report_spec, **kwargs)
+                                                       report_spec=report_spec, **{"search_string": "*", **kwargs})
 
     def get_all_technology_types(
             self,
@@ -5281,8 +5280,8 @@ class AutomatedCuration(ServerClient):
         list | str
             List of all technology types.
         """
-        return self.find_technology_types(search_string="*", start_from=start_from, page_size=page_size,
-                                          output_format=output_format, report_spec=report_spec, **kwargs)
+        return self.find_technology_types(start_from=start_from, page_size=page_size,
+                                          output_format=output_format, report_spec=report_spec, **{"search_string": "*", **kwargs})
 
     def print_engine_action_summary(self, governance_action: dict):
         """Print a summary of a governance engine action.

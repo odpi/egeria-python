@@ -528,11 +528,10 @@ class ProductManager(CollectionManager):
         url = f"{self.product_manager_command_root}/collections/by-name"
         response = await self._async_get_name_request(url, _type="DigitalProduct",
                                                       _gen_output=self._generate_collection_output,
-                                                      filter_string=name,
                                                       classification_names=classification_names, start_from=start_from,
                                                       page_size=page_size, graph_query_depth=graph_query_depth,
                                                       output_format=output_format,
-                                                      report_spec=report_spec, body=body, **kwargs)
+                                                      report_spec=report_spec, body=body, **{"filter_string": name, **kwargs})
         return response
 
     def get_digital_products_by_name(
@@ -1538,11 +1537,10 @@ class ProductManager(CollectionManager):
             name = kwargs.pop("filter_string")
         url = f"{self.product_manager_command_root}/collections/by-name"
         response = await self._async_get_name_request(url, _type="DigitalProductCatalog", _gen_output=None,
-                                                      filter_string=name,
                                                       classification_names=classification_names, start_from=start_from,
                                                       page_size=page_size, graph_query_depth=graph_query_depth,
                                                       output_format=output_format,
-                                                      report_spec=report_spec, body=body, **kwargs)
+                                                      report_spec=report_spec, body=body, **{"filter_string": name, **kwargs})
         return response
 
     def get_digital_product_catalogs_by_name(
@@ -2129,8 +2127,8 @@ class ProductManager(CollectionManager):
                f"product-catalog/governance-definitions/by-name")
         return await self._async_get_name_request(
             url, _type="GovernanceActionProcess", _gen_output=self._generate_referenceable_output,
-            filter_string=name, start_from=start_from, page_size=page_size,
-            output_format=output_format, report_spec=report_spec, body=body, **kwargs)
+            start_from=start_from, page_size=page_size,
+            output_format=output_format, report_spec=report_spec, body=body, **{"filter_string": name, **kwargs})
 
     @dynamic_catch
     def get_governance_action_processes_by_name(

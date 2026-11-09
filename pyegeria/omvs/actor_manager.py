@@ -5231,12 +5231,11 @@ class ActorManager(ServerClient):
         list | str
         """
         return await self._async_find_contribution_records(
-            search_string="*",
             start_from=start_from,
             page_size=page_size,
             output_format=output_format,
             report_spec=report_spec,
-            **kwargs,
+            **{"search_string": "*", **kwargs},
         )
 
     @dynamic_catch

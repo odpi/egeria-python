@@ -250,15 +250,10 @@ def test_report_param_aliases_do_not_warn():
     assert body["sequencingOrder"] == "ANY" and body["anchorScopeGUID"] == "s1"
 
 
-# Built-in report specs whose spec_params name a filter the target method does not have.
-# These were always silently dropped; 6.2.28 warns about them. Fix at the source (the
-# Dr.Egeria compact specs / gen_report_specs) and remove them from this list.
-KNOWN_BAD_SPEC_PARAMS = {
-    ("metadata_element_types", "ExternalReferences.find_external_references"),
-    ("classification", "GlossaryManager.find_glossary_terms"),
-}
-
-
+# Every built-in report spec's spec_params must be a filter (or explicit parameter) of the
+# method it calls. Before 6.2.28 a misspelt one was silently dropped and the report ran
+# unfiltered (e.g. Cited-Document listed every external reference); fix any failure at the
+# source -- the Dr.Egeria compact specs' find_constraints -- then run refresh_specs.
 def test_builtin_report_spec_params_are_valid_filters(methods):
     from pyegeria.view.base_report_formats import get_report_registry
 
@@ -278,5 +273,28 @@ def test_builtin_report_spec_params_are_valid_filters(methods):
         for key in (getattr(action, "spec_params", None) or {}):
             if key not in wire and key not in rf.RENDER_OPTIONS and key not in m.explicit_params:
                 found.add((key, func))
-    assert found <= KNOWN_BAD_SPEC_PARAMS, f"new invalid spec_params: {sorted(found - KNOWN_BAD_SPEC_PARAMS)}"
-    assert found == KNOWN_BAD_SPEC_PARAMS, f"fixed -- remove from KNOWN_BAD_SPEC_PARAMS: {sorted(KNOWN_BAD_SPEC_PARAMS - found)}"
+    assert not found, f"spec_params that are not filters of the called method: {sorted(found)}"
+
+
+def test_no_call_hard_codes_a_filter_beside_forwarded_kwargs(methods):
+    """f(..., metadata_element_type="X", **kwargs) raises TypeError ("multiple values") as soon as a
+    caller -- or a report spec's spec_params -- passes that filter. Put the default in the splat
+    instead (f(..., **{"metadata_element_type": "X", **kwargs})) so the caller's value wins."""
+    import ast
+
+    kind = {"SearchFilters": "search", "ListFilters": "name", "GetFilters": "get", "FindFilters": "find"}
+    bad = []
+    for m in methods:
+        if not m.kwargs_name:
+            continue
+        valid = rf.valid_filter_names(kind[m.filters]) | set(rf.LEGACY_ALIASES)
+        for call in ast.walk(m.node):
+            if not isinstance(call, ast.Call):
+                continue
+            if not any(k.arg is None and isinstance(k.value, ast.Name) and k.value.id == m.kwargs_name
+                       for k in call.keywords):
+                continue
+            clash = [k.arg for k in call.keywords if k.arg in valid and k.arg not in m.explicit_params]
+            if clash:
+                bad.append(f"{m.qualname}: {clash}")
+    assert not bad, "\n".join(bad)
