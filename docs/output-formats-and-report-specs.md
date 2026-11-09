@@ -1258,18 +1258,16 @@ Read it left to right: *the check* (1, names), *the thing named* (`ServerClient.
 
 6.2.28 fixed both, as the words pointed: `Asset-Graph` now calls `AssetCatalog.get_asset_graph_by_guid` (parameter `guid`), and `Data-Classes` calls `DataDesigner.find_data_value_specifications` with `metadata_element_subtypes=["DataClass"]` (a DataClass is a DataValueSpecification subtype and shares its search).
 
-**A graph has a shape per output format (`Asset-Graph`, 6.2.28).** A graph is not a list of elements, so `Asset-Graph` does not render one row per element, and never one row holding mermaid text. Each format it declares gets the shape that fits it (`pyegeria/view/asset_graph.py`):
+**What `Asset-Graph` returns (6.2.28).** It declares DICT and JSON for code, and REPORT, HTML and MERMAID for people:
 
 | Output format | Shape |
 |---|---|
-| `DICT`, `TABLE` | One row per edge: `From Display Name`, `From Type`, `From GUID`, `Relationship`, `To Display Name`, `To Type`, `To GUID`. The asset's own relationships are included, each relationship is listed once (by relationship GUID), and rows are sorted, so their order does not depend on Egeria's. Paging (`start_from`, `page_size`) is Egeria's, on the graph request. |
-| `LIST` | The nodes, as a markdown table: `Display Name`, `Type`, `GUID`, `Role` (`asset`, `anchored`, `related`). |
-| `REPORT`, `MD` | The asset summary, its graph (plus the anchor and action graphs when Egeria returns them) as mermaid, and the edge table. |
-| `HTML` | The `REPORT` document rendered to HTML. |
-| `MERMAID` | The graph. |
+| `DICT` | One row: the asset itself, with its own fields and its graph fields (`Mermaid Graph`, `Anchor Graph`, `Action Graph`, `Field Level Lineage Graph`) as text. |
 | `JSON` | The full graph response. |
+| `REPORT`, `HTML` | The asset's fields, with the asset, anchor and action graphs rendered as mermaid. A fetch by GUID is not a search, so the report does not say "found from the search string". |
+| `MERMAID` | The asset graph. |
 
-`FORM` (a Dr.Egeria update form) and `ALL` are not declared; asking for them is an error that names the declared formats.
+`TABLE`, `LIST`, `MD`, `FORM` and `ALL` are not declared, and asking for them is an error that names the declared formats. `Asset-Graph` is in `NO_TABLE_FALLBACK`, so `TABLE` does not fall back to the DICT row: a table of a graph is its edges, and that edge table is planned as its own spec in Wave 3, built by a processor stage (`pyegeria/view/asset_graph.py` holds the edge helper it will use).
 
 > **Planned, not shipped.** Report specs held in Egeria itself (synced, cached and addressed as `egeria:...`) are being built in a first stage; see `portal-docs/Internals/report-spec-pipeline-model.md` (v5.5) in egeria-workspaces. This section describes only specs loaded from files, entry points and the runtime registry.
 

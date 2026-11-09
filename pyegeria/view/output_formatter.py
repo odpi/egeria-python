@@ -480,8 +480,12 @@ def make_preamble(obj_type: str, search_string: str, output_format: str = 'MD') 
             preamble +=  f"\t {obj_type} found from the search string:  `{search_string}`\n\n"
         return preamble, elements_action
     elif output_format == "REPORT":
-        elements_md += (f"# {obj_type} Report - created at {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
-                       f"\t{obj_type}  found from the search string:  `{search_string}`\n\n")
+        elements_md += f"# {obj_type} Report - created at {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
+        # A fetch by GUID is not a search: name a search string only when there is one (6.2.28).
+        if search_string:
+            elements_md += f"\t{obj_type}  found from the search string:  `{search_string}`\n\n"
+        else:
+            elements_md += "\n"
         elements_action = None
         return elements_md, elements_action
     else:
@@ -2275,7 +2279,9 @@ def generate_output(elements: Union[Dict, List[Dict]],
     if isinstance(elements, dict):
         elements = [elements]
 
-    # Handle empty search string
+    # Handle empty search string. The REPORT preamble names a search string only when the caller
+    # searched (a fetch by GUID is not a search; 6.2.28), so remember whether one was given.
+    searched_for = search_string or None
     if search_string is None or search_string == '':
         search_string = "All"
 
@@ -2293,7 +2299,7 @@ def generate_output(elements: Union[Dict, List[Dict]],
     elif output_format in ('HTML', 'GRAPH'):
         report_output = generate_output(
             elements=elements,
-            search_string=search_string,
+            search_string=searched_for,
             entity_type=entity_type,
             output_format="REPORT",
             extract_properties_func=extract_properties_func,
@@ -2322,7 +2328,7 @@ def generate_output(elements: Union[Dict, List[Dict]],
         if include_preamble:
             elements_md, elements_action = make_preamble(
                 obj_type=target_type,
-                search_string=search_string,
+                search_string=searched_for if output_format == "REPORT" else search_string,
                 output_format=output_format
             )
 

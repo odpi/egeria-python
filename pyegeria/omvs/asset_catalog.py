@@ -177,20 +177,10 @@ class AssetCatalog(ServerClient):
     def _generate_asset_graph_output(self, elements: dict | list[dict], filter_string: Optional[str] = None,
                                      element_type_name: Optional[str] = None, output_format: str = "DICT",
                                      report_spec: dict | str | None = None, **kwargs) -> str | list[dict]:
-        """Shape an asset graph for `output_format` (pyegeria/view/asset_graph.py): DICT/TABLE one row
-        per edge, LIST the nodes, REPORT/MD/HTML the asset summary with its graph and edge table.
-        MERMAID (the graph) and any other format take the generic asset path."""
-        from pyegeria.view import asset_graph
-
-        shaped = asset_graph.render(elements, output_format)
-        if shaped is None:
-            return self._generate_asset_output(elements, filter_string, element_type_name, output_format,
-                                               report_spec, **kwargs)
-        if isinstance(report_spec, str) and isinstance(shaped, str):
-            # Provenance footer for an Egeria-held spec on REPORT/MD/HTML (RS-EGERIA-TIER §7a).
-            from pyegeria.view.base_report_formats import add_spec_footer
-            shaped = add_spec_footer(shaped, report_spec, output_format)
-        return shaped
+        """Output for get_asset_graph_by_guid: the generic asset output, without a search string. A fetch
+        by GUID is not a search, so its REPORT does not say "found from the search string" (6.2.28)."""
+        return self._generate_asset_output(elements, None, element_type_name, output_format, report_spec,
+                                           **kwargs)
 
     @dynamic_catch
     async def _async_find_in_asset_domain(

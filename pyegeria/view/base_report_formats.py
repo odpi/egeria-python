@@ -628,10 +628,7 @@ COMMON_ANNOTATIONS = {
 
 TIME_PARAMETERS = ["as_of_time", "effective_time"]
 
-from pyegeria.view.asset_graph import EDGE_COLUMNS as ASSET_GRAPH_EDGE_COLUMNS  # noqa: E402
-from pyegeria.view.asset_graph import NODE_COLUMNS as ASSET_GRAPH_NODE_COLUMNS  # noqa: E402
-
-#: The Asset-Graph spec's REPORT/MD/HTML/JSON columns: the asset's own fields, then the graphs
+#: The Asset-Graph spec's columns: the asset's own fields, then the graphs
 #: get_asset_graph_by_guid returns at the top level of its response (keys as Egeria writes them).
 ASSET_GRAPH_COLUMNS = COMMON_COLUMNS + COMMON_METADATA_COLUMNS + [
     Column(name="Classifications", key='classifications'),
@@ -1425,22 +1422,18 @@ base_report_specs = FormatSetDict({
                      "(AssetCatalog.get_asset_graph_by_guid)."),
         annotations={},  # No specific annotations
         family="AssetCatalog",
-        # A graph has a shape per output format (6.2.28; pyegeria/view/asset_graph.py):
-        # - DICT/TABLE: one row per edge (from element, relationship type, to element), the asset's own
-        #   relationships included, sorted, each relationship once;
-        # - LIST: the nodes (the asset, its anchored elements, every element an edge reaches);
-        # - REPORT/MD/HTML: the asset summary, its graph(s) and the edge table;
-        # - MERMAID: the graph;
-        # - JSON: the full graph response.
-        # FORM is not declared: it is a Dr.Egeria update form, which a read-only graph does not fit. ALL is
-        # not declared either, so a format not listed here is an error with words (the executor names the
-        # declared formats), never a silent None and never one row of mermaid text.
+        # Declared formats (6.2.28): DICT and JSON for code, REPORT, HTML and MERMAID for people.
+        # - DICT: the asset itself, one row, with its own fields and its graph fields (as text);
+        # - JSON: the full graph response;
+        # - REPORT/HTML: the asset's fields with the asset, anchor and action graphs rendered as mermaid;
+        # - MERMAID: the asset graph.
+        # TABLE, LIST, MD, FORM and ALL are not declared: a table of a graph is its edges, which is planned
+        # as its own spec in Wave 3 (built by a processor stage; pyegeria/view/asset_graph.py holds the
+        # edge helper); MD and FORM are Dr.Egeria update forms; ALL rendered only the asset's name. A
+        # format not listed here is an error with words (the executor names the declared formats).
         formats=[
-            Format(types=["DICT", "TABLE"],
-                   attributes=[Column(name=label, key=key) for label, key in ASSET_GRAPH_EDGE_COLUMNS]),
-            Format(types=["LIST"],
-                   attributes=[Column(name=label, key=key) for label, key in ASSET_GRAPH_NODE_COLUMNS]),
-            Format(types=["REPORT", "MD", "HTML", "JSON"], attributes=ASSET_GRAPH_COLUMNS),
+            Format(types=["DICT", "JSON"], attributes=ASSET_GRAPH_COLUMNS),
+            Format(types=["REPORT", "HTML"], attributes=ASSET_GRAPH_COLUMNS),
             Format(types=["MERMAID"], attributes=[Column(name="Mermaid Graph", key='mermaidGraph')]),
         ],
         action=ActionParameter(
@@ -4878,6 +4871,12 @@ def load_egeria_report_specs(
     return True
 
 
+#: Specs whose TABLE requests are refused instead of falling back to their DICT format. A table of
+#: an asset graph is its edges, not the asset's one DICT row; that edge table is planned as its own
+#: spec in Wave 3 (6.2.28). The label is matched with any tier prefix (egeria:/builtin:) removed.
+NO_TABLE_FALLBACK = frozenset({"Asset-Graph"})
+
+
 def _select_from_registry(registry: FormatSetDict, kind: str, output_type: str) -> dict | None:
     # Normalize
     if output_type is None:
@@ -4933,8 +4932,8 @@ def _select_from_registry(registry: FormatSetDict, kind: str, output_type: str) 
             output_struct["formats"] = fmt.dict()
             return output_struct
 
-    # Fallback for TABLE -> DICT
-    if output_type == "TABLE":
+    # Fallback for TABLE -> DICT, except for the specs in NO_TABLE_FALLBACK, which refuse TABLE.
+    if output_type == "TABLE" and split_tier_prefix(resolved_key or kind)[1] not in NO_TABLE_FALLBACK:
         for fmt in element.formats:
             if "DICT" in fmt.types:
                 output_struct["formats"] = fmt.dict()
