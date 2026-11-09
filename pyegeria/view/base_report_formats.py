@@ -4058,7 +4058,7 @@ def refresh_report_specs() -> List[Tuple[str, str]]:
 
     # A CONFIG label that duplicates another tier would make get_report_registry()
     # itself raise, taking every report spec down with it -- reject it here instead.
-    other_tiers = set(base_report_specs.keys()) | set(generated_format_sets.keys()) | set(_RUNTIME_REPORT_FORMATS.keys())
+    other_tiers = set(_builtin_tier().keys()) | set(_RUNTIME_REPORT_FORMATS.keys())
 
     skipped: List[Tuple[str, str]] = []
     seen_json: set = set()
@@ -4114,8 +4114,8 @@ def get_report_registry() -> FormatSetDict:
         _startup_resolution_done = True
 
     combined = FormatSetDict()
-    _add_with_collision_check(combined, base_report_specs, source="BUILTINS")
-    _add_with_collision_check(combined, generated_format_sets, source="GENERATED")
+    # The builtin tier is the seed (RS-EGERIA-TIER stage 2): packaged JSON, loaded once per process.
+    _add_with_collision_check(combined, _builtin_tier(), source="BUILTINS")
     tiers: Dict[str, str] = {k: "builtin" for k in combined.keys()}
     shadows: Dict[str, Dict[str, str]] = {}
 
@@ -4235,10 +4235,12 @@ def _egeria_tier_view(lower: FormatSetDict, local: FormatSetDict) -> FormatSetDi
 
 
 def _builtin_tier() -> FormatSetDict:
-    combined = FormatSetDict()
-    combined.update(base_report_specs)
-    combined.update(generated_format_sets)
-    return combined
+    """The builtin tier: the report-spec seed (RS-EGERIA-TIER stage 2), loaded once per process through
+    `pyegeria.view.seed.seed_report_specs()`. The Python constants (`base_report_specs`,
+    `generated_format_sets`, the analytic demos and the question specs) are only the seed generator's input
+    until stage 4 removes them."""
+    from pyegeria.view.seed import seed_report_specs
+    return FormatSetDict(seed_report_specs())  # a copy: callers may not change the loaded tier
 
 
 def lookup_report_spec(name: Any) -> Tuple[Optional[FormatSet], Optional[str], Optional[str]]:
@@ -4281,6 +4283,9 @@ def report_spec_source(name: Any) -> Optional[Dict[str, Any]]:
     fs, tier, label = lookup_report_spec(name)
     if fs is None:
         return None
+    if tier == "builtin":
+        from pyegeria.view.seed import seed_file_of
+        return {"tier": "builtin", "label": label, "version": None, "seed": seed_file_of(label)}
     if tier != "egeria":
         return {"tier": tier, "label": label, "version": None}
     _, rest = split_tier_prefix(name)
@@ -4628,9 +4633,11 @@ _QUESTION_SPEC_FORMATS = FormatSetDict({
     ),
 })
 
+# The question specs ship in the report-spec seed (builtin tier) since RS-EGERIA-TIER stage 2 (owner
+# decision S2-2); they are no longer registered into the RUNTIME tier at import. The constant above is the
+# seed generator's input until stage 4. The legacy `report_specs` dict still lists them.
 for _label, _fs in _QUESTION_SPEC_FORMATS.items():
     if _label not in base_report_specs and _label not in generated_format_sets:
-        _RUNTIME_REPORT_FORMATS[_label] = _fs
         report_specs[_label] = _fs
 
 

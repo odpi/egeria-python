@@ -163,6 +163,11 @@ def test_unregister_lets_another_source_take_the_label(isolated):
     assert "EP-Tile" in brf.get_report_registry()
 
 
-def test_pyegeria_ships_its_demo_specs_as_an_entry_point():
+def test_pyegeria_ships_its_demo_specs_in_the_seed_not_as_an_entry_point():
+    """RS-EGERIA-TIER stage 2 (owner decision S2-2): the analytic demos moved from pyegeria's own entry point
+    (CONFIG tier) into the report-spec seed (builtin tier). The entry-point group still serves other packages."""
     eps = [ep for _, ep in brf._report_spec_entry_points() if ep.value == DEMO_LOADER]
-    assert eps, "run `uv sync` so the installed metadata carries pyegeria's own entry points"
+    assert not eps, "reinstall pyegeria so the installed metadata drops the removed analytic_demos entry point"
+    from pyegeria.view.analytic_demo_specs import get_analytic_demo_specs
+    brf.get_report_registry()
+    assert all(brf._REGISTRY_TIERS[label] == "builtin" for label in get_analytic_demo_specs())

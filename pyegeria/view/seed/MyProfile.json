@@ -1,0 +1,474 @@
+{
+ "format": "pyegeria-seed/1",
+ "family": "MyProfile",
+ "specs": [
+  {
+   "label": "My-User",
+   "envelope": {
+    "heading": "My Information",
+    "description": "User Information",
+    "family": "MyProfile",
+    "target_type_name": "My-User",
+    "aliases": ["My User"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "as_of_time": {"type": "string", "required": false},
+     "effective_time": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "My-User",
+      "function": "MyProfile.get_my_profile",
+      "params": {}
+     }
+    ],
+    "formatters": {
+     "DICT": {
+      "columns": [
+       {"field": "full_name", "label": "Full Name"},
+       {"field": "job_title", "label": "Job Title"},
+       {"field": "employee_number", "label": "Employee Number"},
+       {"field": "employee_type", "label": "Employee Type"},
+       {"field": "user_id", "label": "User ID"},
+       {"field": "job_status", "label": "Job Status"},
+       {"field": "contact_methods", "label": "Contact Methods"},
+       {"field": "roles", "label": "Roles"},
+       {"field": "teams", "label": "Teams"},
+       {"field": "communities", "label": "Communities"},
+       {"field": "projects", "label": "Projects"},
+       {"field": "note_logs", "label": "Note Logs"}
+      ]
+     },
+     "LIST": {"same_as": "DICT"},
+     "TABLE": {"same_as": "DICT"}
+    }
+   }
+  },
+  {
+   "label": "My-User-MD",
+   "envelope": {
+    "heading": "My Information Master-Detail",
+    "description": "User Information with links to details",
+    "family": "MyProfile",
+    "target_type_name": "My-User",
+    "aliases": ["My User MD"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "as_of_time": {"type": "string", "required": false},
+     "effective_time": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "My-User",
+      "function": "MyProfile.get_my_profile",
+      "params": {}
+     }
+    ],
+    "formatters": {
+     "DICT": {
+      "columns": [
+       {"field": "full_name", "label": "Full Name"},
+       {"field": "job_title", "label": "Job Title"},
+       {"field": "employee_number", "label": "Employee Number"},
+       {"field": "employee_type", "label": "Employee Type"},
+       {"field": "user_id", "label": "User ID"},
+       {"field": "job_status", "label": "Job Status"},
+       {"field": "contact_methods", "label": "Contact Methods", "detail_spec": "My-User-Contact-Detail"},
+       {"field": "roles", "label": "Roles", "detail_spec": "My-User-Roles-Detail"},
+       {"field": "teams", "label": "Teams", "detail_spec": "My-User-Teams-Detail"},
+       {"field": "communities", "label": "Communities", "detail_spec": "My-User-Communities-Detail"},
+       {"field": "projects", "label": "Projects", "detail_spec": "My-User-Projects-Detail"},
+       {"field": "contribution_record", "label": "Contribution Record", "detail_spec": "My-User-Contribution-Record-Detail"},
+       {"field": "note_logs", "label": "Note Logs"},
+       {"field": "guid", "label": "GUID", "format": true}
+      ]
+     },
+     "LIST": {"same_as": "DICT"},
+     "REPORT": {"same_as": "DICT"},
+     "TABLE": {"same_as": "DICT"}
+    }
+   }
+  },
+  {
+   "label": "My-User-Contribution-Record-Detail",
+   "envelope": {
+    "heading": "Contribution Record",
+    "description": "Detailed Contribution Record",
+    "family": "MyProfile",
+    "target_type_name": "ContributionRecord",
+    "aliases": ["My User Contribution Record Detail"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "karma_points", "label": "Karma Points"}
+      ]
+     },
+     "REPORT": {"same_as": "LIST"},
+     "DICT": {"same_as": "LIST"},
+     "TABLE": {"same_as": "LIST"}
+    }
+   }
+  },
+  {
+   "label": "My-User-Note-Logs-Detail",
+   "envelope": {
+    "heading": "Note Log Entries",
+    "description": "Detailed Note Log Entries",
+    "family": "MyProfile",
+    "target_type_name": "Action",
+    "aliases": ["My User Note Logs Detail"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "title", "label": "Title"},
+       {"field": "text", "label": "Text"},
+       {"field": "time", "label": "Time"},
+       {"field": "priority", "label": "Priority"},
+       {"field": "activityStatus", "label": "Activity Status"},
+       {"field": "guid", "label": "GUID"}
+      ]
+     },
+     "REPORT": {"same_as": "LIST"},
+     "DICT": {"same_as": "LIST"},
+     "TABLE": {"same_as": "LIST"}
+    }
+   }
+  },
+  {
+   "label": "My-User-Activities",
+   "envelope": {
+    "heading": "My Activities",
+    "description": "User Activity Entries",
+    "family": "MyProfile",
+    "target_type_name": "My-User",
+    "aliases": ["My User Activities"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "as_of_time": {"type": "string", "required": false},
+     "effective_time": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "My-User",
+      "function": "MyProfile.get_my_profile",
+      "params": {}
+     }
+    ],
+    "formatters": {
+     "DICT": {
+      "columns": [
+       {"field": "activity_entries", "label": "Activity Entries", "detail_spec": "My-User-Note-Logs-Detail"}
+      ]
+     },
+     "LIST": {"same_as": "DICT"},
+     "REPORT": {"same_as": "DICT"},
+     "TABLE": {"same_as": "DICT"}
+    }
+   }
+  },
+  {
+   "label": "My-User-Blogs",
+   "envelope": {
+    "heading": "My Blogs",
+    "description": "User Blog Entries",
+    "family": "MyProfile",
+    "target_type_name": "My-User",
+    "aliases": ["My User Blogs"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "as_of_time": {"type": "string", "required": false},
+     "effective_time": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "My-User",
+      "function": "MyProfile.get_my_profile",
+      "params": {}
+     }
+    ],
+    "formatters": {
+     "DICT": {
+      "columns": [
+       {"field": "blog_entries", "label": "Blog Entries", "detail_spec": "My-User-Note-Logs-Detail"}
+      ]
+     },
+     "LIST": {"same_as": "DICT"},
+     "REPORT": {"same_as": "DICT"},
+     "TABLE": {"same_as": "DICT"}
+    }
+   }
+  },
+  {
+   "label": "My-User-Journals",
+   "envelope": {
+    "heading": "My Journals",
+    "description": "User Journal Entries",
+    "family": "MyProfile",
+    "target_type_name": "My-User",
+    "aliases": ["My User Journals"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "as_of_time": {"type": "string", "required": false},
+     "effective_time": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "My-User",
+      "function": "MyProfile.get_my_profile",
+      "params": {}
+     }
+    ],
+    "formatters": {
+     "DICT": {
+      "columns": [
+       {"field": "journal_entries", "label": "Journal Entries", "detail_spec": "My-User-Note-Logs-Detail"}
+      ]
+     },
+     "LIST": {"same_as": "DICT"},
+     "REPORT": {"same_as": "DICT"},
+     "TABLE": {"same_as": "DICT"}
+    }
+   }
+  },
+  {
+   "label": "My-User-Contact-Detail",
+   "envelope": {
+    "heading": "Contact Methods",
+    "description": "Detailed Contact Methods",
+    "family": "MyProfile",
+    "target_type_name": "ContactDetails",
+    "aliases": ["My User Contact Detail"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "name", "label": "Name"},
+       {"field": "contactMethodType", "label": "Method Type"},
+       {"field": "contactType", "label": "Contact Type"},
+       {"field": "contactMethodService", "label": "Service"},
+       {"field": "contactMethodValue", "label": "Value"},
+       {"field": "guid", "label": "GUID", "format": true}
+      ]
+     },
+     "REPORT": {"same_as": "LIST"},
+     "DICT": {"same_as": "LIST"},
+     "TABLE": {"same_as": "LIST"}
+    }
+   }
+  },
+  {
+   "label": "My-User-Roles-Detail",
+   "envelope": {
+    "heading": "Roles",
+    "description": "Detailed Roles",
+    "family": "MyProfile",
+    "target_type_name": "PersonRole",
+    "aliases": ["My User Roles Detail"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "name", "label": "Name"},
+       {"field": "type", "label": "Type"},
+       {"field": "assignmentType", "label": "Assignment Type"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "scope", "label": "Scope"},
+       {"field": "description", "label": "Description"},
+       {"field": "guid", "label": "GUID", "format": true}
+      ]
+     },
+     "REPORT": {"same_as": "LIST"},
+     "DICT": {"same_as": "LIST"},
+     "TABLE": {"same_as": "LIST"}
+    }
+   }
+  },
+  {
+   "label": "My-User-Teams-Detail",
+   "envelope": {
+    "heading": "Teams",
+    "description": "Detailed Teams",
+    "family": "MyProfile",
+    "target_type_name": "Team",
+    "aliases": ["My User Teams Detail"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "name", "label": "Name"},
+       {"field": "assignmentType", "label": "Assignment Type"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "teamType", "label": "Team Type"},
+       {"field": "description", "label": "Description"},
+       {"field": "guid", "label": "GUID", "format": true}
+      ]
+     },
+     "REPORT": {"same_as": "LIST"},
+     "DICT": {"same_as": "LIST"},
+     "TABLE": {"same_as": "LIST"}
+    }
+   }
+  },
+  {
+   "label": "My-User-Projects-Detail",
+   "envelope": {
+    "heading": "Projects",
+    "description": "Details on projects I'm involved in",
+    "family": "MyProfile",
+    "target_type_name": "Project",
+    "aliases": ["My User Projects Detail"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "project_status", "label": "Project Status"},
+       {"field": "projectType", "label": "Project Type"},
+       {"field": "description", "label": "Description"},
+       {"field": "priority", "label": "Priority"},
+       {"field": "guid", "label": "GUID", "format": true}
+      ]
+     },
+     "DICT": {"same_as": "LIST"},
+     "REPORT": {"same_as": "LIST"},
+     "TABLE": {"same_as": "LIST"}
+    }
+   }
+  },
+  {
+   "label": "My-User-Communities-Detail",
+   "envelope": {
+    "heading": "Communities",
+    "description": "Detailed Communities",
+    "family": "MyProfile",
+    "target_type_name": "Community",
+    "aliases": ["My User Communities Detail"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "name", "label": "Name"},
+       {"field": "assignmentType", "label": "Assignment Type"},
+       {"field": "description", "label": "Description"},
+       {"field": "guid", "label": "GUID", "format": true}
+      ]
+     },
+     "REPORT": {"same_as": "LIST"},
+     "DICT": {"same_as": "LIST"},
+     "TABLE": {"same_as": "LIST"}
+    }
+   }
+  },
+  {
+   "label": "My-User-ToDos",
+   "envelope": {
+    "heading": "Todos",
+    "description": "My Todos",
+    "family": "MyProfile",
+    "target_type_name": "Todo",
+    "aliases": ["My User ToDos"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "as_of_time": {"type": "string", "required": false},
+     "effective_time": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Todo",
+      "function": "MyProfile.get_my_to_dos",
+      "params": {}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "displayName", "label": "Name"},
+       {"field": "qualifiedName", "label": "Qualified Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "guid", "label": "GUID", "format": true},
+       {"field": "typeName", "label": "Type"},
+       {"field": "activityStatus", "label": "Activity Status"},
+       {"field": "priority", "label": "Priority"}
+      ]
+     },
+     "REPORT": {"same_as": "LIST"},
+     "DICT": {"same_as": "LIST"},
+     "TABLE": {"same_as": "LIST"}
+    }
+   }
+  }
+ ]
+}
