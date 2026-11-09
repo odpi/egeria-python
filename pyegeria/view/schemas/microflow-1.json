@@ -33,7 +33,7 @@
                     "description": "producer/find or producer/analytic in stage 1; other kinds are valid but not run yet."},
           "type": {"type": "string", "description": "The open metadata type a find stage looks for."},
           "function": {"type": "string",
-                       "description": "producer/find: Class.method on an EgeriaTech client class, read-only by name (find_, get_, list_). producer/analytic: a registered analytic name. Never a dotted module path."},
+                       "description": "producer/find: Class.method on an EgeriaTech client class, on pyegeria's find-method allowlist (FIND_METHOD_ALLOWLIST). producer/analytic: a registered analytic name. Never a dotted module path."},
           "params": {"type": "object", "description": "Argument bindings: \"$name\" names a spec parameter, anything else is a constant."},
           "out": {"type": "string", "description": "The shape the stage produces (recorded, not checked, in stage 1)."}
         },
