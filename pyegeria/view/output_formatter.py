@@ -112,16 +112,65 @@ MERMAID_ATTRIBUTE_KEYS = {
     "zoneProfileAllMermaidPieChart",
     "userAccountTypeProfileMermaidPieChart",
     "userAccountStatusProfileMermaidPieChart",
+    "activityMermaidGraph",
 }
+
+#: Egeria names every graph it returns with one of these endings (6.2.29). Two lineage keys,
+#: fieldLevelLineageGraph and localLineageGraph, carry no "Mermaid", hence "LineageGraph".
+#: A key with one of these endings is a Mermaid graph, so a new kind of graph from Egeria is
+#: recognised without a code change. MERMAID_ATTRIBUTE_KEYS stays for the keys named so far.
+MERMAID_KEY_SUFFIXES = ("MermaidGraph", "MermaidMindMap", "MermaidPieChart", "LineageGraph")
+_MERMAID_KEY_SUFFIXES_LOWER = tuple(s.lower() for s in MERMAID_KEY_SUFFIXES)
+_MERMAID_TITLE_SUFFIXES = ("Mermaid Graph", "Mermaid Mind Map", "Mermaid Pie Chart", "Lineage Graph")
+
+#: From Egeria 6.2.29 the context graph (mermaidGraph) leaves out relationships whose purpose is
+#: Action or Activity; these two graphs show them. Wherever a report offers mermaidGraph, these
+#: follow it when the element carries them, so those relationships do not vanish from the report.
+MERMAID_COMPANION_GRAPHS = (
+    ("actionMermaidGraph", "Action Mermaid Graph"),
+    ("activityMermaidGraph", "Activity Mermaid Graph"),
+)
+#: Column keys that carry the context graph: the response key itself, and the 'mermaid' column
+#: that populate_common_columns fills from mermaidGraph.
+_CONTEXT_GRAPH_KEYS = ("mermaidGraph", "mermaid")
+
+
+def is_mermaid_graph_key(key: str | None) -> bool:
+    """True when `key` names a Mermaid graph in an Egeria response (case of the ending ignored)."""
+    if not isinstance(key, str) or not key:
+        return False
+    return key in MERMAID_ATTRIBUTE_KEYS or key.lower().endswith(_MERMAID_KEY_SUFFIXES_LOWER)
 
 
 def _is_mermaid_attribute(attribute_name: str | None = None, attribute_key: str | None = None) -> bool:
     """Return True when a selected report attribute should be rendered as Mermaid."""
-    if attribute_key in MERMAID_ATTRIBUTE_KEYS:
+    if is_mermaid_graph_key(attribute_key):
         return True
 
     attribute_title = camel_to_title_case(attribute_name or "")
-    return attribute_title in MERMAID_GRAPH_TITLES + ["Mermaid Graph", "Mermaid"]
+    return (attribute_title in MERMAID_GRAPH_TITLES + ["Mermaid Graph", "Mermaid"]
+            or attribute_title.endswith(_MERMAID_TITLE_SUFFIXES))
+
+
+def _companion_mermaid_columns(element: Any, column_keys) -> list[dict]:
+    """The action/activity graphs to show after the context graph, as columns.
+
+    Only when the report offers the context graph (a column keyed mermaidGraph or 'mermaid'),
+    only for a companion the report does not already select, and only when the element carries
+    it with a value. An element with neither key gets nothing, so its output is unchanged.
+    """
+    keys = set(k for k in column_keys if k)
+    if not isinstance(element, dict) or not keys.intersection(_CONTEXT_GRAPH_KEYS):
+        return []
+    lower = {k.lower() for k in keys if isinstance(k, str)}
+    result = []
+    for key, name in MERMAID_COMPANION_GRAPHS:
+        if key.lower() in lower:
+            continue
+        value = _get_mermaid_graph_value(element, key)
+        if value not in (None, ""):
+            result.append({"name": name, "key": key, "value": value})
+    return result
 
 
 _VEGA_KEY_SUFFIXES = ("BarGraph", "PieGraph", "VegaGraph", "LineGraph", "AreaGraph", "ScatterGraph", "FunnelGraph")
@@ -254,6 +303,9 @@ def _extract_selected_mermaid_fields(element: dict, columns_struct: Optional[dic
     # Legacy compatibility: if no explicit Mermaid fields were selected, use mermaidGraph.
     if not selected_fields:
         selected_fields = [{"name": "Mermaid Graph", "key": "mermaidGraph"}]
+    # The action and activity graphs follow the context graph when the element carries them.
+    selected_fields = selected_fields + _companion_mermaid_columns(
+        element, [attribute.get("key") for attribute in selected_fields])
 
     result = []
     for attribute in selected_fields:
@@ -1184,6 +1236,9 @@ def generate_entity_md(elements: List[Dict],
         # Add attributes based on column spec if available, otherwise, add all (legacy)
         if returned_struct is not None:
             cols = returned_struct.get('formats', {}).get('attributes', [])
+            # The action and activity graphs follow the context graph in a REPORT (and so in HTML).
+            companions = (_companion_mermaid_columns(element, [c.get('key') for c in cols if isinstance(c, dict)])
+                          if output_format == 'REPORT' else [])
             for column in cols:
                 name = column.get('name')
                 key = column.get('key')
@@ -1196,6 +1251,11 @@ def generate_entity_md(elements: List[Dict],
                     value = format_for_markdown_table(value, guid)
                 
                 elements_md += make_md_attribute(name, value, output_format, attribute_key=key)
+                if companions and key in _CONTEXT_GRAPH_KEYS:
+                    for companion in companions:
+                        elements_md += make_md_attribute(companion["name"], companion["value"], output_format,
+                                                         attribute_key=companion["key"])
+                    companions = []
 
                 # Master-Detail support for REPORT, MD, and FORM formats
                 if detail_spec and value and output_format in ['REPORT', 'MD', 'FORM']:
@@ -1224,6 +1284,8 @@ def generate_entity_md(elements: List[Dict],
                 elements_md += ", ".join(wk)
         elif base_columns:
             # If we have columns but extractor didn't return struct, use legacy props lookup
+            companions = (_companion_mermaid_columns(element, [c.get('key') for c in base_columns])
+                          if output_format == 'REPORT' else [])
             for column in base_columns:
                 key = column['key']
                 name = column['name']
@@ -1235,6 +1297,11 @@ def generate_entity_md(elements: List[Dict],
                 if column.get('format'):
                     value = format_for_markdown_table(value, guid or props.get('GUID'))
                 elements_md += make_md_attribute(name, value, output_format, attribute_key=key)
+                if companions and key in _CONTEXT_GRAPH_KEYS:
+                    for companion in companions:
+                        elements_md += make_md_attribute(companion["name"], companion["value"], output_format,
+                                                         attribute_key=companion["key"])
+                    companions = []
             if output_format in ('REPORT', 'MD', 'FORM') and (wk := columns_struct.get("annotations", {}).get("wikilinks", None)):
                 elements_md += ", ".join(wk)
         else:
@@ -1517,6 +1584,12 @@ def generate_entity_dict(elements: List[Dict],
         entity_dict = {}
 
         cols = local_columns_struct['formats'].get('attributes', None) if local_columns_struct else None
+        # The action and activity graphs follow the context graph in a DICT (not in a TABLE, whose
+        # rows must all have the same columns).
+        companion_source = (returned_struct.get('formats', {}).get('attributes', []) if returned_struct is not None
+                            else cols or [])
+        companions = (_companion_mermaid_columns(element, [c.get('key') for c in companion_source if isinstance(c, dict)])
+                      if output_format == 'DICT' else [])
         if returned_struct is not None:
             for column in returned_struct.get('formats', {}).get('attributes', []):
                 key = column.get('key')
@@ -1558,6 +1631,10 @@ def generate_entity_dict(elements: List[Dict],
                         tmp_key = f"{dict_key}_{suffix_idx}"
                     dict_key = tmp_key
                 entity_dict[dict_key] = value
+                if companions and key in _CONTEXT_GRAPH_KEYS:
+                    for companion in companions:
+                        entity_dict.setdefault(companion["name"], companion["value"])
+                    companions = []
         elif cols:
             for column in cols:
                 key = column['key']
@@ -1580,6 +1657,10 @@ def generate_entity_dict(elements: List[Dict],
                         tmp_key = f"{dict_key}_{suffix_idx}"
                     dict_key = tmp_key
                 entity_dict[dict_key] = value
+                if companions and key in _CONTEXT_GRAPH_KEYS:
+                    for companion in companions:
+                        entity_dict.setdefault(companion["name"], companion["value"])
+                    companions = []
         else:
             props = extract_properties_func(element, local_columns_struct)
             # Add properties based on include/exclude lists
@@ -1847,6 +1928,13 @@ def populate_common_columns(
             continue
         if key in MERMAID_GRAPHS and mermaid_dest_key not in MERMAID_GRAPHS:
             column['value'] = _get_mermaid_graph_value(element, key) or ''
+            continue
+        # Any other graph key (the generic endings): fill it only when the element carries it,
+        # so a column the element lacks keeps the value it had before.
+        if is_mermaid_graph_key(key) and mermaid_dest_key not in MERMAID_GRAPHS:
+            graph_value = _get_mermaid_graph_value(element, key)
+            if graph_value is not None:
+                column['value'] = graph_value
             continue
     
     # --- Auto-generate Vega graphs for categorical counts if requested by the columns_struct ---

@@ -432,9 +432,26 @@ Column(name='Zone Profile All',    key='zoneProfileAllMermaidPieChart'),
 Column(name='Zone Profiles',       key='zone_profile_mermaid_pie_chart'),
 ```
 
-The `name` field has no effect on detection for pie chart or custom graph columns — only the `key` matters. For the generic flowchart case (`key='mermaidGraph'`, `name='Mermaid Graph'`) both routes happen to match, which is why it appears to work with either case.
+Detection goes by the `key` first. A `name` also counts when its title ends in "Mermaid Graph", "Mermaid Mind Map", "Mermaid Pie Chart" or "Lineage Graph" (or is "Mermaid Graph" or "Mermaid"). For the generic flowchart case (`key='mermaidGraph'`, `name='Mermaid Graph'`) both routes match, which is why it appears to work with either case.
 
-#### Recognised camelCase mermaid keys (`MERMAID_ATTRIBUTE_KEYS`)
+#### Any graph key Egeria returns is recognised (6.2.29)
+
+`is_mermaid_graph_key()` in `pyegeria/view/output_formatter.py` treats a key as a Mermaid graph when it ends in `MermaidGraph`, `MermaidMindMap`, `MermaidPieChart` or `LineageGraph` (the ending's case is ignored). The last covers `fieldLevelLineageGraph` and `localLineageGraph`, which carry no "Mermaid". So a new kind of graph from Egeria renders as Mermaid in a REPORT, HTML or MERMAID output with no code change; the table below lists the keys known so far. Vega-Lite keys (`...BarGraph`, `...PieGraph` and so on) are not matched and are checked first.
+
+#### The action and activity graphs follow the context graph (6.2.29)
+
+From Egeria 6.2.29 the context graph, `mermaidGraph`, leaves out relationships whose purpose is Action or Activity; `actionMermaidGraph` and `activityMermaidGraph` show them. So wherever a report offers the context graph (a column keyed `mermaidGraph`, or the `mermaid` column filled from it), pyegeria shows each of these two right after it, when the element carries it:
+
+| Output | What is added |
+| :--- | :--- |
+| MERMAID | A Mermaid block per companion graph, after the context graph |
+| REPORT, and HTML (rendered from the REPORT) | `### Action Mermaid Graph` and `### Activity Mermaid Graph` sections, after the context graph |
+| DICT | `Action Mermaid Graph` and `Activity Mermaid Graph` entries, after the context graph's entry |
+| TABLE, LIST, MD, FORM | Nothing: every row of a table has the same columns, and MD/FORM show no graphs |
+
+A companion the spec already selects (for example `Asset-Graph`'s own `Action Graph` column) is not repeated, and an element that carries neither key gives exactly the output it gave before.
+
+#### Mermaid keys named so far (`MERMAID_ATTRIBUTE_KEYS`)
 
 | Key | Typical content |
 | :--- | :--- |
@@ -442,7 +459,8 @@ The `name` field has no effect on detection for pie chart or custom graph column
 | `anchorMermaidGraph` | Anchor graph |
 | `informationSupplyChainMermaidGraph` | Information supply chain |
 | `fieldLevelLineageGraph` | Field-level lineage |
-| `actionMermaidGraph` | Governance action graph |
+| `actionMermaidGraph` | Relationships whose purpose is Action (left out of `mermaidGraph` from Egeria 6.2.29) |
+| `activityMermaidGraph` | Relationships whose purpose is Activity (left out of `mermaidGraph` from Egeria 6.2.29) |
 | `localLineageGraph` | Local lineage |
 | `edgeMermaidGraph` | Edge graph |
 | `iscImplementationMermaidGraph` | ISC implementation graph (context, solution-component design, implementation status). Servers before Egeria 6.3 sent `iscimplementationMermaidGraph`; it is matched case-insensitively |
@@ -458,8 +476,13 @@ The `name` field has no effect on detection for pie chart or custom graph column
 | `zoneProfileMermaidPieChart` | Zone membership profile |
 | `zoneProfileAnchoredMermaidPieChart` | Zone anchored-elements profile |
 | `zoneProfileAllMermaidPieChart` | Zone all-elements profile |
+| `userAccountTypeProfileMermaidPieChart` | Secrets collection: user accounts by type |
+| `userAccountStatusProfileMermaidPieChart` | Secrets collection: user accounts by status |
+| `organizationTreeMermaidGraph` | Organization tree |
+| `rootHierarchyMermaidGraph` | Root hierarchy |
+| `fullLineageMermaidGraph` | Full lineage |
 
-If you add a new mermaid attribute not in this table, add its camelCase key to `MERMAID_ATTRIBUTE_KEYS` in `pyegeria/view/output_formatter.py`.
+A key with one of the endings above needs no entry here. Add a key to `MERMAID_ATTRIBUTE_KEYS` only if Egeria ever names a graph without one of those endings.
 
 ### Syntax Compatibility
 Egeria often produces Mermaid output using newer syntax features (like `@ { shape: ... }`) or YAML frontmatter that some Markdown renderers (e.g., Obsidian, PyCharm) do not yet support.
