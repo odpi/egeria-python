@@ -1423,9 +1423,11 @@ base_report_specs = FormatSetDict({
             )
         ],
         action=ActionParameter(
-            function="ServerClient.get_asset_graph",
-            optional_params=OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
-            required_params=["asset_guid"],
+            # ServerClient.get_asset_graph no longer exists; the asset graph is AssetCatalog's
+            # assets/{guid}/as-graph (6.2.28).
+            function="AssetCatalog.get_asset_graph_by_guid",
+            required_params=["guid"],
+            optional_params=["start_from", "page_size"],
             spec_params={},
         )
     ),
@@ -2949,9 +2951,14 @@ formats=[
                         )],
 
         action=ActionParameter(
-            function="DataDesigner.find_data_classes",
+            # DataDesigner.find_data_classes no longer exists. DataClass is a subtype of
+            # DataValueSpecification and shares its search endpoint; the subtype filter travels in the
+            # search body as metadataElementSubtypeNames (6.2.28).
+            function="DataDesigner.find_data_value_specifications",
             required_params=["search_string"],
-            spec_params={},
+            optional_params=[p for p in OPTIONAL_SEARCH_PARAMS
+                             if p not in ("metadata_element_subtypes", "metadata_element_type")],
+            spec_params={"metadata_element_subtypes": ["DataClass"]},
         )
     ),
 "Data-Value-Spec": FormatSet(

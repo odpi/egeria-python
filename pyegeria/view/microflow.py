@@ -64,8 +64,8 @@ MICROFLOW_FORMAT = "microflow/1"
 #: FIND_METHOD_DENYLIST). It is the union of two named parts:
 #:
 #: - `_CENSUS_FIND_METHODS`: every find method a runnable built-in or generated spec names, taken from
-#:   the 437-spec census on 2026-11-09 (45 methods; the two unrunnable specs' methods, which do not
-#:   exist, are left out). The micro-test `test_every_runnable_builtin_spec_function_is_on_the_allowlist`
+#:   the 437-spec census on 2026-11-09 (46 methods, every spec runnable since 6.2.28 repointed
+#:   Asset-Graph and Data-Classes). The micro-test `test_every_runnable_builtin_spec_function_is_on_the_allowlist`
 #:   fails when a built-in or generated spec names one that is missing, so the stage-2 seed (today's
 #:   built-ins written into Egeria) can never be refused.
 #: - `FIND_METHOD_ADDITIONS`: methods no built-in names yet, each added after reading it.
@@ -78,6 +78,7 @@ _CENSUS_FIND_METHODS: frozenset = frozenset({
     "ActorManager.find_perspectives",
     "ActorManager.find_skills",
     "ActorManager.find_user_identities",
+    "AssetCatalog.get_asset_graph_by_guid",
     "AssetMaker.find_assets",
     "ClassificationExplorer.get_elements",
     "ClassificationExplorer.get_owners_elements",

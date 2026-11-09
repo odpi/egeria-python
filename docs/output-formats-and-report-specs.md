@@ -1227,7 +1227,7 @@ Check 1 on a report spec that names a dotted path says, for example: *Report spe
 
 - **Runnable:** a `ResolvedSpec`. Its `notes` say which checks did not run and why; its `warnings` are defects that bite only when a caller uses an optional parameter.
 - **Unrunnable:** an `Unrunnable` with `words` and `checks`. It failed at least one check.
-- **Format-only:** an `Unrunnable` of `kind="format_only"` with `checks=[1]`: the spec has no `action`, so it formats elements another call fetched (a detail view, or a command's output format). **This is not broken**: the words say `it has no action, so it formats elements another call fetched`. On the registry as of 6.2.27 there are 374 runnable, 61 format-only and 2 unrunnable specs.
+- **Format-only:** an `Unrunnable` of `kind="format_only"` with `checks=[1]`: the spec has no `action`, so it formats elements another call fetched (a detail view, or a command's output format). **This is not broken**: the words say `it has no action, so it formats elements another call fetched`. On the registry as of 6.2.28 there are 376 runnable, 61 format-only and no unrunnable specs (6.2.27 had 374 runnable and 2 unrunnable; see below).
 
 **Listing them.**
 
@@ -1249,12 +1249,14 @@ for name, spec in unrunnable_specs().items():          # format-only left out; p
 - `load_egeria_report_specs()` (the Egeria question-spec load);
 - `commands/tech/refresh_specs.py`, which resolves everything after regenerating and logs the count.
 
-**Reading the words: the two specs that are unrunnable today.** Both fail check 1, both are `find` specs, and both name a find method that does not exist, so the words tell you exactly what to fix:
+**Reading the words: the two specs that were unrunnable in 6.2.27.** Both failed check 1, both were `find` specs, and both named a find method that no longer existed, so the words said exactly what to fix:
 
 - `Spec 'Asset-Graph' cannot run (check 1): its find method 'ServerClient.get_asset_graph' does not exist: EgeriaTech or any client it proxies to has no '_async_get_asset_graph'.`
 - `Spec 'Data-Classes' cannot run (check 1): its find method 'DataDesigner.find_data_classes' does not exist: client class DataDesigner has no '_async_find_data_classes'.`
 
 Read it left to right: *the check* (1, names), *the thing named* (`ServerClient.get_asset_graph`), *where the resolver looked* (the client class the executor would use for that name, here EgeriaTech and everything it proxies to), and *what was missing* (an `_async_` method of that name). They are listed with these words by `list_report_specs(with_status=True)` rather than being left to fail when someone runs them.
+
+6.2.28 fixed both, as the words pointed: `Asset-Graph` now calls `AssetCatalog.get_asset_graph_by_guid` (parameter `guid`), and `Data-Classes` calls `DataDesigner.find_data_value_specifications` with `metadata_element_subtypes=["DataClass"]` (a DataClass is a DataValueSpecification subtype and shares its search).
 
 > **Planned, not shipped.** Report specs held in Egeria itself (synced, cached and addressed as `egeria:...`) are being built in a first stage; see `portal-docs/Internals/report-spec-pipeline-model.md` (v5.5) in egeria-workspaces. This section describes only specs loaded from files, entry points and the runtime registry.
 

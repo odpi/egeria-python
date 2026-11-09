@@ -130,6 +130,7 @@ def tier(monkeypatch, tmp_path):
 def log_lines():
     from loguru import logger
     lines = []
+    logger.enable("pyegeria")  # another test module may have left pyegeria's logger disabled
     sink = logger.add(lambda m: lines.append(m.record["message"]), level="WARNING")
     yield lines
     logger.remove(sink)
@@ -279,11 +280,10 @@ def test_every_function_todays_runnable_local_specs_name_passes_the_allowlist(ti
         ok, why = mfm.find_method_allowed(func)
         if not ok:
             refused[func] = (labels, why)
-    # Exactly the find methods of the two specs the resolver already lists as unrunnable (their
-    # methods do not exist); every other find method a local spec names is allowed.
-    assert set(refused) == {"ServerClient.get_asset_graph", "DataDesigner.find_data_classes"}, refused
-    for func, (labels, _why) in refused.items():
-        assert all(not results[lb].runnable for lb in labels)
+    # Since 6.2.28 repointed Asset-Graph and Data-Classes, every spec is runnable and every find
+    # method a local spec names is allowed.
+    assert not refused, refused
+    assert all(r.runnable or r.kind == "format_only" for r in results.values())
     for name in analytics:
         ok, why = mfm._analytic_allowed(name)
         assert ok, (name, why)
@@ -334,7 +334,7 @@ def test_async_twin_of_an_allowlisted_method_is_allowed():
 
 def test_allowlist_is_the_census_plus_additions_and_never_meets_the_denylist():
     assert mfm.FIND_METHOD_ALLOWLIST == mfm._CENSUS_FIND_METHODS | mfm.FIND_METHOD_ADDITIONS
-    assert len(mfm._CENSUS_FIND_METHODS) == 45
+    assert len(mfm._CENSUS_FIND_METHODS) == 46
     assert not (mfm.FIND_METHOD_ALLOWLIST & mfm.FIND_METHOD_DENYLIST)
     denied = {e.rsplit(".", 1)[-1] for e in mfm.FIND_METHOD_DENYLIST}
     assert not {e.rsplit(".", 1)[-1] for e in mfm.FIND_METHOD_ALLOWLIST} & denied
@@ -351,7 +351,8 @@ def test_every_allowlist_entry_passes_the_allowlist():
 
 
 def test_every_runnable_builtin_spec_function_is_on_the_allowlist(tier):
-    """The stage-2 seed writes today's built-in and generated specs into Egeria; none may be refused."""
+    """The stage-2 seed writes today's built-in and generated specs into Egeria; none may be refused.
+    Covers the two specs 6.2.28 repointed (Asset-Graph, Data-Classes)."""
     from pyegeria.view.spec_resolver import resolve
     missing = {}
     for source in (brf.base_report_specs, brf.generated_format_sets):
@@ -364,6 +365,10 @@ def test_every_runnable_builtin_spec_function_is_on_the_allowlist(tier):
             if not ok:
                 missing.setdefault(func, []).append(label)
     assert not missing, missing
+    assert brf.base_report_specs["Asset-Graph"].action.function == "AssetCatalog.get_asset_graph_by_guid"
+    assert brf.base_report_specs["Data-Classes"].action.function == "DataDesigner.find_data_value_specifications"
+    for label in ("Asset-Graph", "Data-Classes"):
+        assert resolve(brf.base_report_specs[label], label).runnable, label
 
 
 # Write words, per the Architect's read-back of stage 1 (P1). A name matches when one of its
