@@ -419,6 +419,22 @@ def set_element_prop_body(object_type: str, qualified_name: str, attributes: dic
     body.update(element_status_properties(body["class"], attributes))
     return body
 
+def report_spec_microflow(attributes: dict) -> str | None:
+    """The Report Spec's `Microflow` attribute as canonical microflow/1 text, or None if not given.
+
+    A bare JSON list (legacy format 0) is converted with `microflow_from_legacy`, the same function
+    the report-spec sync uses; a microflow/1 object is validated. Raises ValueError with words for
+    invalid JSON or an invalid micro-flow (RS-EGERIA-TIER, report-spec pipeline model §7a)."""
+    from pyegeria.view.microflow import MicroflowError, normalize_microflow_text
+    value = attributes.get('Microflow', {}).get('value', None)
+    if value is None or (isinstance(value, str) and not value.strip()):
+        return None
+    try:
+        return normalize_microflow_text(value)
+    except MicroflowError as exc:
+        raise ValueError(f"Microflow: {exc}") from exc
+
+
 def set_collection_manager_body(object_type: str, qualified_name: str, attributes: dict) -> dict:
     """
     Build the INNER element-specific Properties body for Collection Manager elements.
@@ -460,7 +476,9 @@ def set_collection_manager_body(object_type: str, qualified_name: str, attribute
     # Handle Report Spec (a ReportType subtype, Egeria 6.3 / odpi/egeria#9432)
     if object_type in ["Report Spec", "ReportSpec"]:
         prop_bod.update({
-            "microflow": attributes.get('Microflow', {}).get('value', None),
+            # RS-EGERIA-TIER: always stored as microflow/1 (a bare list is converted, an object
+            # validated); invalid JSON raises with words instead of passing through verbatim.
+            "microflow": report_spec_microflow(attributes),
             "targetTypeName": attributes.get('Target Type Name', {}).get('value', None),
             "aliases": attributes.get('Aliases', {}).get('value', None),
             "outputTypes": attributes.get('Output Types', {}).get('value', None),

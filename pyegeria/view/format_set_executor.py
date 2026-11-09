@@ -662,7 +662,44 @@ async def safe_call_tool(func, **call_params):
 # Parameter naming note:
 # - exec_report_spec and run_report expect parameter names in snake_case (e.g., metadata_element_subtypes).
 # - The underlying clients map these to on-wire camelCase when serializing request bodies for Egeria.
+def _with_spec_source(result: Any, name: Any, output_format: str) -> Any:
+    """Add `spec_source` beside `kind` (never inside `data`) and, for an Egeria-held spec, the
+    provenance footer on REPORT/MD/HTML text (RS-EGERIA-TIER §7a "Provenance")."""
+    if not isinstance(result, dict) or not isinstance(name, str):
+        return result
+    from pyegeria.view.base_report_formats import add_spec_footer, report_spec_source
+    try:
+        source = report_spec_source(name)
+    except Exception as exc:  # noqa: BLE001 -- provenance must never fail a run
+        logger.debug(f"spec_source for {name!r} unavailable: {exc}")
+        source = None
+    if source is not None:
+        result["spec_source"] = source
+    if result.get("kind") == "text":
+        result["content"] = add_spec_footer(result.get("content"), name, output_format)
+    return result
+
+
 async def _async_run_report(
+    report_name: str,
+    egeria_client: EgeriaTech,
+    output_format: str = "DICT",
+    params: Optional[Dict[str, Any]] = None,
+    refresh_spec: bool = False,
+) -> Dict[str, Any]:
+    """Run a report spec with an async EgeriaTech client (see `_async_run_report_impl`).
+
+    `refresh_spec=True` fetches the spec from Egeria for this call (RS-EGERIA-TIER §7a); a failed
+    fetch raises with words and never falls back to the cached copy. The result carries
+    `spec_source` beside `kind`."""
+    if refresh_spec:
+        from pyegeria.view.egeria_spec_cache import async_fetch_spec_for_call
+        report_name = await async_fetch_spec_for_call(egeria_client, report_name)
+    result = await _async_run_report_impl(report_name, egeria_client, output_format=output_format, params=params)
+    return _with_spec_source(result, report_name, output_format)
+
+
+async def _async_run_report_impl(
     report_name: str,
     egeria_client: EgeriaTech,
     output_format: str = "DICT",
@@ -991,6 +1028,57 @@ def _as_category_value_dict(result: Any) -> Optional[Dict[str, Union[int, float]
 
 
 def exec_report_spec(
+    format_set_name: str | dict,
+    *,
+    output_format: str = "DICT",
+    params: Optional[Dict[str, Any]] = None,
+    view_server: str = settings.Environment.egeria_view_server,
+    view_url: str = settings.Environment.egeria_view_server_url,
+    user: str = settings.User_Profile.user_name,
+    user_pass: str = settings.User_Profile.user_pwd,
+    token: Optional[str] = None,
+    supply: Optional[RoleSupply] = None,
+    refresh_spec: bool = False,
+) -> Dict[str, Any]:
+    """
+    Execute the action for a given report spec (see `_exec_report_spec_impl` for the result
+    shapes).
+
+    RS-EGERIA-TIER: the name may be tier-addressed (`egeria:<label>`, `builtin:<label>`,
+    `seed:<label>`). The result carries `spec_source` (`{"tier", "label", "version", "guid"?,
+    "synced_at"?}`) beside `kind`, never inside `data`; REPORT/MD/HTML text of an Egeria-held spec
+    ends with a one-line provenance footer. `refresh_spec=True` fetches the spec from Egeria for
+    this call: written through to a per-user cache, kept in-process for a shared one. A failed
+    fetch raises with words; it never falls back to the cached copy.
+    """
+    if refresh_spec and isinstance(format_set_name, str):
+        format_set_name = _fetch_for_exec(format_set_name, view_server=view_server, view_url=view_url,
+                                          user=user, user_pass=user_pass, token=token)
+    result = _exec_report_spec_impl(format_set_name, output_format=output_format, params=params,
+                                    view_server=view_server, view_url=view_url, user=user, user_pass=user_pass,
+                                    token=token, supply=supply)
+    return _with_spec_source(result, format_set_name, (output_format or "DICT").upper())
+
+
+def _fetch_for_exec(name: str, *, view_server: str, view_url: str, user: str, user_pass: str,
+                    token: Optional[str]) -> str:
+    from pyegeria.omvs.collection_manager import CollectionManager
+    from pyegeria.view.egeria_spec_cache import fetch_spec_for_call
+    client = CollectionManager(view_server, view_url, user_id=user, user_pwd=user_pass)
+    try:
+        if token:
+            client.set_bearer_token(token)
+        else:
+            client.create_egeria_bearer_token()
+        return fetch_spec_for_call(client, name)
+    finally:
+        try:
+            client.close_session()
+        except Exception:  # noqa: BLE001
+            pass
+
+
+def _exec_report_spec_impl(
     format_set_name: str | dict,
     *,
     output_format: str = "DICT",

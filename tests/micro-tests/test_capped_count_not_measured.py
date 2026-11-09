@@ -234,7 +234,9 @@ def test_a_viewer_tile_still_says_at_least_500():
 
 
 def test_a_measured_tile_is_unchanged():
-    assert _exec("Analytic Demo - Element Count by Type", type_name="DataStore") == {"kind": "json", "data": 843}
+    out = _exec("Analytic Demo - Element Count by Type", type_name="DataStore")
+    assert out.pop("spec_source")["tier"] == "local"  # RS-EGERIA-TIER: provenance beside kind, not in data
+    assert out == {"kind": "json", "data": 843}
 
 
 def test_the_breakdown_rows_keep_measured_counts_and_name_the_unmeasured_one():

@@ -105,6 +105,7 @@ def test_count_relationships_on_a_portal_shaped_supply_counts_the_repository():
     supply = _PortalShapedSupply()
     out = _run("P1-1 Count Relationships", supply, relationship_type="SemanticAssignment")
     assert supply.asked == ["EgeriaTech"]
+    out.pop("spec_source", None)  # RS-EGERIA-TIER: provenance beside kind, not in data
     assert out == {"kind": "json", "data": 12}
 
 

@@ -288,6 +288,7 @@ def test_end_to_end_an_environment_supply_is_asked_by_declared_class_in_order(fa
     assert supply.asked == ["MetadataExpert", "ClassificationExplorer"]
     assert seen["args"] == ("client<MetadataExpert>", "client<ClassificationExplorer>")
     assert fake_tech == []  # the environment's supply, not a client built from user/password
+    result.pop("spec_source", None)  # RS-EGERIA-TIER: provenance beside kind, not in data
     assert result == {"kind": "json", "data": {"groundingLinks": 1, "groundingPct": 1}}
 
 
@@ -343,6 +344,7 @@ def test_a_spec_with_a_binder_runs_on_declared_inputs_alone(monkeypatch, fake_te
         formats=[Format(types=["DICT"], attributes=[])])}, source="test")
     assert sr.resolve(brf.get_report_registry()["W23-Binder"], "W23-Binder").runnable
     result = _run("W23-Binder", params={"type_name": "Asset"})
+    result.pop("spec_source", None)  # RS-EGERIA-TIER: provenance beside kind, not in data
     assert result == {"kind": "json", "data": {"count": 1}}
     assert len(fake_tech) == 1 and seen["args"] == (fake_tech[0], "Asset")  # the caller's client, not os.getcwd()
     assert not hasattr(fse, "_apply_analytic_binders")
