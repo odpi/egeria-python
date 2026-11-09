@@ -558,7 +558,8 @@ def test_exec_report_spec_surfaces_a_refusal(monkeypatch):
             pass
 
         def find_things(self, search_string="*", **kwargs):
-            raise ValueError("give a search string or a narrower type")
+            from pyegeria.core.request_filters import SearchRefused
+            raise SearchRefused("give a search string or a narrower type")
 
     fmt = {"action": {"function": "X.find_things", "required_params": ["search_string"], "spec_params": {}}}
     monkeypatch.setattr(fse, "select_report_spec", lambda name, kind: fmt)
