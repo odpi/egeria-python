@@ -1,0 +1,98 @@
+{
+ "format": "pyegeria-seed/1",
+ "family": "CollectionManager",
+ "specs": [
+  {
+   "label": "Report-Types",
+   "envelope": {
+    "heading": "Report Types",
+    "description": "Report Type collections — each groups its QuestionSpec folders",
+    "family": "CollectionManager",
+    "target_type_name": "ReportType",
+    "aliases": []
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "ReportType",
+      "function": "CollectionManager.find_collections",
+      "params": {"search_string": "$search_string", "_type": "ReportType"}
+     }
+    ],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "created_by", "label": "Created By"},
+       {"field": "create_time", "label": "Create Time"},
+       {"field": "updated_by", "label": "Updated By"},
+       {"field": "update_time", "label": "Update Time"},
+       {"field": "collection_members", "label": "Containing Members", "format": "bulleted-list"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Question-Specs",
+   "envelope": {
+    "heading": "Question Specs",
+    "description": "QuestionSpec collection folders — each groups a set of Questions for a report type",
+    "family": "CollectionManager",
+    "target_type_name": "CollectionFolder",
+    "aliases": []
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "CollectionFolder",
+      "function": "CollectionManager.find_collections",
+      "params": {"search_string": "$search_string", "_type": "FolderCollection"}
+     }
+    ],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "created_by", "label": "Created By"},
+       {"field": "create_time", "label": "Create Time"},
+       {"field": "updated_by", "label": "Updated By"},
+       {"field": "update_time", "label": "Update Time"},
+       {"field": "collection_members", "label": "Containing Members", "format": "bulleted-list"}
+      ]
+     }
+    }
+   }
+  }
+ ]
+}

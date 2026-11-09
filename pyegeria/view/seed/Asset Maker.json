@@ -1,0 +1,1542 @@
+{
+ "format": "pyegeria-seed/1",
+ "family": "Asset Maker",
+ "specs": [
+  {
+   "label": "CSV-Data-File-Element-DrE-Advanced",
+   "envelope": {
+    "heading": "CSV-Data-File-Element-DrE-Advanced Attributes",
+    "description": "Auto-generated format for CSV Data File Element (Create, Advanced).",
+    "family": "Asset Maker",
+    "target_type_name": "CSV Data File Element",
+    "aliases": ["CSV Data File Element DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "CSV Data File Element",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
+      "params": {
+       "search_string": "$search_string",
+       "metadata_element_type": "CSVFile",
+       "property_names": ["displayName", "qualifiedName"]
+      }
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "file_name", "label": "File Name"},
+       {"field": "file_type", "label": "File Type"},
+       {"field": "file_path_name", "label": "File Path Name"},
+       {"field": "file_encoding", "label": "File Encoding"},
+       {"field": "file_extension", "label": "File Extension"},
+       {"field": "file_system_name", "label": "File System Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "version_identifier", "label": "Version Identifier"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "file_name", "label": "File Name"},
+       {"field": "file_type", "label": "File Type"},
+       {"field": "file_path_name", "label": "File Path Name"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "file_encoding", "label": "File Encoding"},
+       {"field": "file_extension", "label": "File Extension"},
+       {"field": "file_system_name", "label": "File System Name"},
+       {"field": "description", "label": "Description"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "CSV-Data-File-Element-DrE-Basic",
+   "envelope": {
+    "heading": "CSV-Data-File-Element-DrE-Basic Attributes",
+    "description": "Auto-generated format for CSV Data File Element (Create, Basic).",
+    "family": "Asset Maker",
+    "target_type_name": "CSV Data File Element",
+    "aliases": ["CSV Data File Element DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "CSV Data File Element",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
+      "params": {
+       "search_string": "$search_string",
+       "metadata_element_type": "CSVFile",
+       "property_names": ["displayName", "qualifiedName"]
+      }
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "file_name", "label": "File Name"},
+       {"field": "file_type", "label": "File Type"},
+       {"field": "file_path_name", "label": "File Path Name"},
+       {"field": "file_encoding", "label": "File Encoding"},
+       {"field": "file_extension", "label": "File Extension"},
+       {"field": "file_system_name", "label": "File System Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "version_identifier", "label": "Version Identifier"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "file_name", "label": "File Name"},
+       {"field": "file_type", "label": "File Type"},
+       {"field": "file_path_name", "label": "File Path Name"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "file_encoding", "label": "File Encoding"},
+       {"field": "file_extension", "label": "File Extension"},
+       {"field": "file_system_name", "label": "File System Name"},
+       {"field": "description", "label": "Description"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Folder-Element-DrE-Advanced",
+   "envelope": {
+    "heading": "Folder-Element-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Folder Element (Create, Advanced).",
+    "family": "Asset Maker",
+    "target_type_name": "Folder Element",
+    "aliases": ["Folder Element DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Folder Element",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
+      "params": {
+       "search_string": "$search_string",
+       "metadata_element_type": "DataFolder",
+       "property_names": ["displayName", "qualifiedName"]
+      }
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "folder_name", "label": "Folder Name"},
+       {"field": "path_name", "label": "Directory Path Name"},
+       {"field": "file_system_name", "label": "File System Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "version_identifier", "label": "Version Identifier"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "folder_name", "label": "Folder Name"},
+       {"field": "path_name", "label": "Directory Path Name"},
+       {"field": "file_system_name", "label": "File System Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "version_identifier", "label": "Version Identifier"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Folder-Element-DrE-Basic",
+   "envelope": {
+    "heading": "Folder-Element-DrE-Basic Attributes",
+    "description": "Auto-generated format for Folder Element (Create, Basic).",
+    "family": "Asset Maker",
+    "target_type_name": "Folder Element",
+    "aliases": ["Folder Element DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Folder Element",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
+      "params": {
+       "search_string": "$search_string",
+       "metadata_element_type": "DataFolder",
+       "property_names": ["displayName", "qualifiedName"]
+      }
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "folder_name", "label": "Folder Name"},
+       {"field": "path_name", "label": "Directory Path Name"},
+       {"field": "file_system_name", "label": "File System Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "version_identifier", "label": "Version Identifier"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "folder_name", "label": "Folder Name"},
+       {"field": "path_name", "label": "Directory Path Name"},
+       {"field": "file_system_name", "label": "File System Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "version_identifier", "label": "Version Identifier"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Kafka-Server-Element-DrE-Advanced",
+   "envelope": {
+    "heading": "Kafka-Server-Element-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Kafka Server Element (Create, Advanced).",
+    "family": "Asset Maker",
+    "target_type_name": "Kafka Server Element",
+    "aliases": ["Kafka Server Element DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false},
+     "deployed_implementation_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Kafka Server Element",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
+      "params": {
+       "search_string": "$search_string",
+       "default_deployed_implementation_type": "Apache Kafka Server",
+       "metadata_element_type": "SoftwareServer",
+       "property_names": ["displayName", "qualifiedName"]
+      }
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "kafka_server", "label": "Kafka Server Name"},
+       {"field": "host_name", "label": "Host Name"},
+       {"field": "port", "label": "Port"},
+       {"field": "description", "label": "Description"},
+       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "kafka_server", "label": "Kafka Server Name"},
+       {"field": "host_name", "label": "Host Name"},
+       {"field": "port", "label": "Port"},
+       {"field": "description", "label": "Description"},
+       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Kafka-Server-Element-DrE-Basic",
+   "envelope": {
+    "heading": "Kafka-Server-Element-DrE-Basic Attributes",
+    "description": "Auto-generated format for Kafka Server Element (Create, Basic).",
+    "family": "Asset Maker",
+    "target_type_name": "Kafka Server Element",
+    "aliases": ["Kafka Server Element DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false},
+     "deployed_implementation_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Kafka Server Element",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
+      "params": {
+       "search_string": "$search_string",
+       "default_deployed_implementation_type": "Apache Kafka Server",
+       "metadata_element_type": "SoftwareServer",
+       "property_names": ["displayName", "qualifiedName"]
+      }
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "kafka_server", "label": "Kafka Server Name"},
+       {"field": "host_name", "label": "Host Name"},
+       {"field": "port", "label": "Port"},
+       {"field": "description", "label": "Description"},
+       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "kafka_server", "label": "Kafka Server Name"},
+       {"field": "host_name", "label": "Host Name"},
+       {"field": "port", "label": "Port"},
+       {"field": "description", "label": "Description"},
+       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Postgres-Database-Element-DrE-Advanced",
+   "envelope": {
+    "heading": "Postgres-Database-Element-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Postgres Database Element (Create, Advanced).",
+    "family": "Asset Maker",
+    "target_type_name": "Postgres Database Element",
+    "aliases": ["Postgres Database Element DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false},
+     "deployed_implementation_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Postgres Database Element",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
+      "params": {
+       "search_string": "$search_string",
+       "default_deployed_implementation_type": "PostgreSQL Relational Database",
+       "metadata_element_type": "RelationalDatabase",
+       "property_names": ["displayName", "qualifiedName"]
+      }
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "postgres_database", "label": "Postgres Database Name"},
+       {"field": "postgres_server", "label": "Postgres Server Name"},
+       {"field": "host_name", "label": "Host Name"},
+       {"field": "port", "label": "Port"},
+       {"field": "secrets_store_path_name", "label": "Secrets Store Path Name"},
+       {"field": "secrets_collection_name", "label": "Secrets Collection Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"},
+       {"field": "version_identifier", "label": "Version Identifier"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "postgres_database", "label": "Postgres Database Name"},
+       {"field": "postgres_server", "label": "Postgres Server Name"},
+       {"field": "host_name", "label": "Host Name"},
+       {"field": "port", "label": "Port"},
+       {"field": "secrets_store_path_name", "label": "Secrets Store Path Name"},
+       {"field": "secrets_collection_name", "label": "Secrets Collection Name"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "description", "label": "Description"},
+       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Postgres-Database-Element-DrE-Basic",
+   "envelope": {
+    "heading": "Postgres-Database-Element-DrE-Basic Attributes",
+    "description": "Auto-generated format for Postgres Database Element (Create, Basic).",
+    "family": "Asset Maker",
+    "target_type_name": "Postgres Database Element",
+    "aliases": ["Postgres Database Element DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false},
+     "deployed_implementation_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Postgres Database Element",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
+      "params": {
+       "search_string": "$search_string",
+       "default_deployed_implementation_type": "PostgreSQL Relational Database",
+       "metadata_element_type": "RelationalDatabase",
+       "property_names": ["displayName", "qualifiedName"]
+      }
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "postgres_database", "label": "Postgres Database Name"},
+       {"field": "postgres_server", "label": "Postgres Server Name"},
+       {"field": "host_name", "label": "Host Name"},
+       {"field": "port", "label": "Port"},
+       {"field": "secrets_store_path_name", "label": "Secrets Store Path Name"},
+       {"field": "secrets_collection_name", "label": "Secrets Collection Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"},
+       {"field": "version_identifier", "label": "Version Identifier"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "postgres_database", "label": "Postgres Database Name"},
+       {"field": "postgres_server", "label": "Postgres Server Name"},
+       {"field": "host_name", "label": "Host Name"},
+       {"field": "port", "label": "Port"},
+       {"field": "secrets_store_path_name", "label": "Secrets Store Path Name"},
+       {"field": "secrets_collection_name", "label": "Secrets Collection Name"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "description", "label": "Description"},
+       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Postgres-Server-Element-DrE-Advanced",
+   "envelope": {
+    "heading": "Postgres-Server-Element-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Postgres Server Element (Create, Advanced).",
+    "family": "Asset Maker",
+    "target_type_name": "Postgres Server Element",
+    "aliases": ["Postgres Server Element DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false},
+     "deployed_implementation_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Postgres Server Element",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
+      "params": {
+       "search_string": "$search_string",
+       "default_deployed_implementation_type": "PostgreSQL Server",
+       "metadata_element_type": "SoftwareServer",
+       "property_names": ["displayName", "qualifiedName"]
+      }
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "postgres_server", "label": "Postgres Server Name"},
+       {"field": "host_name", "label": "Host Name"},
+       {"field": "port", "label": "Port"},
+       {"field": "secrets_store_path_name", "label": "Secrets Store Path Name"},
+       {"field": "secrets_collection_name", "label": "Secrets Collection Name"},
+       {"field": "resource_name", "label": "Resource Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"},
+       {"field": "version_identifier", "label": "Version Identifier"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "postgres_server", "label": "Postgres Server Name"},
+       {"field": "host_name", "label": "Host Name"},
+       {"field": "port", "label": "Port"},
+       {"field": "secrets_store_path_name", "label": "Secrets Store Path Name"},
+       {"field": "secrets_collection_name", "label": "Secrets Collection Name"},
+       {"field": "resource_name", "label": "Resource Name"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "description", "label": "Description"},
+       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Postgres-Server-Element-DrE-Basic",
+   "envelope": {
+    "heading": "Postgres-Server-Element-DrE-Basic Attributes",
+    "description": "Auto-generated format for Postgres Server Element (Create, Basic).",
+    "family": "Asset Maker",
+    "target_type_name": "Postgres Server Element",
+    "aliases": ["Postgres Server Element DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false},
+     "deployed_implementation_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Postgres Server Element",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
+      "params": {
+       "search_string": "$search_string",
+       "default_deployed_implementation_type": "PostgreSQL Server",
+       "metadata_element_type": "SoftwareServer",
+       "property_names": ["displayName", "qualifiedName"]
+      }
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "postgres_server", "label": "Postgres Server Name"},
+       {"field": "host_name", "label": "Host Name"},
+       {"field": "port", "label": "Port"},
+       {"field": "secrets_store_path_name", "label": "Secrets Store Path Name"},
+       {"field": "secrets_collection_name", "label": "Secrets Collection Name"},
+       {"field": "resource_name", "label": "Resource Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"},
+       {"field": "version_identifier", "label": "Version Identifier"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "postgres_server", "label": "Postgres Server Name"},
+       {"field": "host_name", "label": "Host Name"},
+       {"field": "port", "label": "Port"},
+       {"field": "secrets_store_path_name", "label": "Secrets Store Path Name"},
+       {"field": "secrets_collection_name", "label": "Secrets Collection Name"},
+       {"field": "resource_name", "label": "Resource Name"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "description", "label": "Description"},
+       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Secrets-Store-Element-DrE-Advanced",
+   "envelope": {
+    "heading": "Secrets-Store-Element-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Secrets Store Element (Create, Advanced).",
+    "family": "Asset Maker",
+    "target_type_name": "Secrets Store Element",
+    "aliases": ["Secrets Store Element DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Secrets Store Element",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
+      "params": {
+       "search_string": "$search_string",
+       "metadata_element_type": "SecretsCollection",
+       "property_names": ["displayName", "qualifiedName"]
+      }
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "file_path_name", "label": "File Path Name"},
+       {"field": "file_name", "label": "File Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "file_system_name", "label": "File System Name"},
+       {"field": "file_type", "label": "File Type"},
+       {"field": "file_extension", "label": "File Extension"},
+       {"field": "file_encoding", "label": "File Encoding"},
+       {"field": "version_identifier", "label": "Version Identifier"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "file_path_name", "label": "File Path Name"},
+       {"field": "file_name", "label": "File Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "file_system_name", "label": "File System Name"},
+       {"field": "file_type", "label": "File Type"},
+       {"field": "file_extension", "label": "File Extension"},
+       {"field": "file_encoding", "label": "File Encoding"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Secrets-Store-Element-DrE-Basic",
+   "envelope": {
+    "heading": "Secrets-Store-Element-DrE-Basic Attributes",
+    "description": "Auto-generated format for Secrets Store Element (Create, Basic).",
+    "family": "Asset Maker",
+    "target_type_name": "Secrets Store Element",
+    "aliases": ["Secrets Store Element DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Secrets Store Element",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
+      "params": {
+       "search_string": "$search_string",
+       "metadata_element_type": "SecretsCollection",
+       "property_names": ["displayName", "qualifiedName"]
+      }
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "file_path_name", "label": "File Path Name"},
+       {"field": "file_name", "label": "File Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "file_system_name", "label": "File System Name"},
+       {"field": "file_type", "label": "File Type"},
+       {"field": "file_extension", "label": "File Extension"},
+       {"field": "file_encoding", "label": "File Encoding"},
+       {"field": "version_identifier", "label": "Version Identifier"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "file_path_name", "label": "File Path Name"},
+       {"field": "file_name", "label": "File Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "file_system_name", "label": "File System Name"},
+       {"field": "file_type", "label": "File Type"},
+       {"field": "file_extension", "label": "File Extension"},
+       {"field": "file_encoding", "label": "File Encoding"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "UC-Catalog-Element-DrE-Advanced",
+   "envelope": {
+    "heading": "UC-Catalog-Element-DrE-Advanced Attributes",
+    "description": "Auto-generated format for UC Catalog Element (Create, Advanced).",
+    "family": "Asset Maker",
+    "target_type_name": "UC Catalog Element",
+    "aliases": ["UC Catalog Element DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false},
+     "deployed_implementation_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "UC Catalog Element",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
+      "params": {
+       "search_string": "$search_string",
+       "default_deployed_implementation_type": "Unity Catalog Catalog",
+       "metadata_element_type": "SoftwareCapability",
+       "property_names": ["displayName", "qualifiedName"]
+      }
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "uc_catalog", "label": "UC Catalog Name"},
+       {"field": "network_address", "label": "Network Address"},
+       {"field": "description", "label": "Description"},
+       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"},
+       {"field": "version_identifier", "label": "Version Identifier"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "uc_catalog", "label": "UC Catalog Name"},
+       {"field": "network_address", "label": "Network Address"},
+       {"field": "description", "label": "Description"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "UC-Catalog-Element-DrE-Basic",
+   "envelope": {
+    "heading": "UC-Catalog-Element-DrE-Basic Attributes",
+    "description": "Auto-generated format for UC Catalog Element (Create, Basic).",
+    "family": "Asset Maker",
+    "target_type_name": "UC Catalog Element",
+    "aliases": ["UC Catalog Element DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false},
+     "deployed_implementation_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "UC Catalog Element",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
+      "params": {
+       "search_string": "$search_string",
+       "default_deployed_implementation_type": "Unity Catalog Catalog",
+       "metadata_element_type": "SoftwareCapability",
+       "property_names": ["displayName", "qualifiedName"]
+      }
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "uc_catalog", "label": "UC Catalog Name"},
+       {"field": "network_address", "label": "Network Address"},
+       {"field": "description", "label": "Description"},
+       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"},
+       {"field": "version_identifier", "label": "Version Identifier"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "uc_catalog", "label": "UC Catalog Name"},
+       {"field": "network_address", "label": "Network Address"},
+       {"field": "description", "label": "Description"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "UC-Function-Element-DrE-Advanced",
+   "envelope": {
+    "heading": "UC-Function-Element-DrE-Advanced Attributes",
+    "description": "Auto-generated format for UC Function Element (Create, Advanced).",
+    "family": "Asset Maker",
+    "target_type_name": "UC Function Element",
+    "aliases": ["UC Function Element DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false},
+     "deployed_implementation_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "UC Function Element",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
+      "params": {
+       "search_string": "$search_string",
+       "default_deployed_implementation_type": "Unity Catalog Function",
+       "metadata_element_type": "DeployedAPI",
+       "property_names": ["displayName", "qualifiedName"]
+      }
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "uc_catalog", "label": "UC Catalog Name"},
+       {"field": "uc_schema", "label": "UC Schema Name"},
+       {"field": "uc_function", "label": "UC Function Name"},
+       {"field": "network_address", "label": "Network Address"},
+       {"field": "description", "label": "Description"},
+       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"},
+       {"field": "version_identifier", "label": "Version Identifier"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "uc_catalog", "label": "UC Catalog Name"},
+       {"field": "uc_schema", "label": "UC Schema Name"},
+       {"field": "uc_function", "label": "UC Function Name"},
+       {"field": "network_address", "label": "Network Address"},
+       {"field": "description", "label": "Description"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "UC-Function-Element-DrE-Basic",
+   "envelope": {
+    "heading": "UC-Function-Element-DrE-Basic Attributes",
+    "description": "Auto-generated format for UC Function Element (Create, Basic).",
+    "family": "Asset Maker",
+    "target_type_name": "UC Function Element",
+    "aliases": ["UC Function Element DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false},
+     "deployed_implementation_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "UC Function Element",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
+      "params": {
+       "search_string": "$search_string",
+       "default_deployed_implementation_type": "Unity Catalog Function",
+       "metadata_element_type": "DeployedAPI",
+       "property_names": ["displayName", "qualifiedName"]
+      }
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "uc_catalog", "label": "UC Catalog Name"},
+       {"field": "uc_schema", "label": "UC Schema Name"},
+       {"field": "uc_function", "label": "UC Function Name"},
+       {"field": "network_address", "label": "Network Address"},
+       {"field": "description", "label": "Description"},
+       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"},
+       {"field": "version_identifier", "label": "Version Identifier"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "uc_catalog", "label": "UC Catalog Name"},
+       {"field": "uc_schema", "label": "UC Schema Name"},
+       {"field": "uc_function", "label": "UC Function Name"},
+       {"field": "network_address", "label": "Network Address"},
+       {"field": "description", "label": "Description"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "UC-Schema-Element-DrE-Advanced",
+   "envelope": {
+    "heading": "UC-Schema-Element-DrE-Advanced Attributes",
+    "description": "Auto-generated format for UC Schema Element (Create, Advanced).",
+    "family": "Asset Maker",
+    "target_type_name": "UC Schema Element",
+    "aliases": ["UC Schema Element DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false},
+     "deployed_implementation_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "UC Schema Element",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
+      "params": {
+       "search_string": "$search_string",
+       "default_deployed_implementation_type": "Unity Catalog Schema",
+       "metadata_element_type": "DeployedDatabaseSchema",
+       "property_names": ["displayName", "qualifiedName"]
+      }
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "uc_catalog", "label": "UC Catalog Name"},
+       {"field": "uc_schema", "label": "UC Schema Name"},
+       {"field": "network_address", "label": "Network Address"},
+       {"field": "description", "label": "Description"},
+       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"},
+       {"field": "version_identifier", "label": "Version Identifier"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "uc_catalog", "label": "UC Catalog Name"},
+       {"field": "uc_schema", "label": "UC Schema Name"},
+       {"field": "network_address", "label": "Network Address"},
+       {"field": "description", "label": "Description"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "UC-Schema-Element-DrE-Basic",
+   "envelope": {
+    "heading": "UC-Schema-Element-DrE-Basic Attributes",
+    "description": "Auto-generated format for UC Schema Element (Create, Basic).",
+    "family": "Asset Maker",
+    "target_type_name": "UC Schema Element",
+    "aliases": ["UC Schema Element DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false},
+     "deployed_implementation_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "UC Schema Element",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
+      "params": {
+       "search_string": "$search_string",
+       "default_deployed_implementation_type": "Unity Catalog Schema",
+       "metadata_element_type": "DeployedDatabaseSchema",
+       "property_names": ["displayName", "qualifiedName"]
+      }
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "uc_catalog", "label": "UC Catalog Name"},
+       {"field": "uc_schema", "label": "UC Schema Name"},
+       {"field": "network_address", "label": "Network Address"},
+       {"field": "description", "label": "Description"},
+       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"},
+       {"field": "version_identifier", "label": "Version Identifier"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "uc_catalog", "label": "UC Catalog Name"},
+       {"field": "uc_schema", "label": "UC Schema Name"},
+       {"field": "network_address", "label": "Network Address"},
+       {"field": "description", "label": "Description"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "UC-Server-Element-DrE-Advanced",
+   "envelope": {
+    "heading": "UC-Server-Element-DrE-Advanced Attributes",
+    "description": "Auto-generated format for UC Server Element (Create, Advanced).",
+    "family": "Asset Maker",
+    "target_type_name": "UC Server Element",
+    "aliases": ["UC Server Element DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false},
+     "deployed_implementation_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "UC Server Element",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
+      "params": {
+       "search_string": "$search_string",
+       "default_deployed_implementation_type": "Unity Catalog Server",
+       "metadata_element_type": "SoftwareServer",
+       "property_names": ["displayName", "qualifiedName"]
+      }
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "uc_server_name", "label": "UC Server Name"},
+       {"field": "host_url", "label": "Host URL"},
+       {"field": "port", "label": "Port"},
+       {"field": "description", "label": "Description"},
+       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"},
+       {"field": "version_identifier", "label": "Version Identifier"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "uc_server_name", "label": "UC Server Name"},
+       {"field": "host_url", "label": "Host URL"},
+       {"field": "port", "label": "Port"},
+       {"field": "description", "label": "Description"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "UC-Server-Element-DrE-Basic",
+   "envelope": {
+    "heading": "UC-Server-Element-DrE-Basic Attributes",
+    "description": "Auto-generated format for UC Server Element (Create, Basic).",
+    "family": "Asset Maker",
+    "target_type_name": "UC Server Element",
+    "aliases": ["UC Server Element DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false},
+     "deployed_implementation_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "UC Server Element",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
+      "params": {
+       "search_string": "$search_string",
+       "default_deployed_implementation_type": "Unity Catalog Server",
+       "metadata_element_type": "SoftwareServer",
+       "property_names": ["displayName", "qualifiedName"]
+      }
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "uc_server_name", "label": "UC Server Name"},
+       {"field": "host_url", "label": "Host URL"},
+       {"field": "port", "label": "Port"},
+       {"field": "description", "label": "Description"},
+       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"},
+       {"field": "version_identifier", "label": "Version Identifier"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "uc_server_name", "label": "UC Server Name"},
+       {"field": "host_url", "label": "Host URL"},
+       {"field": "port", "label": "Port"},
+       {"field": "description", "label": "Description"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "UC-Table-Element-DrE-Advanced",
+   "envelope": {
+    "heading": "UC-Table-Element-DrE-Advanced Attributes",
+    "description": "Auto-generated format for UC Table Element (Create, Advanced).",
+    "family": "Asset Maker",
+    "target_type_name": "UC Table Element",
+    "aliases": ["UC Table Element DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false},
+     "deployed_implementation_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "UC Table Element",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
+      "params": {
+       "search_string": "$search_string",
+       "default_deployed_implementation_type": "Unity Catalog Table",
+       "metadata_element_type": "RelationalTable",
+       "property_names": ["displayName", "qualifiedName"]
+      }
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "uc_catalog", "label": "UC Catalog Name"},
+       {"field": "uc_schema", "label": "UC Schema Name"},
+       {"field": "uc_table", "label": "UC Table Name"},
+       {"field": "uc_table_type", "label": "UC Table Type", "valid_values": ["Managed", "External"]},
+       {"field": "uc_storage_loc", "label": "UC Storage Location"},
+       {"field": "uc_data_source_format", "label": "UC Data Source Format", "valid_values": ["DELTA", "CSV", "JSON", "AVRO", "PARQUET", "ORC", "TEXT"]},
+       {"field": "network_address", "label": "Network Address"},
+       {"field": "description", "label": "Description"},
+       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"},
+       {"field": "version_identifier", "label": "Version Identifier"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "uc_catalog", "label": "UC Catalog Name"},
+       {"field": "uc_schema", "label": "UC Schema Name"},
+       {"field": "uc_table", "label": "UC Table Name"},
+       {"field": "uc_table_type", "label": "UC Table Type", "valid_values": ["Managed", "External"]},
+       {"field": "uc_storage_loc", "label": "UC Storage Location"},
+       {"field": "uc_data_source_format", "label": "UC Data Source Format", "valid_values": ["DELTA", "CSV", "JSON", "AVRO", "PARQUET", "ORC", "TEXT"]},
+       {"field": "network_address", "label": "Network Address"},
+       {"field": "description", "label": "Description"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "UC-Table-Element-DrE-Basic",
+   "envelope": {
+    "heading": "UC-Table-Element-DrE-Basic Attributes",
+    "description": "Auto-generated format for UC Table Element (Create, Basic).",
+    "family": "Asset Maker",
+    "target_type_name": "UC Table Element",
+    "aliases": ["UC Table Element DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false},
+     "deployed_implementation_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "UC Table Element",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
+      "params": {
+       "search_string": "$search_string",
+       "default_deployed_implementation_type": "Unity Catalog Table",
+       "metadata_element_type": "RelationalTable",
+       "property_names": ["displayName", "qualifiedName"]
+      }
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "uc_catalog", "label": "UC Catalog Name"},
+       {"field": "uc_schema", "label": "UC Schema Name"},
+       {"field": "uc_table", "label": "UC Table Name"},
+       {"field": "uc_table_type", "label": "UC Table Type", "valid_values": ["Managed", "External"]},
+       {"field": "uc_storage_loc", "label": "UC Storage Location"},
+       {"field": "uc_data_source_format", "label": "UC Data Source Format", "valid_values": ["DELTA", "CSV", "JSON", "AVRO", "PARQUET", "ORC", "TEXT"]},
+       {"field": "network_address", "label": "Network Address"},
+       {"field": "description", "label": "Description"},
+       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"},
+       {"field": "version_identifier", "label": "Version Identifier"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "uc_catalog", "label": "UC Catalog Name"},
+       {"field": "uc_schema", "label": "UC Schema Name"},
+       {"field": "uc_table", "label": "UC Table Name"},
+       {"field": "uc_table_type", "label": "UC Table Type", "valid_values": ["Managed", "External"]},
+       {"field": "uc_storage_loc", "label": "UC Storage Location"},
+       {"field": "uc_data_source_format", "label": "UC Data Source Format", "valid_values": ["DELTA", "CSV", "JSON", "AVRO", "PARQUET", "ORC", "TEXT"]},
+       {"field": "network_address", "label": "Network Address"},
+       {"field": "description", "label": "Description"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "UC-Volume-Element-DrE-Advanced",
+   "envelope": {
+    "heading": "UC-Volume-Element-DrE-Advanced Attributes",
+    "description": "Auto-generated format for UC Volume Element (Create, Advanced).",
+    "family": "Asset Maker",
+    "target_type_name": "UC Volume Element",
+    "aliases": ["UC Volume Element DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false},
+     "deployed_implementation_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "UC Volume Element",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
+      "params": {
+       "search_string": "$search_string",
+       "default_deployed_implementation_type": "Unity Catalog Volume",
+       "metadata_element_type": "StorageVolume",
+       "property_names": ["displayName", "qualifiedName"]
+      }
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "uc_catalog", "label": "UC Catalog Name"},
+       {"field": "uc_schema", "label": "UC Schema Name"},
+       {"field": "uc_volume", "label": "UC Volume Name"},
+       {"field": "uc_vol_type", "label": "UC Volume Type", "valid_values": ["Managed", "External"]},
+       {"field": "uc_storage_loc", "label": "UC Storage Location"},
+       {"field": "network_address", "label": "Network Address"},
+       {"field": "description", "label": "Description"},
+       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"},
+       {"field": "version_identifier", "label": "Version Identifier"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "uc_catalog", "label": "UC Catalog Name"},
+       {"field": "uc_schema", "label": "UC Schema Name"},
+       {"field": "uc_volume", "label": "UC Volume Name"},
+       {"field": "uc_vol_type", "label": "UC Volume Type", "valid_values": ["Managed", "External"]},
+       {"field": "uc_storage_loc", "label": "UC Storage Location"},
+       {"field": "network_address", "label": "Network Address"},
+       {"field": "description", "label": "Description"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "UC-Volume-Element-DrE-Basic",
+   "envelope": {
+    "heading": "UC-Volume-Element-DrE-Basic Attributes",
+    "description": "Auto-generated format for UC Volume Element (Create, Basic).",
+    "family": "Asset Maker",
+    "target_type_name": "UC Volume Element",
+    "aliases": ["UC Volume Element DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false},
+     "deployed_implementation_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "UC Volume Element",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
+      "params": {
+       "search_string": "$search_string",
+       "default_deployed_implementation_type": "Unity Catalog Volume",
+       "metadata_element_type": "StorageVolume",
+       "property_names": ["displayName", "qualifiedName"]
+      }
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "uc_catalog", "label": "UC Catalog Name"},
+       {"field": "uc_schema", "label": "UC Schema Name"},
+       {"field": "uc_volume", "label": "UC Volume Name"},
+       {"field": "uc_vol_type", "label": "UC Volume Type", "valid_values": ["Managed", "External"]},
+       {"field": "uc_storage_loc", "label": "UC Storage Location"},
+       {"field": "network_address", "label": "Network Address"},
+       {"field": "description", "label": "Description"},
+       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"},
+       {"field": "version_identifier", "label": "Version Identifier"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "uc_catalog", "label": "UC Catalog Name"},
+       {"field": "uc_schema", "label": "UC Schema Name"},
+       {"field": "uc_volume", "label": "UC Volume Name"},
+       {"field": "uc_vol_type", "label": "UC Volume Type", "valid_values": ["Managed", "External"]},
+       {"field": "uc_storage_loc", "label": "UC Storage Location"},
+       {"field": "network_address", "label": "Network Address"},
+       {"field": "description", "label": "Description"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"}
+      ]
+     }
+    }
+   }
+  }
+ ]
+}

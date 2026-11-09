@@ -522,14 +522,37 @@ You can add report specs without changing pyegeria’s source. List them in conf
 
 ### Where pyegeria looks for user specs
 
-Every report-spec lookup (`select_report_spec`, `get_report_spec_match`, `list_report_specs`, `hey_egeria`, Dr.Egeria, Egeria Explorer) goes through `get_report_registry()` in `pyegeria/view/base_report_formats.py`. It merges four tiers:
+Every report-spec lookup (`select_report_spec`, `get_report_spec_match`, `list_report_specs`, `hey_egeria`, Dr.Egeria, Egeria Explorer) goes through `get_report_registry()` in `pyegeria/view/base_report_formats.py`. It merges three tiers, and
+**a label held by a higher tier shadows the lower one: local > egeria > builtin** (6.2.29):
 
 | Tier | Source |
 |---|---|
-| `BUILTINS` | `base_report_specs`, hand-maintained in `base_report_formats.py` |
-| `GENERATED` | `generated_format_sets`, written by `refresh_specs` |
-| `CONFIG` | Installed packages' entry points and your JSON files (below) |
-| `RUNTIME` | Anything registered in code with `register_report_specs(...)`; survives `refresh_report_specs()` |
+| `builtin` | **The seed** (6.2.29): pyegeria's shipped specs as packaged JSON in `pyegeria/view/seed/`, one file per family plus `manifest.json`. It holds the hand-maintained built-ins (`base_report_specs`), the generated Dr.Egeria specs (`generated_format_sets`, written by `refresh_specs`), the analytic demo specs and the question specs. The seed is generated from those Python constants by `python -m pyegeria.view.seed build` (which `refresh_specs` runs); `... seed check` fails when it is stale. Never edit it by hand. |
+| `egeria` | Report specs held in Egeria, synced into a local cache (RS-EGERIA-TIER) |
+| local: `CONFIG` | Installed packages' entry points and your JSON files (below) |
+| local: `RUNTIME` | Anything registered in code with `register_report_specs(...)`; survives `refresh_report_specs()` |
+
+**Overriding a built-in (6.2.29).** A local spec (a user-directory file, an entry point, or a runtime
+registration) with a built-in's or an Egeria-held spec's label **wins**, with one warning per label per process:
+
+```
+Report spec 'Questions': the local copy shadows the builtin copy (they are the same); the builtin copy stays addressable as 'builtin:Questions'.
+```
+
+`builtin:<label>` (or `seed:<label>`) and `egeria:<label>` still reach the shadowed copy, and
+`list_report_specs(with_status=True)` lists it under that address with `shadowed_by`. An alias of a local spec
+that a built-in or Egeria-held spec already holds as its label or alias is dropped from the local copy, with one
+warning, so a local spec never takes over another spec's name; a local copy keeps the aliases of the spec it
+shadows. With no local specs, the registry is exactly the seed.
+
+A local spec may shadow **any** built-in, including the bootstrap core (`Referenceable`, `Default`,
+`Report-Types`, `Report-Specs`, `Report-Spec-DrE-Basic` and the like) and the Dr.Egeria display specs (the
+`*-DrE`, `*-DrE-Basic` and `*-DrE-Advanced` specs, for example `Glossary-DrE-Basic`). Doing so changes what
+Dr.Egeria and the Portal show for that label, everywhere that label is used. `builtin:<label>` still reaches the
+original, and the shadow is logged once per label per process. To undo it, remove the local spec and refresh.
+
+A stale `analytic_demos` entry point left in an editable install's metadata from before 6.2.29 is skipped by
+name, with one log line, rather than loaded; reinstall pyegeria to drop it.
 
 **Adding specs (the `CONFIG` tier).** There are two sources:
 
@@ -538,7 +561,7 @@ Every report-spec lookup (`select_report_spec`, `get_report_spec_match`, `list_r
   [project.entry-points."pyegeria.report_specs"]
   my_pkg = "my_pkg.specs:report_specs"
   ```
-  Entry points load first. pyegeria's own analytic demo specs load this way (`analytic_demos`), so an editable install needs `uv sync` (or `pip install -e .`) after a change to entry points.
+  Entry points load first. An editable install needs `uv sync` (or `pip install -e .`) after a change to entry points. pyegeria's own analytic demo specs loaded this way (`analytic_demos`) until 6.2.29; they now ship in the seed (`builtin` tier).
 
 - **The user report specs directory.** Every `*.json` file in it is loaded, in alphabetical order, after the list above. Subdirectories and non-JSON files are ignored. The directory is resolved in this order:
   1. the `PYEGERIA_USER_REPORT_SPECS_DIR` env var (or the older `PYEGERIA_USER_FORMAT_SETS_DIR`);
@@ -556,7 +579,7 @@ from pyegeria.view.base_report_formats import register_report_specs
 register_report_specs(my_specs, source="my_app")
 ```
 
-Registering a label again from the same `source` replaces it and is not an error, so it's safe on every handler load. A label that another source, or a built-in, generated or `CONFIG` spec, already holds raises `ReportFormatCollision`, and nothing from that call is registered. `unregister_report_spec(label)` releases a label.
+Registering a label again from the same `source` replaces it and is not an error, so it's safe on every handler load. A label that another source or a `CONFIG` spec already holds raises `ReportFormatCollision`, and nothing from that call is registered. A built-in's or an Egeria-held spec's label is not a clash: the registration shadows it (above). `unregister_report_spec(label)` releases a label.
 
 **When entries are loaded.** The `CONFIG` tier loads automatically the first time anything calls `get_report_registry()`, so no consumer needs to register anything. It loads once per process. If you add or edit a file while a process is running, call `refresh_report_specs()` to reload. `load_user_report_specs()` does the same reload and also copies the directory's files into the legacy `report_specs` dict, for older code that reads that dict directly.
 
@@ -564,7 +587,7 @@ Registering a label again from the same `source` replaces it and is not an error
 
 - its file doesn't exist or isn't valid report-spec JSON;
 - its entry point, module or function can't be imported, or the function raises an error;
-- it defines a label that another source already defined (an earlier `CONFIG` entry, a built-in, a generated spec, or a `RUNTIME` registration). Labels must be unique across the registry, so nothing is silently overridden. The first entry to claim a label keeps it.
+- it defines a label that another local source already defined (an earlier `CONFIG` entry or a `RUNTIME` registration). Labels must be unique within the local tier, so nothing local is silently overridden; the first entry to claim a label keeps it. A built-in's label is not a clash: since 6.2.29 the local entry shadows the built-in, with a warning (above).
 
 Each skip is logged as a warning (`Skipping report spec source JSON:<path>: <reason>`). `refresh_report_specs()` also returns the skips as a list of `(source, reason)` pairs, with an empty list meaning everything loaded. Use that to check your configuration:
 
@@ -576,7 +599,7 @@ for source, reason in refresh_report_specs():
 
 **Gotcha: `config.json` must be discoverable.** pyegeria only finds `config/config.json` if `PYEGERIA_CONFIG_DIRECTORY` (or `PYEGERIA_ROOT_PATH`) is set. Otherwise its `"Pyegeria User Report Specs Dir"` setting is silently ignored. If you're not sure, use `PYEGERIA_USER_REPORT_SPECS_DIR`.
 
-**Changed behavior in the user specs directory.** Before, directory files could override a built-in spec, and a later file overwrote an earlier file's label. Neither is true any more, because the directory is now part of the `CONFIG` tier: a file that reuses an existing label is skipped with a warning. To change a built-in spec, save it under a new label. Also, before this fix the directory defaulted to `../`, the parent of the current working directory; it now defaults to `~/.pyegeria/report_specs`.
+**Changed behavior in the user specs directory.** A later file no longer overwrites an earlier file's label: the directory is part of the `CONFIG` tier, and a file that reuses another local label is skipped with a warning. Before 6.2.29 a file with a built-in's label was skipped too; **since 6.2.29 it overrides the built-in** (local > egeria > builtin), with one warning, and `builtin:<label>` still reaches the original. Also, before this fix the directory defaulted to `../`, the parent of the current working directory; it now defaults to `~/.pyegeria/report_specs`.
 
 Tip: You can also export the built‑in specs, edit them, and load the edited file as a `CONFIG` entry:
 
@@ -1087,7 +1110,7 @@ my_pkg = "my_pkg.manifests:ANALYTICS"
 
 **Demo report specs** (`pyegeria/view/analytic_demo_specs.py`) — one real, executable `FormatSet` per registered analytic function, proving each is actually runnable as a report spec (not just documented in the registry). Named `Analytic Demo - <Heading>`, family `"Analytic Function Demo"`. Each spec's `description` states plainly whether the underlying function is generic or a fixed metric (pulled from the registry, not duplicated by hand).
 
-**Making extra report specs visible everywhere** — the demo specs are loaded through the registry's `CONFIG` tier, by pyegeria's own `pyegeria.report_specs` entry point (`analytic_demos`, ISSUE-173). Any installed pyegeria therefore shows them to `dr_egeria`, `hey_egeria`, and every other consumer, with no config.json or env var. Another package's specs load the same way; one bad entry is skipped without affecting the rest. See [Where pyegeria looks for user specs](#where-pyegeria-looks-for-user-specs) and `refresh_report_specs()`/`get_report_registry()` in `base_report_formats.py`.
+**Making extra report specs visible everywhere** — since 6.2.29 the demo specs ship in the report-spec seed (the `builtin` tier), so any installed pyegeria shows them to `dr_egeria`, `hey_egeria`, and every other consumer, with no config.json or env var. (From ISSUE-173 to 6.2.28 they loaded through pyegeria's own `pyegeria.report_specs` entry point, `analytic_demos`, in the `CONFIG` tier.) Another package's specs load through that entry-point group; one bad entry is skipped without affecting the rest. See [Where pyegeria looks for user specs](#where-pyegeria-looks-for-user-specs) and `refresh_report_specs()`/`get_report_registry()` in `base_report_formats.py`.
 
 **Dashboard authoring** — a `Report` (a real Egeria asset naming a report spec plus default execution params, created via Dr.Egeria's `Create Report`) can be placed on a user-authored Dashboard Sheet (`Create Dashboard Sheet` / `Link Report to Dashboard Sheet`), alongside literal markdown text placements (`Add Text on Dashboard Sheet`) for section headers and explanations. See the "Report" family in `docs/dr_egeria_manual.md` and `pyegeria/view/_output_dashboard_sheet_models.py`.
 

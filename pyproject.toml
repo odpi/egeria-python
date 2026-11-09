@@ -196,10 +196,9 @@ dependencies = [
     pyegeria = "commands.tech.report_specs:main"
     dr_egeria_spec_editor = "commands.tech.spec_editor:main"
 
-# pyegeria's own analytic demo specs load through the same entry-point group as any
-# installed package's report specs (ISSUE-173).
-[project.entry-points."pyegeria.report_specs"]
-analytic_demos = "pyegeria.view.analytic_demo_specs:get_analytic_demo_specs"
+# pyegeria's own analytic demo specs ship in the report-spec seed (pyegeria/view/seed, the builtin
+# tier) since RS-EGERIA-TIER stage 2; installed packages still contribute specs through the
+# "pyegeria.report_specs" entry-point group (ISSUE-173).
 
 
 [tool.uv.workspace]
@@ -243,7 +242,7 @@ namespaces = false
 ]
 "my_egeria" = ["**/*.tcss"]
 "commands" = ["tech/spec_editor_static/*"]
-"pyegeria" = ["view/schemas/*.json"]
+"pyegeria" = ["view/schemas/*.json", "view/seed/*.json"]
 
 
 [project.optional-dependencies]

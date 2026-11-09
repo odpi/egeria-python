@@ -1,0 +1,980 @@
+{
+ "format": "pyegeria-seed/1",
+ "family": "Schema Maker",
+ "specs": [
+  {
+   "label": "Display-Data-Container-DrE-Advanced",
+   "envelope": {
+    "heading": "Display-Data-Container-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Display Data Container (Create, Advanced).",
+    "family": "Schema Maker",
+    "target_type_name": "Display Data Container",
+    "aliases": ["Display Data Container DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Display Data Container",
+      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "params": {"search_string": "$search_string", "metadata_element_type": "DisplayDataContainer"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "usage", "label": "Usage"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "initial_classifications", "label": "Initial Classifications"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "element_position", "label": "Element Position"},
+       {"field": "min_cardinality", "label": "Min Cardinality"},
+       {"field": "max_cardinality", "label": "Max Cardinality"},
+       {"field": "allows_duplicate_values", "label": "Allows Duplicate Values"},
+       {"field": "is_ordered_values", "label": "Is Ordered Values"},
+       {"field": "default_value_override", "label": "Default Value Override"},
+       {"field": "renderer", "label": "Renderer"},
+       {"field": "placement_kind", "label": "Placement Kind"},
+       {"field": "span", "label": "Span"},
+       {"field": "presentation_style", "label": "Presentation Style"},
+       {"field": "markdown_content", "label": "Markdown Content"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "element_status", "label": "Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "category", "label": "Category"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "url", "label": "URL"},
+       {"field": "usage", "label": "Usage"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "authors", "label": "Authors"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "initial_classifications", "label": "Initial Classifications"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "element_position", "label": "Element Position"},
+       {"field": "min_cardinality", "label": "Min Cardinality"},
+       {"field": "max_cardinality", "label": "Max Cardinality"},
+       {"field": "allows_duplicate_values", "label": "Allows Duplicate Values"},
+       {"field": "is_ordered_values", "label": "Is Ordered Values"},
+       {"field": "default_value_override", "label": "Default Value Override"},
+       {"field": "renderer", "label": "Renderer"},
+       {"field": "placement_kind", "label": "Placement Kind"},
+       {"field": "span", "label": "Span"},
+       {"field": "presentation_style", "label": "Presentation Style"},
+       {"field": "markdown_content", "label": "Markdown Content"},
+       {"field": "element_status", "label": "Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Display-Data-Container-DrE-Basic",
+   "envelope": {
+    "heading": "Display-Data-Container-DrE-Basic Attributes",
+    "description": "Auto-generated format for Display Data Container (Create, Basic).",
+    "family": "Schema Maker",
+    "target_type_name": "Display Data Container",
+    "aliases": ["Display Data Container DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Display Data Container",
+      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "params": {"search_string": "$search_string", "metadata_element_type": "DisplayDataContainer"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "usage", "label": "Usage"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "initial_classifications", "label": "Initial Classifications"},
+       {"field": "element_position", "label": "Element Position"},
+       {"field": "min_cardinality", "label": "Min Cardinality"},
+       {"field": "max_cardinality", "label": "Max Cardinality"},
+       {"field": "allows_duplicate_values", "label": "Allows Duplicate Values"},
+       {"field": "is_ordered_values", "label": "Is Ordered Values"},
+       {"field": "default_value_override", "label": "Default Value Override"},
+       {"field": "renderer", "label": "Renderer"},
+       {"field": "placement_kind", "label": "Placement Kind"},
+       {"field": "span", "label": "Span"},
+       {"field": "presentation_style", "label": "Presentation Style"},
+       {"field": "markdown_content", "label": "Markdown Content"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "category", "label": "Category"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "url", "label": "URL"},
+       {"field": "usage", "label": "Usage"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "authors", "label": "Authors"},
+       {"field": "initial_classifications", "label": "Initial Classifications"},
+       {"field": "element_position", "label": "Element Position"},
+       {"field": "min_cardinality", "label": "Min Cardinality"},
+       {"field": "max_cardinality", "label": "Max Cardinality"},
+       {"field": "allows_duplicate_values", "label": "Allows Duplicate Values"},
+       {"field": "is_ordered_values", "label": "Is Ordered Values"},
+       {"field": "default_value_override", "label": "Default Value Override"},
+       {"field": "renderer", "label": "Renderer"},
+       {"field": "placement_kind", "label": "Placement Kind"},
+       {"field": "span", "label": "Span"},
+       {"field": "presentation_style", "label": "Presentation Style"},
+       {"field": "markdown_content", "label": "Markdown Content"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "guid", "label": "GUID"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Display-Data-Field-DrE-Advanced",
+   "envelope": {
+    "heading": "Display-Data-Field-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Display Data Field (Create, Advanced).",
+    "family": "Schema Maker",
+    "target_type_name": "Display Data Field",
+    "aliases": ["Display Data Field DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Display Data Field",
+      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "params": {"search_string": "$search_string", "metadata_element_type": "DisplayDataField"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "usage", "label": "Usage"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "initial_classifications", "label": "Initial Classifications"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "element_position", "label": "Element Position"},
+       {"field": "min_cardinality", "label": "Min Cardinality"},
+       {"field": "max_cardinality", "label": "Max Cardinality"},
+       {"field": "allows_duplicate_values", "label": "Allows Duplicate Values"},
+       {"field": "is_ordered_values", "label": "Is Ordered Values"},
+       {"field": "default_value_override", "label": "Default Value Override"},
+       {"field": "input_field", "label": "Input Field"},
+       {"field": "placement_kind", "label": "Placement Kind"},
+       {"field": "span", "label": "Span"},
+       {"field": "presentation_style", "label": "Presentation Style"},
+       {"field": "markdown_content", "label": "Markdown Content"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "element_status", "label": "Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "category", "label": "Category"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "url", "label": "URL"},
+       {"field": "usage", "label": "Usage"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "authors", "label": "Authors"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "initial_classifications", "label": "Initial Classifications"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "element_position", "label": "Element Position"},
+       {"field": "min_cardinality", "label": "Min Cardinality"},
+       {"field": "max_cardinality", "label": "Max Cardinality"},
+       {"field": "allows_duplicate_values", "label": "Allows Duplicate Values"},
+       {"field": "is_ordered_values", "label": "Is Ordered Values"},
+       {"field": "default_value_override", "label": "Default Value Override"},
+       {"field": "input_field", "label": "Input Field"},
+       {"field": "placement_kind", "label": "Placement Kind"},
+       {"field": "span", "label": "Span"},
+       {"field": "presentation_style", "label": "Presentation Style"},
+       {"field": "markdown_content", "label": "Markdown Content"},
+       {"field": "element_status", "label": "Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Display-Data-Field-DrE-Basic",
+   "envelope": {
+    "heading": "Display-Data-Field-DrE-Basic Attributes",
+    "description": "Auto-generated format for Display Data Field (Create, Basic).",
+    "family": "Schema Maker",
+    "target_type_name": "Display Data Field",
+    "aliases": ["Display Data Field DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Display Data Field",
+      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "params": {"search_string": "$search_string", "metadata_element_type": "DisplayDataField"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "usage", "label": "Usage"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "initial_classifications", "label": "Initial Classifications"},
+       {"field": "element_position", "label": "Element Position"},
+       {"field": "min_cardinality", "label": "Min Cardinality"},
+       {"field": "max_cardinality", "label": "Max Cardinality"},
+       {"field": "allows_duplicate_values", "label": "Allows Duplicate Values"},
+       {"field": "is_ordered_values", "label": "Is Ordered Values"},
+       {"field": "default_value_override", "label": "Default Value Override"},
+       {"field": "input_field", "label": "Input Field"},
+       {"field": "placement_kind", "label": "Placement Kind"},
+       {"field": "span", "label": "Span"},
+       {"field": "presentation_style", "label": "Presentation Style"},
+       {"field": "markdown_content", "label": "Markdown Content"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "category", "label": "Category"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "url", "label": "URL"},
+       {"field": "usage", "label": "Usage"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "authors", "label": "Authors"},
+       {"field": "initial_classifications", "label": "Initial Classifications"},
+       {"field": "element_position", "label": "Element Position"},
+       {"field": "min_cardinality", "label": "Min Cardinality"},
+       {"field": "max_cardinality", "label": "Max Cardinality"},
+       {"field": "allows_duplicate_values", "label": "Allows Duplicate Values"},
+       {"field": "is_ordered_values", "label": "Is Ordered Values"},
+       {"field": "default_value_override", "label": "Default Value Override"},
+       {"field": "input_field", "label": "Input Field"},
+       {"field": "placement_kind", "label": "Placement Kind"},
+       {"field": "span", "label": "Span"},
+       {"field": "presentation_style", "label": "Presentation Style"},
+       {"field": "markdown_content", "label": "Markdown Content"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "guid", "label": "GUID"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Schema-Attribute-DrE-Advanced",
+   "envelope": {
+    "heading": "Schema-Attribute-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Schema Attribute (Create, Advanced).",
+    "family": "Schema Maker",
+    "target_type_name": "Schema Attribute",
+    "aliases": ["Schema Attribute DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Schema Attribute",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
+      "params": {
+       "search_string": "$search_string",
+       "metadata_element_type": "SchemaAttribute",
+       "property_names": ["displayName", "qualifiedName"]
+      }
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "usage", "label": "Usage"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "initial_classifications", "label": "Initial Classifications"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "element_position", "label": "Element Position"},
+       {"field": "min_cardinality", "label": "Min Cardinality"},
+       {"field": "max_cardinality", "label": "Max Cardinality"},
+       {"field": "allows_duplicate_values", "label": "Allows Duplicate Values"},
+       {"field": "is_ordered_values", "label": "Is Ordered Values"},
+       {"field": "default_value_override", "label": "Default Value Override"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "element_status", "label": "Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "category", "label": "Category"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "url", "label": "URL"},
+       {"field": "usage", "label": "Usage"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "authors", "label": "Authors"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "initial_classifications", "label": "Initial Classifications"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "element_position", "label": "Element Position"},
+       {"field": "min_cardinality", "label": "Min Cardinality"},
+       {"field": "max_cardinality", "label": "Max Cardinality"},
+       {"field": "allows_duplicate_values", "label": "Allows Duplicate Values"},
+       {"field": "is_ordered_values", "label": "Is Ordered Values"},
+       {"field": "default_value_override", "label": "Default Value Override"},
+       {"field": "element_status", "label": "Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Schema-Attribute-DrE-Basic",
+   "envelope": {
+    "heading": "Schema-Attribute-DrE-Basic Attributes",
+    "description": "Auto-generated format for Schema Attribute (Create, Basic).",
+    "family": "Schema Maker",
+    "target_type_name": "Schema Attribute",
+    "aliases": ["Schema Attribute DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Schema Attribute",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
+      "params": {
+       "search_string": "$search_string",
+       "metadata_element_type": "SchemaAttribute",
+       "property_names": ["displayName", "qualifiedName"]
+      }
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "usage", "label": "Usage"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "initial_classifications", "label": "Initial Classifications"},
+       {"field": "element_position", "label": "Element Position"},
+       {"field": "min_cardinality", "label": "Min Cardinality"},
+       {"field": "max_cardinality", "label": "Max Cardinality"},
+       {"field": "allows_duplicate_values", "label": "Allows Duplicate Values"},
+       {"field": "is_ordered_values", "label": "Is Ordered Values"},
+       {"field": "default_value_override", "label": "Default Value Override"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "category", "label": "Category"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "url", "label": "URL"},
+       {"field": "usage", "label": "Usage"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "authors", "label": "Authors"},
+       {"field": "initial_classifications", "label": "Initial Classifications"},
+       {"field": "element_position", "label": "Element Position"},
+       {"field": "min_cardinality", "label": "Min Cardinality"},
+       {"field": "max_cardinality", "label": "Max Cardinality"},
+       {"field": "allows_duplicate_values", "label": "Allows Duplicate Values"},
+       {"field": "is_ordered_values", "label": "Is Ordered Values"},
+       {"field": "default_value_override", "label": "Default Value Override"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "guid", "label": "GUID"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Schema-Attribute-From-Template-DrE-Advanced",
+   "envelope": {
+    "heading": "Schema-Attribute-From-Template-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Schema Attribute From Template (Create, Advanced).",
+    "family": "Schema Maker",
+    "target_type_name": "Schema Attribute From Template",
+    "aliases": ["Schema Attribute From Template DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Schema Attribute From Template",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
+      "params": {
+       "search_string": "$search_string",
+       "metadata_element_type": "SchemaAttribute",
+       "property_names": ["displayName", "qualifiedName"]
+      }
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "template_guid", "label": "Template GUID"},
+       {"field": "placeholder_property_values", "label": "Placeholder Property Values"},
+       {"field": "template_properties", "label": "Template Properties"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "template_guid", "label": "Template GUID"},
+       {"field": "placeholder_property_values", "label": "Placeholder Property Values"},
+       {"field": "template_properties", "label": "Template Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Schema-Attribute-From-Template-DrE-Basic",
+   "envelope": {
+    "heading": "Schema-Attribute-From-Template-DrE-Basic Attributes",
+    "description": "Auto-generated format for Schema Attribute From Template (Create, Basic).",
+    "family": "Schema Maker",
+    "target_type_name": "Schema Attribute From Template",
+    "aliases": ["Schema Attribute From Template DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Schema Attribute From Template",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
+      "params": {
+       "search_string": "$search_string",
+       "metadata_element_type": "SchemaAttribute",
+       "property_names": ["displayName", "qualifiedName"]
+      }
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "template_guid", "label": "Template GUID"},
+       {"field": "placeholder_property_values", "label": "Placeholder Property Values"},
+       {"field": "template_properties", "label": "Template Properties"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "template_guid", "label": "Template GUID"},
+       {"field": "placeholder_property_values", "label": "Placeholder Property Values"},
+       {"field": "template_properties", "label": "Template Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Schema-Type-DrE-Advanced",
+   "envelope": {
+    "heading": "Schema-Type-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Schema Type (Create, Advanced).",
+    "family": "Schema Maker",
+    "target_type_name": "Schema Type",
+    "aliases": ["Schema Type DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Schema Type",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
+      "params": {
+       "search_string": "$search_string",
+       "metadata_element_type": "SchemaType",
+       "property_names": ["displayName", "qualifiedName"]
+      }
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "usage", "label": "Usage"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "initial_classifications", "label": "Initial Classifications"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "is_deprecated", "label": "Is Deprecated"},
+       {"field": "author", "label": "Author"},
+       {"field": "encoding_standard", "label": "Encoding Standard"},
+       {"field": "namespace", "label": "Namespace"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "element_status", "label": "Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "category", "label": "Category"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "url", "label": "URL"},
+       {"field": "usage", "label": "Usage"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "authors", "label": "Authors"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "initial_classifications", "label": "Initial Classifications"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "is_deprecated", "label": "Is Deprecated"},
+       {"field": "author", "label": "Author"},
+       {"field": "encoding_standard", "label": "Encoding Standard"},
+       {"field": "namespace", "label": "Namespace"},
+       {"field": "element_status", "label": "Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Schema-Type-DrE-Basic",
+   "envelope": {
+    "heading": "Schema-Type-DrE-Basic Attributes",
+    "description": "Auto-generated format for Schema Type (Create, Basic).",
+    "family": "Schema Maker",
+    "target_type_name": "Schema Type",
+    "aliases": ["Schema Type DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Schema Type",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
+      "params": {
+       "search_string": "$search_string",
+       "metadata_element_type": "SchemaType",
+       "property_names": ["displayName", "qualifiedName"]
+      }
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "usage", "label": "Usage"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "initial_classifications", "label": "Initial Classifications"},
+       {"field": "is_deprecated", "label": "Is Deprecated"},
+       {"field": "author", "label": "Author"},
+       {"field": "encoding_standard", "label": "Encoding Standard"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "category", "label": "Category"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "url", "label": "URL"},
+       {"field": "usage", "label": "Usage"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "authors", "label": "Authors"},
+       {"field": "initial_classifications", "label": "Initial Classifications"},
+       {"field": "is_deprecated", "label": "Is Deprecated"},
+       {"field": "author", "label": "Author"},
+       {"field": "encoding_standard", "label": "Encoding Standard"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "guid", "label": "GUID"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Schema-Type-From-Template-DrE-Advanced",
+   "envelope": {
+    "heading": "Schema-Type-From-Template-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Schema Type From Template (Create, Advanced).",
+    "family": "Schema Maker",
+    "target_type_name": "Schema Type From Template",
+    "aliases": ["Schema Type From Template DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Schema Type From Template",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
+      "params": {
+       "search_string": "$search_string",
+       "metadata_element_type": "SchemaType",
+       "property_names": ["displayName", "qualifiedName"]
+      }
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "template_guid", "label": "Template GUID"},
+       {"field": "placeholder_property_values", "label": "Placeholder Property Values"},
+       {"field": "template_properties", "label": "Template Properties"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "template_guid", "label": "Template GUID"},
+       {"field": "placeholder_property_values", "label": "Placeholder Property Values"},
+       {"field": "template_properties", "label": "Template Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Schema-Type-From-Template-DrE-Basic",
+   "envelope": {
+    "heading": "Schema-Type-From-Template-DrE-Basic Attributes",
+    "description": "Auto-generated format for Schema Type From Template (Create, Basic).",
+    "family": "Schema Maker",
+    "target_type_name": "Schema Type From Template",
+    "aliases": ["Schema Type From Template DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Schema Type From Template",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
+      "params": {
+       "search_string": "$search_string",
+       "metadata_element_type": "SchemaType",
+       "property_names": ["displayName", "qualifiedName"]
+      }
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "template_guid", "label": "Template GUID"},
+       {"field": "placeholder_property_values", "label": "Placeholder Property Values"},
+       {"field": "template_properties", "label": "Template Properties"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "template_guid", "label": "Template GUID"},
+       {"field": "placeholder_property_values", "label": "Placeholder Property Values"},
+       {"field": "template_properties", "label": "Template Properties"}
+      ]
+     }
+    }
+   }
+  }
+ ]
+}

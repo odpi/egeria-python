@@ -1,0 +1,2335 @@
+{
+ "format": "pyegeria-seed/1",
+ "family": "Data Designer",
+ "specs": [
+  {
+   "label": "Data-Dictionaries",
+   "envelope": {
+    "heading": "Data Dictionary Information",
+    "description": "Attributes about Data Dictionary.",
+    "family": "Data Designer",
+    "target_type_name": "Data Dictionary",
+    "aliases": ["Data Dict", "Data Dictionary", "Data Dictionaries"],
+    "annotations": {
+     "wikilinks": ["[[Data Dictionary]]"]
+    }
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Data Dictionary",
+      "function": "CollectionManager.find_collections",
+      "params": {"search_string": "$search_string", "metadata_element_type": "DataDictionary"}
+     }
+    ],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Data-Specifications",
+   "envelope": {
+    "heading": "Data Specification Information",
+    "description": "Attributes about Data Specification.",
+    "family": "Data Designer",
+    "target_type_name": "Data Specification",
+    "aliases": ["Data Spec", "DataSpec", "DataSpecification", "Data Specifications"],
+    "annotations": {
+     "wikilinks": ["[[Data Specification]]"]
+    }
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Data Specification",
+      "function": "CollectionManager.find_collections",
+      "params": {
+       "search_string": "$search_string",
+       "metadata_element_subtypes": ["DataSpec"]
+      }
+     }
+    ],
+    "formatters": {
+     "REPORT": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "mermaidGraph", "label": "Mermaid"}
+      ]
+     },
+     "HTML": {"same_as": "REPORT"},
+     "MERMAID": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "mermaidGraph", "label": "Mermaid"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Data-Structures",
+   "envelope": {
+    "heading": "Data Structure Information",
+    "description": "Attributes about Data Structures.",
+    "family": "Data Designer",
+    "target_type_name": "Data Structure",
+    "aliases": ["Data Structure", "DataStructures", "Data Structures", "Data Struct", "DataStructure"],
+    "annotations": {
+     "wikilinks": ["[[Data Structure]]"]
+    }
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Data Structure",
+      "function": "DataDesigner.find_data_structures",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "FORM": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "in_data_spec", "label": "In Data Specifications"},
+       {"field": "in_data_dictionary", "label": "In Data Dictionaries"},
+       {"field": "member_data_fields", "label": "Member Data Fields"}
+      ]
+     },
+     "DICT": {"same_as": "FORM"},
+     "LIST": {"same_as": "FORM"},
+     "REPORT": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "in_data_spec", "label": "In Data Specifications"},
+       {"field": "in_data_dictionary", "label": "In Data Dictionaries"},
+       {"field": "member_data_fields", "label": "Member Data Fields"},
+       {"field": "mermaidGraph", "label": "Mermaid"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Data-Fields",
+   "envelope": {
+    "heading": "Data Field Information",
+    "description": "Attributes about Data Fields.",
+    "family": "Data Designer",
+    "target_type_name": "Data Field",
+    "aliases": ["Data Field", "Data Fields", "DataFields"],
+    "annotations": {
+     "wikilinks": ["[[Data Field]]"]
+    }
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Data Field",
+      "function": "DataDesigner.find_data_fields",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "MD": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "in_data_dictionary", "label": "In Data Dictionaries"},
+       {"field": "in_data_structure", "label": "In Data Structure"}
+      ]
+     },
+     "FORM": {"same_as": "MD"},
+     "DICT": {"same_as": "MD"},
+     "LIST": {"same_as": "MD"},
+     "REPORT": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "in_data_structure", "label": "In Data Structure"},
+       {"field": "in_data_dictionary", "label": "In Data Dictionaries"},
+       {"field": "member_data_fields", "label": "Member Data Fields"},
+       {"field": "mermaidGraph", "label": "Mermaid"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Data-Classes",
+   "envelope": {
+    "heading": "Data Class Information",
+    "description": "Attributes about Data Classes",
+    "family": "Data Designer",
+    "target_type_name": "Data Class",
+    "aliases": ["Data Field", "Data Fields", "DataFields", "Data Classes"],
+    "annotations": {
+     "wikilinks": ["[[Data Field]]"]
+    }
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Data Class",
+      "function": "DataDesigner.find_data_value_specifications",
+      "params": {
+       "search_string": "$search_string",
+       "metadata_element_subtypes": ["DataClass"]
+      }
+     }
+    ],
+    "formatters": {
+     "MD": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "data_type", "label": "Data Type"},
+       {"field": "specification", "label": "Specification"},
+       {"field": "in_data_dictionary", "label": "In Data Dictionaries"},
+       {"field": "in_data_structure", "label": "In Data Structure"}
+      ]
+     },
+     "FORM": {"same_as": "MD"},
+     "DICT": {"same_as": "MD"},
+     "LIST": {"same_as": "MD"},
+     "TABLE": {"same_as": "MD"},
+     "REPORT": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "data_type", "label": "Data Type"},
+       {"field": "specification", "label": "Specification"},
+       {"field": "in_data_dictionary", "label": "In Data Dictionaries"},
+       {"field": "containing_data_class", "label": "Containing Data Class"},
+       {"field": "specializes_data_class", "label": "Specializes"},
+       {"field": "mermaidGraph", "label": "Mermaid"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Data-Value-Spec",
+   "envelope": {
+    "heading": "Data Value Specification Information",
+    "description": "Attributes about Data Value Specifications",
+    "family": "Data Designer",
+    "target_type_name": "Data Value Specification",
+    "aliases": ["Data Value Spec"],
+    "annotations": {
+     "wikilinks": ["[[Data Value Specification]]"]
+    }
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Data Value Specification",
+      "function": "DataDesigner.find_data_value_specifications",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "MD": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "data_type", "label": "Data Type"},
+       {"field": "specification", "label": "Specification"},
+       {"field": "in_data_dictionary", "label": "In Data Dictionaries"},
+       {"field": "units", "label": "Units"},
+       {"field": "namespace_path", "label": "Namespace Path"}
+      ]
+     },
+     "FORM": {"same_as": "MD"},
+     "DICT": {"same_as": "MD"},
+     "LIST": {"same_as": "MD"},
+     "TABLE": {"same_as": "MD"},
+     "REPORT": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "data_type", "label": "Data Type"},
+       {"field": "specification", "label": "Specification"},
+       {"field": "in_data_dictionary", "label": "In Data Dictionaries"},
+       {"field": "containing_data_class", "label": "Containing Data Class"},
+       {"field": "specializes_data_class", "label": "Specializes"},
+       {"field": "mermaidGraph", "label": "Mermaid"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Measurement-Specifications",
+   "envelope": {
+    "heading": "Measurement Specifications",
+    "description": "How measured values are read: units, completeness, confidence and uncertainty form, absence sentences.",
+    "family": "Data Designer",
+    "target_type_name": "MeasurementSpecification",
+    "aliases": ["Measurement Specification", "MeasurementSpecification", "Measurement Specs", "Measurement Spec", "Measurement Specifications"],
+    "annotations": {
+     "wikilinks": ["[[Measurement Specification]]"]
+    }
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "MeasurementSpecification",
+      "function": "DataDesigner.find_data_value_specifications",
+      "params": {
+       "search_string": "$search_string",
+       "metadata_element_subtypes": ["MeasurementSpecification"]
+      }
+     }
+    ],
+    "formatters": {
+     "MD": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "units", "label": "Units"},
+       {"field": "data_type", "label": "Data Type"},
+       {"field": "completeness_declared", "label": "Completeness Declared"},
+       {"field": "confidence_form", "label": "Confidence Form"},
+       {"field": "uncertainty_form", "label": "Uncertainty Form"},
+       {"field": "absolute_uncertainty", "label": "Absolute Uncertainty"},
+       {"field": "relative_uncertainty", "label": "Relative Uncertainty"},
+       {"field": "absence_sentences", "label": "Absence Sentences"},
+       {"field": "basis_data_field", "label": "Basis Data Field"},
+       {"field": "as_of_data_field", "label": "As Of Data Field"}
+      ]
+     },
+     "FORM": {"same_as": "MD"},
+     "DICT": {"same_as": "MD"},
+     "LIST": {"same_as": "MD"},
+     "TABLE": {"same_as": "MD"},
+     "REPORT": {"same_as": "MD"},
+     "ALL": {"same_as": "MD"}
+    }
+   }
+  },
+  {
+   "label": "Data-Class-DrE-Advanced",
+   "envelope": {
+    "heading": "Data-Class-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Data Class (Create, Advanced).",
+    "family": "Data Designer",
+    "target_type_name": "Data Class",
+    "aliases": ["Data Class DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Data Class",
+      "function": "DataDesigner.find_data_value_specifications",
+      "params": {"search_string": "$search_string", "metadata_element_type": "DataClass"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "absolute_uncertainty", "label": "Absolute Uncertainty"},
+       {"field": "data_type", "label": "Data Type", "valid_values": ["string", "int", "long", "date", "boolean", "char", "byte", "float", "double", "biginteger", "bigdecimal", "array<string>", "array<int>", "map<string,string>", "map<string,boolean>", "map<string,int>", "map<string,long>", "map<string,double>", "map<string,date>", "map<string,object>", "short", "map<string,array<string>>", "other"]},
+       {"field": "in_data_value_specification", "label": "In Data Value Specification"},
+       {"field": "match_property_names", "label": "Match Property Names"},
+       {"field": "match_threshold", "label": "Match Threshold"},
+       {"field": "name_patterns", "label": "Name Patterns"},
+       {"field": "namespace_path", "label": "Namespace Path"},
+       {"field": "relative_uncertainty", "label": "Relative Uncertainty"},
+       {"field": "specializes_data_value_specification", "label": "Specializes Data Value Specification"},
+       {"field": "specification", "label": "Specification"},
+       {"field": "specification_details", "label": "Specification Details"},
+       {"field": "units", "label": "Units"},
+       {"field": "allows_duplicate_values", "label": "Allow Duplicate Values"},
+       {"field": "average_value", "label": "Average Value"},
+       {"field": "containing_data_class", "label": "Containing Data Class"},
+       {"field": "data_patterns", "label": "Data Patterns"},
+       {"field": "default_value", "label": "Default Value"},
+       {"field": "is_case_sensitive", "label": "Is Case Sensitive"},
+       {"field": "is_nullable", "label": "Is Nullable"},
+       {"field": "sample_values", "label": "Sample Values"},
+       {"field": "value_list", "label": "Value List"},
+       {"field": "value_range_from", "label": "Value Range From"},
+       {"field": "value_range_to", "label": "Value Range To"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "status", "label": "Status"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "status", "label": "Status"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "category", "label": "Category"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "absolute_uncertainty", "label": "Absolute Uncertainty"},
+       {"field": "data_type", "label": "Data Type", "valid_values": ["string", "int", "long", "date", "boolean", "char", "byte", "float", "double", "biginteger", "bigdecimal", "array<string>", "array<int>", "map<string,string>", "map<string,boolean>", "map<string,int>", "map<string,long>", "map<string,double>", "map<string,date>", "map<string,object>", "short", "map<string,array<string>>", "other"]},
+       {"field": "in_data_value_specification", "label": "In Data Value Specification"},
+       {"field": "match_property_names", "label": "Match Property Names"},
+       {"field": "match_threshold", "label": "Match Threshold"},
+       {"field": "name_patterns", "label": "Name Patterns"},
+       {"field": "namespace_path", "label": "Namespace Path"},
+       {"field": "relative_uncertainty", "label": "Relative Uncertainty"},
+       {"field": "specializes_data_value_specification", "label": "Specializes Data Value Specification"},
+       {"field": "specification", "label": "Specification"},
+       {"field": "specification_details", "label": "Specification Details"},
+       {"field": "units", "label": "Units"},
+       {"field": "allows_duplicate_values", "label": "Allow Duplicate Values"},
+       {"field": "average_value", "label": "Average Value"},
+       {"field": "containing_data_class", "label": "Containing Data Class"},
+       {"field": "data_patterns", "label": "Data Patterns"},
+       {"field": "default_value", "label": "Default Value"},
+       {"field": "is_case_sensitive", "label": "Is Case Sensitive"},
+       {"field": "is_nullable", "label": "Is Nullable"},
+       {"field": "sample_values", "label": "Sample Values"},
+       {"field": "value_list", "label": "Value List"},
+       {"field": "value_range_from", "label": "Value Range From"},
+       {"field": "value_range_to", "label": "Value Range To"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Data-Class-DrE-Basic",
+   "envelope": {
+    "heading": "Data-Class-DrE-Basic Attributes",
+    "description": "Auto-generated format for Data Class (Create, Basic).",
+    "family": "Data Designer",
+    "target_type_name": "Data Class",
+    "aliases": ["Data Class DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Data Class",
+      "function": "DataDesigner.find_data_value_specifications",
+      "params": {"search_string": "$search_string", "metadata_element_type": "DataClass"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "absolute_uncertainty", "label": "Absolute Uncertainty"},
+       {"field": "data_type", "label": "Data Type", "valid_values": ["string", "int", "long", "date", "boolean", "char", "byte", "float", "double", "biginteger", "bigdecimal", "array<string>", "array<int>", "map<string,string>", "map<string,boolean>", "map<string,int>", "map<string,long>", "map<string,double>", "map<string,date>", "map<string,object>", "short", "map<string,array<string>>", "other"]},
+       {"field": "in_data_value_specification", "label": "In Data Value Specification"},
+       {"field": "match_property_names", "label": "Match Property Names"},
+       {"field": "match_threshold", "label": "Match Threshold"},
+       {"field": "name_patterns", "label": "Name Patterns"},
+       {"field": "namespace_path", "label": "Namespace Path"},
+       {"field": "relative_uncertainty", "label": "Relative Uncertainty"},
+       {"field": "specializes_data_value_specification", "label": "Specializes Data Value Specification"},
+       {"field": "specification", "label": "Specification"},
+       {"field": "specification_details", "label": "Specification Details"},
+       {"field": "units", "label": "Units"},
+       {"field": "allows_duplicate_values", "label": "Allow Duplicate Values"},
+       {"field": "average_value", "label": "Average Value"},
+       {"field": "containing_data_class", "label": "Containing Data Class"},
+       {"field": "data_patterns", "label": "Data Patterns"},
+       {"field": "default_value", "label": "Default Value"},
+       {"field": "is_case_sensitive", "label": "Is Case Sensitive"},
+       {"field": "is_nullable", "label": "Is Nullable"},
+       {"field": "sample_values", "label": "Sample Values"},
+       {"field": "value_list", "label": "Value List"},
+       {"field": "value_range_from", "label": "Value Range From"},
+       {"field": "value_range_to", "label": "Value Range To"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "absolute_uncertainty", "label": "Absolute Uncertainty"},
+       {"field": "data_type", "label": "Data Type", "valid_values": ["string", "int", "long", "date", "boolean", "char", "byte", "float", "double", "biginteger", "bigdecimal", "array<string>", "array<int>", "map<string,string>", "map<string,boolean>", "map<string,int>", "map<string,long>", "map<string,double>", "map<string,date>", "map<string,object>", "short", "map<string,array<string>>", "other"]},
+       {"field": "in_data_value_specification", "label": "In Data Value Specification"},
+       {"field": "match_property_names", "label": "Match Property Names"},
+       {"field": "match_threshold", "label": "Match Threshold"},
+       {"field": "name_patterns", "label": "Name Patterns"},
+       {"field": "namespace_path", "label": "Namespace Path"},
+       {"field": "relative_uncertainty", "label": "Relative Uncertainty"},
+       {"field": "specializes_data_value_specification", "label": "Specializes Data Value Specification"},
+       {"field": "specification", "label": "Specification"},
+       {"field": "specification_details", "label": "Specification Details"},
+       {"field": "units", "label": "Units"},
+       {"field": "allows_duplicate_values", "label": "Allow Duplicate Values"},
+       {"field": "average_value", "label": "Average Value"},
+       {"field": "containing_data_class", "label": "Containing Data Class"},
+       {"field": "data_patterns", "label": "Data Patterns"},
+       {"field": "default_value", "label": "Default Value"},
+       {"field": "is_case_sensitive", "label": "Is Case Sensitive"},
+       {"field": "is_nullable", "label": "Is Nullable"},
+       {"field": "sample_values", "label": "Sample Values"},
+       {"field": "value_list", "label": "Value List"},
+       {"field": "value_range_from", "label": "Value Range From"},
+       {"field": "value_range_to", "label": "Value Range To"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Data-Dictionary-DrE-Advanced",
+   "envelope": {
+    "heading": "Data-Dictionary-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Data Dictionary (Create, Advanced).",
+    "family": "Data Designer",
+    "target_type_name": "Data Dictionary",
+    "aliases": ["Data Dictionary DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Data Dictionary",
+      "function": "CollectionManager.find_collections",
+      "params": {"search_string": "$search_string", "metadata_element_type": "DataDictionary"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "status", "label": "Status"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "status", "label": "Status"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "category", "label": "Category"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Data-Dictionary-DrE-Basic",
+   "envelope": {
+    "heading": "Data-Dictionary-DrE-Basic Attributes",
+    "description": "Auto-generated format for Data Dictionary (Create, Basic).",
+    "family": "Data Designer",
+    "target_type_name": "Data Dictionary",
+    "aliases": ["Data Dictionary DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Data Dictionary",
+      "function": "CollectionManager.find_collections",
+      "params": {"search_string": "$search_string", "metadata_element_type": "DataDictionary"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "purpose", "label": "Purpose"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Data-Field-DrE-Advanced",
+   "envelope": {
+    "heading": "Data-Field-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Data Field (Create, Advanced).",
+    "family": "Data Designer",
+    "target_type_name": "Data Field",
+    "aliases": ["Data Field DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Data Field",
+      "function": "DataDesigner.find_data_fields",
+      "params": {"search_string": "$search_string", "metadata_element_type": "DataField"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "aliases", "label": "Aliases"},
+       {"field": "allows_duplicate_values", "label": "Allow Duplicate Values"},
+       {"field": "coverage_category", "label": "Coverage Category", "valid_values": ["UNKNOWN", "UNIQUE_IDENTIFIER", "IDENTIFIER", "CORE_DETAIL", "EXTENDED_DETAIL"]},
+       {"field": "data_class", "label": "Data Class"},
+       {"field": "data_type", "label": "Data Type", "valid_values": ["string", "int", "long", "date", "boolean", "char", "byte", "float", "double", "biginteger", "bigdecimal", "array<string>", "array<int>", "map<string,string>", "map<string,boolean>", "map<string,int>", "map<string,long>", "map<string,double>", "map<string,date>", "map<string,object>", "short", "map<string,array<string>>", "other"]},
+       {"field": "default_value", "label": "Default Value"},
+       {"field": "in_data_field", "label": "In Data Field"},
+       {"field": "in_data_structure", "label": "In Data Structure"},
+       {"field": "is_nullable", "label": "Is Nullable"},
+       {"field": "is_partition_key", "label": "Is Partition Key"},
+       {"field": "length", "label": "Length"},
+       {"field": "maximum_cardinality", "label": "Maximum Cardinality"},
+       {"field": "minimum_cardinality", "label": "Minimum Cardinality"},
+       {"field": "minimum_length", "label": "Minimum Length"},
+       {"field": "name_patterns", "label": "Name Patterns"},
+       {"field": "namespace_path", "label": "Namespace Path"},
+       {"field": "ordered_values", "label": "Ordered Values"},
+       {"field": "partition_key_position", "label": "Partition Key Position"},
+       {"field": "position", "label": "Position"},
+       {"field": "precision", "label": "Precision"},
+       {"field": "sort_order", "label": "Sort Order", "valid_values": ["ASCENDING", "DESCENDING", "UNSORTED"]},
+       {"field": "units", "label": "Units"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "status", "label": "Status"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "status", "label": "Status"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "category", "label": "Category"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "aliases", "label": "Aliases"},
+       {"field": "allows_duplicate_values", "label": "Allow Duplicate Values"},
+       {"field": "coverage_category", "label": "Coverage Category", "valid_values": ["UNKNOWN", "UNIQUE_IDENTIFIER", "IDENTIFIER", "CORE_DETAIL", "EXTENDED_DETAIL"]},
+       {"field": "data_class", "label": "Data Class"},
+       {"field": "data_type", "label": "Data Type", "valid_values": ["string", "int", "long", "date", "boolean", "char", "byte", "float", "double", "biginteger", "bigdecimal", "array<string>", "array<int>", "map<string,string>", "map<string,boolean>", "map<string,int>", "map<string,long>", "map<string,double>", "map<string,date>", "map<string,object>", "short", "map<string,array<string>>", "other"]},
+       {"field": "default_value", "label": "Default Value"},
+       {"field": "in_data_field", "label": "In Data Field"},
+       {"field": "in_data_structure", "label": "In Data Structure"},
+       {"field": "is_nullable", "label": "Is Nullable"},
+       {"field": "is_partition_key", "label": "Is Partition Key"},
+       {"field": "length", "label": "Length"},
+       {"field": "maximum_cardinality", "label": "Maximum Cardinality"},
+       {"field": "minimum_cardinality", "label": "Minimum Cardinality"},
+       {"field": "minimum_length", "label": "Minimum Length"},
+       {"field": "name_patterns", "label": "Name Patterns"},
+       {"field": "namespace_path", "label": "Namespace Path"},
+       {"field": "ordered_values", "label": "Ordered Values"},
+       {"field": "partition_key_position", "label": "Partition Key Position"},
+       {"field": "position", "label": "Position"},
+       {"field": "precision", "label": "Precision"},
+       {"field": "sort_order", "label": "Sort Order", "valid_values": ["ASCENDING", "DESCENDING", "UNSORTED"]},
+       {"field": "units", "label": "Units"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Data-Field-DrE-Basic",
+   "envelope": {
+    "heading": "Data-Field-DrE-Basic Attributes",
+    "description": "Auto-generated format for Data Field (Create, Basic).",
+    "family": "Data Designer",
+    "target_type_name": "Data Field",
+    "aliases": ["Data Field DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Data Field",
+      "function": "DataDesigner.find_data_fields",
+      "params": {"search_string": "$search_string", "metadata_element_type": "DataField"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "aliases", "label": "Aliases"},
+       {"field": "allows_duplicate_values", "label": "Allow Duplicate Values"},
+       {"field": "coverage_category", "label": "Coverage Category", "valid_values": ["UNKNOWN", "UNIQUE_IDENTIFIER", "IDENTIFIER", "CORE_DETAIL", "EXTENDED_DETAIL"]},
+       {"field": "data_class", "label": "Data Class"},
+       {"field": "data_type", "label": "Data Type", "valid_values": ["string", "int", "long", "date", "boolean", "char", "byte", "float", "double", "biginteger", "bigdecimal", "array<string>", "array<int>", "map<string,string>", "map<string,boolean>", "map<string,int>", "map<string,long>", "map<string,double>", "map<string,date>", "map<string,object>", "short", "map<string,array<string>>", "other"]},
+       {"field": "default_value", "label": "Default Value"},
+       {"field": "in_data_field", "label": "In Data Field"},
+       {"field": "in_data_structure", "label": "In Data Structure"},
+       {"field": "is_nullable", "label": "Is Nullable"},
+       {"field": "is_partition_key", "label": "Is Partition Key"},
+       {"field": "length", "label": "Length"},
+       {"field": "maximum_cardinality", "label": "Maximum Cardinality"},
+       {"field": "minimum_cardinality", "label": "Minimum Cardinality"},
+       {"field": "minimum_length", "label": "Minimum Length"},
+       {"field": "name_patterns", "label": "Name Patterns"},
+       {"field": "namespace_path", "label": "Namespace Path"},
+       {"field": "ordered_values", "label": "Ordered Values"},
+       {"field": "partition_key_position", "label": "Partition Key Position"},
+       {"field": "position", "label": "Position"},
+       {"field": "precision", "label": "Precision"},
+       {"field": "sort_order", "label": "Sort Order", "valid_values": ["ASCENDING", "DESCENDING", "UNSORTED"]},
+       {"field": "units", "label": "Units"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "aliases", "label": "Aliases"},
+       {"field": "allows_duplicate_values", "label": "Allow Duplicate Values"},
+       {"field": "coverage_category", "label": "Coverage Category", "valid_values": ["UNKNOWN", "UNIQUE_IDENTIFIER", "IDENTIFIER", "CORE_DETAIL", "EXTENDED_DETAIL"]},
+       {"field": "data_class", "label": "Data Class"},
+       {"field": "data_type", "label": "Data Type", "valid_values": ["string", "int", "long", "date", "boolean", "char", "byte", "float", "double", "biginteger", "bigdecimal", "array<string>", "array<int>", "map<string,string>", "map<string,boolean>", "map<string,int>", "map<string,long>", "map<string,double>", "map<string,date>", "map<string,object>", "short", "map<string,array<string>>", "other"]},
+       {"field": "default_value", "label": "Default Value"},
+       {"field": "in_data_field", "label": "In Data Field"},
+       {"field": "in_data_structure", "label": "In Data Structure"},
+       {"field": "is_nullable", "label": "Is Nullable"},
+       {"field": "is_partition_key", "label": "Is Partition Key"},
+       {"field": "length", "label": "Length"},
+       {"field": "maximum_cardinality", "label": "Maximum Cardinality"},
+       {"field": "minimum_cardinality", "label": "Minimum Cardinality"},
+       {"field": "minimum_length", "label": "Minimum Length"},
+       {"field": "name_patterns", "label": "Name Patterns"},
+       {"field": "namespace_path", "label": "Namespace Path"},
+       {"field": "ordered_values", "label": "Ordered Values"},
+       {"field": "partition_key_position", "label": "Partition Key Position"},
+       {"field": "position", "label": "Position"},
+       {"field": "precision", "label": "Precision"},
+       {"field": "sort_order", "label": "Sort Order", "valid_values": ["ASCENDING", "DESCENDING", "UNSORTED"]},
+       {"field": "units", "label": "Units"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Data-Grain-DrE-Advanced",
+   "envelope": {
+    "heading": "Data-Grain-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Data Grain (Create, Advanced).",
+    "family": "Data Designer",
+    "target_type_name": "Data Grain",
+    "aliases": ["Data Grain DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Data Grain",
+      "function": "DataDesigner.find_data_value_specifications",
+      "params": {"search_string": "$search_string", "metadata_element_type": "DataGrain"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "absolute_uncertainty", "label": "Absolute Uncertainty"},
+       {"field": "data_type", "label": "Data Type", "valid_values": ["string", "int", "long", "date", "boolean", "char", "byte", "float", "double", "biginteger", "bigdecimal", "array<string>", "array<int>", "map<string,string>", "map<string,boolean>", "map<string,int>", "map<string,long>", "map<string,double>", "map<string,date>", "map<string,object>", "short", "map<string,array<string>>", "other"]},
+       {"field": "in_data_value_specification", "label": "In Data Value Specification"},
+       {"field": "match_property_names", "label": "Match Property Names"},
+       {"field": "match_threshold", "label": "Match Threshold"},
+       {"field": "name_patterns", "label": "Name Patterns"},
+       {"field": "namespace_path", "label": "Namespace Path"},
+       {"field": "relative_uncertainty", "label": "Relative Uncertainty"},
+       {"field": "specializes_data_value_specification", "label": "Specializes Data Value Specification"},
+       {"field": "specification", "label": "Specification"},
+       {"field": "specification_details", "label": "Specification Details"},
+       {"field": "units", "label": "Units"},
+       {"field": "granularity_basis", "label": "Granularity Basis"},
+       {"field": "grain_statement", "label": "Grain Statement"},
+       {"field": "interval", "label": "Interval"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "status", "label": "Status"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "status", "label": "Status"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "category", "label": "Category"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "absolute_uncertainty", "label": "Absolute Uncertainty"},
+       {"field": "data_type", "label": "Data Type", "valid_values": ["string", "int", "long", "date", "boolean", "char", "byte", "float", "double", "biginteger", "bigdecimal", "array<string>", "array<int>", "map<string,string>", "map<string,boolean>", "map<string,int>", "map<string,long>", "map<string,double>", "map<string,date>", "map<string,object>", "short", "map<string,array<string>>", "other"]},
+       {"field": "in_data_value_specification", "label": "In Data Value Specification"},
+       {"field": "match_property_names", "label": "Match Property Names"},
+       {"field": "match_threshold", "label": "Match Threshold"},
+       {"field": "name_patterns", "label": "Name Patterns"},
+       {"field": "namespace_path", "label": "Namespace Path"},
+       {"field": "relative_uncertainty", "label": "Relative Uncertainty"},
+       {"field": "specializes_data_value_specification", "label": "Specializes Data Value Specification"},
+       {"field": "specification", "label": "Specification"},
+       {"field": "specification_details", "label": "Specification Details"},
+       {"field": "units", "label": "Units"},
+       {"field": "granularity_basis", "label": "Granularity Basis"},
+       {"field": "grain_statement", "label": "Grain Statement"},
+       {"field": "interval", "label": "Interval"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Data-Grain-DrE-Basic",
+   "envelope": {
+    "heading": "Data-Grain-DrE-Basic Attributes",
+    "description": "Auto-generated format for Data Grain (Create, Basic).",
+    "family": "Data Designer",
+    "target_type_name": "Data Grain",
+    "aliases": ["Data Grain DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Data Grain",
+      "function": "DataDesigner.find_data_value_specifications",
+      "params": {"search_string": "$search_string", "metadata_element_type": "DataGrain"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "absolute_uncertainty", "label": "Absolute Uncertainty"},
+       {"field": "data_type", "label": "Data Type", "valid_values": ["string", "int", "long", "date", "boolean", "char", "byte", "float", "double", "biginteger", "bigdecimal", "array<string>", "array<int>", "map<string,string>", "map<string,boolean>", "map<string,int>", "map<string,long>", "map<string,double>", "map<string,date>", "map<string,object>", "short", "map<string,array<string>>", "other"]},
+       {"field": "in_data_value_specification", "label": "In Data Value Specification"},
+       {"field": "match_property_names", "label": "Match Property Names"},
+       {"field": "match_threshold", "label": "Match Threshold"},
+       {"field": "name_patterns", "label": "Name Patterns"},
+       {"field": "namespace_path", "label": "Namespace Path"},
+       {"field": "relative_uncertainty", "label": "Relative Uncertainty"},
+       {"field": "specializes_data_value_specification", "label": "Specializes Data Value Specification"},
+       {"field": "specification", "label": "Specification"},
+       {"field": "specification_details", "label": "Specification Details"},
+       {"field": "units", "label": "Units"},
+       {"field": "granularity_basis", "label": "Granularity Basis"},
+       {"field": "grain_statement", "label": "Grain Statement"},
+       {"field": "interval", "label": "Interval"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "absolute_uncertainty", "label": "Absolute Uncertainty"},
+       {"field": "data_type", "label": "Data Type", "valid_values": ["string", "int", "long", "date", "boolean", "char", "byte", "float", "double", "biginteger", "bigdecimal", "array<string>", "array<int>", "map<string,string>", "map<string,boolean>", "map<string,int>", "map<string,long>", "map<string,double>", "map<string,date>", "map<string,object>", "short", "map<string,array<string>>", "other"]},
+       {"field": "in_data_value_specification", "label": "In Data Value Specification"},
+       {"field": "match_property_names", "label": "Match Property Names"},
+       {"field": "match_threshold", "label": "Match Threshold"},
+       {"field": "name_patterns", "label": "Name Patterns"},
+       {"field": "namespace_path", "label": "Namespace Path"},
+       {"field": "relative_uncertainty", "label": "Relative Uncertainty"},
+       {"field": "specializes_data_value_specification", "label": "Specializes Data Value Specification"},
+       {"field": "specification", "label": "Specification"},
+       {"field": "specification_details", "label": "Specification Details"},
+       {"field": "units", "label": "Units"},
+       {"field": "granularity_basis", "label": "Granularity Basis"},
+       {"field": "grain_statement", "label": "Grain Statement"},
+       {"field": "interval", "label": "Interval"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Data-Spec-DrE-Advanced",
+   "envelope": {
+    "heading": "Data-Spec-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Data Spec (Create, Advanced).",
+    "family": "Data Designer",
+    "target_type_name": "Data Spec",
+    "aliases": ["Data Spec DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Data Spec",
+      "function": "CollectionManager.find_collections",
+      "params": {"search_string": "$search_string", "metadata_element_type": "DataSpec"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "status", "label": "Status"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "status", "label": "Status"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "category", "label": "Category"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Data-Spec-DrE-Basic",
+   "envelope": {
+    "heading": "Data-Spec-DrE-Basic Attributes",
+    "description": "Auto-generated format for Data Spec (Create, Basic).",
+    "family": "Data Designer",
+    "target_type_name": "Data Spec",
+    "aliases": ["Data Spec DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Data Spec",
+      "function": "CollectionManager.find_collections",
+      "params": {"search_string": "$search_string", "metadata_element_type": "DataSpec"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "purpose", "label": "Purpose"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Data-Structure-DrE-Advanced",
+   "envelope": {
+    "heading": "Data-Structure-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Data Structure (Create, Advanced).",
+    "family": "Data Designer",
+    "target_type_name": "Data Structure",
+    "aliases": ["Data Structure DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Data Structure",
+      "function": "DataDesigner.find_data_structures",
+      "params": {"search_string": "$search_string", "metadata_element_type": "DataStructure"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "in_data_dictionary", "label": "In Data Dictionary"},
+       {"field": "in_data_specification", "label": "In Data Specification"},
+       {"field": "name_patterns", "label": "Name Patterns"},
+       {"field": "namespace_path", "label": "Namespace Path"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "status", "label": "Status"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "status", "label": "Status"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "category", "label": "Category"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "in_data_dictionary", "label": "In Data Dictionary"},
+       {"field": "in_data_specification", "label": "In Data Specification"},
+       {"field": "name_patterns", "label": "Name Patterns"},
+       {"field": "namespace_path", "label": "Namespace Path"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Data-Structure-DrE-Basic",
+   "envelope": {
+    "heading": "Data-Structure-DrE-Basic Attributes",
+    "description": "Auto-generated format for Data Structure (Create, Basic).",
+    "family": "Data Designer",
+    "target_type_name": "Data Structure",
+    "aliases": ["Data Structure DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Data Structure",
+      "function": "DataDesigner.find_data_structures",
+      "params": {"search_string": "$search_string", "metadata_element_type": "DataStructure"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "in_data_dictionary", "label": "In Data Dictionary"},
+       {"field": "in_data_specification", "label": "In Data Specification"},
+       {"field": "name_patterns", "label": "Name Patterns"},
+       {"field": "namespace_path", "label": "Namespace Path"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "in_data_dictionary", "label": "In Data Dictionary"},
+       {"field": "in_data_specification", "label": "In Data Specification"},
+       {"field": "name_patterns", "label": "Name Patterns"},
+       {"field": "namespace_path", "label": "Namespace Path"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Data-Value-Specification-DrE-Advanced",
+   "envelope": {
+    "heading": "Data-Value-Specification-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Data Value Specification (Create, Advanced).",
+    "family": "Data Designer",
+    "target_type_name": "Data Value Specification",
+    "aliases": ["Data Value Specification DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Data Value Specification",
+      "function": "DataDesigner.find_data_value_specifications",
+      "params": {"search_string": "$search_string", "metadata_element_type": "DataValueSpecification"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "absolute_uncertainty", "label": "Absolute Uncertainty"},
+       {"field": "data_type", "label": "Data Type", "valid_values": ["string", "int", "long", "date", "boolean", "char", "byte", "float", "double", "biginteger", "bigdecimal", "array<string>", "array<int>", "map<string,string>", "map<string,boolean>", "map<string,int>", "map<string,long>", "map<string,double>", "map<string,date>", "map<string,object>", "short", "map<string,array<string>>", "other"]},
+       {"field": "in_data_value_specification", "label": "In Data Value Specification"},
+       {"field": "match_property_names", "label": "Match Property Names"},
+       {"field": "match_threshold", "label": "Match Threshold"},
+       {"field": "name_patterns", "label": "Name Patterns"},
+       {"field": "namespace_path", "label": "Namespace Path"},
+       {"field": "relative_uncertainty", "label": "Relative Uncertainty"},
+       {"field": "specializes_data_value_specification", "label": "Specializes Data Value Specification"},
+       {"field": "specification", "label": "Specification"},
+       {"field": "specification_details", "label": "Specification Details"},
+       {"field": "units", "label": "Units"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "status", "label": "Status"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "status", "label": "Status"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "category", "label": "Category"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "absolute_uncertainty", "label": "Absolute Uncertainty"},
+       {"field": "data_type", "label": "Data Type", "valid_values": ["string", "int", "long", "date", "boolean", "char", "byte", "float", "double", "biginteger", "bigdecimal", "array<string>", "array<int>", "map<string,string>", "map<string,boolean>", "map<string,int>", "map<string,long>", "map<string,double>", "map<string,date>", "map<string,object>", "short", "map<string,array<string>>", "other"]},
+       {"field": "in_data_value_specification", "label": "In Data Value Specification"},
+       {"field": "match_property_names", "label": "Match Property Names"},
+       {"field": "match_threshold", "label": "Match Threshold"},
+       {"field": "name_patterns", "label": "Name Patterns"},
+       {"field": "namespace_path", "label": "Namespace Path"},
+       {"field": "relative_uncertainty", "label": "Relative Uncertainty"},
+       {"field": "specializes_data_value_specification", "label": "Specializes Data Value Specification"},
+       {"field": "specification", "label": "Specification"},
+       {"field": "specification_details", "label": "Specification Details"},
+       {"field": "units", "label": "Units"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Data-Value-Specification-DrE-Basic",
+   "envelope": {
+    "heading": "Data-Value-Specification-DrE-Basic Attributes",
+    "description": "Auto-generated format for Data Value Specification (Create, Basic).",
+    "family": "Data Designer",
+    "target_type_name": "Data Value Specification",
+    "aliases": ["Data Value Specification DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Data Value Specification",
+      "function": "DataDesigner.find_data_value_specifications",
+      "params": {"search_string": "$search_string", "metadata_element_type": "DataValueSpecification"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "absolute_uncertainty", "label": "Absolute Uncertainty"},
+       {"field": "data_type", "label": "Data Type", "valid_values": ["string", "int", "long", "date", "boolean", "char", "byte", "float", "double", "biginteger", "bigdecimal", "array<string>", "array<int>", "map<string,string>", "map<string,boolean>", "map<string,int>", "map<string,long>", "map<string,double>", "map<string,date>", "map<string,object>", "short", "map<string,array<string>>", "other"]},
+       {"field": "in_data_value_specification", "label": "In Data Value Specification"},
+       {"field": "match_property_names", "label": "Match Property Names"},
+       {"field": "match_threshold", "label": "Match Threshold"},
+       {"field": "name_patterns", "label": "Name Patterns"},
+       {"field": "namespace_path", "label": "Namespace Path"},
+       {"field": "relative_uncertainty", "label": "Relative Uncertainty"},
+       {"field": "specializes_data_value_specification", "label": "Specializes Data Value Specification"},
+       {"field": "specification", "label": "Specification"},
+       {"field": "specification_details", "label": "Specification Details"},
+       {"field": "units", "label": "Units"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "absolute_uncertainty", "label": "Absolute Uncertainty"},
+       {"field": "data_type", "label": "Data Type", "valid_values": ["string", "int", "long", "date", "boolean", "char", "byte", "float", "double", "biginteger", "bigdecimal", "array<string>", "array<int>", "map<string,string>", "map<string,boolean>", "map<string,int>", "map<string,long>", "map<string,double>", "map<string,date>", "map<string,object>", "short", "map<string,array<string>>", "other"]},
+       {"field": "in_data_value_specification", "label": "In Data Value Specification"},
+       {"field": "match_property_names", "label": "Match Property Names"},
+       {"field": "match_threshold", "label": "Match Threshold"},
+       {"field": "name_patterns", "label": "Name Patterns"},
+       {"field": "namespace_path", "label": "Namespace Path"},
+       {"field": "relative_uncertainty", "label": "Relative Uncertainty"},
+       {"field": "specializes_data_value_specification", "label": "Specializes Data Value Specification"},
+       {"field": "specification", "label": "Specification"},
+       {"field": "specification_details", "label": "Specification Details"},
+       {"field": "units", "label": "Units"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Measurement-Specification-DrE-Advanced",
+   "envelope": {
+    "heading": "Measurement-Specification-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Measurement Specification (Create, Advanced).",
+    "family": "Data Designer",
+    "target_type_name": "Measurement Specification",
+    "aliases": ["Measurement Specification DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Measurement Specification",
+      "function": "DataDesigner.find_data_value_specifications",
+      "params": {"search_string": "$search_string", "metadata_element_type": "MeasurementSpecification"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "absolute_uncertainty", "label": "Absolute Uncertainty"},
+       {"field": "data_type", "label": "Data Type", "valid_values": ["string", "int", "long", "date", "boolean", "char", "byte", "float", "double", "biginteger", "bigdecimal", "array<string>", "array<int>", "map<string,string>", "map<string,boolean>", "map<string,int>", "map<string,long>", "map<string,double>", "map<string,date>", "map<string,object>", "short", "map<string,array<string>>", "other"]},
+       {"field": "in_data_value_specification", "label": "In Data Value Specification"},
+       {"field": "match_property_names", "label": "Match Property Names"},
+       {"field": "match_threshold", "label": "Match Threshold"},
+       {"field": "name_patterns", "label": "Name Patterns"},
+       {"field": "namespace_path", "label": "Namespace Path"},
+       {"field": "relative_uncertainty", "label": "Relative Uncertainty"},
+       {"field": "specializes_data_value_specification", "label": "Specializes Data Value Specification"},
+       {"field": "specification", "label": "Specification"},
+       {"field": "specification_details", "label": "Specification Details"},
+       {"field": "units", "label": "Units"},
+       {"field": "completeness_declared", "label": "Completeness Declared", "valid_values": ["complete", "lower_bound", "unknown"]},
+       {"field": "confidence_form", "label": "Confidence Form", "valid_values": ["measured", "estimated", "inferred", "judged", "generated"]},
+       {"field": "uncertainty_form", "label": "Uncertainty Form", "valid_values": ["plus_minus", "low_high", "band"]},
+       {"field": "absence_sentences", "label": "Absence Sentences"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "status", "label": "Status"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "status", "label": "Status"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "category", "label": "Category"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "absolute_uncertainty", "label": "Absolute Uncertainty"},
+       {"field": "data_type", "label": "Data Type", "valid_values": ["string", "int", "long", "date", "boolean", "char", "byte", "float", "double", "biginteger", "bigdecimal", "array<string>", "array<int>", "map<string,string>", "map<string,boolean>", "map<string,int>", "map<string,long>", "map<string,double>", "map<string,date>", "map<string,object>", "short", "map<string,array<string>>", "other"]},
+       {"field": "in_data_value_specification", "label": "In Data Value Specification"},
+       {"field": "match_property_names", "label": "Match Property Names"},
+       {"field": "match_threshold", "label": "Match Threshold"},
+       {"field": "name_patterns", "label": "Name Patterns"},
+       {"field": "namespace_path", "label": "Namespace Path"},
+       {"field": "relative_uncertainty", "label": "Relative Uncertainty"},
+       {"field": "specializes_data_value_specification", "label": "Specializes Data Value Specification"},
+       {"field": "specification", "label": "Specification"},
+       {"field": "specification_details", "label": "Specification Details"},
+       {"field": "units", "label": "Units"},
+       {"field": "completeness_declared", "label": "Completeness Declared", "valid_values": ["complete", "lower_bound", "unknown"]},
+       {"field": "confidence_form", "label": "Confidence Form", "valid_values": ["measured", "estimated", "inferred", "judged", "generated"]},
+       {"field": "uncertainty_form", "label": "Uncertainty Form", "valid_values": ["plus_minus", "low_high", "band"]},
+       {"field": "absence_sentences", "label": "Absence Sentences"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Measurement-Specification-DrE-Basic",
+   "envelope": {
+    "heading": "Measurement-Specification-DrE-Basic Attributes",
+    "description": "Auto-generated format for Measurement Specification (Create, Basic).",
+    "family": "Data Designer",
+    "target_type_name": "Measurement Specification",
+    "aliases": ["Measurement Specification DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Measurement Specification",
+      "function": "DataDesigner.find_data_value_specifications",
+      "params": {"search_string": "$search_string", "metadata_element_type": "MeasurementSpecification"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "absolute_uncertainty", "label": "Absolute Uncertainty"},
+       {"field": "data_type", "label": "Data Type", "valid_values": ["string", "int", "long", "date", "boolean", "char", "byte", "float", "double", "biginteger", "bigdecimal", "array<string>", "array<int>", "map<string,string>", "map<string,boolean>", "map<string,int>", "map<string,long>", "map<string,double>", "map<string,date>", "map<string,object>", "short", "map<string,array<string>>", "other"]},
+       {"field": "in_data_value_specification", "label": "In Data Value Specification"},
+       {"field": "match_property_names", "label": "Match Property Names"},
+       {"field": "match_threshold", "label": "Match Threshold"},
+       {"field": "name_patterns", "label": "Name Patterns"},
+       {"field": "namespace_path", "label": "Namespace Path"},
+       {"field": "relative_uncertainty", "label": "Relative Uncertainty"},
+       {"field": "specializes_data_value_specification", "label": "Specializes Data Value Specification"},
+       {"field": "specification", "label": "Specification"},
+       {"field": "specification_details", "label": "Specification Details"},
+       {"field": "units", "label": "Units"},
+       {"field": "completeness_declared", "label": "Completeness Declared", "valid_values": ["complete", "lower_bound", "unknown"]},
+       {"field": "confidence_form", "label": "Confidence Form", "valid_values": ["measured", "estimated", "inferred", "judged", "generated"]},
+       {"field": "uncertainty_form", "label": "Uncertainty Form", "valid_values": ["plus_minus", "low_high", "band"]},
+       {"field": "absence_sentences", "label": "Absence Sentences"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "absolute_uncertainty", "label": "Absolute Uncertainty"},
+       {"field": "data_type", "label": "Data Type", "valid_values": ["string", "int", "long", "date", "boolean", "char", "byte", "float", "double", "biginteger", "bigdecimal", "array<string>", "array<int>", "map<string,string>", "map<string,boolean>", "map<string,int>", "map<string,long>", "map<string,double>", "map<string,date>", "map<string,object>", "short", "map<string,array<string>>", "other"]},
+       {"field": "in_data_value_specification", "label": "In Data Value Specification"},
+       {"field": "match_property_names", "label": "Match Property Names"},
+       {"field": "match_threshold", "label": "Match Threshold"},
+       {"field": "name_patterns", "label": "Name Patterns"},
+       {"field": "namespace_path", "label": "Namespace Path"},
+       {"field": "relative_uncertainty", "label": "Relative Uncertainty"},
+       {"field": "specializes_data_value_specification", "label": "Specializes Data Value Specification"},
+       {"field": "specification", "label": "Specification"},
+       {"field": "specification_details", "label": "Specification Details"},
+       {"field": "units", "label": "Units"},
+       {"field": "completeness_declared", "label": "Completeness Declared", "valid_values": ["complete", "lower_bound", "unknown"]},
+       {"field": "confidence_form", "label": "Confidence Form", "valid_values": ["measured", "estimated", "inferred", "judged", "generated"]},
+       {"field": "uncertainty_form", "label": "Uncertainty Form", "valid_values": ["plus_minus", "low_high", "band"]},
+       {"field": "absence_sentences", "label": "Absence Sentences"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Report-Type-DrE-Advanced",
+   "envelope": {
+    "heading": "Report-Type-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Report Type (Create, Advanced).",
+    "family": "Data Designer",
+    "target_type_name": "Report Type",
+    "aliases": ["Report Type DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Report Type",
+      "function": "CollectionManager.find_collections",
+      "params": {"search_string": "$search_string", "metadata_element_type": "ReportType"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "last_modifier", "label": "Last Modifier"},
+       {"field": "last_modified_time", "label": "Last Modified Time"},
+       {"field": "created_time", "label": "Created Time"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "status", "label": "Status"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "status", "label": "Status"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "category", "label": "Category"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "last_modifier", "label": "Last Modifier"},
+       {"field": "last_modified_time", "label": "Last Modified Time"},
+       {"field": "created_time", "label": "Created Time"},
+       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
+       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Report-Type-DrE-Basic",
+   "envelope": {
+    "heading": "Report-Type-DrE-Basic Attributes",
+    "description": "Auto-generated format for Report Type (Create, Basic).",
+    "family": "Data Designer",
+    "target_type_name": "Report Type",
+    "aliases": ["Report Type DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Report Type",
+      "function": "CollectionManager.find_collections",
+      "params": {"search_string": "$search_string", "metadata_element_type": "ReportType"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "purpose", "label": "Purpose"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
+       {"field": "purpose", "label": "Purpose"}
+      ]
+     }
+    }
+   }
+  }
+ ]
+}

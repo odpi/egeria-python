@@ -1,0 +1,489 @@
+{
+ "format": "pyegeria-seed/1",
+ "family": "Automated Curation",
+ "specs": [
+  {
+   "label": "Tech-Type-Elements",
+   "envelope": {
+    "heading": "Technology Type Elements",
+    "description": "Elements of a Technology",
+    "family": "Automated Curation",
+    "target_type_name": "TechTypeElements",
+    "aliases": ["Tech Type Elements"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "filter_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "as_of_time": {"type": "string", "required": false},
+     "effective_time": {"type": "string", "required": false},
+     "get_templates": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "TechTypeElements",
+      "function": "EgeriaTech.get_technology_type_elements",
+      "params": {"filter_string": "$filter_string"}
+     }
+    ],
+    "formatters": {
+     "MD": {
+      "columns": [
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "created_by", "label": "Created By"},
+       {"field": "create_time", "label": "Create Time"},
+       {"field": "updated_by", "label": "Updated By"},
+       {"field": "update_time", "label": "Update Time"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "version", "label": "Version"},
+       {"field": "type_name", "label": "Open Metadata Type Name"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID", "format": true},
+       {"field": "description", "label": "Description"},
+       {"field": "metadata_collection_name", "label": "Metadata Collection Name", "format": true},
+       {"field": "deployedImplementationType", "label": "Deployed Implementation"},
+       {"field": "mermaidGraph", "label": "Mermaid Graph"},
+       {"field": "specificationMermaidGraph", "label": "Specification Mermaid Graph"}
+      ]
+     },
+     "FORM": {"same_as": "MD"},
+     "MERMAID": {
+      "columns": [
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "created_by", "label": "Created By"},
+       {"field": "create_time", "label": "Create Time"},
+       {"field": "updated_by", "label": "Updated By"},
+       {"field": "update_time", "label": "Update Time"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "version", "label": "Version"},
+       {"field": "type_name", "label": "Open Metadata Type Name"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "deployedImplementationType", "label": "Deployed Implementation"},
+       {"field": "mermaidGraph", "label": "Mermaid Graph"},
+       {"field": "specificationMermaidGraph", "label": "Specification Mermaid Graph"}
+      ]
+     },
+     "HTML": {"same_as": "MERMAID"},
+     "REPORT": {"same_as": "MERMAID"},
+     "DICT": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "deployedImplementationType", "label": "Deployed Implementation"}
+      ]
+     },
+     "TABLE": {"same_as": "DICT"},
+     "LIST": {"same_as": "DICT"}
+    }
+   }
+  },
+  {
+   "label": "Tech-Type-Details",
+   "envelope": {
+    "heading": "Technology Type Details",
+    "description": "Details of a Technology Type Valid Value.",
+    "family": "Automated Curation",
+    "target_type_name": "TechTypeDetail",
+    "aliases": ["Tech Type Details"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "filter_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "as_of_time": {"type": "string", "required": false},
+     "effective_time": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "TechTypeDetail",
+      "function": "ServerClient.get_tech_type_detail",
+      "params": {"filter_string": "$filter_string"}
+     }
+    ],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "catalog_template_specs", "label": "Catalog Template Placeholders"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Tech-Type-Details-MD",
+   "envelope": {
+    "heading": "Technology Type Details",
+    "description": "Details of a Technology Type Valid Value as a Master-Detail pattern",
+    "family": "Automated Curation",
+    "target_type_name": "TechTypeDetail",
+    "aliases": ["Tech Type Details MD"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "filter_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "as_of_time": {"type": "string", "required": false},
+     "effective_time": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "TechTypeDetail",
+      "function": "ServerClient.get_tech_type_detail",
+      "params": {"filter_string": "$filter_string"}
+     }
+    ],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "catalog_templates", "label": "Catalog Templates", "detail_spec": "Catalog-Template-Detail"},
+       {"field": "governance_action_processes", "label": "Governance Processes", "detail_spec": "Governance-Action-Processes-Detail"},
+       {"field": "external_references", "label": "External References", "detail_spec": "External-Reference-Detail"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Catalog-Template-Detail",
+   "envelope": {
+    "heading": "Catalog Templates",
+    "description": "Detailed Catalog Template",
+    "family": "Automated Curation",
+    "target_type_name": "CatalogTemplates",
+    "aliases": ["Catalog Template Detail"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "template_display_name", "label": "Catalog Template Name"},
+       {"field": "template_guid", "label": "Catalog Template GUID"},
+       {"field": "template_description", "label": "Description"},
+       {"field": "placeHolderProperty", "label": "Placeholder Properties", "detail_spec": "Place-Holder-Property-Detail"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Governance-Action-Processes-Detail",
+   "envelope": {
+    "heading": "Governance Processes",
+    "description": "Detailed Governance Processes",
+    "family": "Automated Curation",
+    "target_type_name": "GovernanceActionProcesses",
+    "aliases": ["Governance Action Processes Detail"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "proc_display_name", "label": "Governance Process Name"},
+       {"field": "proc_qualified_name", "label": "Qualified Name"},
+       {"field": "proc_description", "label": "Description"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "governance_action_steps", "label": "Governance Action Steps", "detail_spec": "Governance-Action-Steps-Detail"}
+      ]
+     },
+     "REPORT": {"same_as": "LIST"},
+     "DICT": {"same_as": "LIST"},
+     "TABLE": {"same_as": "LIST"}
+    }
+   }
+  },
+  {
+   "label": "Place-Holder-Property-Detail",
+   "envelope": {
+    "heading": "Place Holder Properties",
+    "description": "Detailed Place Holder Properties",
+    "family": "Automated Curation",
+    "target_type_name": "placeHolderProperty",
+    "aliases": ["Place Holder Property Detail"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "name", "label": "Property Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "dataType", "label": "Data Type"},
+       {"field": "example", "label": "Example"},
+       {"field": "required", "label": "Required"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "External-Reference-Detail",
+   "envelope": {
+    "heading": "External References",
+    "description": "Detailed External References",
+    "family": "Automated Curation",
+    "target_type_name": "ExternalReferences",
+    "aliases": ["External Reference Detail"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "ref_display_name", "label": "Reference Name"},
+       {"field": "ref_qualified_name", "label": "Qualified Name"},
+       {"field": "ref_description", "label": "Description"},
+       {"field": "ref_url", "label": "URL"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Governance-Action-Steps-Detail",
+   "envelope": {
+    "heading": "Governance Action Steps",
+    "description": "Detailed Governance Action Steps",
+    "family": "Automated Curation",
+    "target_type_name": "governanceActionSteps",
+    "aliases": ["Governance Action Steps Detail"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "step_display_name", "label": "Step Name"},
+       {"field": "type_display_name", "label": "Type Name"},
+       {"field": "status", "label": "Status"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Action-Targets-Detail",
+   "envelope": {
+    "heading": "Action Targets",
+    "description": "Detailed Action Targets",
+    "family": "Automated Curation",
+    "target_type_name": "actionTargets",
+    "aliases": ["Action Targets Detail"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "target_display_name", "label": "Target Name"},
+       {"field": "target_qualified_name", "label": "Qualified Name"},
+       {"field": "target_description", "label": "Description"},
+       {"field": "actionTargetName", "label": "Action Target Name"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Action-Request-Sources-Detail",
+   "envelope": {
+    "heading": "Action Request Sources",
+    "description": "Detailed Action Request Sources",
+    "family": "Automated Curation",
+    "target_type_name": "actionRequestSources",
+    "aliases": ["Action Request Sources Detail"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "source_display_name", "label": "Source Name"},
+       {"field": "source_qualified_name", "label": "Qualified Name"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Catalog-Target",
+   "envelope": {
+    "heading": "Catalog Target",
+    "description": "Detailed Catalog Target Information",
+    "family": "Automated Curation",
+    "target_type_name": "CatalogTarget",
+    "aliases": ["Catalog Target"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "target_display_name", "label": "Target Name"},
+       {"field": "target_qualified_name", "label": "Target Qualified Name"},
+       {"field": "target_description", "label": "Target Description"},
+       {"field": "catalogTargetName", "label": "Catalog Target Name"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Tech-Type-Processes",
+   "envelope": {
+    "heading": "Technology Type Processes",
+    "description": "Governance Processes for a Tech Type",
+    "family": "Automated Curation",
+    "target_type_name": "TechTypeDetail",
+    "aliases": ["Tech Type Processes"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "filter_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "as_of_time": {"type": "string", "required": false},
+     "effective_time": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "TechTypeDetail",
+      "function": "ServerClient.get_tech_type_detail",
+      "params": {"filter_string": "$filter_string"}
+     }
+    ],
+    "formatters": {
+     "REPORT": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "governance_processes", "label": "Governance Processes"}
+      ]
+     },
+     "LIST": {"same_as": "REPORT"},
+     "FORM": {"same_as": "REPORT"},
+     "MD": {"same_as": "REPORT"},
+     "TABLE": {"same_as": "REPORT"},
+     "DICT": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "governance_processes_d", "label": "Governance Processes"},
+       {"field": "mermaidGraph", "label": "Mermaid"},
+       {"field": "specificationMermaidGraph", "label": "Mermaid Specification"}
+      ]
+     },
+     "MERMAID": {
+      "columns": [
+       {"field": "mermaidGraph", "label": "Mermaid"},
+       {"field": "specificationMermaidGraph", "label": "Mermaid Specification"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Tech-Types",
+   "envelope": {
+    "heading": "Technology Type Details",
+    "description": "Details of a Technology Type Valid Value.",
+    "family": "Automated Curation",
+    "target_type_name": "TechTypeDetail",
+    "aliases": ["Tech Types"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "TechTypeDetail",
+      "function": "ServerClient.find_technology_types",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"},
+       {"field": "url", "label": "Reference URL"}
+      ]
+     }
+    }
+   }
+  }
+ ]
+}

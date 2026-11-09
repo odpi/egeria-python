@@ -1,0 +1,33 @@
+{
+ "format": "pyegeria-seed/1",
+ "family": "TypeDef",
+ "specs": [
+  {
+   "label": "TypeDef",
+   "envelope": {
+    "heading": "TypeDef",
+    "description": "Attributes that describe TypeDefs",
+    "family": "TypeDef",
+    "target_type_name": "TypeDef",
+    "aliases": []
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "name", "label": "Type Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description"},
+       {"field": "beanClassName", "label": "Bean Class"},
+       {"field": "initialStatus", "label": "Initial Status"},
+       {"field": "descriptionWiki", "label": "Description Wiki"}
+      ]
+     }
+    }
+   }
+  }
+ ]
+}

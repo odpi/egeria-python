@@ -1,0 +1,130 @@
+{
+ "format": "pyegeria-seed/1",
+ "family": "Automation",
+ "specs": [
+  {
+   "label": "Element-DrE-Advanced",
+   "envelope": {
+    "heading": "Element-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Element (Create, Advanced).",
+    "family": "Automation",
+    "target_type_name": "Element",
+    "aliases": ["Element DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Element",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
+      "params": {
+       "search_string": "$search_string",
+       "metadata_element_type": "OpenMetadataRoot",
+       "property_names": ["displayName", "qualifiedName"]
+      }
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "type_name", "label": "Element Type Name"},
+       {"field": "template_guid", "label": "Template GUID"},
+       {"field": "placeholder_property_values", "label": "Placeholder Property Values"},
+       {"field": "template_properties", "label": "Template Properties"},
+       {"field": "initial_classifications", "label": "Generic Initial Classifications"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "deep_copy", "label": "Deep Copy"},
+       {"field": "initial_status", "label": "Initial Status", "valid_values": ["ACTIVE", "DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "DEPRECATED", "OTHER"]}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "type_name", "label": "Element Type Name"},
+       {"field": "template_guid", "label": "Template GUID"},
+       {"field": "placeholder_property_values", "label": "Placeholder Property Values"},
+       {"field": "template_properties", "label": "Template Properties"},
+       {"field": "initial_status", "label": "Initial Status", "valid_values": ["ACTIVE", "DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "DEPRECATED", "OTHER"]},
+       {"field": "initial_classifications", "label": "Generic Initial Classifications"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "deep_copy", "label": "Deep Copy"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Element-DrE-Basic",
+   "envelope": {
+    "heading": "Element-DrE-Basic Attributes",
+    "description": "Auto-generated format for Element (Create, Basic).",
+    "family": "Automation",
+    "target_type_name": "Element",
+    "aliases": ["Element DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Element",
+      "function": "ClassificationExplorer.find_elements_by_property_value",
+      "params": {
+       "search_string": "$search_string",
+       "metadata_element_type": "OpenMetadataRoot",
+       "property_names": ["displayName", "qualifiedName"]
+      }
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "template_guid", "label": "Template GUID"},
+       {"field": "placeholder_property_values", "label": "Placeholder Property Values"},
+       {"field": "template_properties", "label": "Template Properties"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "template_guid", "label": "Template GUID"},
+       {"field": "placeholder_property_values", "label": "Placeholder Property Values"},
+       {"field": "template_properties", "label": "Template Properties"}
+      ]
+     }
+    }
+   }
+  }
+ ]
+}
