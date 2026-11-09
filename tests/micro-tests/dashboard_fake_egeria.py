@@ -130,6 +130,21 @@ class FakeEgeria:
         page = out[start_from:start_from + page_size] if page_size else out[start_from:]
         return page if page else "No elements found"
 
+    async def _async_find_elements_by_property_value(self, property_value, property_names, metadata_element_type=None,
+                                                     starts_with=True, start_from=0, page_size=0, **kwargs):
+        hits = []
+        for g, e in self.entities.items():
+            if metadata_element_type and e["type"] != metadata_element_type:
+                continue
+            for prop in property_names:
+                value = str(e["props"].get(prop) or "")
+                # live Egeria: starts_with=False is a contains match, not an exact one
+                if (value.startswith(property_value) if starts_with else property_value in value):
+                    hits.append(self.element(g))
+                    break
+        page = hits[start_from:start_from + page_size] if page_size else hits[start_from:]
+        return page if page else "No elements found"
+
     async def _async_get_placement_reports(self, dashboard_guid, placement_qualified_names, **kwargs):
         element = self.element(dashboard_guid)
         links = []

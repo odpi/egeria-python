@@ -383,3 +383,29 @@ async def test_create_report_relinks_when_spec_changes():
     report_guid, _ = _report_props(fake)
     assert [(r["end1"], r["end2"]) for r in fake.rels("ReportTypeInstance")] == [(new, report_guid)]
     assert old in fake.entities  # a spec is never deleted
+
+
+@pytest.mark.asyncio
+async def test_report_found_when_its_name_is_shared_with_another_type(egeria):
+    """Live 2026-11-09: a Report whose displayName another element also has (and a longer Report name that
+    contains it) is still found -- exact displayName among Reports only."""
+    from pyegeria.view._output_dashboard_sheet_models import DashboardSheet, Placement
+    report = egeria.add_entity("Report", "X::Report::TDC", "Term Definition Completeness")
+    egeria.add_entity("Report", "X::Report::TDC-metric", "Term Definition Completeness Metric Report")
+    egeria.add_entity("GovernanceMetric", "X::Metric::TDC", "Term Definition Completeness")
+    writer = DashboardSheetEgeriaWriter(egeria)
+    await writer.write_sheet(DashboardSheet(name="s", heading="S",
+                                            placements=[Placement(ref="Term Definition Completeness")]))
+    assert [r["end2"] for r in egeria.rels("DataSetContent")] == [report]
+    assert writer.notes == []
+
+
+@pytest.mark.asyncio
+async def test_two_reports_with_one_name_is_a_note_not_a_guess(egeria):
+    from pyegeria.view._output_dashboard_sheet_models import DashboardSheet, Placement
+    egeria.add_entity("Report", "X::Report::1", "Twin")
+    egeria.add_entity("Report", "X::Report::2", "Twin")
+    writer = DashboardSheetEgeriaWriter(egeria)
+    await writer.write_sheet(DashboardSheet(name="s", heading="S", placements=[Placement(ref="Twin")]))
+    assert not egeria.rels("DataSetContent")
+    assert any("2 Reports are named 'Twin'" in n for n in writer.notes)

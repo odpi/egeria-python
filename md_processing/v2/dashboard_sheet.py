@@ -442,15 +442,38 @@ class DashboardSheetEgeriaWriter:
     # ------------------------------------------------------------ placements
 
     async def _resolve_report(self, report_name: str) -> Optional[str]:
-        """The GUID of the Report a placement shows, by display name or qualified name (the same lookup
-        Dr.Egeria uses for `Report Name`). None if there is none."""
-        try:
-            res = await self.client.__async_get_guid__(qualified_name=report_name, display_name=report_name,
-                                                       property_name="displayName", tech_type="Report")
-        except PyegeriaNotFoundException:
+        """The GUID of the Report a placement shows: the one `Report` whose displayName is exactly
+        `report_name` (the lookup the Portal uses), else the Report whose qualifiedName it is. None if there
+        is none; two or more exact matches are a note, and no link.
+
+        Not Dr.Egeria's `__async_get_guid__`: it tries a unique-name lookup first, which Egeria rejects
+        when the name is shared with an element of another type -- seen live 2026-11-09 for 'Term
+        Definition Completeness' and 'Governance Classification Coverage', both real Reports."""
+        matches: List[str] = []
+        start = 0
+        while True:
+            try:
+                page = await self.client.classification_manager._async_find_elements_by_property_value(
+                    report_name, ["displayName"], metadata_element_type="Report", starts_with=False,
+                    start_from=start, page_size=PAGE_SIZE, graph_query_depth=0)
+            except PyegeriaNotFoundException:
+                page = []
+            items = [e for e in page if isinstance(e, dict) and e.get("elementHeader")] if isinstance(page, list) else []
+            if not items:
+                break
+            matches += [self._guid(e) for e in items
+                        if (e.get("properties") or {}).get("displayName") == report_name
+                        and self._type(e) == "Report"]
+            start += len(items)
+        if len(matches) == 1:
+            return matches[0]
+        if len(matches) > 1:
+            self._note(f"{len(matches)} Reports are named '{report_name}' in Egeria: no report link was written "
+                       f"for that placement. Give the placement's report a unique name.")
             return None
-        if isinstance(res, str) and res and not res.startswith("No ") and " found" not in res:
-            return res
+        element = await self._find(report_name)
+        if element and self._type(element) == "Report":
+            return self._guid(element)
         return None
 
     async def _perspective_guid(self, label: str) -> Optional[str]:
