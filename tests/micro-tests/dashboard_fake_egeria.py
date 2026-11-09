@@ -145,6 +145,15 @@ class FakeEgeria:
         page = hits[start_from:start_from + page_size] if page_size else hits[start_from:]
         return page if page else "No elements found"
 
+    async def _async_get_elements_by_property_value(self, property_value, property_names, metadata_element_type=None,
+                                                    start_from=0, page_size=0, **kwargs):
+        """Exact match (classification-explorer by-exact-property-value)."""
+        hits = [self.element(g) for g, e in self.entities.items()
+                if (not metadata_element_type or e["type"] == metadata_element_type)
+                and any(e["props"].get(p) == property_value for p in property_names)]
+        page = hits[start_from:start_from + page_size] if page_size else hits[start_from:]
+        return page if page else "No elements found"
+
     async def _async_get_placement_reports(self, dashboard_guid, placement_qualified_names, **kwargs):
         element = self.element(dashboard_guid)
         links = []

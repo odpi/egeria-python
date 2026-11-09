@@ -443,7 +443,8 @@ class DashboardSheetEgeriaWriter:
 
     async def _resolve_report(self, report_name: str) -> Optional[str]:
         """The GUID of the Report a placement shows: the one `Report` whose displayName is exactly
-        `report_name` (the lookup the Portal uses), else the Report whose qualifiedName it is. None if there
+        `report_name` (an exact, type-filtered lookup: 0.1 s live, where a contains-search took ~35 s),
+        else the Report whose qualifiedName it is. None if there
         is none; two or more exact matches are a note, and no link.
 
         Not Dr.Egeria's `__async_get_guid__`: it tries a unique-name lookup first, which Egeria rejects
@@ -453,8 +454,8 @@ class DashboardSheetEgeriaWriter:
         start = 0
         while True:
             try:
-                page = await self.client.classification_manager._async_find_elements_by_property_value(
-                    report_name, ["displayName"], metadata_element_type="Report", starts_with=False,
+                page = await self.client.classification_manager._async_get_elements_by_property_value(
+                    report_name, ["displayName"], metadata_element_type="Report",
                     start_from=start, page_size=PAGE_SIZE, graph_query_depth=0)
             except PyegeriaNotFoundException:
                 page = []
