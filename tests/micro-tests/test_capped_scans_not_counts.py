@@ -118,21 +118,8 @@ def _assets(n, updated="2020-01-01T00:00:00+00:00"):
     return [{"elementGUID": f"a{i}", "elementHeader": {"versions": {"updateTime": updated}}} for i in range(n)]
 
 
-def test_a_full_asset_page_is_not_a_stale_count():
-    mgr = _mgr(find=lambda body, *a, **kw: _assets(CAP, updated="2026-11-01T00:00:00+00:00"))
-    mgr.count_metadata_elements.side_effect = RuntimeError("timed out")
-    with om.recording_unmeasured() as notes:
-        r = om.stale_assets(mgr, as_of="2026-11-08T00:00:00Z")
-    assert r["staleCount"] is None            # was 0: none of the first 500 were stale
-    assert r["assetTotal"] is None
-    stale = [n for n in notes if n["count"] == "Assets not updated within 180 days"]
-    assert stale and stale[0]["at_least"] == CAP and "only the first 500" in stale[0]["reason"]
-
-
-def test_a_short_asset_page_is_counted():
-    mgr = _mgr(find=lambda body, *a, **kw: _assets(3) + _assets(2, "2026-11-01T00:00:00+00:00"))
-    r = om.stale_assets(mgr, as_of="2026-11-08T00:00:00Z")
-    assert r["staleCount"] == 3
+# stale_assets no longer reads a page of Assets (6.2.29): it bisects over Egeria's update-time order.
+# Its tests are in test_native_counts_dashboard.py.
 
 
 # ── the other scanners ─────────────────────────────────────────────────────
