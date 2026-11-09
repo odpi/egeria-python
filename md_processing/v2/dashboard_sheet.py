@@ -442,6 +442,9 @@ class DashboardSheetEgeriaWriter:
                 await self.client.schema_maker._async_link_schema(chain.dashboard_guid, chain.schema_type_guid)
         else:
             self.actions.append(f"unchanged DisplayDataSchemaType {schema_type_qn(sheet_name)}")
+            # found through the Schema link, so that link is in place too; itemised so a re-run's
+            # "unchanged" count matches the first run's change count
+            self.actions.append(f"unchanged Schema {dashboard_qn(sheet_name)} -> {schema_type_qn(sheet_name)}")
 
         # 3. the sheet's DisplayDataContainer, linked by AttributeForSchema (position 1)
         if chain.container_guid is None:
@@ -458,6 +461,8 @@ class DashboardSheetEgeriaWriter:
                      "properties": {"class": "AttributeForSchemaProperties", "position": 1}})
         else:
             self.actions.append(f"unchanged DisplayDataContainer {sheet_container_qn(sheet_name)}")
+            self.actions.append(f"unchanged AttributeForSchema {schema_type_qn(sheet_name)} -> "
+                                f"{sheet_container_qn(sheet_name)}")
         return chain
 
     # ------------------------------------------------------------ placements
@@ -523,6 +528,8 @@ class DashboardSheetEgeriaWriter:
                 await self._update_schema_attribute(field_guid, props)
             else:
                 self.actions.append(f"unchanged DisplayDataField {existing.qualified_name}")
+            self.actions.append(f"unchanged NestedSchemaAttribute {sheet_container_qn(sheet)} -> "
+                                f"{existing.qualified_name} (position {pos})")
         else:
             taken = [f.position for f in fields if f.position is not None]
             if position is not None and position not in taken:
