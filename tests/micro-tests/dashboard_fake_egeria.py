@@ -117,7 +117,7 @@ class FakeEgeria:
                 hits.append(g)
         if len(hits) > 1:
             from pyegeria.core._exceptions import PyegeriaException
-            raise PyegeriaException(context={"reason": "Multiple elements found"})
+            raise PyegeriaException(f"Multiple elements found for '{display_name}'")
         return hits[0] if hits else "No elements found"
 
     async def _async_get_related_elements(self, element_guid, relationship_type=None, start_at_end=1,

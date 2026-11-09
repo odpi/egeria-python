@@ -409,3 +409,52 @@ async def test_two_reports_with_one_name_is_a_note_not_a_guess(egeria):
     await writer.write_sheet(DashboardSheet(name="s", heading="S", placements=[Placement(ref="Twin")]))
     assert not egeria.rels("DataSetContent")
     assert any("2 Reports are named 'Twin'" in n for n in writer.notes)
+
+
+# ---------------------------------------------------------------------------- read-back P3s (2026-11-09)
+
+@pytest.mark.asyncio
+async def test_migrate_after_removal_never_reuses_a_position(egeria):
+    from pyegeria.view._output_dashboard_sheet_models import DashboardSheet, Placement
+    for name in ("A", "B", "C", "D"):
+        egeria.add_entity("Report", f"R::{name}", name)
+    writer = DashboardSheetEgeriaWriter(egeria)
+    await writer.write_sheet(DashboardSheet(name="p", heading="P", placements=[Placement(ref=n) for n in "ABC"]))
+    await writer.remove_placement("p", "B")
+    await writer.write_sheet(DashboardSheet(name="p", heading="P", placements=[Placement(ref=n) for n in "ACD"]))
+    positions = sorted((rel["props"]["position"], egeria.entities[rel["end2"]]["props"]["additionalProperties"]["placementName"])
+                       for rel in egeria.rels("NestedSchemaAttribute"))
+    assert positions == [(1, "A"), (3, "C"), (4, "D")]
+
+
+@pytest.mark.asyncio
+async def test_sheet_with_duplicate_placement_names_is_refused_before_any_write(egeria):
+    from pyegeria.view._output_dashboard_sheet_models import DashboardSheet, Placement
+    sheet = DashboardSheet(name="dup", heading="Dup", placements=[
+        Placement(ref="Coco Terms Total", emphasis="kpi"), Placement(ref="Coco Terms Total", emphasis="panel")])
+    with pytest.raises(ValueError, match="more than one placement named 'Coco Terms Total'"):
+        await DashboardSheetEgeriaWriter(egeria).write_sheet(sheet)
+    assert egeria.writes == []
+
+
+@pytest.mark.asyncio
+async def test_text_placement_cannot_take_a_report_placements_name(egeria, _store):
+    await _document(egeria)
+    writes, store = list(egeria.writes), _store.read_text()
+    result = await setup_dispatcher(egeria).dispatch(
+        _command("Add", "Text on Dashboard Sheet", {**TEXT, "Placement Name": "Coco Terms Total"}),
+        {"directive": "process"})
+    assert result["status"] == "failure"
+    assert "already has a report placement named 'Coco Terms Total'" in json.dumps(result)
+    assert egeria.writes == writes and _store.read_text() == store
+
+
+@pytest.mark.asyncio
+async def test_link_command_finds_a_report_whose_name_another_type_shares(egeria):
+    """Dr.Egeria's untyped lookup is ambiguous here (and refused live); the command's typed lookup is not."""
+    report = egeria.add_entity("Report", "X::Report::TDC", "Term Definition Completeness")
+    egeria.add_entity("GovernanceMetric", "X::Metric::TDC", "Term Definition Completeness")
+    await _run(egeria, "Create", "Dashboard Sheet", CREATE)
+    await _run(egeria, "Link", "Report to Dashboard Sheet",
+               {**LINK_2, "Report Name": "Term Definition Completeness", "Placement Detail Spec": ""})
+    assert [r["end2"] for r in egeria.rels("DataSetContent")] == [report]
