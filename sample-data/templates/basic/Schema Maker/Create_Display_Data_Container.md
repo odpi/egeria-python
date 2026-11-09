@@ -170,6 +170,8 @@ ___
 
 >	**Description**: The type of renderer used to display this container. Validated against Egeria's valid metadata values for renderer.
 
+>	**Valid Values**: FORM; REPORT; MERMAID; BAR; REPORT-GRAPH; HTML; PIE; SERIES; JSON; LIST; MD; DICT; KPI; TABLE; GRAPH
+
 
 ### Placement Kind
 >	**Input Required**: False

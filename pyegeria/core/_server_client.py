@@ -19,6 +19,7 @@ from httpx import Response
 from loguru import logger
 from pydantic import TypeAdapter, ValidationError
 
+from pyegeria.core.request_filters import deprecated_names
 from pyegeria.core._base_server_client import BaseServerClient
 from pyegeria.core._exceptions import (
     PyegeriaConnectionException, PyegeriaInvalidParameterException, PyegeriaException, PyegeriaErrorCode
@@ -87,6 +88,7 @@ from pyegeria.models.models import (
     ActionRequestBody
 )
 from pyegeria.core.async_runner import run_sync
+from pyegeria.core.request_filters import filter_body_kwargs
 
 __all__ = [
     # Models
@@ -875,13 +877,14 @@ class ServerClient(BaseServerClient):
         return result
 
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     async def _async_get_related_elements_with_property_value(
             self,
             element_guid: str,
             relationship_type: str,
             property_value: str,
             property_names: list[str],
-            metadata_element_type_name: Optional[str] = None,
+            metadata_element_type: Optional[str] = None,
             start_at_end: int = 1,
             effective_time: Optional[str] = None,
             for_lineage: Optional[bool] = None,
@@ -907,7 +910,7 @@ class ServerClient(BaseServerClient):
             - property value to be searched.
         property_names: [str]
             - property names to search in.
-        metadata_element_type_name : str, default = None
+        metadata_element_type : str, default = None
             - restrict search to elements of this open metadata type
         start_at_end: int, default = 1
             - The end of the relationship to start from - typically End1
@@ -939,7 +942,7 @@ class ServerClient(BaseServerClient):
 
         body = {
             "class": "FindPropertyNamesProperties",
-            "metadataElementTypeName": metadata_element_type_name,
+            "metadataElementTypeName": metadata_element_type,
             "propertyValue": property_value,
             "propertyNames": property_names,
             "effectiveTime": effective_time,
@@ -1579,11 +1582,12 @@ class ServerClient(BaseServerClient):
         )
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_get_attached_comments(
             self,
             element_guid: str,
-            metadata_element_type_name: str | None = "Comment",
+            metadata_element_type: str | None = "Comment",
             graph_query_depth: int = 3,
             start_from: int = 0,
             page_size: int = 0,
@@ -1617,7 +1621,7 @@ class ServerClient(BaseServerClient):
         """
 
         url = f"{self.command_root}feedback-manager/elements/{element_guid}/comments/retrieve"
-        return await self._async_get_results_body_request(url, _type=metadata_element_type_name,
+        return await self._async_get_results_body_request(url, _type=metadata_element_type,
                                                          _gen_output=self._generate_comment_output,
                                                          graph_query_depth=graph_query_depth,
                                                          start_from=start_from,
@@ -1625,10 +1629,11 @@ class ServerClient(BaseServerClient):
                                                          report_spec=report_spec,
                                                          body=body, **kwargs)
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def get_attached_comments(
             self, element_guid: str,
-            metadata_element_type_name: str | None = "Comment",
+            metadata_element_type: str | None = "Comment",
             graph_query_depth: int = 3,
             start_from: int = 0,
             page_size: int = 0,
@@ -1660,7 +1665,7 @@ class ServerClient(BaseServerClient):
         PyegeriaException
         """
         response = run_sync(
-            self._async_get_attached_comments(element_guid, metadata_element_type_name, graph_query_depth,
+            self._async_get_attached_comments(element_guid, metadata_element_type, graph_query_depth,
                                               start_from, page_size, output_format, report_spec, body, **kwargs)
         )
         return response
@@ -2585,10 +2590,11 @@ class ServerClient(BaseServerClient):
 
         return resp
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_get_note_logs_by_name(
             self, name: str = "*",
-            metadata_element_type_name: str | None = "NoteLog",
+            metadata_element_type: str | None = "NoteLog",
             metadata_element_subtypes: list[str] | None = None,
             graph_query_depth: int = 3,
             start_from: int = 0, page_size: int = 0,
@@ -2604,7 +2610,7 @@ class ServerClient(BaseServerClient):
         ----------
         name : str
             - the name to filter on.
-        metadata_element_type_name: str
+        metadata_element_type: str
             - NoteLog element type.
         body: dict | FilterRequestBody
             - optional effective time. If present, values supercede other parameters.
@@ -2623,7 +2629,7 @@ class ServerClient(BaseServerClient):
         response = await self._async_get_name_request(url, _type="NoteLog",
                                                       _gen_output=self._generate_feedback_output,
                                                       filter_string=name,
-                                                      metadata_element_type_name=metadata_element_type_name,
+                                                      metadata_element_type=metadata_element_type,
                                                       metadata_element_subtypes=metadata_element_subtypes,
                                                       graph_query_depth=graph_query_depth,
                                                       start_from=start_from,
@@ -2633,10 +2639,11 @@ class ServerClient(BaseServerClient):
 
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def get_note_logs_by_name(
             self, name: str = "*",
-            metadata_element_type_name: str | None = "NoteLog",
+            metadata_element_type: str | None = "NoteLog",
             metadata_element_subtypes: list[str] | None = None,
             graph_query_depth: int = 3,
             start_from: int = 0, page_size: int = 0,
@@ -2652,7 +2659,7 @@ class ServerClient(BaseServerClient):
         ----------
         name : str
             - the name to filter on.
-        metadata_element_type_name: str
+        metadata_element_type: str
             - NoteLog element type.
         body: dict | FilterRequestBody
             - optional effective time. If present, values supercede other parameters.
@@ -2667,7 +2674,7 @@ class ServerClient(BaseServerClient):
 
         """
         response = run_sync(
-            self._async_get_note_logs_by_name(name, metadata_element_type_name, metadata_element_subtypes,
+            self._async_get_note_logs_by_name(name, metadata_element_type, metadata_element_subtypes,
                                              graph_query_depth, start_from, page_size, output_format,
                                              report_spec, body, **kwargs)
         )
@@ -2745,11 +2752,12 @@ class ServerClient(BaseServerClient):
         )
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_get_attached_note_logs(
             self,
             element_guid: str,
-            metadata_element_type_name: str | None = "NoteLog",
+            metadata_element_type: str | None = "NoteLog",
             graph_query_depth: int = 3,
             start_from: int = 0,
             page_size: int = 0,
@@ -2783,7 +2791,7 @@ class ServerClient(BaseServerClient):
         """
 
         url = f"{self.command_root}feedback-manager/elements/{element_guid}/note-logs/retrieve"
-        return await self._async_get_results_body_request(url, _type=metadata_element_type_name,
+        return await self._async_get_results_body_request(url, _type=metadata_element_type,
                                                          _gen_output=self._generate_feedback_output,
                                                          graph_query_depth=graph_query_depth,
                                                          start_from=start_from,
@@ -2791,10 +2799,11 @@ class ServerClient(BaseServerClient):
                                                          report_spec=report_spec,
                                                          body=body, **kwargs)
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def get_attached_note_logs(
             self, element_guid: str,
-            metadata_element_type_name: str | None = "NoteLog",
+            metadata_element_type: str | None = "NoteLog",
             graph_query_depth: int = 3,
             start_from: int = 0,
             page_size: int = 0,
@@ -2826,7 +2835,7 @@ class ServerClient(BaseServerClient):
         PyegeriaException
         """
         response = run_sync(
-            self._async_get_attached_note_logs(element_guid, metadata_element_type_name, graph_query_depth,
+            self._async_get_attached_note_logs(element_guid, metadata_element_type, graph_query_depth,
                                                start_from, page_size, output_format, report_spec, body, **kwargs)
         )
         return response
@@ -3626,11 +3635,12 @@ class ServerClient(BaseServerClient):
         )
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_get_note_by_guid(
             self,
             guid: str,
-            metadata_element_type_name: str | None = "Note",
+            metadata_element_type: str | None = "Note",
             graph_query_depth: int = 3,
             output_format: str = "JSON",
             report_spec: Optional[str | dict] = None,
@@ -3644,7 +3654,7 @@ class ServerClient(BaseServerClient):
         ----------
         guid: str
             - unique identifier for the note object.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             - type name for the note object (default is "Note").
         body
             - optional effective time
@@ -3660,7 +3670,7 @@ class ServerClient(BaseServerClient):
         """
 
         url = f"{self.command_root}feedback-manager/assets/{guid}/retrieve"
-        response = await self._async_get_guid_request(url, _type=metadata_element_type_name,
+        response = await self._async_get_guid_request(url, _type=metadata_element_type,
                                                       _gen_output=self._generate_feedback_output,
                                                       graph_query_depth=graph_query_depth,
                                                       output_format=output_format, report_spec=report_spec,
@@ -3668,11 +3678,12 @@ class ServerClient(BaseServerClient):
 
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def get_note_by_guid(
             self,
             guid: str,
-            metadata_element_type_name: str | None = "Note",
+            metadata_element_type: str | None = "Note",
             graph_query_depth: int = 3,
             output_format: str = "JSON",
             report_spec: Optional[str | dict] = None,
@@ -3686,7 +3697,7 @@ class ServerClient(BaseServerClient):
         ----------
         guid: str
              - unique identifier of the requested metadata element
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             - type name for the note object (default is "Note").
         body: dict | GetRequestBody
             - optional details of the request.
@@ -3703,15 +3714,16 @@ class ServerClient(BaseServerClient):
          PyegeriaException
         """
         response = run_sync(
-            self._async_get_note_by_guid(guid, metadata_element_type_name, graph_query_depth, output_format, report_spec, body, **kwargs)
+            self._async_get_note_by_guid(guid, metadata_element_type, graph_query_depth, output_format, report_spec, body, **kwargs)
         )
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_get_notes_for_note_log(
             self,
             note_log_guid: str,
-            metadata_element_type_name: str | None = "Note",
+            metadata_element_type: str | None = "Note",
             graph_query_depth: int = 3,
             start_from: int = 0, page_size: int = 0,
             output_format: str = "JSON",
@@ -3726,7 +3738,7 @@ class ServerClient(BaseServerClient):
         ----------
         note_log_guid: str
              - id of the note log to retrieve notes for.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             - type of log entry to return (default is "Note"). A note log can also hold other
               Notification entries; pass "Notification" to get every entry.
         body: dict | ResultsRequestBody
@@ -3747,7 +3759,7 @@ class ServerClient(BaseServerClient):
         """
 
         url = f"{self.command_root}feedback-manager/note-logs/{note_log_guid}/notes/retrieve"
-        response = await self._async_get_results_body_request(url, _type=metadata_element_type_name,
+        response = await self._async_get_results_body_request(url, _type=metadata_element_type,
                                                              _gen_output=self._generate_feedback_output,
                                                              graph_query_depth=graph_query_depth,
                                                              start_from=start_from,
@@ -3756,11 +3768,12 @@ class ServerClient(BaseServerClient):
                                                              body=body, **kwargs)
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def get_notes_for_note_log(
             self,
             note_log_guid: str,
-            metadata_element_type_name: str | None = "Note",
+            metadata_element_type: str | None = "Note",
             graph_query_depth: int = 3,
             start_from: int = 0, page_size: int = 0,
             output_format: str = "JSON",
@@ -3775,7 +3788,7 @@ class ServerClient(BaseServerClient):
          ----------
          note_log_guid: str
               - note_log id to find notes for.
-         metadata_element_type_name : str, optional
+         metadata_element_type : str, optional
              - type of log entry to return (default is "Note"). A note log can also hold other
                Notification entries; pass "Notification" to get every entry.
          body: dict | ResultsRequestBody
@@ -3795,7 +3808,7 @@ class ServerClient(BaseServerClient):
 
          """
         response = run_sync(
-            self._async_get_notes_for_note_log(note_log_guid, metadata_element_type_name, graph_query_depth,
+            self._async_get_notes_for_note_log(note_log_guid, metadata_element_type, graph_query_depth,
                                               start_from, page_size, output_format, report_spec, body, **kwargs)
         )
         return response
@@ -4141,11 +4154,12 @@ class ServerClient(BaseServerClient):
         )
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_get_tags_by_name(
             self,
             name: str = "*",
-            metadata_element_type_name: str | None = "InformalTag",
+            metadata_element_type: str | None = "InformalTag",
             metadata_element_subtypes: list[str] | None = None,
             graph_query_depth: int = 3,
             start_from: int = 0,
@@ -4183,7 +4197,7 @@ class ServerClient(BaseServerClient):
         response = await self._async_get_name_request(url, _type="InformalTag",
                                                       _gen_output=self._generate_feedback_output,
                                                       filter_string=name,
-                                                      metadata_element_type_name=metadata_element_type_name,
+                                                      metadata_element_type=metadata_element_type,
                                                       metadata_element_subtypes=metadata_element_subtypes,
                                                       graph_query_depth=graph_query_depth,
                                                       start_from=start_from,
@@ -4192,11 +4206,12 @@ class ServerClient(BaseServerClient):
                                                       body=body, **kwargs)
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def get_tags_by_name(
             self,
             name: str = "*",
-            metadata_element_type_name: str | None = "InformalTag",
+            metadata_element_type: str | None = "InformalTag",
             metadata_element_subtypes: list[str] | None = None,
             graph_query_depth: int = 3,
             start_from: int = 0,
@@ -4229,7 +4244,7 @@ class ServerClient(BaseServerClient):
         PyegeriaException
         """
         response = run_sync(
-            self._async_get_tags_by_name(name, metadata_element_type_name, metadata_element_subtypes,
+            self._async_get_tags_by_name(name, metadata_element_type, metadata_element_subtypes,
                                          graph_query_depth, start_from, page_size, output_format,
                                          report_spec, body, **kwargs)
         )
@@ -4686,11 +4701,12 @@ class ServerClient(BaseServerClient):
         )
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_get_attached_tags(
             self,
             element_guid: str,
-            metadata_element_type_name: str | None = "InformalTag",
+            metadata_element_type: str | None = "InformalTag",
             graph_query_depth: int = 3,
             start_from: int = 0,
             page_size: int = 0,
@@ -4723,7 +4739,7 @@ class ServerClient(BaseServerClient):
         PyegeriaException
         """
         url = f"{self.command_root}feedback-manager/elements/{element_guid}/tags/retrieve"
-        return await self._async_get_results_body_request(url, _type=metadata_element_type_name,
+        return await self._async_get_results_body_request(url, _type=metadata_element_type,
                                                          _gen_output=self._generate_feedback_output,
                                                          graph_query_depth=graph_query_depth,
                                                          start_from=start_from,
@@ -4731,11 +4747,12 @@ class ServerClient(BaseServerClient):
                                                          report_spec=report_spec,
                                                          body=body, **kwargs)
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def get_attached_tags(
             self,
             element_guid: str,
-            metadata_element_type_name: str | None = "InformalTag",
+            metadata_element_type: str | None = "InformalTag",
             graph_query_depth: int = 3,
             start_from: int = 0,
             page_size: int = 0,
@@ -4768,7 +4785,7 @@ class ServerClient(BaseServerClient):
         PyegeriaException
         """
         response = run_sync(
-            self._async_get_attached_tags(element_guid, metadata_element_type_name, graph_query_depth,
+            self._async_get_attached_tags(element_guid, metadata_element_type, graph_query_depth,
                                           start_from, page_size, output_format, report_spec, body, **kwargs)
         )
         return response
@@ -4980,11 +4997,12 @@ class ServerClient(BaseServerClient):
         )
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_get_attached_likes(
             self,
             element_guid: str,
-            metadata_element_type_name: str | None = "Like",
+            metadata_element_type: str | None = "Like",
             graph_query_depth: int = 3,
             start_from: int = 0,
             page_size: int = 0,
@@ -5021,7 +5039,7 @@ class ServerClient(BaseServerClient):
         PyegeriaException
         """
         url = f"{self.command_root}feedback-manager/elements/{element_guid}/likes/retrieve"
-        return await self._async_get_results_body_request(url, _type=metadata_element_type_name,
+        return await self._async_get_results_body_request(url, _type=metadata_element_type,
                                                          _gen_output=self._generate_feedback_output,
                                                          graph_query_depth=graph_query_depth,
                                                          start_from=start_from,
@@ -5029,11 +5047,12 @@ class ServerClient(BaseServerClient):
                                                          report_spec=report_spec,
                                                          body=body, **kwargs)
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def get_attached_likes(
             self,
             element_guid: str,
-            metadata_element_type_name: str | None = "Like",
+            metadata_element_type: str | None = "Like",
             graph_query_depth: int = 3,
             start_from: int = 0,
             page_size: int = 0,
@@ -5070,7 +5089,7 @@ class ServerClient(BaseServerClient):
         PyegeriaException
         """
         response = run_sync(
-            self._async_get_attached_likes(element_guid, metadata_element_type_name, graph_query_depth,
+            self._async_get_attached_likes(element_guid, metadata_element_type, graph_query_depth,
                                            start_from, page_size, output_format, report_spec, body, **kwargs)
         )
         return response
@@ -5248,11 +5267,12 @@ class ServerClient(BaseServerClient):
         )
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_get_attached_ratings(
             self,
             element_guid: str,
-            metadata_element_type_name: str | None = "Rating",
+            metadata_element_type: str | None = "Rating",
             graph_query_depth: int = 3,
             start_from: int = 0,
             page_size: int = 0,
@@ -5289,7 +5309,7 @@ class ServerClient(BaseServerClient):
         PyegeriaException
         """
         url = f"{self.command_root}feedback-manager/elements/{element_guid}/ratings/retrieve"
-        return await self._async_get_results_body_request(url, _type=metadata_element_type_name,
+        return await self._async_get_results_body_request(url, _type=metadata_element_type,
                                                          _gen_output=self._generate_feedback_output,
                                                          graph_query_depth=graph_query_depth,
                                                          start_from=start_from,
@@ -5297,11 +5317,12 @@ class ServerClient(BaseServerClient):
                                                          report_spec=report_spec,
                                                          body=body, **kwargs)
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def get_attached_ratings(
             self,
             element_guid: str,
-            metadata_element_type_name: str | None = "Rating",
+            metadata_element_type: str | None = "Rating",
             graph_query_depth: int = 3,
             start_from: int = 0,
             page_size: int = 0,
@@ -5338,7 +5359,7 @@ class ServerClient(BaseServerClient):
         PyegeriaException
         """
         response = run_sync(
-            self._async_get_attached_ratings(element_guid, metadata_element_type_name, graph_query_depth,
+            self._async_get_attached_ratings(element_guid, metadata_element_type, graph_query_depth,
                                              start_from, page_size, output_format, report_spec, body, **kwargs)
         )
         return response
@@ -5734,11 +5755,12 @@ class ServerClient(BaseServerClient):
         )
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_get_search_keyword_by_keyword(
             self,
             name: str,
-            metadata_element_type_name: str | None = "SearchKeyword",
+            metadata_element_type: str | None = "SearchKeyword",
             metadata_element_subtypes: list[str] | None = None,
             graph_query_depth: int = 3,
             start_from: int = 0,
@@ -5779,7 +5801,7 @@ class ServerClient(BaseServerClient):
         response = await self._async_get_name_request(url, _type="SearchKeyword",
                                                       _gen_output=self._generate_feedback_output,
                                                       filter_string=name,
-                                                      metadata_element_type_name=metadata_element_type_name,
+                                                      metadata_element_type=metadata_element_type,
                                                       metadata_element_subtypes=metadata_element_subtypes,
                                                       graph_query_depth=graph_query_depth,
                                                       start_from=start_from,
@@ -5788,11 +5810,12 @@ class ServerClient(BaseServerClient):
                                                       body=body, **kwargs)
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def get_search_keyword_by_keyword(
             self,
             name: str = "*",
-            metadata_element_type_name: str | None = "SearchKeyword",
+            metadata_element_type: str | None = "SearchKeyword",
             metadata_element_subtypes: list[str] | None = None,
             graph_query_depth: int = 3,
             start_from: int = 0,
@@ -5828,7 +5851,7 @@ class ServerClient(BaseServerClient):
 
         """
         response = run_sync(
-            self._async_get_search_keyword_by_keyword(name, metadata_element_type_name, metadata_element_subtypes,
+            self._async_get_search_keyword_by_keyword(name, metadata_element_type, metadata_element_subtypes,
                                                      graph_query_depth, start_from, page_size,
                                                      output_format, report_spec, body, **kwargs)
         )
@@ -6480,6 +6503,7 @@ class ServerClient(BaseServerClient):
                                   body: dict | SearchStringRequestBody | FindPropertyNamesRequestBody = None,
                                   **kwargs) -> Any:
         report_spec = await self._async_refresh_report_spec(report_spec, kwargs)  # refresh_spec=True (RS-EGERIA-TIER)
+        _filters = filter_body_kwargs("search", kwargs)  # check names; map to wire names
 
         effective_search_string = None if search_string == '*' else search_string
 
@@ -6521,9 +6545,9 @@ class ServerClient(BaseServerClient):
                     "anchorDomainName": anchor_domain,
                     "anchorScopeGUID": anchor_scope_guid,
                     "governanceZoneFilter": governance_zone_filter,
-                    **kwargs
+                    **_filters
                 }
-                if not metadata_element_type:
+                if not body.get("metadataElementTypeName"):
                     body.pop("metadataElementTypeName", None)
                 validated_body = self._validate_body(FindPropertyNamesRequestBody.model_validate, body)
             else:
@@ -6553,9 +6577,9 @@ class ServerClient(BaseServerClient):
                     "sequencingProperty": sequencing_property,
                     "startFrom": start_from,
                     "pageSize": page_size,
-                    **kwargs
+                    **_filters
                 }
-                if not metadata_element_type:
+                if not body.get("metadataElementTypeName"):
                     body.pop("metadataElementTypeName", None)
                 validated_body = self._validate_body(SearchStringRequestBody.model_validate, body)
 
@@ -6573,10 +6597,11 @@ class ServerClient(BaseServerClient):
                                output_format=output_format, report_spec=report_spec, **kwargs)
         return elements
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_get_name_request(self, url: str, _type: str, _gen_output: Callable[..., Any],
                                       filter_string: str = "*",
-                                      metadata_element_type_name: str | None = None,
+                                      metadata_element_type: str | None = None,
                                       metadata_element_subtypes: list[str] | None = None,
                                       classification_names: list[str] | None = None,
                                       include_only_relationships: list[str] | None = None,
@@ -6588,12 +6613,9 @@ class ServerClient(BaseServerClient):
                                       max_mermaid_node_count=10, **kwargs) -> Any:
         report_spec = await self._async_refresh_report_spec(report_spec, kwargs)  # refresh_spec=True (RS-EGERIA-TIER)
 
-        # _async_find_request spells this argument `metadata_element_type`; a wrapper copied from a find_*
-        # sibling passed that spelling here, where it fell into **kwargs and FilterRequestBody silently
-        # dropped it, so the by-name search ran unfiltered by type (ISSUE-131). Accept both.
-        legacy_type_name = kwargs.pop("metadata_element_type", None)
-        if metadata_element_type_name is None:
-            metadata_element_type_name = legacy_type_name
+        # ISSUE-131: this argument is spelt `metadata_element_type`, as in _async_find_request (6.2.28:
+        # one name everywhere). The old `metadata_element_type_name` still works via @deprecated_names.
+        _filters = filter_body_kwargs("name", kwargs)  # check names; map to wire names
 
         if isinstance(body, FilterRequestBody):
             validated_body = body
@@ -6605,7 +6627,7 @@ class ServerClient(BaseServerClient):
             body = {
                 "class": "FilterRequestBody",
                 "filter": filter_string,
-                "metadataElementTypeName": metadata_element_type_name,
+                "metadataElementTypeName": metadata_element_type,
                 "metadataElementSubtypeNames": metadata_element_subtypes,
                 "includeOnlyRelationships": include_only_relationships,
                 "skipRelationships": skip_relationships,
@@ -6614,7 +6636,7 @@ class ServerClient(BaseServerClient):
                 "pageSize": page_size,
                 "includeOnlyClassifiedElements": classification_names,
                 "maxMermaidNodeCount": max_mermaid_node_count,
-                **kwargs
+                **_filters
             }
             validated_body = self._validate_body(FilterRequestBody.model_validate, body)
 
@@ -6660,6 +6682,7 @@ class ServerClient(BaseServerClient):
         this helper understands the singular "elementGraph" response key.
         """
         report_spec = await self._async_refresh_report_spec(report_spec, kwargs)  # refresh_spec=True (RS-EGERIA-TIER)
+        _filters = filter_body_kwargs("get", kwargs)  # check names; map to wire names
         if isinstance(body, (GetRequestBody, ResultsRequestBody)):
             validated_body = body
         elif isinstance(body, dict):
@@ -6676,7 +6699,7 @@ class ServerClient(BaseServerClient):
                 "skipRelationships": skip_relationships,
                 "graphQueryDepth": graph_query_depth,
                 "maxMermaidNodeCount": max_mermaid_node_count,
-                **kwargs
+                **_filters
             }
             validated_body = self._validate_body(body_model.model_validate, body)
 
@@ -6723,6 +6746,7 @@ class ServerClient(BaseServerClient):
             graph_query_depth ():
         """
         report_spec = await self._async_refresh_report_spec(report_spec, kwargs)  # refresh_spec=True (RS-EGERIA-TIER)
+        _filters = filter_body_kwargs("get", kwargs)  # check names; map to wire names
         if isinstance(body, GetRequestBody):
             validated_body = body
         elif isinstance(body, dict):
@@ -6733,7 +6757,7 @@ class ServerClient(BaseServerClient):
                 "metadataElementTypeName": _type,
                 "maxMermaidNodeCount": max_mermaid_node_count,
                 "graphQueryDepth": graph_query_depth,
-                **kwargs
+                **_filters
             }
             validated_body = self._validate_body(GetRequestBody.model_validate, body)
 
@@ -6787,6 +6811,7 @@ class ServerClient(BaseServerClient):
         body: dict | ActivityStatusSearchString | None = None,
         **kwargs
     ) -> Any:
+        _filters = filter_body_kwargs("activity_search", kwargs)  # check names; map to wire names
         if isinstance(body, ActivityStatusSearchString):
             validated_body = body
         elif isinstance(body, dict):
@@ -6820,7 +6845,7 @@ class ServerClient(BaseServerClient):
                 "sequencingProperty": sequencing_property,
                 "start_from": start_from,
                 "page_size": page_size,
-                **kwargs
+                **_filters
             }
             validated_body = self._validate_body(ActivityStatusSearchString.model_validate, body)
 
@@ -6851,6 +6876,7 @@ class ServerClient(BaseServerClient):
         body: Optional[dict | ActivityStatusFilterRequestBody] = None,
         **kwargs
     ) -> Any:
+        _filters = filter_body_kwargs("activity_filter", kwargs)  # check names; map to wire names
         if isinstance(body, ActivityStatusFilterRequestBody):
             validated_body = body
         elif isinstance(body, dict):
@@ -6863,7 +6889,7 @@ class ServerClient(BaseServerClient):
                 "activityStatusList": activity_status_list,
                 "start_from": start_from,
                 "page_size": page_size,
-                **kwargs
+                **_filters
             }
             validated_body = self._validate_body(ActivityStatusFilterRequestBody.model_validate, body)
 
@@ -6896,6 +6922,7 @@ class ServerClient(BaseServerClient):
         body: Optional[dict | ActivityStatusRequestBody] = None,
         **kwargs
     ) -> Any:
+        _filters = filter_body_kwargs("activity", kwargs)  # check names; map to wire names
         if isinstance(body, ActivityStatusRequestBody):
             validated_body = body
         elif isinstance(body, dict):
@@ -6909,7 +6936,7 @@ class ServerClient(BaseServerClient):
                 "limitResultsByStatus": limit_results_by_status,
                 "sequencingOrder": sequencing_order,
                 "sequencingProperty": sequencing_property,
-                **kwargs
+                **_filters
             }
             validated_body = self._validate_body(ActivityStatusRequestBody.model_validate, body)
 
@@ -6959,6 +6986,7 @@ class ServerClient(BaseServerClient):
         body: dict | ContentStatusSearchString | None = None,
         **kwargs
     ) -> Any:
+        _filters = filter_body_kwargs("content_search", kwargs)  # check names; map to wire names
         if isinstance(body, ContentStatusSearchString):
             validated_body = body
         elif isinstance(body, dict):
@@ -6992,7 +7020,7 @@ class ServerClient(BaseServerClient):
                 "sequencingProperty": sequencing_property,
                 "start_from": start_from,
                 "page_size": page_size,
-                **kwargs
+                **_filters
             }
             validated_body = self._validate_body(ContentStatusSearchString.model_validate, body)
 
@@ -7023,6 +7051,7 @@ class ServerClient(BaseServerClient):
         body: Optional[dict | ContentStatusFilterRequestBody] = None,
         **kwargs
     ) -> Any:
+        _filters = filter_body_kwargs("content_filter", kwargs)  # check names; map to wire names
         if isinstance(body, ContentStatusFilterRequestBody):
             validated_body = body
         elif isinstance(body, dict):
@@ -7035,7 +7064,7 @@ class ServerClient(BaseServerClient):
                 "contentStatusList": content_status_list,
                 "start_from": start_from,
                 "page_size": page_size,
-                **kwargs
+                **_filters
             }
             validated_body = self._validate_body(ContentStatusFilterRequestBody.model_validate, body)
 
@@ -7085,6 +7114,7 @@ class ServerClient(BaseServerClient):
         body: dict | DeploymentStatusSearchString | None = None,
         **kwargs
     ) -> Any:
+        _filters = filter_body_kwargs("deployment_search", kwargs)  # check names; map to wire names
         if isinstance(body, DeploymentStatusSearchString):
             validated_body = body
         elif isinstance(body, dict):
@@ -7118,7 +7148,7 @@ class ServerClient(BaseServerClient):
                 "sequencingProperty": sequencing_property,
                 "startFrom": start_from,
                 "pageSize": page_size,
-                **kwargs
+                **_filters
             }
             validated_body = self._validate_body(DeploymentStatusSearchString.model_validate, body)
 
@@ -7149,6 +7179,7 @@ class ServerClient(BaseServerClient):
         body: Optional[dict | DeploymentStatusFilterRequestBody] = None,
         **kwargs
     ) -> Any:
+        _filters = filter_body_kwargs("deployment_filter", kwargs)  # check names; map to wire names
         if isinstance(body, DeploymentStatusFilterRequestBody):
             validated_body = body
         elif isinstance(body, dict):
@@ -7161,7 +7192,7 @@ class ServerClient(BaseServerClient):
                 "deploymentStatusList": deployment_status_list,
                 "start_from": start_from,
                 "page_size": page_size,
-                **kwargs
+                **_filters
             }
             validated_body = self._validate_body(DeploymentStatusFilterRequestBody.model_validate, body)
 
@@ -7197,6 +7228,7 @@ class ServerClient(BaseServerClient):
         default request body doesn't wrongly filter results by it.
         """
         report_spec = await self._async_refresh_report_spec(report_spec, kwargs)  # refresh_spec=True (RS-EGERIA-TIER)
+        _filters = filter_body_kwargs("list", kwargs)  # check names; map to wire names
         if isinstance(body, ResultsRequestBody):
             validated_body = body
         elif isinstance(body, dict):
@@ -7207,10 +7239,10 @@ class ServerClient(BaseServerClient):
                 "graphQueryDepth": graph_query_depth,
                 "start_from": start_from,
                 "page_size": page_size,
-                **kwargs
+                **_filters
             }
             if filter_results_by_type:
-                body["metadataElementTypeName"] = _type
+                body.setdefault("metadataElementTypeName", _type)
             validated_body = self._validate_body(ResultsRequestBody.model_validate, body)
 
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)

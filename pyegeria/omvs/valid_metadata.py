@@ -10,6 +10,8 @@ import asyncio
 import re
 from typing import Any, Optional
 from loguru import logger
+from typing import Unpack
+from pyegeria.core.request_filters import GetFilters, ListFilters, SearchFilters
 from pyegeria.core._server_client import ServerClient
 from pyegeria.core._validators import validate_guid
 from pyegeria.models import SearchStringRequestBody, ResultsRequestBody, FilterRequestBody, GetRequestBody, \
@@ -2903,7 +2905,7 @@ class ValidMetadataManager(ServerClient):
         page_size: int = 100,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Referenceable",
-        **kwargs
+        **kwargs: Unpack[SearchFilters]
     ) -> list | str:
         """ Retrieve the list of specification property metadata elements that contain the search string. Async Version.
 
@@ -2960,6 +2962,9 @@ class ValidMetadataManager(ServerClient):
         body: dict | SearchStringRequestBody, optional, default = None
             - if provided, the search parameters in the body will supercede other attributes, such as "search_string"
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         List | str
@@ -3015,7 +3020,7 @@ class ValidMetadataManager(ServerClient):
         page_size: int = 100,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Referenceable",
-        **kwargs
+        **kwargs: Unpack[SearchFilters]
     ) -> list | str:
         """ Retrieve the list of specification property metadata elements that contain the search string.
 
@@ -3072,6 +3077,9 @@ class ValidMetadataManager(ServerClient):
         body: dict | SearchStringRequestBody, optional, default = None
             - if provided, the search parameters in the body will supercede other attributes, such as "search_string"
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         List | str
@@ -3109,7 +3117,7 @@ class ValidMetadataManager(ServerClient):
     async def _async_get_specification_property_by_type(self, spec_property_type: str, body: Optional[dict | ResultsRequestBody] = None,
                                               start_from: int = 0,
                                               page_size: int = 0, output_format: str = "JSON",
-                                              report_spec: str | dict = None) -> list | str:
+                                              report_spec: str | dict = None, **kwargs: Unpack[ListFilters]) -> list | str:
         """ Return the list of specification properties containing the supplied type. Async version.
 
             Parameters
@@ -3127,6 +3135,9 @@ class ValidMetadataManager(ServerClient):
                 one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
             report_spec: dict , optional, default = None
                 The desired output columns/fields to include.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
             Returns
             -------
@@ -3169,14 +3180,14 @@ class ValidMetadataManager(ServerClient):
                                                               start_from=start_from, page_size=page_size,
                                                               output_format=output_format,
                                                               report_spec=report_spec,
-                                                              body=body)
+                                                              body=body, **kwargs)
 
         return response
 
     def get_specification_property_by_type(self, spec_property_type:str, body: Optional[dict | ResultsRequestBody] = None,
                                  start_from: int = 0,
                                  page_size: int = 0, output_format: str = "JSON",
-                                 report_spec: str | dict = None) -> list | str:
+                                 report_spec: str | dict = None, **kwargs: Unpack[ListFilters]) -> list | str:
         """ Return the list of specification properties containing the supplied type.
 
 
@@ -3195,6 +3206,9 @@ class ValidMetadataManager(ServerClient):
             - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
          report_spec: str | dict , optional, default = None
                 The desired output columns/fields to include.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -3226,12 +3240,12 @@ class ValidMetadataManager(ServerClient):
         """
         return run_sync(
             self._async_get_specification_property_by_type(spec_property_type, body, start_from, page_size,
-                                                 output_format, report_spec))
+                                                 output_format, report_spec, **kwargs))
     @dynamic_catch
     async def _async_get_specification_property_by_name(self, name: Optional[str] = None, start_from: int = 0, page_size: int = 0,
                                                category: Optional[str] = None, classification_names: list[str]= None,
                                                body: Optional[dict | FilterRequestBody] = None, graph_query_depth: int = 3, output_format: str = "JSON",
-                                               report_spec: str | dict = None, **kwargs) -> list | str:
+                                               report_spec: str | dict = None, **kwargs: Unpack[ListFilters]) -> list | str:
         """ Return the list of specification properties containing the supplied name. Async version.
 
         Parameters
@@ -3249,6 +3263,9 @@ class ValidMetadataManager(ServerClient):
             - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
         report_spec: str | dict = None), optional, default = None
             The desired output columns/fields to include.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -3302,7 +3319,7 @@ class ValidMetadataManager(ServerClient):
     def get_specification_property_by_name(self, name: Optional[str] = None, start_from: int = 0, page_size: int = 0,
                                               category: Optional[str] = None, classification_names: list[str]= None,
                                               body: Optional[dict | FilterRequestBody] = None, graph_query_depth: int = 3, output_format: str = "JSON",
-                                              report_spec: str | dict = None, **kwargs) -> list:
+                                              report_spec: str | dict = None, **kwargs: Unpack[ListFilters]) -> list:
         """ Return the list of specification properties containing the supplied name.
 
             Parameters
@@ -3320,6 +3337,9 @@ class ValidMetadataManager(ServerClient):
                 - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
             report_spec: str | dict = None), optional, default = None
                 The desired output columns/fields to include.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
             Returns
             -------
@@ -3362,7 +3382,7 @@ class ValidMetadataManager(ServerClient):
     async def _async_get_specification_property_by_guid(self, guid: str = None, element_type: Optional[str] = None,
                                             body: Optional[dict | GetRequestBody] = None,
                                             graph_query_depth: int = 3, output_format: str = 'JSON',
-                                            report_spec: str | dict = None, **kwargs) -> dict | str:
+                                            report_spec: str | dict = None, **kwargs: Unpack[GetFilters]) -> dict | str:
         """Return the properties of a specific collection. Async version.
 
         Parameters
@@ -3377,6 +3397,9 @@ class ValidMetadataManager(ServerClient):
             - one of "DICT", "MERMAID" or "JSON"
          report_spec: str | dict, optional, default = None
                 The desired output columns/fields to include.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -3422,7 +3445,7 @@ class ValidMetadataManager(ServerClient):
 
     @dynamic_catch
     def get_specification_property_by_guid(self, guid: str = None, element_type: Optional[str] = None, body: dict | GetRequestBody= None,
-                               graph_query_depth: int = 3, output_format: str = 'JSON', report_spec: str | dict = None, **kwargs) -> dict | str:
+                               graph_query_depth: int = 3, output_format: str = 'JSON', report_spec: str | dict = None, **kwargs: Unpack[GetFilters]) -> dict | str:
         """ Return the properties of a specific collection. Async version.
 
             Parameters
@@ -3438,6 +3461,9 @@ class ValidMetadataManager(ServerClient):
             report_spec: dict , optional, default = None
                 The desired output columns/fields to include.
 
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
             Returns
             -------

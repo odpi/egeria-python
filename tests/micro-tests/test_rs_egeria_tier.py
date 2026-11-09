@@ -84,8 +84,8 @@ class FakeEgeria:
     def remove_member(self, guid, folder=FOLDER_GUID):
         self.members[folder] = [m for m in self.members[folder] if m["elementHeader"]["guid"] != guid]
 
-    def get_collections_by_name(self, name, metadata_element_type_name=None, output_format="JSON", **_):
-        if metadata_element_type_name == "CollectionFolder":
+    def get_collections_by_name(self, name, metadata_element_type=None, output_format="JSON", **_):
+        if metadata_element_type == "CollectionFolder":
             f = self.folders.get(name)
             return [f] if f else "No elements found"
         hits = [e for e in self.elements.values()
@@ -334,7 +334,7 @@ def test_async_twin_of_an_allowlisted_method_is_allowed():
 
 def test_allowlist_is_the_census_plus_additions_and_never_meets_the_denylist():
     assert mfm.FIND_METHOD_ALLOWLIST == mfm._CENSUS_FIND_METHODS | mfm.FIND_METHOD_ADDITIONS
-    assert len(mfm._CENSUS_FIND_METHODS) == 46
+    assert len(mfm._CENSUS_FIND_METHODS) == 47  # +find_elements_by_property_value (generic-search specs, 6.2.28)
     assert not (mfm.FIND_METHOD_ALLOWLIST & mfm.FIND_METHOD_DENYLIST)
     denied = {e.rsplit(".", 1)[-1] for e in mfm.FIND_METHOD_DENYLIST}
     assert not {e.rsplit(".", 1)[-1] for e in mfm.FIND_METHOD_ALLOWLIST} & denied
@@ -829,9 +829,9 @@ async def test_async_fetch_through_a_find_request_helper(tier):
         async def _async_get_collection_by_guid(self, guid, output_format="JSON", **k):
             return self.get_collection_by_guid(guid)
 
-        async def _async_get_collections_by_name(self, name, metadata_element_type_name=None, output_format="JSON",
+        async def _async_get_collections_by_name(self, name, metadata_element_type=None, output_format="JSON",
                                                  **k):
-            return self.get_collections_by_name(name, metadata_element_type_name)
+            return self.get_collections_by_name(name, metadata_element_type)
 
     eg = AsyncFake()
     eg.put(spec_element())

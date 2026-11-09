@@ -11,6 +11,9 @@ relationships to digital resources.
 import asyncio
 from typing import Optional
 
+from typing import Unpack
+from pyegeria.core.request_filters import deprecated_names
+from pyegeria.core.request_filters import GetFilters
 from pyegeria.omvs.collection_manager import CollectionManager
 from pyegeria.core._server_client import ServerClient
 from pyegeria.models import (
@@ -321,7 +324,7 @@ class DigitalBusiness(CollectionManager):
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = "BusinessCapabilities",
         body: Optional[dict] = None,
-        **kwargs,
+        **kwargs: Unpack[GetFilters],
     ) -> dict | str:
         """Return the properties of a specific business capability by GUID. Async version.
 
@@ -335,6 +338,9 @@ class DigitalBusiness(CollectionManager):
             Report specification for formatting.
         body : dict, optional
             Request body (typically empty for retrieval).
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -373,7 +379,7 @@ class DigitalBusiness(CollectionManager):
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = "BusinessCapabilities",
         body: Optional[dict] = None,
-        **kwargs,
+        **kwargs: Unpack[GetFilters],
     ) -> dict | str:
         """Return the properties of a specific business capability by GUID. Sync version.
 
@@ -387,6 +393,9 @@ class DigitalBusiness(CollectionManager):
             Report specification for formatting.
         body : dict, optional
             Request body (typically empty for retrieval).
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -409,11 +418,12 @@ class DigitalBusiness(CollectionManager):
             )
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_get_business_capabilities_by_name(
         self,
         name: str = None,
-        metadata_element_type_name: str | None = "BusinessCapability",
+        metadata_element_type: str | None = "BusinessCapability",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -431,7 +441,7 @@ class DigitalBusiness(CollectionManager):
         ----------
         name: str, optional
             name to use to find matching business capabilities.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             The type of metadata element.
         metadata_element_subtypes : list[str], optional
             The list of subtypes to filter by.
@@ -452,6 +462,9 @@ class DigitalBusiness(CollectionManager):
         body: dict, optional
             Provides a full request body. If specified, the body supercedes other attributes.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | str
@@ -470,7 +483,7 @@ class DigitalBusiness(CollectionManager):
         url = f"{self.digital_business_command_root}/collections/by-name"
         params = {
             "filter_string": name,
-            "metadata_element_type_name": metadata_element_type_name,
+            "metadata_element_type": metadata_element_type,
             "metadata_element_subtypes": metadata_element_subtypes,
             "include_only_relationships": include_only_relationships,
             "skip_relationships": skip_relationships,
@@ -491,10 +504,11 @@ class DigitalBusiness(CollectionManager):
             **params,
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     def get_business_capabilities_by_name(
         self,
         name: str = None,
-        metadata_element_type_name: str | None = "BusinessCapability",
+        metadata_element_type: str | None = "BusinessCapability",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -512,7 +526,7 @@ class DigitalBusiness(CollectionManager):
         ----------
         name: str, optional
             name to use to find matching business capabilities.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             The type of metadata element.
         metadata_element_subtypes : list[str], optional
             The list of subtypes to filter by.
@@ -533,6 +547,9 @@ class DigitalBusiness(CollectionManager):
         body: dict, optional
             Provides a full request body. If specified, the body supercedes other attributes.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | str
@@ -551,7 +568,7 @@ class DigitalBusiness(CollectionManager):
         return run_sync(
             self._async_get_business_capabilities_by_name(
                 name=name,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,
@@ -565,6 +582,7 @@ class DigitalBusiness(CollectionManager):
             )
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_find_business_capabilities(
         self,
@@ -572,7 +590,7 @@ class DigitalBusiness(CollectionManager):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = "BusinessCapability",
+        metadata_element_type: str | None = "BusinessCapability",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -599,7 +617,7 @@ class DigitalBusiness(CollectionManager):
             Ends with the supplied string
         ignore_case : bool, [default=True], optional
             Ignore case when searching
-        metadata_element_type_name: str, optional
+        metadata_element_type: str, optional
             The type of metadata element to search for.
         metadata_element_subtypes: list[str], optional
             The subtypes of metadata element to search for.
@@ -626,6 +644,9 @@ class DigitalBusiness(CollectionManager):
         body: dict | SearchStringRequestBody, optional
             - if provided, the search parameters in the body will supercede other attributes.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -637,7 +658,7 @@ class DigitalBusiness(CollectionManager):
             "starts_with": starts_with,
             "ends_with": ends_with,
             "ignore_case": ignore_case,
-            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_type": metadata_element_type,
             "metadata_element_subtypes": metadata_element_subtypes,
             "include_only_relationships": include_only_relationships,
             "skip_relationships": skip_relationships,
@@ -662,13 +683,14 @@ class DigitalBusiness(CollectionManager):
         )
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     def find_business_capabilities(
         self,
         search_string: str = "*",
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = "BusinessCapability",
+        metadata_element_type: str | None = "BusinessCapability",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -695,7 +717,7 @@ class DigitalBusiness(CollectionManager):
             Whether to match at the end. Defaults to False.
         ignore_case : bool, optional
             Whether to ignore case. Defaults to True.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             The type of metadata element.
         metadata_element_subtypes : list[str], optional
             The subtypes to filter by.
@@ -722,6 +744,9 @@ class DigitalBusiness(CollectionManager):
         body : dict, optional
             Request body for additional parameters.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -732,7 +757,7 @@ class DigitalBusiness(CollectionManager):
                 starts_with=starts_with,
                 ends_with=ends_with,
                 ignore_case=ignore_case,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,

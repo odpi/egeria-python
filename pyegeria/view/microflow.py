@@ -64,7 +64,7 @@ MICROFLOW_FORMAT = "microflow/1"
 #: FIND_METHOD_DENYLIST). It is the union of two named parts:
 #:
 #: - `_CENSUS_FIND_METHODS`: every find method a runnable built-in or generated spec names, taken from
-#:   the 437-spec census on 2026-11-09 (46 methods, every spec runnable since 6.2.28 repointed
+#:   the 437-spec census on 2026-11-09 (47 methods, every spec runnable since 6.2.28 repointed
 #:   Asset-Graph and Data-Classes). The micro-test `test_every_runnable_builtin_spec_function_is_on_the_allowlist`
 #:   fails when a built-in or generated spec names one that is missing, so the stage-2 seed (today's
 #:   built-ins written into Egeria) can never be refused.
@@ -80,6 +80,7 @@ _CENSUS_FIND_METHODS: frozenset = frozenset({
     "ActorManager.find_user_identities",
     "AssetCatalog.get_asset_graph_by_guid",
     "AssetMaker.find_assets",
+    "ClassificationExplorer.find_elements_by_property_value",  # the 40 generic-search DrE specs (6.2.28)
     "ClassificationExplorer.get_elements",
     "ClassificationExplorer.get_owners_elements",
     "CollectionManager.find_collections",
@@ -121,9 +122,14 @@ _CENSUS_FIND_METHODS: frozenset = frozenset({
     "reference_data.find_valid_value_definitions",
 })
 
-#: Reviewed additions: find methods no built-in spec names yet. Empty in 6.2.28; add an entry only
-#: after reading the method (it must only read), and give the reason in a comment beside it.
-FIND_METHOD_ADDITIONS: frozenset = frozenset()
+#: Reviewed additions: find methods no built-in spec names yet. Add an entry only after reading the
+#: method (it must only read), and give the reason in a comment beside it.
+FIND_METHOD_ADDITIONS: frozenset = frozenset({
+    # Read only: POSTs a FindRequestBody to .../elements/by-complex-query and returns the elements.
+    # find_elements_by_property_value calls it for the technology specs (deployedImplementationType
+    # EQ the technology AND the name match, evaluated by Egeria in one query).
+    "ClassificationExplorer.find_root_elements",
+})
 
 FIND_METHOD_ALLOWLIST: frozenset = _CENSUS_FIND_METHODS | FIND_METHOD_ADDITIONS
 

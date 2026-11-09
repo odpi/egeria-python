@@ -88,7 +88,7 @@ def list_related_elements_with_prop_value(
             relationship_type,
             property_value,
             property_names,
-            metadata_element_type_name=om_type,
+            metadata_element_type=om_type,
         )
 
         if type(elements) is list:

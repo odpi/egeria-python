@@ -13,6 +13,10 @@ import asyncio
 from httpx import Response
 from loguru import logger
 from typing import Any, Optional
+from typing import Unpack
+from pyegeria.core.request_filters import deprecated_names
+from pyegeria.core.request_filters import GetFilters, ListFilters, SearchFilters
+from pyegeria.core.request_filters import filter_body_kwargs
 from pyegeria.core._exceptions import PyegeriaException, PyegeriaInvalidParameterException
 from pyegeria.core._server_client import ServerClient
 from pyegeria.core._globals import default_timeout, NO_ELEMENTS_FOUND
@@ -32,6 +36,32 @@ from pyegeria.core.async_runner import run_sync
 
 
 
+
+
+# Types every element has: '*' with one of these lists the whole repository.
+_ROOT_TYPES = frozenset({"OpenMetadataRoot", "Referenceable"})
+# '*' lists a type page by page: the caller's page_size, 100 when none is given, never more than 100.
+STAR_PAGE_MAX = 100
+
+
+def _string_condition(property_name: str, operator: str, value: str) -> dict:
+    """One SearchProperties condition on a string property."""
+    return {"property": property_name, "operator": operator,
+            "value": {"class": "PrimitiveTypePropertyValue", "typeName": "string", "primitiveValue": value}}
+
+
+def _match_operator(starts_with: bool, ends_with: bool, ignore_case: bool) -> str:
+    """The PropertyComparisonOperator for a search string, mirroring the property-value search options.
+    Egeria matches the value literally (it escapes LIKE wildcards), so no regex is needed."""
+    if starts_with and ends_with:
+        op = "EQ"
+    elif starts_with:
+        op = "STARTS_WITH"
+    elif ends_with:
+        op = "ENDS_WITH"
+    else:
+        op = "LIKE"
+    return f"CASE_INSENSITIVE_{op}" if ignore_case else op
 
 class ClassificationExplorer(ServerClient):
     """
@@ -381,7 +411,7 @@ class ClassificationExplorer(ServerClient):
             body: Optional[dict | FilterRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
-            **kwargs
+            **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
         Return information about the elements classified with the ownership classification. Async version.
@@ -398,6 +428,9 @@ class ClassificationExplorer(ServerClient):
             Type of output to return.
         report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         [dict] | str
@@ -432,11 +465,10 @@ class ClassificationExplorer(ServerClient):
             url=url,
             _type="Referenceable",
             _gen_output=self._generate_referenceable_output,
-            filter_string=owner_name,
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **kwargs
+            **{"filter_string": owner_name, **kwargs}
         )
         return response
 
@@ -447,7 +479,7 @@ class ClassificationExplorer(ServerClient):
             body: Optional[dict | FilterRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
-            **kwargs
+            **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
         Return information about the elements classified with the ownership classification.
@@ -464,6 +496,9 @@ class ClassificationExplorer(ServerClient):
             Type of output to return.
         report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         [dict] | str
@@ -504,7 +539,7 @@ class ClassificationExplorer(ServerClient):
             body: Optional[dict | FilterRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
-            **kwargs
+            **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
         Retrieve elements by a value found in the category property. The value must match exactly. Async version.
@@ -521,6 +556,9 @@ class ClassificationExplorer(ServerClient):
             Type of output to return.
         report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         [dict] | str
@@ -553,11 +591,10 @@ class ClassificationExplorer(ServerClient):
             url=url,
             _type="Referenceable",
             _gen_output=self._generate_referenceable_output,
-            filter_string=category,
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **kwargs
+            **{"filter_string": category, **kwargs}
         )
         return response
 
@@ -568,7 +605,7 @@ class ClassificationExplorer(ServerClient):
             body: Optional[dict | FilterRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
-            **kwargs
+            **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
         Retrieve elements by a value found in the category property. The value must match exactly.
@@ -585,6 +622,9 @@ class ClassificationExplorer(ServerClient):
             Type of output to return.
         report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         [dict] | str
@@ -623,7 +663,7 @@ class ClassificationExplorer(ServerClient):
             body: dict | FilterRequestBody,
             output_format: str = "JSON",
             report_spec: dict | str = None,
-            **kwargs
+            **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
         Return information about the elements classified with the subject area classification. Async version.
@@ -640,6 +680,9 @@ class ClassificationExplorer(ServerClient):
             Type of output to return.
         report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         [dict] | str
@@ -675,11 +718,10 @@ class ClassificationExplorer(ServerClient):
             url=url,
             _type="Referenceable",
             _gen_output=self._generate_referenceable_output,
-            filter_string=subject_area,
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **kwargs
+            **{"filter_string": subject_area, **kwargs}
         )
         return response
 
@@ -690,7 +732,7 @@ class ClassificationExplorer(ServerClient):
             body: dict | FilterRequestBody,
             output_format: str = "JSON",
             report_spec: dict | str = None,
-            **kwargs
+            **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
         Return information about the elements classified with the subject area classification.
@@ -707,6 +749,9 @@ class ClassificationExplorer(ServerClient):
             Type of output to return.
         report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         [dict] | str
@@ -1166,7 +1211,7 @@ class ClassificationExplorer(ServerClient):
             output_format: str = "JSON",
             report_spec: dict | str = None,
             body: Optional[dict | ResultsRequestBody] = None,
-            **kwargs
+            **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
         Retrieve the elements linked via a "governed-by" relationship to the requested governance definition. Async version.
@@ -1186,6 +1231,9 @@ class ClassificationExplorer(ServerClient):
             Output format set to use. If None, the default output format set is used.
         body: dict | ResultsRequestBody
             Details of the query.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1231,7 +1279,7 @@ class ClassificationExplorer(ServerClient):
             output_format: str = "JSON",
             report_spec: dict | str = None,
             body: Optional[dict | ResultsRequestBody] = None,
-            **kwargs
+            **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
         Retrieve the elements linked via a "governed-by" relationship to the requested governance definition.
@@ -1251,6 +1299,9 @@ class ClassificationExplorer(ServerClient):
             Output format set to use. If None, the default output format set is used.
         body: dict | ResultsRequestBody
             Details of the query.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1294,7 +1345,7 @@ class ClassificationExplorer(ServerClient):
             output_format: str = "JSON",
             report_spec: dict | str = None,
             body: Optional[dict | ResultsRequestBody] = None,
-            **kwargs
+            **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
         Retrieve the governance definitions linked via a "governed-by" relationship to the specified element. Async version.
@@ -1314,6 +1365,9 @@ class ClassificationExplorer(ServerClient):
             Output format set to use. If None, the default output format set is used.
         body: dict | ResultsRequestBody
             Details of the query.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1359,7 +1413,7 @@ class ClassificationExplorer(ServerClient):
             output_format: str = "JSON",
             report_spec: dict | str = None,
             body: Optional[dict | ResultsRequestBody] = None,
-            **kwargs
+            **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
         Retrieve the governance definitions linked via a "governed-by" relationship to the specified element.
@@ -1379,6 +1433,9 @@ class ClassificationExplorer(ServerClient):
             Output format set to use. If None, the default output format set is used.
         body: dict | ResultsRequestBody
             Details of the query.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1422,7 +1479,7 @@ class ClassificationExplorer(ServerClient):
             output_format: str = "JSON",
             report_spec: dict | str = None,
             body: Optional[dict | ResultsRequestBody] = None,
-            **kwargs
+            **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
             Retrieve the elements linked via a SourceFrom relationship to the requested element.
@@ -1445,6 +1502,9 @@ class ClassificationExplorer(ServerClient):
             Output format set to use. If None, the default output format set is used.
         body: dict | ResultsRequestBody
             Details of the query.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1490,7 +1550,7 @@ class ClassificationExplorer(ServerClient):
             output_format: str = "JSON",
             report_spec: dict | str = None,
             body: Optional[dict | ResultsRequestBody] = None,
-            **kwargs
+            **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
             Retrieve the elements linked via a SourceFrom relationship to the requested element.
@@ -1513,6 +1573,9 @@ class ClassificationExplorer(ServerClient):
             Output format set to use. If None, the default output format set is used.
         body: dict | ResultsRequestBody
             Details of the query.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1556,7 +1619,7 @@ class ClassificationExplorer(ServerClient):
             output_format: str = "JSON",
             report_spec: dict | str = None,
             body: Optional[dict | ResultsRequestBody] = None,
-            **kwargs
+            **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
             Retrieve the elements linked via the SourcedFrom relationship to the requested element. The elements
@@ -1578,6 +1641,9 @@ class ClassificationExplorer(ServerClient):
             Output format set to use. If None, the default output format set is used.
         body: dict | ResultsRequestBody
             Details of the query.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1623,7 +1689,7 @@ class ClassificationExplorer(ServerClient):
             output_format: str = "JSON",
             report_spec: dict | str = None,
             body: Optional[dict | ResultsRequestBody] = None,
-            **kwargs
+            **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
           Retrieve the elements linked via the SourcedFrom relationship to the requested element. The elements
@@ -1645,6 +1711,9 @@ class ClassificationExplorer(ServerClient):
             Output format set to use. If None, the default output format set is used.
         body: dict | ResultsRequestBody
             Details of the query.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1688,7 +1757,7 @@ class ClassificationExplorer(ServerClient):
             output_format: str = "JSON",
             report_spec: dict | str = None,
             body: Optional[dict | ResultsRequestBody] = None,
-            **kwargs
+            **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
         Retrieve the scopes linked via the ScopedBy relationship to the requested element. Async version.
@@ -1708,6 +1777,9 @@ class ClassificationExplorer(ServerClient):
             Output format set to use. If None, the default output format set is used.
         body: dict | ResultsRequestBody
             Details of the query.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1753,7 +1825,7 @@ class ClassificationExplorer(ServerClient):
             output_format: str = "JSON",
             report_spec: dict | str = None,
             body: Optional[dict | ResultsRequestBody] = None,
-            **kwargs
+            **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
         Retrieve the scopes linked via the ScopedBy relationship to the requested element.
@@ -1773,6 +1845,9 @@ class ClassificationExplorer(ServerClient):
             Output format set to use. If None, the default output format set is used.
         body: dict | ResultsRequestBody
             Details of the query.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1816,7 +1891,7 @@ class ClassificationExplorer(ServerClient):
             output_format: str = "JSON",
             report_spec: dict | str = None,
             body: Optional[dict | ResultsRequestBody] = None,
-            **kwargs
+            **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
             Retrieve the elements linked via the ScopedBy relationship to the scope. Async version.
@@ -1836,6 +1911,9 @@ class ClassificationExplorer(ServerClient):
             Output format set to use. If None, the default output format set is used.
         body: dict | ResultsRequestBody
             Details of the query.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1886,7 +1964,7 @@ class ClassificationExplorer(ServerClient):
             output_format: str = "JSON",
             report_spec: dict | str = None,
             body: Optional[dict | ResultsRequestBody] = None,
-            **kwargs
+            **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
              Retrieve the elements linked via the ScopedBy relationship to the scope.
@@ -1906,6 +1984,9 @@ class ClassificationExplorer(ServerClient):
             Output format set to use. If None, the default output format set is used.
         body: dict | ResultsRequestBody
             Details of the query.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1948,7 +2029,7 @@ class ClassificationExplorer(ServerClient):
             output_format: str = "JSON",
             report_spec: dict | str = None,
             body: Optional[dict | ResultsRequestBody] = None,
-            **kwargs
+            **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
             Retrieve the elements linked via a License relationship to the requested LicenseType. Async version.
@@ -1967,6 +2048,9 @@ class ClassificationExplorer(ServerClient):
             Output format set to use. If None, the default output format set is used.
         body: dict | ResultsRequestBody
             Details of the query.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -2012,7 +2096,7 @@ class ClassificationExplorer(ServerClient):
             output_format: str = "JSON",
             report_spec: dict | str = None,
             body: Optional[dict | ResultsRequestBody] = None,
-            **kwargs
+            **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
             Retrieve the elements linked via a License relationship to the requested LicenseType.
@@ -2032,6 +2116,9 @@ class ClassificationExplorer(ServerClient):
             Output format set to use. If None, the default output format set is used.
         body: dict | ResultsRequestBody
             Details of the query.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -2075,7 +2162,7 @@ class ClassificationExplorer(ServerClient):
             output_format: str = "JSON",
             report_spec: dict | str = None,
             body: Optional[dict | ResultsRequestBody] = None,
-            **kwargs
+            **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
             Retrieve the license types linked via a License relationship to the requested element. Async version.
@@ -2095,6 +2182,9 @@ class ClassificationExplorer(ServerClient):
             Output format set to use. If None, the default output format set is used.
         body: dict | ResultsRequestBody
             Details of the query.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -2140,7 +2230,7 @@ class ClassificationExplorer(ServerClient):
             output_format: str = "JSON",
             report_spec: dict | str = None,
             body: Optional[dict | ResultsRequestBody] = None,
-            **kwargs
+            **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
             Retrieve the license types linked via a License relationship to the requested element.
@@ -2160,6 +2250,9 @@ class ClassificationExplorer(ServerClient):
             Output format set to use. If None, the default output format set is used.
         body: dict | ResultsRequestBody
             Details of the query.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -2203,7 +2296,7 @@ class ClassificationExplorer(ServerClient):
             output_format: str = "JSON",
             report_spec: dict | str = None,
             body: Optional[dict | ResultsRequestBody] = None,
-            **kwargs
+            **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
             Retrieve the elements linked via a Certification relationship to the requested CertificationType. Async version.
@@ -2223,6 +2316,9 @@ class ClassificationExplorer(ServerClient):
             Output format set to use. If None, the default output format set is used.
         body: dict | ResultsRequestBody
             Details of the query.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -2268,7 +2364,7 @@ class ClassificationExplorer(ServerClient):
             output_format: str = "JSON",
             report_spec: dict | str = None,
             body: Optional[dict | ResultsRequestBody] = None,
-            **kwargs
+            **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
             Retrieve the elements linked via a Certification relationship to the requested CertificationType.
@@ -2288,6 +2384,9 @@ class ClassificationExplorer(ServerClient):
             Output format set to use. If None, the default output format set is used.
         body: dict | ResultsRequestBody
             Details of the query.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -2331,7 +2430,7 @@ class ClassificationExplorer(ServerClient):
             output_format: str = "JSON",
             report_spec: dict | str = None,
             body: Optional[dict | ResultsRequestBody] = None,
-            **kwargs
+            **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
             Retrieve the certification types linked via a Certification relationship to the requested element.
@@ -2352,6 +2451,9 @@ class ClassificationExplorer(ServerClient):
             Output format set to use. If None, the default output format set is used.
         body: dict | ResultsRequestBody
             Details of the query.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -2397,7 +2499,7 @@ class ClassificationExplorer(ServerClient):
             output_format: str = "JSON",
             report_spec: dict | str = None,
             body: Optional[dict | ResultsRequestBody] = None,
-            **kwargs
+            **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
             Retrieve the certification types linked via a Certification relationship to the requested element.
@@ -2417,6 +2519,9 @@ class ClassificationExplorer(ServerClient):
             Output format set to use. If None, the default output format set is used.
         body: dict | ResultsRequestBody
             Details of the query.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -2485,6 +2590,9 @@ class ClassificationExplorer(ServerClient):
         body: dict | ResultsRequestBody, optional
             - full request specification - if provided, overrides other parameters.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         [dict] | str
@@ -2540,6 +2648,9 @@ class ClassificationExplorer(ServerClient):
         body: dict | ResultsRequestBody, optional
             - full request specification - if provided, overrides other parameters.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         [dict] | str
@@ -2564,11 +2675,12 @@ class ClassificationExplorer(ServerClient):
 
         return response
 
+    @deprecated_names(metadata_element_name="metadata_element_type")
     async def _async_get_elements_by_property_value(
             self,
             property_value: str = None,
             property_names: Optional[list[str]] = None,
-            metadata_element_name: Optional[str] = None,
+            metadata_element_type: Optional[str] = None,
             starts_with: bool = True,
             ends_with: bool = False,
             ignore_case: bool = False,
@@ -2606,7 +2718,7 @@ class ClassificationExplorer(ServerClient):
             - property value to be searched.
         property_names: list[str]
             - property names to search in.
-        metadata_element_name : str, default = None
+        metadata_element_type : str, default = None
             - open metadata type to be used to restrict the search
         starts_with : bool, default = True
             - Whether to match only at the start.
@@ -2653,6 +2765,9 @@ class ClassificationExplorer(ServerClient):
         body: dict | FindPropertyNamesRequestBody | SearchStringRequestBody, default = None
             - Body of the request. If None, the default body is used.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         [dict] | str
@@ -2676,7 +2791,7 @@ class ClassificationExplorer(ServerClient):
 
         return await self._async_find_request(url, "Referenceable", self._generate_referenceable_output, property_value,
                                               starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
-                                              anchor_domain=anchor_domain, metadata_element_type=metadata_element_name,
+                                              anchor_domain=anchor_domain, 
                                               anchor_scope_guid=anchor_scope_guid,
                                               metadata_element_subtypes=metadata_element_subtypes,
                                               skip_relationships=skip_relationships,
@@ -2691,7 +2806,7 @@ class ClassificationExplorer(ServerClient):
                                               sequencing_order=sequencing_order,
                                               sequencing_property=sequencing_property, output_format=output_format,
                                               report_spec=report_spec, start_from=start_from, page_size=page_size,
-                                              property_names=property_names, body=body, **kwargs)
+                                              property_names=property_names, body=body, **{"metadata_element_type": metadata_element_type, **kwargs})
 
     def get_elements_by_property_value(
             self,
@@ -2782,6 +2897,9 @@ class ClassificationExplorer(ServerClient):
         body: dict | FindPropertyNamesRequestBody | SearchStringRequestBody, default = None
             - Body of the request. If None, the default body is used.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         [dict] | str
@@ -2825,11 +2943,12 @@ class ClassificationExplorer(ServerClient):
         )
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     async def _async_find_elements_by_property_value(
         self,
         property_value: str,
         property_names: list[str],
-        metadata_element_type_name: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = False,
@@ -2852,6 +2971,8 @@ class ClassificationExplorer(ServerClient):
         page_size: int = 0,
         timeout: int = default_timeout,
         body: Optional[dict | FindPropertyNamesRequestBody] = None,
+        deployed_implementation_type: Optional[str] = None,
+        default_deployed_implementation_type: Optional[str] = None,
         **kwargs,
     ) -> list | str:
         """
@@ -2864,10 +2985,14 @@ class ClassificationExplorer(ServerClient):
         Parameters
         ----------
         property_value: str
-            - property value to be searched.
+            - property value to be searched. '*' (or empty) with a metadata_element_type returns every element of that type (via get_elements); '*' without a type is refused.
+        deployed_implementation_type: str, optional
+            - list only elements of exactly this technology within metadata_element_type: Egeria ANDs deployedImplementationType EQUALS this value (ignoring case) with (for a search string other than '*') property_names matching it, in one complex query, so paging stays exact. "*" means any technology (no technology condition).
+        default_deployed_implementation_type: str, optional
+            - the technology used when deployed_implementation_type is not given (report specs pin it; a caller's deployed_implementation_type overrides it).
         property_names: list[str]
             - property names to search in.
-        metadata_element_type_name : str, default = None
+        metadata_element_type : str, default = None
             - open metadata type to be used to restrict the search
         starts_with : bool, default = True
             - Whether to match only at the start.
@@ -2916,6 +3041,9 @@ class ClassificationExplorer(ServerClient):
         body: Optional[dict | FindPropertyNamesRequestBody] = None
             - Full request body - supercedes other parameters.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         [dict] | str
@@ -2954,6 +3082,72 @@ class ClassificationExplorer(ServerClient):
         #         "effectiveTime": effective_time,
         #     }
 
+        star = property_value in (None, "", "*")
+        # The technology: the caller's deployed_implementation_type if given, else the report spec's
+        # default; "*" means any technology (no technology condition).
+        technology = deployed_implementation_type or default_deployed_implementation_type
+        if technology == "*":
+            technology = None
+        if technology and body is None:
+            # One technology within a shared supertype (e.g. "PostgreSQL Server" among the
+            # SoftwareServers). Both conditions are ANDed by Egeria in one complex query, so paging is
+            # exact and no other technology can appear: deployedImplementationType EQUALS the
+            # technology, AND (for a search string) one of property_names matches it.
+            # exact, ignoring case: "postgresql server" finds the PostgreSQL Server
+            conditions = [_string_condition("deployedImplementationType", "CASE_INSENSITIVE_EQ", technology)]
+            if not star:
+                operator = _match_operator(starts_with, ends_with, ignore_case)
+                conditions.append({"nestedConditions": {
+                    "class": "SearchProperties", "matchCriteria": "ANY",
+                    "conditions": [_string_condition(name, operator, property_value)
+                                   for name in (property_names or ["displayName", "qualifiedName"])]}})
+            filters = {
+                "anchor_domain": anchor_domain, "metadata_element_subtypes": metadata_element_subtypes,
+                "skip_relationships": skip_relationships,
+                "include_only_relationships": include_only_relationships,
+                "skip_classified_elements": skip_classified_elements,
+                "include_only_classified_elements": include_only_classified_elements,
+                "governance_zone_filter": governance_zone_filter, "as_of_time": as_of_time,
+                "limit_results_by_status": limit_results_by_status, "sequencing_order": sequencing_order,
+                "sequencing_property": sequencing_property,
+            }
+            return await self._async_find_root_elements(
+                metadata_element_type=metadata_element_type,
+                start_from=start_from,
+                page_size=min(page_size or STAR_PAGE_MAX, STAR_PAGE_MAX) if star else page_size,
+                graph_query_depth=graph_query_depth, output_format=output_format, report_spec=report_spec,
+                timeout=timeout, **{k: v for k, v in filters.items() if v is not None},
+                # the technology conditions win over any search_properties a caller passed
+                **{**kwargs, "search_properties": {"class": "SearchProperties", "matchCriteria": "ALL",
+                                                   "conditions": conditions}})
+
+        if star and body is None:
+            # Egeria's property-value search refuses a null value (OPEN-METADATA-400-002), and pyegeria
+            # sends '*' as null. '*' with a type therefore means "every element of that type"; without
+            # a type there is nothing to ask for.
+            if not metadata_element_type or metadata_element_type in _ROOT_TYPES:
+                # A root type is no narrower than no type: listing every element of the repository
+                # ran the quickstart platform out of heap (2026-11-09), so it is refused like '*'.
+                raise ValueError("find_elements_by_property_value: give a search string or a narrower type "
+                                 "('*' with no metadata_element_type, or with "
+                                 f"{'/'.join(sorted(_ROOT_TYPES))}, would list every element)")
+            # Never fetch a whole type in one call: one page of at most STAR_PAGE_MAX, paged by start_from.
+            page_size = min(page_size or STAR_PAGE_MAX, STAR_PAGE_MAX)
+            list_filters = {
+                "anchor_domain": anchor_domain, "metadata_element_subtypes": metadata_element_subtypes,
+                "skip_relationships": skip_relationships,
+                "include_only_relationships": include_only_relationships,
+                "skip_classified_elements": skip_classified_elements,
+                "include_only_classified_elements": include_only_classified_elements,
+                "governance_zone_filter": governance_zone_filter, "as_of_time": as_of_time,
+                "limit_results_by_status": limit_results_by_status, "sequencing_order": sequencing_order,
+                "sequencing_property": sequencing_property, "graph_query_depth": graph_query_depth,
+            }
+            return await self._async_get_elements(
+                metadata_element_type=metadata_element_type, start_from=start_from, page_size=page_size,
+                output_format=output_format, report_spec=report_spec,
+                **{k: v for k, v in list_filters.items() if v is not None}, **kwargs)
+
         url = f"{self.classification_command_root}/elements/by-property-value-search"
 
         params = {
@@ -2961,7 +3155,7 @@ class ClassificationExplorer(ServerClient):
             'ends_with': ends_with,
             'ignore_case': ignore_case,
             'anchor_domain': anchor_domain,
-            'metadata_element_type': metadata_element_type_name,
+            'metadata_element_type': metadata_element_type,
             'metadata_element_subtypes': metadata_element_subtypes,
             'skip_relationships': skip_relationships,
             'include_only_relationships': include_only_relationships,
@@ -2983,15 +3177,16 @@ class ClassificationExplorer(ServerClient):
         }
         params.update(kwargs)
         params = {k: v for k, v in params.items() if v is not None}
-        return await self._async_find_request(url, _type=metadata_element_type_name,
+        return await self._async_find_request(url, _type=metadata_element_type,
                                               _gen_output=self._generate_referenceable_output,
                                               search_string=property_value, **params)
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     def find_elements_by_property_value(
         self,
         property_value: str,
         property_names: list[str],
-        metadata_element_type_name: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = False,
@@ -3014,6 +3209,8 @@ class ClassificationExplorer(ServerClient):
         page_size: int = 0,
         timeout: int = default_timeout,
         body: Optional[dict | FindPropertyNamesRequestBody] = None,
+        deployed_implementation_type: Optional[str] = None,
+        default_deployed_implementation_type: Optional[str] = None,
         **kwargs,
     ) -> list | str:
         """
@@ -3026,10 +3223,14 @@ class ClassificationExplorer(ServerClient):
         Parameters
         ----------
         property_value: str
-            - property value to be searched.
+            - property value to be searched. '*' (or empty) with a metadata_element_type returns every element of that type (via get_elements); '*' without a type is refused.
+        deployed_implementation_type: str, optional
+            - list only elements of exactly this technology within metadata_element_type: Egeria ANDs deployedImplementationType EQUALS this value (ignoring case) with (for a search string other than '*') property_names matching it, in one complex query, so paging stays exact. "*" means any technology (no technology condition).
+        default_deployed_implementation_type: str, optional
+            - the technology used when deployed_implementation_type is not given (report specs pin it; a caller's deployed_implementation_type overrides it).
         property_names: list[str]
             - property names to search in.
-        metadata_element_type_name : str, default = None
+        metadata_element_type : str, default = None
             - open metadata type to be used to restrict the search
         start_from: int, default = 0
             - index of the list to start from (0 for start).
@@ -3043,6 +3244,9 @@ class ClassificationExplorer(ServerClient):
             - Output format set to use. If None, the default output format set is used.
         body: Optional[dict | FindPropertyNamesRequestBody] = None
            - Full request body - supercedes other parameters.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -3074,7 +3278,7 @@ class ClassificationExplorer(ServerClient):
             self._async_find_elements_by_property_value(
                 property_value,
                 property_names,
-                metadata_element_type_name,
+                metadata_element_type,
                 starts_with=starts_with,
                 ends_with=ends_with,
                 ignore_case=ignore_case,
@@ -3097,6 +3301,8 @@ class ClassificationExplorer(ServerClient):
                 page_size=page_size,
                 timeout=timeout,
                 body=body,
+                deployed_implementation_type=deployed_implementation_type,
+                default_deployed_implementation_type=default_deployed_implementation_type,
                 **kwargs
             )
         )
@@ -3109,7 +3315,7 @@ class ClassificationExplorer(ServerClient):
             graph_query_depth: int = 3, output_format: str = "JSON",
             report_spec: dict | str = "Referenceable",
             body: Optional[dict | GetRequestBody] = None,
-            **kwargs,
+            **kwargs: Unpack[GetFilters],
     ) -> dict | str:
         """
         Retrieve element by its unique identifier.  Async version.
@@ -3128,6 +3334,9 @@ class ClassificationExplorer(ServerClient):
             - output format set to be used
         body: dict | GetRequestBody, default = None
             - full request specification - if provided, overrides other parameters.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -3165,7 +3374,7 @@ class ClassificationExplorer(ServerClient):
             graph_query_depth: int = 3, output_format: str = "JSON",
             report_spec: dict | str = None,
             body: Optional[dict | GetRequestBody] = None,
-            **kwargs,
+            **kwargs: Unpack[GetFilters],
     ) -> dict | str:
         """
         Retrieve element by its unique identifier.
@@ -3184,6 +3393,9 @@ class ClassificationExplorer(ServerClient):
             - output format set to be used
         body: dict | GetRequestBody, default = None
             - full request specification - if provided, overrides other parameters.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -3208,9 +3420,13 @@ class ClassificationExplorer(ServerClient):
         )
         return response
 
-    def get_actor_for_guid(self, guid: str) -> str:
-        """Get the name of the actor from the supplied guid."""
-        details = self.get_element_by_guid(guid, element_type_name="UserIdentity")
+    def get_actor_for_guid(self, guid: str, **kwargs: Unpack[GetFilters]) -> str:
+        """Get the name of the actor from the supplied guid.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
+        """
+        details = self.get_element_by_guid(guid, element_type_name="UserIdentity", **kwargs)
         if type(details) is str:
             return details
         if details["elementHeader"]["type"]["typeName"] != "UserIdentity":
@@ -3403,7 +3619,7 @@ class ClassificationExplorer(ServerClient):
         return response
 
     async def _async_get_guid_for_name(self, name: str, property_name: list[str] = ["qualifiedName", "displayName"],
-                                       type_name: str = None, **kwargs) -> str:
+                                       type_name: str = None, **kwargs: Unpack[SearchFilters]) -> str:
         """
         Retrieve the guid associated with the supplied element name.
         If more than one element returned, an exception is thrown. Async version.
@@ -3416,6 +3632,9 @@ class ClassificationExplorer(ServerClient):
             - optional name of property to search. If not specified, defaults to qualifiedName and displayName.
         type_name: str, default = "ValidMetadataValue"
             - metadata element type name to be used to restrict the search
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -3440,7 +3659,7 @@ class ClassificationExplorer(ServerClient):
 
     def get_guid_for_name(
             self, name: str, property_name: list[str] = ["qualifiedName", "displayName"],
-            type_name: str = None, **kwargs
+            type_name: str = None, **kwargs: Unpack[SearchFilters]
     ) -> str:
         """
         Retrieve the guid associated with the supplied element name.
@@ -3454,6 +3673,9 @@ class ClassificationExplorer(ServerClient):
             - optional name of property to search. If not specified, defaults to qualifiedName and displayName.
         type_name: str, default = "ValidMetadataValue"
             - metadata element type name to be used to restrict the search
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -3481,7 +3703,7 @@ class ClassificationExplorer(ServerClient):
             output_format: str = "JSON",
             report_spec: str | dict = None,
             body: Optional[dict | ResultsRequestBody] = None,
-            **kwargs
+            **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
          Retrieve elements with the requested classification name. It is also possible to limit the results
@@ -3504,6 +3726,9 @@ class ClassificationExplorer(ServerClient):
             - Output format set to use. If None, the default output format set is used.
         body: dict | ResultsRequestBody, optional
             - full request specification - if provided, overrides other parameters.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -3541,7 +3766,7 @@ class ClassificationExplorer(ServerClient):
             output_format: str = "JSON",
             report_spec: dict | str = None,
             body: Optional[dict | ResultsRequestBody] = None,
-            **kwargs
+            **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
         Retrieve elements with the requested classification name. It is also possible to limit the results
@@ -3564,6 +3789,9 @@ class ClassificationExplorer(ServerClient):
             - Output format set to use. If None, the default output format set is used.
         body: dict | ResultsRequestBody, optional
             - full request specification - if provided, overrides other parameters.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -3589,12 +3817,13 @@ class ClassificationExplorer(ServerClient):
         return response
 
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     async def _async_get_elements_by_classification_with_property_value(
             self,
             classification_name: str,
             property_value: str,
             property_names: Optional[list[str]] = None,
-            metadata_element_type_name: Optional[str] = None,
+            metadata_element_type: Optional[str] = None,
             starts_with: bool = True,
             ends_with: bool = False,
             ignore_case: bool = False,
@@ -3634,7 +3863,7 @@ class ClassificationExplorer(ServerClient):
              - property value to be searched.
          property_names: list[str]
              - property names to search in.
-         metadata_element_type_name : str, default = None
+         metadata_element_type : str, default = None
              - open metadata type to be used to restrict the search
          starts_with : bool, default = True
              - Whether to match only at the start.
@@ -3681,6 +3910,9 @@ class ClassificationExplorer(ServerClient):
          body: dict | FindPropertyNamesRequestBody | SearchStringRequestBody, optional
              - full request specification - if provided, overrides other parameters.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
          Returns
          -------
          [dict] | str
@@ -3707,7 +3939,6 @@ class ClassificationExplorer(ServerClient):
         return await self._async_find_request(url, "Referenceable", self._generate_referenceable_output, property_value,
                                               starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
                                               anchor_domain=anchor_domain,
-                                              metadata_element_type=metadata_element_type_name,
                                               metadata_element_subtypes=metadata_element_subtypes,
                                               skip_relationships=skip_relationships,
                                               include_only_relationships=include_only_relationships,
@@ -3721,14 +3952,15 @@ class ClassificationExplorer(ServerClient):
                                               sequencing_order=sequencing_order,
                                               sequencing_property=sequencing_property, output_format=output_format,
                                               report_spec=report_spec, start_from=start_from, page_size=page_size,
-                                              property_names=property_names, body=body, **kwargs)
+                                              property_names=property_names, body=body, **{"metadata_element_type": metadata_element_type, **kwargs})
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     def get_elements_by_classification_with_property_value(
             self,
             classification_name: str,
             property_value: str,
             property_names: Optional[list[str]] = None,
-            metadata_element_type_name: Optional[str] = None,
+            metadata_element_type: Optional[str] = None,
             starts_with: bool = True,
             ends_with: bool = False,
             ignore_case: bool = False,
@@ -3767,7 +3999,7 @@ class ClassificationExplorer(ServerClient):
             - property value to be searched.
         property_names: list[str]
             - property names to search in.
-        metadata_element_type_name : str, default = None
+        metadata_element_type : str, default = None
             - open metadata type to be used to restrict the search
         starts_with : bool, default = True
             - Whether to match only at the start.
@@ -3814,6 +4046,9 @@ class ClassificationExplorer(ServerClient):
         body: dict | FindPropertyNamesRequestBody | SearchStringRequestBody, optional
             - full request specification - if provided, overrides other parameters.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         [dict] | str
@@ -3829,7 +4064,7 @@ class ClassificationExplorer(ServerClient):
                 classification_name,
                 property_value,
                 property_names,
-                metadata_element_type_name,
+                metadata_element_type,
                 starts_with,
                 ends_with,
                 ignore_case,
@@ -3857,12 +4092,13 @@ class ClassificationExplorer(ServerClient):
         )
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     async def _async_find_elements_by_classification_with_property_value(
         self,
         classification_name: str,
         property_value: str,
         property_names: list[str],
-        metadata_element_type_name: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = False,
@@ -3904,7 +4140,7 @@ class ClassificationExplorer(ServerClient):
             - property value to be searched.
         property_names: list[str]
             - property names to search in.
-        metadata_element_type_name : str, default = None
+        metadata_element_type : str, default = None
             - open metadata type to be used to restrict the search
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
@@ -3920,6 +4156,9 @@ class ClassificationExplorer(ServerClient):
             - Output format set to use. If None, the default output format set is used.
         body: Optional[dict | SearchStringRequestBody] = None
             - Full request body - supercedes other parameters.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -3956,7 +4195,7 @@ class ClassificationExplorer(ServerClient):
             'ends_with': ends_with,
             'ignore_case': ignore_case,
             'anchor_domain': anchor_domain,
-            'metadata_element_type': metadata_element_type_name,
+            'metadata_element_type': metadata_element_type,
             'metadata_element_subtypes': metadata_element_subtypes,
             'skip_relationships': skip_relationships,
             'include_only_relationships': include_only_relationships,
@@ -3978,16 +4217,17 @@ class ClassificationExplorer(ServerClient):
         }
         params.update(kwargs)
         params = {k: v for k, v in params.items() if v is not None}
-        return await self._async_find_request(url, _type=metadata_element_type_name,
+        return await self._async_find_request(url, _type=metadata_element_type,
                                               _gen_output=self._generate_referenceable_output,
                                               search_string=property_value, **params)
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     def find_elements_by_classification_with_property_value(
         self,
         classification_name: str,
         property_value: str,
         property_names: list[str],
-        metadata_element_type_name: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = False,
@@ -4028,7 +4268,7 @@ class ClassificationExplorer(ServerClient):
             - property value to be searched.
         property_names: list[str]
             - property names to search in.
-        metadata_element_type_name : str, default = None
+        metadata_element_type : str, default = None
             - open metadata type to be used to restrict the search
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
@@ -4045,6 +4285,9 @@ class ClassificationExplorer(ServerClient):
         body: Optional[dict | SearchStringRequestBody] = None
             - Full request body - supercedes other parameters.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         [dict] | str
@@ -4060,7 +4303,7 @@ class ClassificationExplorer(ServerClient):
                 classification_name,
                 property_value,
                 property_names,
-                metadata_element_type_name,
+                metadata_element_type,
                 starts_with=starts_with,
                 ends_with=ends_with,
                 ignore_case=ignore_case,
@@ -4102,7 +4345,7 @@ class ClassificationExplorer(ServerClient):
             output_format: str = "JSON",
             report_spec: dict | str = None,
             body: Optional[dict | ResultsRequestBody] = None,
-            **kwargs
+            **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
         Retrieve elements linked by relationship type name. If the relationship type is None, then all related elements
@@ -4130,6 +4373,9 @@ class ClassificationExplorer(ServerClient):
             - Output format set to use. If None, the default output format set is used.
         body: dict | ResultsRequestBody, optional
             - full request specification - if provided, overrides other parameters.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -4173,7 +4419,7 @@ class ClassificationExplorer(ServerClient):
             output_format: str = "JSON",
             report_spec: dict | str = None,
             body: Optional[dict | ResultsRequestBody] = None,
-            **kwargs
+            **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
         Retrieve elements linked by relationship type name. If the relationship type is None, then all related elements
@@ -4201,6 +4447,9 @@ class ClassificationExplorer(ServerClient):
         body: dict | ResultsRequestBody, optional
             - full request specification - if provided, overrides other parameters.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         [dict] | str
@@ -4226,13 +4475,14 @@ class ClassificationExplorer(ServerClient):
         )
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     async def _async_get_related_elements_with_property_value(
             self,
             element_guid: str,
             relationship_type: str,
             property_value: str,
             property_names: Optional[list[str]] = None,
-            metadata_element_type_name: Optional[str] = None,
+            metadata_element_type: Optional[str] = None,
             start_at_end: int = 1,
             starts_with: bool = True,
             ends_with: bool = False,
@@ -4275,7 +4525,7 @@ class ClassificationExplorer(ServerClient):
             - property value to be searched.
         property_names: list[str]
             - property names to search in.
-        metadata_element_type_name : str, default = None
+        metadata_element_type : str, default = None
             - restrict search to elements of this open metadata type
         start_at_end: int, default = 1
             - The end of the relationship to start from - typically End1
@@ -4324,6 +4574,9 @@ class ClassificationExplorer(ServerClient):
         body: dict | FindPropertyNamesRequestBody | SearchStringRequestBody, optional
             - full request specification - if provided, overrides other parameters.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         [dict] | str
@@ -4346,7 +4599,6 @@ class ClassificationExplorer(ServerClient):
         return await self._async_find_request(url, "Referenceable", self._generate_referenceable_output, property_value,
                                               starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
                                               anchor_domain=anchor_domain,
-                                              metadata_element_type=metadata_element_type_name,
                                               metadata_element_subtypes=metadata_element_subtypes,
                                               skip_relationships=skip_relationships,
                                               include_only_relationships=include_only_relationships,
@@ -4360,15 +4612,16 @@ class ClassificationExplorer(ServerClient):
                                               sequencing_order=sequencing_order,
                                               sequencing_property=sequencing_property, output_format=output_format,
                                               report_spec=report_spec, start_from=start_from, page_size=page_size,
-                                              property_names=property_names, body=body, **kwargs)
+                                              property_names=property_names, body=body, **{"metadata_element_type": metadata_element_type, **kwargs})
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     def get_related_elements_with_property_value(
             self,
             element_guid: str,
             relationship_type: str,
             property_value: str,
             property_names: Optional[list[str]] = None,
-            metadata_element_type_name: Optional[str] = None,
+            metadata_element_type: Optional[str] = None,
             start_at_end: int = 1,
             starts_with: bool = True,
             ends_with: bool = False,
@@ -4411,7 +4664,7 @@ class ClassificationExplorer(ServerClient):
             - property value to be searched.
         property_names: list[str]
             - property names to search in.
-        metadata_element_type_name : str, default = None
+        metadata_element_type : str, default = None
             - open metadata type to be used to restrict the search
         start_at_end: int, default = 1
             - The end of the relationship to start from - typically End1
@@ -4432,6 +4685,9 @@ class ClassificationExplorer(ServerClient):
         report_spec: dict | str, default = None
             - Output format set to use. If None, the default output format set is used.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         [dict] | str
@@ -4448,7 +4704,7 @@ class ClassificationExplorer(ServerClient):
                 relationship_type,
                 property_value,
                 property_names,
-                metadata_element_type_name,
+                metadata_element_type,
                 start_at_end,
                 starts_with,
                 ends_with,
@@ -4478,13 +4734,14 @@ class ClassificationExplorer(ServerClient):
         return response
 
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     async def _async_find_related_elements_with_property_value(
         self,
         element_guid: str,
         relationship_type: str,
         property_value: str,
         property_names: list[str],
-        metadata_element_type_name: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
         start_at_end: int = 1,
         starts_with: bool = True,
         ends_with: bool = False,
@@ -4528,7 +4785,7 @@ class ClassificationExplorer(ServerClient):
             - property value to be searched.
         property_names: list[str]
             - property names to search in.
-        metadata_element_type_name : str, default = None
+        metadata_element_type : str, default = None
             - restrict search to elements of this open metadata type
         start_at_end: int, default = 1
             - The end of the relationship to start from - typically End1
@@ -4546,6 +4803,9 @@ class ClassificationExplorer(ServerClient):
             - Output format set to use. If None, the default output format set is used.
         body: Optional[dict | SearchStringRequestBody] = None
             - Full request body - supercedes other parameters.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -4566,7 +4826,7 @@ class ClassificationExplorer(ServerClient):
         if body is None:
             body = {
                 "class": "FindPropertyNamesProperties",
-                "metadataElementTypeName": metadata_element_type_name,
+                "metadataElementTypeName": metadata_element_type,
                 "propertyValue": property_value,
                 "propertyNames": property_names,
                 "forLineage": None,
@@ -4585,7 +4845,7 @@ class ClassificationExplorer(ServerClient):
             'ends_with': ends_with,
             'ignore_case': ignore_case,
             'anchor_domain': anchor_domain,
-            'metadata_element_type': metadata_element_type_name,
+            'metadata_element_type': metadata_element_type,
             'metadata_element_subtypes': metadata_element_subtypes,
             'skip_relationships': skip_relationships,
             'include_only_relationships': include_only_relationships,
@@ -4607,17 +4867,18 @@ class ClassificationExplorer(ServerClient):
         }
         params.update(kwargs)
         params = {k: v for k, v in params.items() if v is not None}
-        return await self._async_find_request(url, _type=metadata_element_type_name,
+        return await self._async_find_request(url, _type=metadata_element_type,
                                               _gen_output=self._generate_referenceable_output,
                                               search_string=property_value, **params)
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     def find_related_elements_with_property_value(
         self,
         element_guid: str,
         relationship_type: str,
         property_value: str,
         property_names: list[str],
-        metadata_element_type_name: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
         start_at_end: int = 1,
         starts_with: bool = True,
         ends_with: bool = False,
@@ -4661,7 +4922,7 @@ class ClassificationExplorer(ServerClient):
             - property value to be searched.
         property_names: list[str]
             - property names to search in.
-        metadata_element_type_name : str, default = None
+        metadata_element_type : str, default = None
             - restrict search to elements of this open metadata type
         start_at_end: int, default = 1
             - The end of the relationship to start from - typically End1
@@ -4680,6 +4941,9 @@ class ClassificationExplorer(ServerClient):
         body: Optional[dict | SearchStringRequestBody] = None
             - Full request body - supercedes other parameters.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         [dict] | str
@@ -4696,7 +4960,7 @@ class ClassificationExplorer(ServerClient):
                 relationship_type,
                 property_value,
                 property_names,
-                metadata_element_type_name,
+                metadata_element_type,
                 start_at_end,
                 starts_with=starts_with,
                 ends_with=ends_with,
@@ -5105,6 +5369,9 @@ class ClassificationExplorer(ServerClient):
         body: Optional[dict | SearchStringRequestBody] = None
             - Full request body - supercedes other parameters.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         [dict] | str
@@ -5142,9 +5409,8 @@ class ClassificationExplorer(ServerClient):
 
         return await self._async_find_request(url, _type=relationship_type or "Relationship",
                                               _gen_output=self._generate_referenceable_output,
-                                              search_string=property_value, starts_with=starts_with,
+                                              starts_with=starts_with,
                                               ends_with=ends_with, ignore_case=ignore_case, anchor_domain=anchor_domain,
-                                              metadata_element_type=None,
                                               metadata_element_subtypes=metadata_element_subtypes,
                                               skip_relationships=skip_relationships,
                                               include_only_relationships=include_only_relationships,
@@ -5157,7 +5423,7 @@ class ClassificationExplorer(ServerClient):
                                               sequencing_order=sequencing_order,
                                               sequencing_property=sequencing_property, output_format=output_format,
                                               report_spec=report_spec, start_from=start_from, page_size=page_size,
-                                              property_names=property_names, body=body, **kwargs)
+                                              property_names=property_names, body=body, **{"search_string": property_value, "metadata_element_type": None, **kwargs})
 
     def find_relationships_with_property_value(
             self,
@@ -5244,6 +5510,9 @@ class ClassificationExplorer(ServerClient):
             - Output format set to use. If None, the default output format set is used.
         body: Optional[dict | SearchStringRequestBody] = None
             - Full request body - supercedes other parameters.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -6950,7 +7219,7 @@ class ClassificationExplorer(ServerClient):
             output_format: str = "JSON",
             report_spec: dict | str = None,
             body: Optional[dict | ResultsRequestBody] = None,
-            **kwargs
+            **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
             Retrieve the resources linked via the ResourceList relationship to the requested element. Async version.
@@ -6971,6 +7240,9 @@ class ClassificationExplorer(ServerClient):
             Output format set to use. If None, the default output format set is used.
         body: dict | ResultsRequestBody
             Details of the query.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -7016,7 +7288,7 @@ class ClassificationExplorer(ServerClient):
             output_format: str = "JSON",
             report_spec: dict | str = None,
             body: Optional[dict | ResultsRequestBody] = None,
-            **kwargs
+            **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
             Retrieve the resources linked via the ResourceList relationship to the requested element.
@@ -7037,6 +7309,9 @@ class ClassificationExplorer(ServerClient):
             Output format set to use. If None, the default output format set is used.
         body: dict | ResultsRequestBody
             Details of the query.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -7080,7 +7355,7 @@ class ClassificationExplorer(ServerClient):
             output_format: str = "JSON",
             report_spec: dict | str = None,
             body: Optional[dict | ResultsRequestBody] = None,
-            **kwargs
+            **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
             Retrieve the elements linked via the ResourceList relationship to the requested resource -- ie the
@@ -7102,6 +7377,9 @@ class ClassificationExplorer(ServerClient):
             Output format set to use. If None, the default output format set is used.
         body: dict | ResultsRequestBody
             Details of the query.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -7147,7 +7425,7 @@ class ClassificationExplorer(ServerClient):
             output_format: str = "JSON",
             report_spec: dict | str = None,
             body: Optional[dict | ResultsRequestBody] = None,
-            **kwargs
+            **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
             Retrieve the elements linked via the ResourceList relationship to the requested resource -- ie the
@@ -7169,6 +7447,9 @@ class ClassificationExplorer(ServerClient):
             Output format set to use. If None, the default output format set is used.
         body: dict | ResultsRequestBody
             Details of the query.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -12451,10 +12732,11 @@ class ClassificationExplorer(ServerClient):
         )
 
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_find_root_elements(
         self,
-        metadata_element_type_name: str = None,
+        metadata_element_type: str = None,
         search_properties: dict = None,
         match_classifications: dict = None,
         start_from: int = 0,
@@ -12470,7 +12752,7 @@ class ClassificationExplorer(ServerClient):
 
         Parameters
         ----------
-        metadata_element_type_name: str, optional
+        metadata_element_type: str, optional
             - name of the type of element to return.
         search_properties: dict, optional
             - structure containing the search criteria for the properties.
@@ -12488,6 +12770,9 @@ class ClassificationExplorer(ServerClient):
             - http request timeout for this request
         body: dict | FindRequestBody, optional
             - if specified, this takes precedence over other parameters.
+
+        Accepts the standard find filters as keyword arguments (see ``FindFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -12529,11 +12814,12 @@ class ClassificationExplorer(ServerClient):
             body_dict = {
                 'graphQueryDepth': graph_query_depth,
                 "class": "FindRequestBody",
-                "metadataElementTypeName": metadata_element_type_name,
+                "metadataElementTypeName": metadata_element_type,
                 "searchProperties": search_properties,
                 "matchClassifications": match_classifications,
                 "startFrom": start_from,
                 "pageSize": page_size,
+                **filter_body_kwargs("find", kwargs),
             }
             validated_body = FindRequestBody.model_validate(body_dict)
 
@@ -12548,14 +12834,15 @@ class ClassificationExplorer(ServerClient):
 
         if output_format.upper() != "JSON":
             return self._generate_referenceable_output(
-                elements, None, metadata_element_type_name, output_format, report_spec
+                elements, None, metadata_element_type, output_format, report_spec
             )
         return elements
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def find_root_elements(
         self,
-        metadata_element_type_name: str = None,
+        metadata_element_type: str = None,
         search_properties: dict = None,
         match_classifications: dict = None,
         start_from: int = 0,
@@ -12571,7 +12858,7 @@ class ClassificationExplorer(ServerClient):
 
         Parameters
         ----------
-        metadata_element_type_name: str, optional
+        metadata_element_type: str, optional
             - name of the type of element to return.
         search_properties: dict, optional
             - structure containing the search criteria for the properties.
@@ -12590,6 +12877,9 @@ class ClassificationExplorer(ServerClient):
         body: dict | FindRequestBody, optional
             - if specified, this takes precedence over other parameters.
 
+        Accepts the standard find filters as keyword arguments (see ``FindFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | str
@@ -12603,7 +12893,7 @@ class ClassificationExplorer(ServerClient):
         # (get_scoped_elements/get_scopes).
         return run_sync(
             self._async_find_root_elements(
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 search_properties=search_properties,
                 match_classifications=match_classifications,
                 start_from=start_from,
@@ -12671,6 +12961,9 @@ class ClassificationExplorer(ServerClient):
             - the report specification to use for the output
         body: dict | ContentStatusSearchString, optional
             - the request body to use for the request. If specified, this takes precedence over other parameters.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -12780,6 +13073,9 @@ class ClassificationExplorer(ServerClient):
         body: dict | ContentStatusSearchString, optional
             - the request body to use for the request. If specified, this takes precedence over other parameters.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -12825,7 +13121,7 @@ class ClassificationExplorer(ServerClient):
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = None,
         body: dict | ContentStatusFilterRequestBody = None,
-        **kwargs,
+        **kwargs: Unpack[ListFilters],
     ) -> list | str:
         """Returns the list of authored elements matching the category and optional content status.
         Async version.
@@ -12846,6 +13142,9 @@ class ClassificationExplorer(ServerClient):
             - the report specification to use for the output
         body: dict | ContentStatusFilterRequestBody, optional
             - the request body to use for the request. If specified, this takes precedence over other parameters.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -12898,7 +13197,7 @@ class ClassificationExplorer(ServerClient):
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = None,
         body: dict | ContentStatusFilterRequestBody = None,
-        **kwargs,
+        **kwargs: Unpack[ListFilters],
     ) -> list | str:
         """Returns the list of authored elements matching the category and optional content status.
 
@@ -12918,6 +13217,9 @@ class ClassificationExplorer(ServerClient):
             - the report specification to use for the output
         body: dict | ContentStatusFilterRequestBody, optional
             - the request body to use for the request. If specified, this takes precedence over other parameters.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------

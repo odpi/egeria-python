@@ -10,6 +10,8 @@ Copyright Contributors to the ODPi Egeria project.
 import asyncio
 from typing import Any, Optional
 
+from typing import Unpack
+from pyegeria.core.request_filters import GetFilters, ListFilters, SearchFilters
 from pyegeria.view.base_report_formats import select_report_spec
 from pyegeria.core._server_client import ServerClient
 from pyegeria.view.base_report_formats import get_report_spec_match
@@ -156,7 +158,7 @@ class ReferenceDataManager(ServerClient):
             graph_query_depth: int = 3,
             output_format: str = "JSON",
             report_spec: str | dict = None,
-            **kwargs
+            **kwargs: Unpack[SearchFilters]
     ) -> list | str:
         """ Returns the list of valid value definitions matching the search string.
             The search string is located in the request body and is interpreted as a plain string.
@@ -185,6 +187,9 @@ class ReferenceDataManager(ServerClient):
         page_size: int, [default=None]
             The number of items to return in a single page. If not specified, the default will be taken from
             the class instance.
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         List | str
@@ -237,7 +242,7 @@ class ReferenceDataManager(ServerClient):
             graph_query_depth: int = 3,
             output_format: str = "JSON",
             report_spec: str | dict = None,
-            **kwargs
+            **kwargs: Unpack[SearchFilters]
     ) -> list | str:
 
         """ Returns the list of valid value definitions matching the search string.
@@ -262,6 +267,9 @@ class ReferenceDataManager(ServerClient):
         page_size: int, [default=None]
             The number of items to return in a single page. If not specified, the default will be taken from
             the class instance.
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         List | str
@@ -301,7 +309,7 @@ class ReferenceDataManager(ServerClient):
             start_from: int = 0, page_size: int = 0,
             graph_query_depth: int = 3, output_format: str = 'JSON',
             report_spec: str | dict = None,
-            **kwargs) -> list | str:
+            **kwargs: Unpack[ListFilters]) -> list | str:
         if name is None and "filter_string" in kwargs:
             name = kwargs.pop("filter_string")
 
@@ -332,7 +340,7 @@ class ReferenceDataManager(ServerClient):
             start_from: int = 0, page_size: int = 0,
             graph_query_depth: int = 3, output_format: str = 'JSON',
             report_spec: str | dict = None,
-            **kwargs) -> list | str:
+            **kwargs: Unpack[ListFilters]) -> list | str:
 
         resp = run_sync(
             self._async_get_valid_value_definitions_by_name(
@@ -354,7 +362,7 @@ class ReferenceDataManager(ServerClient):
                                          body: Optional[dict | GetRequestBody] = None,
                                          graph_query_depth: int = 3, output_format: str = 'JSON',
                                          report_spec: str | dict = None,
-                                         **kwargs) -> dict | str:
+                                         **kwargs: Unpack[GetFilters]) -> dict | str:
         """Return the properties of a specific project. Async version.
 
             Parameters
@@ -369,6 +377,9 @@ class ReferenceDataManager(ServerClient):
                 - one of "DICT", "MERMAID" or "JSON"
             report_spec: str | dict, optional, default = None
                     The desired output columns/fields to include.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
             Returns
             -------
@@ -418,7 +429,7 @@ class ReferenceDataManager(ServerClient):
                             body: Optional[dict | GetRequestBody] = None,
                             graph_query_depth: int = 3, output_format: str = 'JSON',
                             report_spec: str | dict = None,
-                            **kwargs) -> dict | str:
+                            **kwargs: Unpack[GetFilters]) -> dict | str:
         """Return the properties of a specific project.
 
             Parameters
@@ -433,6 +444,9 @@ class ReferenceDataManager(ServerClient):
                 - one of "DICT", "MERMAID" or "JSON"
             report_spec: str | dict, optional, default = None
                     The desired output columns/fields to include.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
             Returns
             -------

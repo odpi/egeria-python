@@ -3024,7 +3024,7 @@
       "attach": false,
       "level": "Basic",
       "find_method": "CollectionManager.find_collections",
-      "find_constraints": "{\"classification_names\": [\"DigitalProductCatalog\"]}",
+      "find_constraints": "{\"metadata_element_type\": \"DigitalProductCatalog\"}",
       "extra_find": "",
       "extra_constraints": "",
       "OM_TYPE": "DigitalProductCatalog",

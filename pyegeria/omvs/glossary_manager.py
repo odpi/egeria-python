@@ -15,6 +15,9 @@ from typing import List, Annotated, Literal, Optional
 from loguru import logger
 from pydantic import Field
 
+from typing import Unpack
+from pyegeria.core.request_filters import deprecated_names
+from pyegeria.core.request_filters import GetFilters
 from pyegeria.core._exceptions import PyegeriaInvalidParameterException, PyegeriaException
 from pyegeria.core._globals import NO_GUID_RETURNED
 from pyegeria.core._validators import validate_guid
@@ -3400,6 +3403,7 @@ class GlossaryManager(CollectionManager):
         response = run_sync(self._async_get_term_relationship_types())
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_find_glossaries(
         self,
@@ -3407,7 +3411,7 @@ class GlossaryManager(CollectionManager):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = "Glossary",
+        metadata_element_type: str | None = "Glossary",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -3434,7 +3438,7 @@ class GlossaryManager(CollectionManager):
             Whether to match glossaries ending with the search string.
         ignore_case : bool, default=True
             Whether to ignore case when searching.
-        metadata_element_type_name : str, default="Glossary"
+        metadata_element_type : str, default="Glossary"
             The metadata element type to search for.
         metadata_element_subtypes : list[str], optional
             The subtypes of metadata element to search for.
@@ -3463,6 +3467,9 @@ class GlossaryManager(CollectionManager):
         **kwargs : dict, optional
             Additional parameters supported by the find request.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -3478,7 +3485,6 @@ class GlossaryManager(CollectionManager):
             starts_with=starts_with,
             ends_with=ends_with,
             ignore_case=ignore_case,
-            metadata_element_type=metadata_element_type_name,
             metadata_element_subtypes=metadata_element_subtypes,
             include_only_relationships=include_only_relationships,
             skip_relationships=skip_relationships,
@@ -3491,10 +3497,11 @@ class GlossaryManager(CollectionManager):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **kwargs,
+            **{"metadata_element_type": metadata_element_type, **kwargs},
         )
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def find_glossaries(
         self,
@@ -3502,7 +3509,7 @@ class GlossaryManager(CollectionManager):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = "Glossary",
+        metadata_element_type: str | None = "Glossary",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -3517,14 +3524,18 @@ class GlossaryManager(CollectionManager):
         body: Optional[dict | SearchStringRequestBody] = None,
         **kwargs,
     ) -> list | str:
-        """Retrieve the list of glossary metadata elements that contain the search string."""
+        """Retrieve the list of glossary metadata elements that contain the search string.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+        """
         return run_sync(
             self._async_find_glossaries(
                 search_string=search_string,
                 starts_with=starts_with,
                 ends_with=ends_with,
                 ignore_case=ignore_case,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,
@@ -3563,7 +3574,6 @@ class GlossaryManager(CollectionManager):
             _type="Glossary",
             _gen_output=self._generate_glossary_output,
             filter_string=filter_string,
-            metadata_element_type_name="Glossary",
             metadata_element_subtypes=metadata_element_subtypes,
             classification_names=classification_names,
             include_only_relationships=include_only_relationships,
@@ -3574,7 +3584,7 @@ class GlossaryManager(CollectionManager):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **kwargs,
+            **{"metadata_element_type": "Glossary", **kwargs},
         )
         return response
 
@@ -3788,6 +3798,7 @@ class GlossaryManager(CollectionManager):
         )
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_find_glossary_terms(
         self,
@@ -3795,7 +3806,7 @@ class GlossaryManager(CollectionManager):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = "GlossaryTerm",
+        metadata_element_type: str | None = "GlossaryTerm",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -3822,7 +3833,7 @@ class GlossaryManager(CollectionManager):
             Whether to match terms ending with the search string.
         ignore_case : bool, default=True
             Whether to ignore case when searching.
-        metadata_element_type_name : str, default="GlossaryTerm"
+        metadata_element_type : str, default="GlossaryTerm"
             The metadata element type to search for.
         metadata_element_subtypes : list[str], optional
             The subtypes of metadata element to search for.
@@ -3851,6 +3862,9 @@ class GlossaryManager(CollectionManager):
         **kwargs : dict, optional
             Additional parameters supported by the find request.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -3860,13 +3874,12 @@ class GlossaryManager(CollectionManager):
 
         response = await self._async_find_request(
             url,
-            _type=metadata_element_type_name,
+            _type=metadata_element_type,
             _gen_output=self._generate_term_output,
             search_string=search_string,
             starts_with=starts_with,
             ends_with=ends_with,
             ignore_case=ignore_case,
-            metadata_element_type=metadata_element_type_name,
             metadata_element_subtypes=metadata_element_subtypes,
             include_only_relationships=include_only_relationships,
             skip_relationships=skip_relationships,
@@ -3879,11 +3892,12 @@ class GlossaryManager(CollectionManager):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **kwargs,
+            **{"metadata_element_type": metadata_element_type, **kwargs},
         )
 
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def find_glossary_terms(
         self,
@@ -3891,7 +3905,7 @@ class GlossaryManager(CollectionManager):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = "GlossaryTerm",
+        metadata_element_type: str | None = "GlossaryTerm",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -3906,14 +3920,18 @@ class GlossaryManager(CollectionManager):
         body: Optional[dict | SearchStringRequestBody] = None,
         **kwargs,
     ) -> list | str:
-        """Retrieve the list of glossary term metadata elements that contain the search string."""
+        """Retrieve the list of glossary term metadata elements that contain the search string.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+        """
         return run_sync(
             self._async_find_glossary_terms(
                 search_string=search_string,
                 starts_with=starts_with,
                 ends_with=ends_with,
                 ignore_case=ignore_case,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,
@@ -3930,13 +3948,16 @@ class GlossaryManager(CollectionManager):
             )
         )
 
-    async def _async_get_glossary_for_term(self, term_guid: str) -> dict:
+    async def _async_get_glossary_for_term(self, term_guid: str, **kwargs: Unpack[GetFilters]) -> dict:
         """Returns the glossary containing the term with the supplied GUID. Async version.
 
         Parameters
         ----------
         term_guid : str
             The unique identifier of the term to find the glossary for.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -3948,7 +3969,7 @@ class GlossaryManager(CollectionManager):
         PyegeriaException
             If the term is not found, or it is not anchored to any glossary.
         """
-        term = await self._async_get_term_by_guid(term_guid, output_format="JSON")
+        term = await self._async_get_term_by_guid(term_guid, output_format="JSON", **kwargs)
         if not isinstance(term, dict):
             raise PyegeriaException("Term not found or invalid format returned")
 
@@ -3962,16 +3983,19 @@ class GlossaryManager(CollectionManager):
         if not glossary_guid:
             raise PyegeriaException(f"Term '{term_guid}' is not anchored to any glossary")
 
-        return await self._async_get_glossary_by_guid(glossary_guid)
+        return await self._async_get_glossary_by_guid(glossary_guid, **kwargs)
 
     @dynamic_catch
-    def get_glossary_for_term(self, term_guid: str) -> dict:
+    def get_glossary_for_term(self, term_guid: str, **kwargs: Unpack[GetFilters]) -> dict:
         """Returns the glossary containing the term with the supplied GUID.
 
         Parameters
         ----------
         term_guid : str
             The unique identifier of the term to find the glossary for.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -3983,7 +4007,7 @@ class GlossaryManager(CollectionManager):
         PyegeriaException
             If the term is not found, or it is not anchored to any glossary.
         """
-        return run_sync(self._async_get_glossary_for_term(term_guid))
+        return run_sync(self._async_get_glossary_for_term(term_guid, **kwargs))
 
     #
     # Naming standards classifications (0438) -- Egeria PR #9166. Simple marker
