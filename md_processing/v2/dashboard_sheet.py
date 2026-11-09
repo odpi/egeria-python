@@ -213,6 +213,27 @@ def placement_field_properties(sheet_name: str, position: int, placement: Placem
     }
 
 
+def _refuse_kind_clash(sheet_name: str, placement: Placement, existing_kind: str) -> None:
+    """Placements are matched by name within a sheet, so a report and a text placement cannot share a name:
+    the second would silently replace the first. Refuse, in words."""
+    kind = placement_kind(placement)
+    if existing_kind != kind:
+        raise ValueError(
+            f"Dashboard Sheet '{sheet_name}' already has a {existing_kind} placement named '{placement.ref}'; a "
+            f"{kind} placement cannot share its name (placements are matched by name). Give it another name.")
+
+
+def duplicate_placement_names(sheet: DashboardSheet) -> List[str]:
+    """Names used by more than one placement of a sheet (they would collapse into one placement)."""
+    seen, dups = set(), []
+    for p in sheet.placements:
+        ref = p.get("ref") if isinstance(p, dict) else p.ref
+        if ref in seen and ref not in dups:
+            dups.append(ref)
+        seen.add(ref)
+    return dups
+
+
 def _field_props_differ(desired: Dict[str, Any], current: Dict[str, Any]) -> bool:
     """Like _props_differ, but a property set on the field and now unset also counts as a change (a
     placement re-run without perspectives must clear them)."""
@@ -494,6 +515,7 @@ class DashboardSheetEgeriaWriter:
         existing = next((f for f in fields if f.display_name == placement.ref), None)
 
         if existing:
+            _refuse_kind_clash(sheet, placement, existing.properties.get("placementKind") or "report")
             pos = existing.position if existing.position is not None else (position or 0)
             props = placement_field_properties(sheet, pos, placement, existing.qualified_name)
             field_guid = existing.guid
@@ -503,7 +525,10 @@ class DashboardSheetEgeriaWriter:
                 self.actions.append(f"unchanged DisplayDataField {existing.qualified_name}")
         else:
             taken = [f.position for f in fields if f.position is not None]
-            pos = position if position is not None else (max(taken) + 1 if taken else 1)
+            if position is not None and position not in taken:
+                pos = position
+            else:  # never reuse a taken position (after a removal, an index can equal one)
+                pos = max(taken) + 1 if taken else 1
             props = placement_field_properties(sheet, pos, placement)
             found = None if self._is_planned(chain.container_guid) else await self._find(props["qualifiedName"])
             if found:
@@ -611,7 +636,14 @@ class DashboardSheetEgeriaWriter:
     # ------------------------------------------------------------ whole sheets, removal
 
     async def write_sheet(self, sheet: DashboardSheet) -> SheetChain:
-        """Write a whole sheet (migration): the chain, then every placement at its 1-based position."""
+        """Write a whole sheet (migration): the chain, then every placement at its 1-based position.
+        A sheet with two placements of one name is refused before anything is written: they would collapse
+        into one placement."""
+        dups = duplicate_placement_names(sheet)
+        if dups:
+            raise ValueError(f"Dashboard Sheet '{sheet.name}' has more than one placement named "
+                             f"{', '.join(repr(d) for d in dups)}; placements are matched by name, so they would "
+                             f"collapse into one. Rename them in the store first. Nothing was written.")
         chain = await self.ensure_sheet(sheet.name, sheet.heading, sheet.description, sheet.family, sheet.aliases)
         for index, placement in enumerate(sheet.placements, start=1):
             if isinstance(placement, dict):
@@ -804,6 +836,21 @@ class LinkReportToDashboardSheetProcessor(_DashboardSheetProcessorMixin, AsyncBa
     def supports_target_element_lookup(self) -> bool:
         return False
 
+    async def resolve_element_guid(self, name_or_guid: str, tech_type: Optional[str] = None) -> Optional[str]:
+        """`Report Name` is resolved first as the one Report with exactly that displayName (the writer's typed
+        lookup), then as before. Dr.Egeria's untyped lookup is refused by Egeria when another element type
+        shares the name (live 2026-11-09: 'Term Definition Completeness', 'Governance Classification
+        Coverage'), which failed this command at validation."""
+        text = str(name_or_guid or "").strip()
+        if text and "(guid:" not in text and self.client is not None:
+            try:
+                guid = await DashboardSheetEgeriaWriter(self.client)._resolve_report(text)
+            except (AttributeError, PyegeriaConnectionException):
+                guid = None
+            if guid:
+                return guid
+        return await super().resolve_element_guid(name_or_guid, tech_type)
+
     async def apply_changes(self) -> str:
         attributes = self.parsed_output["attributes"]
         sheet_name = attributes.get("Dashboard Sheet Name", {}).get("value")
@@ -864,10 +911,13 @@ class LinkReportToDashboardSheetProcessor(_DashboardSheetProcessorMixin, AsyncBa
 
 
 def _put_placement(sheet: DashboardSheet, placement: Placement) -> bool:
-    """Replace the placement with the same ref, or append it. True if replaced."""
+    """Replace the placement with the same ref, or append it. True if replaced. A same-named placement of the
+    other kind (report vs text) is refused, as in Egeria."""
     for i, p in enumerate(sheet.placements):
-        ref = p.get("ref") if isinstance(p, dict) else p.ref
-        if ref == placement.ref:
+        if isinstance(p, dict):
+            p = Placement(**p)
+        if p.ref == placement.ref:
+            _refuse_kind_clash(sheet.name, placement, placement_kind(p))
             sheet.placements[i] = placement
             return True
     sheet.placements.append(placement)
