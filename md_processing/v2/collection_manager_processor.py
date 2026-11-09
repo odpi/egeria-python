@@ -261,6 +261,32 @@ class CSVElementProcessor(AsyncBaseCommandProcessor):
 
         return self.command.raw_block
 
+# Relationship types CollectionLinkProcessor knows how to link and detach,
+# keyed by the compact spec's OM_TYPE.
+_COLLECTION_LINK_TYPES = frozenset({
+    "AgreementItem", "AgreementActor", "CollectionMembership", "DigitalProductDependency",
+    "BusinessCapabilityDependency", "DigitalSupport", "ResourceList", "DataDescription",
+    "DigitalSubscriber",
+})
+
+# Phrase fallbacks for when no compact spec resolved (so there is no OM_TYPE),
+# checked in order against the object type.  Every command phrasing that
+# reaches this processor must land on exactly one relationship type here or
+# via OM_TYPE -- a miss raises rather than reporting a no-op as success.
+_COLLECTION_LINK_PHRASES = (
+    (("Agreement Item", "Agreement to Item", "Agreement from Item"), "AgreementItem"),
+    (("Agreement Actor", "Agreement to Actor", "Agreement from Actor"), "AgreementActor"),
+    (("Business Capability Dependency", "Supporting Capability"), "BusinessCapabilityDependency"),
+    (("Digital Support", "Digital Service"), "DigitalSupport"),
+    (("Product Dependency", "Digital Product", "Product-Product"), "DigitalProductDependency"),
+    (("Attach Collection", "Resource List", "Collection to Resource", "Collection from Resource",
+      "Collection->Resource"), "ResourceList"),
+    (("Data Description",), "DataDescription"),
+    (("Subscriber",), "DigitalSubscriber"),
+    (("Collection Member", "Member"), "CollectionMembership"),
+)
+
+
 class CollectionLinkProcessor(AsyncBaseCommandProcessor):
     """
     Processor for Agreement Items, Collection Membership, product dependencies, etc.
@@ -270,16 +296,53 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
     async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
         return None
 
+    def _relationship_type(self, object_type: str) -> str:
+        """Which relationship this command links/detaches, or raise if none.
+
+        The compact spec's OM_TYPE is authoritative: every phrasing of a
+        command (``Detach Member from Collection``, ``Remove Member``, ...)
+        resolves to the same spec, whose canonical object type ("Member to
+        Collection") need not contain the words a substring test looks for.
+        The phrase table is only a fallback for phrasings no spec resolves.
+        """
+        om_type = getattr(self, "egeria_type_name", None)
+        if om_type in _COLLECTION_LINK_TYPES:
+            return om_type
+        names = [object_type or "", self.command.object_type or ""]
+        for phrases, rel_type in _COLLECTION_LINK_PHRASES:
+            if any(p in name for name in names for p in phrases):
+                return rel_type
+        raise ValueError(
+            f"{self.command.verb} {self.command.object_type}: no relationship handler for object type "
+            f"'{object_type}' (OM_TYPE {om_type!r}); nothing was sent to Egeria")
+
+    def _resource_list_ends(self, attributes: dict) -> tuple[str, str]:
+        """(resource guid, collection guid) for a ResourceList link/detach, or raise.
+
+        The compact spec names the resource end "Element Id"; older markdown
+        used "Resource Id".  Accept either, and never send a request with an
+        unresolved end.
+        """
+        guid_res = ((attributes.get('Resource Id') or {}).get('guid')
+                    or (attributes.get('Element Id') or {}).get('guid'))
+        guid_coll = (attributes.get('Collection Id') or {}).get('guid')
+        if not guid_res or not guid_coll:
+            raise ValueError(f"{self.command.verb} {self.command.object_type}: Collection Id and Element Id "
+                             f"(or Resource Id) must both resolve to a GUID (got {guid_coll!r}, {guid_res!r}); "
+                             f"nothing was sent to Egeria")
+        return guid_res, guid_coll
+
     async def apply_changes(self) -> str:
         verb = self.command.verb
         object_type = self.canonical_object_type
         attributes = self.parsed_output["attributes"]
+        rel_type = self._relationship_type(object_type)
 
         self.last_body = body = set_rel_request_body(object_type, attributes)
         new_rel_guids: list[str] = []
 
         if verb in ["Link", "Attach", "Add"]:
-            if "Agreement Item" in object_type or "Agreement to Item" in object_type:
+            if rel_type == "AgreementItem":
                 guid1 = attributes.get('Agreement Name', {}).get('guid')
                 guid2 = attributes.get('Item Name', {}).get('guid')
                 body['properties'] = {
@@ -312,7 +375,7 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
                     self.parsed_output["guid"] = rel_guid
                     new_rel_guids.append(rel_guid)
 
-            elif "Agreement Actor" in object_type or "Agreement to Actor" in object_type:
+            elif rel_type == "AgreementActor":
                 guid_ag = attributes.get('Agreement Name', {}).get('guid')
                 actor_data = attributes.get('Actors', {})
                 actor_guids = actor_data.get('guid_list') or ([actor_data.get('guid')] if actor_data.get('guid') else [])
@@ -347,7 +410,7 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
                 if len(new_rel_guids) == 1:
                     self.parsed_output["guid"] = new_rel_guids[0]
 
-            elif "Collection Member" in object_type or "Member to Collection" in object_type:
+            elif rel_type == "CollectionMembership":
                 guid_coll = attributes.get('Collection Id', {}).get('guid')
                 guid_el = attributes.get('Element Id', {}).get('guid')
                 body['properties'] = {
@@ -367,7 +430,7 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
                 }
                 await self.client._async_add_to_collection(guid_coll, guid_el, body_slimmer(body))
 
-            elif "Product Dependency" in object_type:
+            elif rel_type == "DigitalProductDependency":
                 guid1 = attributes.get('Digital Product 1', {}).get('guid')
                 guid2 = attributes.get('Digital Product 2', {}).get('guid')
                 body['properties'] = {
@@ -398,7 +461,7 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
                     self.parsed_output["guid"] = rel_guid
                     new_rel_guids.append(rel_guid)
 
-            elif "Business Capability Dependency" in object_type:
+            elif rel_type == "BusinessCapabilityDependency":
                 # BusinessCapabilityDependency is UNI_LINK, so attach is an upsert.
                 body['properties'] = {
                     "class": "BusinessCapabilityDependencyProperties",
@@ -409,7 +472,7 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
                     attributes.get('Dependent Capability', {}).get('guid'),
                     attributes.get('Supporting Capability', {}).get('guid'), body)
 
-            elif "Digital Support" in object_type:
+            elif rel_type == "DigitalSupport":
                 # DigitalSupport is UNI_LINK, so attach is an upsert.
                 body['properties'] = {
                     "class": "DigitalSupportProperties",
@@ -420,9 +483,8 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
                     attributes.get('Supported Capability', {}).get('guid'),
                     attributes.get('Digital Service', {}).get('guid'), body)
 
-            elif "Attach Collection" in object_type:
-                guid_coll = attributes.get('Collection Id', {}).get('guid')
-                guid_res = attributes.get('Resource Id', {}).get('guid')
+            elif rel_type == "ResourceList":
+                guid_res, guid_coll = self._resource_list_ends(attributes)
                 body['properties'] = {
                     "class": "ResourceListProperties",
                     "typeName": "ResourceList",
@@ -435,7 +497,7 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
                 }
                 await self.client._async_attach_collection(guid_res, guid_coll, body)
 
-            elif "Data Description" in object_type:
+            elif rel_type == "DataDescription":
                 guid_coll = attributes.get('Collection Id', {}).get('guid')
                 guid_el = attributes.get('Element Id', {}).get('guid')
                 body['properties'] = {
@@ -443,7 +505,7 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
                 }
                 await self.client._async_attach_data_description(guid_el, guid_coll, body)
 
-            elif "Subscriber" in object_type:
+            elif rel_type == "DigitalSubscriber":
                 guid_sub = attributes.get('Subscriber Id', {}).get('guid')
                 guid_sn = attributes.get('Subscription Id', {}).get('guid')
                 body['properties'] = {
@@ -454,6 +516,8 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
                     "effectiveTo": attributes.get('Effective To', {}).get('value'),
                 }
                 await self.client._async_link_subscriber(guid_sub, guid_sn, body)
+            else:  # _relationship_type() returned a type with no link branch
+                raise ValueError(f"{verb} {object_type}: no link handler for {rel_type}; nothing was sent to Egeria")
 
             logger.success(f"Linked {object_type}")
 
@@ -468,7 +532,7 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
                 # "GUID" attribute on Detach.
                 label = "Relationship GUID" if len(new_rel_guids) == 1 else "Relationship GUIDs"
                 header += f"### {label}\n" + "\n".join(f"- `{g}`" for g in new_rel_guids) + "\n\n"
-            if "Member to Collection" in object_type or "Collection Member" in object_type:
+            if rel_type == "CollectionMembership":
                 header += "### Associated Elements\n"
                 header += f"- **Collection Id**: `{attributes.get('Collection Id', {}).get('value')}`\n"
                 header += f"- **Element Id**: `{attributes.get('Element Id', {}).get('value')}`\n\n"
@@ -496,12 +560,12 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
             # compatibility with markdown written before this attribute
             # existed and for the common single-instance case.
             explicit_rel_guid = (attributes.get("GUID") or {}).get("guid") or (attributes.get("GUID") or {}).get("value")
-            if "Agreement Item" in object_type or "Agreement to Item" in object_type:
+            if rel_type == "AgreementItem":
                 if explicit_rel_guid:
                     await self.client._async_detach_agreement_item_by_id(explicit_rel_guid, body)
                 else:
                     await self.client._async_detach_agreement_item(attributes.get('Agreement Name', {}).get('guid'), attributes.get('Item Name', {}).get('guid'), body)
-            elif "Agreement Actor" in object_type or "Agreement to Actor" in object_type:
+            elif rel_type == "AgreementActor":
                 guid_ag = attributes.get('Agreement Name', {}).get('guid')
                 actor_data = attributes.get('Actors', {})
                 actor_guids = actor_data.get('guid_list') or ([actor_data.get('guid')] if actor_data.get('guid') else [])
@@ -516,28 +580,35 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
                             else:
                                 logger.warning(
                                     f"No AgreementActor relationship found between agreement {guid_ag} and actor {guid_ac} - skipping detach")
-            elif "Collection Membership" in object_type or "Collection Member" in object_type:
-                await self.client._async_remove_from_collection(attributes.get('Collection Id', {}).get('guid'), attributes.get('Element Id', {}).get('guid'), body)
-            elif "Product Dependency" in object_type:
+            elif rel_type == "CollectionMembership":
+                guid_coll = attributes.get('Collection Id', {}).get('guid')
+                guid_el = attributes.get('Element Id', {}).get('guid')
+                if not guid_coll or not guid_el:
+                    raise ValueError(f"{verb} {object_type}: Collection Id and Element Id must both resolve to a GUID "
+                                     f"(got {guid_coll!r}, {guid_el!r}); nothing was sent to Egeria")
+                await self.client._async_remove_from_collection(guid_coll, guid_el, body)
+            elif rel_type == "DigitalProductDependency":
                 if explicit_rel_guid:
                     await self.client._async_detach_digital_product_dependency_by_id(explicit_rel_guid, body)
                 else:
                     await self.client._async_detach_digital_product_dependency(attributes.get('Digital Product 1', {}).get('guid'), attributes.get('Digital Product 2', {}).get('guid'), body)
-            elif "Business Capability Dependency" in object_type:
+            elif rel_type == "BusinessCapabilityDependency":
                 await self.client._async_detach_business_capability_dependency(
                     attributes.get('Dependent Capability', {}).get('guid'),
                     attributes.get('Supporting Capability', {}).get('guid'), body)
-            elif "Digital Support" in object_type:
+            elif rel_type == "DigitalSupport":
                 await self.client._async_detach_digital_support(
                     attributes.get('Supported Capability', {}).get('guid'),
                     attributes.get('Digital Service', {}).get('guid'), body)
-            elif "Attach Collection" in object_type or "Resource List" in object_type:
-                await self.client._async_detach_collection(attributes.get('Resource Id', {}).get('guid'), attributes.get('Collection Id', {}).get('guid'), body)
-            elif "Data Description" in object_type:
+            elif rel_type == "ResourceList":
+                await self.client._async_detach_collection(*self._resource_list_ends(attributes), body)
+            elif rel_type == "DataDescription":
                 await self.client._async_detach_data_description(attributes.get('Element Id', {}).get('guid'), attributes.get('Collection Id', {}).get('guid'), body)
-            elif "Subscriber" in object_type:
+            elif rel_type == "DigitalSubscriber":
                 await self.client._async_detach_subscriber(attributes.get('Subscriber Id', {}).get('guid'), attributes.get('Subscription Id', {}).get('guid'), body)
-                
+            else:  # _relationship_type() returned a type with no detach branch
+                raise ValueError(f"{verb} {object_type}: no detach handler for {rel_type}; nothing was sent to Egeria")
+
             logger.success(f"Detached {object_type}")
             return f"\n\n## {verb} {object_type}\n\nOperation completed."
 
