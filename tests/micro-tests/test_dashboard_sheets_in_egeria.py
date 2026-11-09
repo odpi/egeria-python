@@ -458,3 +458,20 @@ async def test_link_command_finds_a_report_whose_name_another_type_shares(egeria
     await _run(egeria, "Link", "Report to Dashboard Sheet",
                {**LINK_2, "Report Name": "Term Definition Completeness", "Placement Detail Spec": ""})
     assert [r["end2"] for r in egeria.rels("DataSetContent")] == [report]
+
+
+@pytest.mark.asyncio
+async def test_rerun_itemises_every_unchanged_element_and_link(egeria):
+    """A re-run's 'unchanged' list itemises what the first run made, so the counts match (live step (a): 9)."""
+    from pyegeria.view._output_dashboard_sheet_models import DashboardSheet, Placement
+    sheet = DashboardSheet(name="s", heading="S", placements=[Placement(ref="Coco Terms Total", span="full")])
+    first = DashboardSheetEgeriaWriter(egeria)
+    await first.write_sheet(sheet)
+    second = DashboardSheetEgeriaWriter(egeria)
+    await second.write_sheet(sheet)
+    made = [a for a in first.actions if not a.startswith("unchanged")]
+    assert all(a.startswith("unchanged") for a in second.actions)
+    assert len(second.actions) == len(made) == 8  # 4 elements + Schema, AttributeForSchema, NestedSchemaAttribute, DataSetContent
+    kinds = sorted(a.split()[1] for a in second.actions)
+    assert kinds == sorted(["Dashboard", "DisplayDataSchemaType", "Schema", "DisplayDataContainer",
+                            "AttributeForSchema", "DisplayDataField", "NestedSchemaAttribute", "DataSetContent"])
