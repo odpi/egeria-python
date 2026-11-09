@@ -612,6 +612,9 @@ class SubjectArea(ServerClient):
         body : dict | FilterRequestBody, optional
             The request body for the search.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | str
@@ -697,6 +700,9 @@ class SubjectArea(ServerClient):
             The desired output columns/fields to include.
         body : dict | FilterRequestBody, optional
             The request body for the search.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -797,6 +803,9 @@ class SubjectArea(ServerClient):
         body: dict | SearchStringRequestBody, optional
             - if provided, the search parameters in the body will supercede other attributes.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -893,6 +902,9 @@ class SubjectArea(ServerClient):
         body : dict, optional
             Request body for additional parameters.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -950,6 +962,9 @@ class SubjectArea(ServerClient):
             The desired output columns/fields to include.
         body : dict | GetRequestBody, optional
             The request body for the search.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1009,6 +1024,9 @@ class SubjectArea(ServerClient):
             The desired output columns/fields to include.
         body : dict | GetRequestBody, optional
             The request body for the search.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------

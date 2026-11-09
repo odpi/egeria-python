@@ -11,6 +11,8 @@ relationships, including product dependencies and product managers.
 import asyncio
 from typing import Optional
 
+from typing import Unpack
+from pyegeria.core.request_filters import GetFilters, ListFilters, SearchFilters
 from pyegeria.omvs.collection_manager import CollectionManager
 from pyegeria.core._server_client import ServerClient
 from pyegeria.models import (
@@ -378,7 +380,7 @@ class ProductManager(CollectionManager):
         body: Optional[dict] = None,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
-        **kwargs,
+        **kwargs: Unpack[GetFilters],
     ) -> dict | str:
         """Return the properties of a specific digital product. Async version.
 
@@ -392,6 +394,9 @@ class ProductManager(CollectionManager):
             One of "JSON", "DICT", "MD", "FORM", "REPORT", or "MERMAID".
         report_spec : str | dict, optional
             The desired output columns/fields to include.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -439,7 +444,7 @@ class ProductManager(CollectionManager):
         body: Optional[dict] = None,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
-        **kwargs,
+        **kwargs: Unpack[GetFilters],
     ) -> dict | str:
         """Return the properties of a specific digital product. Sync version.
 
@@ -453,6 +458,9 @@ class ProductManager(CollectionManager):
             One of "JSON", "DICT", "MD", "FORM", "REPORT", or "MERMAID".
         report_spec : str | dict, optional
             The desired output columns/fields to include.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -481,7 +489,7 @@ class ProductManager(CollectionManager):
         page_size: int = 0,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
-        **kwargs,
+        **kwargs: Unpack[ListFilters],
     ) -> list | str:
         """Returns the list of digital products with a particular name. Async version.
 
@@ -502,6 +510,9 @@ class ProductManager(CollectionManager):
         report_spec : str | dict, optional
             The desired output columns/fields to include.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | str
@@ -521,7 +532,7 @@ class ProductManager(CollectionManager):
                                                       classification_names=classification_names, start_from=start_from,
                                                       page_size=page_size, graph_query_depth=graph_query_depth,
                                                       output_format=output_format,
-                                                      report_spec=report_spec, body=body)
+                                                      report_spec=report_spec, body=body, **kwargs)
         return response
 
     def get_digital_products_by_name(
@@ -533,7 +544,7 @@ class ProductManager(CollectionManager):
         page_size: int = 0,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
-        **kwargs,
+        **kwargs: Unpack[ListFilters],
     ) -> list | str:
         """Returns the list of digital products with a particular name. Sync version.
 
@@ -553,6 +564,9 @@ class ProductManager(CollectionManager):
             One of "JSON", "DICT", "MD", "FORM", "REPORT", or "MERMAID".
         report_spec : str | dict, optional
             The desired output columns/fields to include.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -584,7 +598,7 @@ class ProductManager(CollectionManager):
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         metadata_element_subtype: Optional[list[str]] = None,
-        **kwargs
+        **kwargs: Unpack[SearchFilters]
     ) -> list | str:
         """Returns the list of digital products matching the search string. Async version.
 
@@ -641,6 +655,9 @@ class ProductManager(CollectionManager):
         body : dict, optional
             If provided, the search parameters in the body supersede other attributes.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -691,7 +708,7 @@ class ProductManager(CollectionManager):
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         metadata_element_subtype: Optional[list[str]] = None,
-        **kwargs
+        **kwargs: Unpack[SearchFilters]
     ) -> list | str:
         """Returns the list of digital products matching the search string. Sync version.
 
@@ -747,6 +764,9 @@ class ProductManager(CollectionManager):
             The names of properties to search for.
         body : dict, optional
             If provided, the search parameters in the body supersede other attributes.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -1378,7 +1398,7 @@ class ProductManager(CollectionManager):
         body: Optional[dict] = None,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
-        **kwargs,
+        **kwargs: Unpack[GetFilters],
     ) -> dict | str:
         """Return the properties of a specific digital product catalog by GUID. Async version.
 
@@ -1392,6 +1412,9 @@ class ProductManager(CollectionManager):
             Format for output. Defaults to "JSON".
         report_spec : str | dict, optional
             Report specification for formatting.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1432,7 +1455,7 @@ class ProductManager(CollectionManager):
         body: Optional[dict] = None,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
-        **kwargs,
+        **kwargs: Unpack[GetFilters],
     ) -> dict | str:
         """Return the properties of a specific digital product catalog by GUID. Sync version.
 
@@ -1446,6 +1469,9 @@ class ProductManager(CollectionManager):
             Format for output. Defaults to "JSON".
         report_spec : str | dict, optional
             Report specification for formatting.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1474,7 +1500,7 @@ class ProductManager(CollectionManager):
         page_size: int = 0,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
-        **kwargs,
+        **kwargs: Unpack[ListFilters],
     ) -> list | str:
         """Returns the list of digital product catalogs with a particular name. Async version.
 
@@ -1495,6 +1521,9 @@ class ProductManager(CollectionManager):
         report_spec : str | dict, optional
             Report specification for formatting.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | str
@@ -1513,7 +1542,7 @@ class ProductManager(CollectionManager):
                                                       classification_names=classification_names, start_from=start_from,
                                                       page_size=page_size, graph_query_depth=graph_query_depth,
                                                       output_format=output_format,
-                                                      report_spec=report_spec, body=body)
+                                                      report_spec=report_spec, body=body, **kwargs)
         return response
 
     def get_digital_product_catalogs_by_name(
@@ -1525,7 +1554,7 @@ class ProductManager(CollectionManager):
         page_size: int = 0,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
-        **kwargs,
+        **kwargs: Unpack[ListFilters],
     ) -> list | str:
         """Returns the list of digital product catalogs with a particular name. Sync version.
 
@@ -1545,6 +1574,9 @@ class ProductManager(CollectionManager):
             Format for output. Defaults to "JSON".
         report_spec : str | dict, optional
             Report specification for formatting.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1575,7 +1607,7 @@ class ProductManager(CollectionManager):
         page_size: int = 0,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
-        **kwargs
+        **kwargs: Unpack[SearchFilters]
     ) -> list | str:
         """Returns the list of digital product catalogs matching the search string. Async version.
 
@@ -1632,6 +1664,9 @@ class ProductManager(CollectionManager):
         body : dict, optional
             Request body for additional parameters.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -1676,7 +1711,7 @@ class ProductManager(CollectionManager):
         page_size: int = 0,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
-        **kwargs
+        **kwargs: Unpack[SearchFilters]
     ) -> list | str:
         """Returns the list of digital product catalogs matching the search string. Sync version.
 
@@ -1732,6 +1767,9 @@ class ProductManager(CollectionManager):
             The names of properties to search for.
         body : dict, optional
             Request body for additional parameters.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -2055,7 +2093,7 @@ class ProductManager(CollectionManager):
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
-        **kwargs,
+        **kwargs: Unpack[ListFilters],
     ) -> list | str:
         """Retrieve the governance action processes with a matching qualified or display name, from the Product
         Catalog view service (`/product-catalog/governance-definitions/by-name`). A digital product's
@@ -2079,6 +2117,9 @@ class ProductManager(CollectionManager):
         report_spec : str | dict, optional
             The desired output columns/fields.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | str
@@ -2100,10 +2141,14 @@ class ProductManager(CollectionManager):
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
-        **kwargs,
+        **kwargs: Unpack[ListFilters],
     ) -> list | str:
         """Retrieve the governance action processes with a matching qualified or display name (for example a
-        digital product's subscription types)."""
+        digital product's subscription types).
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         return run_sync(self._async_get_governance_action_processes_by_name(
             name, body=body, start_from=start_from, page_size=page_size, output_format=output_format,
             report_spec=report_spec, **kwargs))

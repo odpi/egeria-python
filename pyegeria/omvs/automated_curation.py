@@ -13,6 +13,8 @@ from datetime import datetime
 from httpx import Response
 from loguru import logger
 from pydantic import HttpUrl
+from typing import Unpack
+from pyegeria.core.request_filters import GetFilters, ListFilters, SearchFilters
 from pyegeria.core._globals import NO_ELEMENTS_FOUND
 from pyegeria.core._server_client import ServerClient
 from pyegeria.core._validators import validate_guid, validate_name, validate_search_string
@@ -2788,6 +2790,9 @@ class AutomatedCuration(ServerClient):
         **kwargs : dict, optional
             Additional query parameters.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | str
@@ -2881,6 +2886,9 @@ class AutomatedCuration(ServerClient):
         **kwargs : dict, optional
             Additional query parameters.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list of dict | str
@@ -2964,6 +2972,9 @@ class AutomatedCuration(ServerClient):
             Request body. If provided, overrides other parameters.
         **kwargs : dict, optional
             Additional query parameters.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -3062,6 +3073,9 @@ class AutomatedCuration(ServerClient):
             Request body. If provided, overrides other parameters.
         **kwargs : dict, optional
             Additional query parameters.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -3914,7 +3928,7 @@ class AutomatedCuration(ServerClient):
             output_format: str = "JSON",
             report_spec: str | dict = "CatalogTarget",
             body: Optional[dict | FilterRequestBody] = None,
-            **kwargs,
+            **kwargs: Unpack[ListFilters],
     ) -> list | str:
         """Retrieve the list of catalog target metadata elements.
 
@@ -3936,6 +3950,9 @@ class AutomatedCuration(ServerClient):
             The request body.
         **kwargs : Any
             Additional keyword arguments to pass to the request.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -3975,7 +3992,7 @@ class AutomatedCuration(ServerClient):
             output_format: str = "JSON",
             report_spec: str | dict = "CatalogTarget",
             body: Optional[dict | FilterRequestBody] = None,
-            **kwargs,
+            **kwargs: Unpack[ListFilters],
     ) -> list | str:
         """Retrieve the list of catalog target metadata elements.
 
@@ -3995,6 +4012,9 @@ class AutomatedCuration(ServerClient):
             The request body.
         **kwargs : Any
             Additional keyword arguments to pass to the request.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -4021,7 +4041,7 @@ class AutomatedCuration(ServerClient):
             output_format: str = "JSON",
             report_spec: str | dict = "CatalogTarget",
             body: Optional[dict | GetRequestBody] = None,
-            **kwargs,
+            **kwargs: Unpack[GetFilters],
     ) -> dict | str:
         """Retrieve a specific catalog target associated with an integration connector.
 
@@ -4039,6 +4059,9 @@ class AutomatedCuration(ServerClient):
             The request body.
         **kwargs : Any
             Additional keyword arguments to pass to the request.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -4079,7 +4102,7 @@ class AutomatedCuration(ServerClient):
             output_format: str = "JSON",
             report_spec: str | dict = "CatalogTarget",
             body: Optional[dict | GetRequestBody] = None,
-            **kwargs,
+            **kwargs: Unpack[GetFilters],
     ) -> dict | str:
         """Retrieve a specific catalog target associated with an integration connector.
 
@@ -4095,6 +4118,9 @@ class AutomatedCuration(ServerClient):
             The request body.
         **kwargs : Any
             Additional keyword arguments to pass to the request.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -4429,7 +4455,7 @@ class AutomatedCuration(ServerClient):
             output_format: str = "JSON",
             report_spec: str | dict = "TechType",
             body: Optional[dict | FilterRequestBody] = None,
-            **kwargs,
+            **kwargs: Unpack[ListFilters],
     ) -> list | str:
         """Retrieve the list of technology types linked to an open metadata type.
 
@@ -4453,6 +4479,9 @@ class AutomatedCuration(ServerClient):
             The request body.
         **kwargs : Any
             Additional keyword arguments to pass to the request.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -4487,7 +4516,7 @@ class AutomatedCuration(ServerClient):
             output_format: str = "JSON",
             report_spec: str | dict = "TechType",
             body: Optional[dict | FilterRequestBody] = None,
-            **kwargs,
+            **kwargs: Unpack[ListFilters],
     ) -> list | str:
         """Retrieve the list of technology types linked to an open metadata type.
 
@@ -4509,6 +4538,9 @@ class AutomatedCuration(ServerClient):
             The request body.
         **kwargs : Any
             Additional keyword arguments to pass to the request.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -4849,6 +4881,9 @@ class AutomatedCuration(ServerClient):
         **kwargs : dict, optional
             Additional parameters.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -4954,6 +4989,9 @@ class AutomatedCuration(ServerClient):
         **kwargs : dict, optional
             Additional query parameters.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -5008,7 +5046,11 @@ class AutomatedCuration(ServerClient):
         body: Optional[dict | SearchStringRequestBody] = None,
         **kwargs
     ) -> list | str:
-        """Retrieve the list of technology types that contain the search string. Async version."""
+        """Retrieve the list of technology types that contain the search string. Async version.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+        """
         metadata_element_type = kwargs.pop("metadata_element_type", metadata_element_type_name)
         kwargs.pop("effective_time", None)
 
@@ -5124,6 +5166,9 @@ class AutomatedCuration(ServerClient):
         **kwargs : dict, optional
             Additional parameters.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -5174,7 +5219,7 @@ class AutomatedCuration(ServerClient):
             page_size: int = 0,
             output_format: str = "JSON",
             report_spec: str = "TechType",
-            **kwargs,
+            **kwargs: Unpack[SearchFilters],
     ) -> list | str:
         """Retrieve all technology types.
 
@@ -5193,6 +5238,9 @@ class AutomatedCuration(ServerClient):
         **kwargs : Any
             Additional keyword arguments to pass to the request.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -5208,7 +5256,7 @@ class AutomatedCuration(ServerClient):
             page_size: int = 0,
             output_format: str = "JSON",
             report_spec: str = "TechType",
-            **kwargs,
+            **kwargs: Unpack[SearchFilters],
     ) -> list | str:
         """Retrieve all technology types.
 
@@ -5224,6 +5272,9 @@ class AutomatedCuration(ServerClient):
             The report specification.
         **kwargs : Any
             Additional keyword arguments to pass to the request.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -5301,6 +5352,9 @@ class AutomatedCuration(ServerClient):
             The request body. If provided, it overrides other parameters.
         **kwargs : Any
             Additional keyword arguments to pass to the request.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -5404,6 +5458,9 @@ class AutomatedCuration(ServerClient):
             The request body. If provided, it overrides other parameters.
         **kwargs : Any
             Additional keyword arguments to pass to the request.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------

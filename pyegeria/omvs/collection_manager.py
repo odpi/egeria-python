@@ -13,6 +13,9 @@ from typing import Optional, Annotated, Literal, Union
 from loguru import logger
 from pydantic import Field, HttpUrl
 
+from typing import Unpack
+from pyegeria.core.request_filters import ListFilters
+from pyegeria.core.request_filters import filter_body_kwargs
 from pyegeria.core._exceptions import PyegeriaInvalidParameterException
 from pyegeria.core._globals import NO_ELEMENTS_FOUND, NO_GUID_RETURNED
 from pyegeria.view.base_report_formats import select_report_spec, get_report_spec_match
@@ -437,6 +440,9 @@ class CollectionManager(ServerClient):
         **kwargs : dict, optional
             Additional query parameters.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -537,6 +543,9 @@ class CollectionManager(ServerClient):
         **kwargs : dict, optional
             Additional query parameters.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -631,6 +640,9 @@ class CollectionManager(ServerClient):
         **kwargs : dict, optional
             - Additional query parameters
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -662,7 +674,7 @@ class CollectionManager(ServerClient):
                 "includeOnlyRelationships": include_only_relationships,
                 "skipRelationships": skip_relationships,
                 "graphQueryDepth": graph_query_depth,
-                **kwargs,
+                **filter_body_kwargs("deployment_search", kwargs),
             }
             validated_body = DeploymentStatusSearchString.model_validate(body_dict)
 
@@ -701,6 +713,9 @@ class CollectionManager(ServerClient):
     ) -> list | str:
         """
         Returns the list of digital products matching the search string and optional deployment status. Sync version.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
         """
         return run_sync(
             self._async_find_digital_products(
@@ -847,7 +862,11 @@ class CollectionManager(ServerClient):
         body: Optional[dict | FilterRequestBody] = None,
         **kwargs,
     ) -> list | str:
-        """Returns the list of collections with a particular name. Async version."""
+        """Returns the list of collections with a particular name. Async version.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         if name is None and "filter_string" in kwargs:
             name = kwargs.pop("filter_string")
 
@@ -894,7 +913,11 @@ class CollectionManager(ServerClient):
         body: Optional[dict | FilterRequestBody] = None,
         **kwargs,
     ) -> list | str:
-        """Returns the list of collections matching the search string."""
+        """Returns the list of collections matching the search string.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         return run_sync(
             self._async_get_collections_by_name(
                 name=name,
@@ -953,7 +976,7 @@ class CollectionManager(ServerClient):
     async def _async_get_collections_by_category(self, category: str, classification_names: Optional[list[str]] = None,
                                              body: Optional[dict | FilterRequestBody] = None, start_from: int = 0, page_size: int = 0,
                                              output_format: str = 'JSON',
-                                             report_spec: str | dict = None) -> list | str:
+                                             report_spec: str | dict = None, **kwargs: Unpack[ListFilters]) -> list | str:
         """Returns the list of collections with a particular category. This is an optional text field in the
             collection element.
 
@@ -975,6 +998,9 @@ class CollectionManager(ServerClient):
             - one of "DICT", "MERMAID" or "JSON"
          report_spec: str | dict , optional, default = None
                 The desired output columns/fields to include.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1008,7 +1034,7 @@ class CollectionManager(ServerClient):
                                                       _gen_output=self._generate_collection_output,
                                                       filter_string=category, classification_names=classification_names,
                                                       start_from=start_from, page_size=page_size,
-                                                      output_format=output_format, report_spec=report_spec, body=body)
+                                                      output_format=output_format, report_spec=report_spec, body=body, **kwargs)
 
         return response
 
@@ -1017,7 +1043,7 @@ class CollectionManager(ServerClient):
     def get_collections_by_category(self, category: str, classification_names: Optional[list[str]] = None,
                                 body: Optional[dict | FilterRequestBody] = None,
                                 start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
-                                report_spec: str | dict = None) -> list | str:
+                                report_spec: str | dict = None, **kwargs: Unpack[ListFilters]) -> list | str:
         """Returns the list of collections with a particular collectionType. This is an optional text field in the
             collection element.
 
@@ -1039,6 +1065,9 @@ class CollectionManager(ServerClient):
             - one of "DICT", "MERMAID" or "JSON"
         report_spec: str | dict, optional, default = None
                 The desired output columns/fields to include.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1076,7 +1105,7 @@ class CollectionManager(ServerClient):
 
         return run_sync(
             self._async_get_collections_by_category(category, classification_names, body, start_from, page_size,
-                                                output_format, report_spec))
+                                                output_format, report_spec, **kwargs))
 
 
     @dynamic_catch
@@ -1091,7 +1120,11 @@ class CollectionManager(ServerClient):
         body: Optional[dict | GetRequestBody] = None,
         **kwargs,
     ) -> dict | str:
-        """Return the properties of a specific collection. Async version."""
+        """Return the properties of a specific collection. Async version.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         if guid is None and "collection_guid" in kwargs:
             guid = kwargs.pop("collection_guid")
 
@@ -1127,7 +1160,11 @@ class CollectionManager(ServerClient):
         body: Optional[dict | GetRequestBody] = None,
         **kwargs,
     ) -> dict | str:
-        """Return the properties of a specific collection."""
+        """Return the properties of a specific collection.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         return run_sync(
             self._async_get_collection_by_guid(
                 guid=guid,
@@ -1146,7 +1183,7 @@ class CollectionManager(ServerClient):
     async def _async_get_collection_members(self, collection_guid: Optional[str] = None, collection_name: Optional[str] = None,
                                             collection_qname: Optional[str] = None, body: Optional[dict | ResultsRequestBody] = None, start_from: int = 0,
                                             page_size: int = 0, output_format: str = "JSON",
-                                            report_spec: str | dict = None, **kwargs) -> list | str:
+                                            report_spec: str | dict = None, **kwargs: Unpack[ListFilters]) -> list | str:
         """Return a list of elements that are a member of a collection. Async version.
 
         Parameters
@@ -1171,6 +1208,9 @@ class CollectionManager(ServerClient):
             - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
          report_spec: str | dict , optional, default = None
                 The desired output columns/fields to include.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1224,7 +1264,7 @@ class CollectionManager(ServerClient):
     def get_collection_members(self, collection_guid: Optional[str] = None, collection_name: Optional[str] = None,
                                collection_qname: Optional[str] = None, body: dict = None, start_from: int = 0,
                                page_size: int = 0,
-                               output_format: str = "JSON", report_spec: str | dict = None, **kwargs) -> list | str:
+                               output_format: str = "JSON", report_spec: str | dict = None, **kwargs: Unpack[ListFilters]) -> list | str:
         """Return a list of elements that are a member of a collection.
         Parameters
         ----------
@@ -1248,6 +1288,9 @@ class CollectionManager(ServerClient):
             - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
          report_spec: str | dict , optional, default = None
                 The desired output columns/fields to include.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1288,7 +1331,7 @@ class CollectionManager(ServerClient):
     @dynamic_catch
     async def _async_get_collection_hierarchy(self, collection_guid: str, body: Optional[dict | ResultsRequestBody] = None, start_from: int = 0,
                                           page_size: int = 0, output_format: str = "JSON",
-                                          report_spec: str | dict = None) -> list | str:
+                                          report_spec: str | dict = None, **kwargs: Unpack[ListFilters]) -> list | str:
         """ Return a hierarchy of nested collections. Request body is optional Async version.
 
             Parameters
@@ -1307,6 +1350,9 @@ class CollectionManager(ServerClient):
                 - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
              report_spec: dict , optional, default = None
                 The desired output columns/fields to include.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
             Returns
             -------
@@ -1345,13 +1391,13 @@ class CollectionManager(ServerClient):
                                                               start_from=start_from, page_size=page_size,
                                                               output_format=output_format,
                                                               report_spec=report_spec,
-                                                              body=body)
+                                                              body=body, **kwargs)
 
         return response
 
     def get_collection_hierarchy(self, collection_guid: Optional[str] = None, body: dict| ResultsRequestBody = None, start_from: int = 0,
                              page_size: int = 0, output_format: str = "JSON",
-                             report_spec: str | dict = None) -> list | str:
+                             report_spec: str | dict = None, **kwargs: Unpack[ListFilters]) -> list | str:
         """ Return a graph of elements that are the nested members of a collection along
             with elements immediately connected to the starting collection.  The result
             includes a mermaid graph of the returned elements.
@@ -1372,6 +1418,9 @@ class CollectionManager(ServerClient):
             - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
          report_spec: str | dict , optional, default = None
                 The desired output columns/fields to include.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1403,7 +1452,7 @@ class CollectionManager(ServerClient):
         """
         return run_sync(
             self._async_get_collection_hierarchy(collection_guid, body, start_from, page_size,
-                                             output_format, report_spec))
+                                             output_format, report_spec, **kwargs))
 
 
     @dynamic_catch
@@ -7259,7 +7308,7 @@ class CollectionManager(ServerClient):
 
     @dynamic_catch
     async def _async_get_member_list(self, collection_guid: Optional[str] = None, collection_name: Optional[str] = None,
-                                     collection_qname: Optional[str] = None, ) -> list | str:
+                                     collection_qname: Optional[str] = None, **kwargs: Unpack[ListFilters], ) -> list | str:
         """Get the member list for the collection - async version.
         Parameters
         ----------
@@ -7272,6 +7321,9 @@ class CollectionManager(ServerClient):
         collection_qname: str,
            qualified name of the collection to return members for. If none, collection_guid
            or collection_name are used.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -7289,7 +7341,7 @@ class CollectionManager(ServerClient):
 
         # now find the members of the collection
         member_list = []
-        members = await self._async_get_collection_members(collection_guid, collection_name, collection_qname)
+        members = await self._async_get_collection_members(collection_guid, collection_name, collection_qname, **kwargs)
         if (type(members) is str) or (len(members) == 0):
             logger.trace(f"No members found for collection {collection_guid}")
             return "No members found"
@@ -7311,7 +7363,7 @@ class CollectionManager(ServerClient):
 
 
     def get_member_list(self, collection_guid: Optional[str] = None, collection_name: Optional[str] = None,
-                        collection_qname: Optional[str] = None, ) -> list | bool:
+                        collection_qname: Optional[str] = None, **kwargs: Unpack[ListFilters], ) -> list | bool:
         """Get the member list for a collection - async version.
         Parameters
         ----------
@@ -7324,6 +7376,9 @@ class CollectionManager(ServerClient):
         collection_qname: str,
            qualified name of the collection to return members for. If none, collection_guid
            or collection_name are used.
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | bool
@@ -7336,7 +7391,7 @@ class CollectionManager(ServerClient):
 
         """
         resp = run_sync(
-            self._async_get_member_list(collection_guid, collection_name, collection_qname))
+            self._async_get_member_list(collection_guid, collection_name, collection_qname, **kwargs))
         return resp
 
     def _extract_digital_product_properties(self, element: dict, guid: str, output_format: str) -> dict:

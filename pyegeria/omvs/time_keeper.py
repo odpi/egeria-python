@@ -1330,6 +1330,9 @@ class TimeKeeper(ServerClient):
         body : dict | FilterRequestBody, optional
             The request body for the search.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | str
@@ -1415,6 +1418,9 @@ class TimeKeeper(ServerClient):
             The desired output columns/fields to include.
         body : dict | FilterRequestBody, optional
             The request body for the search.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1515,6 +1521,9 @@ class TimeKeeper(ServerClient):
         body: dict | SearchStringRequestBody, optional
             - if provided, the search parameters in the body will supercede other attributes.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         List | str
@@ -1611,6 +1620,9 @@ class TimeKeeper(ServerClient):
         body: dict | SearchStringRequestBody, optional
             - if provided, the search parameters in the body will supercede other attributes.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         List | str
@@ -1668,6 +1680,9 @@ class TimeKeeper(ServerClient):
             The desired output columns/fields to include.
         body : dict | GetRequestBody, optional
             The request body for the retrieval.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1727,6 +1742,9 @@ class TimeKeeper(ServerClient):
             The desired output columns/fields to include.
         body : dict | GetRequestBody, optional
             The request body for the retrieval.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------

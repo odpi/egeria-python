@@ -11,6 +11,8 @@ relationships to digital resources.
 import asyncio
 from typing import Optional
 
+from typing import Unpack
+from pyegeria.core.request_filters import GetFilters
 from pyegeria.omvs.collection_manager import CollectionManager
 from pyegeria.core._server_client import ServerClient
 from pyegeria.models import (
@@ -321,7 +323,7 @@ class DigitalBusiness(CollectionManager):
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = "BusinessCapabilities",
         body: Optional[dict] = None,
-        **kwargs,
+        **kwargs: Unpack[GetFilters],
     ) -> dict | str:
         """Return the properties of a specific business capability by GUID. Async version.
 
@@ -335,6 +337,9 @@ class DigitalBusiness(CollectionManager):
             Report specification for formatting.
         body : dict, optional
             Request body (typically empty for retrieval).
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -373,7 +378,7 @@ class DigitalBusiness(CollectionManager):
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = "BusinessCapabilities",
         body: Optional[dict] = None,
-        **kwargs,
+        **kwargs: Unpack[GetFilters],
     ) -> dict | str:
         """Return the properties of a specific business capability by GUID. Sync version.
 
@@ -387,6 +392,9 @@ class DigitalBusiness(CollectionManager):
             Report specification for formatting.
         body : dict, optional
             Request body (typically empty for retrieval).
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -451,6 +459,9 @@ class DigitalBusiness(CollectionManager):
             The desired output columns/fields to include.
         body: dict, optional
             Provides a full request body. If specified, the body supercedes other attributes.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -532,6 +543,9 @@ class DigitalBusiness(CollectionManager):
             The desired output columns/fields to include.
         body: dict, optional
             Provides a full request body. If specified, the body supercedes other attributes.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -625,6 +639,9 @@ class DigitalBusiness(CollectionManager):
             - The desired output columns/fields to include.
         body: dict | SearchStringRequestBody, optional
             - if provided, the search parameters in the body will supercede other attributes.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -721,6 +738,9 @@ class DigitalBusiness(CollectionManager):
             Report specification for formatting.
         body : dict, optional
             Request body for additional parameters.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------

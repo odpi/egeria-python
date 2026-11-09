@@ -13,6 +13,8 @@ import asyncio
 
 from loguru import logger
 
+from typing import Unpack
+from pyegeria.core.request_filters import ListFilters
 from pyegeria.core._server_client import ServerClient
 from pyegeria.view.base_report_formats import select_report_format, get_report_spec_match
 from pyegeria.models import SearchStringRequestBody, ResultsRequestBody
@@ -228,6 +230,9 @@ class AssetCatalog(ServerClient):
         **kwargs : dict, optional
             Additional parameters supported by the underlying find request.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -325,6 +330,9 @@ class AssetCatalog(ServerClient):
         **kwargs : dict, optional
             Additional parameters supported by the underlying find request.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -367,7 +375,7 @@ class AssetCatalog(ServerClient):
         output_format: str = "MERMAID",
         report_spec: str | dict = "Common-Mermaid",
         body: Optional[dict | ResultsRequestBody] = None,
-        **kwargs,
+        **kwargs: Unpack[ListFilters],
     ) -> str | dict:
         """Return all the elements that are anchored to an asset plus relationships between these elements and to
         other elements.
@@ -390,6 +398,9 @@ class AssetCatalog(ServerClient):
             If provided, the search parameters in the body will supersede other attributes.
         **kwargs : dict, optional
             Additional query parameters.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -426,7 +437,7 @@ class AssetCatalog(ServerClient):
         output_format: str = "MERMAID",
         report_spec: str | dict = "Common-Mermaid",
         body: Optional[dict | ResultsRequestBody] = None,
-        **kwargs,
+        **kwargs: Unpack[ListFilters],
     ) -> str | dict:
         """Return all the elements that are anchored to an asset plus relationships between these elements and to
         other elements.
@@ -447,6 +458,9 @@ class AssetCatalog(ServerClient):
             If provided, the search parameters in the body will supersede other attributes.
         **kwargs : dict, optional
             Additional query parameters.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -478,7 +492,7 @@ class AssetCatalog(ServerClient):
         self,
         guid: str,
         start_from: int = 0,
-        page_size: int = 0,
+        page_size: int = 0, **kwargs: Unpack[ListFilters],
     ) -> str:
         """Return the asset graph as mermaid markdown string.
 
@@ -490,6 +504,9 @@ class AssetCatalog(ServerClient):
             The index from which to start fetching.
         page_size : int, default 0
             The maximum number of items to fetch.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -505,7 +522,7 @@ class AssetCatalog(ServerClient):
             The principle specified by the user_id does not have authorization for the requested action.
         """
 
-        asset_graph = self.get_asset_graph_by_guid(guid=guid, start_from=start_from, page_size=page_size)
+        asset_graph = self.get_asset_graph_by_guid(guid=guid, start_from=start_from, page_size=page_size, **kwargs)
         return asset_graph[0]
 
     async def _async_get_asset_lineage_graph_by_guid(

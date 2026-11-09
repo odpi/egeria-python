@@ -9,6 +9,8 @@ import asyncio
 
 from pydantic import HttpUrl
 
+from typing import Unpack
+from pyegeria.core.request_filters import SearchFilters
 from pyegeria.core._exceptions import PyegeriaException
 from pyegeria.core.utils import dynamic_catch, transform_json_to_tabular
 from pyegeria.core._server_client import ServerClient
@@ -85,7 +87,7 @@ class DataEngineer(ServerClient):
         page_size: int = 100,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Referenceable",
-        **kwargs
+        **kwargs: Unpack[SearchFilters]
     ) -> list | str:
         """ Retrieve the list of tabular data set metadata elements that contain the search string. Async Version.
 
@@ -142,6 +144,9 @@ class DataEngineer(ServerClient):
         body: dict | SearchStringRequestBody, optional, default = None
             - if provided, the search parameters in the body will supercede other attributes, such as "search_string"
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         List | str
@@ -195,7 +200,7 @@ class DataEngineer(ServerClient):
         page_size: int = 100,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Referenceable",
-        **kwargs
+        **kwargs: Unpack[SearchFilters]
     ) -> list | str:
         """ Retrieve the list of tabular data set metadata elements that contain the search string.
 
@@ -251,6 +256,9 @@ class DataEngineer(ServerClient):
             The names of properties to search for.
         body: dict | SearchStringRequestBody, optional, default = None
             - if provided, the search parameters in the body will supercede other attributes, such as "search_string"
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------

@@ -9,6 +9,8 @@ import asyncio
 import uuid
 from typing import Optional
 
+from typing import Unpack
+from pyegeria.core.request_filters import GetFilters, ListFilters, SearchFilters
 from pyegeria.core._server_client import ServerClient
 from pyegeria.core._globals import NO_ELEMENTS_FOUND
 from pyegeria.models import (
@@ -872,7 +874,7 @@ class DataDiscovery(ServerClient):
         page_size: int = 0,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Annotations",
-        **kwargs,
+        **kwargs: Unpack[ListFilters],
     ) -> list | str:
         """Get annotations by name. Async version.
 
@@ -892,6 +894,9 @@ class DataDiscovery(ServerClient):
             The desired output format.
         report_spec : str | dict, optional
             The desired output columns/fields to include.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -944,7 +949,7 @@ class DataDiscovery(ServerClient):
         page_size: int = 0,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Annotations",
-        **kwargs,
+        **kwargs: Unpack[ListFilters],
     ) -> list | str:
         """Get annotations by name.
 
@@ -964,6 +969,9 @@ class DataDiscovery(ServerClient):
             The desired output format.
         report_spec : str | dict, optional
             The desired output columns/fields to include.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1010,7 +1018,7 @@ class DataDiscovery(ServerClient):
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = "Annotations",
-        **kwargs,
+        **kwargs: Unpack[ListFilters],
     ) -> str | list[dict]:
         """Get annotations by analysis step. Async version.
 
@@ -1025,6 +1033,9 @@ class DataDiscovery(ServerClient):
           "pageSize": 10
         }
         ```
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
         """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/annotations/by-analysis-step"
         return await self._async_get_name_request(
@@ -1048,9 +1059,13 @@ class DataDiscovery(ServerClient):
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = "Annotations",
-        **kwargs,
+        **kwargs: Unpack[ListFilters],
     ) -> str | list[dict]:
-        """Get annotations by analysis step."""
+        """Get annotations by analysis step.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         return run_sync(
             self._async_get_annotations_by_analysis_step(
                 analysis_step, body, start_from, page_size, output_format, report_spec, **kwargs
@@ -1066,7 +1081,7 @@ class DataDiscovery(ServerClient):
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = "Annotations",
-        **kwargs,
+        **kwargs: Unpack[ListFilters],
     ) -> str | list[dict]:
         """Get annotations by annotation type. Async version.
 
@@ -1081,6 +1096,9 @@ class DataDiscovery(ServerClient):
           "pageSize": 10
         }
         ```
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
         """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/annotations/by-annotation-type"
         return await self._async_get_name_request(
@@ -1104,9 +1122,13 @@ class DataDiscovery(ServerClient):
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = "Annotations",
-        **kwargs,
+        **kwargs: Unpack[ListFilters],
     ) -> str | list[dict]:
-        """Get annotations by annotation type."""
+        """Get annotations by annotation type.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         return run_sync(
             self._async_get_annotations_by_annotation_type(
                 annotation_type, body, start_from, page_size, output_format, report_spec, **kwargs
@@ -1122,7 +1144,7 @@ class DataDiscovery(ServerClient):
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = "Annotations",
-        **kwargs,
+        **kwargs: Unpack[ListFilters],
     ) -> str | list[dict]:
         """Get the annotations associated with an element. Async version.
 
@@ -1136,6 +1158,9 @@ class DataDiscovery(ServerClient):
           "pageSize": 10
         }
         ```
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
         """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/elements/{element_guid}/associated-annotations"
         return await self._async_get_results_body_request(
@@ -1158,9 +1183,13 @@ class DataDiscovery(ServerClient):
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = "Annotations",
-        **kwargs,
+        **kwargs: Unpack[ListFilters],
     ) -> str | list[dict]:
-        """Get the annotations associated with an element."""
+        """Get the annotations associated with an element.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         return run_sync(
             self._async_get_annotations_for_element(
                 element_guid, body, start_from, page_size, output_format, report_spec, **kwargs
@@ -1176,7 +1205,7 @@ class DataDiscovery(ServerClient):
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = "Annotations",
-        **kwargs,
+        **kwargs: Unpack[ListFilters],
     ) -> str | list[dict]:
         """Get the new annotations for a survey report. Async version.
 
@@ -1190,6 +1219,9 @@ class DataDiscovery(ServerClient):
           "pageSize": 10
         }
         ```
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
         """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/survey-reports/{survey_report_guid}/new-annotations"
         return await self._async_get_results_body_request(
@@ -1212,9 +1244,13 @@ class DataDiscovery(ServerClient):
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = "Annotations",
-        **kwargs,
+        **kwargs: Unpack[ListFilters],
     ) -> str | list[dict]:
-        """Get the new annotations for a survey report."""
+        """Get the new annotations for a survey report.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         return run_sync(
             self._async_get_new_annotations(
                 survey_report_guid, body, start_from, page_size, output_format, report_spec, **kwargs
@@ -1230,7 +1266,7 @@ class DataDiscovery(ServerClient):
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = "Annotations",
-        **kwargs,
+        **kwargs: Unpack[ListFilters],
     ) -> str | list[dict]:
         """Get the annotations that extend an annotation. Async version.
 
@@ -1244,6 +1280,9 @@ class DataDiscovery(ServerClient):
           "pageSize": 10
         }
         ```
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
         """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/annotations/{annotation_guid}/annotation-extensions"
         return await self._async_get_results_body_request(
@@ -1266,9 +1305,13 @@ class DataDiscovery(ServerClient):
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = "Annotations",
-        **kwargs,
+        **kwargs: Unpack[ListFilters],
     ) -> str | list[dict]:
-        """Get the annotations that extend an annotation."""
+        """Get the annotations that extend an annotation.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         return run_sync(
             self._async_get_annotation_extensions(
                 annotation_guid, body, start_from, page_size, output_format, report_spec, **kwargs
@@ -1284,7 +1327,7 @@ class DataDiscovery(ServerClient):
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = "Annotations",
-        **kwargs,
+        **kwargs: Unpack[ListFilters],
     ) -> str | list[dict]:
         """Get the annotations that precede an annotation. Async version.
 
@@ -1298,6 +1341,9 @@ class DataDiscovery(ServerClient):
           "pageSize": 10
         }
         ```
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
         """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-discovery/annotations/{annotation_guid}/previous-annotations"
         return await self._async_get_results_body_request(
@@ -1320,9 +1366,13 @@ class DataDiscovery(ServerClient):
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = "Annotations",
-        **kwargs,
+        **kwargs: Unpack[ListFilters],
     ) -> str | list[dict]:
-        """Get the annotations that precede an annotation."""
+        """Get the annotations that precede an annotation.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         return run_sync(
             self._async_get_previous_annotations(
                 annotation_guid, body, start_from, page_size, output_format, report_spec, **kwargs
@@ -1341,7 +1391,7 @@ class DataDiscovery(ServerClient):
         page_size: int = 100,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Referenceable",
-        **kwargs
+        **kwargs: Unpack[SearchFilters]
     ) -> list | str:
         """ Retrieve the list of annotation metadata elements that contain the search string. Async Version.
 
@@ -1398,6 +1448,9 @@ class DataDiscovery(ServerClient):
         body: dict | SearchStringRequestBody, optional, default = None
             - if provided, the search parameters in the body will supercede other attributes, such as "search_string"
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         List | str
@@ -1451,7 +1504,7 @@ class DataDiscovery(ServerClient):
         page_size: int = 100,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Referenceable",
-        **kwargs
+        **kwargs: Unpack[SearchFilters]
     ) -> list | str:
         """ Retrieve the list of annotation metadata elements that contain the search string.
 
@@ -1508,6 +1561,9 @@ class DataDiscovery(ServerClient):
         body: dict | SearchStringRequestBody, optional, default = None
             - if provided, the search parameters in the body will supercede other attributes, such as "search_string"
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         List | str
@@ -1549,7 +1605,7 @@ class DataDiscovery(ServerClient):
         body: Optional[dict | GetRequestBody] = None,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Annotations",
-        **kwargs,
+        **kwargs: Unpack[GetFilters],
     ) -> dict | str:
         """Get annotation by GUID. Async version.
 
@@ -1565,6 +1621,9 @@ class DataDiscovery(ServerClient):
             The desired output format.
         report_spec : str | dict, optional
             The desired output columns/fields to include.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1614,7 +1673,7 @@ class DataDiscovery(ServerClient):
         body: Optional[dict | GetRequestBody] = None,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Annotations",
-        **kwargs,
+        **kwargs: Unpack[GetFilters],
     ) -> dict | str:
         """Get annotation by GUID.
 
@@ -1630,6 +1689,9 @@ class DataDiscovery(ServerClient):
             The desired output format.
         report_spec : str | dict, optional
             The desired output columns/fields to include.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1742,7 +1804,7 @@ class DataDiscovery(ServerClient):
         finding_types: Optional[list[str]] = None,
         output_format: str = "JSON",
         report_spec: str | dict | None = None,
-        **kwargs,
+        **kwargs: Unpack[SearchFilters],
     ) -> list | str:
         """Return the security findings in one survey report, or about one element, most severe first. Async version.
 
@@ -1762,6 +1824,9 @@ class DataDiscovery(ServerClient):
             JSON returns the annotations as Egeria returned them; other formats use the report spec.
         report_spec : str | dict, optional
             Defaults to "Security-Findings".
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -1813,11 +1878,14 @@ class DataDiscovery(ServerClient):
         finding_types: Optional[list[str]] = None,
         output_format: str = "JSON",
         report_spec: str | dict | None = None,
-        **kwargs,
+        **kwargs: Unpack[SearchFilters],
     ) -> list | str:
         """Return the security findings in one survey report, or about one element, most severe first.
 
         See _async_get_security_findings.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
         """
         return run_sync(
             self._async_get_security_findings(report_guid, element_guid, min_severity, finding_types,
@@ -1830,7 +1898,7 @@ class DataDiscovery(ServerClient):
         report_qualified_name_prefix: Optional[str] = None,
         output_format: str = "JSON",
         report_spec: str | dict | None = None,
-        **kwargs,
+        **kwargs: Unpack[SearchFilters],
     ) -> list | str:
         """Return the security posture summaries, one per test run, oldest first. Async version.
 
@@ -1843,6 +1911,9 @@ class DataDiscovery(ServerClient):
             JSON returns the posture annotations as Egeria returned them; other formats use the report spec.
         report_spec : str | dict, optional
             Defaults to "Security-Posture".
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -1879,11 +1950,14 @@ class DataDiscovery(ServerClient):
         report_qualified_name_prefix: Optional[str] = None,
         output_format: str = "JSON",
         report_spec: str | dict | None = None,
-        **kwargs,
+        **kwargs: Unpack[SearchFilters],
     ) -> list | str:
         """Return the security posture summaries, one per test run, oldest first.
 
         See _async_get_security_posture_history.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
         """
         return run_sync(
             self._async_get_security_posture_history(report_qualified_name_prefix, output_format,

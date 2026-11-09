@@ -11,6 +11,8 @@ marker, so it inherits CollectionManager; the methods here use that marker.
 import asyncio
 from typing import Optional
 
+from typing import Unpack
+from pyegeria.core.request_filters import SearchFilters
 from pyegeria.core.utils import dynamic_catch
 from pyegeria.models import SearchStringRequestBody
 from pyegeria.omvs.collection_manager import CollectionManager
@@ -46,7 +48,7 @@ class ProductCatalog(CollectionManager):
             output_format: str = "JSON",
             report_spec: Optional[str | dict] = None,
             body: Optional[dict | SearchStringRequestBody] = None,
-            **kwargs,
+            **kwargs: Unpack[SearchFilters],
     ) -> list | str:
         """Find digital product catalogs, or the products in them, through the product-catalog
         view service. Async version.
@@ -67,6 +69,9 @@ class ProductCatalog(CollectionManager):
             Report spec for non-JSON output.
         body : dict | SearchStringRequestBody, optional
             A full request body, used instead of the arguments above.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -102,10 +107,14 @@ class ProductCatalog(CollectionManager):
             output_format: str = "JSON",
             report_spec: Optional[str | dict] = None,
             body: Optional[dict | SearchStringRequestBody] = None,
-            **kwargs,
+            **kwargs: Unpack[SearchFilters],
     ) -> list | str:
         """Find digital product catalogs, or the products in them ("DigitalProduct"), through the
-        product-catalog view service. See _async_find_digital_product_catalogs for the parameters."""
+        product-catalog view service. See _async_find_digital_product_catalogs for the parameters.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+        """
         return run_sync(self._async_find_digital_product_catalogs(
             search_string, metadata_element_type_name, starts_with, ends_with, ignore_case,
             start_from, page_size, output_format, report_spec, body, **kwargs))

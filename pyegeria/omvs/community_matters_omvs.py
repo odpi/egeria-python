@@ -282,6 +282,9 @@ class CommunityMatters(ServerClient):
         **kwargs : dict, optional
             Additional parameters supported by the find request.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -378,6 +381,9 @@ class CommunityMatters(ServerClient):
             Request body containing search parameters. If provided, overrides other search parameters.
         **kwargs : dict, optional
             Additional parameters supported by the find request.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------

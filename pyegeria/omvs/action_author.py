@@ -10,6 +10,8 @@ from typing import Annotated, Literal, Optional
 
 from pydantic import Field
 
+from typing import Unpack
+from pyegeria.core.request_filters import GetFilters
 from pyegeria.core._server_client import ServerClient
 from pyegeria.models import (
     NewRelationshipRequestBody,
@@ -353,7 +355,7 @@ class ActionAuthor(ServerClient):
         output_format: str = "JSON",
         report_spec: str | dict = None,
         body: dict | GetRequestBody | None = None,
-        **kwargs
+        **kwargs: Unpack[GetFilters]
     ) -> dict | list | str:
         """Retrieve the governance action process metadata element with the supplied unique identifier. Async version.
 
@@ -367,6 +369,9 @@ class ActionAuthor(ServerClient):
             The report specification. Defaults to None.
         body : dict | GetRequestBody, optional
             The request body. Defaults to None.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -390,7 +395,7 @@ class ActionAuthor(ServerClient):
         output_format: str = "JSON",
         report_spec: str | dict = None,
         body: dict | GetRequestBody | None = None,
-        **kwargs
+        **kwargs: Unpack[GetFilters]
     ) -> dict | list | str:
         """Retrieve the governance action process metadata element with the supplied unique identifier.
 
@@ -404,6 +409,9 @@ class ActionAuthor(ServerClient):
             The report specification. Defaults to None.
         body : dict | GetRequestBody, optional
             The request body. Defaults to None.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -423,7 +431,7 @@ class ActionAuthor(ServerClient):
         output_format: str = "JSON",
         report_spec: str | dict = None,
         body: dict | FilterRequestBody | None = None,
-        **kwargs
+        **kwargs: Unpack[GetFilters]
     ) -> dict | list | str:
         """Retrieve the governance action process metadata element with the supplied unique identifier
         along with the flow definition describing its implementation. Async version.
@@ -438,6 +446,9 @@ class ActionAuthor(ServerClient):
             The report specification. Defaults to None.
         body : dict | FilterRequestBody, optional
             The request body. Defaults to None.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -461,7 +472,7 @@ class ActionAuthor(ServerClient):
         output_format: str = "JSON",
         report_spec: str | dict = None,
         body: dict | FilterRequestBody | None = None,
-        **kwargs
+        **kwargs: Unpack[GetFilters]
     ) -> dict | list | str:
         """Retrieve the governance action process metadata element with the supplied unique identifier
         along with the flow definition describing its implementation.
@@ -476,6 +487,9 @@ class ActionAuthor(ServerClient):
             The report specification. Defaults to None.
         body : dict | FilterRequestBody, optional
             The request body. Defaults to None.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------

@@ -12,6 +12,8 @@ from typing import Optional, Any
 from loguru import logger
 from pydantic import HttpUrl
 
+from typing import Unpack
+from pyegeria.core.request_filters import SearchFilters
 from pyegeria.view.base_report_formats import select_report_spec, get_report_spec_match
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
                              TemplateRequestBody, NewAttachmentRequestBody,
@@ -777,6 +779,9 @@ class ActorManager(ServerClient):
         body: dict | SearchStringRequestBody, optional
             - if provided, the search parameters in the body will supercede other attributes.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -873,6 +878,9 @@ class ActorManager(ServerClient):
         body : dict, optional
             Request body for additional parameters.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -942,6 +950,9 @@ class ActorManager(ServerClient):
             The desired output columns/fields to include.
         body: dict, optional
             Provides a full request body. If specified, the body supercedes other attributes.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1013,6 +1024,9 @@ class ActorManager(ServerClient):
         body: dict, optional
             Provides a full request body. If specified, the body supercedes other attributes.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | str
@@ -1064,6 +1078,9 @@ class ActorManager(ServerClient):
             The desired output columns/fields to include.
         body: dict | GetRequestBody, optional, default = None
             full request body.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1117,6 +1134,9 @@ class ActorManager(ServerClient):
             The desired output columns/fields to include.
         body: dict | GetRequestBody, optional, default = None
             full request body.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -2330,6 +2350,9 @@ class ActorManager(ServerClient):
         body: dict | SearchStringRequestBody, optional
             - if provided, the search parameters in the body will supercede other attributes.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -2426,6 +2449,9 @@ class ActorManager(ServerClient):
         body : dict, optional
             Request body for additional parameters.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -2495,6 +2521,9 @@ class ActorManager(ServerClient):
             The desired output columns/fields to include.
         body: dict, optional
             Provides a full request body. If specified, the body supercedes other attributes.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -2566,6 +2595,9 @@ class ActorManager(ServerClient):
         body: dict, optional
             Provides a full request body. If specified, the body supercedes other attributes.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | str
@@ -2617,6 +2649,9 @@ class ActorManager(ServerClient):
             The desired output columns/fields to include.
         body: dict | GetRequestBody, optional, default = None
             full request body.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -2670,6 +2705,9 @@ class ActorManager(ServerClient):
             The desired output columns/fields to include.
         body: dict | GetRequestBody, optional, default = None
             full request body.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -3991,6 +4029,9 @@ class ActorManager(ServerClient):
         body: dict | SearchStringRequestBody, optional
             - if provided, the search parameters in the body will supercede other attributes.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -4087,6 +4128,9 @@ class ActorManager(ServerClient):
         body: dict | SearchStringRequestBody, optional
             - if provided, the search parameters in the body will supercede other attributes.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -4156,6 +4200,9 @@ class ActorManager(ServerClient):
             The desired output columns/fields to include.
         body: dict, optional
             Provides a full request body. If specified, the body supercedes other attributes.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -4239,6 +4286,9 @@ class ActorManager(ServerClient):
         body: dict, optional
             Provides a full request body. If specified, the body supercedes other attributes.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | str
@@ -4290,6 +4340,9 @@ class ActorManager(ServerClient):
             The desired output columns/fields to include.
         body: dict | GetRequestBody, optional, default = None
             full request body.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -4344,6 +4397,9 @@ class ActorManager(ServerClient):
             The desired output columns/fields to include.
         body: dict | GetRequestBody, optional, default = None
             full request body.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -4847,6 +4903,9 @@ class ActorManager(ServerClient):
         body: dict, optional
             Provides a full request body. If specified, the body supercedes other attributes.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | str
@@ -4929,6 +4988,9 @@ class ActorManager(ServerClient):
         body: dict, optional
             Provides a full request body. If specified, the body supercedes other attributes.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | str
@@ -5010,6 +5072,9 @@ class ActorManager(ServerClient):
             - The desired output columns/fields to include.
         body: dict | SearchStringRequestBody, optional
             - if provided, the search parameters in the body will supercede other attributes.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -5106,6 +5171,9 @@ class ActorManager(ServerClient):
         body: dict | SearchStringRequestBody, optional
             - if provided, the search parameters in the body will supercede other attributes.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -5140,7 +5208,7 @@ class ActorManager(ServerClient):
         page_size: int = 100,
         output_format: str = "JSON",
         report_spec: Optional[str | dict] = "Contribution-Records",
-        **kwargs,
+        **kwargs: Unpack[SearchFilters],
     ) -> list | str:
         """Retrieve all contribution record metadata elements. Async Version.
 
@@ -5154,6 +5222,9 @@ class ActorManager(ServerClient):
             - one of "DICT", "MERMAID" or "JSON"
         report_spec: dict, optional, default = "Contribution-Records"
             The desired output columns/fields to include.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -5175,7 +5246,7 @@ class ActorManager(ServerClient):
         page_size: int = 100,
         output_format: str = "JSON",
         report_spec: Optional[str | dict] = "Contribution-Records",
-        **kwargs,
+        **kwargs: Unpack[SearchFilters],
     ) -> list | str:
         """Retrieve all contribution record metadata elements.
 
@@ -5189,6 +5260,9 @@ class ActorManager(ServerClient):
             - one of "DICT", "MERMAID" or "JSON"
         report_spec: dict, optional, default = "Contribution-Records"
             The desired output columns/fields to include.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -5234,6 +5308,9 @@ class ActorManager(ServerClient):
             The desired output columns/fields to include.
         body: dict | GetRequestBody, optional, default = None
             full request body.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -5288,6 +5365,9 @@ class ActorManager(ServerClient):
             The desired output columns/fields to include.
         body: dict | GetRequestBody, optional, default = None
             full request body.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -6026,6 +6106,9 @@ class ActorManager(ServerClient):
         body: dict, optional
             Provides a full request body. If specified, the body supercedes other attributes.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | str
@@ -6108,6 +6191,9 @@ class ActorManager(ServerClient):
         body: dict, optional
             Provides a full request body. If specified, the body supercedes other attributes.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | str
@@ -6189,6 +6275,9 @@ class ActorManager(ServerClient):
             - The desired output columns/fields to include.
         body: dict | SearchStringRequestBody, optional
             - if provided, the search parameters in the body will supercede other attributes.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -6285,6 +6374,9 @@ class ActorManager(ServerClient):
         body: dict | SearchStringRequestBody, optional
             - if provided, the search parameters in the body will supercede other attributes.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -6343,6 +6435,9 @@ class ActorManager(ServerClient):
         body: dict | GetRequestBody, optional, default = None
             full request body.
 
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         dict | str
@@ -6396,6 +6491,9 @@ class ActorManager(ServerClient):
             The desired output columns/fields to include.
         body: dict | GetRequestBody, optional, default = None
             full request body.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -6829,6 +6927,9 @@ class ActorManager(ServerClient):
         body: dict, optional
             Provides a full request body. If specified, the body supercedes other attributes.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | str
@@ -6911,6 +7012,9 @@ class ActorManager(ServerClient):
         body: dict, optional
             Provides a full request body. If specified, the body supercedes other attributes.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | str
@@ -6992,6 +7096,9 @@ class ActorManager(ServerClient):
             - The desired output columns/fields to include.
         body: dict | SearchStringRequestBody, optional
             - if provided, the search parameters in the body will supercede other attributes.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -7088,6 +7195,9 @@ class ActorManager(ServerClient):
         body: dict | SearchStringRequestBody, optional
             - if provided, the search parameters in the body will supercede other attributes.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -7146,6 +7256,9 @@ class ActorManager(ServerClient):
         body: dict | GetRequestBody, optional, default = None
             full request body.
 
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         dict | str
@@ -7199,6 +7312,9 @@ class ActorManager(ServerClient):
             The desired output columns/fields to include.
         body: dict | GetRequestBody, optional, default = None
             full request body.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -7632,6 +7748,9 @@ class ActorManager(ServerClient):
         body: dict, optional
             Provides a full request body. If specified, the body supercedes other attributes.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | str
@@ -7714,6 +7833,9 @@ class ActorManager(ServerClient):
         body: dict, optional
             Provides a full request body. If specified, the body supercedes other attributes.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | str
@@ -7795,6 +7917,9 @@ class ActorManager(ServerClient):
             - The desired output columns/fields to include.
         body: dict | SearchStringRequestBody, optional
             - if provided, the search parameters in the body will supercede other attributes.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -7891,6 +8016,9 @@ class ActorManager(ServerClient):
         body: dict | SearchStringRequestBody, optional
             - if provided, the search parameters in the body will supercede other attributes.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -7949,6 +8077,9 @@ class ActorManager(ServerClient):
         body: dict | GetRequestBody, optional, default = None
             full request body.
 
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         dict | str
@@ -8002,6 +8133,9 @@ class ActorManager(ServerClient):
             The desired output columns/fields to include.
         body: dict | GetRequestBody, optional, default = None
             full request body.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------

@@ -11,6 +11,8 @@ import asyncio
 
 from loguru import logger
 
+from typing import Unpack
+from pyegeria.core.request_filters import GetFilters, ListFilters, SearchFilters
 from pyegeria.core._server_client import max_paging_size, ServerClient
 from pyegeria.view.base_report_formats import select_report_spec, get_report_spec_match
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
@@ -72,7 +74,7 @@ class DataDesigner(ServerClient):
         graph_query_depth: int = 3,
         output_format: str = "JSON",
         report_spec: str | dict = None,
-        **kwargs,
+        **kwargs: Unpack[SearchFilters],
     ) -> list | str:
         """Find data value specifications by search string. Async version.
 
@@ -98,6 +100,9 @@ class DataDesigner(ServerClient):
             The format of the output.
         report_spec : str | dict, optional
             The report specification.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -138,7 +143,7 @@ class DataDesigner(ServerClient):
         graph_query_depth: int = 3,
         output_format: str = "JSON",
         report_spec: str | dict = None,
-        **kwargs,
+        **kwargs: Unpack[SearchFilters],
     ) -> list | str:
         """Find data value specifications by search string.
 
@@ -164,6 +169,9 @@ class DataDesigner(ServerClient):
             The format of the output.
         report_spec : str | dict, optional
             The report specification.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -906,7 +914,7 @@ class DataDesigner(ServerClient):
 
     @dynamic_catch
     async def _async_find_all_data_structures(self, graph_query_depth: int = 3, output_format: str = 'JSON',
-                                              report_spec: str | dict = None) -> list | str:
+                                              report_spec: str | dict = None, **kwargs: Unpack[SearchFilters]) -> list | str:
         """Returns a list of all known data structures. Async version.
 
         Parameters
@@ -916,6 +924,9 @@ class DataDesigner(ServerClient):
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
         report_spec: dict, optional, default = None
             - The desired output columns/field options.
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         [dict] | str
@@ -935,10 +946,10 @@ class DataDesigner(ServerClient):
         return await self._async_find_data_structures(search_string="*",
                                                       metadata_element_type="DataStructure",
                                                       output_format=output_format,
-                                                      report_spec=report_spec)
+                                                      report_spec=report_spec, **kwargs)
 
     @dynamic_catch
-    def find_all_data_structures(self, graph_query_depth: int = 3, output_format: str = 'JSON', report_spec: str | dict = None) -> list | str:
+    def find_all_data_structures(self, graph_query_depth: int = 3, output_format: str = 'JSON', report_spec: str | dict = None, **kwargs: Unpack[SearchFilters]) -> list | str:
         """Returns a list of all known data structures.
 
         Parameters
@@ -948,6 +959,9 @@ class DataDesigner(ServerClient):
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
         report_spec: dict, optional, default = None
             - The desired output columns/field options.
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         [dict] | str
@@ -965,7 +979,7 @@ class DataDesigner(ServerClient):
         """
 
         return run_sync(self._async_find_all_data_structures(output_format=output_format,
-                                                                           report_spec=report_spec))
+                                                                           report_spec=report_spec, **kwargs))
 
     @dynamic_catch
     async def _async_find_data_structures(
@@ -979,7 +993,7 @@ class DataDesigner(ServerClient):
         page_size: int = 100,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = None,
-        **kwargs
+        **kwargs: Unpack[SearchFilters]
     ) -> list | str:
         """Find the list of data structure metadata elements that contain the search string. Async version.
 
@@ -1022,6 +1036,9 @@ class DataDesigner(ServerClient):
             - sequencing_order (str): Order for sequencing results
             - sequencing_property (str): Property to use for sequencing
             - property_names (list[str]): Property names to search for
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -1073,7 +1090,7 @@ class DataDesigner(ServerClient):
         page_size: int = 100,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = None,
-        **kwargs
+        **kwargs: Unpack[SearchFilters]
     ) -> list | str:
         """Find the list of data structure metadata elements that contain the search string.
 
@@ -1117,6 +1134,9 @@ class DataDesigner(ServerClient):
             - sequencing_property (str): Property to use for sequencing
             - property_names (list[str]): Property names to search for
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -1156,7 +1176,7 @@ class DataDesigner(ServerClient):
                                                  page_size: int = 0,
                                                  graph_query_depth: int = 3, output_format: str = 'JSON',
                                                  report_spec: str | dict = None,
-                                                 **kwargs) -> list | str:
+                                                 **kwargs: Unpack[ListFilters]) -> list | str:
         """ Get the list of data structure metadata elements with a matching name to the search string filter.
             Async version.
 
@@ -1174,6 +1194,9 @@ class DataDesigner(ServerClient):
             - one of "DICT", "MERMAID" or "JSON"
         report_spec: str | dict, optional, default = None
             - The desired output columns/field options.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1228,7 +1251,7 @@ class DataDesigner(ServerClient):
                                     body: Optional[dict | FilterRequestBody] = None, start_from: int = 0,
                                     page_size: int = max_paging_size, graph_query_depth: int = 3, output_format: str = 'JSON',
                                     report_spec: str | dict = None,
-                                    **kwargs) -> list | str:
+                                    **kwargs: Unpack[ListFilters]) -> list | str:
         """ Get the list of data structure metadata elements with a matching name to the search string filter.
 
         Parameters
@@ -1245,6 +1268,9 @@ class DataDesigner(ServerClient):
          - one of "DICT", "MERMAID" or "JSON"
         report_spec: str | dict, optional, default = None
             - The desired output columns/field options.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1274,7 +1300,7 @@ class DataDesigner(ServerClient):
                                                 body: Optional[dict | GetRequestBody] = None,
                                                 graph_query_depth: int = 3, output_format: str = 'JSON',
                                                 report_spec: str | dict = None,
-                                                **kwargs) -> list | str:
+                                                **kwargs: Unpack[GetFilters]) -> list | str:
         """ Get the  data structure metadata elements for the specified GUID.
             Async version.
 
@@ -1290,6 +1316,9 @@ class DataDesigner(ServerClient):
          - one of "DICT", "MERMAID" or "JSON"
         report_spec: str | dict, optional, default = None
             - The desired output columns/field options.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1341,7 +1370,7 @@ class DataDesigner(ServerClient):
     def get_data_structure_by_guid(self, guid: str = None, element_type: Optional[str] = None,
                                    body: Optional[dict | GetRequestBody] = None,
                                    graph_query_depth: int = 3, output_format: str = 'JSON', report_spec: str | dict = None,
-                                   **kwargs) -> list | str:
+                                   **kwargs: Unpack[GetFilters]) -> list | str:
         """ Get the data structure metadata element with the specified unique identifier..
 
         Parameters
@@ -1356,6 +1385,9 @@ class DataDesigner(ServerClient):
          - one of "DICT", "MERMAID" or "JSON"
         report_spec: str | dict, optional, default = None
             - The desired output columns/field options.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1626,55 +1658,83 @@ class DataDesigner(ServerClient):
             "mermaid": mermaid,
             }
 
-    def get_data_field_rel_elements(self, guid: str) -> dict | str:
-        """return the lists of objects related to a data field"""
+    def get_data_field_rel_elements(self, guid: str, **kwargs: Unpack[GetFilters]) -> dict | str:
+        """return the lists of objects related to a data field
 
-        data_field_entry = self.get_data_field_by_guid(guid, output_format="JSON")
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
+        """
+
+        data_field_entry = self.get_data_field_by_guid(guid, output_format="JSON", **kwargs)
         if isinstance(data_field_entry, str):
             return None
         return self.get_data_rel_elements_dict(data_field_entry)
 
-    async def _async_get_data_field_rel_elements(self, guid: str) -> dict | None:
-        """Async version: return the lists of objects related to a data field."""
-        data_field_entry = await self._async_get_data_field_by_guid(guid, output_format="JSON")
+    async def _async_get_data_field_rel_elements(self, guid: str, **kwargs: Unpack[GetFilters]) -> dict | None:
+        """Async version: return the lists of objects related to a data field.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
+        """
+        data_field_entry = await self._async_get_data_field_by_guid(guid, output_format="JSON", **kwargs)
         if isinstance(data_field_entry, str) or data_field_entry is None:
             return None
         return self.get_data_rel_elements_dict(data_field_entry)
 
-    def get_data_class_rel_elements(self, guid: str) -> dict | str:
-        """return the lists of objects related to a data class"""
+    def get_data_class_rel_elements(self, guid: str, **kwargs: Unpack[GetFilters]) -> dict | str:
+        """return the lists of objects related to a data class
 
-        data_class_entry = self.get_data_class_by_guid(guid, output_format="JSON")
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
+        """
+
+        data_class_entry = self.get_data_class_by_guid(guid, output_format="JSON", **kwargs)
         if isinstance(data_class_entry, str):
             return None
         return self.get_data_rel_elements_dict(data_class_entry)
 
-    async def _async_get_data_class_rel_elements(self, guid: str) -> dict | None:
-        """Async version: return the lists of objects related to a data class."""
-        data_class_entry = await self._async_get_data_class_by_guid(guid, output_format="JSON")
+    async def _async_get_data_class_rel_elements(self, guid: str, **kwargs: Unpack[GetFilters]) -> dict | None:
+        """Async version: return the lists of objects related to a data class.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
+        """
+        data_class_entry = await self._async_get_data_class_by_guid(guid, output_format="JSON", **kwargs)
         if isinstance(data_class_entry, str) or data_class_entry is None:
             return None
         return self.get_data_rel_elements_dict(data_class_entry)
 
-    def get_data_value_specification_rel_elements(self, guid: str) -> dict | str:
-        """return the lists of objects related to a data value specification"""
+    def get_data_value_specification_rel_elements(self, guid: str, **kwargs: Unpack[GetFilters]) -> dict | str:
+        """return the lists of objects related to a data value specification
 
-        spec_entry = self.get_data_value_specification_by_guid(guid, output_format="JSON")
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
+        """
+
+        spec_entry = self.get_data_value_specification_by_guid(guid, output_format="JSON", **kwargs)
         if isinstance(spec_entry, str):
             return None
         return self.get_data_rel_elements_dict(spec_entry)
 
-    async def _async_get_data_value_specification_rel_elements(self, guid: str) -> dict | None:
-        """Async version: return the lists of objects related to a data value specification."""
-        spec_entry = await self._async_get_data_value_specification_by_guid(guid, output_format="JSON")
+    async def _async_get_data_value_specification_rel_elements(self, guid: str, **kwargs: Unpack[GetFilters]) -> dict | None:
+        """Async version: return the lists of objects related to a data value specification.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
+        """
+        spec_entry = await self._async_get_data_value_specification_by_guid(guid, output_format="JSON", **kwargs)
         if isinstance(spec_entry, str) or spec_entry is None:
             return None
         return self.get_data_rel_elements_dict(spec_entry)
 
-    def get_data_grain_rel_elements(self, guid: str) -> dict | str:
-        """return the lists of objects related to a data grain"""
+    def get_data_grain_rel_elements(self, guid: str, **kwargs: Unpack[GetFilters]) -> dict | str:
+        """return the lists of objects related to a data grain
 
-        grain_entry = self.get_data_grain_by_guid(guid, output_format="JSON")
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
+        """
+
+        grain_entry = self.get_data_grain_by_guid(guid, output_format="JSON", **kwargs)
         if isinstance(grain_entry, str):
             return None
         return self.get_data_rel_elements_dict(grain_entry)
@@ -2591,7 +2651,7 @@ class DataDesigner(ServerClient):
     @dynamic_catch
     async def _async_find_all_data_fields(self, graph_query_depth: int = 3, output_format: str = 'JSON',
                                           report_spec: str | dict = None,
-                                          body: dict|SearchStringRequestBody| None= None) -> list | str:
+                                          body: dict|SearchStringRequestBody| None= None, **kwargs: Unpack[SearchFilters]) -> list | str:
         """Returns a list of all known data fields. Async version.
 
         Parameters
@@ -2603,6 +2663,9 @@ class DataDesigner(ServerClient):
             - The desired output columns/field options.
         body: dict|SearchStringRequestBody, optional, default = None
             - The body of the request. If None, no body is sent.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -2623,11 +2686,11 @@ class DataDesigner(ServerClient):
         return await self._async_find_data_fields(search_string="*",
                                                   metadata_element_type="DataField",
                                                   output_format=output_format,
-                                                  report_spec=report_spec, body=body)
+                                                  report_spec=report_spec, body=body, **kwargs)
 
     @dynamic_catch
     def find_all_data_fields(self, graph_query_depth: int = 3, output_format: str = 'JSON', report_spec: str | dict = None,
-                             body: dict | SearchStringRequestBody| None = None) -> list | str:
+                             body: dict | SearchStringRequestBody| None = None, **kwargs: Unpack[SearchFilters]) -> list | str:
         """ Returns a list of all known data fields.
 
         Parameters
@@ -2638,6 +2701,9 @@ class DataDesigner(ServerClient):
             - The desired output columns/field options.
         body: dict|SearchStringRequestBody, optional, default = None
         - The body of the request. If None, no body is sent.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -2656,7 +2722,7 @@ class DataDesigner(ServerClient):
         """
 
         response = run_sync(
-            self._async_find_all_data_fields(graph_query_depth, output_format, report_spec, body))
+            self._async_find_all_data_fields(graph_query_depth, output_format, report_spec, body, **kwargs))
         return response
 
     @dynamic_catch
@@ -2671,7 +2737,7 @@ class DataDesigner(ServerClient):
         page_size: int = 100,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = None,
-        **kwargs
+        **kwargs: Unpack[SearchFilters]
     ) -> list | str:
         """Retrieve the list of data fields elements that contain the search string filter. Async version.
 
@@ -2731,6 +2797,9 @@ class DataDesigner(ServerClient):
             The names of properties to search for.
         body: dict, optional, default = None
             - additional optional specifications for the search.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -2849,6 +2918,9 @@ class DataDesigner(ServerClient):
         body: dict, optional, default = None
             - additional optional specifications for the search.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         [dict] | str
@@ -2886,7 +2958,7 @@ class DataDesigner(ServerClient):
                                              body: Optional[dict | FilterRequestBody] = None, start_from: int = 0,
                                              page_size: int = 0,
                                              graph_query_depth: int = 3, output_format: str = 'JSON',
-                                             report_spec: str | dict = None, **kwargs) -> list | str:
+                                             report_spec: str | dict = None, **kwargs: Unpack[ListFilters]) -> list | str:
         """ Get the list of data class metadata elements with a matching name to the search string filter.
             Async version.
 
@@ -2904,6 +2976,9 @@ class DataDesigner(ServerClient):
             - one of "DICT", "MERMAID" or "JSON"
         report_spec: str | dict, optional, default = None
             - The desired output columns/field options.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -2949,7 +3024,7 @@ class DataDesigner(ServerClient):
     def get_data_fields_by_name(self, filter_string: str | None = None, classification_names: Optional[list[str]] = None, body: dict = None,
                                 start_from: int = 0,
                                 page_size: int = max_paging_size, graph_query_depth: int = 3, output_format: str = 'JSON',
-                                report_spec: str | dict = None, **kwargs) -> list | str:
+                                report_spec: str | dict = None, **kwargs: Unpack[ListFilters]) -> list | str:
         """ Get the list of data class elements with a matching name to the search string filter.
 
         Parameters
@@ -2966,6 +3041,9 @@ class DataDesigner(ServerClient):
          - one of "DICT", "MERMAID" or "JSON"
         report_spec: str | dict, optional, default = None
             - The desired output columns/field options.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -2995,8 +3073,12 @@ class DataDesigner(ServerClient):
     async def _async_get_data_field_by_guid(self, guid: str, element_type: Optional[str] = None,
                                              body: Optional[dict] = None,
                                              graph_query_depth: int = 3, output_format: str = 'JSON',
-                                             report_spec: str | dict = None, **kwargs) -> list | str:
-        """Get a data field by its GUID. Async version."""
+                                             report_spec: str | dict = None, **kwargs: Unpack[GetFilters]) -> list | str:
+        """Get a data field by its GUID. Async version.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         url = f"{self.ref_data_designer_command_base}/data-fields/{guid}/retrieve"
         _type = element_type if element_type else "DataField"
         return await self._async_get_guid_request(url, _type=_type,
@@ -3007,8 +3089,12 @@ class DataDesigner(ServerClient):
     @dynamic_catch
     def get_data_field_by_guid(self, guid: str, element_type: Optional[str] = None,
                                 body: Optional[dict] = None,
-                                graph_query_depth: int = 3, output_format: str = 'JSON', report_spec: str | dict = None, **kwargs) -> list | str:
-        """Get a data field by its GUID."""
+                                graph_query_depth: int = 3, output_format: str = 'JSON', report_spec: str | dict = None, **kwargs: Unpack[GetFilters]) -> list | str:
+        """Get a data field by its GUID.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         return run_sync(
             self._async_get_data_field_by_guid(guid, element_type, body, graph_query_depth, output_format, report_spec, **kwargs))
 
@@ -3018,7 +3104,7 @@ class DataDesigner(ServerClient):
                                                            body: Optional[dict | FilterRequestBody] = None, start_from: int = 0,
                                                            page_size: int = 0,
                                                            graph_query_depth: int = 3, output_format: str = 'JSON',
-                                                           report_spec: str | dict = None, **kwargs) -> list | str:
+                                                           report_spec: str | dict = None, **kwargs: Unpack[ListFilters]) -> list | str:
         """ Get data value specifications by name. Async version.
 
         Parameters
@@ -3035,6 +3121,9 @@ class DataDesigner(ServerClient):
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
         report_spec: str | dict, optional, default = None
             - The desired output columns/field options.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -3080,7 +3169,7 @@ class DataDesigner(ServerClient):
     def get_data_value_specifications_by_name(self, filter_string: str | None = None, classification_names: Optional[list[str]] = None, body: dict = None,
                                               start_from: int = 0,
                                               page_size: int = max_paging_size, graph_query_depth: int = 3, output_format: str = 'JSON',
-                                              report_spec: str | dict = None, **kwargs) -> list | str:
+                                              report_spec: str | dict = None, **kwargs: Unpack[ListFilters]) -> list | str:
         """ Get data value specifications by name.
 
         Parameters
@@ -3098,6 +3187,9 @@ class DataDesigner(ServerClient):
         report_spec: str | dict, optional, default = None
             - The desired output columns/field options.
 
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -3126,7 +3218,7 @@ class DataDesigner(ServerClient):
     async def _async_get_data_value_specification_by_guid(self, guid: str, element_type: Optional[str] = None,
                                                            body: Optional[dict | GetRequestBody] = None,
                                                            graph_query_depth: int = 3, output_format: str = 'JSON',
-                                                           report_spec: str | dict = None, **kwargs) -> list | str:
+                                                           report_spec: str | dict = None, **kwargs: Unpack[GetFilters]) -> list | str:
         """ Get the  data value specification metadata elements for the specified GUID.
             Async version.
 
@@ -3142,6 +3234,9 @@ class DataDesigner(ServerClient):
          - one of "DICT", "MERMAID" or "JSON"
         report_spec: str | dict, optional, default = None
             - The desired output columns/field options.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -3185,7 +3280,7 @@ class DataDesigner(ServerClient):
     @dynamic_catch
     def get_data_value_specification_by_guid(self, guid: str, element_type: Optional[str] = None,
                                              body: Optional[dict | GetRequestBody] = None,
-                                             graph_query_depth: int = 3, output_format: str = 'JSON', report_spec: str | dict = None, **kwargs) -> list | str:
+                                             graph_query_depth: int = 3, output_format: str = 'JSON', report_spec: str | dict = None, **kwargs: Unpack[GetFilters]) -> list | str:
         """ Get the data value specification metadata element with the specified unique identifier..
 
         Parameters
@@ -3200,6 +3295,9 @@ class DataDesigner(ServerClient):
          - one of "DICT", "MERMAID" or "JSON"
         report_spec: str | dict, optional, default = None
             - The desired output columns/field options.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -3239,9 +3337,12 @@ class DataDesigner(ServerClient):
                                              body: Optional[dict | GetRequestBody] = None,
                                              graph_query_depth: int = 3, output_format: str = 'JSON',
                                              report_spec: str | dict = None,
-                                             **kwargs) -> list | str:
+                                             **kwargs: Unpack[GetFilters]) -> list | str:
         """Get a data class by its GUID. Async version.
         Uses the data-value-specifications parent endpoint since DataClass is a subtype.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
         """
         if guid is None and "data_class_guid" in kwargs:
             guid = kwargs.pop("data_class_guid")
@@ -3263,8 +3364,12 @@ class DataDesigner(ServerClient):
     def get_data_class_by_guid(self, guid: str = None, element_type: Optional[str] = None,
                                 body: Optional[dict | GetRequestBody] = None,
                                 graph_query_depth: int = 3, output_format: str = 'JSON', report_spec: str | dict = None,
-                                **kwargs) -> list | str:
-        """Get a data class by its GUID."""
+                                **kwargs: Unpack[GetFilters]) -> list | str:
+        """Get a data class by its GUID.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         return run_sync(
             self._async_get_data_class_by_guid(guid=guid, element_type=element_type, body=body, graph_query_depth=graph_query_depth, output_format=output_format, report_spec=report_spec, **kwargs))
 
@@ -3272,8 +3377,12 @@ class DataDesigner(ServerClient):
     def get_data_grain_by_guid(self, guid: str = None, element_type: Optional[str] = None,
                                 body: Optional[dict] = None,
                                 graph_query_depth: int = 3, output_format: str = 'JSON', report_spec: str | dict = None,
-                                **kwargs) -> list | str:
-        """Get a data grain by its GUID. Alias for get_data_value_specification_by_guid with DataGrain type."""
+                                **kwargs: Unpack[GetFilters]) -> list | str:
+        """Get a data grain by its GUID. Alias for get_data_value_specification_by_guid with DataGrain type.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         return run_sync(
             self._async_get_data_value_specification_by_guid(
                 guid=guid, element_type=element_type or "DataGrain", body=body, output_format=output_format, report_spec=report_spec, **kwargs))

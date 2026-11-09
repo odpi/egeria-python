@@ -11,6 +11,8 @@ import json
 import uuid
 from typing import Optional, Union, Any
 
+from typing import Unpack
+from pyegeria.core.request_filters import ListFilters
 from pyegeria.core._server_client import ServerClient
 from pyegeria.core._globals import NO_ELEMENTS_FOUND
 from pyegeria.core._exceptions import PyegeriaNotFoundException
@@ -455,7 +457,11 @@ class SecurityOfficer(ServerClient):
         body: Optional[dict | SearchStringRequestBody] = None,
         **kwargs,
     ) -> list | str:
-        """Return the list of security roles matching the search string. Async version."""
+        """Return the list of security roles matching the search string. Async version.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+        """
         url = f"{self.security_officer_base_url}/collections/by-search-string"
         params = {
             "search_string": search_string,
@@ -507,7 +513,11 @@ class SecurityOfficer(ServerClient):
         body: Optional[dict | SearchStringRequestBody] = None,
         **kwargs,
     ) -> list | str:
-        """Return the list of security roles matching the search string."""
+        """Return the list of security roles matching the search string.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+        """
         return run_sync(
             self._async_find_security_roles(
                 search_string=search_string,
@@ -553,7 +563,11 @@ class SecurityOfficer(ServerClient):
         body: Optional[dict | SearchStringRequestBody] = None,
         **kwargs,
     ) -> list | str:
-        """Return the list of security groups matching the search string. Async version."""
+        """Return the list of security groups matching the search string. Async version.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+        """
         url = f"{self.security_officer_base_url}/collections/by-search-string"
         params = {
             "search_string": search_string,
@@ -605,7 +619,11 @@ class SecurityOfficer(ServerClient):
         body: Optional[dict | SearchStringRequestBody] = None,
         **kwargs,
     ) -> list | str:
-        """Return the list of security groups matching the search string."""
+        """Return the list of security groups matching the search string.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+        """
         return run_sync(
             self._async_find_security_groups(
                 search_string=search_string,
@@ -879,7 +897,11 @@ class SecurityOfficer(ServerClient):
         body: Optional[dict | FilterRequestBody] = None,
         **kwargs,
     ) -> list | str:
-        """Return the statements of applicability with a particular name. Async version."""
+        """Return the statements of applicability with a particular name. Async version.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         url = f"{self.security_officer_base_url}/statements-of-applicability/by-name"
         return await self._async_get_name_request(
             url,
@@ -913,7 +935,11 @@ class SecurityOfficer(ServerClient):
         body: Optional[dict | FilterRequestBody] = None,
         **kwargs,
     ) -> list | str:
-        """Return the statements of applicability with a particular name."""
+        """Return the statements of applicability with a particular name.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         return run_sync(
             self._async_get_statements_of_applicability_by_name(
                 filter_string=filter_string,
@@ -952,7 +978,11 @@ class SecurityOfficer(ServerClient):
         body: Optional[dict | SearchStringRequestBody] = None,
         **kwargs,
     ) -> list | str:
-        """Return the statements of applicability that contain the search string. Async version."""
+        """Return the statements of applicability that contain the search string. Async version.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+        """
         url = f"{self.security_officer_base_url}/statements-of-applicability/by-search-string"
         return await self._async_find_request(
             url,
@@ -1000,7 +1030,11 @@ class SecurityOfficer(ServerClient):
         body: Optional[dict | SearchStringRequestBody] = None,
         **kwargs,
     ) -> list | str:
-        """Return the statements of applicability that contain the search string."""
+        """Return the statements of applicability that contain the search string.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+        """
         return run_sync(
             self._async_find_statements_of_applicability(
                 search_string=search_string,
@@ -1040,6 +1074,9 @@ class SecurityOfficer(ServerClient):
 
         Each linked control, with its ControlApplicability relationship properties, is returned in the
         element's otherRelatedElements list.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
         """
         url = f"{self.security_officer_base_url}/statements-of-applicability/{soa_guid}/retrieve"
         return await self._async_get_guid_request(
@@ -1071,6 +1108,9 @@ class SecurityOfficer(ServerClient):
 
         Each linked control, with its ControlApplicability relationship properties, is returned in the
         element's otherRelatedElements list.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
         """
         return run_sync(
             self._async_get_statement_of_applicability_by_guid(
@@ -1182,7 +1222,7 @@ class SecurityOfficer(ServerClient):
         output_format: str = "JSON",
         report_spec: str | dict | None = None,
         body: Optional[dict | GetRequestBody] = None,
-        **kwargs,
+        **kwargs: Unpack[ListFilters],
     ) -> list | str:
         """Return the controls assessed in a statement of applicability, one row per control. Async version.
 
@@ -1200,6 +1240,9 @@ class SecurityOfficer(ServerClient):
             Defaults to "Statement-of-Applicability-Controls".
         body : dict | GetRequestBody, optional
             Passed to get_statement_of_applicability_by_guid.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1226,11 +1269,14 @@ class SecurityOfficer(ServerClient):
         output_format: str = "JSON",
         report_spec: str | dict | None = None,
         body: Optional[dict | GetRequestBody] = None,
-        **kwargs,
+        **kwargs: Unpack[ListFilters],
     ) -> list | str:
         """Return the controls assessed in a statement of applicability, one row per control.
 
         See _async_get_statement_of_applicability_controls.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
         """
         return run_sync(
             self._async_get_statement_of_applicability_controls(

@@ -9,6 +9,9 @@ import asyncio
 from loguru import logger
 from typing import Any, Optional, Union, Dict, List
 from httpx import Response
+from typing import Unpack
+from pyegeria.core.request_filters import FindFilters
+from pyegeria.core.request_filters import filter_body_kwargs
 from pyegeria.models import (NewOpenMetadataElementRequestBody, TemplateRequestBody,
                              UpdatePropertiesRequestBody, MetadataSourceRequestBody,
                              ReIdentifyRequestBody, ReTypeRequestBody, ReHomeRequestBody,
@@ -1446,6 +1449,9 @@ class MetadataExpert(ServerClient):
         body: dict | GetRequestBody, default = None
             - details of the request supersede parameters. Body, if present overrides parameters.
 
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         dict | str
@@ -1487,7 +1493,7 @@ class MetadataExpert(ServerClient):
         response = await self._async_get_guid_request(url=url, _type="Referenceable",
                                                       _gen_output=self._generate_referenceable_output,
                                                       output_format=output_format,
-                                                      report_spec=None, body=body)
+                                                      report_spec=None, body=body, **kwargs)
         return response
 
     @dynamic_catch
@@ -1511,6 +1517,9 @@ class MetadataExpert(ServerClient):
             - Query the element as of this time. If None, then use current time.
         body: dict | GetRequestBody, default = None
             - details of the request supersede parameters. Body, if present overrides parameters.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1553,6 +1562,9 @@ class MetadataExpert(ServerClient):
             - Query the element as of this time. If None, current time is used.
         body: dict | GetRequestBody, default = None
         - details of the request supersede parameters. Body, if present, overrides parameters.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1597,7 +1609,7 @@ class MetadataExpert(ServerClient):
         )
         response = await self._async_get_guid_request(
             url=url, _type="Referenceable", _gen_output=self._generate_referenceable_output,
-            output_format="JSON", report_spec=None, body=body
+            output_format="JSON", report_spec=None, body=body, **kwargs
         )
         if mermaid_only:
             return response.get("mermaidGraph", "No Mermaid Graph Found")
@@ -1623,6 +1635,9 @@ class MetadataExpert(ServerClient):
                 - Query the element as of this time. If None, current time is used.
             body: dict | GetRequestBody, default = None
             - details of the request supersede parameters. Body, if present, overrides parameters.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
             Returns
             -------
@@ -2238,6 +2253,9 @@ class MetadataExpert(ServerClient):
             body (SearchStringRequestBody | dict | None): A payload containing additional search parameters
                 or overrides. Defaults to None.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns:
             list | str: Returns the search results as a list of metadata elements, or as a string in cases
                 where the output is serialized in text format.
@@ -2334,6 +2352,9 @@ class MetadataExpert(ServerClient):
             body (SearchStringRequestBody | dict | None): A payload containing additional search parameters
                 or overrides. Defaults to None.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns:
             list | str: Returns the search results as a list of metadata elements, or as a string in cases
                 where the output is serialized in text format.
@@ -2420,6 +2441,9 @@ class MetadataExpert(ServerClient):
                 Defaults to 0.
             body (SearchStringRequestBody | dict | None): A payload containing additional search parameters
                 or overrides. Defaults to None.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns:
             list | str: Returns the search results as a list of metadata elements, or as a string in cases
@@ -2516,6 +2540,9 @@ class MetadataExpert(ServerClient):
                 body (SearchStringRequestBody | dict | None): A payload containing additional search parameters
                     or overrides. Defaults to None.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
             Returns:
                     list | str: Returns the search results as a list of metadata elements, or as a string in cases
                         where the output is serialized in text format.
@@ -2601,6 +2628,9 @@ class MetadataExpert(ServerClient):
                 Defaults to 0.
             body (SearchStringRequestBody | dict | None): A payload containing additional search parameters
                 or overrides. Defaults to None.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns:
             list | str: Returns the search results as a list of metadata elements, or as a string in cases
@@ -2697,6 +2727,9 @@ class MetadataExpert(ServerClient):
                 body (SearchStringRequestBody | dict | None): A payload containing additional search parameters
                     or overrides. Defaults to None.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
             Returns:
                     list | str: Returns the search results as a list of metadata elements, or as a string in cases
                         where the output is serialized in text format.
@@ -2784,6 +2817,9 @@ class MetadataExpert(ServerClient):
                 Defaults to 0.
             body (SearchStringRequestBody | dict | None): A payload containing additional search parameters
                 or overrides. Defaults to None.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns:
             list | str: Returns the search results as a list of metadata elements, or as a string in cases
@@ -2882,6 +2918,9 @@ class MetadataExpert(ServerClient):
                     Defaults to 0.
                 body (SearchStringRequestBody | dict | None): A payload containing additional search parameters
                     or overrides. Defaults to None.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
             Returns:
                     list | str: Returns the search results as a list of metadata elements, or as a string in cases
@@ -3576,7 +3615,7 @@ class MetadataExpert(ServerClient):
         self,
         body: Optional[dict] = None,
         timeout: int = default_timeout,
-        **kwargs,
+        **kwargs: Unpack[FindFilters],
     ) -> list | str:
         """Return a list of metadata elements that match the supplied criteria.
         The results can be returned over many pages. Async version.
@@ -3617,6 +3656,9 @@ class MetadataExpert(ServerClient):
               Supported: `metadata_element_type_name`, `metadata_element_subtype_names`, `skip_subtypes`,
               `search_properties`, `match_classifications`, `effective_time`, `limit_results_by_status`,
               `as_of_time`, `sequencing_order`, `sequencing_property`, `start_from`, `page_size`.
+
+        Accepts the standard find filters as keyword arguments (see ``FindFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -3690,21 +3732,11 @@ class MetadataExpert(ServerClient):
         """
 
         if body is None:
-            body = {
-                "class": "FindRequestBody",
-                "metadataElementTypeName": kwargs.get("metadata_element_type_name"),
-                "metadataElementSubtypeNames": kwargs.get("metadata_element_subtype_names"),
-                "skipSubtypes": kwargs.get("skip_subtypes"),
-                "searchProperties": kwargs.get("search_properties"),
-                "matchClassifications": kwargs.get("match_classifications"),
-                "effectiveTime": kwargs.get("effective_time"),
-                "limitResultsByStatus": kwargs.get("limit_results_by_status"),
-                "asOfTime": kwargs.get("as_of_time"),
-                "sequencingOrder": kwargs.get("sequencing_order"),
-                "sequencingProperty": kwargs.get("sequencing_property"),
-                "startFrom": kwargs.get("start_from"),
-                "pageSize": kwargs.get("page_size"),
-            }
+            # Every FindRequestBody field may be given as a keyword (snake_case, or the
+            # metadata_element_type / metadata_element_subtypes spellings); unknown names warn.
+            body = {"class": "FindRequestBody", **filter_body_kwargs("find", kwargs)}
+        elif kwargs:
+            filter_body_kwargs("find", kwargs)  # body wins; still warn about misspelt names
 
         url = f"{base_path(self, self.view_server)}/metadata-elements/by-search-conditions"
 
@@ -3727,7 +3759,7 @@ class MetadataExpert(ServerClient):
         self,
         body: Optional[dict] = None,
         timeout: int = default_timeout,
-        **kwargs,
+        **kwargs: Unpack[FindFilters],
     ) -> list | str:
         """
         Retrieve the relationships linking the supplied elements.
@@ -3746,6 +3778,9 @@ class MetadataExpert(ServerClient):
             - http request timeout for this request
         **kwargs:
             - Backward compatibility parameters for individual criteria if `body` is not provided.
+
+        Accepts the standard find filters as keyword arguments (see ``FindFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------

@@ -15,6 +15,8 @@ from typing import List, Annotated, Literal, Optional
 from loguru import logger
 from pydantic import Field
 
+from typing import Unpack
+from pyegeria.core.request_filters import GetFilters
 from pyegeria.core._exceptions import PyegeriaInvalidParameterException, PyegeriaException
 from pyegeria.core._globals import NO_GUID_RETURNED
 from pyegeria.core._validators import validate_guid
@@ -3463,6 +3465,9 @@ class GlossaryManager(CollectionManager):
         **kwargs : dict, optional
             Additional parameters supported by the find request.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -3517,7 +3522,11 @@ class GlossaryManager(CollectionManager):
         body: Optional[dict | SearchStringRequestBody] = None,
         **kwargs,
     ) -> list | str:
-        """Retrieve the list of glossary metadata elements that contain the search string."""
+        """Retrieve the list of glossary metadata elements that contain the search string.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+        """
         return run_sync(
             self._async_find_glossaries(
                 search_string=search_string,
@@ -3851,6 +3860,9 @@ class GlossaryManager(CollectionManager):
         **kwargs : dict, optional
             Additional parameters supported by the find request.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -3906,7 +3918,11 @@ class GlossaryManager(CollectionManager):
         body: Optional[dict | SearchStringRequestBody] = None,
         **kwargs,
     ) -> list | str:
-        """Retrieve the list of glossary term metadata elements that contain the search string."""
+        """Retrieve the list of glossary term metadata elements that contain the search string.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+        """
         return run_sync(
             self._async_find_glossary_terms(
                 search_string=search_string,
@@ -3930,13 +3946,16 @@ class GlossaryManager(CollectionManager):
             )
         )
 
-    async def _async_get_glossary_for_term(self, term_guid: str) -> dict:
+    async def _async_get_glossary_for_term(self, term_guid: str, **kwargs: Unpack[GetFilters]) -> dict:
         """Returns the glossary containing the term with the supplied GUID. Async version.
 
         Parameters
         ----------
         term_guid : str
             The unique identifier of the term to find the glossary for.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -3948,7 +3967,7 @@ class GlossaryManager(CollectionManager):
         PyegeriaException
             If the term is not found, or it is not anchored to any glossary.
         """
-        term = await self._async_get_term_by_guid(term_guid, output_format="JSON")
+        term = await self._async_get_term_by_guid(term_guid, output_format="JSON", **kwargs)
         if not isinstance(term, dict):
             raise PyegeriaException("Term not found or invalid format returned")
 
@@ -3962,16 +3981,19 @@ class GlossaryManager(CollectionManager):
         if not glossary_guid:
             raise PyegeriaException(f"Term '{term_guid}' is not anchored to any glossary")
 
-        return await self._async_get_glossary_by_guid(glossary_guid)
+        return await self._async_get_glossary_by_guid(glossary_guid, **kwargs)
 
     @dynamic_catch
-    def get_glossary_for_term(self, term_guid: str) -> dict:
+    def get_glossary_for_term(self, term_guid: str, **kwargs: Unpack[GetFilters]) -> dict:
         """Returns the glossary containing the term with the supplied GUID.
 
         Parameters
         ----------
         term_guid : str
             The unique identifier of the term to find the glossary for.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -3983,7 +4005,7 @@ class GlossaryManager(CollectionManager):
         PyegeriaException
             If the term is not found, or it is not anchored to any glossary.
         """
-        return run_sync(self._async_get_glossary_for_term(term_guid))
+        return run_sync(self._async_get_glossary_for_term(term_guid, **kwargs))
 
     #
     # Naming standards classifications (0438) -- Egeria PR #9166. Simple marker

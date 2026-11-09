@@ -1018,6 +1018,9 @@ class LocationArena(ServerClient):
         body: dict | SearchStringRequestBody, optional
             - if provided, the search parameters in the body will supercede other attributes.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         List | str
@@ -1114,6 +1117,9 @@ class LocationArena(ServerClient):
         body: dict | SearchStringRequestBody, optional
             - if provided, the search parameters in the body will supercede other attributes.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         List | str
@@ -1183,6 +1189,9 @@ class LocationArena(ServerClient):
             The desired output columns/fields to include.
         body: dict, optional
             Provides a full request body. If specified, the body supercedes other attributes.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1264,6 +1273,9 @@ class LocationArena(ServerClient):
         body: dict, optional
             Provides a full request body. If specified, the body supercedes other attributes.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         List | str
@@ -1327,6 +1339,9 @@ class LocationArena(ServerClient):
         body: dict | GetRequestBody, optional
             full request body.
 
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         dict | str
@@ -1380,6 +1395,9 @@ class LocationArena(ServerClient):
             The desired output columns/fields to include.
         body: dict | GetRequestBody, optional
             full request body.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------

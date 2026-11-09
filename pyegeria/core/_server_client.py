@@ -87,6 +87,7 @@ from pyegeria.models.models import (
     ActionRequestBody
 )
 from pyegeria.core.async_runner import run_sync
+from pyegeria.core.request_filters import filter_body_kwargs
 
 __all__ = [
     # Models
@@ -6480,6 +6481,7 @@ class ServerClient(BaseServerClient):
                                   body: dict | SearchStringRequestBody | FindPropertyNamesRequestBody = None,
                                   **kwargs) -> Any:
         report_spec = await self._async_refresh_report_spec(report_spec, kwargs)  # refresh_spec=True (RS-EGERIA-TIER)
+        _filters = filter_body_kwargs("search", kwargs)  # check names; map to wire names
 
         effective_search_string = None if search_string == '*' else search_string
 
@@ -6521,9 +6523,9 @@ class ServerClient(BaseServerClient):
                     "anchorDomainName": anchor_domain,
                     "anchorScopeGUID": anchor_scope_guid,
                     "governanceZoneFilter": governance_zone_filter,
-                    **kwargs
+                    **_filters
                 }
-                if not metadata_element_type:
+                if not body.get("metadataElementTypeName"):
                     body.pop("metadataElementTypeName", None)
                 validated_body = self._validate_body(FindPropertyNamesRequestBody.model_validate, body)
             else:
@@ -6553,9 +6555,9 @@ class ServerClient(BaseServerClient):
                     "sequencingProperty": sequencing_property,
                     "startFrom": start_from,
                     "pageSize": page_size,
-                    **kwargs
+                    **_filters
                 }
-                if not metadata_element_type:
+                if not body.get("metadataElementTypeName"):
                     body.pop("metadataElementTypeName", None)
                 validated_body = self._validate_body(SearchStringRequestBody.model_validate, body)
 
@@ -6594,6 +6596,7 @@ class ServerClient(BaseServerClient):
         legacy_type_name = kwargs.pop("metadata_element_type", None)
         if metadata_element_type_name is None:
             metadata_element_type_name = legacy_type_name
+        _filters = filter_body_kwargs("name", kwargs)  # check names; map to wire names
 
         if isinstance(body, FilterRequestBody):
             validated_body = body
@@ -6614,7 +6617,7 @@ class ServerClient(BaseServerClient):
                 "pageSize": page_size,
                 "includeOnlyClassifiedElements": classification_names,
                 "maxMermaidNodeCount": max_mermaid_node_count,
-                **kwargs
+                **_filters
             }
             validated_body = self._validate_body(FilterRequestBody.model_validate, body)
 
@@ -6660,6 +6663,7 @@ class ServerClient(BaseServerClient):
         this helper understands the singular "elementGraph" response key.
         """
         report_spec = await self._async_refresh_report_spec(report_spec, kwargs)  # refresh_spec=True (RS-EGERIA-TIER)
+        _filters = filter_body_kwargs("get", kwargs)  # check names; map to wire names
         if isinstance(body, (GetRequestBody, ResultsRequestBody)):
             validated_body = body
         elif isinstance(body, dict):
@@ -6676,7 +6680,7 @@ class ServerClient(BaseServerClient):
                 "skipRelationships": skip_relationships,
                 "graphQueryDepth": graph_query_depth,
                 "maxMermaidNodeCount": max_mermaid_node_count,
-                **kwargs
+                **_filters
             }
             validated_body = self._validate_body(body_model.model_validate, body)
 
@@ -6723,6 +6727,7 @@ class ServerClient(BaseServerClient):
             graph_query_depth ():
         """
         report_spec = await self._async_refresh_report_spec(report_spec, kwargs)  # refresh_spec=True (RS-EGERIA-TIER)
+        _filters = filter_body_kwargs("get", kwargs)  # check names; map to wire names
         if isinstance(body, GetRequestBody):
             validated_body = body
         elif isinstance(body, dict):
@@ -6733,7 +6738,7 @@ class ServerClient(BaseServerClient):
                 "metadataElementTypeName": _type,
                 "maxMermaidNodeCount": max_mermaid_node_count,
                 "graphQueryDepth": graph_query_depth,
-                **kwargs
+                **_filters
             }
             validated_body = self._validate_body(GetRequestBody.model_validate, body)
 
@@ -6787,6 +6792,7 @@ class ServerClient(BaseServerClient):
         body: dict | ActivityStatusSearchString | None = None,
         **kwargs
     ) -> Any:
+        _filters = filter_body_kwargs("activity_search", kwargs)  # check names; map to wire names
         if isinstance(body, ActivityStatusSearchString):
             validated_body = body
         elif isinstance(body, dict):
@@ -6820,7 +6826,7 @@ class ServerClient(BaseServerClient):
                 "sequencingProperty": sequencing_property,
                 "start_from": start_from,
                 "page_size": page_size,
-                **kwargs
+                **_filters
             }
             validated_body = self._validate_body(ActivityStatusSearchString.model_validate, body)
 
@@ -6851,6 +6857,7 @@ class ServerClient(BaseServerClient):
         body: Optional[dict | ActivityStatusFilterRequestBody] = None,
         **kwargs
     ) -> Any:
+        _filters = filter_body_kwargs("activity_filter", kwargs)  # check names; map to wire names
         if isinstance(body, ActivityStatusFilterRequestBody):
             validated_body = body
         elif isinstance(body, dict):
@@ -6863,7 +6870,7 @@ class ServerClient(BaseServerClient):
                 "activityStatusList": activity_status_list,
                 "start_from": start_from,
                 "page_size": page_size,
-                **kwargs
+                **_filters
             }
             validated_body = self._validate_body(ActivityStatusFilterRequestBody.model_validate, body)
 
@@ -6896,6 +6903,7 @@ class ServerClient(BaseServerClient):
         body: Optional[dict | ActivityStatusRequestBody] = None,
         **kwargs
     ) -> Any:
+        _filters = filter_body_kwargs("activity", kwargs)  # check names; map to wire names
         if isinstance(body, ActivityStatusRequestBody):
             validated_body = body
         elif isinstance(body, dict):
@@ -6909,7 +6917,7 @@ class ServerClient(BaseServerClient):
                 "limitResultsByStatus": limit_results_by_status,
                 "sequencingOrder": sequencing_order,
                 "sequencingProperty": sequencing_property,
-                **kwargs
+                **_filters
             }
             validated_body = self._validate_body(ActivityStatusRequestBody.model_validate, body)
 
@@ -6959,6 +6967,7 @@ class ServerClient(BaseServerClient):
         body: dict | ContentStatusSearchString | None = None,
         **kwargs
     ) -> Any:
+        _filters = filter_body_kwargs("content_search", kwargs)  # check names; map to wire names
         if isinstance(body, ContentStatusSearchString):
             validated_body = body
         elif isinstance(body, dict):
@@ -6992,7 +7001,7 @@ class ServerClient(BaseServerClient):
                 "sequencingProperty": sequencing_property,
                 "start_from": start_from,
                 "page_size": page_size,
-                **kwargs
+                **_filters
             }
             validated_body = self._validate_body(ContentStatusSearchString.model_validate, body)
 
@@ -7023,6 +7032,7 @@ class ServerClient(BaseServerClient):
         body: Optional[dict | ContentStatusFilterRequestBody] = None,
         **kwargs
     ) -> Any:
+        _filters = filter_body_kwargs("content_filter", kwargs)  # check names; map to wire names
         if isinstance(body, ContentStatusFilterRequestBody):
             validated_body = body
         elif isinstance(body, dict):
@@ -7035,7 +7045,7 @@ class ServerClient(BaseServerClient):
                 "contentStatusList": content_status_list,
                 "start_from": start_from,
                 "page_size": page_size,
-                **kwargs
+                **_filters
             }
             validated_body = self._validate_body(ContentStatusFilterRequestBody.model_validate, body)
 
@@ -7085,6 +7095,7 @@ class ServerClient(BaseServerClient):
         body: dict | DeploymentStatusSearchString | None = None,
         **kwargs
     ) -> Any:
+        _filters = filter_body_kwargs("deployment_search", kwargs)  # check names; map to wire names
         if isinstance(body, DeploymentStatusSearchString):
             validated_body = body
         elif isinstance(body, dict):
@@ -7118,7 +7129,7 @@ class ServerClient(BaseServerClient):
                 "sequencingProperty": sequencing_property,
                 "startFrom": start_from,
                 "pageSize": page_size,
-                **kwargs
+                **_filters
             }
             validated_body = self._validate_body(DeploymentStatusSearchString.model_validate, body)
 
@@ -7149,6 +7160,7 @@ class ServerClient(BaseServerClient):
         body: Optional[dict | DeploymentStatusFilterRequestBody] = None,
         **kwargs
     ) -> Any:
+        _filters = filter_body_kwargs("deployment_filter", kwargs)  # check names; map to wire names
         if isinstance(body, DeploymentStatusFilterRequestBody):
             validated_body = body
         elif isinstance(body, dict):
@@ -7161,7 +7173,7 @@ class ServerClient(BaseServerClient):
                 "deploymentStatusList": deployment_status_list,
                 "start_from": start_from,
                 "page_size": page_size,
-                **kwargs
+                **_filters
             }
             validated_body = self._validate_body(DeploymentStatusFilterRequestBody.model_validate, body)
 
@@ -7197,6 +7209,7 @@ class ServerClient(BaseServerClient):
         default request body doesn't wrongly filter results by it.
         """
         report_spec = await self._async_refresh_report_spec(report_spec, kwargs)  # refresh_spec=True (RS-EGERIA-TIER)
+        _filters = filter_body_kwargs("list", kwargs)  # check names; map to wire names
         if isinstance(body, ResultsRequestBody):
             validated_body = body
         elif isinstance(body, dict):
@@ -7207,10 +7220,10 @@ class ServerClient(BaseServerClient):
                 "graphQueryDepth": graph_query_depth,
                 "start_from": start_from,
                 "page_size": page_size,
-                **kwargs
+                **_filters
             }
             if filter_results_by_type:
-                body["metadataElementTypeName"] = _type
+                body.setdefault("metadataElementTypeName", _type)
             validated_body = self._validate_body(ResultsRequestBody.model_validate, body)
 
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
