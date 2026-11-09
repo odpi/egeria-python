@@ -2618,7 +2618,7 @@
         "ONGOING_UPDATE"
       ],
       "existing_element": "",
-      "description": "How often subscribers are notified, and so how often the product's data is delivered: ONE_TIME (a single delivery, typically to evaluate the product), PERIODIC (every Subscription Notification Interval minutes) or ONGOING_UPDATE (when a Monitored Resource changes, but no more often than every Subscription Notification Interval minutes).",
+      "description": "How often subscribers are notified, and so how often the product's data is delivered: ONE_TIME (a single delivery, typically to evaluate the product), PERIODIC (every Minimum Notification Interval minutes) or ONGOING_UPDATE (when a Monitored Resource changes, but no more often than every Minimum Notification Interval minutes).",
       "generated": false,
       "style": "Valid Value",
       "user_specified": true,
@@ -2684,25 +2684,6 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Advanced",
-      "Journal Entry": "Added 2026-10-05 -- product-manager subscription types and ODCS/ODPS documents."
-    },
-    "Subscription Notification Interval": {
-      "variable_name": "subscription_notification_interval",
-      "inUpdate": false,
-      "attr_labels": "",
-      "examples": "",
-      "default_value": "",
-      "valid_values": [],
-      "existing_element": "",
-      "description": "Minutes between notifications -- the delivery interval for a PERIODIC subscription, the minimum interval for an ONGOING_UPDATE one. In MINUTES (unlike the Governance Officer family's 'Notification Interval', which is milliseconds).",
-      "generated": false,
-      "style": "Simple Int",
-      "user_specified": true,
-      "unique": false,
-      "input_required": false,
-      "min_cardinality": 0,
-      "max_cardinality": 1,
-      "level": "Basic",
       "Journal Entry": "Added 2026-10-05 -- product-manager subscription types and ODCS/ODPS documents."
     },
     "Monitored Resources": {
@@ -2779,6 +2760,25 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Basic"
+    },
+    "Minimum Notification Interval": {
+      "variable_name": "minimum_notification_interval",
+      "inUpdate": true,
+      "attr_labels": "Subscription Notification Interval",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Minimum minutes between notifications. For a Notification Type with no monitored resources it is the period between notifications; with monitored resources it throttles how often notifications are sent. For a Subscription Type it is the delivery interval of a PERIODIC subscription and the minimum interval of an ONGOING_UPDATE one. In MINUTES.",
+      "generated": false,
+      "style": "Simple Int",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Basic",
+      "Journal Entry": "2026-11-08 -- Egeria 6.3: notificationInterval removed; minimumNotificationInterval (minutes) is the period or throttle."
     }
   },
   "bundles": {
@@ -2970,7 +2970,7 @@
         "Display Name",
         "Description",
         "Identifier",
-        "Subscription Notification Interval",
+        "Minimum Notification Interval",
         "Monitored Resources",
         "Subscription Manager",
         "Subscription License Type",
@@ -3024,7 +3024,7 @@
       "attach": false,
       "level": "Basic",
       "find_method": "CollectionManager.find_collections",
-      "find_constraints": "{\"classification_names\": [\"DigitalProductCatalog\"]}",
+      "find_constraints": "{\"metadata_element_type\": \"DigitalProductCatalog\"}",
       "extra_find": "",
       "extra_constraints": "",
       "OM_TYPE": "DigitalProductCatalog",

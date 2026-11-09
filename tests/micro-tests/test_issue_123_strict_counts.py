@@ -3,7 +3,10 @@
 """
 ISSUE-123: count_elements turns a failed query into 0, so an outage looks like
 an empty catalog. strict=True returns None whenever the count is not known;
-the default keeps the old behaviour for existing callers.
+the default keeps the old behaviour for existing callers -- in the viewer
+population, the only one with a find fallback. A repository count (the
+default population since 2026-11-08) has no fallback, so it is never 0 on
+failure, strict or not.
 """
 from unittest.mock import MagicMock
 
@@ -37,8 +40,15 @@ def _reset_seam_caches():
     om._native_server_ok.clear()
 
 
-def test_default_still_returns_zero_on_failure():
-    assert om.count_elements(_mgr(find_error=RuntimeError("401")), "Asset") == 0
+def test_a_failed_viewer_count_is_none_not_zero():
+    # 6.2.28: the historical non-strict 0 is gone -- a failed query is not "none of them".
+    assert om.count_elements(_mgr(find_error=RuntimeError("401")), "Asset", population="viewer") is None
+
+
+def test_a_failed_repository_count_is_none_never_zero():
+    mgr = _mgr(native=MagicMock(side_effect=RuntimeError("401")), find_result=[])
+    assert om.count_elements(mgr, "Asset") is None
+    assert om.count_elements(mgr, "Asset", strict=True) is None
 
 
 def test_strict_returns_none_when_the_query_fails():
@@ -52,13 +62,16 @@ def test_strict_returns_none_when_native_and_fallback_both_fail():
 
 def test_strict_real_zero_is_zero():
     # pyegeria answers a miss with its sentinel string, not an empty list.
-    assert om.count_elements(_mgr(find_result="No elements found"), "Asset", strict=True) == 0
-    assert om.count_elements(_mgr(find_result=[]), "Asset", strict=True) == 0
+    assert om.count_elements(_mgr(find_result="No elements found"), "Asset", strict=True, population="viewer") == 0
+    assert om.count_elements(_mgr(find_result=[]), "Asset", strict=True, population="viewer") == 0
+    om._count_caps.clear()  # the seam caches native support per client class; these mocks share one
+    assert om.count_elements(_mgr(native=MagicMock(return_value={"count": 0})), "Asset", strict=True) == 0
 
 
-def test_strict_returns_none_for_a_capped_fallback():
+def test_a_capped_fallback_is_none_in_either_mode_never_the_cap():
+    # A full page is a lower bound, never a total: non-strict no longer returns the cap.
     full_page = [{"i": i} for i in range(om.DEFAULT_CAP)]
-    assert om.count_elements(_mgr(find_result=full_page), "Asset") == om.DEFAULT_CAP
+    assert om.count_elements(_mgr(find_result=full_page), "Asset") is None
     assert om.count_elements(_mgr(find_result=full_page), "Asset", strict=True) is None
 
 
@@ -73,7 +86,8 @@ def test_strict_native_count_is_trusted_even_above_the_cap():
 
 def test_strict_by_property():
     mgr = _mgr(find_error=RuntimeError("500"))
-    assert om.count_elements_by_property(mgr, "DigitalProduct", "deploymentStatus", "ACTIVE") == 0
+    assert om.count_elements_by_property(mgr, "DigitalProduct", "deploymentStatus", "ACTIVE",
+                                         population="viewer") is None
     assert om.count_elements_by_property(mgr, "DigitalProduct", "deploymentStatus", "ACTIVE",
                                          strict=True) is None
 
@@ -83,7 +97,8 @@ def test_strict_propagates_through_the_composite_counts():
     assert om.counts_by_type(mgr, [("Stores", "DataStore")], strict=True)[0]["count"] is None
     assert set(om.people_counts(mgr, strict=True).values()) == {None}
     assert set(om.usage_context_counts(mgr, strict=True).values()) == {None}
-    assert set(om.people_counts(mgr).values()) == {0}
+    assert set(om.people_counts(mgr, population="viewer").values()) == {None}   # never 0 (6.2.28)
+    assert set(om.people_counts(mgr).values()) == {None}   # repository: no fallback, never 0
 
 
 @pytest.mark.parametrize("name", ["count_elements", "count_elements_by_property", "counts_by_type",

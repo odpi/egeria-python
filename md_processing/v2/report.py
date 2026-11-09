@@ -182,6 +182,14 @@ class ReportProcessor(AsyncBaseCommandProcessor):
 
         props = set_element_prop_body("Report", qualified_name, attributes)
         props["additionalProperties"] = _report_additional_properties(attributes)
+        # Egeria 6.3 (odpi/egeria#9432) gives Report typed outputFormat and reportParameters (a JSON
+        # string). Written as well as the additionalProperties keys above, which the Portal's
+        # local dashboards still read.
+        props["outputFormat"] = attributes.get("Output Format", {}).get("value")
+        report_params = attributes.get("Report Parameters", {}).get("value")
+        if isinstance(report_params, dict) and report_params:
+            props["reportParameters"] = json.dumps(
+                {str(k): v for k, v in report_params.items() if v is not None})
         props["deployedImplementationType"] = attributes.get("Deployed Implementation Type", {}).get("value")
         props["resourceName"] = attributes.get("Resource Name", {}).get("value")
 
@@ -204,4 +212,52 @@ class ReportProcessor(AsyncBaseCommandProcessor):
         update_element_dictionary(qualified_name, {"guid": guid, "display_name": display_name})
 
         logger.success(f"{verb_word} Report '{display_name}' with GUID {guid}")
+        return await self.render_result_markdown(guid)
+
+
+class DashboardProcessor(AsyncBaseCommandProcessor):
+    """Processor for Create Dashboard (and its Update transition): an Egeria 6.3 `Dashboard` asset
+    (DataSet subtype, sibling of Report; odpi/egeria#9432). Same AssetMaker path as ReportProcessor.
+
+    Its sheets and placements are DisplayDataContainers / DisplayDataFields (Schema Maker family);
+    Egeria has no separate DashboardPlacement type. The local `Create Dashboard Sheet` records
+    (dashboard_sheet.py) are unchanged by this command.
+    """
+
+    async def apply_changes(self) -> str:
+        attributes = self.parsed_output["attributes"]
+        qualified_name = self.parsed_output.get("qualified_name") or self.derive_qualified_name(attributes)
+        display_name = attributes.get("Display Name", {}).get("value") or qualified_name
+
+        props = set_element_prop_body("Dashboard", qualified_name, attributes)
+        props["deployedImplementationType"] = attributes.get("Deployed Implementation Type", {}).get("value")
+        props["resourceName"] = attributes.get("Resource Name", {}).get("value")
+        props["aliases"] = attributes.get("Aliases", {}).get("value")
+        # refreshTimeInterval is a long, in minutes (Egeria's REFRESH_TIME_INTERVAL property).
+        props["refreshTimeInterval"] = attributes.get("Refresh Time Interval", {}).get("value")
+        props["layoutStyle"] = attributes.get("Layout Style", {}).get("value")
+
+        if self.as_is_element:
+            guid = self.as_is_element["elementHeader"]["guid"]
+            merge_update = attributes.get("Merge Update", {}).get("value", True)
+            update_body = {
+                "class": "UpdateElementRequestBody",
+                "properties": self.filter_update_properties(props, merge_update),
+                "mergeUpdate": merge_update,
+            }
+            self.last_body = update_body
+            await self.client._async_update_asset(guid, update_body)
+            verb_word = "Updated"
+        else:
+            create_body = set_create_body("Dashboard", attributes)
+            create_body["properties"] = props
+            self.last_body = create_body
+            raw_guid = await self.client._async_create_asset(["DashboardProperties"], create_body)
+            guid = self.extract_guid_or_raise(raw_guid, "Create Dashboard")
+            verb_word = "Created"
+
+        self.parsed_output["guid"] = guid
+        update_element_dictionary(qualified_name, {"guid": guid, "display_name": display_name})
+
+        logger.success(f"{verb_word} Dashboard '{display_name}' with GUID {guid}")
         return await self.render_result_markdown(guid)

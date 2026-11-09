@@ -13,6 +13,9 @@ import asyncio
 
 from loguru import logger
 
+from typing import Unpack
+from pyegeria.core.request_filters import deprecated_names
+from pyegeria.core.request_filters import ListFilters
 from pyegeria.core._server_client import ServerClient
 from pyegeria.view.base_report_formats import select_report_format, get_report_spec_match
 from pyegeria.models import SearchStringRequestBody, ResultsRequestBody
@@ -174,6 +177,15 @@ class AssetCatalog(ServerClient):
             **kwargs
         )
 
+    def _generate_asset_graph_output(self, elements: dict | list[dict], filter_string: Optional[str] = None,
+                                     element_type_name: Optional[str] = None, output_format: str = "DICT",
+                                     report_spec: dict | str | None = None, **kwargs) -> str | list[dict]:
+        """Output for get_asset_graph_by_guid: the generic asset output, without a search string. A fetch
+        by GUID is not a search, so its REPORT does not say "found from the search string" (6.2.28)."""
+        return self._generate_asset_output(elements, None, element_type_name, output_format, report_spec,
+                                           **kwargs)
+
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_find_in_asset_domain(
             self,
@@ -181,7 +193,7 @@ class AssetCatalog(ServerClient):
             starts_with: bool = True,
             ends_with: bool = False,
             ignore_case: bool = True,
-            metadata_element_type_name: Optional[str] = None,
+            metadata_element_type: Optional[str] = None,
             metadata_element_subtypes: Optional[list[str]] = None,
             include_only_relationships: Optional[list[str]] = None,
             skip_relationships: Optional[list[str]] = None,
@@ -205,7 +217,7 @@ class AssetCatalog(ServerClient):
             Ends with the supplied string.
         ignore_case : bool, default True
             Ignore case when searching.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             Specific metadata element type to filter on.
         metadata_element_subtypes : list[str], optional
             List of metadata element subtypes to filter on.
@@ -228,6 +240,9 @@ class AssetCatalog(ServerClient):
         **kwargs : dict, optional
             Additional parameters supported by the underlying find request.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -244,7 +259,7 @@ class AssetCatalog(ServerClient):
         """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/asset-catalog/assets/in-domain/by-search-string"
         
-        metadata_element_type = kwargs.pop("metadata_element_type", metadata_element_type_name)
+        metadata_element_type = kwargs.pop("metadata_element_type", metadata_element_type)
 
         # Merge explicit parameters with kwargs
         params = {
@@ -271,6 +286,7 @@ class AssetCatalog(ServerClient):
         response = await self._async_find_request(url, _type="Asset", _gen_output=self._generate_asset_output, **params)
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def find_in_asset_domain(
             self,
@@ -278,7 +294,7 @@ class AssetCatalog(ServerClient):
             starts_with: bool = True,
             ends_with: bool = False,
             ignore_case: bool = True,
-            metadata_element_type_name: Optional[str] = None,
+            metadata_element_type: Optional[str] = None,
             metadata_element_subtypes: Optional[list[str]] = None,
             include_only_relationships: Optional[list[str]] = None,
             skip_relationships: Optional[list[str]] = None,
@@ -302,7 +318,7 @@ class AssetCatalog(ServerClient):
             Ends with the supplied string.
         ignore_case : bool, default True
             Ignore case when searching.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             Specific metadata element type to filter on.
         metadata_element_subtypes : list[str], optional
             List of metadata element subtypes to filter on.
@@ -325,6 +341,9 @@ class AssetCatalog(ServerClient):
         **kwargs : dict, optional
             Additional parameters supported by the underlying find request.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -345,7 +364,7 @@ class AssetCatalog(ServerClient):
                 starts_with=starts_with,
                 ends_with=ends_with,
                 ignore_case=ignore_case,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,
@@ -367,7 +386,7 @@ class AssetCatalog(ServerClient):
         output_format: str = "MERMAID",
         report_spec: str | dict = "Common-Mermaid",
         body: Optional[dict | ResultsRequestBody] = None,
-        **kwargs,
+        **kwargs: Unpack[ListFilters],
     ) -> str | dict:
         """Return all the elements that are anchored to an asset plus relationships between these elements and to
         other elements.
@@ -391,6 +410,9 @@ class AssetCatalog(ServerClient):
         **kwargs : dict, optional
             Additional query parameters.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         str | dict
@@ -408,7 +430,7 @@ class AssetCatalog(ServerClient):
         response = await self._async_get_results_body_request(
             url=url,
             _type="Asset",
-            _gen_output=self._generate_asset_output,
+            _gen_output=self._generate_asset_graph_output,
             start_from=start_from,
             page_size=page_size,
             output_format=output_format,
@@ -426,7 +448,7 @@ class AssetCatalog(ServerClient):
         output_format: str = "MERMAID",
         report_spec: str | dict = "Common-Mermaid",
         body: Optional[dict | ResultsRequestBody] = None,
-        **kwargs,
+        **kwargs: Unpack[ListFilters],
     ) -> str | dict:
         """Return all the elements that are anchored to an asset plus relationships between these elements and to
         other elements.
@@ -447,6 +469,9 @@ class AssetCatalog(ServerClient):
             If provided, the search parameters in the body will supersede other attributes.
         **kwargs : dict, optional
             Additional query parameters.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -478,7 +503,7 @@ class AssetCatalog(ServerClient):
         self,
         guid: str,
         start_from: int = 0,
-        page_size: int = 0,
+        page_size: int = 0, **kwargs: Unpack[ListFilters],
     ) -> str:
         """Return the asset graph as mermaid markdown string.
 
@@ -490,6 +515,9 @@ class AssetCatalog(ServerClient):
             The index from which to start fetching.
         page_size : int, default 0
             The maximum number of items to fetch.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -505,7 +533,7 @@ class AssetCatalog(ServerClient):
             The principle specified by the user_id does not have authorization for the requested action.
         """
 
-        asset_graph = self.get_asset_graph_by_guid(guid=guid, start_from=start_from, page_size=page_size)
+        asset_graph = self.get_asset_graph_by_guid(guid=guid, start_from=start_from, page_size=page_size, **kwargs)
         return asset_graph[0]
 
     async def _async_get_asset_lineage_graph_by_guid(
@@ -882,10 +910,11 @@ class AssetCatalog(ServerClient):
         return asset_graph.get("mermaidGraph")
 
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     async def _async_get_assets_by_metadata_collection_id(
         self,
         metadata_collection_id: str,
-        metadata_element_type_name: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
         include_only_relationships: Optional[list[str]] = None,
         skip_relationships: Optional[list[str]] = None,
         graph_query_depth: int = 3,
@@ -902,7 +931,7 @@ class AssetCatalog(ServerClient):
         ----------
         metadata_collection_id : str
             The unique identity of the metadata collection to return assets from.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             An asset type to filter on. If not specified, all assets in the collection are returned.
         include_only_relationships : list[str], optional
             Only include these relationship types.
@@ -933,7 +962,7 @@ class AssetCatalog(ServerClient):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        type_name = kwargs.pop("type_name", metadata_element_type_name)
+        type_name = kwargs.pop("type_name", metadata_element_type)
         kwargs.pop("effective_time", None)
 
         url = (
@@ -964,10 +993,11 @@ class AssetCatalog(ServerClient):
                                                output_format, report_spec)
         return elements
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     def get_assets_by_metadata_collection_id(
         self,
         metadata_collection_id: str,
-        metadata_element_type_name: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
         include_only_relationships: Optional[list[str]] = None,
         skip_relationships: Optional[list[str]] = None,
         graph_query_depth: int = 3,
@@ -984,7 +1014,7 @@ class AssetCatalog(ServerClient):
         ----------
         metadata_collection_id : str
             The unique identity of the metadata collection to return assets from.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             An asset type to filter on. If not specified, all assets in the collection are returned.
         include_only_relationships : list[str], optional
             Only include these relationship types.
@@ -1018,7 +1048,7 @@ class AssetCatalog(ServerClient):
         response = run_sync(
             self._async_get_assets_by_metadata_collection_id(
                 metadata_collection_id=metadata_collection_id,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,
                 graph_query_depth=graph_query_depth,

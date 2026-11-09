@@ -40,7 +40,7 @@ def asset_viewer(asset_guid: str, output_format: str = "TABLE", view_server: str
                  render_table: bool = False, table_caption: str | None = None, use_pager: bool = True):
     try:
         list_generic(report_spec="Asset-Graph", output_format=output_format, view_server=view_server,
-                 view_url=view_url, user=user, user_pass=user_pass, params={"asset_guid": asset_guid},
+                 view_url=view_url, user=user, user_pass=user_pass, params={"guid": asset_guid},
                  render_table=render_table, write_file = write_file, table_caption=table_caption, use_pager=use_pager,
                      width=width, jupyter=jupyter, prompt_missing=prompt_missing)
 

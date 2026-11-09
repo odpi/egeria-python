@@ -18,7 +18,7 @@ import inspect
 import json
 import os
 import sys
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 from loguru import logger
 from pydantic import ValidationError
@@ -34,9 +34,11 @@ from pyegeria.view.base_report_formats import (
     get_report_registry,
 )
 from pyegeria.view.output_formatter import generate_output
-from pyegeria.view.analytic_registry import ABSENCE_STATES, AnalyticActionSpec
+from pyegeria.view.analytic_registry import ABSENCE_STATES, AnalyticActionSpec, canonical_absence_state
 from pyegeria.view.analytic_registry import get_analytic_registry as get_analytic_registry_functions
 from pyegeria.egeria_tech_client import EgeriaTech
+from pyegeria.view.role_supply import PlainSupply, RoleRefused, RoleSupply, supply_inputs
+from pyegeria.view.overview_metrics import recording_unmeasured
 
 _CLIENT_CLASS_MAP = {
     "CollectionManager": "pyegeria.omvs.collection_manager.CollectionManager",
@@ -111,6 +113,25 @@ def _module_allowed(module_path: str) -> bool:
     return any(module_path == p or module_path.startswith(p + ".") for p in analytic_module_prefixes())
 
 
+def python_binding_allowed(target: str) -> bool:
+    """Is a python binding's target under an allowed module prefix? The allow-list applies to
+    binding targets only: a report spec names routines by registered name and never carries a
+    target (ISSUE-173, RS-W2-2)."""
+    return isinstance(target, str) and "." in target and _module_allowed(target.rsplit(".", 1)[0])
+
+
+def _python_binding_of(spec) -> str:
+    """A registered entry's python binding target, or AnalyticFunctionRefused naming the bindings
+    it has instead (this pyegeria runs python bindings only)."""
+    target = spec.python_target() if hasattr(spec, "python_target") else spec.function
+    if not target:
+        kinds = ", ".join(f"{b.kind} '{b.target}'" for b in getattr(spec, "bindings", [])) or "none"
+        raise AnalyticFunctionRefused(
+            f"Analytic function '{spec.name}' has no python binding (its bindings: {kinds}); this pyegeria "
+            f"runs python bindings only.")
+    return target
+
+
 def _import_callable(func_decl: str):
     module_path, func_name = func_decl.rsplit(".", 1)
     module = importlib.import_module(module_path)
@@ -122,7 +143,7 @@ def _import_callable(func_decl: str):
 
 def _resolve_analytic_function(func_decl: str):
     """Return the callable a report spec's analytic_function (or an action's
-    fetch/analytic step, or a binder factory) names.
+    fetch/analytic step) names.
 
     Unlike `function` (find_method), `analytic_function` (extra_find) targets a
     plain module-level function, not a client class method -- overview_metrics.py's
@@ -131,11 +152,15 @@ def _resolve_analytic_function(func_decl: str):
     class to resolve here, just the function itself.
 
     A report spec is data, so it may not import arbitrary code (ISSUE-169):
-      1. A registered name (analytic_registry) resolves to that entry's function.
+      1. A registered name (analytic_registry) resolves to that entry's python
+         binding; an entry with none is refused by name.
       2. A dotted path some registered entry declares is trusted as-is.
       3. Any other dotted path must sit under an allowed module prefix
-         (`analytic_module_prefixes()`); anything else raises
+         (`python_binding_allowed`); anything else raises
          AnalyticFunctionRefused before any import happens.
+    Cases 2 and 3 are binding targets (an action's fetch/analytic step): a report
+    spec never reaches them, because
+    `resolve_report_spec_function` accepts registered names only (ISSUE-173).
     """
     if not isinstance(func_decl, str) or not func_decl.strip():
         raise ValueError(f"Invalid analytic_function declaration: {func_decl!r}")
@@ -144,14 +169,13 @@ def _resolve_analytic_function(func_decl: str):
     registry = get_analytic_registry()
     spec = registry.get(func_decl)
     if spec is not None:
-        return _import_callable(spec.function)
+        return _import_callable(_python_binding_of(spec))
     if "." not in func_decl:
         raise AnalyticFunctionRefused(
             f"Analytic function '{func_decl}' is not a registered name, and is not a dotted path.")
-    if any(s.function == func_decl for s in registry.values()):
+    if any(s.function and s.function == func_decl for s in registry.values()):
         return _import_callable(func_decl)
-    module_path = func_decl.rsplit(".", 1)[0]
-    if not _module_allowed(module_path):
+    if not python_binding_allowed(func_decl):
         raise AnalyticFunctionRefused(
             f"Analytic function '{func_decl}' is not registered and its module is not under an allowed "
             f"prefix {list(analytic_module_prefixes())}. Register it in the analytic registry, or add its "
@@ -181,38 +205,24 @@ def resolve_report_spec_function(func_decl: str):
         f"from pyegeria 6.2.19).")
 
 
-# Parameter names an analytic function uses for its leading client argument(s)
-# -- pyegeria.view.overview_metrics's functions take one (`mgr` or `ce`) or,
-# for semantic_grounding, two (`mgr`, `ce`) positional clients before their
-# real parameters. EgeriaTech is a facade that proxies to every subclient via
-# __getattr__ (see egeria_tech_client.py), so the same instance satisfies
-# either role -- no need to construct a second client.
-_ANALYTIC_CLIENT_PARAM_NAMES = {"mgr", "ce", "expert", "client"}
-
-
-def _count_client_params(func) -> int:
-    """Number of leading parameters named like a client (mgr/ce/expert/client)."""
-    count = 0
-    for name, param in inspect.signature(func).parameters.items():
-        if name in _ANALYTIC_CLIENT_PARAM_NAMES and param.kind in (
-            inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD,
-        ):
-            count += 1
-        else:
-            break
-    return count
-
-
-def _bind_client_args(func, client: Any) -> list:
-    """Return the positional args to pass before **kwargs: one copy of `client`
-    per leading parameter named like a client (mgr/ce/expert/client)."""
-    return [client] * _count_client_params(func)
+def _plain_client(view_server: str, view_url: str, user: str, user_pass: str,
+                  token: Optional[str] = None) -> Any:
+    """The caller's EgeriaTech, authenticated: with `token` when given (ISSUE-86), else a token
+    minted from `user`/`user_pass`. `PlainSupply` calls this at most once per run, and only when a
+    routine declares an egeria_client input (ISSUE-137: no client, no connection)."""
+    client = EgeriaTech(view_server, view_url, user_id=user, user_pwd=user_pass)
+    if token:
+        client.set_bearer_token(token)
+    else:
+        client.create_egeria_bearer_token()
+    return client
 
 
 def run_analytic_action(
-    action: AnalyticActionSpec, client: Any, *,
+    action: AnalyticActionSpec, client: Any = None, *,
     fetch_kwargs: Optional[Dict[str, Any]] = None,
     analytic_kwargs: Optional[Dict[str, Any]] = None,
+    supply: Optional[RoleSupply] = None,
 ) -> Any:
     """Run an `analytic_registry.AnalyticActionSpec`'s fetch step, then (if
     declared) its analytic step over the fetch's raw result -- the executor
@@ -224,52 +234,25 @@ def run_analytic_action(
     below exactly as before -- this is a separate, additive entry point, not
     a replacement.
 
-    `client` is resolved once by the caller (same convention as
-    `_run_analytic_function`) and bound positionally to both steps' leading
-    client-shaped parameters -- `fetch` via the usual signature introspection
-    (`_bind_client_args`), `analytic` via the SAME resolved client args
-    (not re-introspected from `analytic`'s own signature, since its first
-    positional parameter is the fetch result, not a client) -- so `analytic`
-    can itself make a further client call (e.g. follow a relationship to
-    enrich) using the identical already-authenticated client `fetch` used.
+    The fetch step must be a registered routine (by name or by its python binding's path): its
+    declared `inputs` are supplied, in declared order, from `supply` -- or, when none is given,
+    from `PlainSupply(client)`, the caller's already-authenticated client (RS-W2-3: inputs by
+    role, never by parameter name). The analytic step gets the fetch's raw result followed by the
+    SAME supplied arguments, so it can itself make a further client call (e.g. follow a
+    relationship to enrich) with the identical client the fetch used.
     """
+    from pyegeria.view.spec_resolver import declared_inputs  # lazy: the resolver imports this module
     fetch_func = _resolve_analytic_function(action.fetch)
-    fetch_clients = _bind_client_args(fetch_func, client)
-    raw_result = fetch_func(*fetch_clients, **(fetch_kwargs or {}))
+    if supply is None:
+        supply = PlainSupply(client)
+    fetch_args = supply_inputs(action.fetch, declared_inputs(action.fetch, fetch_func), supply)
+    raw_result = fetch_func(*fetch_args, **(fetch_kwargs or {}))
 
     if not action.analytic:
         return raw_result
 
     analytic_func = _resolve_analytic_function(action.analytic)
-    return analytic_func(raw_result, *fetch_clients, **(analytic_kwargs or {}))
-
-
-def _apply_analytic_binders(func, binders: Dict[str, str], call_params: Dict[str, Any]) -> Dict[str, Any]:
-    """Build non-JSON arguments for an analytic function from its call params (ISSUE-138).
-
-    `binders` maps a parameter name of `func` to the dotted path of a factory
-    (e.g. `{"ods": "trellis_analytics.readers.ods.OdsReader"}`). Each factory is
-    called with the call params its own signature names; those params are
-    consumed unless `func` also takes them. A param the caller already supplied
-    under the bound name wins over the factory.
-    """
-    if not binders:
-        return call_params
-    params = dict(call_params)
-    func_params = set(inspect.signature(func).parameters)
-    for target, factory_decl in binders.items():
-        if target in params:
-            continue
-        factory = _resolve_analytic_function(factory_decl.replace(":", "."))
-        factory_sig = inspect.signature(factory)
-        accepts_any = any(p.kind is inspect.Parameter.VAR_KEYWORD for p in factory_sig.parameters.values())
-        names = set(params) if accepts_any else set(factory_sig.parameters) & set(params)
-        kwargs = {n: params[n] for n in names}
-        for n in names:
-            if n not in func_params:
-                params.pop(n)
-        params[target] = factory(**kwargs)
-    return params
+    return analytic_func(raw_result, *fetch_args, **(analytic_kwargs or {}))
 
 
 # Result-state envelope (ISSUE-139/140). A routine that reports how sure it is
@@ -297,8 +280,9 @@ def _result_envelope(result: Any) -> Optional[Dict[str, str]]:
         reason = str(m.get("state_reason", m.get("resultStateReason", m.get("result_state_reason", ""))) or "")
         subtitle = m.get("subtitle") or (state.replace("_", " ") + (f" \u00b7 {reason}" if reason else ""))
         found = {"state": state, "reason": reason, "subtitle": str(subtitle)}
-        if m.get("absence") in ABSENCE_STATES:  # the result says which absence (ISSUE-171)
-            found["absence"] = m["absence"]
+        claimed = canonical_absence_state(m.get("absence"))  # legacy measured_nothing reads as nothing_found
+        if claimed in ABSENCE_STATES:  # the result says which absence (ISSUE-171)
+            found["absence"] = claimed
         return found
 
     if isinstance(result, dict):
@@ -334,7 +318,7 @@ def _with_envelope(out: Dict[str, Any], envelope: Optional[Dict[str, str]]) -> D
 # not_measured unless the result itself claims not_permitted (an `absence` key);
 # the reason text is never parsed to guess which.
 _ABSENCE_FOR_STATE = {
-    "nothing_found": "measured_nothing",
+    "nothing_found": "nothing_found",
     "not_established": "not_measured",
     "not_applicable": "not_applicable",
 }
@@ -344,7 +328,7 @@ _UNDECLARED_ABSENCE_WORDS = {
     "not_measured": "Not measured",
     "not_permitted": "Not measured: not permitted",
     "not_applicable": "Does not apply",
-    "measured_nothing": "Measured; nothing found",
+    "nothing_found": "Measured; nothing found",
 }
 
 
@@ -363,7 +347,7 @@ def _absence_for(envelope: Optional[Dict[str, str]], func_decl: str) -> Optional
     one with no envelope, which keep their old shapes."""
     if not envelope or envelope["state"] not in _ABSENCE_FOR_STATE:
         return None
-    state = _ABSENCE_FOR_STATE[envelope["state"]]
+    state = canonical_absence_state(_ABSENCE_FOR_STATE[envelope["state"]])
     if state == "not_measured" and envelope.get("absence") == "not_permitted":
         state = "not_permitted"
     reason = envelope.get("reason", "")
@@ -376,13 +360,40 @@ def _absence_for(envelope: Optional[Dict[str, str]], func_decl: str) -> Optional
             "declared": False}
 
 
-def _absent_output(result: Any, envelope: Dict[str, str], absence: Dict[str, Any]) -> Dict[str, Any]:
+def _run_recording_unmeasured(action: dict, **kwargs: Any) -> Tuple[Any, List[Dict[str, Any]]]:
+    """Run the analytic routine and collect a note for every count in it that was not measured
+    (a failed or timed-out count, or a find fallback that stopped at its page cap -- a lower
+    bound, never a total). See overview_metrics.recording_unmeasured."""
+    with recording_unmeasured() as notes:
+        result = _run_analytic_function(action, **kwargs)
+    unique: List[Dict[str, Any]] = []  # a series repeats the same note once per point
+    for note in notes:
+        if note not in unique:
+            unique.append(note)
+    return result, unique
+
+
+def _unmeasured_envelope(notes: List[Dict[str, Any]]) -> Dict[str, str]:
+    """The not_established envelope for a result whose value is a count that was not measured;
+    the reason is each note's own words, so the lower bound ("at least 500") reaches the reader."""
+    reason = "; ".join(f"{n['count']}: {n['reason']}" for n in notes)
+    return {"state": "not_established", "reason": reason, "subtitle": f"not established \u00b7 {reason}"}
+
+
+def _absent_output(result: Any, envelope: Dict[str, str], absence: Dict[str, Any],
+                   notes: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
     """Output for a result whose value is not established or does not apply: the sentence,
     never top-level data a chart or table would draw as an answer. Any partial result rides
-    under `detail`."""
-    out: Dict[str, Any] = {"kind": "absent", "content": absence["sentence"], "absence": absence}
+    under `detail`. With `notes` (counts that were not measured), `content` also says which
+    and why, lower bound included, and the notes ride under `unmeasured`."""
+    content = absence["sentence"]
+    if notes:
+        content = f"{content} Not measured: " + "; ".join(f"{n['count']}: {n['reason']}" for n in notes) + "."
+    out: Dict[str, Any] = {"kind": "absent", "content": content, "absence": absence}
     if result not in (None, [], {}):
         out["detail"] = result
+    if notes:
+        out["unmeasured"] = notes
     return _with_envelope(out, envelope)
 
 
@@ -390,6 +401,7 @@ def _run_analytic_function(
     action: dict, *, params: Dict[str, Any],
     view_server: str, view_url: str, user: str, user_pass: str,
     token: Optional[str] = None,
+    supply: Optional[RoleSupply] = None,
 ) -> Any:
     """Resolve and call a report spec action's `analytic_function` (extra_find),
     returning the function's raw result -- no chart-wrapping, no output_format
@@ -404,6 +416,12 @@ def _run_analytic_function(
     as that user instead of falling back to the `user`/`user_pass` service
     account. Backward compatible: `user`/`user_pass` keep working exactly as
     before when no token is given.
+
+    RS-W2-3: the routine's leading arguments are its declared `inputs`, in declared order, each
+    asked of `supply` (default: `PlainSupply` over the caller's client built from the arguments
+    above). Every input is obtained before the routine runs, so a role the supply cannot provide
+    -- or a declaration that does not match its binding (check 5) -- raises `RoleRefused` with
+    its words before any stage. No parameter name is read to decide what to pass.
     """
     func_decl = action.get("analytic_function")
     if not func_decl:
@@ -423,17 +441,14 @@ def _run_analytic_function(
     call_params.update({k: v for k, v in params.items() if v not in (None, "")})
 
     func = resolve_report_spec_function(func_decl)
-    call_params = _apply_analytic_binders(func, action.get("analytic_binders") or {}, call_params)
-    n_clients = _count_client_params(func)
-    if n_clients == 0:
-        # The routine takes no client, so don't connect to Egeria or mint a token (ISSUE-137).
-        return func(**call_params)
-    client = EgeriaTech(view_server, view_url, user_id=user, user_pwd=user_pass)
-    if token:
-        client.set_bearer_token(token)
-    else:
-        client.create_egeria_bearer_token()
-    return func(*([client] * n_clients), **call_params)
+    from pyegeria.view.spec_resolver import declared_inputs  # lazy: the resolver imports this module
+    inputs = declared_inputs(func_decl, func)  # check 5: the same function the resolver runs at load
+    if supply is None:
+        supply = PlainSupply(client_factory=lambda: _plain_client(view_server, view_url, user, user_pass, token))
+    # Every role is obtained here, before the routine runs; a routine that declares no
+    # egeria_client input never connects or mints a token (ISSUE-137).
+    args = supply_inputs(func_decl, inputs, supply)
+    return func(*args, **call_params)
 
 
 def _resolve_action_target_client(egeria_client: EgeriaTech, client_class: type) -> Any:
@@ -532,7 +547,69 @@ def _normalize_report_params(params: Dict[str, Any], action_mode: str = "generic
             continue
         cleaned[key] = value
 
-    return cleaned
+    return _canonical_param_names(cleaned)
+
+
+# Run-parameter names that are aliases or rendering options rather than parameters of the report:
+# consumed under another name, so never reported as dropped.
+_RUN_PARAM_ALIASES = frozenset({
+    "search_string", "filter_string", "property_value", "filter", "output_format", "report_spec",
+    "graph_query_depth", "metadata_element_name", "limit_result_by_status", "sort_order",
+    "output_sort_order", "order_property_name", "anchor_scope_id",
+})
+
+
+def _warn_dropped_params(report_name: str, params: Dict[str, Any], call_params: Dict[str, Any],
+                         declared: Iterable[str]) -> None:
+    """A caller's run parameter that the report does not take is dropped; say so (P3: never silent).
+
+    Same warning class as an unknown filter on a method call (UnknownFilterWarning), plus a log line.
+    """
+    import warnings
+    from pyegeria.core.request_filters import (DEPRECATED_NAMES, LEGACY_ALIASES, RENDER_OPTIONS,
+                                               UnknownFilterWarning, _SKIP_PREFIXES)
+
+    known = _RUN_PARAM_ALIASES | RENDER_OPTIONS | set(DEPRECATED_NAMES) | set(LEGACY_ALIASES)
+    dropped = sorted(k for k in (params or {}) if k not in call_params and k not in known)
+    if not dropped:
+        return
+    takes = ", ".join(sorted(set(declared))) or "no parameters"
+    msg = (f"report '{report_name}': parameter(s) {', '.join(repr(k) for k in dropped)} ignored -- "
+           f"not parameters of this report (it takes: {takes}). "
+           f"(pyegeria will raise an error for unknown parameters in a future release.)")
+    logger.warning(msg)
+    warnings.warn(msg, UnknownFilterWarning, skip_file_prefixes=_SKIP_PREFIXES)
+
+
+def _bind_search_parameter(func: Any, call_params: Dict[str, Any]) -> Dict[str, Any]:
+    """Generated report specs always pass the user's text as `search_string`. A method that takes it
+    as `property_value` instead (ClassificationExplorer.find_elements_by_property_value) gets it
+    under that name."""
+    try:
+        names = inspect.signature(func).parameters
+    except (TypeError, ValueError):
+        return call_params
+    if "search_string" in call_params and "search_string" not in names and "property_value" in names \
+            and "property_value" not in call_params:
+        out = dict(call_params)
+        out["property_value"] = out.pop("search_string")
+        return out
+    return call_params
+
+
+def _canonical_param_names(params: Dict[str, Any]) -> Dict[str, Any]:
+    """Rename deprecated filter spellings (metadata_element_type_name, ...) to the canonical
+    names, quietly: a report spec or Dr.Egeria parameter list is not the caller's code, so it
+    should not trip the methods' DeprecationWarning. A canonical value already present wins."""
+    from pyegeria.core.request_filters import DEPRECATED_NAMES, _canonical_value
+
+    out = dict(params)
+    for old, new in DEPRECATED_NAMES.items():
+        if old in out:
+            value = out.pop(old)
+            if out.get(new) in (None, "", []):
+                out[new] = _canonical_value(new, value)
+    return out
 
 
 def _extract_param_value(params: Dict[str, Any], param_name: str, action_mode: str = "generic") -> Any:
@@ -647,7 +724,44 @@ async def safe_call_tool(func, **call_params):
 # Parameter naming note:
 # - exec_report_spec and run_report expect parameter names in snake_case (e.g., metadata_element_subtypes).
 # - The underlying clients map these to on-wire camelCase when serializing request bodies for Egeria.
+def _with_spec_source(result: Any, name: Any, output_format: str) -> Any:
+    """Add `spec_source` beside `kind` (never inside `data`) and, for an Egeria-held spec, the
+    provenance footer on REPORT/MD/HTML text (RS-EGERIA-TIER §7a "Provenance")."""
+    if not isinstance(result, dict) or not isinstance(name, str):
+        return result
+    from pyegeria.view.base_report_formats import add_spec_footer, report_spec_source
+    try:
+        source = report_spec_source(name)
+    except Exception as exc:  # noqa: BLE001 -- provenance must never fail a run
+        logger.debug(f"spec_source for {name!r} unavailable: {exc}")
+        source = None
+    if source is not None:
+        result["spec_source"] = source
+    if result.get("kind") == "text":
+        result["content"] = add_spec_footer(result.get("content"), name, output_format)
+    return result
+
+
 async def _async_run_report(
+    report_name: str,
+    egeria_client: EgeriaTech,
+    output_format: str = "DICT",
+    params: Optional[Dict[str, Any]] = None,
+    refresh_spec: bool = False,
+) -> Dict[str, Any]:
+    """Run a report spec with an async EgeriaTech client (see `_async_run_report_impl`).
+
+    `refresh_spec=True` fetches the spec from Egeria for this call (RS-EGERIA-TIER §7a); a failed
+    fetch raises with words and never falls back to the cached copy. The result carries
+    `spec_source` beside `kind`."""
+    if refresh_spec:
+        from pyegeria.view.egeria_spec_cache import async_fetch_spec_for_call
+        report_name = await async_fetch_spec_for_call(egeria_client, report_name)
+    result = await _async_run_report_impl(report_name, egeria_client, output_format=output_format, params=params)
+    return _with_spec_source(result, report_name, output_format)
+
+
+async def _async_run_report_impl(
     report_name: str,
     egeria_client: EgeriaTech,
     output_format: str = "DICT",
@@ -754,6 +868,7 @@ async def _async_run_report(
 
     # Include fixed specifics
     call_params.update(spec_params)
+    call_params = _canonical_param_names(call_params)
 
     # Always include output_format and report_spec for downstream rendering
     call_params["output_format"] = output_format
@@ -775,6 +890,9 @@ async def _async_run_report(
             )
 
         call_params = _merge_signature_params(func, params, call_params)
+        call_params = _bind_search_parameter(func, call_params)
+        _warn_dropped_params(report_name, params, call_params,
+                             [*required_params, *optional_params, *spec_params])
         # Only (re)create a bearer token if one is not already set on the client.
         try:
             existing_token = None
@@ -847,6 +965,7 @@ def _exec_analytic_chart(
     user: str,
     user_pass: str,
     token: Optional[str] = None,
+    supply: Optional[RoleSupply] = None,
 ) -> Dict[str, Any]:
     """Run a report spec's `analytic_function` (extra_find) and wrap the
     result as a Vega-Lite chart -- `chart_kind` picks which:
@@ -879,18 +998,22 @@ def _exec_analytic_chart(
             f"{chart_kind.upper()} output isn't supported for this spec."
         )
 
-    result = _run_analytic_function(
+    result, notes = _run_recording_unmeasured(
         action, params=params, view_server=view_server, view_url=view_url,
-        user=user, user_pass=user_pass, token=token,
+        user=user, user_pass=user_pass, token=token, supply=supply,
     )
     envelope = _result_envelope(result)
     result = _jsonable(result)
+    # A count in the result was not measured: its value is None, and a chart would draw that as
+    # a missing bar, a gap or a re-proportioned pie. Withhold the chart and say why instead.
+    if notes and (envelope is None or envelope["state"] in CHARTABLE_STATES):
+        envelope = _unmeasured_envelope(notes)
     absence = _absence_for(envelope, action["analytic_function"])
     # Chart only an established answer (ISSUE-140): measured, or nothing_found (a real
     # zero). For not_established / not_applicable the numbers aren't known, so say so
     # (ISSUE-171), never a chart whose zeros would read as an answer.
     if envelope and envelope["state"] not in CHARTABLE_STATES:
-        return _absent_output(result, envelope, absence)
+        return _absent_output(result, envelope, absence, notes)
     if not result:
         return _with_envelope({"kind": "empty", **({"absence": absence} if absence else {})}, envelope)
 
@@ -980,6 +1103,58 @@ def exec_report_spec(
     user: str = settings.User_Profile.user_name,
     user_pass: str = settings.User_Profile.user_pwd,
     token: Optional[str] = None,
+    supply: Optional[RoleSupply] = None,
+    refresh_spec: bool = False,
+) -> Dict[str, Any]:
+    """
+    Execute the action for a given report spec (see `_exec_report_spec_impl` for the result
+    shapes).
+
+    RS-EGERIA-TIER: the name may be tier-addressed (`egeria:<label>`, `builtin:<label>`,
+    `seed:<label>`). The result carries `spec_source` (`{"tier", "label", "version", "guid"?,
+    "synced_at"?}`) beside `kind`, never inside `data`; REPORT/MD/HTML text of an Egeria-held spec
+    ends with a one-line provenance footer. `refresh_spec=True` fetches the spec from Egeria for
+    this call: written through to a per-user cache, kept in-process for a shared one. A failed
+    fetch raises with words; it never falls back to the cached copy.
+    """
+    if refresh_spec and isinstance(format_set_name, str):
+        format_set_name = _fetch_for_exec(format_set_name, view_server=view_server, view_url=view_url,
+                                          user=user, user_pass=user_pass, token=token)
+    result = _exec_report_spec_impl(format_set_name, output_format=output_format, params=params,
+                                    view_server=view_server, view_url=view_url, user=user, user_pass=user_pass,
+                                    token=token, supply=supply)
+    return _with_spec_source(result, format_set_name, (output_format or "DICT").upper())
+
+
+def _fetch_for_exec(name: str, *, view_server: str, view_url: str, user: str, user_pass: str,
+                    token: Optional[str]) -> str:
+    from pyegeria.omvs.collection_manager import CollectionManager
+    from pyegeria.view.egeria_spec_cache import fetch_spec_for_call
+    client = CollectionManager(view_server, view_url, user_id=user, user_pwd=user_pass)
+    try:
+        if token:
+            client.set_bearer_token(token)
+        else:
+            client.create_egeria_bearer_token()
+        return fetch_spec_for_call(client, name)
+    finally:
+        try:
+            client.close_session()
+        except Exception:  # noqa: BLE001
+            pass
+
+
+def _exec_report_spec_impl(
+    format_set_name: str | dict,
+    *,
+    output_format: str = "DICT",
+    params: Optional[Dict[str, Any]] = None,
+    view_server: str = settings.Environment.egeria_view_server,
+    view_url: str = settings.Environment.egeria_view_server_url,
+    user: str = settings.User_Profile.user_name,
+    user_pass: str = settings.User_Profile.user_pwd,
+    token: Optional[str] = None,
+    supply: Optional[RoleSupply] = None,
 ) -> Dict[str, Any]:
     """
     Execute the action for a given format set and return a normalized result structure.
@@ -995,6 +1170,14 @@ def exec_report_spec(
     SERIES/BAR/PIE the subtitle is put on the chart, and no chart is drawn
     unless the state is `measured` or `nothing_found` (ISSUE-140).
 
+    A count inside an analytic result that was not measured -- it failed, timed out, or its
+    find fallback stopped at the page cap, which is a lower bound and never a total -- is
+    None in the data, never 0 or the cap, and the output carries `"unmeasured": [{"count",
+    "reason", "at_least"}, ...]` naming each one. A scalar result that is such a count, and
+    any SERIES/BAR/PIE whose result holds one, come back as `kind: "absent"` (no chart: a
+    missing bar or a re-proportioned pie would read as an answer), with the reason and the
+    lower bound in `content`.
+
     ISSUE-86: `token`, when given, authenticates the client(s) built here with
     `set_bearer_token(token)` instead of minting a fresh token from
     `user`/`user_pass` via `create_egeria_bearer_token()`. Use this when the
@@ -1003,6 +1186,13 @@ def exec_report_spec(
     report execution -- and its provenance -- reflects that user, not a
     fallback service account. `user`/`user_pass` remain fully backward
     compatible when `token` is not given.
+
+    RS-W2-3: `supply` (a `role_supply.RoleSupply`) provides an analytic routine's declared inputs
+    -- its Egeria client(s), and any reader, viewer or subject it declares. Omitted, plain
+    pyegeria's `PlainSupply` is built from the arguments above and supplies the caller's
+    EgeriaTech only. A role the supply cannot provide raises `role_supply.RoleRefused`, with the
+    environment's words, before the routine runs. A find-method spec (no analytic routine) does
+    not read `supply`: it builds its client class from the arguments above, as before.
     """
     output_format = (output_format or "DICT").upper()
     params = _normalize_report_params(dict(params or {}), action_mode="find")
@@ -1018,7 +1208,7 @@ def exec_report_spec(
         return _exec_analytic_chart(
             format_set_name, chart_kind=_CHART_KINDS[output_format], params=params,
             view_server=view_server, view_url=view_url, user=user, user_pass=user_pass,
-            token=token,
+            token=token, supply=supply,
         )
 
     # Resolve the format set and action
@@ -1078,19 +1268,25 @@ def exec_report_spec(
     # docstring describes) still falls through to the find path below for
     # anything other than SERIES, unchanged.
     if action.get("analytic_function") and not func_decl:
-        result = _run_analytic_function(
+        result, notes = _run_recording_unmeasured(
             action, params=params, view_server=view_server, view_url=view_url,
-            user=user, user_pass=user_pass, token=token,
+            user=user, user_pass=user_pass, token=token, supply=supply,
         )
         envelope = _result_envelope(result)
         result = _jsonable(result)
+        # The value itself is a count that was not measured (a scalar None): say so, with the
+        # reason and any lower bound, never "empty". A dict or list keeps its measured values;
+        # its unmeasured ones are None and the notes below name each one.
+        if notes and envelope is None and result is None:
+            envelope = _unmeasured_envelope(notes)
+        unmeasured = {"unmeasured": notes} if notes else {}
         absence = _absence_for(envelope, action["analytic_function"])
         if envelope and envelope["state"] not in CHARTABLE_STATES:
-            return _absent_output(result, envelope, absence)  # ISSUE-171
+            return _absent_output(result, envelope, absence, notes)  # ISSUE-171
         extra = {"absence": absence} if absence else {}
         if result is None or result == [] or result == {}:
-            return _with_envelope({"kind": "empty", **extra}, envelope)
-        return _with_envelope({"kind": "json", "data": result, **extra}, envelope)
+            return _with_envelope({"kind": "empty", **extra, **unmeasured}, envelope)
+        return _with_envelope({"kind": "json", "data": result, **extra, **unmeasured}, envelope)
 
     required_params = action.get("required_params", action.get("user_params", [])) or []
     optional_params = action.get("optional_params", []) or []
@@ -1114,6 +1310,7 @@ def exec_report_spec(
 
     # Include fixed specifics
     call_params.update(spec_params)
+    call_params = _canonical_param_names(call_params)
 
     # Always include output_format and report_spec for downstream rendering
     call_params["output_format"] = output_format
@@ -1134,6 +1331,9 @@ def exec_report_spec(
             )
 
         call_params = _add_request_options(func, params, call_params)
+        call_params = _bind_search_parameter(func, call_params)
+        _warn_dropped_params(format_set_name, params, call_params,
+                             [*required_params, *optional_params, *spec_params])
         result = func(**call_params)
 
         if not result or result == NO_ELEMENTS_FOUND:
@@ -1178,8 +1378,10 @@ def exec_report_spec(
         print_validation_error(e)
         raise
     except ValueError as e:
-        import traceback
-        traceback.print_exc()
+        # Never a silent None (6.2.28): the caller gets the error and its words.
+        logger.error(f"Report spec '{format_set_name}' ({output_format}) failed: {e}")
+        # Re-raised, as the async path does: a plain-words refusal must not reach the caller as "no result".
+        raise
 
     finally:
         try:

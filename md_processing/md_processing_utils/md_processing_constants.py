@@ -87,7 +87,7 @@ COLLECTION_SUBTYPES = [
     "Digital Product", "Digital Product Catalog", "Digital Product Family",
     "Agreement", "Digital Subscription", "Data Sharing Agreement", "Data Dictionary", "Data Spec",
     "Glossary", "Security Group", "Security List", "Security Role",
-    "Skill Set", "Reference List", "Report Type", "Question Spec", "Working Set",
+    "Skill Set", "Reference List", "Report Type", "Report Spec", "Question Spec", "Working Set",
     "Event Set", "Context Event Collection", "IT Subsystem", "Naming Standard Rule Set", "Software Archive",
     "Concept Model", "Business Capability",
 ]

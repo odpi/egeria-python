@@ -362,6 +362,118 @@ class NotificationSubscriberProperties(PyegeriaModel):
     effective_to: datetime | None = None
 
 
+#
+# Report specifications, measurements and dashboards (Egeria 6.3, odpi/egeria#9432, area 0582).
+# Each `class_` is the Java bean name exactly: Egeria resolves the polymorphic "class" against its
+# known `*Properties` subtypes, so sending a type name ("Dashboard") is an HTTP 400
+# "Could not resolve type id" (the ScopedBy lesson, pyegeria #537).
+#
+
+class DataValueSpecificationProperties(AuthoredReferenceableProperties):
+    """Properties of a DataValueSpecification (and the base of DataClass, DataGrain, MeasurementSpecification)."""
+    class_: Annotated[Literal["DataValueSpecificationProperties"], Field(alias="class")]
+    match_property_names: list[str] | None = None
+    namespace_path: str | None = None
+    match_threshold: int | None = None
+    specification: str | None = None
+    specification_details: dict[str, str] | None = None
+    data_type: str | None = None
+    units: str | None = None
+    absolute_uncertainty: int | None = None
+    relative_uncertainty: int | None = None
+
+
+class MeasurementSpecificationProperties(DataValueSpecificationProperties):
+    """How a measured value is to be read: completeness, confidence form, uncertainty form and the sentences
+    to show in place of a value when there isn't one. Created through DataDesigner.create_data_value_specification.
+
+    completenessDeclared: complete | lower_bound | unknown
+    confidenceForm:       measured | estimated | inferred | judged | generated
+    uncertaintyForm:      plus_minus | low_high | band
+    absenceSentences:     map keyed by absence state (nothing_found, not_measured, not_permitted, not_applicable)
+
+    The state set is not a property: it is a ValidValuesAssignment from the specification. The basis and
+    as-of fields are the BasisDataField / AsOfDataField relationships, not strings.
+    """
+    class_: Annotated[Literal["MeasurementSpecificationProperties"], Field(alias="class")]
+    completeness_declared: str | None = None
+    confidence_form: str | None = None
+    uncertainty_form: str | None = None
+    absence_sentences: dict[str, str] | None = None
+
+
+class DataSetProperties(ReferenceableProperties):
+    """Partial model of Egeria's DataSetProperties (a DataAsset). Only the DataSet-level fields are declared;
+    other Asset fields a caller supplies are kept (extra='allow') rather than silently dropped."""
+    model_config = ConfigDict(extra='allow')
+    class_: Annotated[Literal["DataSetProperties"], Field(alias="class")]
+    formula: str | None = None
+    formula_type: str | None = None
+
+    @model_validator(mode='after')
+    def _drop_injected_metadata(self):
+        # OpenMetadataRootProperties.preprocess_data adds an empty 'metadata' key; with extra='allow' it
+        # would otherwise be serialized and sent to Egeria.
+        if self.__pydantic_extra__ and self.__pydantic_extra__.get('metadata') == {}:
+            self.__pydantic_extra__.pop('metadata')
+        return self
+
+
+class ReportProperties(DataSetProperties):
+    """A Report asset. outputFormat and reportParameters (a JSON string) are new in Egeria 6.3."""
+    class_: Annotated[Literal["ReportProperties"], Field(alias="class")]
+    purpose: str | None = None
+    start_time: datetime | None = None
+    completion_time: datetime | None = None
+    completion_message: str | None = None
+    created_time: datetime | None = None
+    last_modified_time: datetime | None = None
+    last_modifier: str | None = None
+    output_format: str | None = None
+    report_parameters: str | None = None
+
+
+class DashboardProperties(DataSetProperties):
+    """A Dashboard asset (a DataSet, sibling of Report). refreshTimeInterval is a long, in minutes
+    (Egeria's existing REFRESH_TIME_INTERVAL property: "how frequently the processing should run - in minutes")."""
+    class_: Annotated[Literal["DashboardProperties"], Field(alias="class")]
+    aliases: list[str] | None = None
+    refresh_time_interval: int | None = None
+    layout_style: str | None = None
+
+
+class LabeledRelationshipProperties(PyegeriaModel):
+    """Egeria's LabeledRelationshipProperties: the base of the relationship properties below."""
+    class_: Annotated[Literal["LabeledRelationshipProperties"], Field(alias="class")]
+    label: str | None = None
+    description: str | None = None
+    effective_from: datetime | None = None
+    effective_to: datetime | None = None
+
+
+class BasisDataFieldProperties(LabeledRelationshipProperties):
+    """BasisDataField: MeasurementSpecification (end 1) -> the DataField giving the measurement's basis."""
+    class_: Annotated[Literal["BasisDataFieldProperties"], Field(alias="class")]
+
+
+class AsOfDataFieldProperties(LabeledRelationshipProperties):
+    """AsOfDataField: MeasurementSpecification (end 1) -> the DataField giving the time of the measurement."""
+    class_: Annotated[Literal["AsOfDataFieldProperties"], Field(alias="class")]
+
+
+class ReportTypeInstanceProperties(LabeledRelationshipProperties):
+    """ReportTypeInstance: ReportType (end 1, e.g. a ReportSpec) -> a Report generated from it."""
+    class_: Annotated[Literal["ReportTypeInstanceProperties"], Field(alias="class")]
+
+
+class ReportRunOfProperties(LabeledRelationshipProperties):
+    """ReportRunOf: ResultsSet (end 1) -> the Report it is a run of, with the run's result state."""
+    class_: Annotated[Literal["ReportRunOfProperties"], Field(alias="class")]
+    result_state: str | None = None
+    result_state_reason: str | None = None
+    result_location: str | None = None
+
+
 class RequestBody(PyegeriaModel):
     external_source_guid: str | None = None
     external_source_name: str | None = None
@@ -1075,8 +1187,28 @@ class NewSubscriptionTypeRequestBody(RequestBody):
     description: str | None = None
     license_type_guid: str | None = None
     service_level_objective_guid: str | None = None
-    notification_interval: int | None = None  # minutes
+    # Minutes: the delivery interval of a PERIODIC type, the minimum interval of an ONGOING_UPDATE one.
+    minimum_notification_interval: int | None = None
+    # TRANSITIONAL -- remove with the validator below once Egeria's oak2026 change lands. That change renames
+    # this request field notificationInterval -> minimumNotificationInterval; a server on either side of it
+    # reads only its own name and treats the other as interval 0, so both are sent until it merges.
+    notification_interval: int | None = None
     monitored_resource_guids: list[str] | None = Field(None, alias="monitoredResourceGUIDs")
+
+    @model_validator(mode="after")
+    def _send_both_interval_names(self) -> "NewSubscriptionTypeRequestBody":
+        # TRANSITIONAL (see notification_interval above): mirror whichever name the caller set.
+        if (self.minimum_notification_interval is not None and self.notification_interval is not None
+                and self.minimum_notification_interval != self.notification_interval):
+            # A pre-rename platform would use one value and a post-rename platform the other.
+            raise ValueError(
+                f"minimumNotificationInterval ({self.minimum_notification_interval}) and notificationInterval "
+                f"({self.notification_interval}) differ; set only minimumNotificationInterval.")
+        if self.minimum_notification_interval is None:
+            self.minimum_notification_interval = self.notification_interval
+        elif self.notification_interval is None:
+            self.notification_interval = self.minimum_notification_interval
+        return self
 
 
 # ---------------------------------------------------------------------------

@@ -53,7 +53,7 @@ _FIND_FMT = {
 }
 
 _ANALYTIC_FMT = {
-    "action": {"analytic_function": "fake.analytic", "analytic_spec_params": {}},
+    "action": {"analytic_function": "fake_analytic", "analytic_spec_params": {}},
     "target_type": "Referenceable",
 }
 
@@ -65,7 +65,23 @@ def _patch_find_path(monkeypatch):
                         lambda decl: (_RecordingClient, "find_things"))
 
 
-def _patch_analytic_path(monkeypatch):
+def _register_fake_analytic(inputs):
+    """The routine is registered with its declared inputs: the executor supplies those (RS-W2-3)."""
+    from pyegeria.view.analytic_registry import AnalyticFunctionSpec, register_analytic_functions
+    register_analytic_functions({"fake_analytic": AnalyticFunctionSpec(
+        name="fake_analytic", function="pyegeria.view.overview_metrics.count_elements", inputs=list(inputs))})
+
+
+@pytest.fixture(autouse=True)
+def _clear_runtime_routines():
+    yield
+    from pyegeria.view.analytic_registry import clear_runtime_analytic_functions
+    clear_runtime_analytic_functions()
+
+
+def _patch_analytic_path(monkeypatch, inputs=("egeria_client:EgeriaTech",)):
+    _register_fake_analytic(inputs)
+
     def _analytic(client):
         return {"count": 3, "token_seen": client.token}
     monkeypatch.setattr(fse, "select_report_spec", lambda name, out: _ANALYTIC_FMT)
@@ -139,10 +155,10 @@ def test_chart_path_threads_token(monkeypatch):
 
 
 def test_analytic_routine_without_client_param_builds_no_client(monkeypatch):
-    """ISSUE-137: a routine that takes no mgr/ce/expert/client parameter must not
+    """ISSUE-137: a routine that declares no egeria_client input must not
     cause an EgeriaTech to be built or a token minted -- an unreachable view_url
     must not stop it running."""
-    _patch_analytic_path(monkeypatch)
+    _patch_analytic_path(monkeypatch, inputs=())
 
     def _local_only(window=0):
         return {"count": 7, "window": window}

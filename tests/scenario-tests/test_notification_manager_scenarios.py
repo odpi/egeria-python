@@ -231,7 +231,6 @@ class NotificationManagerScenarioTester:
                     "description": "Governance control acting as notification type for testing",
                     "multipleNotificationsPermitted": True,
                     "minimumNotificationInterval": 60,
-                    "notificationInterval":100,
                     "plannedStartDate": "2026-01-31",
                     "plannedCompletionDate": "2027-01-31",
                     "domainIdentifier": 0,

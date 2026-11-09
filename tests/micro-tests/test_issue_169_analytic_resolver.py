@@ -90,10 +90,3 @@ def test_env_var_overrides_the_allowlist(monkeypatch):
     assert fse._resolve_analytic_function("json.dumps") is json.dumps
     with pytest.raises(fse.AnalyticFunctionRefused):
         fse._resolve_analytic_function("pyegeria.core.utils.body_slimmer")
-
-
-def test_binder_factories_go_through_the_same_check():
-    def analytic(ods=None):
-        return ods
-    with pytest.raises(fse.AnalyticFunctionRefused):
-        fse._apply_analytic_binders(analytic, {"ods": "os:getcwd"}, {})

@@ -24,15 +24,27 @@ concerns. `overview_handler.py` is the reference caller; see its git history
 for the original inline versions this was extracted from.
 """
 
+import contextlib
+import contextvars
+import functools
 import inspect
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
+import time
+import warnings
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, TypedDict
 
 from loguru import logger
 
+from pyegeria.core._exceptions import (
+    PyegeriaConnectionException,
+    PyegeriaNotFoundException,
+    PyegeriaTimeoutException,
+)
 from pyegeria.core._globals import max_paging_size
 
 __all__ = [
     "DEFAULT_CAP",
+    "recording_unmeasured",
     "GOVERNANCE_CLASSIFICATIONS",
     "count_elements",
     "count_relationships",
@@ -59,6 +71,13 @@ __all__ = [
     "metric_trend",
     "term_definition_completeness",
     "active_contributors",
+    "asset_subtype_tree",
+    "asset_composition",
+    "AssetComposition",
+    "AssetCompositionRow",
+    "CompositionCell",
+    "COMPOSITION_DEFAULT_CONCURRENCY",
+    "COMPOSITION_MAX_CONCURRENCY",
     "WINDOWS",
     "growth_label",
 ]
@@ -115,22 +134,67 @@ def growth_label(d, span_s: int) -> str:
 _ELEMENT_COUNT_CANDIDATES = ("count_metadata_elements", "get_metadata_element_count")
 _REL_COUNT_CANDIDATES = ("count_relationships_between_elements", "count_relationships")
 _count_caps: Dict[str, Optional[str]] = {}
-_native_server_ok: Dict[str, bool] = {}
+_native_server_ok: Dict[str, float] = {}  # server key -> monotonic time native was found unsupported
 
 
 def _server_key(client) -> str:
     return f"{getattr(client, 'platform_url', '')}|{getattr(client, 'view_server', '')}"
 
 
+# How long a "this server has no native counts" verdict is trusted before the
+# next count tries native again (a server upgraded to support it is picked up
+# without a process restart).
+NATIVE_DISABLE_TTL_S = 300.0
+
+_UNSUPPORTED_MARKERS = ("not implemented", "not supported", "unsupported", "no such method",
+                        "no static resource", "not found")
+
+
+def _native_unsupported(exc: Exception) -> bool:
+    """True only when `exc` says the server lacks the native count endpoint
+    (404/405/501 or an equivalent message). A timeout, a connection error or
+    any other transient failure is NOT evidence of that: it fails only the one
+    count (which then uses the len(find) fallback) and leaves native enabled."""
+    if isinstance(exc, (PyegeriaTimeoutException, PyegeriaConnectionException)):
+        return False
+    if isinstance(exc, PyegeriaNotFoundException):
+        return True
+    code = getattr(exc, "http_status_code", None) or getattr(exc, "related_http_code", None)
+    if code in (404, 405, 501):
+        return True
+    ai = getattr(exc, "additional_info", None)
+    if isinstance(ai, dict) and ai.get("relatedHTTPCode") in (404, 405, 501):
+        return True
+    if isinstance(exc, (AttributeError, NotImplementedError)):
+        return True
+    msg = str(exc).lower()
+    return any(m in msg for m in _UNSUPPORTED_MARKERS)
+
+
 def _native_disabled(client) -> bool:
-    return _native_server_ok.get(_server_key(client)) is False
+    key = _server_key(client)
+    since = _native_server_ok.get(key)
+    if since is None:
+        return False
+    if time.monotonic() - since > NATIVE_DISABLE_TTL_S:
+        _native_server_ok.pop(key, None)  # expired: try native again
+        return False
+    return True
 
 
 def _disable_native(client, exc) -> None:
+    """Record that native counting failed. Only a 'server lacks it' error
+    disables native for the server (until NATIVE_DISABLE_TTL_S); anything else
+    is transient and only that one count falls back."""
+    if not _native_unsupported(exc):
+        logger.info(f"overview_metrics count seam: native count failed once for "
+                    f"{_server_key(client)} ({exc}) -- this count falls back; native stays enabled")
+        return
     if not _native_disabled(client):
         logger.info(f"overview_metrics count seam: native count not supported by "
-                    f"{_server_key(client)} -- using len(find/get) fallback ({exc})")
-    _native_server_ok[_server_key(client)] = False
+                    f"{_server_key(client)} -- using len(find/get) fallback for "
+                    f"{NATIVE_DISABLE_TTL_S:.0f}s ({exc})")
+    _native_server_ok[_server_key(client)] = time.monotonic()
 
 
 def _native_count_method(client, candidates: Sequence[str], cache_key: str) -> Optional[str]:
@@ -139,7 +203,9 @@ def _native_count_method(client, candidates: Sequence[str], cache_key: str) -> O
         _count_caps[cache_key] = name
         logger.info(f"overview_metrics count seam [{cache_key}]: "
                     + (f"native via {name}" if name else "fallback to len(find/get)"))
-    return _count_caps[cache_key]
+    name = _count_caps[cache_key]
+    # The cache is per class name; a client of another class with the same name may lack the method.
+    return name if name and callable(getattr(client, name, None)) else None
 
 
 def _as_count(res) -> Optional[int]:
@@ -166,7 +232,7 @@ def _find(mgr, body: dict, page_size: int = DEFAULT_CAP) -> list:
     return _find_or_none(mgr, body, page_size) or []
 
 
-def _find_or_none(mgr, body: dict, page_size: int = DEFAULT_CAP) -> Optional[list]:
+def _find_or_none(mgr, body: dict, page_size: int = DEFAULT_CAP, start_from: int = 0) -> Optional[list]:
     """Run a FindRequestBody: a list of elements, [] when nothing matched (a list
     or pyegeria's "No elements found" string), or None when the query failed or
     answered with something else. Never raises."""
@@ -178,7 +244,7 @@ def _find_or_none(mgr, body: dict, page_size: int = DEFAULT_CAP) -> Optional[lis
         # stopped working once Egeria moved pagination for this endpoint
         # into the request body; find_metadata_elements no longer accepts
         # them as parameters at all, to avoid this drifting stale again).
-        b = {**body, "graphQueryDepth": 0, "startFrom": 0, "pageSize": page_size}
+        b = {**body, "graphQueryDepth": 0, "startFrom": start_from, "pageSize": page_size}
         raw = mgr.find_metadata_elements(b)
     except Exception as exc:  # noqa: BLE001 -- best-effort, degrade don't fail
         logger.debug(f"overview_metrics _find failed for {body.get('metadataElementTypeName')!r}: {exc}")
@@ -192,54 +258,314 @@ def _find_or_none(mgr, body: dict, page_size: int = DEFAULT_CAP) -> Optional[lis
     return None
 
 
-def _element_count(mgr, body: dict, as_of: Optional[str] = None, strict: bool = False) -> Optional[int]:
+# ── exhaustive scans ───────────────────────────────────────────────────────
+# A figure computed from a scan (distinct relationship ends, per-element checks) is only a figure when
+# the scan read everything. Egeria's paging contract: only an EMPTY page means done -- a short page is not
+# the last page, because a server may filter hits out of a page after fetching it. So these helpers page
+# until an empty page, advancing startFrom by the full page size every time, and a scan that would need
+# more than MAX_SCAN_PAGES pages stops and is not measured (None plus a note), never reported from the
+# part it had read. Found live 2026-11-08: one 500-relationship SemanticAssignment page held 8 distinct
+# terms, all 747 held 77, so the orphan-term count read 1,053 instead of 984.
+MAX_SCAN_PAGES = 40
+
+
+class _ScanIncomplete(Exception):
+    """Internal: a scan helper returned None (its note is already recorded)."""
+
+
+def _scan_stopped_reason(kind: str, n: int) -> str:
+    return (f"the {kind} scan stopped after {MAX_SCAN_PAGES} pages of {DEFAULT_CAP} ({n} read) before "
+            f"Egeria returned an empty page, so it is incomplete")
+
+
+def _repeated_page_reason(kind: str, n: int) -> str:
+    return (f"the {kind} scan got a page that repeated only what it had already read, so the server "
+            f"is not paging and the scan is incomplete ({n} read)")
+
+
+def _all_relationships(ce, relationship_type: str, as_of: Optional[str] = None) -> Optional[list]:
+    """Every relationship of `relationship_type` (as of `as_of`), paged until Egeria returns an empty page.
+
+    Distinct by relationship GUID: a page may repeat relationships an earlier page returned. Returns None,
+    with a note for `recording_unmeasured()`, when the scan is incomplete -- it reached MAX_SCAN_PAGES, or a
+    page added nothing new (the server ignored startFrom). Raises when a page query fails, so each caller
+    keeps its own failure path.
+
+    The body always carries startFrom/pageSize: ClassificationExplorer.get_relationships ignores its
+    start_from/page_size arguments whenever a body is given."""
+    out: list = []
+    seen: set = set()
+    prev: Optional[list] = None
+    what = f"{relationship_type} relationships"
+    for i in range(MAX_SCAN_PAGES):
+        start = i * DEFAULT_CAP
+        body: Dict[str, Any] = {"class": "ResultsRequestBody", "startFrom": start, "pageSize": DEFAULT_CAP}
+        if as_of:
+            body["asOfTime"] = as_of
+        page = _json_list(ce.get_relationships(relationship_type=relationship_type, output_format="JSON",
+                                               start_from=start, page_size=DEFAULT_CAP, body=body))
+        if not page:
+            return out
+        if page == prev:  # the same page again: startFrom was ignored (a GUID check cannot see it without GUIDs)
+            _not_measured(what, _repeated_page_reason("relationship", len(out)), at_least=len(out))
+            return None
+        prev = page
+        added = 0
+        for r in page:
+            g = (r.get("relationshipHeader") or {}).get("guid") or r.get("guid")
+            if g:
+                if g in seen:
+                    continue
+                seen.add(g)
+            out.append(r)
+            added += 1
+        if added == 0:
+            _not_measured(what, _repeated_page_reason("relationship", len(out)), at_least=len(out))
+            return None
+    _not_measured(what, _scan_stopped_reason("relationship", len(out)), at_least=len(out))
+    return None
+
+
+def _element_guid(el: dict) -> Optional[str]:
+    return el.get("elementGUID") or (el.get("elementHeader") or {}).get("guid") or el.get("guid")
+
+
+def _all_elements(mgr, body: dict) -> Optional[list]:
+    """Every element a FindRequestBody matches, paged until Egeria returns an empty page.
+
+    Distinct by element GUID. Returns None when a page query fails (no note: the caller's own failure
+    path), and None with a note when the scan is incomplete (MAX_SCAN_PAGES reached, or a page that added
+    nothing new). Never raises."""
+    out: list = []
+    seen: set = set()
+    prev: Optional[list] = None
+    for i in range(MAX_SCAN_PAGES):
+        page = _find_or_none(mgr, body, DEFAULT_CAP, start_from=i * DEFAULT_CAP)
+        if page is None:
+            return None
+        if not page:
+            return out
+        if page == prev:  # the same page again: startFrom was ignored
+            _not_measured(_count_label(body), _repeated_page_reason("find", len(out)), at_least=len(out))
+            return None
+        prev = page
+        added = 0
+        for el in page:
+            g = _element_guid(el)
+            if g:
+                if g in seen:
+                    continue
+                seen.add(g)
+            out.append(el)
+            added += 1
+        if added == 0:
+            _not_measured(_count_label(body), _repeated_page_reason("find", len(out)), at_least=len(out))
+            return None
+    _not_measured(_count_label(body), _scan_stopped_reason("find", len(out)), at_least=len(out))
+    return None
+
+
+def _one_page_or_none(mgr, body: dict, what: str) -> Optional[list]:
+    """One find page, for a routine whose population is too large to page through (Asset): the page,
+    [] when nothing matched, or None when the query failed or the page was full. A full page is a sample,
+    not the population, so a figure computed from it is not measured (a note says so)."""
+    page = _find_or_none(mgr, body)
+    if page is not None and len(page) >= DEFAULT_CAP:
+        _not_measured(what, f"the find stopped at its {DEFAULT_CAP}-element page cap, so this figure would "
+                            f"describe only the first {len(page)} elements, not all of them", at_least=len(page))
+        return None
+    return page
+
+
+SCOPE_VIEWER = "viewer"
+SCOPE_REPOSITORY = "repository"
+
+
+def _population_keyword(fn):
+    """Accept `population=` ("viewer" | "repository"), the owner's word (RS-W1-1 §5, 2026-11-06), as the
+    count helpers' keyword. `scope=` still works as a deprecated alias: `scope` already means result level
+    (resource, container, member, field) in the declaration model, so the population word must not reuse it.
+    Passing both with different values is a ValueError."""
+    sig = inspect.signature(fn)
+    params = list(sig.parameters.values()) + [
+        inspect.Parameter("population", inspect.Parameter.KEYWORD_ONLY, default=None, annotation=Optional[str])]
+
+    @functools.wraps(fn)
+    def wrapper(*args, population: Optional[str] = None, **kwargs):
+        scope = kwargs.get("scope")
+        if scope is not None:
+            if population is not None and population != scope:
+                raise ValueError(f"{fn.__name__}: population={population!r} and scope={scope!r} disagree; "
+                                 f"pass population= only")
+            if population is None:
+                warnings.warn(f"{fn.__name__}(scope=...) is deprecated; use population=",
+                              DeprecationWarning, stacklevel=2)
+        if population is not None:
+            kwargs["scope"] = population
+        return fn(*args, **kwargs)
+
+    wrapper.__signature__ = sig.replace(parameters=params)
+    return wrapper
+
+
+def _push_down(scope: Optional[str]) -> Optional[bool]:
+    """Map a count scope to the native `push_down` argument: "viewer" -> False
+    (server counts only what the caller may see), "repository" -> True (a raw
+    repository COUNT: fast, but it also counts elements the caller cannot see),
+    None -> None (omit it; the server default applies). Raises ValueError for
+    any other value -- a programming error, not a runtime condition."""
+    if scope is None:
+        return None
+    if scope == SCOPE_VIEWER:
+        return False
+    if scope == SCOPE_REPOSITORY:
+        return True
+    raise ValueError(f"scope must be None, {SCOPE_VIEWER!r} or {SCOPE_REPOSITORY!r}; got {scope!r}")
+
+
+def _pop(scope: Optional[str]) -> Dict[str, Optional[str]]:
+    """Keyword arguments that forward a composite's population to a count helper. `population=None`
+    means "not given" to the keyword wrapper (the helper's repository default then applies), so the
+    server default, scope=None, is forwarded as `scope=None` instead -- explicitly, not lost."""
+    return {"population": scope} if scope is not None else {"scope": None}
+
+
+# ── not-measured notes ─────────────────────────────────────────────────────
+# A count that comes back None is "not measured", never 0 and never the find
+# cap. The value alone cannot say why, or what lower bound the fallback did
+# see, so every count that returns None for that reason also records a note
+# here; `recording_unmeasured()` collects them for whoever wants the words
+# (the report-spec executor puts them on its output, see format_set_executor).
+_UNMEASURED: "contextvars.ContextVar[Optional[List[Dict[str, Any]]]]" = contextvars.ContextVar(
+    "pyegeria_unmeasured_counts", default=None)
+
+
+@contextlib.contextmanager
+def recording_unmeasured():
+    """Collect a note for every count that is not measured while the block runs.
+
+    Yields a list that fills with {"count": what was counted, "reason": why it is
+    not measured, "at_least": the lower bound the find fallback saw, or None}.
+    Notes are per context (a ContextVar), so a worker thread records into its own
+    block, not its caller's."""
+    notes: List[Dict[str, Any]] = []
+    token = _UNMEASURED.set(notes)
+    try:
+        yield notes
+    finally:
+        _UNMEASURED.reset(token)
+
+
+def _not_measured(what: str, reason: str, at_least: Optional[int] = None) -> None:
+    logger.warning(f"overview_metrics: count of {what!r} not measured -- {reason}")
+    notes = _UNMEASURED.get()
+    if notes is not None:
+        notes.append({"count": what, "reason": reason, "at_least": at_least})
+
+
+def _native_failure_words(exc: Optional[BaseException], tried: bool) -> str:
+    """What happened to the native count, in words, for a not-measured reason."""
+    if not tried:
+        return "no native count is available"
+    if exc is None:
+        return "the native count gave no number"
+    text = str(exc).lower()
+    if isinstance(exc, PyegeriaTimeoutException) or "timed out" in text or "timeout" in text or "408" in text:
+        return "the native count timed out"
+    return f"the native count failed ({type(exc).__name__})"
+
+
+def _count_label(body: dict) -> str:
+    label = body.get("metadataElementTypeName") or "elements"
+    props = ((body.get("searchProperties") or {}).get("conditions")) or []
+    words = [f"{c.get('property')} {'=' if c.get('operator') == 'EQ' else '!='} "
+             f"{((c.get('value') or {}).get('primitiveValue'))!r}" for c in props if isinstance(c, dict)]
+    if words:
+        label = f"{label} with {' and '.join(words)}"
+    conditions = ((body.get("matchClassifications") or {}).get("conditions")) or []
+    names = [c.get("name") for c in conditions if isinstance(c, dict) and c.get("name")]
+    return f"{label} classified {'/'.join(names)}" if names else label
+
+
+def _capped_reason(native_words: str, n: int) -> str:
+    return (f"{native_words}, and the find fallback stopped at its {DEFAULT_CAP}-element page cap, "
+            f"so there are at least {n}")
+
+
+def _element_count(mgr, body: dict, as_of: Optional[str] = None, strict: bool = False,
+                   scope: Optional[str] = None) -> Optional[int]:
     """Count elements matching a FindRequestBody -- native when available, else
     len(find_metadata_elements(...)).
 
-    strict=False: 0 when the fallback query fails (the historical behaviour).
-    strict=True: None when the count is not known -- the fallback query failed,
-    or it returned a full page (DEFAULT_CAP), which is only a lower bound.
+    scope="repository" (the default of every public count helper): only a
+    native push-down count can answer. The len(find) fallback is always
+    viewer-scoped, so it is NOT used -- a failed native count is None (strict
+    or not) with a note, never 0 and never a viewer number masquerading as a
+    repository one.
+
+    scope="viewer" or None: the len(find) fallback answers when the native
+    count cannot. None, with a note, when that query fails too (strict or not:
+    a 0 would read as "none of them", 6.2.28), and None when it returned a full
+    page (DEFAULT_CAP). That is only a lower bound, never a total, so it is
+    never returned as one; the bound and the reason go to
+    `recording_unmeasured()`'s notes. `strict` no longer changes any result; it
+    is kept so existing callers still work.
     """
+    push_down = _push_down(scope)
+    kw = {} if push_down is None else {"push_down": push_down}
     b = dict(body)
     if as_of:
         b["asOfTime"] = as_of
+    what = _count_label(body)
     name = _native_count_method(mgr, _ELEMENT_COUNT_CANDIDATES, "elem:" + type(mgr).__name__)
+    tried, native_exc = False, None
     if name and not _native_disabled(mgr):
+        tried = True
         try:
-            c = _as_count(getattr(mgr, name)(b))
+            c = _as_count(getattr(mgr, name)(b, **kw))
             if c is not None:
                 return c
         except Exception as exc:  # noqa: BLE001 -- old server: mark unsupported, fall back
+            native_exc = exc
             _disable_native(mgr, exc)
-    if not strict:
-        return len(_find(mgr, b))
-    found = _find_or_none(mgr, b)
-    if found is None:
-        logger.warning(f"overview_metrics: count of {body.get('metadataElementTypeName') or 'elements'!r} "
-                       f"not measured -- the query failed")
+    native_words = _native_failure_words(native_exc, tried)
+    if scope == SCOPE_REPOSITORY:
+        # Strict or not: a repository count has no fallback, and 0 here would read as an empty catalog.
+        _not_measured(what, f"{native_words}, and a repository-population count has no fallback "
+                            f"(the find fallback only sees what the viewer may see)")
         return None
-    if len(found) >= DEFAULT_CAP:
-        logger.warning(f"overview_metrics: count of {body.get('metadataElementTypeName') or 'elements'!r} "
-                       f"not measured -- the fallback hit the {DEFAULT_CAP} cap, so {len(found)} is only a lower bound")
+    found = _find_or_none(mgr, b)
+    if found is None:  # strict or not: a failed query is not "none of them" (6.2.28)
+        _not_measured(what, f"{native_words}, and the find fallback failed")
+        return None
+    if len(found) >= DEFAULT_CAP:  # a full page is a lower bound, never a total (strict or not)
+        _not_measured(what, _capped_reason(native_words, len(found)), at_least=len(found))
         return None
     return len(found)
 
 
+@_population_keyword
 def count_elements(
     mgr,
     type_name: Optional[str] = None,
     as_of: Optional[str] = None,
     classifications: Optional[Sequence[str]] = None,
     strict: bool = False,
+    scope: Optional[str] = SCOPE_REPOSITORY,
 ) -> Optional[int]:
     """
     Count ACTIVE elements, optionally of a given type and/or matching ANY of
-    the given classifications. Uses native `count_metadata_elements` when the
-    client + server support it, else `len(find_metadata_elements(...))`.
+    the given classifications, with native `count_metadata_elements`.
 
-    By default a failed query counts as 0, so an outage looks like an empty
-    catalog. Pass strict=True to get None instead whenever the number is not
-    known (ISSUE-123).
+    In the repository population (the default) only the native count can
+    answer: when it is unavailable, fails or times out the result is None,
+    strict or not, with its reason recorded for `recording_unmeasured()`.
+
+    Only in the viewer population (or scope=None) does a missing or failed
+    native count fall back to `len(find_metadata_elements(...))`. There a
+    failed query is None, not 0 (strict or not, since 6.2.28), and a fallback
+    that stops at DEFAULT_CAP gives None, never the cap: that page is a lower
+    bound, not a total (its bound and reason are recorded too).
 
     Parameters
     ----------
@@ -248,12 +574,22 @@ def count_elements(
     as_of : ISO-8601 asOfTime for a point-in-time count (None = now)
     classifications : classification names to match ANY of -- keep to a
         single call's worth (some connectors mishandle 2+ ANY conditions)
-    strict : when True, return None if the query failed, or if the fallback
-        count hit DEFAULT_CAP (a lower bound, not a total)
+    strict : no longer changes the result: a count that is not measured is
+        None either way (since 6.2.28 a failed viewer query is None too, not 0).
+        Kept so existing callers still work
+    scope : "repository" (the default: push_down=True, a whole-repository raw
+        count -- fast, and it includes elements the caller may not be able to
+        see; a deliberate interim choice, until zone-aware push-down exists),
+        "viewer" (push_down=False: only what the caller may see) or None (omit
+        push_down; the server default, which is viewer-scoped). The len(find)
+        fallback always answers in viewer scope, so with scope="repository" it
+        is never used: a failed native count is None, strict or not.
 
     Returns
     -------
-    int -- 0 on any failure (never raises); with strict=True, Optional[int]
+    Optional[int] -- None whenever the count is not measured: a failed or
+    unavailable repository count, a failed viewer query, or a capped fallback
+    (never 0 for any of those, and never raises)
     """
     body: Dict[str, Any] = {"class": "FindRequestBody", "limitResultsByStatus": ["ACTIVE"]}
     if type_name:
@@ -263,9 +599,10 @@ def count_elements(
             "class": "SearchClassifications", "matchCriteria": "ANY",
             "conditions": [{"name": n} for n in classifications],
         }
-    return _element_count(mgr, body, as_of, strict)
+    return _element_count(mgr, body, as_of, strict, scope)
 
 
+@_population_keyword
 def count_elements_by_property(
     mgr,
     type_name: str,
@@ -273,15 +610,18 @@ def count_elements_by_property(
     property_value: str,
     as_of: Optional[str] = None,
     strict: bool = False,
+    scope: Optional[str] = SCOPE_REPOSITORY,
+    operator: str = "EQ",
 ) -> Optional[int]:
     """
     Count ACTIVE elements of a given type whose named string property equals
     a given value -- e.g. counting DigitalProduct elements by deploymentStatus
     (Overview dashboard's Data Products tile, OVERVIEW_NEXT_STEPS.md
-    "Remaining app wiring"). Same native-count-with-fallback seam as
-    count_elements, just with a searchProperties EQ condition instead of a
-    bare type filter -- one cheap native COUNT call per distinct value, no
-    element fetch, same cost class as the plain count.
+    "Remaining app wiring"). Same count seam as count_elements -- native
+    only in the repository population, a capped-find fallback only in the
+    viewer population -- just with a searchProperties EQ (or NEQ) condition
+    instead of a bare type filter: one cheap native COUNT call per distinct
+    value, no element fetch, same cost class as the plain count.
 
     Parameters
     ----------
@@ -290,12 +630,18 @@ def count_elements_by_property(
     property_name : the element property to match (e.g. "deploymentStatus")
     property_value : the exact string value to match
     as_of : ISO-8601 asOfTime for a point-in-time count (None = now)
-    strict : as for count_elements -- None instead of 0 when not measured
+    strict : as for count_elements -- accepted, changes nothing (not measured is always None)
+    scope : as for count_elements ("repository" by default | "viewer" | None)
+    operator : "EQ" (the default: the property equals `property_value`) or
+        "NEQ" (it is set and differs -- e.g. property_value="" counts elements
+        whose property is set to something other than the empty string)
 
     Returns
     -------
-    int -- 0 on any failure (never raises); with strict=True, Optional[int]
+    Optional[int] -- as for count_elements
     """
+    if operator not in ("EQ", "NEQ"):
+        raise ValueError(f"count_elements_by_property: operator must be 'EQ' or 'NEQ'; got {operator!r}")
     body: Dict[str, Any] = {
         "class": "FindRequestBody",
         "metadataElementTypeName": type_name,
@@ -305,15 +651,17 @@ def count_elements_by_property(
             "matchCriteria": "ALL",
             "conditions": [{
                 "property": property_name,
-                "operator": "EQ",
+                "operator": operator,
                 "value": {"class": "PrimitiveTypePropertyValue", "typeName": "string", "primitiveValue": property_value},
             }],
         },
     }
-    return _element_count(mgr, body, as_of, strict)
+    return _element_count(mgr, body, as_of, strict, scope)
 
 
-def count_relationships(ce, relationship_type: str, as_of: Optional[str] = None, expert=None) -> Optional[int]:
+@_population_keyword
+def count_relationships(ce, relationship_type: str, as_of: Optional[str] = None, expert=None,
+                        scope: Optional[str] = SCOPE_REPOSITORY) -> Optional[int]:
     """
     Count relationships of a type, optionally as of a past time.
 
@@ -328,50 +676,82 @@ def count_relationships(ce, relationship_type: str, as_of: Optional[str] = None,
 
     Parameters
     ----------
-    ce : ClassificationExplorer (or compatible client)
+    ce : EgeriaTech (or another client with both get_relationships and the native
+        count_relationships_between_elements; a bare ClassificationExplorer has
+        only get_relationships, so it can answer a viewer count only)
     relationship_type : the relationship type name to count
     as_of : ISO-8601 asOfTime for a point-in-time count (None = now)
-    expert : optional MetadataExpert to enable the native fast-path
+    expert : optional MetadataExpert to enable the native fast-path. With
+        scope="repository" and no `expert`, `ce` itself is used when it has the
+        native method (an EgeriaTech does; a bare ClassificationExplorer does not)
+    scope : "repository" (the default: native push_down=True, whole repository,
+        including relationships the caller may not be able to see), "viewer"
+        (native push_down=False) or None (the get_relationships path, unless an
+        `expert` is passed). Only the native path takes a scope; the
+        get_relationships path is always viewer-scoped, so with
+        scope="repository" it is never used -- no native method, an
+        unsupported server or a failed native call gives None with a note, not
+        a viewer number.
 
     Returns
     -------
-    Optional[int] -- None on total failure (never raises)
+    Optional[int] -- None on total failure, and None when the get_relationships
+    page came back full (DEFAULT_CAP): that is a lower bound, never a total
+    (its bound and reason are recorded for `recording_unmeasured()`). Never raises.
     """
+    push_down = _push_down(scope)
+    kw = {} if push_down is None else {"push_down": push_down}
+    tried, native_exc = False, None
+    if expert is None and scope == SCOPE_REPOSITORY:
+        expert = ce  # only a native count can answer for the repository; ce may be able to give one
     if expert is not None and not _native_disabled(expert):
         name = _native_count_method(expert, _REL_COUNT_CANDIDATES, "rel:" + type(expert).__name__)
         if name:
+            tried = True
             body = {"class": "FindRelationshipRequestBody", "relationshipTypeName": relationship_type,
                     "limitResultsByStatus": ["ACTIVE"]}
             if as_of:
                 body["asOfTime"] = as_of
             try:
-                c = _as_count(getattr(expert, name)(body))
+                c = _as_count(getattr(expert, name)(body, **kw))
                 if c is not None:
                     return c
             except Exception as exc:  # noqa: BLE001
+                native_exc = exc
                 _disable_native(expert, exc)
+    if scope == SCOPE_REPOSITORY:
+        words = (_native_failure_words(native_exc, tried) if tried
+                 else "no native relationship count is available (it needs a MetadataExpert client)")
+        _not_measured(relationship_type, f"{words}, and a repository-population count has no fallback "
+                                         f"(get_relationships only sees what the viewer may see)")
+        return None
     try:
-        body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
-        return len(_json_list(ce.get_relationships(
-            relationship_type=relationship_type, output_format="JSON",
-            start_from=0, page_size=DEFAULT_CAP, body=body)))
+        # Paged to an empty page (Egeria's contract), so the count is every relationship the viewer may
+        # see, not one page of them; an incomplete scan is None with its note (see _all_relationships).
+        rels = _all_relationships(ce, relationship_type, as_of)
     except Exception as exc:  # noqa: BLE001
         logger.debug(f"overview_metrics count_relationships({relationship_type}) failed: {exc}")
+        _not_measured(relationship_type, f"{_native_failure_words(native_exc, tried)}, and the "
+                                         f"get_relationships fallback failed")
         return None
+    return None if rels is None else len(rels)
 
 
+@_population_keyword
 def counts_by_type(mgr, type_map: Sequence[Tuple[str, str]], as_of: Optional[str] = None,
-                   strict: bool = False) -> List[Dict[str, Any]]:
+                   strict: bool = False, scope: Optional[str] = SCOPE_REPOSITORY) -> List[Dict[str, Any]]:
     """
     Per-type counts for a set of (label, type_name) pairs -- e.g. the assets-
-    by-type composition breakdown. Unknown/wrong types just yield 0 rather
-    than failing the whole call. With strict=True, a count that could not be
-    measured is None (see count_elements).
+    by-type composition breakdown. A type that cannot be counted (unknown,
+    failed, timed out, or a capped fallback) is None for its own row, never 0,
+    rather than failing the whole call (see count_elements). `scope` is passed
+    to count_elements; `strict` is accepted for compatibility and changes
+    nothing.
 
     Returns a list of {"label": ..., "type": ..., "count": ...} dicts, in the
     order given.
     """
-    return [{"label": label, "type": type_name, "count": count_elements(mgr, type_name, as_of, strict=strict)}
+    return [{"label": label, "type": type_name, "count": count_elements(mgr, type_name, as_of, strict=strict, **_pop(scope))}
             for label, type_name in type_map]
 
 
@@ -402,7 +782,8 @@ def sum_type_counts(mgr, type_map: Sequence[Tuple[str, str]], as_of: Optional[st
         fetch="pyegeria.view.overview_metrics.counts_by_type",
         analytic="pyegeria.view.overview_metrics.sum_counts",
     )
-    return run_analytic_action(spec, mgr, fetch_kwargs={"type_map": type_map, "as_of": as_of})
+    # strict: a failed count is None, not 0, so the total is None rather than an undercount.
+    return run_analytic_action(spec, mgr, fetch_kwargs={"type_map": type_map, "as_of": as_of, "strict": True})
 
 
 def sum_counts(by_type: List[Dict[str, Any]], mgr=None) -> Dict[str, Any]:
@@ -412,8 +793,13 @@ def sum_counts(by_type: List[Dict[str, Any]], mgr=None) -> Dict[str, Any]:
     analytic step that DOES need to fetch more -- e.g. following a
     relationship to enrich, the pattern `ai_ready_assets` already uses
     inline). Also directly reusable on a `by_type` result a caller already
-    has, without re-fetching (see `sum_type_counts`'s docstring)."""
-    return {"total": sum(r["count"] for r in by_type), "byType": by_type}
+    has, without re-fetching (see `sum_type_counts`'s docstring).
+
+    `total` is None when any row's count is None (not measured): a sum over
+    the measured rows only would read as the whole total."""
+    counts = [r["count"] for r in by_type]
+    total = None if any(c is None for c in counts) else sum(counts)
+    return {"total": total, "byType": by_type}
 
 
 def _classifications_of(el: dict) -> set:
@@ -455,9 +841,16 @@ def governed_coverage(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
     type, so these are catalog-wide counts, not Asset-only -- an existing,
     already-accepted proxy in this dashboard, not a new one introduced here.
 
-    Returns {"governedCount": int, "byClassification": {name: count},
+    The find is paged until Egeria returns an empty page, so every figure
+    covers every governed element. If it fails or the scan is incomplete
+    (MAX_SCAN_PAGES; a note is recorded), governedCount/governedCapped/
+    fullyGoverned/partialZoneOnly are None (unmeasured) and byClassification/
+    topZones are empty. `governedCapped` is False whenever measured (kept for
+    callers that read it).
+
+    Returns {"governedCount": int|None, "byClassification": {name: count},
     "topZones": [{"zone": name, "count": count}, ...8 max],
-    "fullyGoverned": int, "partialZoneOnly": int}.
+    "fullyGoverned": int|None, "partialZoneOnly": int|None}.
     """
     body = {
         "class": "FindRequestBody",
@@ -469,7 +862,16 @@ def governed_coverage(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
     }
     if as_of:
         body["asOfTime"] = as_of
-    hits = _find(mgr, body)
+    hits = _all_elements(mgr, body)  # every page; None when it failed or was incomplete (noted)
+    if hits is None:  # unmeasured, not "nothing governed"
+        return {
+            "governedCount": None,
+            "governedCapped": None,
+            "byClassification": {},
+            "topZones": [],
+            "fullyGoverned": None,
+            "partialZoneOnly": None,
+        }
 
     substantive = set(GOVERNANCE_CLASSIFICATIONS) - {"ZoneMembership"}
     by_classification: Dict[str, int] = {}
@@ -492,7 +894,7 @@ def governed_coverage(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
 
     return {
         "governedCount": len(hits),
-        "governedCapped": len(hits) >= DEFAULT_CAP,
+        "governedCapped": False,  # every page was read
         "byClassification": by_classification,
         "topZones": [{"zone": z, "count": c} for z, c in top_zones],
         "fullyGoverned": fully_governed,
@@ -520,7 +922,12 @@ def ownership_coverage(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
     data" is repeatedly named as the foundation for trustworthy AI
     consumption), not a duplicate of governance-classification coverage.
 
-    Returns {"ownershipCount": int, "ownershipCapped": bool,
+    The find is paged until Egeria returns an empty page. If it fails or the
+    scan is incomplete, ownershipCount/ownershipCapped are None (unmeasured, as
+    in governed_coverage) and byOwnerType is empty -- not 0, which read as
+    "nothing owned". `ownershipCapped` is False whenever measured.
+
+    Returns {"ownershipCount": int|None, "ownershipCapped": bool|None,
     "byOwnerType": {typeName: count}}.
     """
     body = {
@@ -533,7 +940,9 @@ def ownership_coverage(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
     }
     if as_of:
         body["asOfTime"] = as_of
-    hits = _find(mgr, body)
+    hits = _all_elements(mgr, body)  # every page; None when it failed or was incomplete (noted)
+    if hits is None:  # unmeasured, not "nothing owned"
+        return {"ownershipCount": None, "ownershipCapped": None, "byOwnerType": {}}
 
     by_owner_type: Dict[str, int] = {}
     for el in hits:
@@ -542,12 +951,14 @@ def ownership_coverage(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
 
     return {
         "ownershipCount": len(hits),
-        "ownershipCapped": len(hits) >= DEFAULT_CAP,
+        "ownershipCapped": False,  # every page was read
         "byOwnerType": by_owner_type,
     }
 
 
-def business_value_signals(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
+@_population_keyword
+def business_value_signals(mgr, as_of: Optional[str] = None,
+                           scope: Optional[str] = SCOPE_REPOSITORY) -> Dict[str, Any]:
     """
     Real signals behind the Overview dashboard's four "Business Value" tiles
     (NEXT-9) -- replaces the four previously-synthetic narrative numbers
@@ -558,57 +969,55 @@ def business_value_signals(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
     it (e.g. "more described assets" is a proxy for self-service findability,
     not a measure of actual query/access frequency).
 
-    A single Asset-hierarchy fetch answers two of the four fields
-    (confidentiality exposure and description coverage -- both are
-    per-element checks on the same fetched set, same "check several signals
-    from one fetch" shape `context_readiness_funnel` already uses).
+    Every field is a native count in one population, `scope` ("repository" by
+    default: the whole repository, including elements the viewer may not be
+    able to see; or "viewer"), so the asset-scoped shares never mix
+    populations:
+
+    - assetTotal: Assets (the supertype, so every subtype).
+    - confidentialCount: Assets carrying Confidentiality.
+    - describedCount: Assets whose `description` is set and not the empty
+      string (`NEQ ""`; a whitespace-only description counts as described).
+    - duplicateCount: elements of any type carrying ConsolidatedDuplicate.
 
     IMPORTANT scoping distinction from `governed_coverage`'s own
     `byClassification["Confidentiality"]`: that number is NOT Asset-scoped
     (any element type carrying the classification counts, per its own
-    documented caveat), whereas `confidentialCount` here IS Asset-scoped by
-    construction (checked only on elements this function's own Asset-
-    hierarchy fetch returned). Confirmed live 2026-08-02 on a real dataset:
-    5 total Confidentiality-classified elements exist, only 1 of which is
-    Asset-typed (a CSVFile; the other 4 are typed `Referenceable`, not under
-    `Asset`) -- the two numbers are both correct, just different
+    documented caveat), whereas `confidentialCount` here IS Asset-scoped
+    (the count names the Asset type). Confirmed live 2026-08-02 on a real
+    dataset: 5 total Confidentiality-classified elements exist, only 1 of
+    which is Asset-typed (a CSVFile; the other 4 are typed `Referenceable`,
+    not under `Asset`) -- the two numbers are both correct, just different
     populations, not a discrepancy to "fix."
 
-    Duplicate detection is a separate classification count. Data Products
-    (Trust & Adoption) is deliberately NOT duplicated here -- callers already
-    have a live `dataProducts` count from `count_elements(mgr, "DigitalProduct", as_of)`
-    elsewhere in the same request; no rating/adoption signal is wired (no
-    `AttachedRating` relationships exist against `DigitalProduct` in a typical
-    demo dataset, confirmed live -- so a rating average is honestly omitted
-    rather than faked).
+    Data Products (Trust & Adoption) is deliberately NOT duplicated here --
+    callers already have a live `dataProducts` count from
+    `count_elements(mgr, "DigitalProduct", as_of)` elsewhere in the same
+    request; no rating/adoption signal is wired (no `AttachedRating`
+    relationships exist against `DigitalProduct` in a typical demo dataset,
+    confirmed live -- so a rating average is honestly omitted rather than
+    faked).
 
-    Returns {"assetTotal": int, "assetCapped": bool, "confidentialCount": int,
-    "describedCount": int, "duplicateCount": int}.
+    These figures used to come from one capped Asset find, so on a catalog
+    over DEFAULT_CAP assets they described the first page only. A count that
+    was not measured is None, never 0. `assetCapped` is kept for callers that
+    read it: False when assetTotal was measured (a native count is
+    complete), None when it was not.
+
+    Returns {"assetTotal": int|None, "assetCapped": bool|None,
+    "confidentialCount": int|None, "describedCount": int|None,
+    "duplicateCount": int|None}.
     """
-    body = {"class": "FindRequestBody", "limitResultsByStatus": ["ACTIVE"],
-            "metadataElementTypeName": "Asset"}
-    if as_of:
-        body["asOfTime"] = as_of
-    assets = _find(mgr, body)
-
-    confidential = 0
-    described = 0
-    for a in assets:
-        if "Confidentiality" in _classifications_of(a):
-            confidential += 1
-        pvm = (a.get("elementProperties") or {}).get("propertyValueMap") or {}
-        desc = (pvm.get("description") or {}).get("primitiveValue")
-        if isinstance(desc, str) and desc.strip():
-            described += 1
-
-    duplicate = count_elements(mgr, None, as_of, classifications=["ConsolidatedDuplicate"])
-
+    total = count_elements(mgr, "Asset", as_of, strict=True, **_pop(scope))
     return {
-        "assetTotal": len(assets),
-        "assetCapped": len(assets) >= DEFAULT_CAP,
-        "confidentialCount": confidential,
-        "describedCount": described,
-        "duplicateCount": duplicate,
+        "assetTotal": total,
+        "assetCapped": None if total is None else False,
+        "confidentialCount": count_elements(mgr, "Asset", as_of, classifications=["Confidentiality"],
+                                            strict=True, **_pop(scope)),
+        "describedCount": count_elements_by_property(mgr, "Asset", "description", "", as_of, strict=True,
+                                                     **_pop(scope), operator="NEQ"),
+        "duplicateCount": count_elements(mgr, None, as_of, classifications=["ConsolidatedDuplicate"],
+                                         strict=True, **_pop(scope)),
     }
 
 
@@ -640,15 +1049,17 @@ def certifications_summary(ce, as_of: Optional[str] = None) -> Dict[str, Any]:
     Returns {"active": int|None, "expiring90": int|None, "soon": [...],
     "licenses": int|None, "exceptions": int|None}. Degrades to Nones on
     failure rather than raising (a demo/dev server may simply have none).
+    The Certification relationships are paged to Egeria's empty page; an
+    incomplete scan leaves active/expiring90 None (with a note), never a count
+    of the first page.
     """
     from datetime import datetime, timezone, timedelta
 
     out: Dict[str, Any] = {"active": None, "expiring90": None, "soon": [], "licenses": None, "exceptions": None}
-    body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
     try:
-        certs = _json_list(ce.get_relationships(relationship_type="Certification",
-                                                output_format="JSON", start_from=0,
-                                                page_size=DEFAULT_CAP, body=body))
+        certs = _all_relationships(ce, "Certification", as_of)  # every page, not the first
+        if certs is None:  # incomplete scan (noted): active/expiring are not measured, not a count of a page
+            raise _ScanIncomplete()
         now = datetime.fromisoformat(as_of.replace("Z", "+00:00")) if as_of else datetime.now(timezone.utc)
         if now.tzinfo is None:
             now = now.replace(tzinfo=timezone.utc)
@@ -669,11 +1080,14 @@ def certifications_summary(ce, as_of: Optional[str] = None) -> Dict[str, Any]:
         out["active"] = len(certs)
         out["expiring90"] = expiring
         out["soon"] = soon[:5]
+    except _ScanIncomplete:
+        pass
     except Exception as exc:  # noqa: BLE001
         logger.debug(f"overview_metrics certifications_summary: query failed: {exc}")
 
-    out["licenses"] = count_relationships(ce, "License", as_of)
-    out["exceptions"] = count_relationships(ce, "Exception", as_of)
+    # One population per payload: active/expiring come from a get_relationships scan (viewer-scoped).
+    out["licenses"] = count_relationships(ce, "License", as_of, population=SCOPE_VIEWER)
+    out["exceptions"] = count_relationships(ce, "Exception", as_of, population=SCOPE_VIEWER)
     return out
 
 
@@ -687,10 +1101,14 @@ def orphan_glossary_terms(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Opt
     much of the catalog is grounded"; this one asks "how much of the
     glossary is idle").
 
-    Same single-bounded-relationship-fetch shape as `contextualised_coverage`
-    (ImplementedBy) -- one `SemanticAssignment` fetch, filtered to the
-    GlossaryTerm-typed end, distinct-GUID count is the "referenced" set;
-    orphan = term total - referenced. Not scoped to "approved" status
+    Same relationship-scan shape as `contextualised_coverage` (ImplementedBy):
+    every `SemanticAssignment` relationship, paged until Egeria returns an
+    empty page, filtered to the GlossaryTerm-typed end; the distinct-GUID count
+    is the "referenced" set; orphan = term total - referenced. An incomplete
+    scan makes referencedCount and orphanCount None (with a note), never a
+    figure from the pages it did read: one 500-relationship page held 8
+    distinct terms live (2026-11-08), all 747 held 77, so a one-page scan
+    reported 1,053 orphans instead of 984. Not scoped to "approved" status
     specifically (Egeria's term status isn't filtered here) -- same
     catalog-wide-not-sub-filtered tradeoff `governedCount` etc. already
     carry, not a new one.
@@ -699,23 +1117,23 @@ def orphan_glossary_terms(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Opt
     "orphanCount": int|None}. Any field is None on total failure for its own
     step (never raises).
     """
-    term_total = count_elements(mgr, "GlossaryTerm", as_of)
+    # One population per payload: this payload's other figures come from a find, which only sees what the
+    # viewer may see, so its native total is counted in the viewer population too (never a repository
+    # total under a viewer numerator).
+    term_total = count_elements(mgr, "GlossaryTerm", as_of, strict=True, population=SCOPE_VIEWER)
 
     referenced_count = None
     try:
-        rel_body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
-        rels = _json_list(ce.get_relationships(
-            relationship_type="SemanticAssignment", output_format="JSON",
-            start_from=0, page_size=max_paging_size, body=rel_body))
+        rels = _all_relationships(ce, "SemanticAssignment", as_of)  # every page: one page is not the set
         term_guids: set = set()
-        for r in rels:
+        for r in rels or []:
             for end_key in ("end1", "end2"):
                 end = (r.get(end_key) or {}) if isinstance(r, dict) else {}
                 end_type = end.get("type") or {}
                 type_names = {end_type.get("typeName")} | set(end_type.get("superTypeNames") or [])
                 if "GlossaryTerm" in type_names and end.get("guid"):
                     term_guids.add(end["guid"])
-        referenced_count = len(term_guids)
+        referenced_count = None if rels is None else len(term_guids)
     except Exception as exc:  # noqa: BLE001
         logger.debug(f"orphan_glossary_terms: SemanticAssignment query failed: {exc}")
 
@@ -740,8 +1158,11 @@ def stale_assets(mgr, as_of: Optional[str] = None, days: int = 180) -> Dict[str,
     anchoring).
 
     Returns {"staleCount": int|None, "assetTotal": int|None}. `staleCount`
-    is None on total failure; `assetTotal` reuses `count_elements` (native,
-    unaffected by this function's own element-fetch cap).
+    is None when the Asset find fails, and None with an `unmeasured` note when
+    the find filled its DEFAULT_CAP page (6.2.28): the page is a sample, not
+    every Asset, so a count of stale ones in it is not the stale count and was
+    shown as 0 beside a not-measured assetTotal. `assetTotal` reuses
+    `count_elements` (native, unaffected by this function's own page).
     """
     from datetime import datetime, timezone, timedelta
 
@@ -754,16 +1175,22 @@ def stale_assets(mgr, as_of: Optional[str] = None, days: int = 180) -> Dict[str,
         body = {"class": "FindRequestBody", "metadataElementTypeName": "Asset", "limitResultsByStatus": ["ACTIVE"]}
         if as_of:
             body["asOfTime"] = as_of
-        elements = _find(mgr, body)
-        stale_count = 0
-        for el in elements:
+        # None when the find failed, and None (with a note) when it filled its page: a page of Assets is
+        # a sample, so a stale count from it is not the stale count -- never 0 beside an unmeasured total.
+        elements = _one_page_or_none(mgr, body, f"Assets not updated within {days} days")
+        stale_count = None if elements is None else 0
+        for el in elements or []:
             updated = _update_time(el)
             if updated is not None and updated < cutoff:
                 stale_count += 1
     except Exception as exc:  # noqa: BLE001
         logger.debug(f"stale_assets: query failed: {exc}")
 
-    return {"staleCount": stale_count, "assetTotal": count_elements(mgr, "Asset", as_of)}
+    # One population per payload: this payload's other figures come from a find, which only sees what the
+    # viewer may see, so its native total is counted in the viewer population too (never a repository
+    # total under a viewer numerator).
+    return {"staleCount": stale_count,
+            "assetTotal": count_elements(mgr, "Asset", as_of, strict=True, population=SCOPE_VIEWER)}
 
 
 def semantic_grounding(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Any]:
@@ -772,10 +1199,15 @@ def semantic_grounding(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Any]:
     asset), as a count and as a percentage of the broad `Asset` supertype
     count -- the "meaning layer" that grounds AI context.
 
+    Both counts are native and in the repository population (the whole
+    repository, including elements the viewer may not be able to see), so the
+    percentage never divides one population by the other. `mgr` is the
+    MetadataExpert the repository relationship count needs.
+
     Returns {"groundingLinks": int|None, "groundingPct": int|None}.
     """
-    cataloged = count_elements(mgr, "Asset", as_of)
-    links = count_relationships(ce, "SemanticAssignment", as_of)
+    cataloged = count_elements(mgr, "Asset", as_of, strict=True, population=SCOPE_REPOSITORY)
+    links = count_relationships(ce, "SemanticAssignment", as_of, expert=mgr, population=SCOPE_REPOSITORY)
     pct = min(100, round(100 * links / cataloged)) if cataloged and links is not None else None
     return {"groundingLinks": links, "groundingPct": pct}
 
@@ -785,11 +1217,14 @@ def context_readiness_funnel(mgr, ce, as_of: Optional[str] = None) -> Dict[str, 
     Context-readiness funnel stages: how much cataloged data becomes
     trustworthy AI context.
 
-    `documented` -- count of `Asset` elements carrying a non-empty
-    `description`, same field-value-check approach `term_definition_completeness`
-    uses for GlossaryTerm (fetches element bodies via `_find`, capped at
-    DEFAULT_CAP -- no native count exists for "has a description", same
-    tradeoff `governed_coverage`'s by-classification breakdown already accepts).
+    Every stage is a native count in the repository population (the whole
+    repository, including elements the viewer may not be able to see), so the
+    stages can be compared without mixing populations.
+
+    `documented` -- count of `Asset` elements whose `description` is set and
+    not the empty string (a native `NEQ ""` property count, the same one
+    `term_definition_completeness` uses; a whitespace-only description counts
+    as documented).
 
     `lineage` -- count of `DataFlow` relationships (design/business lineage --
     literal data-movement edges between assets/processes; distinct from
@@ -812,37 +1247,41 @@ def context_readiness_funnel(mgr, ce, as_of: Optional[str] = None) -> Dict[str, 
     underlying queries yet) -- fold `aiReady` into that work rather than
     faking an approximate number here.
 
-    Returns {"cataloged": int, "documented": int|None, "classified": int,
+    `cataloged` and `classified` are None only when unmeasured (query failed,
+    or the fallback count hit DEFAULT_CAP); a measured 0 is returned as 0.
+
+    Returns {"cataloged": int|None, "documented": int|None, "classified": int|None,
     "lineage": int|None, "aiReady": None}.
     """
-    cataloged = count_elements(mgr, "Asset", as_of)
-    classified = count_elements(mgr, None, as_of, classifications=GOVERNANCE_CLASSIFICATIONS)
-
-    documented = None
-    try:
-        body: Dict[str, Any] = {"class": "FindRequestBody", "limitResultsByStatus": ["ACTIVE"],
-                                 "metadataElementTypeName": "Asset"}
-        if as_of:
-            body["asOfTime"] = as_of
-        assets = _find(mgr, body)
-        documented = 0
-        for a in assets:
-            pvm = (a.get("elementProperties") or {}).get("propertyValueMap") or {}
-            desc = (pvm.get("description") or {}).get("primitiveValue")
-            if isinstance(desc, str) and desc.strip():
-                documented += 1
-    except Exception as exc:  # noqa: BLE001
-        logger.debug(f"context_readiness_funnel: documented query failed: {exc}")
-
-    lineage = count_relationships(ce, "DataFlow", as_of)
+    pop = SCOPE_REPOSITORY
+    cataloged = count_elements(mgr, "Asset", as_of, strict=True, population=pop)
+    classified = count_elements(mgr, None, as_of, classifications=GOVERNANCE_CLASSIFICATIONS, strict=True,
+                                population=pop)
+    documented = count_elements_by_property(mgr, "Asset", "description", "", as_of, strict=True,
+                                            population=pop, operator="NEQ")
+    lineage = count_relationships(ce, "DataFlow", as_of, expert=mgr, population=pop)
 
     return {
-        "cataloged": cataloged or None,
+        "cataloged": cataloged,
         "documented": documented,
-        "classified": classified or None,
+        "classified": classified,
         "lineage": lineage,
         "aiReady": None,
     }
+
+
+def _lineage_guids(ce, as_of: Optional[str], who: str) -> Optional[set]:
+    """GUIDs at either end of any DataFlow relationship (every page), or None when the scan failed or was
+    incomplete (an incomplete one is noted)."""
+    try:
+        rels = _all_relationships(ce, "DataFlow", as_of)
+    except Exception as exc:  # noqa: BLE001
+        logger.debug(f"{who}: DataFlow relationship query failed: {exc}")
+        return None
+    if rels is None:
+        return None
+    return {g for r in rels if isinstance(r, dict) for k in ("end1", "end2")
+            if (g := (r.get(k) or {}).get("guid"))}
 
 
 def ai_ready_assets(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Any]:
@@ -873,35 +1312,36 @@ def ai_ready_assets(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Any]:
     an empty intersection instead of an error, so this was checked against
     live responses before writing the intersection logic, not assumed.
 
-    Same DEFAULT_CAP tradeoff every field-value-check function in this
-    module already accepts (`term_definition_completeness`,
-    `context_readiness_funnel`'s own `documented` stage) -- a floor, not
-    exact, on a catalog larger than DEFAULT_CAP.
+    The Asset find is one DEFAULT_CAP page. When that page is full it is a
+    sample, not the catalog, so aiReadyCount and total are None with an
+    `unmeasured` note and capped is True (6.2.28; it used to report the
+    sample's count). The DataFlow relationships are paged until Egeria returns
+    an empty page.
 
-    Returns {"aiReadyCount": int, "total": int, "capped": bool} -- "total" is
-    the (possibly capped) Asset population actually checked, so a caller can
-    compute a percentage without a separate cataloged-count call.
+    Returns {"aiReadyCount": int|None, "total": int|None, "capped": bool|None}
+    -- "total" is the Asset population checked (every Asset, since a full page
+    is not measured), so a caller can compute a percentage without a separate
+    cataloged-count call. A failed Asset find makes all three None; a failed or
+    incomplete DataFlow scan makes aiReadyCount None (no asset can be shown
+    lineage-traced, which is not the same as none being so) and keeps
+    total/capped.
     """
     body: Dict[str, Any] = {"class": "FindRequestBody", "limitResultsByStatus": ["ACTIVE"],
                              "metadataElementTypeName": "Asset"}
     if as_of:
         body["asOfTime"] = as_of
-    assets = _find(mgr, body)
+    assets = _find_or_none(mgr, body)
+    if assets is None:
+        return {"aiReadyCount": None, "total": None, "capped": None}
+    if len(assets) >= DEFAULT_CAP:
+        # A full page is a sample of the Assets, not all of them: a count from it is not the count.
+        _not_measured("AI-ready Assets", f"the Asset find stopped at its {DEFAULT_CAP}-element page cap, so "
+                                         f"only the first {len(assets)} Assets could be checked", at_least=None)
+        return {"aiReadyCount": None, "total": None, "capped": True}
 
-    lineage_guids: set = set()
-    try:
-        rel_body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
-        rels = _json_list(ce.get_relationships(
-            relationship_type="DataFlow", output_format="JSON",
-            start_from=0, page_size=DEFAULT_CAP, body=rel_body))
-        for r in rels:
-            for end_key in ("end1", "end2"):
-                end = (r.get(end_key) or {}) if isinstance(r, dict) else {}
-                g = end.get("guid")
-                if g:
-                    lineage_guids.add(g)
-    except Exception as exc:  # noqa: BLE001
-        logger.debug(f"ai_ready_assets: lineage relationship query failed: {exc}")
+    lineage_guids = _lineage_guids(ce, as_of, "ai_ready_assets")
+    if lineage_guids is None:
+        return {"aiReadyCount": None, "total": len(assets), "capped": False}
 
     ai_ready = 0
     for a in assets:
@@ -914,7 +1354,7 @@ def ai_ready_assets(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Any]:
         if documented and governed and lineage_traced:
             ai_ready += 1
 
-    return {"aiReadyCount": ai_ready, "total": len(assets), "capped": len(assets) >= DEFAULT_CAP}
+    return {"aiReadyCount": ai_ready, "total": len(assets), "capped": False}
 
 
 # ── Modality tagging (§1.9) ──────────────────────────────────────────────────
@@ -998,8 +1438,12 @@ def drl_readiness_gates(mgr, ce, as_of: Optional[str] = None, recency_days: int 
     recency_days : provisional recency window for "recent" -- not yet a
         decided band threshold, see design doc "Open decisions"
 
-    Returns {"total": int, "capped": bool, "aiReadyCount": int,
-    "aiReadyRecentCount": int, "byModality": {"tabular", "text_media", "other"}}.
+    Returns {"total": int|None, "capped": bool|None, "aiReadyCount": int|None,
+    "aiReadyRecentCount": int|None, "byModality": {"tabular", "text_media", "other"}|None}.
+    A failed Asset find makes every field None; a full Asset page (a sample,
+    not the catalog) makes every field None too, with capped True and an
+    `unmeasured` note (6.2.28); a failed or incomplete DataFlow scan makes
+    aiReadyCount/aiReadyRecentCount None and keeps the rest -- unmeasured, not 0.
     """
     from datetime import datetime, timedelta, timezone
 
@@ -1007,21 +1451,18 @@ def drl_readiness_gates(mgr, ce, as_of: Optional[str] = None, recency_days: int 
                              "metadataElementTypeName": "Asset"}
     if as_of:
         body["asOfTime"] = as_of
-    assets = _find(mgr, body)
+    assets = _find_or_none(mgr, body)
+    if assets is None:
+        return {"total": None, "capped": None, "aiReadyCount": None, "aiReadyRecentCount": None,
+                "byModality": None}
+    if len(assets) >= DEFAULT_CAP:
+        # A full page is a sample of the Assets, not all of them: no figure here may describe it as all.
+        _not_measured("DRL readiness gates", f"the Asset find stopped at its {DEFAULT_CAP}-element page cap, "
+                                             f"so only the first {len(assets)} Assets could be checked")
+        return {"total": None, "capped": True, "aiReadyCount": None, "aiReadyRecentCount": None,
+                "byModality": None}
 
-    lineage_guids: set = set()
-    try:
-        rel_body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
-        rels = _json_list(ce.get_relationships(
-            relationship_type="DataFlow", output_format="JSON",
-            start_from=0, page_size=DEFAULT_CAP, body=rel_body))
-        for r in rels:
-            for end_key in ("end1", "end2"):
-                g = ((r.get(end_key) or {}) if isinstance(r, dict) else {}).get("guid")
-                if g:
-                    lineage_guids.add(g)
-    except Exception as exc:  # noqa: BLE001
-        logger.debug(f"drl_readiness_gates: DataFlow relationship query failed: {exc}")
+    lineage_guids = _lineage_guids(ce, as_of, "drl_readiness_gates")
 
     now = datetime.fromisoformat(as_of.replace("Z", "+00:00")) if as_of else datetime.now(timezone.utc)
     if now.tzinfo is None:
@@ -1039,7 +1480,7 @@ def drl_readiness_gates(mgr, ce, as_of: Optional[str] = None, recency_days: int 
         desc = (pvm.get("description") or {}).get("primitiveValue")
         documented = isinstance(desc, str) and bool(desc.strip())
         governed = bool(_classifications_of(a) & set(GOVERNANCE_CLASSIFICATIONS))
-        lineage_traced = guid in lineage_guids
+        lineage_traced = lineage_guids is not None and guid in lineage_guids
         if not (documented and governed and lineage_traced):
             continue
         ai_ready += 1
@@ -1050,9 +1491,9 @@ def drl_readiness_gates(mgr, ce, as_of: Optional[str] = None, recency_days: int 
 
     return {
         "total": len(assets),
-        "capped": len(assets) >= DEFAULT_CAP,
-        "aiReadyCount": ai_ready,
-        "aiReadyRecentCount": ai_ready_recent,
+        "capped": False,
+        "aiReadyCount": ai_ready if lineage_guids is not None else None,
+        "aiReadyRecentCount": ai_ready_recent if lineage_guids is not None else None,
         "byModality": by_modality,
     }
 
@@ -1071,7 +1512,8 @@ def _update_time(el: dict):
         return None
 
 
-def people_counts(mgr, as_of: Optional[str] = None, strict: bool = False) -> Dict[str, Optional[int]]:
+@_population_keyword
+def people_counts(mgr, as_of: Optional[str] = None, strict: bool = False, scope: Optional[str] = SCOPE_REPOSITORY) -> Dict[str, Optional[int]]:
     """
     Person / Team / Organization / ITProfile / Community counts via native
     element counts (sub-second where an older find-and-bucket approach would
@@ -1080,16 +1522,16 @@ def people_counts(mgr, as_of: Optional[str] = None, strict: bool = False) -> Dic
     filtered set, so totals may differ from an older implementation -- this
     raw count is the authoritative repository count.
 
-    Returns {"persons": int, "teams": int, "organizations": int,
-    "itProfiles": int, "communities": int}. With strict=True, a count that
-    could not be measured is None (see count_elements).
+    Returns {"persons": int|None, "teams": int|None, "organizations": int|None,
+    "itProfiles": int|None, "communities": int|None}. A count that could not be
+    measured is None, never 0 (see count_elements; `strict` changes nothing).
     """
     return {
-        "persons": count_elements(mgr, "Person", as_of, strict=strict),
-        "teams": count_elements(mgr, "Team", as_of, strict=strict),
-        "organizations": count_elements(mgr, "Organization", as_of, strict=strict),
-        "itProfiles": count_elements(mgr, "ITProfile", as_of, strict=strict),
-        "communities": count_elements(mgr, "Community", as_of, strict=strict),
+        "persons": count_elements(mgr, "Person", as_of, strict=strict, **_pop(scope)),
+        "teams": count_elements(mgr, "Team", as_of, strict=strict, **_pop(scope)),
+        "organizations": count_elements(mgr, "Organization", as_of, strict=strict, **_pop(scope)),
+        "itProfiles": count_elements(mgr, "ITProfile", as_of, strict=strict, **_pop(scope)),
+        "communities": count_elements(mgr, "Community", as_of, strict=strict, **_pop(scope)),
     }
 
 
@@ -1102,30 +1544,42 @@ _FEEDBACK_RELATIONSHIP_TYPES = (
 )
 
 
-def feedback_summary(ce, as_of: Optional[str] = None) -> Dict[str, Any]:
+@_population_keyword
+def feedback_summary(ce, as_of: Optional[str] = None, scope: Optional[str] = SCOPE_REPOSITORY, expert=None) -> Dict[str, Any]:
     """
     Crowd-sourced feedback tally -- ratings/comments/likes/tags/note-logs
     (Collaboration OMAS relationship counts). Often sparse in demo data, but
     real.
 
-    Returns {"byType": {ratings, comments, likes, tags, noteLogs}, "total": int}.
+    `scope` (and the MetadataExpert it needs, `expert`) are passed to
+    count_relationships; scope="repository" without `expert` yields None for
+    every type.
+
+    A type whose count failed is None in `byType`; `total` is None unless every
+    type was measured (a partial sum would read as "less feedback").
+
+    Returns {"byType": {ratings, comments, likes, tags, noteLogs: int|None},
+    "total": int|None}.
     """
-    by_type = {key: (count_relationships(ce, rel, as_of) or 0) for rel, key in _FEEDBACK_RELATIONSHIP_TYPES}
-    return {"byType": by_type, "total": sum(by_type.values())}
+    by_type = {key: count_relationships(ce, rel, as_of, expert=expert, **_pop(scope)) for rel, key in _FEEDBACK_RELATIONSHIP_TYPES}
+    measured = all(v is not None for v in by_type.values())
+    return {"byType": by_type, "total": sum(by_type.values()) if measured else None}
 
 
-def usage_context_counts(mgr, as_of: Optional[str] = None, strict: bool = False) -> Dict[str, Optional[int]]:
+@_population_keyword
+def usage_context_counts(mgr, as_of: Optional[str] = None, strict: bool = False, scope: Optional[str] = SCOPE_REPOSITORY) -> Dict[str, Optional[int]]:
     """
     InformationSupplyChain and SolutionBlueprint counts -- what puts assets
     in a *usage context* ("this store feeds the Clinical Trial supply
     chain", "this component realises the Sales blueprint").
 
-    Returns {"informationSupplyChains": int, "blueprints": int}. With
-    strict=True, a count that could not be measured is None (see count_elements).
+    Returns {"informationSupplyChains": int|None, "blueprints": int|None}. A
+    count that could not be measured is None, never 0 (see count_elements;
+    `strict` changes nothing).
     """
     return {
-        "informationSupplyChains": count_elements(mgr, "InformationSupplyChain", as_of, strict=strict),
-        "blueprints": count_elements(mgr, "SolutionBlueprint", as_of, strict=strict),
+        "informationSupplyChains": count_elements(mgr, "InformationSupplyChain", as_of, strict=strict, **_pop(scope)),
+        "blueprints": count_elements(mgr, "SolutionBlueprint", as_of, strict=strict, **_pop(scope)),
     }
 
 
@@ -1159,10 +1613,9 @@ def contextualised_coverage(mgr, ce, as_of: Optional[str] = None) -> Dict[str, O
     counting DataFlow relationships rather than confirming each one sits on
     a path Egeria would call "lineage" in the strict sense).
 
-    Capped at max_paging_size ImplementedBy relationships (matches every
-    other relationship fetch in this module) -- undercounts if a deployment
-    has more, same documented tradeoff as governed_coverage/
-    certifications_summary's own caps.
+    Every ImplementedBy relationship is read, paged until Egeria returns an
+    empty page; an incomplete scan makes contextualisedCount None (with a
+    note), never a count from the pages it did read.
 
     Returns {"contextualisedCount": int|None, "assetTotal": int|None,
     "contextualisedPct": float|None}. Any field is None on total failure for
@@ -1170,10 +1623,9 @@ def contextualised_coverage(mgr, ce, as_of: Optional[str] = None) -> Dict[str, O
     """
     contextualised_count = None
     try:
-        rel_body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
-        rels = _json_list(ce.get_relationships(
-            relationship_type="ImplementedBy", output_format="JSON",
-            start_from=0, page_size=max_paging_size, body=rel_body))
+        rels = _all_relationships(ce, "ImplementedBy", as_of)  # every page; None when incomplete (noted)
+        if rels is None:
+            raise _ScanIncomplete()
         asset_guids: set = set()
         for r in rels:
             for end_key in ("end1", "end2"):
@@ -1183,10 +1635,15 @@ def contextualised_coverage(mgr, ce, as_of: Optional[str] = None) -> Dict[str, O
                 if "Asset" in type_names and end.get("guid"):
                     asset_guids.add(end["guid"])
         contextualised_count = len(asset_guids)
+    except _ScanIncomplete:
+        pass
     except Exception as exc:  # noqa: BLE001
         logger.debug(f"contextualised_coverage: ImplementedBy query failed: {exc}")
 
-    asset_total = count_elements(mgr, "Asset", as_of)
+    # One population per payload: this payload's other figures come from a find, which only sees what the
+    # viewer may see, so its native total is counted in the viewer population too (never a repository
+    # total under a viewer numerator).
+    asset_total = count_elements(mgr, "Asset", as_of, strict=True, population=SCOPE_VIEWER)
 
     pct = None
     if contextualised_count is not None and asset_total:
@@ -1231,14 +1688,16 @@ def solution_component_realisation(mgr, ce, as_of: Optional[str] = None) -> Dict
     int|None}. Either field is None on total failure for its own step (never
     raises).
     """
-    total = count_elements(mgr, "SolutionComponent", as_of)
+    # One population per payload: this payload's other figures come from a find, which only sees what the
+    # viewer may see, so its native total is counted in the viewer population too (never a repository
+    # total under a viewer numerator).
+    total = count_elements(mgr, "SolutionComponent", as_of, strict=True, population=SCOPE_VIEWER)
 
     realised_count = None
     try:
-        rel_body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
-        rels = _json_list(ce.get_relationships(
-            relationship_type="ImplementedBy", output_format="JSON",
-            start_from=0, page_size=max_paging_size, body=rel_body))
+        rels = _all_relationships(ce, "ImplementedBy", as_of)  # every page; None when incomplete (noted)
+        if rels is None:
+            raise _ScanIncomplete()
         component_guids: set = set()
         for r in rels:
             end1 = (r.get("end1") or {}) if isinstance(r, dict) else {}
@@ -1247,6 +1706,8 @@ def solution_component_realisation(mgr, ce, as_of: Optional[str] = None) -> Dict
             if "SolutionComponent" in type_names and end1.get("guid"):
                 component_guids.add(end1["guid"])
         realised_count = len(component_guids)
+    except _ScanIncomplete:
+        pass
     except Exception as exc:  # noqa: BLE001
         logger.debug(f"solution_component_realisation: ImplementedBy query failed: {exc}")
 
@@ -1269,9 +1730,10 @@ def karma_leaderboard(mgr, as_of: Optional[str] = None, top_n: int = 10,
     to the element itself, no relationship traversal needed to know whose
     karma it is.
 
-    One bounded `find_metadata_elements` call (capped at max_paging_size,
-    same discipline as every other fetch in this module) returns every
-    ContributionRecord with properties + classifications attached; this
+    `find_metadata_elements`, paged until Egeria returns an empty page,
+    returns every ContributionRecord with properties + classifications
+    attached (an incomplete scan gives an empty list with an `unmeasured`
+    note, never the top of one page); this
     filters to `anchor_types` (Person only by default -- pass e.g.
     `("Person", "ITProfile")` to include automation/engine contributors too),
     sorts by karmaPoints descending, and returns the top N. Display name is
@@ -1290,9 +1752,12 @@ def karma_leaderboard(mgr, as_of: Optional[str] = None, top_n: int = 10,
                                  "metadataElementTypeName": "ContributionRecord"}
         if as_of:
             body["asOfTime"] = as_of
-        records = _find(mgr, body)
+        # Every page: a top-N from one page is the top of that page, not of everyone.
+        records = _all_elements(mgr, body)
     except Exception as exc:  # noqa: BLE001
         logger.debug(f"karma_leaderboard: find failed: {exc}")
+        return []
+    if records is None:  # failed, or incomplete (noted): no leaderboard rather than a wrong one
         return []
 
     entries: List[Dict[str, Any]] = []
@@ -1347,9 +1812,14 @@ def engagement_series(ce, as_of: Optional[str] = None, weeks: int = 12) -> List[
     a near-flat line with one or two non-zero weeks -- that's the real
     signal, not a rendering bug.
 
-    Returns a list of {"week": "2026-W33", "comments": int, "ratings": int,
-    "likes": int, "tags": int, "noteLogs": int, "total": int}, oldest week
-    first, length == `weeks`. Empty list on total failure (never raises).
+    Each relationship type is read in full, paged until Egeria returns an
+    empty page. A type whose query failed or whose scan was incomplete is None
+    in every week (with an `unmeasured` note), and so is every week's total --
+    never a row of zeros (6.2.28; a failed type used to read as no activity).
+
+    Returns a list of {"week": "2026-W33", "comments": int|None, "ratings":
+    int|None, "likes": int|None, "tags": int|None, "noteLogs": int|None,
+    "total": int|None}, oldest week first, length == `weeks` (never raises).
     """
     from datetime import datetime, timedelta, timezone
 
@@ -1369,14 +1839,16 @@ def engagement_series(ce, as_of: Optional[str] = None, weeks: int = 12) -> List[
     buckets: Dict[str, Dict[str, int]] = {wk: {"comments": 0, "ratings": 0, "likes": 0, "tags": 0, "noteLogs": 0}
                                            for wk in week_keys}
 
+    unmeasured_fields: set = set()
     for rel_type, field in _FEEDBACK_RELATIONSHIP_TYPES_FOR_SERIES:
         try:
-            rel_body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
-            rels = _json_list(ce.get_relationships(
-                relationship_type=rel_type, output_format="JSON",
-                start_from=0, page_size=max_paging_size, body=rel_body))
+            rels = _all_relationships(ce, rel_type, as_of)  # every page; None when incomplete (noted)
         except Exception as exc:  # noqa: BLE001
             logger.debug(f"engagement_series: {rel_type} query failed: {exc}")
+            _not_measured(f"{rel_type} relationships", "the get_relationships query failed")
+            rels = None
+        if rels is None:  # not measured: None in every week, never a row of zeros
+            unmeasured_fields.add(field)
             continue
         for r in rels:
             create_time = (((r.get("relationshipHeader") or {}).get("versions") or {}).get("createTime"))
@@ -1392,8 +1864,8 @@ def engagement_series(ce, as_of: Optional[str] = None, weeks: int = 12) -> List[
 
     series = []
     for wk in week_keys:
-        b = buckets[wk]
-        series.append({"week": wk, **b, "total": sum(b.values())})
+        b: Dict[str, Optional[int]] = {k: (None if k in unmeasured_fields else v) for k, v in buckets[wk].items()}
+        series.append({"week": wk, **b, "total": None if unmeasured_fields else sum(b.values())})
     return series
 
 
@@ -1402,6 +1874,7 @@ def growth_series(
     window: str = "6mo",
     points: Optional[int] = None,
     type_map: Optional[Sequence[Tuple[str, Optional[str], Optional[Sequence[str]]]]] = None,
+    population: str = SCOPE_REPOSITORY,
 ) -> List[Dict[str, Any]]:
     """
     A real growth series -- one snapshot per point, using Egeria's native
@@ -1415,6 +1888,8 @@ def growth_series(
     type_map : what to snapshot at each point, as (series_key, type_name,
         classifications) triples. Defaults to the Overview dashboard's own
         four series: assets/terms/governed/products.
+    population : "repository" (the default: whole-repository native counts,
+        including elements the viewer may not be able to see) or "viewer"
 
     Returns a list of dicts, oldest first, each
     {"label": ..., "date": ..., <series_key>: count, ...}.
@@ -1429,6 +1904,7 @@ def growth_series(
             ("products", "DigitalProduct", None),
         ]
 
+    _push_down(population)  # ValueError for an unknown population, before any count
     span_s, default_pts = WINDOWS.get(window, WINDOWS["6mo"])
     n = points or default_pts
 
@@ -1446,7 +1922,8 @@ def growth_series(
         point = {"label": growth_label(d, span_s), "date": d.strftime(date_fmt)}
         try:
             for key, type_name, classifications in type_map:
-                point[key] = count_elements(mgr, type_name, as_of, classifications=classifications)
+                point[key] = count_elements(mgr, type_name, as_of, classifications=classifications, strict=True,
+                                            **_pop(population))
         except Exception as exc:  # noqa: BLE001
             logger.debug(f"overview_metrics growth_series: snapshot {i} failed: {exc}")
             for key, _, _ in type_map:
@@ -1488,6 +1965,11 @@ def metric_trend(
     Pass both `mgr` and `ce` regardless of what the target function actually
     needs -- only the client parameter names it declares (by leading
     positional parameter named "mgr"/"ce") are bound; the other is unused.
+    `mgr` is an EgeriaTech: a slot the target declares as
+    `egeria_client:EgeriaTech` gets `mgr`, even one named `ce` --
+    feedback_summary and count_relationships count repository relationships
+    through `ce`, which needs MetadataExpert's native count, and a
+    ClassificationExplorer lacks it.
 
     `metric_params` are extra keyword arguments forwarded to the target
     function at every snapshot (e.g. `classifications` for `count_elements`);
@@ -1505,12 +1987,17 @@ def metric_trend(
     func = resolve_report_spec_function(metric_path)
 
     clients = {"mgr": mgr, "ce": ce}
+    from pyegeria.view.analytic_registry import get_analytic_registry  # lazy, as above
+    target = get_analytic_registry().get(metric_path)
+    declared = list(getattr(target, "inputs", None) or [])
     bound_args = []
     for pname, param in inspect.signature(func).parameters.items():
         if pname in _CLIENT_PARAM_NAMES and param.kind in (
             inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD,
         ):
-            bound_args.append(clients[pname])
+            i = len(bound_args)
+            wants_tech = i < len(declared) and declared[i] == "egeria_client:EgeriaTech"
+            bound_args.append(mgr if wants_tech else clients[pname])
         else:
             break
 
@@ -1548,37 +2035,29 @@ def term_definition_completeness(mgr, as_of: Optional[str] = None) -> Dict[str, 
     `semantic_grounding` (which measures term<->asset linkage, not whether
     the term itself is actually defined).
 
-    Unlike `count_elements`'s classification-only filter, "has a
-    description" is a field-value check, so this fetches term bodies (via
-    `_find`, same `FindRequestBody`/`metadataElementTypeName` shape
-    `count_elements` uses) rather than using a native count -- no fast
-    native-count path exists for this, same tradeoff `governed_coverage`
-    accepts for its by-classification breakdown. `description` is read the
-    same way `_zone_names` reads `zoneMembership`: verified live against a
-    running server that `find_metadata_elements` returns raw
-    `elementProperties.propertyValueMap.description.primitiveValue`, not a
-    flat `properties.description` (that flatter shape belongs to the
-    output_format='JSON' relationship/report path other functions here use,
-    e.g. `certifications_summary`'s `end2`, not this raw element-query path).
+    Both numbers are native counts in the repository population (the whole
+    repository, including terms the viewer may not be able to see), so the
+    ratio never divides a viewer-scoped numerator by a repository total:
+    `total` counts GlossaryTerms, `defined` those whose `description` is set
+    and not the empty string (`NEQ ""`). A whitespace-only description counts
+    as defined -- Egeria's LIKE (regex) condition counted 0 for every pattern
+    tried live (2026-11-08), so "not blank" cannot be counted natively; live,
+    9 of 1061 terms differ. This used to scan one page of terms, so on a
+    glossary over DEFAULT_CAP terms the total was the page size, not the total.
 
-    Returns {"total": int, "defined": int, "undefinedPct": int|None}
+    Returns {"total": int|None, "defined": int|None, "undefinedPct": int|None}
     (`undefinedPct` mirrors `semantic_grounding.groundingPct`'s naming: the
     gap, not the coverage, since a near-100%-defined glossary is the
-    uninteresting case and the gap is what's actionable).
+    uninteresting case and the gap is what's actionable). A count that was not
+    measured is None, and so is the percentage -- unmeasured, not an empty
+    glossary.
     """
-    body: Dict[str, Any] = {"class": "FindRequestBody", "limitResultsByStatus": ["ACTIVE"],
-                             "metadataElementTypeName": "GlossaryTerm"}
-    if as_of:
-        body["asOfTime"] = as_of
-    terms = _find(mgr, body)
-    total = len(terms)
-    defined = 0
-    for t in terms:
-        pvm = (t.get("elementProperties") or {}).get("propertyValueMap") or {}
-        desc = (pvm.get("description") or {}).get("primitiveValue")
-        if isinstance(desc, str) and desc.strip():
-            defined += 1
-    undefined_pct = round(100 * (total - defined) / total) if total else None
+    pop = SCOPE_REPOSITORY
+    total = count_elements(mgr, "GlossaryTerm", as_of, strict=True, population=pop)
+    defined = count_elements_by_property(mgr, "GlossaryTerm", "description", "", as_of, strict=True,
+                                         population=pop, operator="NEQ")
+    undefined_pct = (round(100 * (total - defined) / total)
+                     if total and defined is not None else None)
     return {"total": total, "defined": defined, "undefinedPct": undefined_pct}
 
 
@@ -1605,29 +2084,39 @@ def active_contributors(ce, as_of: Optional[str] = None) -> Dict[str, Any]:
     noteLogs}} where byType is the distinct-username count per relationship
     type (one person active in two types counts once in "contributors" but
     once per type in byType).
-    """
-    body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
 
+    Each type is read in full, paged until Egeria returns an empty page. A
+    type whose query failed or whose scan was incomplete is None in byType,
+    and `contributors` is None unless every type was read -- a partial union would read as fewer people,
+    the same rule feedback_summary's `total` follows.
+    """
     def _actor_usernames(rel_type: str) -> set:
-        rels = _json_list(ce.get_relationships(
-            relationship_type=rel_type, output_format="JSON",
-            start_from=0, page_size=DEFAULT_CAP, body=body))
+        rels = _all_relationships(ce, rel_type, as_of)  # every page; None when incomplete (noted)
+        if rels is None:
+            raise _ScanIncomplete()
         return {
             u for rel in rels
             if (u := (rel.get("relationshipHeader") or {}).get("versions", {}).get("createdBy"))
         }
 
-    by_type: Dict[str, int] = {}
+    by_type: Dict[str, Optional[int]] = {}
     all_users: set = set()
+    measured = True
     for rel_type, key in _FEEDBACK_RELATIONSHIP_TYPES:
         try:
             users = _actor_usernames(rel_type)
+        except _ScanIncomplete:
+            by_type[key] = None
+            measured = False
+            continue
         except Exception as exc:  # noqa: BLE001
             logger.debug(f"overview_metrics active_contributors: {rel_type} failed: {exc}")
-            users = set()
+            by_type[key] = None
+            measured = False
+            continue
         by_type[key] = len(users)
         all_users |= users
-    return {"contributors": len(all_users), "byType": by_type}
+    return {"contributors": len(all_users) if measured else None, "byType": by_type}
 
 
 def control_implementation_summary(client, soa_guid: str) -> Dict[str, int]:
@@ -1650,3 +2139,361 @@ def control_implementation_summary(client, soa_guid: str) -> Dict[str, int]:
     dict -- {status: count}, one key per ControlImplementationStatus value
     """
     return client.get_control_implementation_summary(soa_guid)["byStatus"]
+
+
+# ── Asset composition (RS-W1-4): the Asset subtype tree, counted in two scopes ──
+#
+# One routine today, opaque to the executor (as the reporting model's §7 allows).
+# In the reporting model's §10.8 words it is four stages, so step (a'') can split
+# it later without changing what it returns:
+#   1. a `typedefs` producer   -- asset_subtype_tree(): the subtype tree under root;
+#   2. a per-row `derive`      -- each row counted in viewer scope;
+#   3. a per-row `derive`      -- each row counted in repository scope;
+#   4. a `difference`          -- not_visible = repository - viewer per row, and each
+#                                 parent's `other` row = parent - sum(children).
+
+#: The cell's word for which population was counted ("viewer" | "repository"). The
+#: owner chose `population` (RS-W1-1 §5). The keywords are `populations=` (asset_composition) and
+#: `population=` (the count helpers); `scopes=` / `scope=` remain as deprecated aliases.
+POPULATION_WORD = "population"
+
+#: Cell and row states. A 0 is nothing_found; a failure is not_measured, never 0.
+CELL_MEASURED = "measured"
+CELL_NOTHING_FOUND = "nothing_found"
+CELL_NOT_MEASURED = "not_measured"
+_ESTABLISHED = (CELL_MEASURED, CELL_NOTHING_FOUND)
+
+#: Completeness of an established cell, per population: a repository count is the
+#: whole repository; a viewer count is what one person's client may see, which the
+#: routine cannot judge complete (RS-W1-1 §5 default under a person's client).
+_COMPLETENESS = {SCOPE_REPOSITORY: "complete", SCOPE_VIEWER: "unknown"}
+
+#: Concurrency is a performance parameter below Egeria's database pool (10
+#: connections): the default leaves room for other users; the cap is never exceeded.
+COMPOSITION_DEFAULT_CONCURRENCY = 3
+COMPOSITION_MAX_CONCURRENCY = 5
+
+
+class CompositionCell(TypedDict, total=False):
+    """One count of one row in one population."""
+    value: Optional[int]       # None unless state is measured or nothing_found
+    state: str                 # measured | nothing_found | not_measured
+    completeness: str          # complete (repository) | unknown (viewer, or not measured)
+    as_of: str                 # when the count is of: the requested as_of, else the run time
+    population: str            # viewer | repository (POPULATION_WORD)
+    reason: str                # why not measured; "" when established
+    elapsed_s: Optional[float] # wall time of this count; None for a derived (`other`) cell
+
+
+class AssetCompositionRow(TypedDict, total=False):
+    """One type in the subtype tree. `viewer` / `repository` are present for each requested scope."""
+    type_name: str
+    parent: Optional[str]      # None for the root row
+    level: int                 # 0 = root, 1 = its direct subtypes, ...
+    exact_type: bool           # True on an `other` row: elements typed as exactly `parent`
+    subtypes_error: Optional[str]  # set when this type's subtypes could not be read
+    viewer: CompositionCell
+    repository: CompositionCell
+    not_visible: Dict[str, Any]  # {value, state, reason}: repository - viewer
+
+
+class AssetComposition(TypedDict, total=False):
+    """asset_composition()'s result: the rows plus the envelope executors read."""
+    state: str                 # measured | nothing_found | not_established
+    state_reason: str          # lists the cells that were not measured
+    root: str
+    depth: int
+    scopes: List[str]
+    as_of: str
+    concurrency: int
+    rows: List[AssetCompositionRow]
+    not_measured: List[str]    # "<type_name>/<population>" for each failed count
+    provenance: Dict[str, Any]  # pyegeria version, platform, server, run time, elapsed
+
+
+def _typedef_names(result, parent: str) -> List[str]:
+    """Direct subtype names from a get_sub_types result. A null/"no elements" result is
+    no subtypes. A TypeDef whose superType names another type is skipped, in case a
+    server answers with every descendant rather than the direct children."""
+    if isinstance(result, dict):
+        result = result.get("typeDefs", result.get("typeDefList"))
+    if not isinstance(result, list):
+        return []
+    names = []
+    for td in result:
+        if not isinstance(td, dict) or not td.get("name"):
+            continue
+        sup = td.get("superType")
+        sup_name = sup.get("name") if isinstance(sup, dict) else None
+        if sup_name and sup_name != parent:
+            continue
+        names.append(td["name"])
+    return sorted(set(names))
+
+
+def asset_subtype_tree(vm, root: str = "Asset", depth: int = 2) -> List[Dict[str, Any]]:
+    """
+    The subtype tree under `root` to `depth`, breadth-first, from
+    `ValidMetadataManager.get_sub_types` (one call per expanded node).
+
+    Rows: {type_name, parent, level, exact_type, subtypes_error}. The root is level 0;
+    its direct subtypes are level 1. After the children of each parent comes one
+    `other` row (type_name = parent, level = the children's level, exact_type=True)
+    for elements typed as exactly the parent -- an "other" row shows rather than hides.
+
+    A null result is "no subtypes", not an error. A call that raises sets the node's
+    `subtypes_error` (its children are unknown, so it gets no `other` row) and the
+    walk carries on.
+    """
+    if depth < 0:
+        raise ValueError(f"depth must be >= 0; got {depth!r}")
+    rows: List[Dict[str, Any]] = [
+        {"type_name": root, "parent": None, "level": 0, "exact_type": False, "subtypes_error": None}]
+    frontier = [rows[0]]
+    for level in range(1, depth + 1):
+        next_frontier = []
+        for node in frontier:
+            try:
+                children = _typedef_names(vm.get_sub_types(node["type_name"]), node["type_name"])
+            except Exception as exc:  # noqa: BLE001 -- recorded on the row, never a silent leaf
+                node["subtypes_error"] = f"subtypes of {node['type_name']} could not be read: {exc}"
+                logger.warning(f"overview_metrics asset_subtype_tree: {node['subtypes_error']}")
+                continue
+            if not children:
+                continue
+            for name in children:
+                row = {"type_name": name, "parent": node["type_name"], "level": level,
+                       "exact_type": False, "subtypes_error": None}
+                rows.append(row)
+                next_frontier.append(row)
+            rows.append({"type_name": node["type_name"], "parent": node["type_name"], "level": level,
+                         "exact_type": True, "subtypes_error": None})
+        frontier = next_frontier
+    return rows
+
+
+def _pyegeria_version() -> str:
+    try:
+        from importlib.metadata import version
+        return version("pyegeria")
+    except Exception:  # noqa: BLE001
+        return "unknown"
+
+
+def _count_cell(mgr, type_name: str, as_of: Optional[str], scope: str, stamp: str) -> Dict[str, Any]:
+    """One strict count, as a cell. A 0 is nothing_found; None or an exception is not_measured."""
+    started = time.monotonic()
+    reason = ""
+    try:
+        with recording_unmeasured() as notes:
+            value = count_elements(mgr, type_name, as_of, strict=True, **_pop(scope))
+        if value is None:
+            reason = (f"the {scope} count of {type_name} could not be measured: "
+                      + ("; ".join(n["reason"] for n in notes) if notes
+                         else "query failed, native count unavailable, or the fallback hit its cap"))
+    except Exception as exc:  # noqa: BLE001 -- the exception's words become the reason
+        value = None
+        reason = f"the {scope} count of {type_name} failed: {exc}"
+    elapsed = round(time.monotonic() - started, 3)
+    if value is None:
+        state = CELL_NOT_MEASURED
+    else:
+        state = CELL_MEASURED if value > 0 else CELL_NOTHING_FOUND
+    return {"value": value, "state": state,
+            "completeness": _COMPLETENESS[scope] if state in _ESTABLISHED else "unknown",
+            "as_of": stamp, POPULATION_WORD: scope, "reason": reason, "elapsed_s": elapsed}
+
+
+def _derived_cell(value: Optional[int], reason: str, scope: str, stamp: str) -> Dict[str, Any]:
+    if value is None:
+        state = CELL_NOT_MEASURED
+    else:
+        state = CELL_MEASURED if value > 0 else CELL_NOTHING_FOUND
+    return {"value": value, "state": state,
+            "completeness": _COMPLETENESS[scope] if state in _ESTABLISHED else "unknown",
+            "as_of": stamp, POPULATION_WORD: scope, "reason": reason, "elapsed_s": None}
+
+
+def _other_cell(parent_cell: Optional[Dict[str, Any]], child_cells: List[Dict[str, Any]],
+                scope: str, stamp: str) -> Dict[str, Any]:
+    """parent - sum(children), only when the parent and every child are established."""
+    if parent_cell is None or parent_cell["state"] not in _ESTABLISHED:
+        return _derived_cell(None, "the parent count is missing", scope, stamp)
+    if any(c["state"] not in _ESTABLISHED for c in child_cells):
+        return _derived_cell(None, "a child count is missing", scope, stamp)
+    rest = parent_cell["value"] - sum(c["value"] for c in child_cells)
+    if rest < 0:
+        return _derived_cell(None, "the children's counts exceed the parent's "
+                                   "(counts taken at different moments)", scope, stamp)
+    return _derived_cell(rest, "", scope, stamp)
+
+
+def _not_visible(row: Dict[str, Any]) -> Dict[str, Any]:
+    """repository - viewer, only when both cells are established."""
+    viewer, repo = row.get(SCOPE_VIEWER), row.get(SCOPE_REPOSITORY)
+    if viewer is None or repo is None:
+        return {"value": None, "state": CELL_NOT_MEASURED, "reason": "needs both scopes"}
+    if viewer["state"] not in _ESTABLISHED or repo["state"] not in _ESTABLISHED:
+        return {"value": None, "state": CELL_NOT_MEASURED, "reason": "needs both scopes measured"}
+    diff = repo["value"] - viewer["value"]
+    if diff < 0:
+        return {"value": None, "state": CELL_NOT_MEASURED,
+                "reason": "the viewer count exceeds the repository count (counts taken at different moments)"}
+    return {"value": diff, "state": CELL_MEASURED if diff > 0 else CELL_NOTHING_FOUND, "reason": ""}
+
+
+def asset_composition(
+    mgr,
+    vm=None,
+    root: str = "Asset",
+    depth: int = 2,
+    as_of: Optional[str] = None,
+    scopes: Optional[Sequence[str]] = None,
+    concurrency: int = COMPOSITION_DEFAULT_CONCURRENCY,
+    strict: bool = True,
+    *,
+    populations: Optional[Sequence[str]] = None,
+) -> Dict[str, Any]:
+    """
+    The composition of `root` by subtype: one row per type in the subtype tree to
+    `depth`, each counted in every requested scope, with an `other` row per parent
+    and `not_visible` = repository - viewer.
+
+    Stages, in the reporting model's §10.8 words (one opaque routine today; step
+    (a'') can split it along these lines): a `typedefs` producer
+    (asset_subtype_tree), two per-row `derive`s (the viewer count and the
+    repository count, via count_elements(..., strict=True, scope=...)), and a
+    `difference` (not_visible per row; each `other` row = parent - sum(children),
+    only when every child count is established in that scope).
+
+    Every count, in both scopes, goes through ONE ThreadPoolExecutor of
+    `concurrency` workers, so `concurrency` is the real number of counts in flight
+    against Egeria. The default is 3; above COMPOSITION_MAX_CONCURRENCY (5) it is
+    lowered to 5, because Egeria's database pool is 10 connections and one sheet
+    must not starve other users.
+
+    Cells (see CompositionCell): `value`, `state` (a 0 is nothing_found; a failed
+    count is not_measured with the failure's words in `reason`, never 0),
+    `completeness` (repository "complete", viewer "unknown"), `as_of`,
+    `population` ("viewer" | "repository"), `reason`, `elapsed_s` (a viewer
+    `Process` count can take minutes; the page can say which cell was slow).
+
+    Parameters
+    ----------
+    mgr : MetadataExpert (or EgeriaTech) -- counts elements
+    vm : ValidMetadataManager -- reads the subtype tree. None (the default) uses
+        `mgr`, which works when mgr is an EgeriaTech; the report-spec executor binds
+        only clients named mgr/ce/expert/client, so it relies on this default.
+    root : the type whose subtypes are counted
+    depth : how many subtype levels below root (0 = root only)
+    as_of : ISO-8601 asOfTime for point-in-time counts (None = now). The subtype
+        tree is always today's.
+    populations : any of "viewer", "repository" -- the populations to count; each cell
+        names its population under `population`. `scopes=` is a deprecated alias.
+    concurrency : counts in flight at once, 1..5 (default 3)
+    strict : must be True -- the routine never turns a failure into a 0
+
+    Returns
+    -------
+    AssetComposition -- {state, state_reason, root, depth, scopes, as_of,
+    concurrency, rows, not_measured, provenance}. `state` is measured when any
+    cell is measured, nothing_found when every established cell is 0, else
+    not_established.
+    """
+    if not strict:
+        raise ValueError("asset_composition always counts strictly: a failed count is not_measured, never 0")
+    if scopes is not None:
+        if populations is not None and list(populations) != list(scopes):
+            raise ValueError("asset_composition: populations= and scopes= disagree; pass populations= only")
+        if populations is None:
+            warnings.warn("asset_composition(scopes=...) is deprecated; use populations=",
+                          DeprecationWarning, stacklevel=2)
+            populations = scopes
+    if populations is None:
+        populations = (SCOPE_VIEWER, SCOPE_REPOSITORY)
+    scopes = populations
+    wanted: List[str] = []
+    for s in scopes:
+        _push_down(s)  # ValueError for an unknown scope
+        if s is None:
+            raise ValueError("scopes must name 'viewer' and/or 'repository'")
+        if s not in wanted:
+            wanted.append(s)
+    if not wanted:
+        raise ValueError("scopes must name 'viewer' and/or 'repository'")
+    if not isinstance(concurrency, int) or concurrency < 1:
+        raise ValueError(f"concurrency must be a positive int; got {concurrency!r}")
+    if concurrency > COMPOSITION_MAX_CONCURRENCY:
+        logger.warning(f"overview_metrics asset_composition: concurrency {concurrency} lowered to the cap "
+                       f"{COMPOSITION_MAX_CONCURRENCY} (Egeria's database pool is 10 connections)")
+        concurrency = COMPOSITION_MAX_CONCURRENCY
+
+    from datetime import datetime, timezone
+    run_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    stamp = as_of or run_at
+    started = time.monotonic()
+
+    rows = asset_subtype_tree(mgr if vm is None else vm, root=root, depth=depth)
+
+    # Each distinct type is counted once per scope; an `other` row reuses its parent's count.
+    type_names: List[str] = []
+    for row in rows:
+        if not row["exact_type"] and row["type_name"] not in type_names:
+            type_names.append(row["type_name"])
+    cells: Dict[Tuple[str, str], Dict[str, Any]] = {}
+    with ThreadPoolExecutor(max_workers=concurrency, thread_name_prefix="asset-composition") as pool:
+        futures = {pool.submit(_count_cell, mgr, t, as_of, s, stamp): (t, s)
+                   for s in wanted for t in type_names}
+        for fut in as_completed(futures):
+            cells[futures[fut]] = fut.result()
+
+    for row in rows:
+        if row["exact_type"]:
+            continue
+        for s in wanted:
+            row[s] = dict(cells[(row["type_name"], s)])
+    for row in rows:
+        if not row["exact_type"]:
+            continue
+        parent = row["type_name"]
+        parent_row = next(r for r in rows if r["type_name"] == parent and not r["exact_type"])
+        children = [r for r in rows if r["parent"] == parent and not r["exact_type"]]
+        for s in wanted:
+            row[s] = _other_cell(parent_row.get(s), [c[s] for c in children], s, stamp)
+    for row in rows:
+        row["not_visible"] = _not_visible(row)
+
+    all_cells = [row[s] for row in rows for s in wanted]
+    failed = [f"{t}/{s}" for s in wanted for t in type_names if cells[(t, s)]["state"] == CELL_NOT_MEASURED]
+    tree_errors = [r["subtypes_error"] for r in rows if r["subtypes_error"]]
+    if any(c["state"] == CELL_MEASURED for c in all_cells):
+        state = "measured"
+    elif any(c["state"] == CELL_NOTHING_FOUND for c in all_cells):
+        state = "nothing_found"
+    else:
+        state = "not_established"
+    reasons = []
+    if failed:
+        reasons.append("not measured: " + ", ".join(failed))
+    reasons.extend(tree_errors)
+
+    return {
+        "state": state,
+        "state_reason": "; ".join(reasons),
+        "root": root,
+        "depth": depth,
+        "populations": wanted,
+        "scopes": wanted,  # deprecated key, same value as "populations"
+        "as_of": stamp,
+        "concurrency": concurrency,
+        "rows": rows,
+        "not_measured": failed,
+        "provenance": {
+            "pyegeria_version": _pyegeria_version(),
+            "platform": getattr(mgr, "platform_url", None),
+            "server": getattr(mgr, "view_server", None),
+            "run_at": run_at,
+            "as_of_requested": as_of,
+            "elapsed_s": round(time.monotonic() - started, 3),
+        },
+    }

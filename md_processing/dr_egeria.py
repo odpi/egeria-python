@@ -41,7 +41,7 @@ from md_processing.v2 import (
     ViewProcessor, ActorManagerProcessor, ActorManagerLinkProcessor,
     ActionProcessStepLinkProcessor, ActionExecutorTargetLinkProcessor,
     CreateDashboardSheetProcessor, LinkReportToDashboardSheetProcessor,
-    AddTextOnDashboardSheetProcessor, ReportProcessor,
+    AddTextOnDashboardSheetProcessor, ReportProcessor, DashboardProcessor,
     StatementOfApplicabilityProcessor, ControlApplicabilityLinkProcessor,
     SurveyReportProcessor, SecurityFindingProcessor,
     SavedQueryProcessor, SmartQueryLinkProcessor,
@@ -336,13 +336,17 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
     reg("Create Data Value Specification", DataValueSpecificationProcessor)
     reg("Update Data Value Specification", DataValueSpecificationProcessor)
     reg("Create Data Grain", DataGrainProcessor)
+    reg("Create Measurement Specification", DataValueSpecificationProcessor)
+    reg("Update Measurement Specification", DataValueSpecificationProcessor)
     # Relationship commands: one table-driven processor keyed by OM_TYPE
     # (DATA_DESIGNER_LINKS). Each reg() also routes the Detach/Unlink/Remove
     # phrasings, which the processor branches on.
     for link_command in ("Link Data Field", "Link Data Field to Data Structure", "Link Nested Data Field",
                          "Link Schema Attribute Definition", "Link Schema Type Definition",
                          "Link Data Value Definition", "Link Data Value Composition",
-                         "Link Data Class Composition", "Link Certification Type to Data Structure"):
+                         "Link Data Class Composition", "Link Certification Type to Data Structure",
+                         "Link Basis Data Field", "Link As Of Data Field",
+                         "Link Report Type Instance", "Link Report Run Of"):
         reg(link_command, DataDesignerLinkProcessor)
     reg("Classify Data Field as Primary Key", DataFieldPrimaryKeyProcessor)
     reg("Declassify Data Field as Primary Key", DataFieldPrimaryKeyProcessor)
@@ -449,6 +453,9 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
     reg("Create Schema Type From Template", SchemaTemplateProcessor)
     reg("Create Schema Attribute", SchemaElementProcessor)
     reg("Update Schema Attribute", SchemaElementProcessor)
+    for _noun in ("Display Data Container", "Display Data Field"):
+        reg(f"Create {_noun}", SchemaElementProcessor)
+        reg(f"Update {_noun}", SchemaElementProcessor)
     reg("Create Schema Attribute From Template", SchemaTemplateProcessor)
     for _noun in ("Nested Schema Attribute", "Attribute for Schema", "Foreign Key",
                   "External Schema Type", "Map From Schema Type", "Map To Schema Type",
@@ -478,6 +485,8 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
     reg("View Report", ViewProcessor)
     reg("Create Report", ReportProcessor)
     reg("Update Report", ReportProcessor)
+    reg("Create Dashboard", DashboardProcessor)
+    reg("Update Dashboard", DashboardProcessor)
 
     # Security Officer -- statements of applicability (Egeria 6.3)
     reg("Create Statement of Applicability", StatementOfApplicabilityProcessor)

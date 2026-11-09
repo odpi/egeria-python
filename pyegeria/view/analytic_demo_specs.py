@@ -85,7 +85,7 @@ _DEMOS: Dict[str, FormatSet] = {
         heading="Element Count by Type",
         what="Counts active GlossaryTerm elements.",
         analytic_function_name="count_elements",
-        demo_params={"type_name": "GlossaryTerm"},
+        demo_params={"type_name": "GlossaryTerm", "strict": True},
         result_shape="scalar (int)",
     ),
     "Analytic Demo - Assets by Type Breakdown": _demo(
@@ -96,7 +96,7 @@ _DEMOS: Dict[str, FormatSet] = {
         demo_params={"type_map": [
             ["Data Stores", "DataStore"], ["Data Sets", "DataSet"],
             ["Software Components", "DeployedSoftwareComponent"],
-        ]},
+        ], "strict": True},
         result_shape="list[dict] ({label, type, count})",
         chart_types=["BAR", "PIE"],
     ),
@@ -104,8 +104,8 @@ _DEMOS: Dict[str, FormatSet] = {
         heading="Ownership Coverage",
         what="Count of elements carrying an Ownership classification -- NOT a percentage, same "
              "caveat as Governance Coverage (no cheap total-elements denominator yet). "
-             "ownershipCapped=true means the query hit its result-page cap (DEFAULT_CAP), so "
-             "ownershipCount is a floor, not exact, when true. byOwnerType is a nested breakdown "
+             "The find is paged until Egeria returns an empty page, so ownershipCount is every owned "
+             "element (ownershipCapped is false when measured; an incomplete scan is not measured). byOwnerType is a nested breakdown "
              "of the same ownershipCount elements by the owner's type (Person, Team, "
              "SolutionActorRole, ...) -- pick BAR below for a chart of byOwnerType.",
         analytic_function_name="ownership_coverage",
@@ -116,10 +116,10 @@ _DEMOS: Dict[str, FormatSet] = {
     "Analytic Demo - Business Value Signals": _demo(
         heading="Business Value Signals",
         what="Real signals behind the Overview dashboard's four Business Value tiles "
-             "(NEXT-9): confidentialCount and describedCount come from a single "
-             "Asset-hierarchy fetch (assetTotal is that fetch's size, assetCapped=true "
-             "if it hit DEFAULT_CAP); duplicateCount is a separate ConsolidatedDuplicate "
-             "classification count. Each is a documented proxy, not a direct measure -- "
+             "(NEXT-9): assetTotal, confidentialCount (Assets classified Confidentiality), "
+             "describedCount (Assets whose description is set and not empty) and duplicateCount "
+             "(ConsolidatedDuplicate elements) are native counts over the whole repository, "
+             "including elements the viewer may not be able to see. Each is a documented proxy, not a direct measure -- "
              "see business_value_signals()'s docstring for the causal-claim caveat that "
              "belongs with each field before treating it as more than that.",
         analytic_function_name="business_value_signals",
@@ -132,8 +132,8 @@ _DEMOS: Dict[str, FormatSet] = {
         what="Count of elements carrying at least one governance classification "
              "(ZoneMembership/Confidentiality/Criticality/Impact/Retention) -- NOT a percentage "
              "despite 'coverage' in the name (there's no cheap total-elements denominator to "
-             "divide by yet). governedCapped=true means the query hit its result-page cap "
-             "(DEFAULT_CAP), so governedCount is a floor, not exact, when true. byClassification "
+             "divide by yet). The find is paged until Egeria returns an empty page, so governedCount "
+             "is every governed element (governedCapped is false when measured). byClassification "
              "and topZones are nested breakdowns of the same governedCount elements -- pick BAR "
              "below for a chart of byClassification.",
         analytic_function_name="governed_coverage",
@@ -156,7 +156,7 @@ _DEMOS: Dict[str, FormatSet] = {
         heading="People & Community Counts",
         what="Counts of Person/Team/Organization/ITProfile/Community actor profiles.",
         analytic_function_name="people_counts",
-        demo_params={},
+        demo_params={"strict": True},
         result_shape="dict (persons, teams, organizations, itProfiles, communities)",
         chart_types=["BAR", "PIE"],
     ),
@@ -175,13 +175,14 @@ _DEMOS: Dict[str, FormatSet] = {
         what="InformationSupplyChain and SolutionBlueprint counts -- the two structures that put "
              "assets in a business usage context (supply chain membership, blueprint realization).",
         analytic_function_name="usage_context_counts",
-        demo_params={},
+        demo_params={"strict": True},
         result_shape="dict (informationSupplyChains, blueprints)",
     ),
     "Analytic Demo - Semantic Grounding": _demo(
         heading="Semantic Grounding Coverage",
         what="groundingLinks = count of SemanticAssignment relationships (term<->asset). "
-             "groundingPct = that count as a percent of the broad Asset supertype count "
+             "groundingPct = that count as a percent of the broad Asset supertype count; both are "
+             "native counts over the whole repository, including elements the viewer may not see "
              "(i.e. 'percent of Assets' as the denominator, capped at 100 -- an asset with "
              "multiple assignments can push the raw ratio over 100%, which is why it's capped, "
              "not because grounding coverage is literally bounded there). A per-asset detail "
@@ -193,12 +194,13 @@ _DEMOS: Dict[str, FormatSet] = {
     ),
     "Analytic Demo - AI Context Readiness": _demo(
         heading="AI Context Readiness Funnel",
-        what="'cataloged' (Asset supertype count), 'documented' (Assets with a non-empty "
-             "description, capped at DEFAULT_CAP -- a floor, not exact, on a large catalog), "
+        what="'cataloged' (Asset supertype count), 'documented' (Assets whose description is "
+             "set and not empty), "
              "'classified' (elements matching ANY of the same governance classifications "
              "governed_coverage uses), and 'lineage' (count of DataFlow relationships -- design/ "
-             "business lineage, distinct from OpenLineage's operational lineage) are all computed "
-             "as of 2026-08-01. 'aiReady' stays None from this function ALWAYS, by design -- these "
+             "business lineage, distinct from OpenLineage's operational lineage) are all native counts "
+             "over the whole repository (including elements the viewer may not be able to see), "
+             "computed as of 2026-08-01. 'aiReady' stays None from this function ALWAYS, by design -- these "
              "four are independent counts, not a per-asset check, so they can't answer 'how many "
              "assets are ALL of these at once'. See 'Analytic Demo - AI-Ready Assets' (below) for "
              "that -- a genuinely different function, not a missing field on this one.",
@@ -210,13 +212,14 @@ _DEMOS: Dict[str, FormatSet] = {
         heading="AI-Ready Assets (Composite)",
         what="The actual per-asset intersection context_readiness_funnel's 'aiReady' field can't "
              "give you: Asset elements that are governed AND documented AND lineage-traced, all "
-             "three, checked per element from a single capped Asset fetch plus one DataFlow "
-             "relationship query (not three separate counts intersected client-side after the "
+             "three, checked per element from one Asset find page plus every DataFlow "
+             "relationship (not three separate counts intersected client-side after the "
              "fact -- see the function's own docstring for the exact field-name gotchas this hit "
              "while being built, e.g. find_metadata_elements results key their GUID as "
              "'elementGUID' but a relationship end's GUID is plain 'guid'). 'total' is the "
-             "(possibly capped) Asset population actually checked -- divide aiReadyCount by total "
-             "for a percentage, don't assume it's the full catalog. First worked example of the "
+             "Asset population checked. A full Asset page is a sample, not the catalog, so then "
+             "nothing is measured (capped=true, with a note); otherwise divide aiReadyCount by "
+             "total for a percentage. First worked example of the "
              "composite/derived analytic metric pattern NEXT-18 (egeria-workspaces BACKLOG.md) "
              "flagged as missing.",
         analytic_function_name="ai_ready_assets",
@@ -226,7 +229,8 @@ _DEMOS: Dict[str, FormatSet] = {
     "Analytic Demo - Catalog Growth Trend": _demo(
         heading="Catalog Growth Trend (6 Month)",
         what="Snapshot-based growth series -- assets/terms/governed/products, one point "
-             "per window step. Run with output_format SERIES for a Vega-Lite line chart.",
+             "per window step, each a native count over the whole repository (including elements "
+             "the viewer may not be able to see). Run with output_format SERIES for a Vega-Lite line chart.",
         analytic_function_name="growth_series",
         demo_params={"window": "6mo"},
         result_shape="list[dict] (time series: {label, date, <series_key>: count, ...})",
@@ -234,7 +238,9 @@ _DEMOS: Dict[str, FormatSet] = {
     ),
     "Analytic Demo - Term Definition Completeness": _demo(
         heading="Term Definition Completeness",
-        what="Share of GlossaryTerms carrying a non-empty description. undefinedPct is the gap "
+        what="Share of GlossaryTerms whose description is set and not empty; total and defined are "
+             "native counts over the whole repository (including terms the viewer may not be able to "
+             "see). undefinedPct is the gap "
              "(not the coverage) -- a near-100%-defined glossary is the uninteresting case, and "
              "the gap is what's actionable.",
         analytic_function_name="term_definition_completeness",
@@ -274,7 +280,8 @@ _DEMOS: Dict[str, FormatSet] = {
         heading="Count Elements by Property",
         what="Counts active DigitalProduct elements with deploymentStatus=ACTIVE.",
         analytic_function_name="count_elements_by_property",
-        demo_params={"type_name": "DigitalProduct", "property_name": "deploymentStatus", "property_value": "ACTIVE"},
+        demo_params={"type_name": "DigitalProduct", "property_name": "deploymentStatus", "property_value": "ACTIVE",
+                     "strict": True},
         result_shape="scalar (int)",
     ),
     "Analytic Demo - Contextualised Coverage": _demo(

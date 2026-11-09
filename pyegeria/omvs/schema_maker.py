@@ -12,6 +12,8 @@ from pydantic import Field
 
 from loguru import logger
 
+from typing import Unpack
+from pyegeria.core.request_filters import GetFilters, ListFilters, SearchFilters
 from pyegeria.core._server_client import ServerClient
 from pyegeria.models import (
     NewElementRequestBody,
@@ -53,6 +55,30 @@ class SchemaAttributeProperties(ReferenceableProperties):
     is_ordered_values: Optional[bool] = None
     default_value_override: Optional[str] = None
     anchor_guid: Optional[str] = None
+
+
+class DisplayDataContainerProperties(SchemaAttributeProperties):
+    """A DisplayDataContainer: one formatter of a report spec, or a sheet (or nested sheet) of a dashboard.
+    renderer, placementKind, span, presentationStyle and markdownContent are new in Egeria 6.3. Their allowed
+    values are Egeria valid metadata values keyed by property name. Create with create_schema_attribute."""
+    class_: Annotated[Literal["DisplayDataContainerProperties"], Field(alias="class")]
+    renderer: Optional[str] = None
+    placement_kind: Optional[str] = None
+    span: Optional[str] = None
+    presentation_style: Optional[str] = None
+    markdown_content: Optional[str] = None
+
+
+class DisplayDataFieldProperties(SchemaAttributeProperties):
+    """A DisplayDataField: one column of a formatter, or a leaf placement on a dashboard sheet.
+    inputField marks a form input. placementKind, span, presentationStyle and markdownContent are new in
+    Egeria 6.3. Create with create_schema_attribute."""
+    class_: Annotated[Literal["DisplayDataFieldProperties"], Field(alias="class")]
+    input_field: Optional[bool] = None
+    placement_kind: Optional[str] = None
+    span: Optional[str] = None
+    presentation_style: Optional[str] = None
+    markdown_content: Optional[str] = None
 
 
 class SchemaMaker(ServerClient):
@@ -203,7 +229,7 @@ class SchemaMaker(ServerClient):
         page_size: int = 100,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Referenceable",
-        **kwargs
+        **kwargs: Unpack[SearchFilters]
     ) -> list | str:
         """ Retrieve the list of schema type metadata elements that contain the search string. Async Version.
 
@@ -260,6 +286,9 @@ class SchemaMaker(ServerClient):
         body: dict | SearchStringRequestBody, optional, default = None
             - if provided, the search parameters in the body will supercede other attributes, such as "search_string"
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
 -------
         List | str
@@ -314,7 +343,7 @@ class SchemaMaker(ServerClient):
         page_size: int = 100,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Referenceable",
-        **kwargs
+        **kwargs: Unpack[SearchFilters]
     ) -> list | str:
         """ Retrieve the list of schema type metadata elements that contain the search string.
 
@@ -371,6 +400,9 @@ class SchemaMaker(ServerClient):
         body: dict | SearchStringRequestBody, optional, default = None
             - if provided, the search parameters in the body will supercede other attributes, such as "search_string"
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
 -------
         List | str
@@ -413,7 +445,7 @@ class SchemaMaker(ServerClient):
         body: Optional[dict | GetRequestBody] = None,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "SchemaTypes",
-        **kwargs,
+        **kwargs: Unpack[GetFilters],
     ) -> dict | str:
         if guid is None and "schema_type_guid" in kwargs:
             guid = kwargs.pop("schema_type_guid")
@@ -443,7 +475,7 @@ class SchemaMaker(ServerClient):
         body: Optional[dict | GetRequestBody] = None,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "SchemaTypes",
-        **kwargs,
+        **kwargs: Unpack[GetFilters],
     ) -> dict | str:
         return run_sync(
             self._async_get_schema_type_by_guid(
@@ -474,43 +506,75 @@ class SchemaMaker(ServerClient):
         return run_sync(self._async_create_schema_attribute_from_template(body))
 
     @dynamic_catch
-    async def _async_get_schema_types_by_name(self, name: str | None = None, start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
-        """Get schema types by name. Async version."""
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/schema-types/by-name"
-        return await self._async_get_name_request(url, _type="SchemaType", _gen_output=self._generate_schema_output, filter_string=name, start_from=start_from, page_size=page_size, **kwargs)
+    async def _async_get_schema_types_by_name(self, name: str | None = None, start_from: int = 0, page_size: int = 100, **kwargs: Unpack[ListFilters]) -> list | str:
+        """Get schema types by name. Async version.
 
-    def get_schema_types_by_name(self, name: str | None = None, start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
-        """Get schema types by name."""
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+        """
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/schema-types/by-name"
+        return await self._async_get_name_request(url, _type="SchemaType", _gen_output=self._generate_schema_output, start_from=start_from, page_size=page_size, **{"filter_string": name, **kwargs})
+
+    def get_schema_types_by_name(self, name: str | None = None, start_from: int = 0, page_size: int = 100, **kwargs: Unpack[ListFilters]) -> list | str:
+        """Get schema types by name.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         return run_sync(self._async_get_schema_types_by_name(name, start_from, page_size, **kwargs))
 
     @dynamic_catch
-    async def _async_get_schema_attributes_by_name(self, name: str | None = None, start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
-        """Get schema attributes by name. Async version."""
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/schema-attributes/by-name"
-        return await self._async_get_name_request(url, _type="SchemaAttribute", _gen_output=self._generate_schema_output, filter_string=name, start_from=start_from, page_size=page_size, **kwargs)
+    async def _async_get_schema_attributes_by_name(self, name: str | None = None, start_from: int = 0, page_size: int = 100, **kwargs: Unpack[ListFilters]) -> list | str:
+        """Get schema attributes by name. Async version.
 
-    def get_schema_attributes_by_name(self, name: str | None = None, start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
-        """Get schema attributes by name."""
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+        """
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/schema-attributes/by-name"
+        return await self._async_get_name_request(url, _type="SchemaAttribute", _gen_output=self._generate_schema_output, start_from=start_from, page_size=page_size, **{"filter_string": name, **kwargs})
+
+    def get_schema_attributes_by_name(self, name: str | None = None, start_from: int = 0, page_size: int = 100, **kwargs: Unpack[ListFilters]) -> list | str:
+        """Get schema attributes by name.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         return run_sync(self._async_get_schema_attributes_by_name(name, start_from, page_size, **kwargs))
 
     @dynamic_catch
-    async def _async_find_schema_attributes(self, search_string: str = "*", start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
-        """Find schema attributes. Async version."""
+    async def _async_find_schema_attributes(self, search_string: str = "*", start_from: int = 0, page_size: int = 100, **kwargs: Unpack[SearchFilters]) -> list | str:
+        """Find schema attributes. Async version.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+        """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/schema-attributes/by-search-string"
         return await self._async_find_request(url, _type="SchemaAttribute", _gen_output=self._generate_schema_output, search_string=search_string, start_from=start_from, page_size=page_size, **kwargs)
 
-    def find_schema_attributes(self, search_string: str = "*", start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
-        """Find schema attributes."""
+    def find_schema_attributes(self, search_string: str = "*", start_from: int = 0, page_size: int = 100, **kwargs: Unpack[SearchFilters]) -> list | str:
+        """Find schema attributes.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+        """
         return run_sync(self._async_find_schema_attributes(search_string, start_from, page_size, **kwargs))
 
     @dynamic_catch
-    async def _async_get_schema_attribute_by_guid(self, guid: str, **kwargs) -> dict | str:
-        """Get schema attribute by GUID. Async version."""
+    async def _async_get_schema_attribute_by_guid(self, guid: str, **kwargs: Unpack[GetFilters]) -> dict | str:
+        """Get schema attribute by GUID. Async version.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/schema-maker/schema-attributes/{guid}/retrieve"
         return await self._async_get_guid_request(url, _type="SchemaAttribute", _gen_output=self._generate_schema_output, **kwargs)
 
-    def get_schema_attribute_by_guid(self, guid: str, **kwargs) -> dict | str:
-        """Get schema attribute by GUID."""
+    def get_schema_attribute_by_guid(self, guid: str, **kwargs: Unpack[GetFilters]) -> dict | str:
+        """Get schema attribute by GUID.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         return run_sync(self._async_get_schema_attribute_by_guid(guid, **kwargs))
 
     #

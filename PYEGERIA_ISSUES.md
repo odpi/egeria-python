@@ -427,10 +427,10 @@ Tests: `tests/micro-tests/test_issue_172_analytic_entry_points.py`.
 
 **Change** (`pyegeria/view/format_set_executor.py`):
 - **not_established / not_applicable** results now return `{"kind": "absent", "content": <sentence>, "absence": {...}, "envelope": {...}}` on every output format. There is no top-level `data`; a partial result rides under `detail`.
-- **nothing_found** results keep their data or chart (real zeros) and gain the same `absence` block. A chart's subtitle is the declared `measured_nothing` sentence.
+- **nothing_found** results keep their data or chart (real zeros) and gain the same `absence` block. A chart's subtitle is the declared `nothing_found` sentence.
 - **measured** results, and results with no envelope, are unchanged.
 
-`absence` gives the state (`not_measured`, `not_permitted`, `not_applicable` or `measured_nothing`), the sentence, the reason, and `declared`. The sentence comes from the function's registered `declaration.absence` (ISSUE-170), looked up by registry name or by dotted path. A function with no declaration gets words built from its own reason, with `declared: False`. `not_established` becomes `not_permitted` only when the result says so itself (`"absence": "not_permitted"`); the reason text is never parsed to guess.
+`absence` gives the state (`not_measured`, `not_permitted`, `not_applicable` or `nothing_found`), the sentence, the reason, and `declared`. The sentence comes from the function's registered `declaration.absence` (ISSUE-170), looked up by registry name or by dotted path. A function with no declaration gets words built from its own reason, with `declared: False`. `not_established` becomes `not_permitted` only when the result says so itself (`"absence": "not_permitted"`); the reason text is never parsed to guess.
 
 **Consumers to update:** Egeria Advisor's `report_pipeline`/`report_spec_agent` (trellis) treat an unknown kind generically. `content` is among the keys its fallback reads, so it shows the sentence, but it should handle `absent` explicitly. Any Portal tile that reads `data` for these states gets no `data` now.
 
@@ -1291,6 +1291,8 @@ declared factory per parameter type, so non-client objects can be
 constructed from params.
 
 **Fixed 2026-10-13:** `ActionParameter.analytic_binders` maps a parameter name to a factory's dotted path (`pkg.mod.Factory` or `pkg.mod:Factory`). `_apply_analytic_binders` (format_set_executor.py) calls the factory with the call params its signature names, consuming them unless the routine also takes them, and passes the result to the routine by name. trellis can then name `trellis_analytics.routines.curation_coverage` directly, with `analytic_binders={"ods": "trellis_analytics.readers.ods.OdsReader"}` and the caller passing `url`. Tests: `tests/micro-tests/test_issue_138_140_149_analytic_envelope.py`. Documented in `docs/output-formats-and-report-specs.md`.
+
+**Superseded 2026-11-08 (RS-W2-3 PR-B):** `analytic_binders` and `_apply_analytic_binders` are removed. A reader is now a declared `reader:<name>` input that the environment's role supply provides (RS-W2-3 PR-A). For one release `ActionParameter` accepts the key and ignores it, with a `DeprecationWarning` when it is non-empty. No built-in, demo or library 0.4.0 spec set it.
 
 ---
 

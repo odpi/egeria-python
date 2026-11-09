@@ -9,6 +9,10 @@ import asyncio
 from loguru import logger
 from typing import Any, Optional, Union, Dict, List
 from httpx import Response
+from typing import Unpack
+from pyegeria.core.request_filters import deprecated_names
+from pyegeria.core.request_filters import FindFilters
+from pyegeria.core.request_filters import filter_body_kwargs
 from pyegeria.models import (NewOpenMetadataElementRequestBody, TemplateRequestBody,
                              UpdatePropertiesRequestBody, MetadataSourceRequestBody,
                              ReIdentifyRequestBody, ReTypeRequestBody, ReHomeRequestBody,
@@ -1446,6 +1450,9 @@ class MetadataExpert(ServerClient):
         body: dict | GetRequestBody, default = None
             - details of the request supersede parameters. Body, if present overrides parameters.
 
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         dict | str
@@ -1487,7 +1494,7 @@ class MetadataExpert(ServerClient):
         response = await self._async_get_guid_request(url=url, _type="Referenceable",
                                                       _gen_output=self._generate_referenceable_output,
                                                       output_format=output_format,
-                                                      report_spec=None, body=body)
+                                                      report_spec=None, body=body, **kwargs)
         return response
 
     @dynamic_catch
@@ -1511,6 +1518,9 @@ class MetadataExpert(ServerClient):
             - Query the element as of this time. If None, then use current time.
         body: dict | GetRequestBody, default = None
             - details of the request supersede parameters. Body, if present overrides parameters.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1553,6 +1563,9 @@ class MetadataExpert(ServerClient):
             - Query the element as of this time. If None, current time is used.
         body: dict | GetRequestBody, default = None
         - details of the request supersede parameters. Body, if present, overrides parameters.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1597,7 +1610,7 @@ class MetadataExpert(ServerClient):
         )
         response = await self._async_get_guid_request(
             url=url, _type="Referenceable", _gen_output=self._generate_referenceable_output,
-            output_format="JSON", report_spec=None, body=body
+            output_format="JSON", report_spec=None, body=body, **kwargs
         )
         if mermaid_only:
             return response.get("mermaidGraph", "No Mermaid Graph Found")
@@ -1623,6 +1636,9 @@ class MetadataExpert(ServerClient):
                 - Query the element as of this time. If None, current time is used.
             body: dict | GetRequestBody, default = None
             - details of the request supersede parameters. Body, if present, overrides parameters.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
             Returns
             -------
@@ -2172,12 +2188,13 @@ class MetadataExpert(ServerClient):
         )
         return response
 
+    @deprecated_names(metadata_element_sub_type="metadata_element_subtypes")
     @dynamic_catch
     async def _async_find_metadata_elements_with_string(self, search_string: str = "*", starts_with: bool = True,
                                                         ends_with: bool = False, ignore_case: bool = False,
                                                         anchor_domain: Optional[str] = None,
                                                         zone_filter=None, metadata_element_type: Optional[str] = None,
-                                                        metadata_element_sub_type=None, skip_relationships=None,
+                                                        metadata_element_subtypes=None, skip_relationships=None,
                                                         include_only_relationships=None,
                                                         relationship_page_size: int = 10,
                                                         skip_classified_elements=None,
@@ -2189,6 +2206,7 @@ class MetadataExpert(ServerClient):
                                                         sequencing_property: str = "qualifiedName",
                                                         start_from: int = 0, page_size: int = 0,
                                                         output_format: str = "JSON",
+                                                        report_spec: Optional[str | dict] = None,
                                                         body: SearchStringRequestBody | dict = None,
                                                         **kwargs) -> list | str:
         """ Searches for metadata elements based on a string pattern with a comprehensive filtering
@@ -2210,7 +2228,7 @@ class MetadataExpert(ServerClient):
                 those associated with the given zones. Defaults to None.
             metadata_element_type (str | None): Filters the search to elements of a specific metadata
                 type. Defaults to None.
-            metadata_element_sub_type (str | None): Filters the search to elements of a specific subtype.
+            metadata_element_subtypes (str | None): Filters the search to elements of a specific subtype.
                 Defaults to None.
             skip_relationships (bool | None): If set to True, relationships associated with metadata
                 elements are excluded from the search result. Defaults to None.
@@ -2237,11 +2255,20 @@ class MetadataExpert(ServerClient):
             body (SearchStringRequestBody | dict | None): A payload containing additional search parameters
                 or overrides. Defaults to None.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns:
             list | str: Returns the search results as a list of metadata elements, or as a string in cases
                 where the output is serialized in text format.
         """
 
+        if search_string in (None, "", "*") and body is None and not (
+                metadata_element_type or metadata_element_subtypes or include_only_classified_elements):
+            # Egeria refuses this with "searchString is null" (OMAG-COMMON-400-022); say why in plain words.
+            raise ValueError("find_metadata_elements_with_string: give a search string or a type "
+                             "(metadata_element_type, metadata_element_subtypes or "
+                             "include_only_classified_elements); '*' alone is not a search")
         url = (
             f"{base_path(self, self.view_server)}/metadata-elements/by-search-string"
         )
@@ -2253,28 +2280,27 @@ class MetadataExpert(ServerClient):
                                                   ends_with=ends_with, ignore_case=ignore_case,
                                                   anchor_domain=anchor_domain,
                                                   metadata_element_type=metadata_element_type,
-                                                  metadata_element_subtypes=metadata_element_sub_type,
                                                   skip_relationships=skip_relationships,
                                                   include_only_relationships=include_only_relationships,
                                                   skip_classified_elements=skip_classified_elements,
                                                   include_only_classified_elements=include_only_classified_elements,
                                                   graph_query_depth=graph_query_depth,
-                                                  governance_zone_filter=zone_filter, as_of_time=as_of_time,
-                                                  effective_time=effective_time,
+                                                  as_of_time=as_of_time,
                                                   relationship_page_size=relationship_page_size,
                                                   limit_results_by_status=limit_results_by_status,
                                                   sequencing_order=sequencing_order,
                                                   sequencing_property=sequencing_property, output_format=output_format,
-                                                  report_spec=None, start_from=start_from, page_size=page_size,
-                                                  body=body, **kwargs)
+                                                  report_spec=report_spec, start_from=start_from, page_size=page_size,
+                                                  body=body, **{"metadata_element_subtypes": metadata_element_subtypes, "governance_zone_filter": zone_filter, "effective_time": effective_time, **kwargs})
         return response
 
+    @deprecated_names(metadata_element_sub_type="metadata_element_subtypes")
     @dynamic_catch
     def find_metadata_elements_with_string(self, search_string: str = "*", starts_with: bool = True,
                                            ends_with: bool = False, ignore_case: bool = False,
                                            anchor_domain: Optional[str] = None,
                                            zone_filter=None, metadata_element_type: Optional[str] = None,
-                                           metadata_element_sub_type=None, skip_relationships=None,
+                                           metadata_element_subtypes=None, skip_relationships=None,
                                            include_only_relationships=None, relationship_page_size: int = 10,
                                            skip_classified_elements=None,
                                            include_only_classified_elements: Optional[list[str]] = None,
@@ -2306,7 +2332,7 @@ class MetadataExpert(ServerClient):
                 those associated with the given zones. Defaults to None.
             metadata_element_type (str | None): Filters the search to elements of a specific metadata
                 type. Defaults to None.
-            metadata_element_sub_type (str | None): Filters the search to elements of a specific subtype.
+            metadata_element_subtypes (str | None): Filters the search to elements of a specific subtype.
                 Defaults to None.
             skip_relationships (bool | None): If set to True, relationships associated with metadata
                 elements are excluded from the search result. Defaults to None.
@@ -2333,6 +2359,9 @@ class MetadataExpert(ServerClient):
             body (SearchStringRequestBody | dict | None): A payload containing additional search parameters
                 or overrides. Defaults to None.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns:
             list | str: Returns the search results as a list of metadata elements, or as a string in cases
                 where the output is serialized in text format.
@@ -2341,7 +2370,7 @@ class MetadataExpert(ServerClient):
             self._async_find_metadata_elements_with_string(
                 search_string=search_string, starts_with=starts_with, ends_with=ends_with,
                 ignore_case=ignore_case, anchor_domain=anchor_domain, zone_filter=zone_filter,
-                metadata_element_type=metadata_element_type, metadata_element_sub_type=metadata_element_sub_type,
+                metadata_element_type=metadata_element_type, metadata_element_subtypes=metadata_element_subtypes,
                 skip_relationships=skip_relationships, include_only_relationships=include_only_relationships,
                 relationship_page_size=relationship_page_size, skip_classified_elements=skip_classified_elements,
                 include_only_classified_elements=include_only_classified_elements,
@@ -2354,13 +2383,14 @@ class MetadataExpert(ServerClient):
         )
         return response
 
+    @deprecated_names(metadata_element_sub_type="metadata_element_subtypes")
     @dynamic_catch
     async def _async_find_elements_for_anchor(self, guid: Optional[str] = None, search_string: str = "*",
                                               starts_with: bool = True,
                                               ends_with: bool = False, ignore_case: bool = False,
                                               anchor_domain: Optional[str] = None,
                                               zone_filter=None, metadata_element_type: Optional[str] = None,
-                                              metadata_element_sub_type=None, skip_relationships=None,
+                                              metadata_element_subtypes=None, skip_relationships=None,
                                               include_only_relationships=None, relationship_page_size: int = 10,
                                               skip_classified_elements=None,
                                               include_only_classified_elements: Optional[list[str]] = None,
@@ -2371,6 +2401,7 @@ class MetadataExpert(ServerClient):
                                               sequencing_property: str = "qualifiedName",
                                               start_from: int = 0, page_size: int = 0,
                                               output_format: str = "JSON",
+                                              report_spec: Optional[str | dict] = None,
                                               body: SearchStringRequestBody | dict = None,
                                               **kwargs) -> list | str:
         """ Return a list of elements with the requested search string in their (display, resource) name, qualified name,
@@ -2392,7 +2423,7 @@ class MetadataExpert(ServerClient):
                 those associated with the given zones. Defaults to None.
             metadata_element_type (str | None): Filters the search to elements of a specific metadata
                 type. Defaults to None.
-            metadata_element_sub_type (str | None): Filters the search to elements of a specific subtype.
+            metadata_element_subtypes (str | None): Filters the search to elements of a specific subtype.
                 Defaults to None.
             skip_relationships (bool | None): If set to True, relationships associated with metadata
                 elements are excluded from the search result. Defaults to None.
@@ -2419,6 +2450,9 @@ class MetadataExpert(ServerClient):
             body (SearchStringRequestBody | dict | None): A payload containing additional search parameters
                 or overrides. Defaults to None.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns:
             list | str: Returns the search results as a list of metadata elements, or as a string in cases
                 where the output is serialized in text format.
@@ -2436,27 +2470,26 @@ class MetadataExpert(ServerClient):
                                                   _gen_output=self._generate_referenceable_output,
                                                   search_string=search_string, anchor_domain=anchor_domain,
                                                   metadata_element_type=metadata_element_type,
-                                                  metadata_element_subtypes=metadata_element_sub_type,
                                                   skip_relationships=skip_relationships,
                                                   include_only_relationships=include_only_relationships,
                                                   skip_classified_elements=skip_classified_elements,
                                                   include_only_classified_elements=include_only_classified_elements,
                                                   graph_query_depth=graph_query_depth,
-                                                  governance_zone_filter=zone_filter, as_of_time=as_of_time,
-                                                  effective_time=effective_time,
+                                                  as_of_time=as_of_time,
                                                   relationship_page_size=relationship_page_size,
                                                   limit_results_by_status=limit_results_by_status,
                                                   sequencing_order=sequencing_order,
                                                   sequencing_property=sequencing_property, output_format=output_format,
-                                                  report_spec=None, start_from=start_from, page_size=page_size,
-                                                  body=body, **kwargs)
+                                                  report_spec=report_spec, start_from=start_from, page_size=page_size,
+                                                  body=body, **{"metadata_element_subtypes": metadata_element_subtypes, "governance_zone_filter": zone_filter, "effective_time": effective_time, **kwargs})
         return response
 
+    @deprecated_names(metadata_element_sub_type="metadata_element_subtypes")
     @dynamic_catch
     def find_elements_for_anchor(self, guid: Optional[str] = None, search_string: str = "*", starts_with: bool = True,
                                  ends_with: bool = False, ignore_case: bool = False, anchor_domain: Optional[str] = None,
                                  zone_filter=None, metadata_element_type: Optional[str] = None,
-                                 metadata_element_sub_type=None, skip_relationships=None,
+                                 metadata_element_subtypes=None, skip_relationships=None,
                                  include_only_relationships=None, relationship_page_size: int = 10,
                                  skip_classified_elements=None,
                                  include_only_classified_elements: Optional[list[str]] = None, graph_query_depth: int = 5,
@@ -2487,7 +2520,7 @@ class MetadataExpert(ServerClient):
                     those associated with the given zones. Defaults to None.
                 metadata_element_type (str | None): Filters the search to elements of a specific metadata
                     type. Defaults to None.
-                metadata_element_sub_type (str | None): Filters the search to elements of a specific subtype.
+                metadata_element_subtypes (str | None): Filters the search to elements of a specific subtype.
                     Defaults to None.
                 skip_relationships (bool | None): If set to True, relationships associated with metadata
                     elements are excluded from the search result. Defaults to None.
@@ -2514,6 +2547,9 @@ class MetadataExpert(ServerClient):
                 body (SearchStringRequestBody | dict | None): A payload containing additional search parameters
                     or overrides. Defaults to None.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
             Returns:
                     list | str: Returns the search results as a list of metadata elements, or as a string in cases
                         where the output is serialized in text format.
@@ -2522,7 +2558,7 @@ class MetadataExpert(ServerClient):
             self._async_find_elements_for_anchor(
                 guid=guid, search_string=search_string, starts_with=starts_with, ends_with=ends_with,
                 ignore_case=ignore_case, anchor_domain=anchor_domain, zone_filter=zone_filter,
-                metadata_element_type=metadata_element_type, metadata_element_sub_type=metadata_element_sub_type,
+                metadata_element_type=metadata_element_type, metadata_element_subtypes=metadata_element_subtypes,
                 skip_relationships=skip_relationships, include_only_relationships=include_only_relationships,
                 relationship_page_size=relationship_page_size, skip_classified_elements=skip_classified_elements,
                 include_only_classified_elements=include_only_classified_elements,
@@ -2535,13 +2571,14 @@ class MetadataExpert(ServerClient):
         )
         return response
 
+    @deprecated_names(metadata_element_sub_type="metadata_element_subtypes")
     @dynamic_catch
     async def _async_find_elements_in_anchor_domain(self, search_string: str = "*",
                                                     starts_with: bool = True,
                                                     ends_with: bool = False, ignore_case: bool = False,
                                                     anchor_domain: Optional[str] = None,
                                                     zone_filter=None, metadata_element_type: Optional[str] = None,
-                                                    metadata_element_sub_type=None, skip_relationships=None,
+                                                    metadata_element_subtypes=None, skip_relationships=None,
                                                     include_only_relationships=None, relationship_page_size: int = 10,
                                                     skip_classified_elements=None,
                                                     include_only_classified_elements: Optional[list[str]] = None,
@@ -2552,6 +2589,7 @@ class MetadataExpert(ServerClient):
                                                     sequencing_property: str = "qualifiedName",
                                                     start_from: int = 0, page_size: int = 0,
                                                     output_format: str = "JSON",
+                                                    report_spec: Optional[str | dict] = None,
                                                     body: SearchStringRequestBody | dict = None,
                                                     **kwargs) -> list | str:
         """ Return a list of elements with the requested search string in their (display, resource) name, qualified name,
@@ -2572,7 +2610,7 @@ class MetadataExpert(ServerClient):
                 those associated with the given zones. Defaults to None.
             metadata_element_type (str | None): Filters the search to elements of a specific metadata
                 type. Defaults to None.
-            metadata_element_sub_type (str | None): Filters the search to elements of a specific subtype.
+            metadata_element_subtypes (str | None): Filters the search to elements of a specific subtype.
                 Defaults to None.
             skip_relationships (bool | None): If set to True, relationships associated with metadata
                 elements are excluded from the search result. Defaults to None.
@@ -2599,6 +2637,9 @@ class MetadataExpert(ServerClient):
             body (SearchStringRequestBody | dict | None): A payload containing additional search parameters
                 or overrides. Defaults to None.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns:
             list | str: Returns the search results as a list of metadata elements, or as a string in cases
                 where the output is serialized in text format.
@@ -2617,27 +2658,26 @@ class MetadataExpert(ServerClient):
                                                   ends_with=ends_with, ignore_case=ignore_case,
                                                   anchor_domain=anchor_domain,
                                                   metadata_element_type=metadata_element_type,
-                                                  metadata_element_subtypes=metadata_element_sub_type,
                                                   skip_relationships=skip_relationships,
                                                   include_only_relationships=include_only_relationships,
                                                   skip_classified_elements=skip_classified_elements,
                                                   include_only_classified_elements=include_only_classified_elements,
                                                   graph_query_depth=graph_query_depth,
-                                                  governance_zone_filter=zone_filter, as_of_time=as_of_time,
-                                                  effective_time=effective_time,
+                                                  as_of_time=as_of_time,
                                                   relationship_page_size=relationship_page_size,
                                                   limit_results_by_status=limit_results_by_status,
                                                   sequencing_order=sequencing_order,
                                                   sequencing_property=sequencing_property, output_format=output_format,
-                                                  report_spec=None, start_from=start_from, page_size=page_size,
-                                                  body=body, **kwargs)
+                                                  report_spec=report_spec, start_from=start_from, page_size=page_size,
+                                                  body=body, **{"metadata_element_subtypes": metadata_element_subtypes, "governance_zone_filter": zone_filter, "effective_time": effective_time, **kwargs})
         return response
 
+    @deprecated_names(metadata_element_sub_type="metadata_element_subtypes")
     @dynamic_catch
     def find_elements_in_anchor_domain(self, search_string: str = "*", starts_with: bool = True,
                                        ends_with: bool = False, ignore_case: bool = False, anchor_domain: Optional[str] = None,
                                        zone_filter=None, metadata_element_type: Optional[str] = None,
-                                       metadata_element_sub_type=None, skip_relationships=None,
+                                       metadata_element_subtypes=None, skip_relationships=None,
                                        include_only_relationships=None, relationship_page_size: int = 10,
                                        skip_classified_elements=None,
                                        include_only_classified_elements: Optional[list[str]] = None, graph_query_depth: int = 5,
@@ -2667,7 +2707,7 @@ class MetadataExpert(ServerClient):
                     those associated with the given zones. Defaults to None.
                 metadata_element_type (str | None): Filters the search to elements of a specific metadata
                     type. Defaults to None.
-                metadata_element_sub_type (str | None): Filters the search to elements of a specific subtype.
+                metadata_element_subtypes (str | None): Filters the search to elements of a specific subtype.
                     Defaults to None.
                 skip_relationships (bool | None): If set to True, relationships associated with metadata
                     elements are excluded from the search result. Defaults to None.
@@ -2694,6 +2734,9 @@ class MetadataExpert(ServerClient):
                 body (SearchStringRequestBody | dict | None): A payload containing additional search parameters
                     or overrides. Defaults to None.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
             Returns:
                     list | str: Returns the search results as a list of metadata elements, or as a string in cases
                         where the output is serialized in text format.
@@ -2702,7 +2745,7 @@ class MetadataExpert(ServerClient):
             self._async_find_elements_in_anchor_domain(
                 search_string=search_string, starts_with=starts_with, ends_with=ends_with,
                 ignore_case=ignore_case, anchor_domain=anchor_domain, zone_filter=zone_filter,
-                metadata_element_type=metadata_element_type, metadata_element_sub_type=metadata_element_sub_type,
+                metadata_element_type=metadata_element_type, metadata_element_subtypes=metadata_element_subtypes,
                 skip_relationships=skip_relationships, include_only_relationships=include_only_relationships,
                 relationship_page_size=relationship_page_size, skip_classified_elements=skip_classified_elements,
                 include_only_classified_elements=include_only_classified_elements,
@@ -2715,13 +2758,14 @@ class MetadataExpert(ServerClient):
         )
         return response
 
+    @deprecated_names(metadata_element_sub_type="metadata_element_subtypes")
     @dynamic_catch
     async def _async_find_elements_in_anchor_scope(self, guid: Optional[str] = None, search_string: str = "*",
                                                    starts_with: bool = True,
                                                    ends_with: bool = False, ignore_case: bool = False,
                                                    anchor_domain: Optional[str] = None,
                                                    zone_filter=None, metadata_element_type: Optional[str] = None,
-                                                   metadata_element_sub_type=None, skip_relationships=None,
+                                                   metadata_element_subtypes=None, skip_relationships=None,
                                                    include_only_relationships=None, relationship_page_size: int = 10,
                                                    skip_classified_elements=None,
                                                    include_only_classified_elements: Optional[list[str]] = None,
@@ -2732,6 +2776,7 @@ class MetadataExpert(ServerClient):
                                                    sequencing_property: str = "qualifiedName",
                                                    start_from: int = 0, page_size: int = 0,
                                                    output_format: str = "JSON",
+                                                   report_spec: Optional[str | dict] = None,
                                                    body: SearchStringRequestBody | dict = None,
                                                    **kwargs) -> list | str:
         """ Return a list of elements with the requested search string in their (display, resource) name, qualified name,
@@ -2754,7 +2799,7 @@ class MetadataExpert(ServerClient):
                 those associated with the given zones. Defaults to None.
             metadata_element_type (str | None): Filters the search to elements of a specific metadata
                 type. Defaults to None.
-            metadata_element_sub_type (str | None): Filters the search to elements of a specific subtype.
+            metadata_element_subtypes (str | None): Filters the search to elements of a specific subtype.
                 Defaults to None.
             skip_relationships (bool | None): If set to True, relationships associated with metadata
                 elements are excluded from the search result. Defaults to None.
@@ -2781,6 +2826,9 @@ class MetadataExpert(ServerClient):
             body (SearchStringRequestBody | dict | None): A payload containing additional search parameters
                 or overrides. Defaults to None.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns:
             list | str: Returns the search results as a list of metadata elements, or as a string in cases
                 where the output is serialized in text format.
@@ -2801,27 +2849,26 @@ class MetadataExpert(ServerClient):
                                                   ends_with=ends_with, ignore_case=ignore_case,
                                                   anchor_domain=anchor_domain,
                                                   metadata_element_type=metadata_element_type,
-                                                  metadata_element_subtypes=metadata_element_sub_type,
                                                   skip_relationships=skip_relationships,
                                                   include_only_relationships=include_only_relationships,
                                                   skip_classified_elements=skip_classified_elements,
                                                   include_only_classified_elements=include_only_classified_elements,
                                                   graph_query_depth=graph_query_depth,
-                                                  governance_zone_filter=zone_filter, as_of_time=as_of_time,
-                                                  effective_time=effective_time,
+                                                  as_of_time=as_of_time,
                                                   relationship_page_size=relationship_page_size,
                                                   limit_results_by_status=limit_results_by_status,
                                                   sequencing_order=sequencing_order,
                                                   sequencing_property=sequencing_property, output_format=output_format,
-                                                  report_spec=None, start_from=start_from, page_size=page_size,
-                                                  body=body, **kwargs)
+                                                  report_spec=report_spec, start_from=start_from, page_size=page_size,
+                                                  body=body, **{"metadata_element_subtypes": metadata_element_subtypes, "governance_zone_filter": zone_filter, "effective_time": effective_time, **kwargs})
         return response
 
+    @deprecated_names(metadata_element_sub_type="metadata_element_subtypes")
     @dynamic_catch
     def find_elements_in_anchor_scope(self, guid: Optional[str] = None, search_string: str = "*", starts_with: bool = True,
                                       ends_with: bool = False, ignore_case: bool = False, anchor_domain: Optional[str] = None,
                                       zone_filter=None, metadata_element_type: Optional[str] = None,
-                                      metadata_element_sub_type=None, skip_relationships=None,
+                                      metadata_element_subtypes=None, skip_relationships=None,
                                       include_only_relationships=None, relationship_page_size: int = 10,
                                       skip_classified_elements=None,
                                       include_only_classified_elements: Optional[list[str]] = None, graph_query_depth: int = 5,
@@ -2852,7 +2899,7 @@ class MetadataExpert(ServerClient):
                     those associated with the given zones. Defaults to None.
                 metadata_element_type (str | None): Filters the search to elements of a specific metadata
                     type. Defaults to None.
-                metadata_element_sub_type (str | None): Filters the search to elements of a specific subtype.
+                metadata_element_subtypes (str | None): Filters the search to elements of a specific subtype.
                     Defaults to None.
                 skip_relationships (bool | None): If set to True, relationships associated with metadata
                     elements are excluded from the search result. Defaults to None.
@@ -2879,6 +2926,9 @@ class MetadataExpert(ServerClient):
                 body (SearchStringRequestBody | dict | None): A payload containing additional search parameters
                     or overrides. Defaults to None.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
             Returns:
                     list | str: Returns the search results as a list of metadata elements, or as a string in cases
                         where the output is serialized in text format.
@@ -2887,7 +2937,7 @@ class MetadataExpert(ServerClient):
             self._async_find_elements_in_anchor_scope(
                 guid=guid, search_string=search_string, starts_with=starts_with, ends_with=ends_with,
                 ignore_case=ignore_case, anchor_domain=anchor_domain, zone_filter=zone_filter,
-                metadata_element_type=metadata_element_type, metadata_element_sub_type=metadata_element_sub_type,
+                metadata_element_type=metadata_element_type, metadata_element_subtypes=metadata_element_subtypes,
                 skip_relationships=skip_relationships, include_only_relationships=include_only_relationships,
                 relationship_page_size=relationship_page_size, skip_classified_elements=skip_classified_elements,
                 include_only_classified_elements=include_only_classified_elements,
@@ -3572,7 +3622,7 @@ class MetadataExpert(ServerClient):
         self,
         body: Optional[dict] = None,
         timeout: int = default_timeout,
-        **kwargs,
+        **kwargs: Unpack[FindFilters],
     ) -> list | str:
         """Return a list of metadata elements that match the supplied criteria.
         The results can be returned over many pages. Async version.
@@ -3610,9 +3660,12 @@ class MetadataExpert(ServerClient):
             - http request timeout for this request
         **kwargs:
             - Backward compatibility parameters for individual criteria if `body` is not provided.
-              Supported: `metadata_element_type_name`, `metadata_element_subtype_names`, `skip_subtypes`,
+              Supported: `metadata_element_type`, `metadata_element_subtypes`, `skip_subtypes`,
               `search_properties`, `match_classifications`, `effective_time`, `limit_results_by_status`,
               `as_of_time`, `sequencing_order`, `sequencing_property`, `start_from`, `page_size`.
+
+        Accepts the standard find filters as keyword arguments (see ``FindFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -3686,21 +3739,11 @@ class MetadataExpert(ServerClient):
         """
 
         if body is None:
-            body = {
-                "class": "FindRequestBody",
-                "metadataElementTypeName": kwargs.get("metadata_element_type_name"),
-                "metadataElementSubtypeNames": kwargs.get("metadata_element_subtype_names"),
-                "skipSubtypes": kwargs.get("skip_subtypes"),
-                "searchProperties": kwargs.get("search_properties"),
-                "matchClassifications": kwargs.get("match_classifications"),
-                "effectiveTime": kwargs.get("effective_time"),
-                "limitResultsByStatus": kwargs.get("limit_results_by_status"),
-                "asOfTime": kwargs.get("as_of_time"),
-                "sequencingOrder": kwargs.get("sequencing_order"),
-                "sequencingProperty": kwargs.get("sequencing_property"),
-                "startFrom": kwargs.get("start_from"),
-                "pageSize": kwargs.get("page_size"),
-            }
+            # Every FindRequestBody field may be given as a keyword (snake_case, or the
+            # metadata_element_type / metadata_element_subtypes spellings); unknown names warn.
+            body = {"class": "FindRequestBody", **filter_body_kwargs("find", kwargs)}
+        elif kwargs:
+            filter_body_kwargs("find", kwargs)  # body wins; still warn about misspelt names
 
         url = f"{base_path(self, self.view_server)}/metadata-elements/by-search-conditions"
 
@@ -3723,7 +3766,7 @@ class MetadataExpert(ServerClient):
         self,
         body: Optional[dict] = None,
         timeout: int = default_timeout,
-        **kwargs,
+        **kwargs: Unpack[FindFilters],
     ) -> list | str:
         """
         Retrieve the relationships linking the supplied elements.
@@ -3742,6 +3785,9 @@ class MetadataExpert(ServerClient):
             - http request timeout for this request
         **kwargs:
             - Backward compatibility parameters for individual criteria if `body` is not provided.
+
+        Accepts the standard find filters as keyword arguments (see ``FindFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -3823,7 +3869,7 @@ class MetadataExpert(ServerClient):
         self,
         body: dict,
         push_down: Optional[bool] = None,
-        timeout: int = default_timeout,
+        timeout: Optional[int] = None,
         **kwargs,
     ) -> int:
         """Return the number of metadata elements that match the supplied criteria.
@@ -3849,8 +3895,8 @@ class MetadataExpert(ServerClient):
               reading every one of them server-side). `None` omits the query
               parameter, and the server default applies: `false` on Egeria
               main since the 2026-10-18 fixes, `true` on older servers.
-        timeout: int, default = default_timeout
-            - http request timeout for this request
+        timeout: int, optional
+            - http request timeout for this request; None (default) uses the client's own time_out
 
         Returns
         -------
@@ -3890,7 +3936,7 @@ class MetadataExpert(ServerClient):
         self,
         body: dict,
         push_down: Optional[bool] = None,
-        timeout: int = default_timeout,
+        timeout: Optional[int] = None,
         **kwargs,
     ) -> int:
         """Return the number of metadata elements that match the supplied criteria.
@@ -3906,8 +3952,8 @@ class MetadataExpert(ServerClient):
         push_down: bool, optional, default = None
             - ISSUE-38 (PY-18): see `_async_count_metadata_elements` for the full
               explanation. `None` omits the query parameter (server default).
-        timeout: int, default = default_timeout
-            - http request timeout for this request
+        timeout: int, optional
+            - http request timeout for this request; None (default) uses the client's own time_out
 
         Returns
         -------
@@ -4137,7 +4183,7 @@ class MetadataExpert(ServerClient):
         self,
         body: dict,
         push_down: Optional[bool] = None,
-        timeout: int = default_timeout,
+        timeout: Optional[int] = None,
         **kwargs,
     ) -> int:
         """Return the number of relationships that match the requested conditions.
@@ -4166,8 +4212,8 @@ class MetadataExpert(ServerClient):
               server-side). `None` omits the query parameter, and the server
               default applies: `false` on Egeria main since the 2026-10-18
               fixes, `true` on older servers.
-        timeout: int, default = default_timeout
-            - http request timeout for this request
+        timeout: int, optional
+            - http request timeout for this request; None (default) uses the client's own time_out
 
         Returns
         -------
@@ -4208,7 +4254,7 @@ class MetadataExpert(ServerClient):
         self,
         body: dict,
         push_down: Optional[bool] = None,
-        timeout: int = default_timeout,
+        timeout: Optional[int] = None,
         **kwargs,
     ) -> int:
         """Return the number of relationships that match the requested conditions.
@@ -4226,8 +4272,8 @@ class MetadataExpert(ServerClient):
             - ISSUE-38 (PY-18): see `_async_count_relationships_between_elements`
               for the full explanation. `None` omits the query parameter
               (server default).
-        timeout: int, default = default_timeout
-            - http request timeout for this request
+        timeout: int, optional
+            - http request timeout for this request; None (default) uses the client's own time_out
 
         Returns
         -------

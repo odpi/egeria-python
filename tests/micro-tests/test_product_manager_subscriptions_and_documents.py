@@ -47,7 +47,7 @@ def _client(calls: list, payload: dict, monkeypatch) -> ProductManager:
 async def test_subscription_types_post_to_the_kind_and_return_the_process_guid(method, kind, monkeypatch):
     calls: list = []
     client = _client(calls, {"class": "GUIDResponse", "guid": "gap-guid"}, monkeypatch)
-    body = {"identifier": "ID", "displayName": "Name", "notificationInterval": 10,
+    body = {"identifier": "ID", "displayName": "Name", "minimumNotificationInterval": 10,
             "monitoredResourceGUIDs": ["asset-1"]}
 
     guid = await getattr(client, method)("product-1", body)
@@ -57,7 +57,19 @@ async def test_subscription_types_post_to_the_kind_and_return_the_process_guid(m
     assert calls[0]["url"].endswith(f"{ROOT}/digital-products/product-1/subscription-types/{kind}")
     assert calls[0]["body"]["class"] == "NewSubscriptionTypeRequestBody"
     assert calls[0]["body"]["monitoredResourceGUIDs"] == ["asset-1"]   # explicit alias, not "...Guids"
+    assert calls[0]["body"]["minimumNotificationInterval"] == 10
+    # TRANSITIONAL: also sent under the pre-rename name until Egeria's oak2026 change merges.
     assert calls[0]["body"]["notificationInterval"] == 10
+
+
+@pytest.mark.asyncio
+async def test_subscription_type_accepts_the_old_interval_name_and_sends_both(monkeypatch):
+    # TRANSITIONAL: a caller still using notificationInterval keeps working on a 6.3 platform.
+    calls: list = []
+    client = _client(calls, {"class": "GUIDResponse", "guid": "gap-guid"}, monkeypatch)
+    await client._async_create_periodic_subscription("product-1", {"notificationInterval": 1440})
+    assert calls[0]["body"]["minimumNotificationInterval"] == 1440
+    assert calls[0]["body"]["notificationInterval"] == 1440
 
 
 @pytest.mark.asyncio
@@ -186,3 +198,35 @@ async def test_governance_action_processes_by_name_uses_the_product_catalog_url(
     assert calls[0]["body"]["filter"] == "ProvisioningActionProcess::Hospital Data::Create Subscription::EVAL"
     # a filter by name, not by an element type (a wrong type name is rejected by the server)
     assert "metadataElementTypeName" not in calls[0]["body"]
+
+
+def test_subscription_type_body_rejects_two_different_intervals():
+    # TRANSITIONAL: both names are sent, so a pre-rename platform would use one value and a
+    # post-rename platform the other. Refuse rather than send a body whose meaning depends on the server.
+    from pyegeria.models import NewSubscriptionTypeRequestBody
+    with pytest.raises(ValueError, match=r"minimumNotificationInterval \(10\) and notificationInterval \(1440\)"):
+        NewSubscriptionTypeRequestBody.model_validate(
+            {"class": "NewSubscriptionTypeRequestBody", "minimumNotificationInterval": 10,
+             "notificationInterval": 1440})
+
+
+@pytest.mark.asyncio
+async def test_subscription_type_with_two_different_intervals_is_not_sent(monkeypatch):
+    calls: list = []
+    client = _client(calls, {"class": "GUIDResponse", "guid": "gap-guid"}, monkeypatch)
+    try:
+        await client._async_create_periodic_subscription(
+            "product-1", {"minimumNotificationInterval": 10, "notificationInterval": 1440})
+    except Exception:
+        pass   # dynamic_catch may raise or swallow; either way nothing must reach Egeria
+    assert calls == []
+
+
+@pytest.mark.asyncio
+async def test_subscription_type_with_equal_intervals_under_both_names_is_sent(monkeypatch):
+    calls: list = []
+    client = _client(calls, {"class": "GUIDResponse", "guid": "gap-guid"}, monkeypatch)
+    await client._async_create_periodic_subscription(
+        "product-1", {"minimumNotificationInterval": 60, "notificationInterval": 60})
+    assert calls[0]["body"]["minimumNotificationInterval"] == 60
+    assert calls[0]["body"]["notificationInterval"] == 60

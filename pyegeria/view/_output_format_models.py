@@ -66,9 +66,10 @@ The following exceptions may be raised by functions and classes in this module:
 
 import json
 import os
+import warnings
 from pathlib import Path
 from typing import Dict, List, Optional, Union, Any
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, PrivateAttr, field_validator, model_validator
 from loguru import logger
 __all__ = [
     'Column',
@@ -247,10 +248,12 @@ class ActionParameter(BaseModel):
         analytic_spec_params: Parameters fixed for this action, for `analytic_function`
             (from `extra_constraints`) -- layered under whatever arbitrary
             parameters the caller supplies at execution time.
-        analytic_binders: Parameter name -> dotted path of a factory that builds that
-            argument (e.g. a reader object) for `analytic_function` (ISSUE-138). The
-            factory's own parameters are filled from the call params by name, so a
-            routine that takes a non-JSON object can be named by its own dotted path.
+
+    RS-W2-3 PR-B: the former `analytic_binders` field is gone. A routine's non-JSON
+    arguments (clients, readers, viewer, subject) are its declared `inputs`, which the
+    executor's role supply provides. For one release a spec that still carries the key is
+    accepted and the key ignored, with a DeprecationWarning when it is non-empty
+    (`_drop_deprecated_binders`).
     """
     function: Optional[str] = None
     required_params: List[str] = Field(default_factory=list)
@@ -258,7 +261,42 @@ class ActionParameter(BaseModel):
     spec_params: Dict[str, Any] = Field(default_factory=dict)
     analytic_function: Optional[str] = None
     analytic_spec_params: Dict[str, Any] = Field(default_factory=dict)
-    analytic_binders: Dict[str, str] = Field(default_factory=dict)
+
+    _dropped_binders: List[str] = PrivateAttr(default_factory=list)
+
+    @model_validator(mode="wrap")
+    @classmethod
+    def _drop_deprecated_binders(cls, values, handler):
+        """Accept and ignore the removed `analytic_binders` key for one release (RS-W2-3 PR-B).
+
+        An empty mapping (what older generated specs serialise) is dropped silently. A non-empty
+        one is dropped with a DeprecationWarning and a log warning naming the parameters: the
+        routine must declare them as `inputs` instead, or its call will lack them. The names are
+        kept on the model (`_dropped_binders`) so the spec resolver can report them as a warning.
+
+        The marker is a private attribute: it survives `model_copy`, but NOT `model_dump` and a
+        reload (`model_validate_json(fs.model_dump_json())` has no marker and so no warning), since
+        the dump no longer holds the key. Resolve the loaded spec, not a serialised copy of it. The
+        EGERIA tier rebuilds its specs from the cached micro-flow text, which keeps the key, so
+        its marker is set afresh on every load.
+        """
+        names: List[str] = []
+        if isinstance(values, dict) and "analytic_binders" in values:
+            values = dict(values)
+            binders = values.pop("analytic_binders")
+            if binders:
+                names = sorted(binders) if isinstance(binders, dict) else [repr(binders)]
+                message = (
+                    f"analytic_binders is no longer supported and is ignored (binders for: {', '.join(names)}). "
+                    f"Declare these arguments as the routine's inputs (reader:<name>, viewer, subject, "
+                    f"egeria_client:<Class>); the environment's role supply provides them. "
+                    f"The key will be refused in a later release.")
+                warnings.warn(message, DeprecationWarning, stacklevel=2)
+                logger.warning(message)
+        model = handler(values)
+        if names:
+            model._dropped_binders = names
+        return model
 
     @model_validator(mode="before")
     @classmethod
@@ -333,7 +371,21 @@ class FormatSet(BaseModel):
         if isinstance(values, dict):
             if 'entity_type' in values and 'target_type' not in values:
                 values['target_type'] = values.pop('entity_type')
+            # Egeria's ReportSpec property, and the canonical JSON key (ws #794, RS-W2-2 PR-B).
+            # `target_type` stays this model's field name until the generator moves (§9.6).
+            if 'target_type_name' in values:
+                values = dict(values)
+                canonical = values.pop('target_type_name')
+                if values.get('target_type') not in (None, canonical):
+                    raise ValueError(f"target_type_name '{canonical}' and target_type '{values['target_type']}' "
+                                     "disagree: they are one value (target_type is its old key)")
+                values['target_type'] = canonical
         return values
+
+    @property
+    def target_type_name(self) -> Optional[str]:
+        """Egeria's name for `target_type` (the ReportSpec property targetTypeName)."""
+        return self.target_type
 
     @field_validator('formats', mode='before')
     @classmethod

@@ -91,18 +91,20 @@ async def test_periodic_subscription_type_sends_interval_in_minutes_as_int():
     result, calls = await _run(_cmd("Create", "Subscription Type", {
         "Digital Product": "Hospital Data", "Subscription Kind": "periodic",   # case-insensitive
         "Display Name": "Daily refresh", "Identifier": "DAILY-REFRESH-SUBSCRIPTION",
-        "Subscription Notification Interval": "1440", "Subscription Manager": "Baudot Manager"}))
+        "Minimum Notification Interval": "1440", "Subscription Manager": "Baudot Manager"}))
 
     assert result["status"] == "success", result
     [(kind, guid, body)] = calls
     assert kind == "periodic"
-    assert body["notificationInterval"] == 1440 and isinstance(body["notificationInterval"], int)
+    assert body["minimumNotificationInterval"] == 1440 and isinstance(body["minimumNotificationInterval"], int)
     assert body["identifier"] == "DAILY-REFRESH-SUBSCRIPTION"
     assert body["subscriptionManagerGUID"] == "manager-1"
 
 
 @pytest.mark.asyncio
 async def test_ongoing_update_subscription_type_sends_monitored_resource_guids():
+    # Uses the attribute's old label, "Subscription Notification Interval", which stays an alternate
+    # label of "Minimum Notification Interval" so existing documents still parse.
     result, calls = await _run(_cmd("Create", "Subscription Type", {
         "Digital Product": "Hospital Data", "Subscription Kind": "ONGOING_UPDATE",
         "Display Name": "Ongoing", "Subscription Notification Interval": "10",
@@ -112,13 +114,13 @@ async def test_ongoing_update_subscription_type_sends_monitored_resource_guids()
     [(kind, guid, body)] = calls
     assert kind == "ongoing-update"
     assert body["monitoredResourceGUIDs"] == ["asset-1", "asset-2"]
-    assert body["notificationInterval"] == 10
+    assert body["minimumNotificationInterval"] == 10
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("attributes, message", [
-    ({"Subscription Kind": "PERIODIC"}, "Subscription Notification Interval"),
-    ({"Subscription Kind": "ONGOING_UPDATE", "Subscription Notification Interval": "5"}, "Monitored Resources"),
+    ({"Subscription Kind": "PERIODIC"}, "Minimum Notification Interval"),
+    ({"Subscription Kind": "ONGOING_UPDATE", "Minimum Notification Interval": "5"}, "Monitored Resources"),
     ({"Subscription Kind": "HOURLY"}, "Subscription Kind"),
 ])
 async def test_subscription_type_rejects_incomplete_requests_before_calling_egeria(attributes, message):

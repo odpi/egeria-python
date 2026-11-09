@@ -2882,25 +2882,6 @@
       "level": "Domain",
       "Journal Entry": ""
     },
-    "Notification Interval": {
-      "variable_name": "notification_interval",
-      "inUpdate": true,
-      "attr_labels": "",
-      "examples": "",
-      "default_value": "",
-      "valid_values": [],
-      "existing_element": "",
-      "description": "The interval between scheduled notifications in milliseconds.",
-      "generated": false,
-      "style": "Simple Int",
-      "user_specified": true,
-      "unique": false,
-      "input_required": false,
-      "min_cardinality": 0,
-      "max_cardinality": 1,
-      "level": "Domain",
-      "Journal Entry": ""
-    },
     "Notification Type": {
       "variable_name": "notification_type",
       "inUpdate": false,
@@ -3940,7 +3921,6 @@
         "Multiple Notifications Permitted",
         "Next Scheduled Notification",
         "Notification Count",
-        "Notification Interval",
         "Minimum Notification Interval",
         "Planned Start Date"
       ],

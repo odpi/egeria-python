@@ -12,6 +12,8 @@ from typing import Optional, Any
 from loguru import logger
 from pydantic import HttpUrl
 
+from typing import Unpack
+from pyegeria.core.request_filters import GetFilters, ListFilters, SearchFilters
 from pyegeria.core._globals import NO_GUID_RETURNED
 from pyegeria.view.base_report_formats import select_report_spec, get_report_spec_match
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
@@ -1207,7 +1209,7 @@ class ExternalReferences(ServerClient):
         page_size: int = 100,
         graph_query_depth: int = 3, output_format: str = 'JSON',
         report_spec: str | dict = "ExternalReference",
-        **kwargs
+        **kwargs: Unpack[SearchFilters]
     ) -> list | str:
         """ Retrieve the list of external reference metadata elements that contain the search string. Async Version.
 
@@ -1264,6 +1266,9 @@ class ExternalReferences(ServerClient):
         body: dict | SearchStringRequestBody, optional, default = None
             - if provided, the search parameters in the body will supercede other attributes, such as "search_string"
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         List | str
@@ -1318,7 +1323,7 @@ class ExternalReferences(ServerClient):
         page_size: int = 100,
         graph_query_depth: int = 3, output_format: str = 'JSON',
         report_spec: str | dict = "ExternalReference",
-        **kwargs
+        **kwargs: Unpack[SearchFilters]
     ) -> list | str:
         """ Retrieve the list of external reference metadata elements that contain the search string.
 
@@ -1375,6 +1380,9 @@ class ExternalReferences(ServerClient):
         body: dict | SearchStringRequestBody, optional, default = None
             - if provided, the search parameters in the body will supercede other attributes, such as "search_string"
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         List | str
@@ -1415,7 +1423,7 @@ class ExternalReferences(ServerClient):
                                                      start_from: int = 0, page_size: int = 0,
                                                      graph_query_depth: int = 3, output_format: str = 'JSON',
                                                      report_spec: str | dict = "ExternalReference",
-                                                     **kwargs) -> list | str:
+                                                     **kwargs: Unpack[ListFilters]) -> list | str:
         """ Returns the list of external references with a particular name.
 
             Parameters
@@ -1435,6 +1443,9 @@ class ExternalReferences(ServerClient):
                 - one of "DICT", "MERMAID" or "JSON"
             report_spec: dict , optional, default = None
                 The desired output columns/fields to include.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
             Returns
             -------
@@ -1479,7 +1490,7 @@ class ExternalReferences(ServerClient):
                                         body: Optional[dict | FilterRequestBody] = None,
                                         start_from: int = 0, page_size: int = 0, graph_query_depth: int = 3, output_format: str = 'JSON',
                                         report_spec: str | dict = "ExternalReference",
-                                        **kwargs) -> list | str:
+                                        **kwargs: Unpack[ListFilters]) -> list | str:
         """Returns the list of external references matching the filter string. Async version.
             The search string is located in the request body and is interpreted as a plain string.
             The request parameters, startsWith, endsWith, and ignoreCase can be used to allow a fuzzy search.
@@ -1501,6 +1512,9 @@ class ExternalReferences(ServerClient):
             - one of "DICT", "MERMAID" or "JSON"
          report_spec: str | dict, optional, default = None
                 The desired output columns/fields to include.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1525,7 +1539,7 @@ class ExternalReferences(ServerClient):
                                                     body: Optional[dict | GetRequestBody] = None,
                                                     graph_query_depth: int = 3, output_format: str = 'JSON',
                                                     report_spec: str | dict = "ExternalReference",
-                                                    **kwargs) -> dict | str:
+                                                    **kwargs: Unpack[GetFilters]) -> dict | str:
         """Return the properties of a specific external reference. Async version.
 
         Parameters
@@ -1540,6 +1554,9 @@ class ExternalReferences(ServerClient):
             - one of "DICT", "MERMAID" or "JSON"
          report_spec: str | dict, optional, default = None
                 The desired output columns/fields to include.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1594,7 +1611,7 @@ class ExternalReferences(ServerClient):
                                        body: Optional[dict | GetRequestBody] = None,
                                        graph_query_depth: int = 3, output_format: str = 'JSON',
                                        report_spec: str | dict = "ExternalReference",
-                                       **kwargs) -> dict | str:
+                                       **kwargs: Unpack[GetFilters]) -> dict | str:
         """ Return the properties of a specific external reference. Async version.
 
             Parameters
@@ -1610,6 +1627,9 @@ class ExternalReferences(ServerClient):
             report_spec: dict , optional, default = None
                 The desired output columns/fields to include.
 
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
             Returns
             -------
@@ -2076,7 +2096,7 @@ class ExternalReferences(ServerClient):
                                                       start_from: int = 0, page_size: int = 0,
                                                       output_format: str = "JSON",
                                                       report_spec: Optional[str | dict] = "ExternalIdentifier",
-                                                      **kwargs) -> Any:
+                                                      **kwargs: Unpack[ListFilters]) -> Any:
         """ Returns the list of external identifiers with a particular name.
             Async version.
 
@@ -2099,6 +2119,9 @@ class ExternalReferences(ServerClient):
 
         report_spec: str | dict, optional, default = "ExternalIdentifier"
             The report specification to use.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -2132,8 +2155,8 @@ class ExternalReferences(ServerClient):
 
         url = f"{self.command_root}/external-identifiers/by-name"
         return await self._async_get_name_request(url, "ExternalId", self._generate_external_identifier_output,
-                                                    filter_string=name, start_from=start_from, page_size=page_size,
-                                                    output_format=output_format, report_spec=report_spec, body=body, **kwargs)
+                                                    start_from=start_from, page_size=page_size,
+                                                    output_format=output_format, report_spec=report_spec, body=body, **{"filter_string": name, **kwargs})
 
     @dynamic_catch
     def get_external_identifiers_by_name(self, name: str = "*",
@@ -2141,7 +2164,7 @@ class ExternalReferences(ServerClient):
                                          start_from: int = 0, page_size: int = 0,
                                          output_format: str = "JSON",
                                          report_spec: Optional[str | dict] = "ExternalIdentifier",
-                                         **kwargs) -> Any:
+                                         **kwargs: Unpack[ListFilters]) -> Any:
         """ Returns the list of external identifiers with a particular name.
 
         Parameters
@@ -2164,6 +2187,9 @@ class ExternalReferences(ServerClient):
         report_spec: str | dict, optional, default = "ExternalIdentifier"
             The report specification to use.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         Any - list of matching metadata elements or formatted output
@@ -2179,7 +2205,7 @@ class ExternalReferences(ServerClient):
                                                ignore_case: bool = True, start_from: int = 0, page_size: int = 0,
                                                output_format: str = "JSON",
                                                report_spec: Optional[str | dict] = "ExternalIdentifier",
-                                               **kwargs) -> Any:
+                                               **kwargs: Unpack[SearchFilters]) -> Any:
         """ Retrieve the list of external identifiers metadata elements that contain the search string.
             Async version.
 
@@ -2211,6 +2237,9 @@ class ExternalReferences(ServerClient):
 
         report_spec: str | dict, optional, default = "ExternalIdentifier"
             The report specification to use.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -2257,7 +2286,7 @@ class ExternalReferences(ServerClient):
                                   ignore_case: bool = True, start_from: int = 0, page_size: int = 0,
                                   output_format: str = "JSON",
                                   report_spec: Optional[str | dict] = "ExternalIdentifier",
-                                  **kwargs) -> Any:
+                                  **kwargs: Unpack[SearchFilters]) -> Any:
         """ Retrieve the list of external identifiers metadata elements that contain the search string.
 
         Parameters
@@ -2289,6 +2318,9 @@ class ExternalReferences(ServerClient):
         report_spec: str | dict, optional, default = "ExternalIdentifier"
             The report specification to use.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         Any - list of matching metadata elements or formatted output
@@ -2303,7 +2335,7 @@ class ExternalReferences(ServerClient):
                                                      body: Optional[dict | GetRequestBody] = None,
                                                      output_format: str = "JSON",
                                                      report_spec: Optional[str | dict] = "ExternalIdentifier",
-                                                     **kwargs) -> Any:
+                                                     **kwargs: Unpack[GetFilters]) -> Any:
         """ Return the properties of a specific external identifier.
             Async version.
 
@@ -2320,6 +2352,9 @@ class ExternalReferences(ServerClient):
 
         report_spec: str | dict, optional, default = "ExternalIdentifier"
             The report specification to use.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -2354,7 +2389,7 @@ class ExternalReferences(ServerClient):
                                         body: Optional[dict | GetRequestBody] = None,
                                         output_format: str = "JSON",
                                         report_spec: Optional[str | dict] = "ExternalIdentifier",
-                                        **kwargs) -> Any:
+                                        **kwargs: Unpack[GetFilters]) -> Any:
         """ Return the properties of a specific external identifier.
 
         Parameters
@@ -2370,6 +2405,9 @@ class ExternalReferences(ServerClient):
 
         report_spec: str | dict, optional, default = "ExternalIdentifier"
             The report specification to use.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------

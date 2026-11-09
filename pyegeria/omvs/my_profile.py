@@ -11,6 +11,8 @@ import time
 from loguru import logger
 from typing import Any, Optional
 
+from typing import Unpack
+from pyegeria.core.request_filters import ListFilters
 from pyegeria import NO_ELEMENTS_FOUND, PyegeriaInvalidParameterException
 from pyegeria.omvs.asset_maker import AssetMaker
 from pyegeria.core._validators import validate_name
@@ -668,9 +670,13 @@ class MyProfile(AssetMaker):
         output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         body: Optional[dict | ResultsRequestBody] = None,
-        **kwargs,
+        **kwargs: Unpack[ListFilters],
     ) -> list | str:
-        """Return the list of actors linked to the user's profile. Async version."""
+        """Return the list of actors linked to the user's profile. Async version.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         url = f"{self.my_profile_command_root}/actors"
         # filter_results_by_type=False: "ActorProfile" is only a rendering hint. The
         # endpoint's .http example sends no type filter, and sending one made every
@@ -700,9 +706,13 @@ class MyProfile(AssetMaker):
         output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         body: Optional[dict | ResultsRequestBody] = None,
-        **kwargs,
+        **kwargs: Unpack[ListFilters],
     ) -> list | str:
-        """Return the list of actors linked to the user's profile."""
+        """Return the list of actors linked to the user's profile.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         return run_sync(
             self._async_get_my_actors(
                 graph_query_depth=graph_query_depth,
@@ -724,9 +734,13 @@ class MyProfile(AssetMaker):
         output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         body: Optional[dict | ResultsRequestBody] = None,
-        **kwargs,
+        **kwargs: Unpack[ListFilters],
     ) -> list | str:
-        """Return the list of user identities linked to the user's profile. Async version."""
+        """Return the list of user identities linked to the user's profile. Async version.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         url = f"{self.my_profile_command_root}/actors/user-identities"
         # filter_results_by_type=False: "UserIdentity" is only a rendering hint. The
         # endpoint's .http example sends no type filter, and with one the server
@@ -755,9 +769,13 @@ class MyProfile(AssetMaker):
         output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         body: Optional[dict | ResultsRequestBody] = None,
-        **kwargs,
+        **kwargs: Unpack[ListFilters],
     ) -> list | str:
-        """Return the list of user identities linked to the user's profile."""
+        """Return the list of user identities linked to the user's profile.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         return run_sync(
             self._async_get_my_user_identities(
                 graph_query_depth=graph_query_depth,
@@ -779,9 +797,13 @@ class MyProfile(AssetMaker):
         output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         body: Optional[dict | ResultsRequestBody] = None,
-        **kwargs,
+        **kwargs: Unpack[ListFilters],
     ) -> list | str:
-        """Return the list of assigned roles linked to the user's profile. Async version."""
+        """Return the list of assigned roles linked to the user's profile. Async version.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         url = f"{self.my_profile_command_root}/actors/assigned-roles"
         # filter_results_by_type=False: "GovernanceRole" is only a rendering hint. The
         # endpoint's .http example sends no type filter, and with one the server
@@ -810,9 +832,13 @@ class MyProfile(AssetMaker):
         output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         body: Optional[dict | ResultsRequestBody] = None,
-        **kwargs,
+        **kwargs: Unpack[ListFilters],
     ) -> list | str:
-        """Return the list of assigned roles linked to the user's profile."""
+        """Return the list of assigned roles linked to the user's profile.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         return run_sync(
             self._async_get_my_roles(
                 graph_query_depth=graph_query_depth,
@@ -834,9 +860,13 @@ class MyProfile(AssetMaker):
         output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         body: Optional[dict | ResultsRequestBody] = None,
-        **kwargs,
+        **kwargs: Unpack[ListFilters],
     ) -> list | str:
-        """Return the list of assigned resources linked to the user's profile. Async version."""
+        """Return the list of assigned resources linked to the user's profile. Async version.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         url = f"{self.my_profile_command_root}/assigned-resources?includeUserIds=true&includeRoles=true"
         # filter_results_by_type=False: "Resource" is only a rendering hint, not an
         # Egeria type. Sent as metadataElementTypeName it made every call fail with
@@ -866,9 +896,13 @@ class MyProfile(AssetMaker):
         output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         body: Optional[dict | ResultsRequestBody] = None,
-        **kwargs,
+        **kwargs: Unpack[ListFilters],
     ) -> list | str:
-        """Return the list of assigned resources linked to the user's profile."""
+        """Return the list of assigned resources linked to the user's profile.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         return run_sync(
             self._async_get_my_resources(
                 graph_query_depth=graph_query_depth,
@@ -897,7 +931,11 @@ class MyProfile(AssetMaker):
         body: Optional[dict | ActivityStatusRequestBody] = None,
         **kwargs,
     ) -> list | str:
-        """Get assigned actions for the user profile. Async version."""
+        """Get assigned actions for the user profile. Async version.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         url = f"{self.my_profile_command_root}/assigned-actions?includeUserIds=true&includeRoles=true"
         # metadata_element_type/metadata_element_subtypes are intentionally NOT
         # forwarded into the request body here. The real ActivityStatusRequestBody/
@@ -951,7 +989,11 @@ class MyProfile(AssetMaker):
         body: Optional[dict | ActivityStatusRequestBody] = None,
         **kwargs,
     ) -> list | str:
-        """Get assigned actions for the user profile."""
+        """Get assigned actions for the user profile.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         return run_sync(
             self._async_get_my_assigned_actions(
                 metadata_element_type=metadata_element_type,
@@ -983,7 +1025,11 @@ class MyProfile(AssetMaker):
         body: Optional[dict | ActivityStatusRequestBody] = None,
         **kwargs,
     ) -> list | str:
-        """Get actions sponsored by the user profile. Async version."""
+        """Get actions sponsored by the user profile. Async version.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         url = f"{self.my_profile_command_root}/sponsored-actions?includeUserIds=true&includeRoles=true"
         return await self._async_activity_status_request(
             url,
@@ -1015,7 +1061,11 @@ class MyProfile(AssetMaker):
         body: Optional[dict | ActivityStatusRequestBody] = None,
         **kwargs,
     ) -> list | str:
-        """Get actions sponsored by the user profile."""
+        """Get actions sponsored by the user profile.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         return run_sync(
             self._async_get_my_sponsored_actions(
                 activity_status_list=activity_status_list,
@@ -1045,7 +1095,11 @@ class MyProfile(AssetMaker):
         body: Optional[dict | ActivityStatusRequestBody] = None,
         **kwargs,
     ) -> list | str:
-        """Get actions requested by the user profile. Async version."""
+        """Get actions requested by the user profile. Async version.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         url = f"{self.my_profile_command_root}/requested-actions?includeUserIds=true&includeRoles=true"
         return await self._async_activity_status_request(
             url,
@@ -1077,7 +1131,11 @@ class MyProfile(AssetMaker):
         body: Optional[dict | ActivityStatusRequestBody] = None,
         **kwargs,
     ) -> list | str:
-        """Get actions requested by the user profile."""
+        """Get actions requested by the user profile.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         return run_sync(
             self._async_get_my_requested_actions(
                 activity_status_list=activity_status_list,
@@ -1574,7 +1632,11 @@ class MyProfile(AssetMaker):
         page_size: int = 100,
         **kwargs,
     ) -> list | str:
-        """find To-Do items. Async version."""
+        """find To-Do items. Async version.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         return await self._async_get_my_assigned_actions(
             metadata_element_type=metadata_element_type,
             metadata_element_subtypes=metadata_element_subtypes,
@@ -1598,7 +1660,11 @@ class MyProfile(AssetMaker):
         page_size: int = 100,
         **kwargs,
     ) -> list | str:
-        """find To-Do items."""
+        """find To-Do items.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         return self.get_my_assigned_actions(
             metadata_element_type=metadata_element_type,
             metadata_element_subtypes=metadata_element_subtypes,

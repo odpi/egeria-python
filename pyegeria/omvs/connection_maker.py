@@ -138,7 +138,6 @@ class ConnectionMaker(ServerClient):
             url,
             "Connection",
             self._generate_referenceable_output,
-            filter_string=name,
             metadata_element_subtypes=metadata_element_subtypes,
             include_only_relationships=include_only_relationships,
             skip_relationships=skip_relationships,
@@ -148,7 +147,7 @@ class ConnectionMaker(ServerClient):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **kwargs,
+            **{"filter_string": name, **kwargs},
         )
 
     def get_connections_by_name(
@@ -369,7 +368,6 @@ class ConnectionMaker(ServerClient):
             url,
             "ConnectorType",
             self._generate_referenceable_output,
-            filter_string=name,
             metadata_element_subtypes=metadata_element_subtypes,
             include_only_relationships=include_only_relationships,
             skip_relationships=skip_relationships,
@@ -379,7 +377,7 @@ class ConnectionMaker(ServerClient):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **kwargs,
+            **{"filter_string": name, **kwargs},
         )
 
     def get_connector_types_by_name(
@@ -431,7 +429,6 @@ class ConnectionMaker(ServerClient):
             url,
             "ConnectorType",
             self._generate_referenceable_output,
-            filter_string=connector_provider_class_name,
             metadata_element_subtypes=metadata_element_subtypes,
             include_only_relationships=include_only_relationships,
             skip_relationships=skip_relationships,
@@ -441,7 +438,7 @@ class ConnectionMaker(ServerClient):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **kwargs,
+            **{"filter_string": connector_provider_class_name, **kwargs},
         )
 
     def get_connector_types_by_connector_provider_class_name(
@@ -662,7 +659,6 @@ class ConnectionMaker(ServerClient):
             url,
             "Endpoint",
             self._generate_referenceable_output,
-            filter_string=name,
             metadata_element_subtypes=metadata_element_subtypes,
             include_only_relationships=include_only_relationships,
             skip_relationships=skip_relationships,
@@ -672,7 +668,7 @@ class ConnectionMaker(ServerClient):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **kwargs,
+            **{"filter_string": name, **kwargs},
         )
 
     def get_endpoints_by_name(
@@ -724,7 +720,6 @@ class ConnectionMaker(ServerClient):
             url,
             "Endpoint",
             self._generate_referenceable_output,
-            filter_string=network_address,
             metadata_element_subtypes=metadata_element_subtypes,
             include_only_relationships=include_only_relationships,
             skip_relationships=skip_relationships,
@@ -734,7 +729,7 @@ class ConnectionMaker(ServerClient):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **kwargs,
+            **{"filter_string": network_address, **kwargs},
         )
 
     def get_endpoints_by_network_address(
@@ -877,7 +872,6 @@ class ConnectionMaker(ServerClient):
             url,
             "Endpoint",
             self._generate_referenceable_output,
-            filter_string=name,
             metadata_element_subtypes=metadata_element_subtypes,
             include_only_relationships=include_only_relationships,
             skip_relationships=skip_relationships,
@@ -887,7 +881,7 @@ class ConnectionMaker(ServerClient):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **kwargs,
+            **{"filter_string": name, **kwargs},
         )
 
     def get_endpoints_for_asset(
