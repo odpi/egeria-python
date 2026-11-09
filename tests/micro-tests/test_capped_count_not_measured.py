@@ -136,14 +136,45 @@ def test_notes_are_only_kept_inside_a_recording_block():
     assert [n["count"] for n in outer] == ["Process"]
 
 
-def test_a_full_relationship_page_is_not_a_relationship_count():
+def _rel_pages(rows):
+    """get_relationships paging like Egeria: rows from the body's startFrom, then an empty page."""
+    def fake(*a, body=None, **kw):
+        start, size = body["startFrom"], body["pageSize"]
+        return rows[start:start + size]
+    return fake
+
+
+def test_a_viewer_relationship_count_reads_every_page():
+    # A full page is not the last page: the viewer count pages on until Egeria returns an empty page.
     ce = MagicMock()
-    ce.get_relationships.return_value = [{"guid": f"r{i}"} for i in range(CAP)]
+    ce.get_relationships.side_effect = _rel_pages([{"relationshipHeader": {"guid": f"r{i}"}}
+                                                   for i in range(CAP + 247)])
+    with om.recording_unmeasured() as notes:
+        assert om.count_relationships(ce, "SemanticAssignment", population="viewer") == CAP + 247
+    assert notes == []
+    assert [c.kwargs["body"]["startFrom"] for c in ce.get_relationships.call_args_list] == [0, CAP, 2 * CAP]
+
+
+def test_a_relationship_scan_that_cannot_finish_is_not_a_count():
+    # A server that ignores startFrom repeats the page: the count is not measured, never the page.
+    ce = MagicMock()
+    ce.get_relationships.return_value = [{"relationshipHeader": {"guid": f"r{i}"}} for i in range(CAP)]
     with om.recording_unmeasured() as notes:
         assert om.count_relationships(ce, "SemanticAssignment", population="viewer") is None
-    assert notes[0]["count"] == "SemanticAssignment" and notes[0]["at_least"] == CAP
-    ce.get_relationships.return_value = [{"guid": "r1"}]
+    assert notes[0]["count"] == "SemanticAssignment relationships" and notes[0]["at_least"] == CAP
+    ce.get_relationships.reset_mock(return_value=True)
+    ce.get_relationships.side_effect = _rel_pages([{"relationshipHeader": {"guid": "r1"}}])
     assert om.count_relationships(ce, "SemanticAssignment", population="viewer") == 1
+
+
+def test_a_relationship_scan_stops_at_max_scan_pages_and_is_not_measured(monkeypatch):
+    monkeypatch.setattr(om, "MAX_SCAN_PAGES", 3)
+    ce = MagicMock()
+    ce.get_relationships.side_effect = _rel_pages([{"relationshipHeader": {"guid": f"r{i}"}}
+                                                   for i in range(3 * CAP + 1)])
+    with om.recording_unmeasured() as notes:
+        assert om.count_relationships(ce, "SemanticAssignment", population="viewer") is None
+    assert "stopped after 3 pages" in notes[0]["reason"] and notes[0]["at_least"] == 3 * CAP
 
 
 def test_semantic_grounding_no_longer_reports_500_links_100_percent():
