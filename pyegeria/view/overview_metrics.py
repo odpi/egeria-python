@@ -377,6 +377,83 @@ def _one_page_or_none(mgr, body: dict, what: str) -> Optional[list]:
     return page
 
 
+# ── counting by last-update time ───────────────────────────────────────────
+# Egeria cannot count by an updateTime condition: a search condition only reaches an element's own
+# properties, and the header's updateTime (set at create, so never empty) is not one of them -- a count
+# with `updateTime LT <cutoff>` answers 0 for every Asset (checked live 2026-11-09, and in the postgres
+# connector's QueryBuilder, where update_time is only a sort column). It can SORT by it (sequencingOrder
+# LAST_UPDATE_OLDEST), and startFrom is an offset into the repository's own sorted rows: a row the
+# viewer may not see still takes its offset and reads as an empty one-row page. So the number of rows
+# last updated before a cutoff is the offset of the first row updated at or after it, and a bisection
+# over offsets finds it in about log2(total / 25) one-row reads plus one read of the last window (12 for
+# 37,000 Assets), never paging the population.
+MAX_BISECT_READS = 64
+BISECT_WINDOW = 25  # the last window is read as one page of at most this many rows
+
+
+def _rows_updated_before(mgr, body: dict, cutoff, total: int, what: str) -> Optional[int]:
+    """How many of the `total` rows `body` matches were last updated before `cutoff`, by bisection over
+    their offsets in LAST_UPDATE_OLDEST order. One-row reads, then one read of the last window of at most
+    BISECT_WINDOW rows (it settles the count when every row in it is visible), at most MAX_BISECT_READS.
+
+    A row the viewer cannot see reads as an empty page, and it still counts: a hidden row between two rows
+    updated before the cutoff was updated before it too (the order is by update time), so the count is in
+    the repository population, like `total`. Only hidden rows between the last row seen before the cutoff
+    and the first row seen after it cannot be placed; then the result is None with a note giving the
+    range. None with a note, too, when a read fails or the reads run out. Never raises."""
+    b = {**body, "sequencingOrder": "LAST_UPDATE_OLDEST"}
+    lo, hi = 0, total  # rows [0, lo) were updated before the cutoff; rows [hi, total) were not
+    unknown: set = set()  # offsets that read as empty (hidden) or carried no update time
+    reads = 0
+    window_read = False
+    while lo < hi:
+        if not window_read and hi - lo <= BISECT_WINDOW and reads < MAX_BISECT_READS:
+            # One read of the whole remaining window settles it when every row in it is visible: then the
+            # page's positions are the offsets. With a hidden row in it, carry on one row at a time.
+            window_read = True
+            reads += 1
+            page = _find_or_none(mgr, b, hi - lo, start_from=lo)
+            if page is None:
+                _not_measured(what, "a read of the rows in update-time order failed")
+                return None
+            times = [_update_time(el) for el in page]
+            if len(page) == hi - lo and all(t is not None for t in times):
+                return lo + sum(1 for t in times if t < cutoff)
+            continue
+        mid = (lo + hi) // 2
+        found = None
+        for k in list(range(mid, hi)) + list(range(mid - 1, lo - 1, -1)):
+            if k in unknown:
+                continue
+            if reads >= MAX_BISECT_READS:
+                _not_measured(what, f"the update-time bisection used all {MAX_BISECT_READS} of its one-row reads "
+                                    f"(rows you cannot see lie between offsets {lo} and {hi}), so there are "
+                                    f"between {lo} and {hi}", at_least=lo)
+                return None
+            reads += 1
+            page = _find_or_none(mgr, b, 1, start_from=k)
+            if page is None:
+                _not_measured(what, "a read of the rows in update-time order failed")
+                return None
+            when = _update_time(page[0]) if page else None
+            if when is None:
+                unknown.add(k)
+                continue
+            found = (k, when)
+            break
+        if found is None:
+            _not_measured(what, f"the {hi - lo} rows between the last one updated before the cutoff and the "
+                                f"first one updated after it are not visible to you, so there are between "
+                                f"{lo} and {hi}", at_least=lo)
+            return None
+        k, when = found
+        if when < cutoff:
+            lo = k + 1
+        else:
+            hi = k
+    return lo
+
+
 SCOPE_VIEWER = "viewer"
 SCOPE_REPOSITORY = "repository"
 
@@ -1113,14 +1190,26 @@ def orphan_glossary_terms(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Opt
     catalog-wide-not-sub-filtered tradeoff `governedCount` etc. already
     carry, not a new one.
 
+    Egeria cannot count the distinct ends of a relationship type natively, so
+    the referenced set needs the scan. The term total is counted in the
+    viewer population, because the scan only sees what the viewer may see,
+    and a viewer count is slow (13.5 s live for 1,061 terms, against 0.7 s
+    for the repository count). So it runs on its own thread while the scan
+    pages (6.2.29): the routine takes about as long as the slower of the two,
+    not their sum. Its note, if any, still reaches the caller's
+    `recording_unmeasured()`.
+
     Returns {"termTotal": int|None, "referencedCount": int|None,
     "orphanCount": int|None}. Any field is None on total failure for its own
     step (never raises).
     """
-    # One population per payload: this payload's other figures come from a find, which only sees what the
+    # One population per payload: this payload's other figures come from a scan, which only sees what the
     # viewer may see, so its native total is counted in the viewer population too (never a repository
-    # total under a viewer numerator).
-    term_total = count_elements(mgr, "GlossaryTerm", as_of, strict=True, population=SCOPE_VIEWER)
+    # total under a viewer numerator). Two reads at once, not one after the other.
+    pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="orphan-terms")
+    term_future = pool.submit(contextvars.copy_context().run, count_elements, mgr, "GlossaryTerm", as_of,
+                              strict=True, population=SCOPE_VIEWER)
+    pool.shutdown(wait=False)
 
     referenced_count = None
     try:
@@ -1137,6 +1226,13 @@ def orphan_glossary_terms(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Opt
     except Exception as exc:  # noqa: BLE001
         logger.debug(f"orphan_glossary_terms: SemanticAssignment query failed: {exc}")
 
+    try:
+        term_total = term_future.result()
+    except Exception as exc:  # noqa: BLE001 -- count_elements does not raise; belt and braces
+        logger.debug(f"orphan_glossary_terms: GlossaryTerm count failed: {exc}")
+        _not_measured("GlossaryTerm", f"the count failed ({type(exc).__name__})")
+        term_total = None
+
     orphan_count = None
     if term_total is not None and referenced_count is not None:
         orphan_count = max(term_total - referenced_count, 0)
@@ -1147,50 +1243,53 @@ def orphan_glossary_terms(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Opt
 def stale_assets(mgr, as_of: Optional[str] = None, days: int = 180) -> Dict[str, Optional[int]]:
     """
     Assets with no update in the last `days` -- the Attention Queue's "Stale
-    assets" row, candidates for archival review. One bounded `Asset` element
-    fetch (same cap as every other full-element scan in this module), each
-    element's own version metadata (`_update_time`, already used elsewhere
-    in this file) compared against the cutoff -- no relationship traversal.
+    assets" row, candidates for archival review.
+
+    Both figures are in the repository population (the whole repository,
+    including Assets the viewer may not be able to see), so the payload never
+    mixes populations:
+
+    - assetTotal: the native push-down count of ACTIVE Assets.
+    - staleCount: how many of those were last updated before the cutoff.
+      Egeria cannot count by an update-time condition, but it sorts by update
+      time, so this is a bisection over the sorted rows' offsets
+      (`_rows_updated_before`): about log2(assetTotal / 25) one-row reads and
+      one read of the last 25-row window (12 for 37,000 Assets), never a page
+      of Assets (6.2.29). An Asset updated while
+      the bisection runs can shift the offsets by one.
 
     `as_of` anchors both the query and the cutoff clock (an as-of-time
     dashboard view should ask "stale as of that moment", not "stale as of
     right now" -- consistent with `certifications_summary`'s own as_of
     anchoring).
 
-    Returns {"staleCount": int|None, "assetTotal": int|None}. `staleCount`
-    is None when the Asset find fails, and None with an `unmeasured` note when
-    the find filled its DEFAULT_CAP page (6.2.28): the page is a sample, not
-    every Asset, so a count of stale ones in it is not the stale count and was
-    shown as 0 beside a not-measured assetTotal. `assetTotal` reuses
-    `count_elements` (native, unaffected by this function's own page).
+    Returns {"staleCount": int|None, "assetTotal": int|None}. Either is None,
+    with an `unmeasured` note, when it is not measured: the native count
+    failed (staleCount bisects over it, so it is None too), a read failed,
+    rows the viewer cannot see sit exactly at the cutoff (the note gives the
+    range), or the reads ran out. Never a figure from a sample of Assets.
     """
     from datetime import datetime, timezone, timedelta
 
-    stale_count = None
-    try:
-        anchor = datetime.fromisoformat(as_of.replace("Z", "+00:00")) if as_of else datetime.now(timezone.utc)
+    what = f"Assets not updated within {days} days"
+    body: Dict[str, Any] = {"class": "FindRequestBody", "metadataElementTypeName": "Asset",
+                            "limitResultsByStatus": ["ACTIVE"]}
+    total = _element_count(mgr, body, as_of, scope=SCOPE_REPOSITORY)  # noted when not measured
+    if total is None:
+        _not_measured(what, "the Asset count it bisects over was not measured")
+        return {"staleCount": None, "assetTotal": None}
+    anchor = datetime.now(timezone.utc)
+    if as_of:
+        try:
+            anchor = datetime.fromisoformat(as_of.replace("Z", "+00:00"))
+        except ValueError:
+            _not_measured(what, f"as_of {as_of!r} is not an ISO-8601 time, so there is no cutoff")
+            return {"staleCount": None, "assetTotal": total}
         if anchor.tzinfo is None:
             anchor = anchor.replace(tzinfo=timezone.utc)
-        cutoff = anchor - timedelta(days=days)
-        body = {"class": "FindRequestBody", "metadataElementTypeName": "Asset", "limitResultsByStatus": ["ACTIVE"]}
-        if as_of:
-            body["asOfTime"] = as_of
-        # None when the find failed, and None (with a note) when it filled its page: a page of Assets is
-        # a sample, so a stale count from it is not the stale count -- never 0 beside an unmeasured total.
-        elements = _one_page_or_none(mgr, body, f"Assets not updated within {days} days")
-        stale_count = None if elements is None else 0
-        for el in elements or []:
-            updated = _update_time(el)
-            if updated is not None and updated < cutoff:
-                stale_count += 1
-    except Exception as exc:  # noqa: BLE001
-        logger.debug(f"stale_assets: query failed: {exc}")
-
-    # One population per payload: this payload's other figures come from a find, which only sees what the
-    # viewer may see, so its native total is counted in the viewer population too (never a repository
-    # total under a viewer numerator).
-    return {"staleCount": stale_count,
-            "assetTotal": count_elements(mgr, "Asset", as_of, strict=True, population=SCOPE_VIEWER)}
+    b = dict(body, asOfTime=as_of) if as_of else dict(body)
+    stale_count = _rows_updated_before(mgr, b, anchor - timedelta(days=days), total, what)
+    return {"staleCount": stale_count, "assetTotal": total}
 
 
 def semantic_grounding(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Any]:
