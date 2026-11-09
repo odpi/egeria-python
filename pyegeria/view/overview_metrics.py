@@ -384,11 +384,13 @@ def _element_count(mgr, body: dict, as_of: Optional[str] = None, strict: bool = 
     or not) with a note, never 0 and never a viewer number masquerading as a
     repository one.
 
-    scope="viewer" or None: strict=False gives 0 when the fallback query fails
-    (the historical behaviour); strict=True gives None.
-    Either way: None when the fallback returned a full page (DEFAULT_CAP). That
-    is only a lower bound, never a total, so it is never returned as one; the
-    bound and the reason go to `recording_unmeasured()`'s notes.
+    scope="viewer" or None: the len(find) fallback answers when the native
+    count cannot. None, with a note, when that query fails too (strict or not:
+    a 0 would read as "none of them", 6.2.28), and None when it returned a full
+    page (DEFAULT_CAP). That is only a lower bound, never a total, so it is
+    never returned as one; the bound and the reason go to
+    `recording_unmeasured()`'s notes. `strict` no longer changes any result; it
+    is kept so existing callers still work.
     """
     push_down = _push_down(scope)
     kw = {} if push_down is None else {"push_down": push_down}
@@ -414,9 +416,7 @@ def _element_count(mgr, body: dict, as_of: Optional[str] = None, strict: bool = 
                             f"(the find fallback only sees what the viewer may see)")
         return None
     found = _find_or_none(mgr, b)
-    if found is None:
-        if not strict:
-            return 0
+    if found is None:  # strict or not: a failed query is not "none of them" (6.2.28)
         _not_measured(what, f"{native_words}, and the find fallback failed")
         return None
     if len(found) >= DEFAULT_CAP:  # a full page is a lower bound, never a total (strict or not)
@@ -444,7 +444,7 @@ def count_elements(
 
     Only in the viewer population (or scope=None) does a missing or failed
     native count fall back to `len(find_metadata_elements(...))`. There a
-    failed query counts as 0 unless strict=True (ISSUE-123), and a fallback
+    failed query is None, not 0 (strict or not, since 6.2.28), and a fallback
     that stops at DEFAULT_CAP gives None, never the cap: that page is a lower
     bound, not a total (its bound and reason are recorded too).
 
@@ -455,8 +455,9 @@ def count_elements(
     as_of : ISO-8601 asOfTime for a point-in-time count (None = now)
     classifications : classification names to match ANY of -- keep to a
         single call's worth (some connectors mishandle 2+ ANY conditions)
-    strict : when True, return None (not 0) if the query failed. A fallback
-        count that hit DEFAULT_CAP is None in either mode
+    strict : no longer changes the result: a count that is not measured is
+        None either way (since 6.2.28 a failed viewer query is None too, not 0).
+        Kept so existing callers still work
     scope : "repository" (the default: push_down=True, a whole-repository raw
         count -- fast, and it includes elements the caller may not be able to
         see; a deliberate interim choice, until zone-aware push-down exists),
@@ -467,9 +468,9 @@ def count_elements(
 
     Returns
     -------
-    Optional[int] -- None whenever a repository count is not measured, and on
-    a capped fallback; in viewer scope a failed query is 0 unless strict=True
-    (never raises)
+    Optional[int] -- None whenever the count is not measured: a failed or
+    unavailable repository count, a failed viewer query, or a capped fallback
+    (never 0 for any of those, and never raises)
     """
     body: Dict[str, Any] = {"class": "FindRequestBody", "limitResultsByStatus": ["ACTIVE"]}
     if type_name:
@@ -510,7 +511,7 @@ def count_elements_by_property(
     property_name : the element property to match (e.g. "deploymentStatus")
     property_value : the exact string value to match
     as_of : ISO-8601 asOfTime for a point-in-time count (None = now)
-    strict : as for count_elements -- None instead of 0 when not measured
+    strict : as for count_elements -- accepted, changes nothing (not measured is always None)
     scope : as for count_elements ("repository" by default | "viewer" | None)
     operator : "EQ" (the default: the property equals `property_value`) or
         "NEQ" (it is set and differs -- e.g. property_value="" counts elements
@@ -626,10 +627,11 @@ def counts_by_type(mgr, type_map: Sequence[Tuple[str, str]], as_of: Optional[str
                    strict: bool = False, scope: Optional[str] = SCOPE_REPOSITORY) -> List[Dict[str, Any]]:
     """
     Per-type counts for a set of (label, type_name) pairs -- e.g. the assets-
-    by-type composition breakdown. Unknown/wrong types just yield 0 rather
-    than failing the whole call. With strict=True, a count that could not be
-    measured is None (see count_elements); a capped fallback is None either
-    way, never the cap. `scope` is passed to count_elements.
+    by-type composition breakdown. A type that cannot be counted (unknown,
+    failed, timed out, or a capped fallback) is None for its own row, never 0,
+    rather than failing the whole call (see count_elements). `scope` is passed
+    to count_elements; `strict` is accepted for compatibility and changes
+    nothing.
 
     Returns a list of {"label": ..., "type": ..., "count": ...} dicts, in the
     order given.
@@ -1387,9 +1389,9 @@ def people_counts(mgr, as_of: Optional[str] = None, strict: bool = False, scope:
     filtered set, so totals may differ from an older implementation -- this
     raw count is the authoritative repository count.
 
-    Returns {"persons": int, "teams": int, "organizations": int,
-    "itProfiles": int, "communities": int}. With strict=True, a count that
-    could not be measured is None (see count_elements).
+    Returns {"persons": int|None, "teams": int|None, "organizations": int|None,
+    "itProfiles": int|None, "communities": int|None}. A count that could not be
+    measured is None, never 0 (see count_elements; `strict` changes nothing).
     """
     return {
         "persons": count_elements(mgr, "Person", as_of, strict=strict, **_pop(scope)),
@@ -1438,8 +1440,9 @@ def usage_context_counts(mgr, as_of: Optional[str] = None, strict: bool = False,
     in a *usage context* ("this store feeds the Clinical Trial supply
     chain", "this component realises the Sales blueprint").
 
-    Returns {"informationSupplyChains": int, "blueprints": int}. With
-    strict=True, a count that could not be measured is None (see count_elements).
+    Returns {"informationSupplyChains": int|None, "blueprints": int|None}. A
+    count that could not be measured is None, never 0 (see count_elements;
+    `strict` changes nothing).
     """
     return {
         "informationSupplyChains": count_elements(mgr, "InformationSupplyChain", as_of, strict=strict, **_pop(scope)),

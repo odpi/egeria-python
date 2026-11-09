@@ -761,8 +761,9 @@ def _as_of(description: str = "ISO-8601 asOfTime for a point-in-time value (None
 
 def _strict() -> AnalyticParam:
     return AnalyticParam(name="strict", type="bool", default=False,
-                         description="Return None instead of 0 when a count could not be measured "
-                                     "(query failed, or the fallback hit the page-size cap). ISSUE-123.")
+                         description="Accepted for compatibility; changes nothing. Since 6.2.28 a count "
+                                     "that could not be measured (query failed, or the fallback hit the "
+                                     "page-size cap) is None in every population, never 0. ISSUE-123.")
 
 
 def _population() -> AnalyticParam:

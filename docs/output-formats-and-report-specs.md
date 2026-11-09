@@ -1100,7 +1100,7 @@ A count a routine could not establish is `None`, never `0` and never the cap (#5
 - a `SERIES`/`BAR`/`PIE` over a result that holds one becomes `kind: "absent"` too: a missing bar, or a pie re-proportioned without its missing slice, would read as an answer;
 - a dict or list result keeps its measured values; the unmeasured ones are `None` and the notes name each one.
 
-Measured results are unchanged. One exception to "never `0`": a `viewer` count with `strict=False` still returns `0` when the query itself fails; pass `strict=True` for `None`.
+Measured results are unchanged. Since 6.2.28 there is no exception to "never `0`": a `viewer` count whose query fails is `None` with a note too, whatever `strict` says (6.2.27 still returned `0` there unless `strict=True`). `strict` is still accepted, and changes nothing.
 
 **Population (#556, 6.2.27).** The count routines take `population=` (`"viewer"` or `"repository"`; `scope=` is a deprecated alias and passing both with different values is a `ValueError`). They now default to `"repository"`: totals count the whole repository, **including elements the viewer may not be able to see**, via the native push-down count. This is a deliberate interim choice until zone-aware push-down exists, and the registry descriptions say so. `"viewer"` is an explicit opt-in; `scope=None` omits the argument and takes the server default. A failed repository count has no find fallback, so it is `None` with a note, strict or not. Routines that scan elements (for example `certifications_summary`, `orphan_glossary_terms`, `stale_assets`) stay viewer-scoped, and no payload mixes the two populations in one ratio.
 

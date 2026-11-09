@@ -107,8 +107,14 @@ def test_a_native_count_above_the_cap_is_trusted():
     assert notes == []
 
 
-def test_non_strict_viewer_failure_keeps_its_historical_zero():
-    assert om.count_elements(_mgr(find_error=RuntimeError("boom")), "Asset", population="viewer") == 0
+def test_a_failed_viewer_count_is_none_with_a_note_strict_or_not():
+    # 6.2.28: the non-strict viewer 0 is gone -- a failed query is not "no Assets".
+    for strict in (False, True):
+        with om.recording_unmeasured() as notes:
+            assert om.count_elements(_mgr(find_error=RuntimeError("boom")), "Asset", population="viewer",
+                                     strict=strict) is None
+        assert notes == [{"count": "Asset", "reason": "no native count is available, and the find fallback failed",
+                          "at_least": None}]
 
 
 def test_a_classification_count_names_what_it_counted():
