@@ -292,10 +292,12 @@ def test_every_function_todays_runnable_local_specs_name_passes_the_allowlist(ti
 @pytest.mark.parametrize("func,words", [
     ("pyegeria.omvs.collection_manager.CollectionManager.find_collections", "dotted module path"),
     ("os.system", "not an EgeriaTech client class"),
-    ("CollectionManager.create_collection", "not read-only by name"),
-    ("CollectionManager.delete_collection", "not read-only by name"),
+    ("CollectionManager.create_collection", "not on the allowlist"),
+    ("CollectionManager.delete_collection", "not on the allowlist"),
+    ("CollectionManager.get_collection_by_guid", "not on the allowlist"),  # read-only by name, not listed
+    ("EgeriaTech.find_collections", "not on the allowlist"),  # entries are Class.method as written
     ("NotAClient.find_things", "not an EgeriaTech client class"),
-    ("CollectionManager.find_no_such_thing", "does not exist"),
+    ("CollectionManager.find_no_such_thing", "not on the allowlist"),
 ])
 def test_allowlist_refuses_with_words(func, words):
     ok, why = mfm.find_method_allowed(func)
@@ -326,66 +328,81 @@ def test_denylist_refuses_the_csv_template_write_on_every_class_and_async_twin()
         assert not ok and "denylist" in why, (decl, why)
 
 
+def test_async_twin_of_an_allowlisted_method_is_allowed():
+    assert mfm.find_method_allowed("CollectionManager._async_find_collections") == (True, "")
+
+
+def test_allowlist_is_the_census_plus_additions_and_never_meets_the_denylist():
+    assert mfm.FIND_METHOD_ALLOWLIST == mfm._CENSUS_FIND_METHODS | mfm.FIND_METHOD_ADDITIONS
+    assert len(mfm._CENSUS_FIND_METHODS) == 45
+    assert not (mfm.FIND_METHOD_ALLOWLIST & mfm.FIND_METHOD_DENYLIST)
+    denied = {e.rsplit(".", 1)[-1] for e in mfm.FIND_METHOD_DENYLIST}
+    assert not {e.rsplit(".", 1)[-1] for e in mfm.FIND_METHOD_ALLOWLIST} & denied
+
+
+def test_every_allowlist_entry_passes_the_allowlist():
+    """Each entry's class maps to an EgeriaTech client class and the method exists there."""
+    refused = {}
+    for decl in sorted(mfm.FIND_METHOD_ALLOWLIST):
+        ok, why = mfm.find_method_allowed(decl)
+        if not ok:
+            refused[decl] = why
+    assert not refused, refused
+
+
+def test_every_runnable_builtin_spec_function_is_on_the_allowlist(tier):
+    """The stage-2 seed writes today's built-in and generated specs into Egeria; none may be refused."""
+    from pyegeria.view.spec_resolver import resolve
+    missing = {}
+    for source in (brf.base_report_specs, brf.generated_format_sets):
+        for label, fs in source.items():
+            a = fs.action if isinstance(fs.action, dict) or fs.action is None else fs.action.model_dump()
+            func = (a or {}).get("function")
+            if not func or not resolve(fs, label).runnable:
+                continue
+            ok, why = mfm.find_method_allowed(func)
+            if not ok:
+                missing.setdefault(func, []).append(label)
+    assert not missing, missing
+
+
 # Write words, per the Architect's read-back of stage 1 (P1). A name matches when one of its
 # _-separated words starts with one; a docstring's first line when a word there does.
 _WRITE_WORDS = r"(create|add|update|delete|remove|attach|detach|set|start|stop|run|register|refresh|clear|load)"
 
-# Reviewed 2026-11-09: each passes the allowlist, matches a write word, and is a read. Why it matched:
+# Reviewed 2026-11-09, keyed by Class.method as on the allowlist: each matches a write word and is a
+# read. Why it matched:
 _REVIEWED_READS = {
-    "find_tabular_data_sets": "'data sets' (set) - retrieves tabular data set elements",
-    "get_tabular_data_set": "'data set' (set) - retrieves a tabular data set report",
-    "get_active_configuration": "'if it is running' - returns a server's configuration",
-    "get_active_server_instance_status": "'services running' - status of a server's services",
-    "get_approved_engine_actions": "'approved to run' - lists engine actions",
-    "get_attached_collections": "'attached' - lists linked collections",
-    "get_attached_comments": "'attached' - lists comments",
-    "get_attached_likes": "'attached' - lists likes",
-    "get_attached_note_logs": "'attached' - lists note logs",
-    "get_attached_ratings": "'attached' - lists ratings",
-    "get_attached_tags": "'attached' - lists informal tags",
-    "get_connector_config": "'connector running' - reads configuration properties",
-    "get_integration_connector_config_properties": "'connector running' - reads configuration properties",
-    "get_connector_type": "'as registered' - returns a connector type",
-    "get_endpoints_by_network_address": "'address' (add) - POST to /endpoints/by-network-address, a search",
-    "get_platform_report": "'running platform' - returns platform details",
-    "get_server_report": "'running server' - returns server details",
-    "get_project_hierarchy": "'starting with' - returns a project hierarchy",
-    "get_registered_services": "'registered' - lists registered services",
-    "get_security_posture_history": "'test run' - returns posture summaries",
-    "get_software_capabilities_for_infrastructure": "'attached' - lists software capabilities",
-    "get_user_list": "'registered' - lists platform users",
-    "get_valid_classification_types": "'can be attached' - returns TypeDefs",
-    "get_valid_relationship_types": "'can be attached' - returns TypeDefs",
+    "DataDiscovery.get_security_posture_history": "'one per test run' - returns posture summaries",
+    "ServerClient.get_attached_comments": "'attached' - lists the comments attached to an element",
 }
 
 
 def test_no_allowlisted_method_reads_as_a_write():
-    """Scan every method on the EgeriaTech classes that passes the allowlist for write words in its
-    name or its docstring's first line. Any hit must be on the denylist (and so not pass) or in
-    `_REVIEWED_READS`. A new hit means: read the method; if it writes, add it to
-    FIND_METHOD_DENYLIST; if it reads, add it to `_REVIEWED_READS` with why it matched."""
+    """Scan every FIND_METHOD_ALLOWLIST entry for write words in its method name or its docstring's
+    first line (sync and `_async_` twin). A hit must be in `_REVIEWED_READS`, keyed by Class.method.
+    A new hit means: read the method; if it writes, take it off the allowlist (and add it to
+    FIND_METHOD_DENYLIST); if it reads, add it to `_REVIEWED_READS` with why it matched."""
     import inspect
     import re
-    from pyegeria.view.spec_resolver import _egeria_tech_classes
+    import sys
+    from pyegeria.view.spec_resolver import _find_method
 
     name_re = re.compile(r"(^|_)" + _WRITE_WORDS)
     doc_re = re.compile(r"\b" + _WRITE_WORDS, re.I)
-    passing, hits = 0, {}
-    for cls in _egeria_tech_classes():
-        for attr in dir(cls):
-            bare = attr[len("_async_"):] if attr.startswith("_async_") else attr
-            if not bare.startswith(("find_", "get_", "list_")) or not callable(getattr(cls, attr, None)):
-                continue
-            ok, _why = mfm.find_method_allowed(f"{cls.__name__}.{attr}")
-            if not ok:
-                continue
-            passing += 1
-            doc = (inspect.getdoc(getattr(cls, attr)) or "").strip().splitlines()
-            first = doc[0] if doc else ""
-            if name_re.search(bare) or doc_re.search(first):
-                hits.setdefault(bare, f"{cls.__name__}.{attr}: {first[:120]}")
-    assert passing > 1000  # the scan really ran over the client classes
-    assert _WRITE_CSV not in hits
+    hits = {}
+    for decl in sorted(mfm.FIND_METHOD_ALLOWLIST):
+        bare = decl.rsplit(".", 1)[-1]
+        method, why = _find_method(decl)
+        assert method is not None, (decl, why)
+        # `_find_method` returns the `_async_` function; its defining class holds the sync twin.
+        owner = getattr(sys.modules.get(method.__module__), method.__qualname__.split(".")[0], None)
+        firsts = []
+        for m in (method, getattr(owner, bare, None)):
+            doc = (inspect.getdoc(m) or "").strip().splitlines() if m is not None else []
+            firsts.append(doc[0] if doc else "")
+        if name_re.search(bare) or any(doc_re.search(f) for f in firsts):
+            hits[decl] = " | ".join(f[:120] for f in firsts if f)
     unreviewed = {k: v for k, v in hits.items() if k not in _REVIEWED_READS}
     assert not unreviewed, unreviewed
     stale = set(_REVIEWED_READS) - set(hits)
