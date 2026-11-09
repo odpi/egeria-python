@@ -40,8 +40,9 @@ def _reset_seam_caches():
     om._native_server_ok.clear()
 
 
-def test_default_still_returns_zero_on_failure_in_the_viewer_population():
-    assert om.count_elements(_mgr(find_error=RuntimeError("401")), "Asset", population="viewer") == 0
+def test_a_failed_viewer_count_is_none_not_zero():
+    # 6.2.28: the historical non-strict 0 is gone -- a failed query is not "none of them".
+    assert om.count_elements(_mgr(find_error=RuntimeError("401")), "Asset", population="viewer") is None
 
 
 def test_a_failed_repository_count_is_none_never_zero():
@@ -86,7 +87,7 @@ def test_strict_native_count_is_trusted_even_above_the_cap():
 def test_strict_by_property():
     mgr = _mgr(find_error=RuntimeError("500"))
     assert om.count_elements_by_property(mgr, "DigitalProduct", "deploymentStatus", "ACTIVE",
-                                         population="viewer") == 0
+                                         population="viewer") is None
     assert om.count_elements_by_property(mgr, "DigitalProduct", "deploymentStatus", "ACTIVE",
                                          strict=True) is None
 
@@ -96,7 +97,7 @@ def test_strict_propagates_through_the_composite_counts():
     assert om.counts_by_type(mgr, [("Stores", "DataStore")], strict=True)[0]["count"] is None
     assert set(om.people_counts(mgr, strict=True).values()) == {None}
     assert set(om.usage_context_counts(mgr, strict=True).values()) == {None}
-    assert set(om.people_counts(mgr, population="viewer").values()) == {0}
+    assert set(om.people_counts(mgr, population="viewer").values()) == {None}   # never 0 (6.2.28)
     assert set(om.people_counts(mgr).values()) == {None}   # repository: no fallback, never 0
 
 

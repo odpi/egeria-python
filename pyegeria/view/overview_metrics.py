@@ -232,7 +232,7 @@ def _find(mgr, body: dict, page_size: int = DEFAULT_CAP) -> list:
     return _find_or_none(mgr, body, page_size) or []
 
 
-def _find_or_none(mgr, body: dict, page_size: int = DEFAULT_CAP) -> Optional[list]:
+def _find_or_none(mgr, body: dict, page_size: int = DEFAULT_CAP, start_from: int = 0) -> Optional[list]:
     """Run a FindRequestBody: a list of elements, [] when nothing matched (a list
     or pyegeria's "No elements found" string), or None when the query failed or
     answered with something else. Never raises."""
@@ -244,7 +244,7 @@ def _find_or_none(mgr, body: dict, page_size: int = DEFAULT_CAP) -> Optional[lis
         # stopped working once Egeria moved pagination for this endpoint
         # into the request body; find_metadata_elements no longer accepts
         # them as parameters at all, to avoid this drifting stale again).
-        b = {**body, "graphQueryDepth": 0, "startFrom": 0, "pageSize": page_size}
+        b = {**body, "graphQueryDepth": 0, "startFrom": start_from, "pageSize": page_size}
         raw = mgr.find_metadata_elements(b)
     except Exception as exc:  # noqa: BLE001 -- best-effort, degrade don't fail
         logger.debug(f"overview_metrics _find failed for {body.get('metadataElementTypeName')!r}: {exc}")
@@ -256,6 +256,125 @@ def _find_or_none(mgr, body: dict, page_size: int = DEFAULT_CAP) -> Optional[lis
     logger.debug(f"overview_metrics _find: unexpected result for {body.get('metadataElementTypeName')!r}: "
                  f"{type(raw).__name__}")
     return None
+
+
+# ── exhaustive scans ───────────────────────────────────────────────────────
+# A figure computed from a scan (distinct relationship ends, per-element checks) is only a figure when
+# the scan read everything. Egeria's paging contract: only an EMPTY page means done -- a short page is not
+# the last page, because a server may filter hits out of a page after fetching it. So these helpers page
+# until an empty page, advancing startFrom by the full page size every time, and a scan that would need
+# more than MAX_SCAN_PAGES pages stops and is not measured (None plus a note), never reported from the
+# part it had read. Found live 2026-11-08: one 500-relationship SemanticAssignment page held 8 distinct
+# terms, all 747 held 77, so the orphan-term count read 1,053 instead of 984.
+MAX_SCAN_PAGES = 40
+
+
+class _ScanIncomplete(Exception):
+    """Internal: a scan helper returned None (its note is already recorded)."""
+
+
+def _scan_stopped_reason(kind: str, n: int) -> str:
+    return (f"the {kind} scan stopped after {MAX_SCAN_PAGES} pages of {DEFAULT_CAP} ({n} read) before "
+            f"Egeria returned an empty page, so it is incomplete")
+
+
+def _repeated_page_reason(kind: str, n: int) -> str:
+    return (f"the {kind} scan got a page that repeated only what it had already read, so the server "
+            f"is not paging and the scan is incomplete ({n} read)")
+
+
+def _all_relationships(ce, relationship_type: str, as_of: Optional[str] = None) -> Optional[list]:
+    """Every relationship of `relationship_type` (as of `as_of`), paged until Egeria returns an empty page.
+
+    Distinct by relationship GUID: a page may repeat relationships an earlier page returned. Returns None,
+    with a note for `recording_unmeasured()`, when the scan is incomplete -- it reached MAX_SCAN_PAGES, or a
+    page added nothing new (the server ignored startFrom). Raises when a page query fails, so each caller
+    keeps its own failure path.
+
+    The body always carries startFrom/pageSize: ClassificationExplorer.get_relationships ignores its
+    start_from/page_size arguments whenever a body is given."""
+    out: list = []
+    seen: set = set()
+    prev: Optional[list] = None
+    what = f"{relationship_type} relationships"
+    for i in range(MAX_SCAN_PAGES):
+        start = i * DEFAULT_CAP
+        body: Dict[str, Any] = {"class": "ResultsRequestBody", "startFrom": start, "pageSize": DEFAULT_CAP}
+        if as_of:
+            body["asOfTime"] = as_of
+        page = _json_list(ce.get_relationships(relationship_type=relationship_type, output_format="JSON",
+                                               start_from=start, page_size=DEFAULT_CAP, body=body))
+        if not page:
+            return out
+        if page == prev:  # the same page again: startFrom was ignored (a GUID check cannot see it without GUIDs)
+            _not_measured(what, _repeated_page_reason("relationship", len(out)), at_least=len(out))
+            return None
+        prev = page
+        added = 0
+        for r in page:
+            g = (r.get("relationshipHeader") or {}).get("guid") or r.get("guid")
+            if g:
+                if g in seen:
+                    continue
+                seen.add(g)
+            out.append(r)
+            added += 1
+        if added == 0:
+            _not_measured(what, _repeated_page_reason("relationship", len(out)), at_least=len(out))
+            return None
+    _not_measured(what, _scan_stopped_reason("relationship", len(out)), at_least=len(out))
+    return None
+
+
+def _element_guid(el: dict) -> Optional[str]:
+    return el.get("elementGUID") or (el.get("elementHeader") or {}).get("guid") or el.get("guid")
+
+
+def _all_elements(mgr, body: dict) -> Optional[list]:
+    """Every element a FindRequestBody matches, paged until Egeria returns an empty page.
+
+    Distinct by element GUID. Returns None when a page query fails (no note: the caller's own failure
+    path), and None with a note when the scan is incomplete (MAX_SCAN_PAGES reached, or a page that added
+    nothing new). Never raises."""
+    out: list = []
+    seen: set = set()
+    prev: Optional[list] = None
+    for i in range(MAX_SCAN_PAGES):
+        page = _find_or_none(mgr, body, DEFAULT_CAP, start_from=i * DEFAULT_CAP)
+        if page is None:
+            return None
+        if not page:
+            return out
+        if page == prev:  # the same page again: startFrom was ignored
+            _not_measured(_count_label(body), _repeated_page_reason("find", len(out)), at_least=len(out))
+            return None
+        prev = page
+        added = 0
+        for el in page:
+            g = _element_guid(el)
+            if g:
+                if g in seen:
+                    continue
+                seen.add(g)
+            out.append(el)
+            added += 1
+        if added == 0:
+            _not_measured(_count_label(body), _repeated_page_reason("find", len(out)), at_least=len(out))
+            return None
+    _not_measured(_count_label(body), _scan_stopped_reason("find", len(out)), at_least=len(out))
+    return None
+
+
+def _one_page_or_none(mgr, body: dict, what: str) -> Optional[list]:
+    """One find page, for a routine whose population is too large to page through (Asset): the page,
+    [] when nothing matched, or None when the query failed or the page was full. A full page is a sample,
+    not the population, so a figure computed from it is not measured (a note says so)."""
+    page = _find_or_none(mgr, body)
+    if page is not None and len(page) >= DEFAULT_CAP:
+        _not_measured(what, f"the find stopped at its {DEFAULT_CAP}-element page cap, so this figure would "
+                            f"describe only the first {len(page)} elements, not all of them", at_least=len(page))
+        return None
+    return page
 
 
 SCOPE_VIEWER = "viewer"
@@ -384,11 +503,13 @@ def _element_count(mgr, body: dict, as_of: Optional[str] = None, strict: bool = 
     or not) with a note, never 0 and never a viewer number masquerading as a
     repository one.
 
-    scope="viewer" or None: strict=False gives 0 when the fallback query fails
-    (the historical behaviour); strict=True gives None.
-    Either way: None when the fallback returned a full page (DEFAULT_CAP). That
-    is only a lower bound, never a total, so it is never returned as one; the
-    bound and the reason go to `recording_unmeasured()`'s notes.
+    scope="viewer" or None: the len(find) fallback answers when the native
+    count cannot. None, with a note, when that query fails too (strict or not:
+    a 0 would read as "none of them", 6.2.28), and None when it returned a full
+    page (DEFAULT_CAP). That is only a lower bound, never a total, so it is
+    never returned as one; the bound and the reason go to
+    `recording_unmeasured()`'s notes. `strict` no longer changes any result; it
+    is kept so existing callers still work.
     """
     push_down = _push_down(scope)
     kw = {} if push_down is None else {"push_down": push_down}
@@ -414,9 +535,7 @@ def _element_count(mgr, body: dict, as_of: Optional[str] = None, strict: bool = 
                             f"(the find fallback only sees what the viewer may see)")
         return None
     found = _find_or_none(mgr, b)
-    if found is None:
-        if not strict:
-            return 0
+    if found is None:  # strict or not: a failed query is not "none of them" (6.2.28)
         _not_measured(what, f"{native_words}, and the find fallback failed")
         return None
     if len(found) >= DEFAULT_CAP:  # a full page is a lower bound, never a total (strict or not)
@@ -444,7 +563,7 @@ def count_elements(
 
     Only in the viewer population (or scope=None) does a missing or failed
     native count fall back to `len(find_metadata_elements(...))`. There a
-    failed query counts as 0 unless strict=True (ISSUE-123), and a fallback
+    failed query is None, not 0 (strict or not, since 6.2.28), and a fallback
     that stops at DEFAULT_CAP gives None, never the cap: that page is a lower
     bound, not a total (its bound and reason are recorded too).
 
@@ -455,8 +574,9 @@ def count_elements(
     as_of : ISO-8601 asOfTime for a point-in-time count (None = now)
     classifications : classification names to match ANY of -- keep to a
         single call's worth (some connectors mishandle 2+ ANY conditions)
-    strict : when True, return None (not 0) if the query failed. A fallback
-        count that hit DEFAULT_CAP is None in either mode
+    strict : no longer changes the result: a count that is not measured is
+        None either way (since 6.2.28 a failed viewer query is None too, not 0).
+        Kept so existing callers still work
     scope : "repository" (the default: push_down=True, a whole-repository raw
         count -- fast, and it includes elements the caller may not be able to
         see; a deliberate interim choice, until zone-aware push-down exists),
@@ -467,9 +587,9 @@ def count_elements(
 
     Returns
     -------
-    Optional[int] -- None whenever a repository count is not measured, and on
-    a capped fallback; in viewer scope a failed query is 0 unless strict=True
-    (never raises)
+    Optional[int] -- None whenever the count is not measured: a failed or
+    unavailable repository count, a failed viewer query, or a capped fallback
+    (never 0 for any of those, and never raises)
     """
     body: Dict[str, Any] = {"class": "FindRequestBody", "limitResultsByStatus": ["ACTIVE"]}
     if type_name:
@@ -510,7 +630,7 @@ def count_elements_by_property(
     property_name : the element property to match (e.g. "deploymentStatus")
     property_value : the exact string value to match
     as_of : ISO-8601 asOfTime for a point-in-time count (None = now)
-    strict : as for count_elements -- None instead of 0 when not measured
+    strict : as for count_elements -- accepted, changes nothing (not measured is always None)
     scope : as for count_elements ("repository" by default | "viewer" | None)
     operator : "EQ" (the default: the property equals `property_value`) or
         "NEQ" (it is set and differs -- e.g. property_value="" counts elements
@@ -606,19 +726,15 @@ def count_relationships(ce, relationship_type: str, as_of: Optional[str] = None,
                                          f"(get_relationships only sees what the viewer may see)")
         return None
     try:
-        body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
-        n = len(_json_list(ce.get_relationships(
-            relationship_type=relationship_type, output_format="JSON",
-            start_from=0, page_size=DEFAULT_CAP, body=body)))
+        # Paged to an empty page (Egeria's contract), so the count is every relationship the viewer may
+        # see, not one page of them; an incomplete scan is None with its note (see _all_relationships).
+        rels = _all_relationships(ce, relationship_type, as_of)
     except Exception as exc:  # noqa: BLE001
         logger.debug(f"overview_metrics count_relationships({relationship_type}) failed: {exc}")
+        _not_measured(relationship_type, f"{_native_failure_words(native_exc, tried)}, and the "
+                                         f"get_relationships fallback failed")
         return None
-    if n >= DEFAULT_CAP:
-        page = f"get_relationships stopped at its {DEFAULT_CAP}-relationship page cap, so there are at least {n}"
-        _not_measured(relationship_type, (f"{_native_failure_words(native_exc, tried)}, and {page}" if tried
-                                          else f"{page} (no native count was asked for)"), at_least=n)
-        return None
-    return n
+    return None if rels is None else len(rels)
 
 
 @_population_keyword
@@ -626,10 +742,11 @@ def counts_by_type(mgr, type_map: Sequence[Tuple[str, str]], as_of: Optional[str
                    strict: bool = False, scope: Optional[str] = SCOPE_REPOSITORY) -> List[Dict[str, Any]]:
     """
     Per-type counts for a set of (label, type_name) pairs -- e.g. the assets-
-    by-type composition breakdown. Unknown/wrong types just yield 0 rather
-    than failing the whole call. With strict=True, a count that could not be
-    measured is None (see count_elements); a capped fallback is None either
-    way, never the cap. `scope` is passed to count_elements.
+    by-type composition breakdown. A type that cannot be counted (unknown,
+    failed, timed out, or a capped fallback) is None for its own row, never 0,
+    rather than failing the whole call (see count_elements). `scope` is passed
+    to count_elements; `strict` is accepted for compatibility and changes
+    nothing.
 
     Returns a list of {"label": ..., "type": ..., "count": ...} dicts, in the
     order given.
@@ -724,8 +841,12 @@ def governed_coverage(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
     type, so these are catalog-wide counts, not Asset-only -- an existing,
     already-accepted proxy in this dashboard, not a new one introduced here.
 
-    If the find fails, governedCount/governedCapped/fullyGoverned/partialZoneOnly
-    are None (unmeasured) and byClassification/topZones are empty.
+    The find is paged until Egeria returns an empty page, so every figure
+    covers every governed element. If it fails or the scan is incomplete
+    (MAX_SCAN_PAGES; a note is recorded), governedCount/governedCapped/
+    fullyGoverned/partialZoneOnly are None (unmeasured) and byClassification/
+    topZones are empty. `governedCapped` is False whenever measured (kept for
+    callers that read it).
 
     Returns {"governedCount": int|None, "byClassification": {name: count},
     "topZones": [{"zone": name, "count": count}, ...8 max],
@@ -741,8 +862,8 @@ def governed_coverage(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
     }
     if as_of:
         body["asOfTime"] = as_of
-    hits = _find_or_none(mgr, body)
-    if hits is None:  # query failed: unmeasured, not "nothing governed"
+    hits = _all_elements(mgr, body)  # every page; None when it failed or was incomplete (noted)
+    if hits is None:  # unmeasured, not "nothing governed"
         return {
             "governedCount": None,
             "governedCapped": None,
@@ -773,7 +894,7 @@ def governed_coverage(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
 
     return {
         "governedCount": len(hits),
-        "governedCapped": len(hits) >= DEFAULT_CAP,
+        "governedCapped": False,  # every page was read
         "byClassification": by_classification,
         "topZones": [{"zone": z, "count": c} for z, c in top_zones],
         "fullyGoverned": fully_governed,
@@ -801,8 +922,10 @@ def ownership_coverage(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
     data" is repeatedly named as the foundation for trustworthy AI
     consumption), not a duplicate of governance-classification coverage.
 
-    If the find fails, ownershipCount/ownershipCapped are None (unmeasured, as in
-    governed_coverage) and byOwnerType is empty -- not 0, which read as "nothing owned".
+    The find is paged until Egeria returns an empty page. If it fails or the
+    scan is incomplete, ownershipCount/ownershipCapped are None (unmeasured, as
+    in governed_coverage) and byOwnerType is empty -- not 0, which read as
+    "nothing owned". `ownershipCapped` is False whenever measured.
 
     Returns {"ownershipCount": int|None, "ownershipCapped": bool|None,
     "byOwnerType": {typeName: count}}.
@@ -817,8 +940,8 @@ def ownership_coverage(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
     }
     if as_of:
         body["asOfTime"] = as_of
-    hits = _find_or_none(mgr, body)
-    if hits is None:  # query failed: unmeasured, not "nothing owned"
+    hits = _all_elements(mgr, body)  # every page; None when it failed or was incomplete (noted)
+    if hits is None:  # unmeasured, not "nothing owned"
         return {"ownershipCount": None, "ownershipCapped": None, "byOwnerType": {}}
 
     by_owner_type: Dict[str, int] = {}
@@ -828,7 +951,7 @@ def ownership_coverage(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
 
     return {
         "ownershipCount": len(hits),
-        "ownershipCapped": len(hits) >= DEFAULT_CAP,
+        "ownershipCapped": False,  # every page was read
         "byOwnerType": by_owner_type,
     }
 
@@ -926,15 +1049,17 @@ def certifications_summary(ce, as_of: Optional[str] = None) -> Dict[str, Any]:
     Returns {"active": int|None, "expiring90": int|None, "soon": [...],
     "licenses": int|None, "exceptions": int|None}. Degrades to Nones on
     failure rather than raising (a demo/dev server may simply have none).
+    The Certification relationships are paged to Egeria's empty page; an
+    incomplete scan leaves active/expiring90 None (with a note), never a count
+    of the first page.
     """
     from datetime import datetime, timezone, timedelta
 
     out: Dict[str, Any] = {"active": None, "expiring90": None, "soon": [], "licenses": None, "exceptions": None}
-    body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
     try:
-        certs = _json_list(ce.get_relationships(relationship_type="Certification",
-                                                output_format="JSON", start_from=0,
-                                                page_size=DEFAULT_CAP, body=body))
+        certs = _all_relationships(ce, "Certification", as_of)  # every page, not the first
+        if certs is None:  # incomplete scan (noted): active/expiring are not measured, not a count of a page
+            raise _ScanIncomplete()
         now = datetime.fromisoformat(as_of.replace("Z", "+00:00")) if as_of else datetime.now(timezone.utc)
         if now.tzinfo is None:
             now = now.replace(tzinfo=timezone.utc)
@@ -955,10 +1080,12 @@ def certifications_summary(ce, as_of: Optional[str] = None) -> Dict[str, Any]:
         out["active"] = len(certs)
         out["expiring90"] = expiring
         out["soon"] = soon[:5]
+    except _ScanIncomplete:
+        pass
     except Exception as exc:  # noqa: BLE001
         logger.debug(f"overview_metrics certifications_summary: query failed: {exc}")
 
-    # One population per payload: active/expiring come from a get_relationships page (viewer-scoped).
+    # One population per payload: active/expiring come from a get_relationships scan (viewer-scoped).
     out["licenses"] = count_relationships(ce, "License", as_of, population=SCOPE_VIEWER)
     out["exceptions"] = count_relationships(ce, "Exception", as_of, population=SCOPE_VIEWER)
     return out
@@ -974,10 +1101,14 @@ def orphan_glossary_terms(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Opt
     much of the catalog is grounded"; this one asks "how much of the
     glossary is idle").
 
-    Same single-bounded-relationship-fetch shape as `contextualised_coverage`
-    (ImplementedBy) -- one `SemanticAssignment` fetch, filtered to the
-    GlossaryTerm-typed end, distinct-GUID count is the "referenced" set;
-    orphan = term total - referenced. Not scoped to "approved" status
+    Same relationship-scan shape as `contextualised_coverage` (ImplementedBy):
+    every `SemanticAssignment` relationship, paged until Egeria returns an
+    empty page, filtered to the GlossaryTerm-typed end; the distinct-GUID count
+    is the "referenced" set; orphan = term total - referenced. An incomplete
+    scan makes referencedCount and orphanCount None (with a note), never a
+    figure from the pages it did read: one 500-relationship page held 8
+    distinct terms live (2026-11-08), all 747 held 77, so a one-page scan
+    reported 1,053 orphans instead of 984. Not scoped to "approved" status
     specifically (Egeria's term status isn't filtered here) -- same
     catalog-wide-not-sub-filtered tradeoff `governedCount` etc. already
     carry, not a new one.
@@ -993,19 +1124,16 @@ def orphan_glossary_terms(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Opt
 
     referenced_count = None
     try:
-        rel_body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
-        rels = _json_list(ce.get_relationships(
-            relationship_type="SemanticAssignment", output_format="JSON",
-            start_from=0, page_size=max_paging_size, body=rel_body))
+        rels = _all_relationships(ce, "SemanticAssignment", as_of)  # every page: one page is not the set
         term_guids: set = set()
-        for r in rels:
+        for r in rels or []:
             for end_key in ("end1", "end2"):
                 end = (r.get(end_key) or {}) if isinstance(r, dict) else {}
                 end_type = end.get("type") or {}
                 type_names = {end_type.get("typeName")} | set(end_type.get("superTypeNames") or [])
                 if "GlossaryTerm" in type_names and end.get("guid"):
                     term_guids.add(end["guid"])
-        referenced_count = len(term_guids)
+        referenced_count = None if rels is None else len(term_guids)
     except Exception as exc:  # noqa: BLE001
         logger.debug(f"orphan_glossary_terms: SemanticAssignment query failed: {exc}")
 
@@ -1030,8 +1158,11 @@ def stale_assets(mgr, as_of: Optional[str] = None, days: int = 180) -> Dict[str,
     anchoring).
 
     Returns {"staleCount": int|None, "assetTotal": int|None}. `staleCount`
-    is None when the Asset find fails (not 0); `assetTotal` reuses `count_elements` (native,
-    unaffected by this function's own element-fetch cap).
+    is None when the Asset find fails, and None with an `unmeasured` note when
+    the find filled its DEFAULT_CAP page (6.2.28): the page is a sample, not
+    every Asset, so a count of stale ones in it is not the stale count and was
+    shown as 0 beside a not-measured assetTotal. `assetTotal` reuses
+    `count_elements` (native, unaffected by this function's own page).
     """
     from datetime import datetime, timezone, timedelta
 
@@ -1044,7 +1175,9 @@ def stale_assets(mgr, as_of: Optional[str] = None, days: int = 180) -> Dict[str,
         body = {"class": "FindRequestBody", "metadataElementTypeName": "Asset", "limitResultsByStatus": ["ACTIVE"]}
         if as_of:
             body["asOfTime"] = as_of
-        elements = _find_or_none(mgr, body)  # None when the find failed: staleCount stays None, not 0
+        # None when the find failed, and None (with a note) when it filled its page: a page of Assets is
+        # a sample, so a stale count from it is not the stale count -- never 0 beside an unmeasured total.
+        elements = _one_page_or_none(mgr, body, f"Assets not updated within {days} days")
         stale_count = None if elements is None else 0
         for el in elements or []:
             updated = _update_time(el)
@@ -1137,6 +1270,20 @@ def context_readiness_funnel(mgr, ce, as_of: Optional[str] = None) -> Dict[str, 
     }
 
 
+def _lineage_guids(ce, as_of: Optional[str], who: str) -> Optional[set]:
+    """GUIDs at either end of any DataFlow relationship (every page), or None when the scan failed or was
+    incomplete (an incomplete one is noted)."""
+    try:
+        rels = _all_relationships(ce, "DataFlow", as_of)
+    except Exception as exc:  # noqa: BLE001
+        logger.debug(f"{who}: DataFlow relationship query failed: {exc}")
+        return None
+    if rels is None:
+        return None
+    return {g for r in rels if isinstance(r, dict) for k in ("end1", "end2")
+            if (g := (r.get(k) or {}).get("guid"))}
+
+
 def ai_ready_assets(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Any]:
     """
     The actual "AI-Ready" claim `context_readiness_funnel`'s own UI already
@@ -1165,17 +1312,19 @@ def ai_ready_assets(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Any]:
     an empty intersection instead of an error, so this was checked against
     live responses before writing the intersection logic, not assumed.
 
-    Same DEFAULT_CAP tradeoff every field-value-check function in this
-    module already accepts (`term_definition_completeness`,
-    `context_readiness_funnel`'s own `documented` stage) -- a floor, not
-    exact, on a catalog larger than DEFAULT_CAP.
+    The Asset find is one DEFAULT_CAP page. When that page is full it is a
+    sample, not the catalog, so aiReadyCount and total are None with an
+    `unmeasured` note and capped is True (6.2.28; it used to report the
+    sample's count). The DataFlow relationships are paged until Egeria returns
+    an empty page.
 
     Returns {"aiReadyCount": int|None, "total": int|None, "capped": bool|None}
-    -- "total" is the (possibly capped) Asset population actually checked, so
-    a caller can compute a percentage without a separate cataloged-count call.
-    A failed Asset find makes all three None; a failed DataFlow query makes
-    aiReadyCount None (no asset can be shown lineage-traced, which is not the
-    same as none being so) and keeps total/capped.
+    -- "total" is the Asset population checked (every Asset, since a full page
+    is not measured), so a caller can compute a percentage without a separate
+    cataloged-count call. A failed Asset find makes all three None; a failed or
+    incomplete DataFlow scan makes aiReadyCount None (no asset can be shown
+    lineage-traced, which is not the same as none being so) and keeps
+    total/capped.
     """
     body: Dict[str, Any] = {"class": "FindRequestBody", "limitResultsByStatus": ["ACTIVE"],
                              "metadataElementTypeName": "Asset"}
@@ -1184,24 +1333,15 @@ def ai_ready_assets(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Any]:
     assets = _find_or_none(mgr, body)
     if assets is None:
         return {"aiReadyCount": None, "total": None, "capped": None}
+    if len(assets) >= DEFAULT_CAP:
+        # A full page is a sample of the Assets, not all of them: a count from it is not the count.
+        _not_measured("AI-ready Assets", f"the Asset find stopped at its {DEFAULT_CAP}-element page cap, so "
+                                         f"only the first {len(assets)} Assets could be checked", at_least=None)
+        return {"aiReadyCount": None, "total": None, "capped": True}
 
-    lineage_guids: Optional[set] = set()
-    try:
-        rel_body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
-        rels = _json_list(ce.get_relationships(
-            relationship_type="DataFlow", output_format="JSON",
-            start_from=0, page_size=DEFAULT_CAP, body=rel_body))
-        for r in rels:
-            for end_key in ("end1", "end2"):
-                end = (r.get(end_key) or {}) if isinstance(r, dict) else {}
-                g = end.get("guid")
-                if g:
-                    lineage_guids.add(g)
-    except Exception as exc:  # noqa: BLE001
-        logger.debug(f"ai_ready_assets: lineage relationship query failed: {exc}")
-        lineage_guids = None
+    lineage_guids = _lineage_guids(ce, as_of, "ai_ready_assets")
     if lineage_guids is None:
-        return {"aiReadyCount": None, "total": len(assets), "capped": len(assets) >= DEFAULT_CAP}
+        return {"aiReadyCount": None, "total": len(assets), "capped": False}
 
     ai_ready = 0
     for a in assets:
@@ -1214,7 +1354,7 @@ def ai_ready_assets(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Any]:
         if documented and governed and lineage_traced:
             ai_ready += 1
 
-    return {"aiReadyCount": ai_ready, "total": len(assets), "capped": len(assets) >= DEFAULT_CAP}
+    return {"aiReadyCount": ai_ready, "total": len(assets), "capped": False}
 
 
 # ── Modality tagging (§1.9) ──────────────────────────────────────────────────
@@ -1300,7 +1440,9 @@ def drl_readiness_gates(mgr, ce, as_of: Optional[str] = None, recency_days: int 
 
     Returns {"total": int|None, "capped": bool|None, "aiReadyCount": int|None,
     "aiReadyRecentCount": int|None, "byModality": {"tabular", "text_media", "other"}|None}.
-    A failed Asset find makes every field None; a failed DataFlow query makes
+    A failed Asset find makes every field None; a full Asset page (a sample,
+    not the catalog) makes every field None too, with capped True and an
+    `unmeasured` note (6.2.28); a failed or incomplete DataFlow scan makes
     aiReadyCount/aiReadyRecentCount None and keeps the rest -- unmeasured, not 0.
     """
     from datetime import datetime, timedelta, timezone
@@ -1313,21 +1455,14 @@ def drl_readiness_gates(mgr, ce, as_of: Optional[str] = None, recency_days: int 
     if assets is None:
         return {"total": None, "capped": None, "aiReadyCount": None, "aiReadyRecentCount": None,
                 "byModality": None}
+    if len(assets) >= DEFAULT_CAP:
+        # A full page is a sample of the Assets, not all of them: no figure here may describe it as all.
+        _not_measured("DRL readiness gates", f"the Asset find stopped at its {DEFAULT_CAP}-element page cap, "
+                                             f"so only the first {len(assets)} Assets could be checked")
+        return {"total": None, "capped": True, "aiReadyCount": None, "aiReadyRecentCount": None,
+                "byModality": None}
 
-    lineage_guids: Optional[set] = set()
-    try:
-        rel_body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
-        rels = _json_list(ce.get_relationships(
-            relationship_type="DataFlow", output_format="JSON",
-            start_from=0, page_size=DEFAULT_CAP, body=rel_body))
-        for r in rels:
-            for end_key in ("end1", "end2"):
-                g = ((r.get(end_key) or {}) if isinstance(r, dict) else {}).get("guid")
-                if g:
-                    lineage_guids.add(g)
-    except Exception as exc:  # noqa: BLE001
-        logger.debug(f"drl_readiness_gates: DataFlow relationship query failed: {exc}")
-        lineage_guids = None
+    lineage_guids = _lineage_guids(ce, as_of, "drl_readiness_gates")
 
     now = datetime.fromisoformat(as_of.replace("Z", "+00:00")) if as_of else datetime.now(timezone.utc)
     if now.tzinfo is None:
@@ -1356,7 +1491,7 @@ def drl_readiness_gates(mgr, ce, as_of: Optional[str] = None, recency_days: int 
 
     return {
         "total": len(assets),
-        "capped": len(assets) >= DEFAULT_CAP,
+        "capped": False,
         "aiReadyCount": ai_ready if lineage_guids is not None else None,
         "aiReadyRecentCount": ai_ready_recent if lineage_guids is not None else None,
         "byModality": by_modality,
@@ -1387,9 +1522,9 @@ def people_counts(mgr, as_of: Optional[str] = None, strict: bool = False, scope:
     filtered set, so totals may differ from an older implementation -- this
     raw count is the authoritative repository count.
 
-    Returns {"persons": int, "teams": int, "organizations": int,
-    "itProfiles": int, "communities": int}. With strict=True, a count that
-    could not be measured is None (see count_elements).
+    Returns {"persons": int|None, "teams": int|None, "organizations": int|None,
+    "itProfiles": int|None, "communities": int|None}. A count that could not be
+    measured is None, never 0 (see count_elements; `strict` changes nothing).
     """
     return {
         "persons": count_elements(mgr, "Person", as_of, strict=strict, **_pop(scope)),
@@ -1438,8 +1573,9 @@ def usage_context_counts(mgr, as_of: Optional[str] = None, strict: bool = False,
     in a *usage context* ("this store feeds the Clinical Trial supply
     chain", "this component realises the Sales blueprint").
 
-    Returns {"informationSupplyChains": int, "blueprints": int}. With
-    strict=True, a count that could not be measured is None (see count_elements).
+    Returns {"informationSupplyChains": int|None, "blueprints": int|None}. A
+    count that could not be measured is None, never 0 (see count_elements;
+    `strict` changes nothing).
     """
     return {
         "informationSupplyChains": count_elements(mgr, "InformationSupplyChain", as_of, strict=strict, **_pop(scope)),
@@ -1477,10 +1613,9 @@ def contextualised_coverage(mgr, ce, as_of: Optional[str] = None) -> Dict[str, O
     counting DataFlow relationships rather than confirming each one sits on
     a path Egeria would call "lineage" in the strict sense).
 
-    Capped at max_paging_size ImplementedBy relationships (matches every
-    other relationship fetch in this module) -- undercounts if a deployment
-    has more, same documented tradeoff as governed_coverage/
-    certifications_summary's own caps.
+    Every ImplementedBy relationship is read, paged until Egeria returns an
+    empty page; an incomplete scan makes contextualisedCount None (with a
+    note), never a count from the pages it did read.
 
     Returns {"contextualisedCount": int|None, "assetTotal": int|None,
     "contextualisedPct": float|None}. Any field is None on total failure for
@@ -1488,10 +1623,9 @@ def contextualised_coverage(mgr, ce, as_of: Optional[str] = None) -> Dict[str, O
     """
     contextualised_count = None
     try:
-        rel_body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
-        rels = _json_list(ce.get_relationships(
-            relationship_type="ImplementedBy", output_format="JSON",
-            start_from=0, page_size=max_paging_size, body=rel_body))
+        rels = _all_relationships(ce, "ImplementedBy", as_of)  # every page; None when incomplete (noted)
+        if rels is None:
+            raise _ScanIncomplete()
         asset_guids: set = set()
         for r in rels:
             for end_key in ("end1", "end2"):
@@ -1501,6 +1635,8 @@ def contextualised_coverage(mgr, ce, as_of: Optional[str] = None) -> Dict[str, O
                 if "Asset" in type_names and end.get("guid"):
                     asset_guids.add(end["guid"])
         contextualised_count = len(asset_guids)
+    except _ScanIncomplete:
+        pass
     except Exception as exc:  # noqa: BLE001
         logger.debug(f"contextualised_coverage: ImplementedBy query failed: {exc}")
 
@@ -1559,10 +1695,9 @@ def solution_component_realisation(mgr, ce, as_of: Optional[str] = None) -> Dict
 
     realised_count = None
     try:
-        rel_body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
-        rels = _json_list(ce.get_relationships(
-            relationship_type="ImplementedBy", output_format="JSON",
-            start_from=0, page_size=max_paging_size, body=rel_body))
+        rels = _all_relationships(ce, "ImplementedBy", as_of)  # every page; None when incomplete (noted)
+        if rels is None:
+            raise _ScanIncomplete()
         component_guids: set = set()
         for r in rels:
             end1 = (r.get("end1") or {}) if isinstance(r, dict) else {}
@@ -1571,6 +1706,8 @@ def solution_component_realisation(mgr, ce, as_of: Optional[str] = None) -> Dict
             if "SolutionComponent" in type_names and end1.get("guid"):
                 component_guids.add(end1["guid"])
         realised_count = len(component_guids)
+    except _ScanIncomplete:
+        pass
     except Exception as exc:  # noqa: BLE001
         logger.debug(f"solution_component_realisation: ImplementedBy query failed: {exc}")
 
@@ -1593,9 +1730,10 @@ def karma_leaderboard(mgr, as_of: Optional[str] = None, top_n: int = 10,
     to the element itself, no relationship traversal needed to know whose
     karma it is.
 
-    One bounded `find_metadata_elements` call (capped at max_paging_size,
-    same discipline as every other fetch in this module) returns every
-    ContributionRecord with properties + classifications attached; this
+    `find_metadata_elements`, paged until Egeria returns an empty page,
+    returns every ContributionRecord with properties + classifications
+    attached (an incomplete scan gives an empty list with an `unmeasured`
+    note, never the top of one page); this
     filters to `anchor_types` (Person only by default -- pass e.g.
     `("Person", "ITProfile")` to include automation/engine contributors too),
     sorts by karmaPoints descending, and returns the top N. Display name is
@@ -1614,9 +1752,12 @@ def karma_leaderboard(mgr, as_of: Optional[str] = None, top_n: int = 10,
                                  "metadataElementTypeName": "ContributionRecord"}
         if as_of:
             body["asOfTime"] = as_of
-        records = _find(mgr, body)
+        # Every page: a top-N from one page is the top of that page, not of everyone.
+        records = _all_elements(mgr, body)
     except Exception as exc:  # noqa: BLE001
         logger.debug(f"karma_leaderboard: find failed: {exc}")
+        return []
+    if records is None:  # failed, or incomplete (noted): no leaderboard rather than a wrong one
         return []
 
     entries: List[Dict[str, Any]] = []
@@ -1671,9 +1812,14 @@ def engagement_series(ce, as_of: Optional[str] = None, weeks: int = 12) -> List[
     a near-flat line with one or two non-zero weeks -- that's the real
     signal, not a rendering bug.
 
-    Returns a list of {"week": "2026-W33", "comments": int, "ratings": int,
-    "likes": int, "tags": int, "noteLogs": int, "total": int}, oldest week
-    first, length == `weeks`. Empty list on total failure (never raises).
+    Each relationship type is read in full, paged until Egeria returns an
+    empty page. A type whose query failed or whose scan was incomplete is None
+    in every week (with an `unmeasured` note), and so is every week's total --
+    never a row of zeros (6.2.28; a failed type used to read as no activity).
+
+    Returns a list of {"week": "2026-W33", "comments": int|None, "ratings":
+    int|None, "likes": int|None, "tags": int|None, "noteLogs": int|None,
+    "total": int|None}, oldest week first, length == `weeks` (never raises).
     """
     from datetime import datetime, timedelta, timezone
 
@@ -1693,14 +1839,16 @@ def engagement_series(ce, as_of: Optional[str] = None, weeks: int = 12) -> List[
     buckets: Dict[str, Dict[str, int]] = {wk: {"comments": 0, "ratings": 0, "likes": 0, "tags": 0, "noteLogs": 0}
                                            for wk in week_keys}
 
+    unmeasured_fields: set = set()
     for rel_type, field in _FEEDBACK_RELATIONSHIP_TYPES_FOR_SERIES:
         try:
-            rel_body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
-            rels = _json_list(ce.get_relationships(
-                relationship_type=rel_type, output_format="JSON",
-                start_from=0, page_size=max_paging_size, body=rel_body))
+            rels = _all_relationships(ce, rel_type, as_of)  # every page; None when incomplete (noted)
         except Exception as exc:  # noqa: BLE001
             logger.debug(f"engagement_series: {rel_type} query failed: {exc}")
+            _not_measured(f"{rel_type} relationships", "the get_relationships query failed")
+            rels = None
+        if rels is None:  # not measured: None in every week, never a row of zeros
+            unmeasured_fields.add(field)
             continue
         for r in rels:
             create_time = (((r.get("relationshipHeader") or {}).get("versions") or {}).get("createTime"))
@@ -1716,8 +1864,8 @@ def engagement_series(ce, as_of: Optional[str] = None, weeks: int = 12) -> List[
 
     series = []
     for wk in week_keys:
-        b = buckets[wk]
-        series.append({"week": wk, **b, "total": sum(b.values())})
+        b: Dict[str, Optional[int]] = {k: (None if k in unmeasured_fields else v) for k, v in buckets[wk].items()}
+        series.append({"week": wk, **b, "total": None if unmeasured_fields else sum(b.values())})
     return series
 
 
@@ -1937,16 +2085,15 @@ def active_contributors(ce, as_of: Optional[str] = None) -> Dict[str, Any]:
     type (one person active in two types counts once in "contributors" but
     once per type in byType).
 
-    A type whose query failed is None in byType, and `contributors` is None
-    unless every type was read -- a partial union would read as fewer people,
+    Each type is read in full, paged until Egeria returns an empty page. A
+    type whose query failed or whose scan was incomplete is None in byType,
+    and `contributors` is None unless every type was read -- a partial union would read as fewer people,
     the same rule feedback_summary's `total` follows.
     """
-    body = {"class": "ResultsRequestBody", "asOfTime": as_of} if as_of else None
-
     def _actor_usernames(rel_type: str) -> set:
-        rels = _json_list(ce.get_relationships(
-            relationship_type=rel_type, output_format="JSON",
-            start_from=0, page_size=DEFAULT_CAP, body=body))
+        rels = _all_relationships(ce, rel_type, as_of)  # every page; None when incomplete (noted)
+        if rels is None:
+            raise _ScanIncomplete()
         return {
             u for rel in rels
             if (u := (rel.get("relationshipHeader") or {}).get("versions", {}).get("createdBy"))
@@ -1958,6 +2105,10 @@ def active_contributors(ce, as_of: Optional[str] = None) -> Dict[str, Any]:
     for rel_type, key in _FEEDBACK_RELATIONSHIP_TYPES:
         try:
             users = _actor_usernames(rel_type)
+        except _ScanIncomplete:
+            by_type[key] = None
+            measured = False
+            continue
         except Exception as exc:  # noqa: BLE001
             logger.debug(f"overview_metrics active_contributors: {rel_type} failed: {exc}")
             by_type[key] = None

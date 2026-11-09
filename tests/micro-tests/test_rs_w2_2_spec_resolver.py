@@ -42,11 +42,10 @@ def _clean():
 
 # ── The census over every registered spec (base_report_formats + analytic demo specs) ──
 
-#: The unrunnable specs the first resolution found, each a real defect (see the PR body).
-KNOWN_UNRUNNABLE = {
-    "Asset-Graph": "its find method 'ServerClient.get_asset_graph' does not exist",
-    "Data-Classes": "its find method 'DataDesigner.find_data_classes' does not exist",
-}
+#: The unrunnable specs: the first resolution found two (Asset-Graph naming the missing
+#: ServerClient.get_asset_graph, Data-Classes naming the missing DataDesigner.find_data_classes);
+#: 6.2.28 repointed both, so there are none.
+KNOWN_UNRUNNABLE: dict = {}
 
 
 def test_every_registered_spec_resolves_and_the_unrunnable_ones_are_the_known_defects():
@@ -216,10 +215,16 @@ def test_formatset_accepts_target_type_name():
 def test_list_report_specs_is_unchanged_by_default_and_gains_status_on_request():
     names = brf.list_report_specs()
     assert names and all(isinstance(n, str) for n in names)
-    status = {d["name"]: d for d in brf.list_report_specs(with_status=True)}
-    assert set(status) == set(names)
-    assert status["Data-Classes"]["runnable"] is False
-    assert "check 1" in status["Data-Classes"]["unrunnable_reason"]
+    brf.register_report_specs({"Probe-Missing": _spec(_find(function="DataDesigner.find_no_such_things"))},
+                              source="test")
+    try:
+        status = {d["name"]: d for d in brf.list_report_specs(with_status=True)}
+    finally:
+        brf.unregister_report_spec("Probe-Missing")
+    assert set(status) == set(names) | {"Probe-Missing"}
+    assert status["Probe-Missing"]["runnable"] is False
+    assert "check 1" in status["Probe-Missing"]["unrunnable_reason"]
+    assert status["Data-Classes"]["runnable"] is True and status["Asset-Graph"]["runnable"] is True
     assert status["Analytic Demo - Element Count by Type"] == {
         "name": "Analytic Demo - Element Count by Type", "runnable": True, "unrunnable_reason": "",
         # RS-EGERIA-TIER: where the spec comes from, and whether it shadows or is shadowed
@@ -268,14 +273,25 @@ def _captured(fn) -> str:
     return "".join(lines)
 
 
-def test_refresh_report_specs_logs_the_unrunnable_count_and_words():
+def test_refresh_report_specs_logs_all_runnable_when_none_is_unrunnable():
     brf.get_report_registry()  # startup has happened
     text = _captured(brf.refresh_report_specs)
-    assert "Report specs resolved at refresh_report_specs: 2 of" in text
-    assert "Spec 'Data-Classes' cannot run (check 1)" in text
+    assert "Report specs resolved at refresh_report_specs: all " in text and "cannot run" not in text
+
+
+def test_refresh_report_specs_logs_the_unrunnable_count_and_words():
+    brf.get_report_registry()  # startup has happened
+    brf.register_report_specs({"Probe-Missing": _spec(_find(function="DataDesigner.find_no_such_things"))},
+                              source="test")
+    try:
+        text = _captured(lambda: sr.log_resolution_summary(force=True, where="refresh_report_specs"))
+    finally:
+        brf.unregister_report_spec("Probe-Missing")
+    assert "Report specs resolved at refresh_report_specs: 1 of" in text
+    assert "Spec 'Probe-Missing' cannot run (check 1)" in text
 
 
 def test_the_summary_is_logged_once_unless_forced():
     sr.log_resolution_summary()
     assert _captured(sr.log_resolution_summary) == ""
-    assert "cannot run" in _captured(lambda: sr.log_resolution_summary(force=True, where="test"))
+    assert "Report specs resolved at test" in _captured(lambda: sr.log_resolution_summary(force=True, where="test"))

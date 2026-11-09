@@ -25,6 +25,27 @@ def _mgr(**attrs):
     return m
 
 
+def _pages(rows):
+    """A get_relationships / find_metadata_elements fake that pages like Egeria: the rows from the
+    body's startFrom (where the scans put it), then an empty page -- the only end-of-scan signal."""
+    def fake(*args, **kw):
+        body = kw.get("body") or next((a for a in args if isinstance(a, dict)), None) or {}
+        start = body.get("startFrom", kw.get("start_from", 0)) or 0
+        size = body.get("pageSize", kw.get("page_size", 0)) or om.DEFAULT_CAP
+        return list(rows[start:start + size])
+    return fake
+
+
+def _by_type(table):
+    """A paging get_relationships fake keyed by relationship type; an exception value is raised."""
+    def fake(*args, relationship_type=None, **kw):
+        rows = table.get(relationship_type, [])
+        if isinstance(rows, BaseException):
+            raise rows
+        return _pages(rows)(*args, **kw)
+    return fake
+
+
 def _native(answer):
     """A native count method fake: `answer(body)` gives the count for each request body."""
     return MagicMock(side_effect=lambda body, **kw: {"count": answer(body)})
@@ -67,7 +88,7 @@ def test_count_elements_native_returns_plain_int():
 
 def test_count_elements_falls_back_when_no_native_method():
     mgr = _mgr()
-    mgr.find_metadata_elements.return_value = [{"a": 1}, {"b": 2}, {"c": 3}]
+    mgr.find_metadata_elements.side_effect = _pages([{"a": 1}, {"b": 2}, {"c": 3}])
     n = om.count_elements(mgr, type_name="Asset", population="viewer")
     assert n == 3
     mgr.find_metadata_elements.assert_called_once()
@@ -75,7 +96,7 @@ def test_count_elements_falls_back_when_no_native_method():
 
 def test_count_elements_falls_back_when_native_raises():
     mgr = _mgr(count_metadata_elements=MagicMock(side_effect=RuntimeError("not supported")))
-    mgr.find_metadata_elements.return_value = [{"a": 1}]
+    mgr.find_metadata_elements.side_effect = _pages([{"a": 1}])
     n = om.count_elements(mgr, type_name="Asset", population="viewer")
     assert n == 1
     # second call should skip native entirely (server marked unsupported)
@@ -86,7 +107,7 @@ def test_count_elements_falls_back_when_native_raises():
 
 def test_count_elements_passes_as_of_and_classifications():
     mgr = _mgr()
-    mgr.find_metadata_elements.return_value = []
+    mgr.find_metadata_elements.side_effect = _pages([])
     om.count_elements(mgr, type_name="Asset", as_of="2026-01-01T00:00:00+00:00",
                        classifications=["ZoneMembership", "Confidentiality"], population="viewer")
     body = mgr.find_metadata_elements.call_args[0][0]
@@ -100,7 +121,7 @@ def test_count_elements_passes_as_of_and_classifications():
 
 def test_count_relationships_viewer_path_without_expert():
     ce = MagicMock()
-    ce.get_relationships.return_value = [{"a": 1}, {"b": 2}]
+    ce.get_relationships.side_effect = _pages([{"a": 1}, {"b": 2}])
     n = om.count_relationships(ce, "Certification", population="viewer")
     assert n == 2
 
@@ -186,17 +207,33 @@ def test_governed_coverage_extracts_classifications_and_zones():
              }}}},
         ]},
     ]
-    mgr.find_metadata_elements.return_value = hits
+    mgr.find_metadata_elements.side_effect = _pages(hits)
     result = om.governed_coverage(mgr)
     assert result["governedCount"] == 2
     assert result["byClassification"] == {"Confidentiality": 1, "ZoneMembership": 1}
     assert result["topZones"] == [{"zone": "clinical-trial", "count": 1}]
 
 
-def test_governed_coverage_capped_flag():
+def test_governed_coverage_pages_past_the_first_page():
+    # Every page is read until Egeria returns an empty one: 501 governed elements is 501, not "at least 500".
     mgr = _mgr()
-    mgr.find_metadata_elements.return_value = [{}] * om.DEFAULT_CAP
-    assert om.governed_coverage(mgr)["governedCapped"] is True
+    hits = [{"elementGUID": f"g{i}", "classifications": [{"classificationName": "Confidentiality"}]}
+            for i in range(om.DEFAULT_CAP + 1)]
+    mgr.find_metadata_elements.side_effect = _pages(hits)
+    r = om.governed_coverage(mgr)
+    assert r["governedCount"] == om.DEFAULT_CAP + 1 and r["governedCapped"] is False
+    assert r["byClassification"] == {"Confidentiality": om.DEFAULT_CAP + 1}
+    assert [c.args[0]["startFrom"] for c in mgr.find_metadata_elements.call_args_list] == [0, 500, 1000]
+
+
+def test_governed_coverage_incomplete_scan_is_not_measured():
+    # A server that ignores startFrom repeats its page: the scan is incomplete, so nothing is reported.
+    mgr = _mgr()
+    mgr.find_metadata_elements.return_value = [{"elementGUID": f"g{i}"} for i in range(om.DEFAULT_CAP)]
+    with om.recording_unmeasured() as notes:
+        r = om.governed_coverage(mgr)
+    assert r["governedCount"] is None and r["governedCapped"] is None and r["fullyGoverned"] is None
+    assert notes and "repeated only what it had already read" in notes[0]["reason"]
 
 
 # ── certifications_summary ────────────────────────────────────────────────
@@ -206,14 +243,14 @@ def test_certifications_summary_shape_and_expiry():
     from datetime import datetime, timezone, timedelta
     soon_date = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
     far_date = (datetime.now(timezone.utc) + timedelta(days=400)).isoformat()
-    ce.get_relationships.side_effect = [
-        [
+    ce.get_relationships.side_effect = _by_type({
+        "Certification": [
             {"relationshipProperties": {"coverageEnd": soon_date}, "end2": {"properties": {"displayName": "cert-A"}}},
             {"relationshipProperties": {"coverageEnd": far_date}},
         ],
-        [{"x": 1}],   # License
-        [],           # Exception
-    ]
+        "License": [{"x": 1}],
+        "Exception": [],
+    })
     result = om.certifications_summary(ce)
     assert result["active"] == 2
     assert result["expiring90"] == 1
@@ -247,9 +284,9 @@ def test_semantic_grounding_computes_percent():
 
 def test_semantic_grounding_handles_zero_cataloged():
     mgr = _mgr()
-    mgr.find_metadata_elements.return_value = []
+    mgr.find_metadata_elements.side_effect = _pages([])
     ce = MagicMock()
-    ce.get_relationships.return_value = []
+    ce.get_relationships.side_effect = _pages([])
     result = om.semantic_grounding(mgr, ce)
     assert result["groundingPct"] is None
 
@@ -315,35 +352,35 @@ def _asset(guid, description=None, classifications=None):
 
 def test_ai_ready_assets_requires_all_three_criteria():
     mgr = _mgr()
-    mgr.find_metadata_elements.return_value = [
+    mgr.find_metadata_elements.side_effect = _pages([
         _asset("a1", "documented", ["Confidentiality"]),   # governed + documented, NOT lineage-traced
         _asset("a2", "documented", ["Confidentiality"]),   # governed + documented + lineage-traced -> AI-ready
         _asset("a3", None, ["Confidentiality"]),            # governed + lineage-traced, NOT documented
         _asset("a4", "documented", []),                     # documented + lineage-traced, NOT governed
-    ]
+    ])
     ce = MagicMock()
-    ce.get_relationships.return_value = [
+    ce.get_relationships.side_effect = _pages([
         {"end1": {"guid": "a2"}, "end2": {"guid": "a3"}},
         {"end1": {"guid": "a4"}, "end2": {"guid": "other-asset"}},
-    ]
+    ])
     result = om.ai_ready_assets(mgr, ce)
     assert result == {"aiReadyCount": 1, "total": 4, "capped": False}
 
 
 def test_ai_ready_assets_empty_catalog():
     mgr = _mgr()
-    mgr.find_metadata_elements.return_value = []
+    mgr.find_metadata_elements.side_effect = _pages([])
     ce = MagicMock()
-    ce.get_relationships.return_value = []
+    ce.get_relationships.side_effect = _pages([])
     result = om.ai_ready_assets(mgr, ce)
     assert result == {"aiReadyCount": 0, "total": 0, "capped": False}
 
 
 def test_ai_ready_assets_lineage_query_failure_is_unmeasured():
     mgr = _mgr()
-    mgr.find_metadata_elements.return_value = [
+    mgr.find_metadata_elements.side_effect = _pages([
         _asset("a1", "documented", ["Confidentiality"]),
-    ]
+    ])
     ce = MagicMock()
     ce.get_relationships.side_effect = Exception("boom")
     result = om.ai_ready_assets(mgr, ce)
@@ -393,18 +430,18 @@ def _asset_full(guid, description=None, classifications=None, type_name=None, up
 
 def test_drl_readiness_gates_narrows_ai_ready_by_recency():
     mgr = _mgr()
-    mgr.find_metadata_elements.return_value = [
+    mgr.find_metadata_elements.side_effect = _pages([
         _asset_full("a1", "documented", ["Confidentiality"], "RelationalTable",
                     update_time="2026-08-01T00:00:00Z"),   # AI-ready + recent
         _asset_full("a2", "documented", ["Confidentiality"], "PDFFile",
                     update_time="2020-01-01T00:00:00Z"),   # AI-ready, stale
         _asset_full("a3", None, ["Confidentiality"], "APIEndpoint"),  # not documented
-    ]
+    ])
     ce = MagicMock()
-    ce.get_relationships.return_value = [
+    ce.get_relationships.side_effect = _pages([
         {"end1": {"guid": "a1"}, "end2": {"guid": "x"}},
         {"end1": {"guid": "a2"}, "end2": {"guid": "y"}},
-    ]
+    ])
     result = om.drl_readiness_gates(mgr, ce, as_of="2026-08-02T00:00:00Z", recency_days=180)
     assert result["total"] == 3
     assert result["aiReadyCount"] == 2
@@ -414,9 +451,9 @@ def test_drl_readiness_gates_narrows_ai_ready_by_recency():
 
 def test_drl_readiness_gates_empty_catalog():
     mgr = _mgr()
-    mgr.find_metadata_elements.return_value = []
+    mgr.find_metadata_elements.side_effect = _pages([])
     ce = MagicMock()
-    ce.get_relationships.return_value = []
+    ce.get_relationships.side_effect = _pages([])
     result = om.drl_readiness_gates(mgr, ce)
     assert result["total"] == 0
     assert result["aiReadyCount"] == 0
@@ -426,11 +463,11 @@ def test_drl_readiness_gates_empty_catalog():
 
 def test_drl_readiness_gates_missing_update_time_not_counted_recent():
     mgr = _mgr()
-    mgr.find_metadata_elements.return_value = [
+    mgr.find_metadata_elements.side_effect = _pages([
         _asset_full("a1", "documented", ["Confidentiality"], "RelationalTable"),  # no updateTime
-    ]
+    ])
     ce = MagicMock()
-    ce.get_relationships.return_value = [{"end1": {"guid": "a1"}, "end2": {"guid": "x"}}]
+    ce.get_relationships.side_effect = _pages([{"end1": {"guid": "a1"}, "end2": {"guid": "x"}}])
     result = om.drl_readiness_gates(mgr, ce)
     assert result["aiReadyCount"] == 1
     assert result["aiReadyRecentCount"] == 0
@@ -502,7 +539,8 @@ def test_usage_context_counts_shape():
 
 def test_feedback_summary_sums_by_type():
     ce = MagicMock()
-    ce.get_relationships.side_effect = [[{}] * 3, [{}] * 1, [], [{}] * 2, []]
+    ce.get_relationships.side_effect = _by_type({"AttachedRating": [{}] * 3, "AttachedComment": [{}],
+                                                 "AttachedTag": [{}] * 2})
     result = om.feedback_summary(ce, population="viewer")
     assert result["byType"] == {"ratings": 3, "comments": 1, "likes": 0, "tags": 2, "noteLogs": 0}
     assert result["total"] == 6
@@ -589,14 +627,12 @@ def test_term_definition_completeness_unmeasured_numerator_is_no_percentage():
 
 def test_active_contributors_dedupes_by_username_across_types():
     ce = MagicMock()
-    ce.get_relationships.side_effect = [
-        [{"relationshipHeader": {"versions": {"createdBy": "alice"}}},
-         {"relationshipHeader": {"versions": {"createdBy": "alice"}}}],  # ratings
-        [{"relationshipHeader": {"versions": {"createdBy": "bob"}}}],    # comments
-        [],  # likes
-        [],  # tags
-        [{"relationshipHeader": {"versions": {"createdBy": "alice"}}}],  # noteLogs
-    ]
+    ce.get_relationships.side_effect = _by_type({
+        "AttachedRating": [{"relationshipHeader": {"guid": "r1", "versions": {"createdBy": "alice"}}},
+                           {"relationshipHeader": {"guid": "r2", "versions": {"createdBy": "alice"}}}],
+        "AttachedComment": [{"relationshipHeader": {"guid": "c1", "versions": {"createdBy": "bob"}}}],
+        "AttachedNoteLog": [{"relationshipHeader": {"guid": "n1", "versions": {"createdBy": "alice"}}}],
+    })
     result = om.active_contributors(ce)
     assert result["contributors"] == 2  # alice, bob
     assert result["byType"] == {"ratings": 1, "comments": 1, "likes": 0, "tags": 0, "noteLogs": 1}
@@ -604,11 +640,10 @@ def test_active_contributors_dedupes_by_username_across_types():
 
 def test_active_contributors_degrades_per_type_on_failure():
     ce = MagicMock()
-    ce.get_relationships.side_effect = [
-        RuntimeError("boom"),
-        [{"relationshipHeader": {"versions": {"createdBy": "bob"}}}],
-        [], [], [],
-    ]
+    ce.get_relationships.side_effect = _by_type({
+        "AttachedRating": RuntimeError("boom"),
+        "AttachedComment": [{"relationshipHeader": {"versions": {"createdBy": "bob"}}}],
+    })
     result = om.active_contributors(ce)
     # the failed type is unmeasured (None), and so is the union it would be part of (RS-W2-1a)
     assert result["byType"]["ratings"] is None
@@ -678,7 +713,7 @@ def test_count_elements_by_property_uses_native_when_available():
 
 def test_count_elements_by_property_falls_back_when_no_native_method():
     mgr = _mgr()
-    mgr.find_metadata_elements.return_value = [{}, {}, {}]
+    mgr.find_metadata_elements.side_effect = _pages([{}, {}, {}])
     n = om.count_elements_by_property(mgr, "DigitalProduct", "deploymentStatus", "ACTIVE", population="viewer")
     assert n == 3
 
@@ -711,11 +746,11 @@ def _implemented_by(end1_type, end2_type, end2_guid, super_types=None):
 def test_contextualised_coverage_counts_only_asset_subtype_ends():
     mgr = _mgr(count_metadata_elements=MagicMock(return_value={"count": 384}))
     ce = MagicMock()
-    ce.get_relationships.return_value = [
+    ce.get_relationships.side_effect = _pages([
         _implemented_by("SolutionComponent", "GovernanceActionType", "gat-1"),
         _implemented_by("SolutionComponent", "IntegrationConnector", "asset-1", super_types=["Asset"]),
         _implemented_by("SolutionComponent", "SoftwareServer", "asset-2", super_types=["Asset"]),
-    ]
+    ])
     result = om.contextualised_coverage(mgr, ce)
     assert result["contextualisedCount"] == 2
     assert result["assetTotal"] == 384
@@ -725,10 +760,10 @@ def test_contextualised_coverage_counts_only_asset_subtype_ends():
 def test_contextualised_coverage_dedupes_by_guid():
     mgr = _mgr(count_metadata_elements=MagicMock(return_value={"count": 10}))
     ce = MagicMock()
-    ce.get_relationships.return_value = [
+    ce.get_relationships.side_effect = _pages([
         _implemented_by("SolutionComponent", "SoftwareServer", "asset-1", super_types=["Asset"]),
         _implemented_by("SolutionComponent", "SoftwareServer", "asset-1", super_types=["Asset"]),
-    ]
+    ])
     result = om.contextualised_coverage(mgr, ce)
     assert result["contextualisedCount"] == 1
 
@@ -737,9 +772,9 @@ def test_contextualised_coverage_matches_asset_typename_directly_too():
     # end2's own typeName (not just its superTypeNames) can be "Asset".
     mgr = _mgr(count_metadata_elements=MagicMock(return_value={"count": 5}))
     ce = MagicMock()
-    ce.get_relationships.return_value = [
+    ce.get_relationships.side_effect = _pages([
         _implemented_by("SolutionComponent", "Asset", "asset-1"),
-    ]
+    ])
     result = om.contextualised_coverage(mgr, ce)
     assert result["contextualisedCount"] == 1
 
@@ -757,7 +792,7 @@ def test_contextualised_coverage_relationship_fetch_failure_yields_none_count():
 def test_contextualised_coverage_zero_asset_total_yields_none_pct_not_zero_division():
     mgr = _mgr(count_metadata_elements=MagicMock(return_value={"count": 0}))
     ce = MagicMock()
-    ce.get_relationships.return_value = []
+    ce.get_relationships.side_effect = _pages([])
     result = om.contextualised_coverage(mgr, ce)
     assert result["contextualisedCount"] == 0
     assert result["assetTotal"] is None
@@ -775,7 +810,7 @@ def test_funnel_keeps_measured_zero_and_none_on_failure():
 
     mgr.count_metadata_elements.side_effect = RuntimeError("down")
     mgr.count_relationships_between_elements.side_effect = RuntimeError("down")
-    mgr.find_metadata_elements.return_value = []   # a viewer answer must never stand in
+    mgr.find_metadata_elements.side_effect = _pages([])   # a viewer answer must never stand in
     r = om.context_readiness_funnel(mgr, ce)
     assert r["cataloged"] is None and r["classified"] is None
     assert r["documented"] is None and r["lineage"] is None
@@ -783,7 +818,7 @@ def test_funnel_keeps_measured_zero_and_none_on_failure():
 
 def test_feedback_summary_total_none_unless_all_measured():
     ce = MagicMock()
-    ce.get_relationships.side_effect = [[{}] * 3, RuntimeError("x"), [], [], []]
+    ce.get_relationships.side_effect = _by_type({"AttachedRating": [{}] * 3, "AttachedComment": RuntimeError("x")})
     r = om.feedback_summary(ce, population="viewer")
     assert r["byType"]["comments"] is None and r["byType"]["ratings"] == 3
     assert r["total"] is None
@@ -804,7 +839,7 @@ def test_governed_coverage_and_business_value_none_on_failed_find():
 def test_timeout_does_not_disable_native_counting():
     from pyegeria.core._exceptions import PyegeriaTimeoutException
     mgr = _mgr(count_metadata_elements=MagicMock(side_effect=[PyegeriaTimeoutException(), 987]))
-    mgr.find_metadata_elements.return_value = [{}] * 3
+    mgr.find_metadata_elements.side_effect = _pages([{}] * 3)
     assert om.count_elements(mgr, "Asset", population="viewer") == 3   # that one count falls back
     assert not om._native_disabled(mgr)
     assert om.count_elements(mgr, "GlossaryTerm", strict=True) == 987  # native still used
@@ -812,7 +847,7 @@ def test_timeout_does_not_disable_native_counting():
 
 def test_transient_generic_error_does_not_disable_native():
     mgr = _mgr(count_metadata_elements=MagicMock(side_effect=[RuntimeError("boom"), 5]))
-    mgr.find_metadata_elements.return_value = []
+    mgr.find_metadata_elements.side_effect = _pages([])
     om.count_elements(mgr, "Asset")
     assert not om._native_disabled(mgr)
     assert om.count_elements(mgr, "Asset") == 5
@@ -825,7 +860,7 @@ def test_not_supported_error_disables_native():
     for exc in (PyegeriaNotFoundException(resp), RuntimeError("Operation not implemented")):
         om._native_server_ok.clear(); om._count_caps.clear()
         mgr = _mgr(count_metadata_elements=MagicMock(side_effect=exc))
-        mgr.find_metadata_elements.return_value = [{}] * 2
+        mgr.find_metadata_elements.side_effect = _pages([{}] * 2)
         assert om.count_elements(mgr, "Asset", population="viewer") == 2
         assert om._native_disabled(mgr)
         om.count_elements(mgr, "Asset", population="viewer")
@@ -867,7 +902,7 @@ def test_invalid_scope_raises():
 
 def test_repository_scope_failure_strict_is_none_not_find_result():
     mgr = _mgr(count_metadata_elements=MagicMock(side_effect=RuntimeError("boom")))
-    mgr.find_metadata_elements.return_value = [{}] * 43     # viewer-scope answer
+    mgr.find_metadata_elements.side_effect = _pages([{}] * 43)     # viewer-scope answer
     with om.recording_unmeasured() as notes:
         assert om.count_elements(mgr, "Asset", strict=True, population="repository") is None
         assert om.count_elements(mgr, "Asset", population="repository") is None   # never 0, strict or not
@@ -877,7 +912,7 @@ def test_repository_scope_failure_strict_is_none_not_find_result():
 
 def test_repository_scope_without_native_method_is_none():
     mgr = _mgr()
-    mgr.find_metadata_elements.return_value = [{}] * 3
+    mgr.find_metadata_elements.side_effect = _pages([{}] * 3)
     assert om.count_elements(mgr, "Asset", strict=True, population="repository") is None
     assert om.count_elements(mgr, "Asset", strict=True, population="viewer") == 3   # viewer may fall back
 
@@ -898,12 +933,12 @@ def test_count_relationships_scope():
     expert.platform_url, expert.view_server = "u", "v"
     expert.count_relationships_between_elements.return_value = 4
     ce = MagicMock()
-    ce.get_relationships.return_value = [{}] * 9
+    ce.get_relationships.side_effect = _pages([{}] * 9)
     assert om.count_relationships(ce, "License", expert=expert, population="repository") == 4
     assert expert.count_relationships_between_elements.call_args.kwargs == {"push_down": True}
     # no expert, and ce has no native count: repository scope cannot be answered by the viewer-scoped path
     ce = MagicMock(spec=["get_relationships"])
-    ce.get_relationships.return_value = [{}] * 9
+    ce.get_relationships.side_effect = _pages([{}] * 9)
     with om.recording_unmeasured() as notes:
         assert om.count_relationships(ce, "License", population="repository") is None
         assert om.count_relationships(ce, "License") is None   # repository is the default
@@ -1188,5 +1223,5 @@ def test_scope_none_reaches_the_server_default_through_every_composite():
     calls = mgr.count_metadata_elements.call_args_list
     assert len(calls) == 1 + 5 + 2 + 4 + 2 * 4 and all(c.kwargs == {} for c in calls)
     ce = MagicMock()
-    ce.get_relationships.return_value = [{}] * 2
+    ce.get_relationships.side_effect = _pages([{}] * 2)
     assert om.feedback_summary(ce, scope=None)["total"] == 10   # the get_relationships path, not None

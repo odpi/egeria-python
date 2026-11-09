@@ -1100,7 +1100,9 @@ A count a routine could not establish is `None`, never `0` and never the cap (#5
 - a `SERIES`/`BAR`/`PIE` over a result that holds one becomes `kind: "absent"` too: a missing bar, or a pie re-proportioned without its missing slice, would read as an answer;
 - a dict or list result keeps its measured values; the unmeasured ones are `None` and the notes name each one.
 
-Measured results are unchanged. One exception to "never `0`": a `viewer` count with `strict=False` still returns `0` when the query itself fails; pass `strict=True` for `None`.
+Measured results are unchanged. Since 6.2.28 there is no exception to "never `0`": a `viewer` count whose query fails is `None` with a note too, whatever `strict` says (6.2.27 still returned `0` there unless `strict=True`). `strict` is still accepted, and changes nothing.
+
+**Scans (6.2.28).** A figure computed from a scan, rather than from a native count, is only a figure when the scan read everything. The relationship scans (`orphan_glossary_terms`, `certifications_summary`, `contextualised_coverage`, `solution_component_realisation`, `active_contributors`, `engagement_series`, the DataFlow lineage in `ai_ready_assets`/`drl_readiness_gates`, and `count_relationships` in the viewer population) and the element finds of `governed_coverage`, `ownership_coverage` and `karma_leaderboard` page until Egeria returns an **empty** page. That is Egeria's paging contract: a short page is not the last page. A scan that cannot finish (more than `MAX_SCAN_PAGES` pages, 40 by default, or a server that repeats its page) is `None` with a note, never a figure from the part it read. `stale_assets`, `ai_ready_assets` and `drl_readiness_gates` read one page of Assets, which is too many to page through; when that page is full, their figures are `None` with a note (`capped` is `true` for the readiness routines), because a page of Assets is a sample, not the catalog. In 6.2.27 `orphan_glossary_terms` read one 500-relationship page that held 8 distinct terms, so it reported 1,053 orphans where all 747 relationships give 984.
 
 **Population (#556, 6.2.27).** The count routines take `population=` (`"viewer"` or `"repository"`; `scope=` is a deprecated alias and passing both with different values is a `ValueError`). They now default to `"repository"`: totals count the whole repository, **including elements the viewer may not be able to see**, via the native push-down count. This is a deliberate interim choice until zone-aware push-down exists, and the registry descriptions say so. `"viewer"` is an explicit opt-in; `scope=None` omits the argument and takes the server default. A failed repository count has no find fallback, so it is `None` with a note, strict or not. Routines that scan elements (for example `certifications_summary`, `orphan_glossary_terms`, `stale_assets`) stay viewer-scoped, and no payload mixes the two populations in one ratio.
 
@@ -1227,7 +1229,7 @@ Check 1 on a report spec that names a dotted path says, for example: *Report spe
 
 - **Runnable:** a `ResolvedSpec`. Its `notes` say which checks did not run and why; its `warnings` are defects that bite only when a caller uses an optional parameter.
 - **Unrunnable:** an `Unrunnable` with `words` and `checks`. It failed at least one check.
-- **Format-only:** an `Unrunnable` of `kind="format_only"` with `checks=[1]`: the spec has no `action`, so it formats elements another call fetched (a detail view, or a command's output format). **This is not broken**: the words say `it has no action, so it formats elements another call fetched`. On the registry as of 6.2.27 there are 374 runnable, 61 format-only and 2 unrunnable specs.
+- **Format-only:** an `Unrunnable` of `kind="format_only"` with `checks=[1]`: the spec has no `action`, so it formats elements another call fetched (a detail view, or a command's output format). **This is not broken**: the words say `it has no action, so it formats elements another call fetched`. On the registry as of 6.2.28 there are 376 runnable, 61 format-only and no unrunnable specs (6.2.27 had 374 runnable and 2 unrunnable; see below).
 
 **Listing them.**
 
@@ -1249,12 +1251,25 @@ for name, spec in unrunnable_specs().items():          # format-only left out; p
 - `load_egeria_report_specs()` (the Egeria question-spec load);
 - `commands/tech/refresh_specs.py`, which resolves everything after regenerating and logs the count.
 
-**Reading the words: the two specs that are unrunnable today.** Both fail check 1, both are `find` specs, and both name a find method that does not exist, so the words tell you exactly what to fix:
+**Reading the words: the two specs that were unrunnable in 6.2.27.** Both failed check 1, both were `find` specs, and both named a find method that no longer existed, so the words said exactly what to fix:
 
 - `Spec 'Asset-Graph' cannot run (check 1): its find method 'ServerClient.get_asset_graph' does not exist: EgeriaTech or any client it proxies to has no '_async_get_asset_graph'.`
 - `Spec 'Data-Classes' cannot run (check 1): its find method 'DataDesigner.find_data_classes' does not exist: client class DataDesigner has no '_async_find_data_classes'.`
 
 Read it left to right: *the check* (1, names), *the thing named* (`ServerClient.get_asset_graph`), *where the resolver looked* (the client class the executor would use for that name, here EgeriaTech and everything it proxies to), and *what was missing* (an `_async_` method of that name). They are listed with these words by `list_report_specs(with_status=True)` rather than being left to fail when someone runs them.
+
+6.2.28 fixed both, as the words pointed: `Asset-Graph` now calls `AssetCatalog.get_asset_graph_by_guid` (parameter `guid`), and `Data-Classes` calls `DataDesigner.find_data_value_specifications` with `metadata_element_subtypes=["DataClass"]` (a DataClass is a DataValueSpecification subtype and shares its search).
+
+**What `Asset-Graph` returns (6.2.28).** It declares DICT and JSON for code, and REPORT, HTML and MERMAID for people:
+
+| Output format | Shape |
+|---|---|
+| `DICT` | One row: the asset itself, with its own fields and its graph fields (`Mermaid Graph`, `Anchor Graph`, `Action Graph`, `Field Level Lineage Graph`) as text. |
+| `JSON` | The full graph response. |
+| `REPORT`, `HTML` | The asset's fields, with the asset, anchor and action graphs rendered as mermaid. A fetch by GUID is not a search, so the report does not say "found from the search string". |
+| `MERMAID` | The asset graph. |
+
+`TABLE`, `LIST`, `MD`, `FORM` and `ALL` are not declared, and asking for them is an error that names the declared formats. `Asset-Graph` is in `NO_TABLE_FALLBACK`, so `TABLE` does not fall back to the DICT row: a table of a graph is its edges, and that edge table is planned as its own spec in Wave 3, built by a processor stage (`pyegeria/view/asset_graph.py` holds the edge helper it will use).
 
 > **Planned, not shipped.** Report specs held in Egeria itself (synced, cached and addressed as `egeria:...`) are being built in a first stage; see `portal-docs/Internals/report-spec-pipeline-model.md` (v5.5) in egeria-workspaces. This section describes only specs loaded from files, entry points and the runtime registry.
 
