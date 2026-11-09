@@ -761,8 +761,9 @@ def _as_of(description: str = "ISO-8601 asOfTime for a point-in-time value (None
 
 def _strict() -> AnalyticParam:
     return AnalyticParam(name="strict", type="bool", default=False,
-                         description="Return None instead of 0 when a count could not be measured "
-                                     "(query failed, or the fallback hit the page-size cap). ISSUE-123.")
+                         description="Accepted for compatibility; changes nothing. Since 6.2.28 a count "
+                                     "that could not be measured (query failed, or the fallback hit the "
+                                     "page-size cap) is None in every population, never 0. ISSUE-123.")
 
 
 def _population() -> AnalyticParam:
@@ -918,7 +919,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         inputs=["egeria_client:MetadataExpert"],
         description="Share of assets carrying at least one governance classification, plus a "
                     "by-classification / top-zones breakdown. "
-                    "Cost: one capped find (one page of elements), seconds.",
+                    "Cost: one find, paged until Egeria returns an empty page (an incomplete scan is not measured), seconds.",
         returns="dict (governedCount, governedCapped, byClassification, topZones)",
         generic=False,
         binding_note="Fixed to GOVERNANCE_CLASSIFICATIONS: ZoneMembership, Confidentiality, "
@@ -949,7 +950,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
             ),
             out=[
                 _field("governedCount", "Governed elements", "int", unit="elements"),
-                _field("governedCapped", "At least (page cap reached)", "bool"),
+                _field("governedCapped", "At least (false when measured: every page is read)", "bool"),
                 _field("fullyGoverned", "Fully governed", "int", unit="elements"),
                 _field("partialZoneOnly", "Zone only", "int", unit="elements"),
                 _field("byClassification", "By classification", "map<string,int>", unit="elements"),
@@ -966,7 +967,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                     "breakdown. Distinct from governed_coverage -- data mesh literature names "
                     "'clean, owned, product-based data' as its own foundation for trustworthy "
                     "AI consumption, not a synonym for governance-classification coverage. "
-                    "Cost: one capped find (one page of elements), seconds.",
+                    "Cost: one find, paged until Egeria returns an empty page (an incomplete scan is not measured), seconds.",
         returns="dict (ownershipCount, ownershipCapped, byOwnerType)",
         generic=False,
         binding_note="Fixed to the Ownership classification -- not a parameter.",
@@ -984,7 +985,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
             ),
             out=[
                 _field("ownershipCount", "Owned elements", "int", unit="elements"),
-                _field("ownershipCapped", "At least (page cap reached)", "bool"),
+                _field("ownershipCapped", "At least (false when measured: every page is read)", "bool"),
                 _field("byOwnerType", "By owner type", "map<string,int>", unit="elements"),
             ],
         ),
@@ -1040,14 +1041,14 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         function="pyegeria.view.overview_metrics.certifications_summary",
         inputs=["egeria_client:ClassificationExplorer"],
         description="Active/expiring Certification relationships, licenses, and open Exception counts. "
-                    "Cost: three capped relationship pages, seconds.",
+                    "Cost: one relationship scan, paged until Egeria returns an empty page, plus two counts, seconds.",
         returns="dict (active, expiring90, soon, licenses, exceptions)",
         generic=False,
         binding_note="Fixed to the Certification and Exception relationship types -- not a parameter.",
         params=[_as_of()],
         declaration=AnalyticDeclaration(
             result_kind="measure",
-            # Each count is one get_relationships page (DEFAULT_CAP), with no completeness flag.
+            # active/expiring90 come from every Certification page; an incomplete scan is None, noted.
             measures=[
                 _measure("certifications", "Certification relationships", "active", population="viewer"),
                 _measure("expiring_certifications", "Certification relationships ending within 90 days",
@@ -1117,7 +1118,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                     "Takes an EgeriaTech: the repository count is MetadataExpert's native relationship count, "
                     "and the viewer path is ClassificationExplorer's get_relationships. "
                     "Cost: five native counts, sub-second each in the repository population; population=viewer "
-                    "reads five capped relationship pages instead." + REPOSITORY_WORDS,
+                    "reads five relationship scans instead, paged until Egeria returns an empty page." + REPOSITORY_WORDS,
         returns="dict (byType, total)",
         generic=False,
         binding_note="Fixed to Collaboration OMAS's feedback relationship types -- not a parameter.",
@@ -1271,7 +1272,8 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                     "pattern -- see NEXT-18 (egeria-workspaces BACKLOG.md) for why this pattern didn't "
                     "exist here before. Takes two leading clients (mgr, ce), same convention as "
                     "semantic_grounding/context_readiness_funnel. "
-                    "Cost: one capped Asset find plus one capped DataFlow relationship page, seconds.",
+                    "Cost: one Asset find page (a full page is a sample, so not measured) plus every DataFlow "
+                    "relationship page, seconds.",
         returns="dict (aiReadyCount, total, capped)",
         generic=False,
         binding_note="Fixed to governed+documented+lineage-traced over Asset elements -- not a parameter.",
@@ -1293,7 +1295,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
             out=[
                 _field("aiReadyCount", "AI-ready Assets", "int", unit="Assets"),
                 _field("total", "Assets checked", "int", unit="Assets"),
-                _field("capped", "At least (page cap reached)", "bool"),
+                _field("capped", "Asset page full (true: a sample, so nothing is measured)", "bool"),
             ],
         ),
     ),
@@ -1305,8 +1307,8 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                     "(tabular / text_media / other) of the Asset population -- the two Data "
                     "Readiness Level pieces computable today. Not a DRL band distribution: "
                     "Analytics-Ready and RAG-Ready are deliberately absent until their gates exist. "
-                    "Takes two leading clients (mgr, ce). Cost: one capped Asset find and one capped "
-                    "DataFlow relationship page, seconds.",
+                    "Takes two leading clients (mgr, ce). Cost: one Asset find page (a full page is a sample, "
+                    "so not measured) and every DataFlow relationship page, seconds.",
         returns="dict (total, capped, aiReadyCount, aiReadyRecentCount, byModality)",
         generic=False,
         binding_note="Fixed to governed+documented+lineage-traced Asset elements and the "
@@ -1342,7 +1344,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
             ),
             out=[
                 _field("total", "Assets checked", "int", unit="Assets"),
-                _field("capped", "At least (page cap reached)", "bool"),
+                _field("capped", "Asset page full (true: a sample, so nothing is measured)", "bool"),
                 _field("aiReadyCount", "AI-ready Assets", "int", unit="Assets"),
                 _field("aiReadyRecentCount", "AI-ready and recent", "int", unit="Assets"),
                 _field("byModality", "By modality", "map<string,int>", unit="Assets"),
@@ -1444,7 +1446,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         description="Distinct usernames behind at least one feedback relationship (ratings/comments/"
                     "likes/tags/noteLogs) -- an engagement signal feedback_summary's raw relationship "
                     "counts don't give you (one prolific commenter vs. many occasional ones). "
-                    "Cost: five capped relationship pages, seconds.",
+                    "Cost: five relationship scans, paged until Egeria returns an empty page, seconds.",
         returns="dict (contributors, byType)",
         generic=False,
         binding_note="Fixed to Collaboration OMAS's feedback relationship types -- not a parameter.",
@@ -1603,7 +1605,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                     "that the specific SolutionComponent is itself wired into an ISC/blueprint (a "
                     "second hop this function doesn't take). Takes two leading clients (mgr, ce), "
                     "same convention as semantic_grounding. "
-                    "Cost: one capped relationship page plus one count, seconds.",
+                    "Cost: one relationship scan, paged until Egeria returns an empty page, plus one count, seconds.",
         returns="dict (contextualisedCount, assetTotal, contextualisedPct)",
         generic=False,
         binding_note="Fixed to the ImplementedBy relationship, filtered to Asset-subtype ends -- not a parameter.",
@@ -1638,7 +1640,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                     "ImplementedBy implementation) -- the Overview's Solution Blueprints drill-down. A "
                     "single-hop proxy: the implementation need not itself sit in the component's "
                     "supply chain or blueprint. Takes two leading clients (mgr, ce). Cost: one native "
-                    "count plus one capped ImplementedBy relationship page, seconds.",
+                    "count plus one ImplementedBy relationship scan, paged until Egeria returns an empty page, seconds.",
         returns="dict (solutionComponentsTotal, solutionComponentsRealised)",
         generic=False,
         binding_note="Fixed to SolutionComponent and the ImplementedBy relationship -- not a parameter.",
@@ -1667,10 +1669,10 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         name="karma_leaderboard",
         function="pyegeria.view.overview_metrics.karma_leaderboard",
         inputs=["egeria_client:MetadataExpert"],
-        description="Top-N people by karma -- one bounded ContributionRecord fetch, karmaPoints is a "
+        description="Top-N people by karma -- every ContributionRecord, karmaPoints is a "
                     "scalar property on the record itself (not derived from counting related things), "
                     "filtered to the given anchor type(s) via each record's own Anchors classification. "
-                    "Cost: one capped find, seconds.",
+                    "Cost: one find, paged until Egeria returns an empty page, seconds.",
         returns="list[dict] (name, karmaPoints, anchorGuid, anchorType), longest-karma first",
         generic=False,
         binding_note="Fixed to ContributionRecord.karmaPoints -- top_n and anchor_types tune the "
@@ -1711,7 +1713,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                     "zero-filled across the trailing window -- reuses the same 5 relationship-type "
                     "queries feedback_summary() already makes, keeping createTime instead of only "
                     "the count. Takes ce as its leading client. "
-                    "Cost: five capped relationship pages, seconds.",
+                    "Cost: five relationship scans, paged until Egeria returns an empty page, seconds.",
         returns="list[dict] (week, comments, ratings, likes, tags, noteLogs, total), oldest week first",
         generic=False,
         binding_note="Fixed to Collaboration OMAS's 5 feedback relationship types -- weeks tunes the window, not what's measured.",
@@ -1721,7 +1723,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         ],
         declaration=AnalyticDeclaration(
             result_kind="series",
-            # One row per ISO week, oldest first, zero-filled; each type is one capped relationship page.
+            # One row per ISO week, oldest first, zero-filled; each type is read in full (None when not measured).
             measures=[
                 _measure("feedback", "feedback relationships created in the week", "total", as_of="week",
                          population="viewer"),
@@ -1762,7 +1764,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                     "catalog. One bounded SemanticAssignment fetch, distinct GlossaryTerm-end GUID "
                     "count is the 'referenced' set; orphan = term total - referenced. Takes two "
                     "leading clients (mgr, ce), same convention as semantic_grounding. "
-                    "Cost: one count plus one capped relationship page, seconds.",
+                    "Cost: one count plus one relationship scan, paged until Egeria returns an empty page, seconds.",
         returns="dict (termTotal, referencedCount, orphanCount)",
         generic=False,
         binding_note="Fixed to the SemanticAssignment relationship type and GlossaryTerm elements -- not a parameter.",
@@ -1797,7 +1799,8 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         description="Assets with no update in the last N days (default 180) -- candidates for "
                     "archival review. One bounded Asset element fetch, each element's own version "
                     "metadata compared against the cutoff, no relationship traversal. "
-                    "Cost: one capped Asset find plus one count, seconds.",
+                    "Cost: one Asset find page (a full page is a sample, so staleCount is not measured) plus one "
+                    "count, seconds.",
         returns="dict (staleCount, assetTotal)",
         generic=False,
         binding_note="Fixed to the Asset type -- population isn't a parameter, but the staleness threshold (days) is.",
@@ -1807,14 +1810,15 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         ],
         declaration=AnalyticDeclaration(
             result_kind="measure",
-            # staleCount comes from one capped find, assetTotal from a native count: no basis between them.
+            # staleCount comes from one find page (None when full), assetTotal from a native count: no basis.
             measures=[
-                _measure("stale_assets", "Assets not updated within `days`, among those one capped find returned",
+                _measure("stale_assets", "Assets not updated within `days` (not measured when the Asset find fills its page)",
                          "staleCount", population="viewer"),
                 _measure("assets", "Assets", "assetTotal"),
             ],
             absence=_absence(
-                not_measured="Stale assets were not measured: the Asset find failed.",
+                not_measured="Stale assets were not measured: the Asset find failed, or it filled its page, "
+                             "so it held only some of the Assets.",
                 not_permitted="You are not permitted to read the Assets.",
                 not_applicable=_always_applies("Finding stale assets"),
                 nothing_found="Checked: every Asset read was updated within the threshold, or there are no Assets.",

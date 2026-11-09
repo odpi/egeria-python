@@ -104,8 +104,8 @@ _DEMOS: Dict[str, FormatSet] = {
         heading="Ownership Coverage",
         what="Count of elements carrying an Ownership classification -- NOT a percentage, same "
              "caveat as Governance Coverage (no cheap total-elements denominator yet). "
-             "ownershipCapped=true means the query hit its result-page cap (DEFAULT_CAP), so "
-             "ownershipCount is a floor, not exact, when true. byOwnerType is a nested breakdown "
+             "The find is paged until Egeria returns an empty page, so ownershipCount is every owned "
+             "element (ownershipCapped is false when measured; an incomplete scan is not measured). byOwnerType is a nested breakdown "
              "of the same ownershipCount elements by the owner's type (Person, Team, "
              "SolutionActorRole, ...) -- pick BAR below for a chart of byOwnerType.",
         analytic_function_name="ownership_coverage",
@@ -132,8 +132,8 @@ _DEMOS: Dict[str, FormatSet] = {
         what="Count of elements carrying at least one governance classification "
              "(ZoneMembership/Confidentiality/Criticality/Impact/Retention) -- NOT a percentage "
              "despite 'coverage' in the name (there's no cheap total-elements denominator to "
-             "divide by yet). governedCapped=true means the query hit its result-page cap "
-             "(DEFAULT_CAP), so governedCount is a floor, not exact, when true. byClassification "
+             "divide by yet). The find is paged until Egeria returns an empty page, so governedCount "
+             "is every governed element (governedCapped is false when measured). byClassification "
              "and topZones are nested breakdowns of the same governedCount elements -- pick BAR "
              "below for a chart of byClassification.",
         analytic_function_name="governed_coverage",
@@ -212,13 +212,14 @@ _DEMOS: Dict[str, FormatSet] = {
         heading="AI-Ready Assets (Composite)",
         what="The actual per-asset intersection context_readiness_funnel's 'aiReady' field can't "
              "give you: Asset elements that are governed AND documented AND lineage-traced, all "
-             "three, checked per element from a single capped Asset fetch plus one DataFlow "
-             "relationship query (not three separate counts intersected client-side after the "
+             "three, checked per element from one Asset find page plus every DataFlow "
+             "relationship (not three separate counts intersected client-side after the "
              "fact -- see the function's own docstring for the exact field-name gotchas this hit "
              "while being built, e.g. find_metadata_elements results key their GUID as "
              "'elementGUID' but a relationship end's GUID is plain 'guid'). 'total' is the "
-             "(possibly capped) Asset population actually checked -- divide aiReadyCount by total "
-             "for a percentage, don't assume it's the full catalog. First worked example of the "
+             "Asset population checked. A full Asset page is a sample, not the catalog, so then "
+             "nothing is measured (capped=true, with a note); otherwise divide aiReadyCount by "
+             "total for a percentage. First worked example of the "
              "composite/derived analytic metric pattern NEXT-18 (egeria-workspaces BACKLOG.md) "
              "flagged as missing.",
         analytic_function_name="ai_ready_assets",
