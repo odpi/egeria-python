@@ -191,3 +191,51 @@ def test_a_companion_the_spec_already_selects_is_not_repeated():
     assert report.count(action) == 1
     assert "### Action Mermaid Graph" not in report  # shown under the spec's own "Action Graph"
     assert report.count("### Activity Mermaid Graph") == 1
+
+
+# ── key on every row (owner, 2026-11-09): DICT rows keep one shape ──
+
+DICT_SPEC = "Governance-Zone-Overview-Charts"  # its DICT declares the context graph
+COMPANION_NAMES = ["Action Mermaid Graph", "Activity Mermaid Graph"]
+
+
+def _dict_rows(elements):
+    return of.generate_output([copy.deepcopy(e) for e in elements], "x", "Thing", "DICT",
+                              of.populate_columns_from_properties, None,
+                              copy.deepcopy(select_report_spec(DICT_SPEC, "DICT")))
+
+
+def test_mixed_rows_all_get_the_companion_keys_in_the_same_order():
+    rows = _dict_rows([_with(ZONE, actionMermaidGraph=ACTION), copy.deepcopy(ZONE),
+                       _with(ZONE, activityMermaidGraph=ACTIVITY)])
+    assert len({tuple(row) for row in rows}) == 1  # one shape, one key order
+    for name in COMPANION_NAMES:
+        assert all(name in row for row in rows)
+    assert rows[0]["Action Mermaid Graph"] == ACTION and rows[0]["Activity Mermaid Graph"] == ""
+    assert rows[1]["Action Mermaid Graph"] == "" and rows[1]["Activity Mermaid Graph"] == ""
+    assert rows[2]["Action Mermaid Graph"] == "" and rows[2]["Activity Mermaid Graph"] == ACTIVITY
+    keys = list(rows[0])
+    context = next(c["name"] for c in select_report_spec(DICT_SPEC, "DICT")["formats"]["attributes"]
+                   if c["key"] in ("mermaidGraph", "mermaid"))
+    assert keys.index(context) + 1 == keys.index("Action Mermaid Graph")
+    assert keys.index("Action Mermaid Graph") + 1 == keys.index("Activity Mermaid Graph")
+
+
+def test_only_the_companions_some_row_carries_are_added_to_every_row():
+    rows = _dict_rows([_with(ZONE, actionMermaidGraph=ACTION), copy.deepcopy(ZONE)])
+    assert all("Action Mermaid Graph" in row for row in rows)
+    assert not any("Activity Mermaid Graph" in row for row in rows)
+    assert list(rows[0]) == list(rows[1])
+
+
+def test_no_companion_in_any_row_adds_no_key():
+    rows = _dict_rows([copy.deepcopy(ZONE), copy.deepcopy(ZONE)])
+    spec_names = [c["name"] for c in select_report_spec(DICT_SPEC, "DICT")["formats"]["attributes"]]
+    for row in rows:
+        assert list(row) == spec_names
+        assert not set(COMPANION_NAMES) & set(row)
+
+
+def test_a_single_row_is_unchanged_by_the_uniform_rule():
+    (row,) = _dict_rows([_with(ZONE, actionMermaidGraph=ACTION)])
+    assert row["Action Mermaid Graph"] == ACTION and "Activity Mermaid Graph" not in row

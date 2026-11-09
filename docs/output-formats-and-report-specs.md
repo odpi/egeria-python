@@ -449,7 +449,9 @@ From Egeria 6.2.29 the context graph, `mermaidGraph`, leaves out relationships w
 | DICT | `Action Mermaid Graph` and `Activity Mermaid Graph` entries, after the context graph's entry |
 | TABLE, LIST, MD, FORM | Nothing: every row of a table has the same columns, and MD/FORM show no graphs |
 
-A companion the spec already selects (for example `Asset-Graph`'s own `Action Graph` column) is not repeated, and an element that carries neither key gives exactly the output it gave before.
+A companion the spec already selects (for example `Asset-Graph`'s own `Action Graph` column) is not repeated, and an element that carries neither key gives exactly the output it gave before. Egeria already returns `actionMermaidGraph` (for Assets, for example), so this changes output today: `Asset-Graph`'s MERMAID shows the context graph, then the action graph.
+
+**Key on every row.** In a DICT result of several rows, when any row carries a companion, every row gets that key right after its context graph, with `""` where the element has none, so a table renderer sees one row shape. A single row, or rows none of which carries a companion, are left as they are.
 
 #### Mermaid keys named so far (`MERMAID_ATTRIBUTE_KEYS`)
 

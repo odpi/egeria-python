@@ -1523,6 +1523,33 @@ def generate_entity_md_table(elements: List[Dict],
     return elements_md
 
 
+def _uniform_companion_keys(rows: List[Dict], row_context_keys: List[Optional[str]]) -> None:
+    """Key on every row (owner, 2026-11-09): when any DICT row carries a companion graph, every row
+    gets that key, empty ("") where its element has none, right after the row's context graph, so
+    table renderers see one row shape. A single row, or rows with no companion, are left as they are.
+    """
+    names = [name for _, name in MERMAID_COMPANION_GRAPHS if any(name in row for row in rows)]
+    if not names or len(rows) < 2:
+        return
+    for row, context_key in zip(rows, row_context_keys):
+        if all(name in row for name in names):
+            continue
+        values = {name: row.get(name, "") for name in names}
+        if context_key not in row:
+            for name in names:
+                row.setdefault(name, "")
+            continue
+        rebuilt = {}
+        for key, value in row.items():
+            if key in values:
+                continue
+            rebuilt[key] = value
+            if key == context_key:
+                rebuilt.update(values)
+        row.clear()
+        row.update(rebuilt)
+
+
 def generate_entity_dict(elements: List[Dict], 
                         extract_properties_func: Callable, 
                         get_additional_props_func: Optional[Callable] = None,
@@ -1546,6 +1573,7 @@ def generate_entity_dict(elements: List[Dict],
         list: List of entity dictionaries
     """
     result = []
+    row_context_keys = []
 
     #####
     # Add attributes based on column spec if available, otherwise, add all
@@ -1582,6 +1610,7 @@ def generate_entity_dict(elements: List[Dict],
 
         # Create entity dictionary
         entity_dict = {}
+        context_dict_key = None  # the DICT key of the context graph's column, if the row has one
 
         cols = local_columns_struct['formats'].get('attributes', None) if local_columns_struct else None
         # The action and activity graphs follow the context graph in a DICT (not in a TABLE, whose
@@ -1631,6 +1660,8 @@ def generate_entity_dict(elements: List[Dict],
                         tmp_key = f"{dict_key}_{suffix_idx}"
                     dict_key = tmp_key
                 entity_dict[dict_key] = value
+                if key in _CONTEXT_GRAPH_KEYS and context_dict_key is None:
+                    context_dict_key = dict_key
                 if companions and key in _CONTEXT_GRAPH_KEYS:
                     for companion in companions:
                         entity_dict.setdefault(companion["name"], companion["value"])
@@ -1657,6 +1688,8 @@ def generate_entity_dict(elements: List[Dict],
                         tmp_key = f"{dict_key}_{suffix_idx}"
                     dict_key = tmp_key
                 entity_dict[dict_key] = value
+                if key in _CONTEXT_GRAPH_KEYS and context_dict_key is None:
+                    context_dict_key = dict_key
                 if companions and key in _CONTEXT_GRAPH_KEYS:
                     for companion in companions:
                         entity_dict.setdefault(companion["name"], companion["value"])
@@ -1676,6 +1709,10 @@ def generate_entity_dict(elements: List[Dict],
                     entity_dict[key] = value
 
         result.append(entity_dict)
+        row_context_keys.append(context_dict_key)
+
+    if output_format == 'DICT':
+        _uniform_companion_keys(result, row_context_keys)
     #####
     # for element in elements:
     #     if element is None:
