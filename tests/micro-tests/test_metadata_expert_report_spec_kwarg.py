@@ -60,9 +60,11 @@ _WITH_STRING_SPECS = _specs_using("find_metadata_elements_with_string")
 
 
 def test_known_failing_spec_is_covered():
-    # Reproduced live 2026-11-07. Specs added later on the same function
+    # Reproduced live 2026-11-07 with Report-DrE-Basic. Since 6.2.28 the generic-search specs
+    # (Report-DrE-* among them) call ClassificationExplorer; the specs still on this function
     # (e.g. Dashboards) are picked up by the registry scan below.
-    assert "Report-DrE-Basic" in _WITH_STRING_SPECS
+    assert "Report-DrE-Basic" not in _WITH_STRING_SPECS
+    assert "Dashboard-DrE-Basic" in _WITH_STRING_SPECS
 
 
 @pytest.mark.parametrize("spec_name", _WITH_STRING_SPECS)
@@ -76,7 +78,8 @@ def test_exec_report_spec_runs(spec_name, _offline):
 
 
 @pytest.mark.parametrize("method, args", [
-    ("find_metadata_elements_with_string", {}),
+    # an untyped '*' is refused in words since 6.2.28, so give it a type
+    ("find_metadata_elements_with_string", {"metadata_element_type": "Report"}),
     ("find_elements_for_anchor", {"guid": "a1"}),
     ("find_elements_in_anchor_domain", {"anchor_domain": "Glossary"}),
     ("find_elements_in_anchor_scope", {"guid": "a1"}),

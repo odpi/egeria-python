@@ -3139,7 +3139,7 @@
       "upsert": true,
       "attach": false,
       "level": "Basic",
-      "find_method": "MetadataExpert.find_metadata_elements_with_string",
+      "find_method": "ClassificationExplorer.find_elements_by_property_value",
       "find_constraints": "",
       "extra_find": "",
       "extra_constraints": "",

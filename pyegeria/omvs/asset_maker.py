@@ -9,6 +9,9 @@ The Asset Maker OMVS provides APIs for supporting the creation and editing of as
 
 import asyncio
 from typing import Any, Optional
+from typing import Unpack
+from pyegeria.core.request_filters import deprecated_names
+from pyegeria.core.request_filters import GetFilters, ListFilters
 from pyegeria.core._server_client import ServerClient
 from pyegeria.core._globals import max_paging_size, NO_ELEMENTS_FOUND, NO_GUID_RETURNED
 from pyegeria.models import (
@@ -600,11 +603,12 @@ class AssetMaker(ServerClient):
         """
         super().delete_asset(asset_guid, body)
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_get_assets_by_name(
         self,
         filter_string: str | None = None,
-        metadata_element_type_name: str | None = "Asset",
+        metadata_element_type: str | None = "Asset",
         metadata_element_subtypes: list[str] | None = None,
         include_only_classified_elements: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
@@ -623,7 +627,7 @@ class AssetMaker(ServerClient):
         ----------
         filter_string: str
             String to find in the asset properties.
-        metadata_element_type_name: str, default "Asset"
+        metadata_element_type: str, default "Asset"
             The type of asset to filter by.
         metadata_element_subtypes: list[str], optional
             The subtypes of asset to filter by.
@@ -645,6 +649,9 @@ class AssetMaker(ServerClient):
             Specification for report formatting.
         body: dict | FilterRequestBody, optional
             Additional filter parameters.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -685,21 +692,21 @@ class AssetMaker(ServerClient):
         url = f"{self.asset_command_root}/assets/by-name"
         return await self._async_get_name_request(url, _type="Asset", _gen_output=self._generate_referenceable_output,
                                                   filter_string=filter_string,
-                                                  metadata_element_type_name=metadata_element_type_name,
+                                                  metadata_element_type=metadata_element_type,
                                                   metadata_element_subtypes=metadata_element_subtypes,
-                                                  classification_names=include_only_classified_elements,
                                                   include_only_relationships=include_only_relationships,
                                                   skip_relationships=skip_relationships,
                                                   graph_query_depth=graph_query_depth,
                                                   start_from=start_from,
                                                   page_size=page_size, output_format=output_format,
-                                                  report_spec=report_spec, body=body, **kwargs)
+                                                  report_spec=report_spec, body=body, **{"classification_names": include_only_classified_elements, **kwargs})
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def get_assets_by_name(
         self,
         filter_string: str | None = None,
-        metadata_element_type_name: str | None = "Asset",
+        metadata_element_type: str | None = "Asset",
         metadata_element_subtypes: list[str] | None = None,
         include_only_classified_elements: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
@@ -718,7 +725,7 @@ class AssetMaker(ServerClient):
         ----------
         filter_string: str
             String to find in the asset properties.
-        metadata_element_type_name: str, default "Asset"
+        metadata_element_type: str, default "Asset"
             The type of asset to filter by.
         metadata_element_subtypes: list[str], optional
             The subtypes of asset to filter by.
@@ -740,6 +747,9 @@ class AssetMaker(ServerClient):
             Specification for report formatting.
         body: dict | FilterRequestBody, optional
             Additional filter parameters.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -779,7 +789,7 @@ class AssetMaker(ServerClient):
         """
         return run_sync(
             self._async_get_assets_by_name(filter_string=filter_string,
-                                           metadata_element_type_name=metadata_element_type_name,
+                                           metadata_element_type=metadata_element_type,
                                            metadata_element_subtypes=metadata_element_subtypes,
                                            include_only_classified_elements=include_only_classified_elements,
                                            include_only_relationships=include_only_relationships,
@@ -1011,6 +1021,9 @@ class AssetMaker(ServerClient):
         report_spec: dict | str, optional
             Specification for report formatting.
 
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         dict | str
@@ -1085,6 +1098,9 @@ class AssetMaker(ServerClient):
             Format of the output. Default is "JSON".
         report_spec: dict | str, optional
             Specification for report formatting.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1379,7 +1395,7 @@ class AssetMaker(ServerClient):
         output_format: str = "JSON",
         report_spec: dict | str | None = None,
         body: dict | GetRequestBody | None = None,
-        **kwargs
+        **kwargs: Unpack[GetFilters]
     ) -> dict | str:
         """Retrieve a specific catalog target associated with an integration connector. Async version.
 
@@ -1395,6 +1411,9 @@ class AssetMaker(ServerClient):
             Specification for report formatting.
         body: dict | GetRequestBody, optional
             Additional parameters for the request.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1432,7 +1451,7 @@ class AssetMaker(ServerClient):
         output_format: str = "JSON",
         report_spec: dict | str | None = None,
         body: dict | GetRequestBody | None = None,
-        **kwargs
+        **kwargs: Unpack[GetFilters]
     ) -> dict | str:
         """Retrieve a specific catalog target associated with an integration connector.
 
@@ -1448,6 +1467,9 @@ class AssetMaker(ServerClient):
             Specification for report formatting.
         body: dict | GetRequestBody, optional
             Additional parameters for the request.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1480,7 +1502,7 @@ class AssetMaker(ServerClient):
         output_format: str = "JSON",
         report_spec: dict | str | None = None,
         body: dict | ResultsRequestBody | None = None,
-        **kwargs
+        **kwargs: Unpack[ListFilters]
     ) -> list | dict | str:
         """Retrieve the details of the metadata elements identified as catalog targets with an integration connector.
         Async version.
@@ -1501,6 +1523,9 @@ class AssetMaker(ServerClient):
             Specification for report formatting.
         body: dict | ResultsRequestBody, optional
             Additional filter parameters.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1545,7 +1570,7 @@ class AssetMaker(ServerClient):
         output_format: str = "JSON",
         report_spec: dict | str | None = None,
         body: dict | ResultsRequestBody | None = None,
-        **kwargs
+        **kwargs: Unpack[ListFilters]
     ) -> list | dict | str:
         """Retrieve the details of the metadata elements identified as catalog targets with an integration connector.
 
@@ -1565,6 +1590,9 @@ class AssetMaker(ServerClient):
             Specification for report formatting.
         body: dict | ResultsRequestBody, optional
             Additional filter parameters.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -2037,6 +2065,9 @@ class AssetMaker(ServerClient):
         body: dict | ContentStatusSearchString, optional
             - the request body to use for the request. If specified, this takes precedence over other parameters.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -2165,6 +2196,9 @@ class AssetMaker(ServerClient):
         body: dict | ContentStatusSearchString, optional
             - the request body to use for the request. If specified, this takes precedence over other parameters.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -2226,7 +2260,7 @@ class AssetMaker(ServerClient):
         output_format: str = "JSON",
         report_spec: str | dict = None,
         body: Optional[dict | ContentStatusFilterRequestBody] = None,
-        **kwargs
+        **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
         Returns the list of data assets matching the category and optional content status. Async version.
@@ -2250,6 +2284,9 @@ class AssetMaker(ServerClient):
         body: dict | ContentStatusFilterRequestBody, optional
             - the request body
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | str
@@ -2271,7 +2308,6 @@ class AssetMaker(ServerClient):
             url,
             _type="DataAsset",
             _gen_output=self._generate_referenceable_output,
-            filter_string=category,
             content_status_list=content_status_list,
             graph_query_depth=graph_query_depth,
             start_from=start_from,
@@ -2279,7 +2315,7 @@ class AssetMaker(ServerClient):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **kwargs
+            **{"filter_string": category, **kwargs}
         )
 
     @dynamic_catch
@@ -2293,7 +2329,7 @@ class AssetMaker(ServerClient):
         output_format: str = "JSON",
         report_spec: str | dict = None,
         body: Optional[dict | ContentStatusFilterRequestBody] = None,
-        **kwargs
+        **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
         Returns the list of data assets matching the category and optional content status. Sync version.
@@ -2316,6 +2352,9 @@ class AssetMaker(ServerClient):
             - the report specification to use for the output
         body: dict | ContentStatusFilterRequestBody, optional
             - the request body to use for the request. If specified, this takes precedence over other parameters.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -2686,24 +2725,31 @@ class AssetMaker(ServerClient):
     async def _async_get_placement_reports(
         self,
         dashboard_guid: str,
-        placement_qualified_names: list[str],
+        placement_qualified_names: list[str], **kwargs: Unpack[GetFilters],
     ) -> dict[str, dict]:
         """Read which report each placement of a dashboard is bound to. Async version.
 
         Returns one entry per placement qualified name; see `resolve_placement_reports` for the states.
         Raises if the dashboard itself cannot be retrieved, rather than reporting every placement as
         unbound: a dashboard that was never read says nothing about its placements.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
         """
         element = await self._async_get_asset_by_guid(dashboard_guid,
-                                                      include_only_relationships=["DataSetContent"])
+                                                      **{"include_only_relationships": ["DataSetContent"], **kwargs})
         if not isinstance(element, dict):
             raise ValueError(f"Dashboard {dashboard_guid} could not be retrieved: {element}")
         return resolve_placement_reports(element, placement_qualified_names)
 
     @dynamic_catch
-    def get_placement_reports(self, dashboard_guid: str, placement_qualified_names: list[str]) -> dict[str, dict]:
-        """Read which report each placement of a dashboard is bound to. See `_async_get_placement_reports`."""
-        return run_sync(self._async_get_placement_reports(dashboard_guid, placement_qualified_names))
+    def get_placement_reports(self, dashboard_guid: str, placement_qualified_names: list[str], **kwargs: Unpack[GetFilters]) -> dict[str, dict]:
+        """Read which report each placement of a dashboard is bound to. See `_async_get_placement_reports`.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
+        """
+        return run_sync(self._async_get_placement_reports(dashboard_guid, placement_qualified_names, **kwargs))
 
     @dynamic_catch
     async def _async_detach_placement_report(
@@ -3316,6 +3362,9 @@ class AssetMaker(ServerClient):
         body: dict | DeploymentStatusSearchString, optional
             - the request body
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -3414,6 +3463,9 @@ class AssetMaker(ServerClient):
         body: dict | DeploymentStatusSearchString, optional
             - the request body to use for the request. If specified, this takes precedence over other parameters.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -3475,7 +3527,7 @@ class AssetMaker(ServerClient):
         output_format: str = "JSON",
         report_spec: str | dict = None,
         body: Optional[dict | DeploymentStatusFilterRequestBody] = None,
-        **kwargs
+        **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
         Returns the list of infrastructure assets matching the category and optional deployment status. Async version.
@@ -3499,6 +3551,9 @@ class AssetMaker(ServerClient):
         body: dict | DeploymentStatusFilterRequestBody, optional
             - the request body
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | str
@@ -3520,7 +3575,6 @@ class AssetMaker(ServerClient):
             url,
             _type="Infrastructure",
             _gen_output=self._generate_referenceable_output,
-            filter_string=category,
             deployment_status_list=deployment_status_list,
             graph_query_depth=graph_query_depth,
             start_from=start_from,
@@ -3528,7 +3582,7 @@ class AssetMaker(ServerClient):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **kwargs
+            **{"filter_string": category, **kwargs}
         )
 
     @dynamic_catch
@@ -3542,7 +3596,7 @@ class AssetMaker(ServerClient):
         output_format: str = "JSON",
         report_spec: str | dict = None,
         body: Optional[dict | DeploymentStatusFilterRequestBody] = None,
-        **kwargs
+        **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
         Returns the list of infrastructure assets matching the category and optional deployment status. Sync version.
@@ -3565,6 +3619,9 @@ class AssetMaker(ServerClient):
             - the report specification to use for the output
         body: dict | DeploymentStatusFilterRequestBody, optional
             - the request body to use for the request. If specified, this takes precedence over other parameters.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -3973,6 +4030,9 @@ class AssetMaker(ServerClient):
         report_spec: str | dict, optional
         body: dict | ActivityStatusSearchString, optional
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -4081,6 +4141,9 @@ class AssetMaker(ServerClient):
         body: dict | ActivityStatusSearchString, optional
             - the request body to use for the request. If specified, this takes precedence over other parameters.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -4142,7 +4205,7 @@ class AssetMaker(ServerClient):
         output_format: str = "JSON",
         report_spec: str | dict = None,
         body: Optional[dict | ActivityStatusFilterRequestBody] = None,
-        **kwargs
+        **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
         Retrieve the processes that match the category name and status. Async version.
@@ -4158,6 +4221,9 @@ class AssetMaker(ServerClient):
         output_format: str, default = "JSON"
         report_spec: str | dict, optional
         body: dict | ActivityStatusFilterRequestBody, optional
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -4180,7 +4246,6 @@ class AssetMaker(ServerClient):
             url,
             _type="Process",
             _gen_output=self._generate_referenceable_output,
-            filter_string=category,
             activity_status_list=activity_status_list,
             graph_query_depth=graph_query_depth,
             start_from=start_from,
@@ -4188,7 +4253,7 @@ class AssetMaker(ServerClient):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **kwargs
+            **{"filter_string": category, **kwargs}
         )
 
     @dynamic_catch
@@ -4202,7 +4267,7 @@ class AssetMaker(ServerClient):
         output_format: str = "JSON",
         report_spec: str | dict = None,
         body: Optional[dict | ActivityStatusFilterRequestBody] = None,
-        **kwargs
+        **kwargs: Unpack[ListFilters]
     ) -> list | str:
         """
         Retrieve the processes that match the category name and status. Sync version.
@@ -4225,6 +4290,9 @@ class AssetMaker(ServerClient):
             - the report specification to use for the output
         body: dict | ActivityStatusFilterRequestBody, optional
             - the request body to use for the request. If specified, this takes precedence over other parameters.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -4591,7 +4659,7 @@ class AssetMaker(ServerClient):
         output_format: str = "JSON",
         report_spec: str | dict = None,
         body: dict | GetRequestBody | None = None,
-        **kwargs
+        **kwargs: Unpack[GetFilters]
     ) -> list | dict | str:
         """
         Retrieve a specific action target associated with an action. Async version.
@@ -4604,6 +4672,9 @@ class AssetMaker(ServerClient):
         body: dict | GetRequestBody, optional
         output_format: str, default = "JSON"
         report_spec: str | dict, optional
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -4630,7 +4701,7 @@ class AssetMaker(ServerClient):
         output_format: str = "JSON",
         report_spec: str | dict = None,
         body: dict | GetRequestBody | None = None,
-        **kwargs
+        **kwargs: Unpack[GetFilters]
     ) -> list | dict | str:
         """
         Retrieve a specific action target associated with an action. Sync version.
@@ -4643,6 +4714,9 @@ class AssetMaker(ServerClient):
         body: dict | GetRequestBody, optional
         output_format: str, default = "JSON"
         report_spec: str | dict, optional
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -4692,6 +4766,9 @@ class AssetMaker(ServerClient):
         body: dict | ActivityStatusRequestBody, optional
         output_format: str, default = "JSON"
         report_spec: str | dict, optional
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -4748,6 +4825,9 @@ class AssetMaker(ServerClient):
         body: dict | ActivityStatusRequestBody, optional
         output_format: str, default = "JSON"
         report_spec: str | dict, optional
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -4807,6 +4887,9 @@ class AssetMaker(ServerClient):
         output_format: str, default = "JSON"
         report_spec: str | dict, optional
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | dict | str
@@ -4862,6 +4945,9 @@ class AssetMaker(ServerClient):
         body: dict | ActivityStatusRequestBody, optional
         output_format: str, default = "JSON"
         report_spec: str | dict, optional
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -5087,6 +5173,9 @@ class AssetMaker(ServerClient):
         output_format: str, default = "JSON"
         report_spec: str | dict, optional
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | dict | str
@@ -5142,6 +5231,9 @@ class AssetMaker(ServerClient):
         body: dict | ActivityStatusRequestBody, optional
         output_format: str, default = "JSON"
         report_spec: str | dict, optional
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -5201,6 +5293,9 @@ class AssetMaker(ServerClient):
         output_format: str, default = "JSON"
         report_spec: str | dict, optional
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | dict | str
@@ -5256,6 +5351,9 @@ class AssetMaker(ServerClient):
         body: dict | ActivityStatusRequestBody, optional
         output_format: str, default = "JSON"
         report_spec: str | dict, optional
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -5315,6 +5413,9 @@ class AssetMaker(ServerClient):
         output_format: str, default = "JSON"
         report_spec: str | dict, optional
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | dict | str
@@ -5370,6 +5471,9 @@ class AssetMaker(ServerClient):
         body: dict | ActivityStatusRequestBody, optional
         output_format: str, default = "JSON"
         report_spec: str | dict, optional
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -5652,11 +5756,12 @@ class AssetMaker(ServerClient):
             self._async_update_software_capability(software_capability_guid, body)
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_get_software_capability_by_guid(
         self,
         guid: str,
-        metadata_element_type_name: str | None = "SoftwareCapability",
+        metadata_element_type: str | None = "SoftwareCapability",
         graph_query_depth: int = 3,
         output_format: str = "JSON",
         report_spec: dict | str | None = None,
@@ -5669,7 +5774,7 @@ class AssetMaker(ServerClient):
         ----------
         guid: str
             Unique identifier of the software capability.
-        metadata_element_type_name: str, default "SoftwareCapability"
+        metadata_element_type: str, default "SoftwareCapability"
             Metadata element type name to include in the request body.
         graph_query_depth: int, default 3
             The depth of the graph query.
@@ -5679,6 +5784,9 @@ class AssetMaker(ServerClient):
             Format of the output. Default is "JSON".
         report_spec: dict | str, optional
             Specification for report formatting.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -5698,7 +5806,7 @@ class AssetMaker(ServerClient):
         url = f"{self.asset_command_root}/software-capabilities/{guid}"
         return await self._async_get_guid_request(
             url,
-            _type=metadata_element_type_name,
+            _type=metadata_element_type,
             _gen_output=self._generate_referenceable_output,
             graph_query_depth=graph_query_depth,
             output_format=output_format,
@@ -5707,11 +5815,12 @@ class AssetMaker(ServerClient):
             **kwargs
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def get_software_capability_by_guid(
         self,
         guid: str,
-        metadata_element_type_name: str | None = "SoftwareCapability",
+        metadata_element_type: str | None = "SoftwareCapability",
         graph_query_depth: int = 3,
         output_format: str = "JSON",
         report_spec: dict | str | None = None,
@@ -5724,7 +5833,7 @@ class AssetMaker(ServerClient):
         ----------
         guid: str
             Unique identifier of the software capability.
-        metadata_element_type_name: str, default "SoftwareCapability"
+        metadata_element_type: str, default "SoftwareCapability"
             Metadata element type name to include in the request body.
         graph_query_depth: int, default 3
             The depth of the graph query.
@@ -5734,6 +5843,9 @@ class AssetMaker(ServerClient):
             Format of the output. Default is "JSON".
         report_spec: dict | str, optional
             Specification for report formatting.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -5753,7 +5865,7 @@ class AssetMaker(ServerClient):
         return run_sync(
             self._async_get_software_capability_by_guid(
                 guid=guid,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 graph_query_depth=graph_query_depth,
                 output_format=output_format,
                 report_spec=report_spec,
@@ -5846,6 +5958,9 @@ class AssetMaker(ServerClient):
             Specific properties to search.
         body: dict | SearchStringRequestBody, optional
             Additional search parameters.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -6004,6 +6119,9 @@ class AssetMaker(ServerClient):
         body: dict | SearchStringRequestBody, optional
             Additional search parameters.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | dict | str
@@ -6046,11 +6164,12 @@ class AssetMaker(ServerClient):
             )
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_get_software_capabilities_by_name(
         self,
         name: str | None = None,
-        metadata_element_type_name: str | None = "SoftwareCapability",
+        metadata_element_type: str | None = "SoftwareCapability",
         graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
@@ -6065,7 +6184,7 @@ class AssetMaker(ServerClient):
         ----------
         name: str
             Name to filter software capabilities by.
-        metadata_element_type_name: str, default "SoftwareCapability"
+        metadata_element_type: str, default "SoftwareCapability"
             Metadata element type name to include in the request body.
         graph_query_depth: int, default 3
             The depth of the graph query.
@@ -6074,6 +6193,9 @@ class AssetMaker(ServerClient):
         output_format: str, default = "JSON"
         report_spec: str | dict, optional
         body: dict | FilterRequestBody, optional
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -6095,22 +6217,22 @@ class AssetMaker(ServerClient):
             url,
             _type="SoftwareCapability",
             _gen_output=self._generate_referenceable_output,
-            filter_string=name,
-            metadata_element_type_name=metadata_element_type_name,
+            metadata_element_type=metadata_element_type,
             graph_query_depth=graph_query_depth,
             start_from=start_from,
             page_size=page_size,
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **kwargs
+            **{"filter_string": name, **kwargs}
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def get_software_capabilities_by_name(
         self,
         name: str | None = None,
-        metadata_element_type_name: str | None = "SoftwareCapability",
+        metadata_element_type: str | None = "SoftwareCapability",
         graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
@@ -6125,7 +6247,7 @@ class AssetMaker(ServerClient):
         ----------
         name: str
             Name to filter software capabilities by.
-        metadata_element_type_name: str, default "SoftwareCapability"
+        metadata_element_type: str, default "SoftwareCapability"
             Metadata element type name to include in the request body.
         graph_query_depth: int, default 3
             The depth of the graph query.
@@ -6134,6 +6256,9 @@ class AssetMaker(ServerClient):
         output_format: str, default = "JSON"
         report_spec: str | dict, optional
         body: dict | FilterRequestBody, optional
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -6153,7 +6278,7 @@ class AssetMaker(ServerClient):
         return run_sync(
             self._async_get_software_capabilities_by_name(
                 name=name,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 graph_query_depth=graph_query_depth,
                 start_from=start_from,
                 page_size=page_size,
@@ -6164,11 +6289,12 @@ class AssetMaker(ServerClient):
             )
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_get_software_capabilities_by_deployed_implementation_type(
         self,
         deployed_implementation_type: str,
-        metadata_element_type_name: str | None = "SoftwareCapability",
+        metadata_element_type: str | None = "SoftwareCapability",
         graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
@@ -6183,7 +6309,7 @@ class AssetMaker(ServerClient):
         ----------
         deployed_implementation_type: str
             Deployed implementation type to filter by (e.g., "Software Server").
-        metadata_element_type_name: str, default "SoftwareCapability"
+        metadata_element_type: str, default "SoftwareCapability"
             Metadata element type name to include in the request body.
         graph_query_depth: int, default 3
             The depth of the graph query.
@@ -6192,6 +6318,9 @@ class AssetMaker(ServerClient):
         output_format: str, default = "JSON"
         report_spec: str | dict, optional
         body: dict | FilterRequestBody, optional
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -6213,22 +6342,22 @@ class AssetMaker(ServerClient):
             url,
             _type="SoftwareCapability",
             _gen_output=self._generate_referenceable_output,
-            filter_string=deployed_implementation_type,
-            metadata_element_type_name=metadata_element_type_name,
+            metadata_element_type=metadata_element_type,
             graph_query_depth=graph_query_depth,
             start_from=start_from,
             page_size=page_size,
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **kwargs
+            **{"filter_string": deployed_implementation_type, **kwargs}
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def get_software_capabilities_by_deployed_implementation_type(
         self,
         deployed_implementation_type: str,
-        metadata_element_type_name: str | None = "SoftwareCapability",
+        metadata_element_type: str | None = "SoftwareCapability",
         graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
@@ -6243,7 +6372,7 @@ class AssetMaker(ServerClient):
         ----------
         deployed_implementation_type: str
             Deployed implementation type to filter by (e.g., "Software Server").
-        metadata_element_type_name: str, default "SoftwareCapability"
+        metadata_element_type: str, default "SoftwareCapability"
             Metadata element type name to include in the request body.
         graph_query_depth: int, default 3
             The depth of the graph query.
@@ -6252,6 +6381,9 @@ class AssetMaker(ServerClient):
         output_format: str, default = "JSON"
         report_spec: str | dict, optional
         body: dict | FilterRequestBody, optional
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -6271,7 +6403,7 @@ class AssetMaker(ServerClient):
         return run_sync(
             self._async_get_software_capabilities_by_deployed_implementation_type(
                 deployed_implementation_type=deployed_implementation_type,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 graph_query_depth=graph_query_depth,
                 start_from=start_from,
                 page_size=page_size,
@@ -6292,7 +6424,7 @@ class AssetMaker(ServerClient):
         output_format: str = "JSON",
         report_spec: dict | str | None = None,
         body: dict | ResultsRequestBody | None = None,
-        **kwargs
+        **kwargs: Unpack[ListFilters]
     ) -> list | dict | str:
         """Retrieve the list of software capabilities attached to a specific infrastructure element. Async version.
 
@@ -6306,6 +6438,9 @@ class AssetMaker(ServerClient):
         page_size: int, optional
         output_format: str, default "JSON"
         report_spec: dict | str, optional
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -6346,7 +6481,7 @@ class AssetMaker(ServerClient):
         output_format: str = "JSON",
         report_spec: dict | str | None = None,
         body: dict | ResultsRequestBody | None = None,
-        **kwargs
+        **kwargs: Unpack[ListFilters]
     ) -> list | dict | str:
         """Retrieve the list of software capabilities attached to a specific infrastructure element.
 
@@ -6360,6 +6495,9 @@ class AssetMaker(ServerClient):
         page_size: int, optional
         output_format: str, default "JSON"
         report_spec: dict | str, optional
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -6571,7 +6709,7 @@ class AssetMaker(ServerClient):
         output_format: str = "JSON",
         report_spec: dict | str | None = None,
         body: dict | ResultsRequestBody | None = None,
-        **kwargs
+        **kwargs: Unpack[ListFilters]
     ) -> list | dict | str:
         """Retrieve the software capabilities using a particular asset. Async version.
 
@@ -6585,6 +6723,9 @@ class AssetMaker(ServerClient):
         page_size: int, optional
         output_format: str, default "JSON"
         report_spec: dict | str, optional
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -6625,7 +6766,7 @@ class AssetMaker(ServerClient):
         output_format: str = "JSON",
         report_spec: dict | str | None = None,
         body: dict | ResultsRequestBody | None = None,
-        **kwargs
+        **kwargs: Unpack[ListFilters]
     ) -> list | dict | str:
         """Retrieve the software capabilities using a particular asset.
 
@@ -6639,6 +6780,9 @@ class AssetMaker(ServerClient):
         page_size: int, optional
         output_format: str, default "JSON"
         report_spec: dict | str, optional
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -6678,7 +6822,7 @@ class AssetMaker(ServerClient):
         output_format: str = "JSON",
         report_spec: dict | str | None = None,
         body: dict | ResultsRequestBody | None = None,
-        **kwargs
+        **kwargs: Unpack[ListFilters]
     ) -> list | dict | str:
         """Retrieve the governance engines connected to a particular governance service. Async version.
 
@@ -6692,6 +6836,9 @@ class AssetMaker(ServerClient):
         page_size: int, optional
         output_format: str, default "JSON"
         report_spec: dict | str, optional
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -6732,7 +6879,7 @@ class AssetMaker(ServerClient):
         output_format: str = "JSON",
         report_spec: dict | str | None = None,
         body: dict | ResultsRequestBody | None = None,
-        **kwargs
+        **kwargs: Unpack[ListFilters]
     ) -> list | dict | str:
         """Retrieve the governance engines connected to a particular governance service.
 
@@ -6746,6 +6893,9 @@ class AssetMaker(ServerClient):
         page_size: int, optional
         output_format: str, default "JSON"
         report_spec: dict | str, optional
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -6942,7 +7092,7 @@ class AssetMaker(ServerClient):
         output_format: str = "JSON",
         report_spec: dict | str | None = None,
         body: dict | ResultsRequestBody | None = None,
-        **kwargs
+        **kwargs: Unpack[ListFilters]
     ) -> list | dict | str:
         """Retrieve the integration groups connected to a particular integration connector. Async version.
 
@@ -6956,6 +7106,9 @@ class AssetMaker(ServerClient):
         page_size: int, optional
         output_format: str, default "JSON"
         report_spec: dict | str, optional
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -6996,7 +7149,7 @@ class AssetMaker(ServerClient):
         output_format: str = "JSON",
         report_spec: dict | str | None = None,
         body: dict | ResultsRequestBody | None = None,
-        **kwargs
+        **kwargs: Unpack[ListFilters]
     ) -> list | dict | str:
         """Retrieve the integration groups connected to a particular integration connector.
 
@@ -7010,6 +7163,9 @@ class AssetMaker(ServerClient):
         page_size: int, optional
         output_format: str, default "JSON"
         report_spec: dict | str, optional
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------

@@ -15,6 +15,8 @@ from typing import Dict, List, Optional
 from loguru import logger
 from pydantic import Field
 
+from typing import Unpack
+from pyegeria.core.request_filters import GetFilters, ListFilters, SearchFilters
 from pyegeria.core._server_client import ServerClient
 from pyegeria.view.base_report_formats import select_report_spec, get_report_spec_match
 from pyegeria.view.output_formatter import (
@@ -2107,7 +2109,7 @@ class GovernanceOfficer(ServerClient):
         page_size: int = 100,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = None,
-        **kwargs
+        **kwargs: Unpack[SearchFilters]
     ) -> list | str:
         """ Retrieve the list of governance definition metadata elements that contain the search string. Async Version.
 
@@ -2163,6 +2165,9 @@ class GovernanceOfficer(ServerClient):
             The names of properties to search for.
         body: dict | SearchStringRequestBody, optional, default = None
             - if provided, the search parameters in the body will supercede other attributes, such as "search_string"
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
 -------
@@ -2221,7 +2226,7 @@ class GovernanceOfficer(ServerClient):
         page_size: int = 100,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = None,
-        **kwargs
+        **kwargs: Unpack[SearchFilters]
     ) -> list | str:
         """ Retrieve the list of governance definition metadata elements that contain the search string.
 
@@ -2278,6 +2283,9 @@ class GovernanceOfficer(ServerClient):
         body: dict | SearchStringRequestBody, optional, default = None
             - if provided, the search parameters in the body will supercede other attributes, such as "search_string"
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
 -------
         List | str
@@ -2323,7 +2331,7 @@ class GovernanceOfficer(ServerClient):
         page_size: int = 100,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = None,
-        **kwargs
+        **kwargs: Unpack[SearchFilters]
     ) -> list | str:
         """ Retrieve the list of governance action process metadata elements that contain the search string.
             Async Version.
@@ -2350,6 +2358,9 @@ class GovernanceOfficer(ServerClient):
             - The desired output columns/fields to include.
         body: dict | SearchStringRequestBody, optional, default = None
             - if provided, the search parameters in the body will supercede other attributes, such as "search_string"
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -2384,9 +2395,13 @@ class GovernanceOfficer(ServerClient):
         page_size: int = 100,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = None,
-        **kwargs
+        **kwargs: Unpack[SearchFilters]
     ) -> list | str:
-        """ Retrieve the list of governance action process metadata elements that contain the search string."""
+        """ Retrieve the list of governance action process metadata elements that contain the search string.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+        """
         return run_sync(
             self._async_find_governance_action_processes(
                 search_string=search_string,
@@ -2494,7 +2509,7 @@ class GovernanceOfficer(ServerClient):
                                                         start_from: int = 0, page_size: int = 0,
                                                         graph_query_depth: int = 3, output_format: str = "JSON",
                                                         report_spec: dict = None,
-                                                        **kwargs) -> list | str:
+                                                        **kwargs: Unpack[ListFilters]) -> list | str:
         """ Returns the list of governance definitions with a particular name. Async Version.
 
             Parameters
@@ -2510,6 +2525,9 @@ class GovernanceOfficer(ServerClient):
                 FORM - output markdown with a preamble for a form
                 REPORT - output markdown with a preamble for a report
                 MERMAID - output mermaid markdown
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
             Returns
             -------
@@ -2574,7 +2592,7 @@ class GovernanceOfficer(ServerClient):
                                            start_from: int = 0, page_size: int = 0,
                                            graph_query_depth: int = 3, output_format: str = "JSON",
                                            report_spec: dict = None,
-                                           **kwargs) -> list | str:
+                                           **kwargs: Unpack[ListFilters]) -> list | str:
         """ Returns the list of governance definitions with a particular name.
 
             Parameters
@@ -2597,6 +2615,9 @@ class GovernanceOfficer(ServerClient):
                 FORM - output markdown with a preamble for a form
                 REPORT - output markdown with a preamble for a report
                 MERMAID - output mermaid markdown
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
             Returns
             -------
@@ -2641,7 +2662,7 @@ class GovernanceOfficer(ServerClient):
                                                         body: Optional[dict | GetRequestBody] = None,
                                                         graph_query_depth: int = 3, output_format: str = "JSON",
                                                         report_spec: dict = None,
-                                                        **kwargs) -> list | str:
+                                                        **kwargs: Unpack[GetFilters]) -> list | str:
         """ Returns the  governance definitions with a particular GUID. Async Version.
 
             Parameters
@@ -2657,6 +2678,9 @@ class GovernanceOfficer(ServerClient):
                 FORM - output markdown with a preamble for a form
                 REPORT - output markdown with a preamble for a report
                 MERMAID - output mermaid markdown
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
             Returns
             -------
@@ -2722,7 +2746,7 @@ class GovernanceOfficer(ServerClient):
                                            body: Optional[dict | GetRequestBody] = None,
                                            graph_query_depth: int = 3, output_format: str = "JSON",
                                            report_spec: dict = None,
-                                           **kwargs) -> list | str:
+                                           **kwargs: Unpack[GetFilters]) -> list | str:
         """ Returns the a governance definitions with a particular GUID. 
 
             Parameters
@@ -2741,6 +2765,9 @@ class GovernanceOfficer(ServerClient):
                 FORM - output markdown with a preamble for a form
                 REPORT - output markdown with a preamble for a report
                 MERMAID - output mermaid markdown
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
             Returns
             -------
@@ -2786,7 +2813,7 @@ class GovernanceOfficer(ServerClient):
                                             body: Optional[dict | GetRequestBody] = None,
                                             graph_query_depth: int = 3, output_format: str = "JSON",
                                             report_spec: dict = None,
-                                            **kwargs) -> list | str:
+                                            **kwargs: Unpack[GetFilters]) -> list | str:
         """ Returns the governance definitions in context. Async Version.
 
             Parameters
@@ -2802,6 +2829,9 @@ class GovernanceOfficer(ServerClient):
                 FORM - output markdown with a preamble for a form
                 REPORT - output markdown with a preamble for a report
                 MERMAID - output mermaid markdown
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
             Returns
             -------
@@ -2826,7 +2856,7 @@ class GovernanceOfficer(ServerClient):
                                body: Optional[dict | GetRequestBody] = None,
                                graph_query_depth: int = 3, output_format: str = "JSON",
                                report_spec: dict = None,
-                               **kwargs) -> list | str:
+                               **kwargs: Unpack[GetFilters]) -> list | str:
         """ Returns the governance definitions in context.
 
             Parameters
@@ -2845,6 +2875,9 @@ class GovernanceOfficer(ServerClient):
                 FORM - output markdown with a preamble for a form
                 REPORT - output markdown with a preamble for a report
                 MERMAID - output mermaid markdown
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
         """
         response = run_sync(
             self._async_get_gov_def_in_context(guid=guid, element_type=element_type, body=body,
@@ -2859,7 +2892,7 @@ class GovernanceOfficer(ServerClient):
     async def _async_get_governance_action_process_graph(self, guid: str, element_type: Optional[str] = None,
                                                        body: Optional[dict | FilterRequestBody] = None,
                                                        output_format: str = "JSON",
-                                                       report_spec: dict = None, **kwargs) -> dict | str:
+                                                       report_spec: dict = None, **kwargs: Unpack[GetFilters]) -> dict | str:
 
         """ Retrieve the governance action process metadata element with the supplied unique identifier
             along with the flow definition describing its implementation. Async version.
@@ -2873,6 +2906,9 @@ class GovernanceOfficer(ServerClient):
             A dictionary containing the definition of the governance definition to create.
         output_format: str
             The output format to use.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -2924,7 +2960,7 @@ class GovernanceOfficer(ServerClient):
     @dynamic_catch
     def get_governance_action_process_graph(self, guid: str, element_type: Optional[str] = None, body: dict = None,
                                           output_format: str = "JSON",
-                                          report_spec: dict = None, **kwargs) -> dict | str:
+                                          report_spec: dict = None, **kwargs: Unpack[GetFilters]) -> dict | str:
 
         """ Retrieve the governance action process metadata element with the supplied unique identifier
             along with the flow definition describing its implementation.
@@ -2938,6 +2974,9 @@ class GovernanceOfficer(ServerClient):
             A dictionary containing the definition of the governance definition to create.
         output_format: str, default = "JSON"
             The output format to use.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -2982,7 +3021,7 @@ class GovernanceOfficer(ServerClient):
         output_format: str = "JSON",
         report_spec: str | dict = None,
         body: dict | GetRequestBody | None = None,
-        **kwargs
+        **kwargs: Unpack[GetFilters]
     ) -> dict | list | str:
         """Retrieve the governance action process metadata element with the supplied unique identifier. Async version.
 
@@ -2998,6 +3037,9 @@ class GovernanceOfficer(ServerClient):
             The report specification. Defaults to None.
         body : dict | GetRequestBody, optional
             The request body. Defaults to None.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -3023,7 +3065,7 @@ class GovernanceOfficer(ServerClient):
         output_format: str = "JSON",
         report_spec: str | dict = None,
         body: dict | GetRequestBody | None = None,
-        **kwargs
+        **kwargs: Unpack[GetFilters]
     ) -> dict | list | str:
         """Retrieve the governance action process metadata element with the supplied unique identifier.
 
@@ -3039,6 +3081,9 @@ class GovernanceOfficer(ServerClient):
             The report specification. Defaults to None.
         body : dict | GetRequestBody, optional
             The request body. Defaults to None.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------

@@ -13,6 +13,9 @@ from datetime import datetime
 from httpx import Response
 from loguru import logger
 from pydantic import HttpUrl
+from typing import Unpack
+from pyegeria.core.request_filters import deprecated_names
+from pyegeria.core.request_filters import GetFilters, ListFilters, SearchFilters
 from pyegeria.core._globals import NO_ELEMENTS_FOUND
 from pyegeria.core._server_client import ServerClient
 from pyegeria.core._validators import validate_guid, validate_name, validate_search_string
@@ -35,6 +38,23 @@ from pyegeria.view.output_formatter import (
 from pyegeria.core.async_runner import run_sync
 settings.Logging.console_logging_level = "ERROR"
 
+
+
+# The deployed implementation type (Egeria technology type) of the catalog template each
+# create_<key>_element_from_template method instantiates. One source: Dr.Egeria's Asset Maker
+# commands create elements through these methods, and gen_report_specs reads this table so the
+# matching report specs list exactly that technology ("Create UC Table Element" -> "uc_table").
+ELEMENT_TEMPLATE_TECHNOLOGY: dict[str, str] = {
+    "kafka_server": "Apache Kafka Server",
+    "postgres_server": "PostgreSQL Server",
+    "postgres_database": "PostgreSQL Relational Database",
+    "uc_server": "Unity Catalog Server",
+    "uc_catalog": "Unity Catalog Catalog",
+    "uc_schema": "Unity Catalog Schema",
+    "uc_table": "Unity Catalog Table",
+    "uc_function": "Unity Catalog Function",
+    "uc_volume": "Unity Catalog Volume",
+}
 
 class AutomatedCuration(ServerClient):
     """
@@ -890,7 +910,7 @@ class AutomatedCuration(ServerClient):
         str
             The GUID of the Kafka server element.
         """
-        template_guid = await self._async_get_template_guid_for_technology_type("Apache Kafka Server")
+        template_guid = await self._async_get_template_guid_for_technology_type(ELEMENT_TEMPLATE_TECHNOLOGY["kafka_server"])
         body = {
             "class": "TemplateRequestBody",
             "templateGUID": template_guid,
@@ -1239,7 +1259,7 @@ class AutomatedCuration(ServerClient):
             # are no longer template placeholders, so these values are not sent.
             warnings.warn("db_user and db_pwd are deprecated and ignored; pass secrets_store_path_name "
                           "and secrets_collection_name instead (ISSUE-160)", DeprecationWarning, stacklevel=2)
-        template_guid = await self._async_get_template_guid_for_technology_type("PostgreSQL Server")
+        template_guid = await self._async_get_template_guid_for_technology_type(ELEMENT_TEMPLATE_TECHNOLOGY["postgres_server"])
 
         body = {
             "class": "TemplateRequestBody",
@@ -1377,7 +1397,7 @@ class AutomatedCuration(ServerClient):
             # are no longer template placeholders, so these values are not sent.
             warnings.warn("db_user and db_pwd are deprecated and ignored; pass secrets_store_path_name "
                           "and secrets_collection_name instead (ISSUE-160)", DeprecationWarning, stacklevel=2)
-        template_guid = await self._async_get_template_guid_for_technology_type("PostgreSQL Relational Database")
+        template_guid = await self._async_get_template_guid_for_technology_type(ELEMENT_TEMPLATE_TECHNOLOGY["postgres_database"])
 
         body = {
             "class": "TemplateRequestBody",
@@ -1617,7 +1637,7 @@ class AutomatedCuration(ServerClient):
         str
             The GUID of the File Folder element.
         """
-        template_guid = await self._async_get_template_guid_for_technology_type("Unity Catalog Server")
+        template_guid = await self._async_get_template_guid_for_technology_type(ELEMENT_TEMPLATE_TECHNOLOGY["uc_server"])
 
         body = {
             "class": "TemplateRequestBody",
@@ -1715,7 +1735,7 @@ class AutomatedCuration(ServerClient):
         str
             The GUID of the File Folder element.
         """
-        template_guid = await self._async_get_template_guid_for_technology_type("Unity Catalog Catalog")
+        template_guid = await self._async_get_template_guid_for_technology_type(ELEMENT_TEMPLATE_TECHNOLOGY["uc_catalog"])
 
         body = {
             "class": "TemplateRequestBody",
@@ -1809,7 +1829,7 @@ class AutomatedCuration(ServerClient):
         str
             The GUID of the File Folder element.
         """
-        template_guid = await self._async_get_template_guid_for_technology_type("Unity Catalog Schema")
+        template_guid = await self._async_get_template_guid_for_technology_type(ELEMENT_TEMPLATE_TECHNOLOGY["uc_schema"])
 
         body = {
             "class": "TemplateRequestBody",
@@ -1918,7 +1938,7 @@ class AutomatedCuration(ServerClient):
         str
             The GUID of the File Folder element.
         """
-        template_guid = await self._async_get_template_guid_for_technology_type("Unity Catalog Table")
+        template_guid = await self._async_get_template_guid_for_technology_type(ELEMENT_TEMPLATE_TECHNOLOGY["uc_table"])
 
         body = {
             "class": "TemplateRequestBody",
@@ -2049,7 +2069,7 @@ class AutomatedCuration(ServerClient):
         str
             The GUID of the File Folder element.
         """
-        template_guid = await self._async_get_template_guid_for_technology_type("Unity Catalog Function")
+        template_guid = await self._async_get_template_guid_for_technology_type(ELEMENT_TEMPLATE_TECHNOLOGY["uc_function"])
 
         body = {
             "class": "TemplateRequestBody",
@@ -2175,7 +2195,7 @@ class AutomatedCuration(ServerClient):
         str
             The GUID of the File Folder element.
         """
-        template_guid = await self._async_get_template_guid_for_technology_type("Unity Catalog Volume")
+        template_guid = await self._async_get_template_guid_for_technology_type(ELEMENT_TEMPLATE_TECHNOLOGY["uc_volume"])
 
         body = {
             "class": "TemplateRequestBody",
@@ -2742,10 +2762,11 @@ class AutomatedCuration(ServerClient):
         )
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     async def _async_get_engine_actions_by_name(
             self,
             name: str = None,
-            metadata_element_type_name: str | None = "EngineAction",
+            metadata_element_type: str | None = "EngineAction",
             metadata_element_subtypes: list[str] | None = None,
             include_only_relationships: list[str] | None = None,
             skip_relationships: list[str] | None = None,
@@ -2765,7 +2786,7 @@ class AutomatedCuration(ServerClient):
         ----------
         name : str, optional
             The name of the engine action to retrieve.
-        metadata_element_type_name : str, default "EngineAction"
+        metadata_element_type : str, default "EngineAction"
             The metadata element type to filter on.
         metadata_element_subtypes : list[str], optional
             Subtypes to filter on.
@@ -2787,6 +2808,9 @@ class AutomatedCuration(ServerClient):
             Provides a full request body. If specified, the body supersedes the name parameter.
         **kwargs : dict, optional
             Additional query parameters.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -2812,11 +2836,11 @@ class AutomatedCuration(ServerClient):
 
         url = f"{self.ref_curation_command_base}/assets/by-name"
 
-        metadata_element_type = kwargs.pop("metadata_element_type", metadata_element_type_name)
+        metadata_element_type = kwargs.pop("metadata_element_type", metadata_element_type)
 
         params = {
             'filter_string': name,
-            'metadata_element_type_name': metadata_element_type,
+            'metadata_element_type': metadata_element_type,
             'metadata_element_subtypes': metadata_element_subtypes,
             'include_only_relationships': include_only_relationships,
             'skip_relationships': skip_relationships,
@@ -2835,10 +2859,11 @@ class AutomatedCuration(ServerClient):
                                                       **params)
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     def get_engine_actions_by_name(
             self,
             name: str = None,
-            metadata_element_type_name: str | None = "EngineAction",
+            metadata_element_type: str | None = "EngineAction",
             metadata_element_subtypes: list[str] | None = None,
             include_only_relationships: list[str] | None = None,
             skip_relationships: list[str] | None = None,
@@ -2857,7 +2882,7 @@ class AutomatedCuration(ServerClient):
         ----------
         name : str
             The name of the engine action to retrieve.
-        metadata_element_type_name : str, default "EngineAction"
+        metadata_element_type : str, default "EngineAction"
             The metadata element type to filter on.
         metadata_element_subtypes : list[str], optional
             Subtypes to filter on.
@@ -2881,6 +2906,9 @@ class AutomatedCuration(ServerClient):
         **kwargs : dict, optional
             Additional query parameters.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list of dict | str
@@ -2896,7 +2924,7 @@ class AutomatedCuration(ServerClient):
         return run_sync(
             self._async_get_engine_actions_by_name(
                 name=name,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,
@@ -2910,13 +2938,14 @@ class AutomatedCuration(ServerClient):
             )
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     async def _async_find_engine_actions(
             self,
             search_string: str = "*",
             starts_with: bool = True,
             ends_with: bool = False,
             ignore_case: bool = True,
-            metadata_element_type_name: Optional[str] = "EngineAction",
+            metadata_element_type: Optional[str] = "EngineAction",
             metadata_element_subtypes: Optional[list[str]] = None,
             include_only_relationships: Optional[list[str]] = None,
             skip_relationships: Optional[list[str]] = None,
@@ -2942,7 +2971,7 @@ class AutomatedCuration(ServerClient):
             Ends with the supplied string.
         ignore_case : bool, default True
             Ignore case when searching.
-        metadata_element_type_name : str, default "EngineAction"
+        metadata_element_type : str, default "EngineAction"
             The metadata element type to filter on.
         metadata_element_subtypes : list[str], optional
             List of metadata element subtypes.
@@ -2965,6 +2994,9 @@ class AutomatedCuration(ServerClient):
         **kwargs : dict, optional
             Additional query parameters.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -2981,7 +3013,7 @@ class AutomatedCuration(ServerClient):
         """
         url = f"{self.ref_curation_command_base}/assets/by-search-string"
 
-        metadata_element_type = kwargs.pop("metadata_element_type", metadata_element_type_name)
+        metadata_element_type = kwargs.pop("metadata_element_type", metadata_element_type)
 
         # Merge explicit parameters with kwargs
         params = {
@@ -3009,6 +3041,7 @@ class AutomatedCuration(ServerClient):
                                                   _gen_output=self._generate_engine_action_output, **params)
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def find_engine_actions(
             self,
@@ -3016,7 +3049,7 @@ class AutomatedCuration(ServerClient):
             starts_with: bool = True,
             ends_with: bool = False,
             ignore_case: bool = True,
-            metadata_element_type_name: Optional[str] = "EngineAction",
+            metadata_element_type: Optional[str] = "EngineAction",
             metadata_element_subtypes: Optional[list[str]] = None,
             include_only_relationships: Optional[list[str]] = None,
             skip_relationships: Optional[list[str]] = None,
@@ -3040,7 +3073,7 @@ class AutomatedCuration(ServerClient):
             Ends with the supplied string.
         ignore_case : bool, default True
             Ignore case when searching.
-        metadata_element_type_name : str, default "EngineAction"
+        metadata_element_type : str, default "EngineAction"
             The metadata element type to filter on.
         metadata_element_subtypes : list[str], optional
             List of metadata element subtypes.
@@ -3063,6 +3096,9 @@ class AutomatedCuration(ServerClient):
         **kwargs : dict, optional
             Additional query parameters.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -3083,7 +3119,7 @@ class AutomatedCuration(ServerClient):
                 starts_with=starts_with,
                 ends_with=ends_with,
                 ignore_case=ignore_case,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,
@@ -3914,7 +3950,7 @@ class AutomatedCuration(ServerClient):
             output_format: str = "JSON",
             report_spec: str | dict = "CatalogTarget",
             body: Optional[dict | FilterRequestBody] = None,
-            **kwargs,
+            **kwargs: Unpack[ListFilters],
     ) -> list | str:
         """Retrieve the list of catalog target metadata elements.
 
@@ -3936,6 +3972,9 @@ class AutomatedCuration(ServerClient):
             The request body.
         **kwargs : Any
             Additional keyword arguments to pass to the request.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -3962,8 +4001,8 @@ class AutomatedCuration(ServerClient):
 
         response = await self._async_get_name_request(url, _type=self.CATALOG_TARGET_LABEL,
                                                       _gen_output=self._generate_catalog_target_output,
-                                                      filter_string=None, start_from=start_from, page_size=page_size,
-                                                      output_format=output_format, report_spec=report_spec, body=body, **kwargs)
+                                                      start_from=start_from, page_size=page_size,
+                                                      output_format=output_format, report_spec=report_spec, body=body, **{"filter_string": None, **kwargs})
 
         return response
 
@@ -3975,7 +4014,7 @@ class AutomatedCuration(ServerClient):
             output_format: str = "JSON",
             report_spec: str | dict = "CatalogTarget",
             body: Optional[dict | FilterRequestBody] = None,
-            **kwargs,
+            **kwargs: Unpack[ListFilters],
     ) -> list | str:
         """Retrieve the list of catalog target metadata elements.
 
@@ -3995,6 +4034,9 @@ class AutomatedCuration(ServerClient):
             The request body.
         **kwargs : Any
             Additional keyword arguments to pass to the request.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -4021,7 +4063,7 @@ class AutomatedCuration(ServerClient):
             output_format: str = "JSON",
             report_spec: str | dict = "CatalogTarget",
             body: Optional[dict | GetRequestBody] = None,
-            **kwargs,
+            **kwargs: Unpack[GetFilters],
     ) -> dict | str:
         """Retrieve a specific catalog target associated with an integration connector.
 
@@ -4039,6 +4081,9 @@ class AutomatedCuration(ServerClient):
             The request body.
         **kwargs : Any
             Additional keyword arguments to pass to the request.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -4079,7 +4124,7 @@ class AutomatedCuration(ServerClient):
             output_format: str = "JSON",
             report_spec: str | dict = "CatalogTarget",
             body: Optional[dict | GetRequestBody] = None,
-            **kwargs,
+            **kwargs: Unpack[GetFilters],
     ) -> dict | str:
         """Retrieve a specific catalog target associated with an integration connector.
 
@@ -4095,6 +4140,9 @@ class AutomatedCuration(ServerClient):
             The request body.
         **kwargs : Any
             Additional keyword arguments to pass to the request.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -4429,7 +4477,7 @@ class AutomatedCuration(ServerClient):
             output_format: str = "JSON",
             report_spec: str | dict = "TechType",
             body: Optional[dict | FilterRequestBody] = None,
-            **kwargs,
+            **kwargs: Unpack[ListFilters],
     ) -> list | str:
         """Retrieve the list of technology types linked to an open metadata type.
 
@@ -4454,6 +4502,9 @@ class AutomatedCuration(ServerClient):
         **kwargs : Any
             Additional keyword arguments to pass to the request.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | str
@@ -4472,9 +4523,9 @@ class AutomatedCuration(ServerClient):
         url = f"{self.ref_curation_command_base}/open-metadata-types/{type_name}/technology-types"
         response = await self._async_get_name_request(url, _type=self.TECH_TYPE_ENTITY_LABEL,
                                                       _gen_output=self._generate_tech_type_output,
-                                                      filter_string=tech_name, start_from=start_from,
+                                                      start_from=start_from,
                                                       page_size=page_size, output_format=output_format,
-                                                      report_spec=report_spec, body=body, **kwargs)
+                                                      report_spec=report_spec, body=body, **{"filter_string": tech_name, **kwargs})
 
         return response
 
@@ -4487,7 +4538,7 @@ class AutomatedCuration(ServerClient):
             output_format: str = "JSON",
             report_spec: str | dict = "TechType",
             body: Optional[dict | FilterRequestBody] = None,
-            **kwargs,
+            **kwargs: Unpack[ListFilters],
     ) -> list | str:
         """Retrieve the list of technology types linked to an open metadata type.
 
@@ -4509,6 +4560,9 @@ class AutomatedCuration(ServerClient):
             The request body.
         **kwargs : Any
             Additional keyword arguments to pass to the request.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -4794,13 +4848,14 @@ class AutomatedCuration(ServerClient):
         )
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     async def _async_find_technology_types(
         self,
         search_string: str = "*",
         starts_with: bool = False,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
         metadata_element_subtypes: Optional[list[str]] = None,
         include_only_relationships: Optional[list[str]] = None,
         skip_relationships: Optional[list[str]] = None,
@@ -4826,7 +4881,7 @@ class AutomatedCuration(ServerClient):
             Whether to search technology types that end with the given search string.
         ignore_case : bool, default True
             Whether to ignore case while searching technology types.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             Metadata element type to search for.
         metadata_element_subtypes : list[str], optional
             Subtypes to filter.
@@ -4848,6 +4903,9 @@ class AutomatedCuration(ServerClient):
             The request body.
         **kwargs : dict, optional
             Additional parameters.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -4873,7 +4931,7 @@ class AutomatedCuration(ServerClient):
         if 'sequencing_property' not in kwargs:
             kwargs['sequencing_property'] = "qualifiedName"
 
-        metadata_element_type = kwargs.pop("metadata_element_type", metadata_element_type_name)
+        metadata_element_type = kwargs.pop("metadata_element_type", metadata_element_type)
 
         # Merge explicit parameters with kwargs
         params = {
@@ -4901,13 +4959,14 @@ class AutomatedCuration(ServerClient):
                                               **params)
 
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     def find_technology_types(
             self,
             search_string: str = "*",
             starts_with: bool = False,
             ends_with: bool = False,
             ignore_case: bool = True,
-            metadata_element_type_name: Optional[str] = None,
+            metadata_element_type: Optional[str] = None,
             metadata_element_subtypes: Optional[list[str]] = None,
             include_only_relationships: Optional[list[str]] = None,
             skip_relationships: Optional[list[str]] = None,
@@ -4931,7 +4990,7 @@ class AutomatedCuration(ServerClient):
             Whether to search technology types that end with the given search string.
         ignore_case : bool, default True
             Whether to ignore case while searching.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             Metadata element type to search for.
         metadata_element_subtypes : list[str], optional
             List of metadata element subtypes.
@@ -4954,6 +5013,9 @@ class AutomatedCuration(ServerClient):
         **kwargs : dict, optional
             Additional query parameters.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -4965,7 +5027,7 @@ class AutomatedCuration(ServerClient):
                 starts_with=starts_with,
                 ends_with=ends_with,
                 ignore_case=ignore_case,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,
@@ -4979,6 +5041,7 @@ class AutomatedCuration(ServerClient):
             )
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_find_technology_types_body(
         self,
@@ -4987,7 +5050,7 @@ class AutomatedCuration(ServerClient):
         ends_with: bool = False,
         ignore_case: bool = True,
         anchor_domain: Optional[str] = None,
-        metadata_element_type_name: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
         metadata_element_subtypes: Optional[list[str]] = None,
         skip_relationships: Optional[list[str]] = None,
         include_only_relationships: Optional[list[str]] = None,
@@ -5008,8 +5071,12 @@ class AutomatedCuration(ServerClient):
         body: Optional[dict | SearchStringRequestBody] = None,
         **kwargs
     ) -> list | str:
-        """Retrieve the list of technology types that contain the search string. Async version."""
-        metadata_element_type = kwargs.pop("metadata_element_type", metadata_element_type_name)
+        """Retrieve the list of technology types that contain the search string. Async version.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+        """
+        metadata_element_type = kwargs.pop("metadata_element_type", metadata_element_type)
         kwargs.pop("effective_time", None)
 
         return await self._async_find_technology_types(
@@ -5018,7 +5085,6 @@ class AutomatedCuration(ServerClient):
             ends_with=ends_with,
             ignore_case=ignore_case,
             anchor_domain=anchor_domain,
-            metadata_element_type=metadata_element_type,
             metadata_element_subtypes=metadata_element_subtypes,
             skip_relationships=skip_relationships,
             include_only_relationships=include_only_relationships,
@@ -5037,10 +5103,11 @@ class AutomatedCuration(ServerClient):
             page_size=page_size,
             property_names=property_names,
             body=body,
-            **kwargs
+            **{"metadata_element_type": metadata_element_type, **kwargs}
         )
 
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     def find_technology_types_body(
         self,
         search_string: str = "*",
@@ -5048,7 +5115,7 @@ class AutomatedCuration(ServerClient):
         ends_with: bool = False,
         ignore_case: bool = True,
         anchor_domain: Optional[str] = None,
-        metadata_element_type_name: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
         metadata_element_subtypes: Optional[list[str]] = None,
         skip_relationships: Optional[list[str]] = None,
         include_only_relationships: Optional[list[str]] = None,
@@ -5083,7 +5150,7 @@ class AutomatedCuration(ServerClient):
             Whether to ignore case while searching.
         anchor_domain : str, optional
             Anchor domain to filter.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             Metadata element type to search for.
         metadata_element_subtypes : list[str], optional
             Subtypes to filter.
@@ -5124,6 +5191,9 @@ class AutomatedCuration(ServerClient):
         **kwargs : dict, optional
             Additional parameters.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -5145,7 +5215,7 @@ class AutomatedCuration(ServerClient):
                 ends_with=ends_with,
                 ignore_case=ignore_case,
                 anchor_domain=anchor_domain,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 skip_relationships=skip_relationships,
                 include_only_relationships=include_only_relationships,
@@ -5174,7 +5244,7 @@ class AutomatedCuration(ServerClient):
             page_size: int = 0,
             output_format: str = "JSON",
             report_spec: str = "TechType",
-            **kwargs,
+            **kwargs: Unpack[SearchFilters],
     ) -> list | str:
         """Retrieve all technology types.
 
@@ -5193,14 +5263,17 @@ class AutomatedCuration(ServerClient):
         **kwargs : Any
             Additional keyword arguments to pass to the request.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
             List of all technology types.
         """
-        return await self._async_find_technology_types(search_string="*", start_from=start_from,
+        return await self._async_find_technology_types(start_from=start_from,
                                                        page_size=page_size, output_format=output_format,
-                                                       report_spec=report_spec, **kwargs)
+                                                       report_spec=report_spec, **{"search_string": "*", **kwargs})
 
     def get_all_technology_types(
             self,
@@ -5208,7 +5281,7 @@ class AutomatedCuration(ServerClient):
             page_size: int = 0,
             output_format: str = "JSON",
             report_spec: str = "TechType",
-            **kwargs,
+            **kwargs: Unpack[SearchFilters],
     ) -> list | str:
         """Retrieve all technology types.
 
@@ -5225,13 +5298,16 @@ class AutomatedCuration(ServerClient):
         **kwargs : Any
             Additional keyword arguments to pass to the request.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
             List of all technology types.
         """
-        return self.find_technology_types(search_string="*", start_from=start_from, page_size=page_size,
-                                          output_format=output_format, report_spec=report_spec, **kwargs)
+        return self.find_technology_types(start_from=start_from, page_size=page_size,
+                                          output_format=output_format, report_spec=report_spec, **{"search_string": "*", **kwargs})
 
     def print_engine_action_summary(self, governance_action: dict):
         """Print a summary of a governance engine action.
@@ -5301,6 +5377,9 @@ class AutomatedCuration(ServerClient):
             The request body. If provided, it overrides other parameters.
         **kwargs : Any
             Additional keyword arguments to pass to the request.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -5404,6 +5483,9 @@ class AutomatedCuration(ServerClient):
             The request body. If provided, it overrides other parameters.
         **kwargs : Any
             Additional keyword arguments to pass to the request.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------

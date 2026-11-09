@@ -18,7 +18,7 @@ import inspect
 import json
 import os
 import sys
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 from loguru import logger
 from pydantic import ValidationError
@@ -547,7 +547,69 @@ def _normalize_report_params(params: Dict[str, Any], action_mode: str = "generic
             continue
         cleaned[key] = value
 
-    return cleaned
+    return _canonical_param_names(cleaned)
+
+
+# Run-parameter names that are aliases or rendering options rather than parameters of the report:
+# consumed under another name, so never reported as dropped.
+_RUN_PARAM_ALIASES = frozenset({
+    "search_string", "filter_string", "property_value", "filter", "output_format", "report_spec",
+    "graph_query_depth", "metadata_element_name", "limit_result_by_status", "sort_order",
+    "output_sort_order", "order_property_name", "anchor_scope_id",
+})
+
+
+def _warn_dropped_params(report_name: str, params: Dict[str, Any], call_params: Dict[str, Any],
+                         declared: Iterable[str]) -> None:
+    """A caller's run parameter that the report does not take is dropped; say so (P3: never silent).
+
+    Same warning class as an unknown filter on a method call (UnknownFilterWarning), plus a log line.
+    """
+    import warnings
+    from pyegeria.core.request_filters import (DEPRECATED_NAMES, LEGACY_ALIASES, RENDER_OPTIONS,
+                                               UnknownFilterWarning, _SKIP_PREFIXES)
+
+    known = _RUN_PARAM_ALIASES | RENDER_OPTIONS | set(DEPRECATED_NAMES) | set(LEGACY_ALIASES)
+    dropped = sorted(k for k in (params or {}) if k not in call_params and k not in known)
+    if not dropped:
+        return
+    takes = ", ".join(sorted(set(declared))) or "no parameters"
+    msg = (f"report '{report_name}': parameter(s) {', '.join(repr(k) for k in dropped)} ignored -- "
+           f"not parameters of this report (it takes: {takes}). "
+           f"(pyegeria will raise an error for unknown parameters in a future release.)")
+    logger.warning(msg)
+    warnings.warn(msg, UnknownFilterWarning, skip_file_prefixes=_SKIP_PREFIXES)
+
+
+def _bind_search_parameter(func: Any, call_params: Dict[str, Any]) -> Dict[str, Any]:
+    """Generated report specs always pass the user's text as `search_string`. A method that takes it
+    as `property_value` instead (ClassificationExplorer.find_elements_by_property_value) gets it
+    under that name."""
+    try:
+        names = inspect.signature(func).parameters
+    except (TypeError, ValueError):
+        return call_params
+    if "search_string" in call_params and "search_string" not in names and "property_value" in names \
+            and "property_value" not in call_params:
+        out = dict(call_params)
+        out["property_value"] = out.pop("search_string")
+        return out
+    return call_params
+
+
+def _canonical_param_names(params: Dict[str, Any]) -> Dict[str, Any]:
+    """Rename deprecated filter spellings (metadata_element_type_name, ...) to the canonical
+    names, quietly: a report spec or Dr.Egeria parameter list is not the caller's code, so it
+    should not trip the methods' DeprecationWarning. A canonical value already present wins."""
+    from pyegeria.core.request_filters import DEPRECATED_NAMES, _canonical_value
+
+    out = dict(params)
+    for old, new in DEPRECATED_NAMES.items():
+        if old in out:
+            value = out.pop(old)
+            if out.get(new) in (None, "", []):
+                out[new] = _canonical_value(new, value)
+    return out
 
 
 def _extract_param_value(params: Dict[str, Any], param_name: str, action_mode: str = "generic") -> Any:
@@ -662,7 +724,44 @@ async def safe_call_tool(func, **call_params):
 # Parameter naming note:
 # - exec_report_spec and run_report expect parameter names in snake_case (e.g., metadata_element_subtypes).
 # - The underlying clients map these to on-wire camelCase when serializing request bodies for Egeria.
+def _with_spec_source(result: Any, name: Any, output_format: str) -> Any:
+    """Add `spec_source` beside `kind` (never inside `data`) and, for an Egeria-held spec, the
+    provenance footer on REPORT/MD/HTML text (RS-EGERIA-TIER §7a "Provenance")."""
+    if not isinstance(result, dict) or not isinstance(name, str):
+        return result
+    from pyegeria.view.base_report_formats import add_spec_footer, report_spec_source
+    try:
+        source = report_spec_source(name)
+    except Exception as exc:  # noqa: BLE001 -- provenance must never fail a run
+        logger.debug(f"spec_source for {name!r} unavailable: {exc}")
+        source = None
+    if source is not None:
+        result["spec_source"] = source
+    if result.get("kind") == "text":
+        result["content"] = add_spec_footer(result.get("content"), name, output_format)
+    return result
+
+
 async def _async_run_report(
+    report_name: str,
+    egeria_client: EgeriaTech,
+    output_format: str = "DICT",
+    params: Optional[Dict[str, Any]] = None,
+    refresh_spec: bool = False,
+) -> Dict[str, Any]:
+    """Run a report spec with an async EgeriaTech client (see `_async_run_report_impl`).
+
+    `refresh_spec=True` fetches the spec from Egeria for this call (RS-EGERIA-TIER §7a); a failed
+    fetch raises with words and never falls back to the cached copy. The result carries
+    `spec_source` beside `kind`."""
+    if refresh_spec:
+        from pyegeria.view.egeria_spec_cache import async_fetch_spec_for_call
+        report_name = await async_fetch_spec_for_call(egeria_client, report_name)
+    result = await _async_run_report_impl(report_name, egeria_client, output_format=output_format, params=params)
+    return _with_spec_source(result, report_name, output_format)
+
+
+async def _async_run_report_impl(
     report_name: str,
     egeria_client: EgeriaTech,
     output_format: str = "DICT",
@@ -769,6 +868,7 @@ async def _async_run_report(
 
     # Include fixed specifics
     call_params.update(spec_params)
+    call_params = _canonical_param_names(call_params)
 
     # Always include output_format and report_spec for downstream rendering
     call_params["output_format"] = output_format
@@ -790,6 +890,9 @@ async def _async_run_report(
             )
 
         call_params = _merge_signature_params(func, params, call_params)
+        call_params = _bind_search_parameter(func, call_params)
+        _warn_dropped_params(report_name, params, call_params,
+                             [*required_params, *optional_params, *spec_params])
         # Only (re)create a bearer token if one is not already set on the client.
         try:
             existing_token = None
@@ -1001,6 +1104,57 @@ def exec_report_spec(
     user_pass: str = settings.User_Profile.user_pwd,
     token: Optional[str] = None,
     supply: Optional[RoleSupply] = None,
+    refresh_spec: bool = False,
+) -> Dict[str, Any]:
+    """
+    Execute the action for a given report spec (see `_exec_report_spec_impl` for the result
+    shapes).
+
+    RS-EGERIA-TIER: the name may be tier-addressed (`egeria:<label>`, `builtin:<label>`,
+    `seed:<label>`). The result carries `spec_source` (`{"tier", "label", "version", "guid"?,
+    "synced_at"?}`) beside `kind`, never inside `data`; REPORT/MD/HTML text of an Egeria-held spec
+    ends with a one-line provenance footer. `refresh_spec=True` fetches the spec from Egeria for
+    this call: written through to a per-user cache, kept in-process for a shared one. A failed
+    fetch raises with words; it never falls back to the cached copy.
+    """
+    if refresh_spec and isinstance(format_set_name, str):
+        format_set_name = _fetch_for_exec(format_set_name, view_server=view_server, view_url=view_url,
+                                          user=user, user_pass=user_pass, token=token)
+    result = _exec_report_spec_impl(format_set_name, output_format=output_format, params=params,
+                                    view_server=view_server, view_url=view_url, user=user, user_pass=user_pass,
+                                    token=token, supply=supply)
+    return _with_spec_source(result, format_set_name, (output_format or "DICT").upper())
+
+
+def _fetch_for_exec(name: str, *, view_server: str, view_url: str, user: str, user_pass: str,
+                    token: Optional[str]) -> str:
+    from pyegeria.omvs.collection_manager import CollectionManager
+    from pyegeria.view.egeria_spec_cache import fetch_spec_for_call
+    client = CollectionManager(view_server, view_url, user_id=user, user_pwd=user_pass)
+    try:
+        if token:
+            client.set_bearer_token(token)
+        else:
+            client.create_egeria_bearer_token()
+        return fetch_spec_for_call(client, name)
+    finally:
+        try:
+            client.close_session()
+        except Exception:  # noqa: BLE001
+            pass
+
+
+def _exec_report_spec_impl(
+    format_set_name: str | dict,
+    *,
+    output_format: str = "DICT",
+    params: Optional[Dict[str, Any]] = None,
+    view_server: str = settings.Environment.egeria_view_server,
+    view_url: str = settings.Environment.egeria_view_server_url,
+    user: str = settings.User_Profile.user_name,
+    user_pass: str = settings.User_Profile.user_pwd,
+    token: Optional[str] = None,
+    supply: Optional[RoleSupply] = None,
 ) -> Dict[str, Any]:
     """
     Execute the action for a given format set and return a normalized result structure.
@@ -1156,6 +1310,7 @@ def exec_report_spec(
 
     # Include fixed specifics
     call_params.update(spec_params)
+    call_params = _canonical_param_names(call_params)
 
     # Always include output_format and report_spec for downstream rendering
     call_params["output_format"] = output_format
@@ -1176,6 +1331,9 @@ def exec_report_spec(
             )
 
         call_params = _add_request_options(func, params, call_params)
+        call_params = _bind_search_parameter(func, call_params)
+        _warn_dropped_params(format_set_name, params, call_params,
+                             [*required_params, *optional_params, *spec_params])
         result = func(**call_params)
 
         if not result or result == NO_ELEMENTS_FOUND:
@@ -1220,8 +1378,10 @@ def exec_report_spec(
         print_validation_error(e)
         raise
     except ValueError as e:
-        import traceback
-        traceback.print_exc()
+        # Never a silent None (6.2.28): the caller gets the error and its words.
+        logger.error(f"Report spec '{format_set_name}' ({output_format}) failed: {e}")
+        # Re-raised, as the async path does: a plain-words refusal must not reach the caller as "no result".
+        raise
 
     finally:
         try:

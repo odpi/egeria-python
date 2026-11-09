@@ -10,6 +10,9 @@ Copyright Contributors to the ODPi Egeria project.
 import asyncio
 from typing import Any, Optional
 
+from typing import Unpack
+from pyegeria.core.request_filters import deprecated_names
+from pyegeria.core.request_filters import GetFilters, ListFilters
 from pyegeria.core._globals import NO_ELEMENTS_FOUND
 from pyegeria.core._server_client import ServerClient
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
@@ -98,7 +101,7 @@ class ProjectManager(ServerClient):
             body: Optional[dict | GetRequestBody] = None,
             output_format: str = 'JSON',
             report_spec: str | dict = None,
-            **kwargs,
+            **kwargs: Unpack[GetFilters],
     ) -> list | str:
         """Returns the list of projects that are linked off of the supplied element. Any relationship will do.
              The request body is optional, but if supplied acts as a filter on project status. Async version.
@@ -119,6 +122,9 @@ class ProjectManager(ServerClient):
         page_size: int, [default=None]
             The number of items to return in a single page. If not specified, the default will be taken from
             the class instance.
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         List | str
@@ -156,7 +162,7 @@ class ProjectManager(ServerClient):
             body: Optional[dict | GetRequestBody] = None,
             output_format: str = 'JSON',
             report_spec: str | dict = None,
-            **kwargs) -> str | dict:
+            **kwargs: Unpack[GetFilters]) -> str | dict:
 
         """Returns the list of projects that are linked off of the supplied element. Any relationship will do.
              The request body is optional, but if supplied acts as a filter on project status.
@@ -179,6 +185,9 @@ class ProjectManager(ServerClient):
         page_size: int, [default=None]
             The number of items to return in a single page. If not specified, the default will be taken from
             the class instance.
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         List | str
@@ -216,7 +225,7 @@ class ProjectManager(ServerClient):
             output_format: str = 'JSON',
             report_spec: str | dict = None,
             body: Optional[dict | GetRequestBody] = None,
-            **kwargs) -> str | dict:
+            **kwargs: Unpack[ListFilters]) -> str | dict:
 
         """Returns the list of projects with a particular classification. The name of the classification is
             supplied in the request body. Examples of these classifications include StudyProject, PersonalProject,
@@ -231,6 +240,9 @@ class ProjectManager(ServerClient):
         page_size: int, [default=None]
             The number of items to return in a single page. If not specified, the default will be taken from
             the class instance.
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         List | str
@@ -254,9 +266,9 @@ class ProjectManager(ServerClient):
             f"projects/by-classifications"
         )
         response = await self._async_get_name_request(url, "Project", self._extract_project_properties,
-                                                      filter_string=project_classification, start_from=start_from,
+                                                      start_from=start_from,
                                                       page_size=page_size, output_format=output_format,
-                                                      report_spec=report_spec, body=body, **kwargs)
+                                                      report_spec=report_spec, body=body, **{"filter_string": project_classification, **kwargs})
         return response
 
     @dynamic_catch
@@ -268,7 +280,7 @@ class ProjectManager(ServerClient):
             output_format: str = 'JSON',
             report_spec: str | dict = None,
             body: Optional[dict | GetRequestBody] = None,
-            **kwargs
+            **kwargs: Unpack[ListFilters]
     ) -> str | dict:
         """Returns the list of projects with a particular classification. The name of the classification is
             supplied in the request body. Examples of these classifications include StudyProject, PersonalProject,
@@ -286,6 +298,9 @@ class ProjectManager(ServerClient):
         page_size: int, [default=None]
             The number of items to return in a single page. If not specified, the default will be taken from
             the class instance.
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         List | str
@@ -834,6 +849,7 @@ class ProjectManager(ServerClient):
         )
         return resp
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_find_projects(
         self,
@@ -841,7 +857,7 @@ class ProjectManager(ServerClient):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = None,
+        metadata_element_type: str | None = None,
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -868,7 +884,7 @@ class ProjectManager(ServerClient):
             Whether to match projects ending with the search string.
         ignore_case : bool, default=True
             Whether to ignore case when searching.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             The metadata element type to search for.
         metadata_element_subtypes : list[str], optional
             The subtypes of metadata element to search for.
@@ -897,6 +913,9 @@ class ProjectManager(ServerClient):
         **kwargs : dict, optional
             Additional parameters supported by the find request.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -912,7 +931,6 @@ class ProjectManager(ServerClient):
             starts_with=starts_with,
             ends_with=ends_with,
             ignore_case=ignore_case,
-            metadata_element_type=metadata_element_type_name,
             metadata_element_subtypes=metadata_element_subtypes,
             include_only_relationships=include_only_relationships,
             skip_relationships=skip_relationships,
@@ -925,11 +943,12 @@ class ProjectManager(ServerClient):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **kwargs,
+            **{"metadata_element_type": metadata_element_type, **kwargs},
         )
 
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def find_projects(
         self,
@@ -937,7 +956,7 @@ class ProjectManager(ServerClient):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = None,
+        metadata_element_type: str | None = None,
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -952,14 +971,18 @@ class ProjectManager(ServerClient):
         body: Optional[dict | SearchStringRequestBody] = None,
         **kwargs,
     ) -> list | str:
-        """ Retrieve the list of project metadata elements that contain the search string. """
+        """ Retrieve the list of project metadata elements that contain the search string. 
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+        """
         return run_sync(
             self._async_find_projects(
                 search_string=search_string,
                 starts_with=starts_with,
                 ends_with=ends_with,
                 ignore_case=ignore_case,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,
@@ -1060,7 +1083,11 @@ class ProjectManager(ServerClient):
         body: Optional[dict | GetRequestBody] = None,
         **kwargs,
     ) -> dict | str:
-        """Return the properties of a specific project. Async version."""
+        """Return the properties of a specific project. Async version.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
+        """
 
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/{project_guid}"
 
@@ -1091,7 +1118,11 @@ class ProjectManager(ServerClient):
         body: Optional[dict | GetRequestBody] = None,
         **kwargs,
     ) -> dict | str:
-        """Return the properties of a specific project."""
+        """Return the properties of a specific project.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         resp = run_sync(
             self._async_get_project_by_guid(
                 project_guid=project_guid,
@@ -1115,7 +1146,7 @@ class ProjectManager(ServerClient):
             body: Optional[dict | GetRequestBody] = None,
             output_format: str = 'JSON',
             report_spec: str | dict = None,
-            **kwargs
+            **kwargs: Unpack[GetFilters]
     ) -> dict | str:
         """Return the mermaid graph of a specific project. Async version.
 
@@ -1125,6 +1156,9 @@ class ProjectManager(ServerClient):
             unique identifier of the project.
         body: dict | GetRequestBody, optional, default = None
             full request body.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1161,7 +1195,7 @@ class ProjectManager(ServerClient):
             body: Optional[dict | GetRequestBody] = None,
             output_format: str = 'JSON',
             report_spec: str | dict = None,
-            **kwargs
+            **kwargs: Unpack[GetFilters]
     ) -> dict | str:
         """Return the mermaid graph of a specific project. Async version.
 
@@ -1171,6 +1205,9 @@ class ProjectManager(ServerClient):
             unique identifier of the project.
         body: dict | GetRequestBody, optional, default = None
             full request body.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------

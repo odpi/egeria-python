@@ -2992,7 +2992,7 @@
       "attach": false,
       "level": "Basic",
       "find_method": "GlossaryManager.find_glossary_terms",
-      "find_constraints": "{\"metadata_element_type\": \"GlossaryTerm\", \"classification\": \"Question\"}",
+      "find_constraints": "{\"metadata_element_type\": \"GlossaryTerm\", \"include_only_classified_elements\": [\"Question\"]}",
       "extra_find": "",
       "extra_constraints": "",
       "OM_TYPE": "GlossaryTerm",

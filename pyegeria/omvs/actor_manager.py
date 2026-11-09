@@ -12,6 +12,9 @@ from typing import Optional, Any
 from loguru import logger
 from pydantic import HttpUrl
 
+from typing import Unpack
+from pyegeria.core.request_filters import deprecated_names
+from pyegeria.core.request_filters import SearchFilters
 from pyegeria.view.base_report_formats import select_report_spec, get_report_spec_match
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
                              TemplateRequestBody, NewAttachmentRequestBody,
@@ -716,6 +719,7 @@ class ActorManager(ServerClient):
          """
         run_sync(self._async_delete_actor_profile(actor_profile_guid, body, cascade))
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_find_actor_profiles(
         self,
@@ -723,7 +727,7 @@ class ActorManager(ServerClient):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = "ActorProfile",
+        metadata_element_type: str | None = "ActorProfile",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -750,7 +754,7 @@ class ActorManager(ServerClient):
             Ends with the supplied string
         ignore_case : bool, [default=True], optional
             Ignore case when searching
-        metadata_element_type_name: str, optional
+        metadata_element_type: str, optional
             The type of metadata element to search for.
         metadata_element_subtypes: list[str], optional
             The subtypes of metadata element to search for.
@@ -777,6 +781,9 @@ class ActorManager(ServerClient):
         body: dict | SearchStringRequestBody, optional
             - if provided, the search parameters in the body will supercede other attributes.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -788,7 +795,7 @@ class ActorManager(ServerClient):
             "starts_with": starts_with,
             "ends_with": ends_with,
             "ignore_case": ignore_case,
-            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_type": metadata_element_type,
             "metadata_element_subtypes": metadata_element_subtypes,
             "include_only_relationships": include_only_relationships,
             "skip_relationships": skip_relationships,
@@ -813,13 +820,14 @@ class ActorManager(ServerClient):
         )
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     def find_actor_profiles(
         self,
         search_string: str = "*",
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = "ActorProfile",
+        metadata_element_type: str | None = "ActorProfile",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -846,7 +854,7 @@ class ActorManager(ServerClient):
             Ends with the supplied string.
         ignore_case : bool, default True
             Ignore case when searching.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             The type of metadata element.
         metadata_element_subtypes : list[str], optional
             The subtypes to filter by.
@@ -873,6 +881,9 @@ class ActorManager(ServerClient):
         body : dict, optional
             Request body for additional parameters.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -883,7 +894,7 @@ class ActorManager(ServerClient):
                 starts_with=starts_with,
                 ends_with=ends_with,
                 ignore_case=ignore_case,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,
@@ -900,11 +911,12 @@ class ActorManager(ServerClient):
             )
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_get_actor_profiles_by_name(
         self,
         name: str | None = None,
-        metadata_element_type_name: str | None = "ActorProfile",
+        metadata_element_type: str | None = "ActorProfile",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -922,7 +934,7 @@ class ActorManager(ServerClient):
         ----------
         name: str
             name to use to find matching profiles.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             The type of metadata element.
         metadata_element_subtypes : list[str], optional
             The list of subtypes to filter by.
@@ -943,6 +955,9 @@ class ActorManager(ServerClient):
         body: dict, optional
             Provides a full request body. If specified, the body supercedes other attributes.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | str
@@ -950,7 +965,7 @@ class ActorManager(ServerClient):
         url = str(HttpUrl(f"{self.command_root}/actor-profiles/by-name"))
         params = {
             "filter_string": name,
-            "metadata_element_type_name": metadata_element_type_name,
+            "metadata_element_type": metadata_element_type,
             "metadata_element_subtypes": metadata_element_subtypes,
             "include_only_relationships": include_only_relationships,
             "skip_relationships": skip_relationships,
@@ -971,10 +986,11 @@ class ActorManager(ServerClient):
             **params,
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     def get_actor_profiles_by_name(
         self,
         name: str | None = None,
-        metadata_element_type_name: str | None = "ActorProfile",
+        metadata_element_type: str | None = "ActorProfile",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -992,7 +1008,7 @@ class ActorManager(ServerClient):
         ----------
         name: str
             name to use to find matching profiles.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             The type of metadata element.
         metadata_element_subtypes : list[str], optional
             The list of subtypes to filter by.
@@ -1013,6 +1029,9 @@ class ActorManager(ServerClient):
         body: dict, optional
             Provides a full request body. If specified, the body supercedes other attributes.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | str
@@ -1020,7 +1039,7 @@ class ActorManager(ServerClient):
         return run_sync(
             self._async_get_actor_profiles_by_name(
                 name=name,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,
@@ -1064,6 +1083,9 @@ class ActorManager(ServerClient):
             The desired output columns/fields to include.
         body: dict | GetRequestBody, optional, default = None
             full request body.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1117,6 +1139,9 @@ class ActorManager(ServerClient):
             The desired output columns/fields to include.
         body: dict | GetRequestBody, optional, default = None
             full request body.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -2269,6 +2294,7 @@ class ActorManager(ServerClient):
          """
         run_sync(self._async_delete_actor_role(actor_role_guid, body, cascade))
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_find_actor_roles(
         self,
@@ -2276,7 +2302,7 @@ class ActorManager(ServerClient):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = "ActorRole",
+        metadata_element_type: str | None = "ActorRole",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -2303,7 +2329,7 @@ class ActorManager(ServerClient):
             Ends with the supplied string
         ignore_case : bool, [default=True], optional
             Ignore case when searching
-        metadata_element_type_name: str, optional
+        metadata_element_type: str, optional
             The type of metadata element to search for.
         metadata_element_subtypes: list[str], optional
             The subtypes of metadata element to search for.
@@ -2330,6 +2356,9 @@ class ActorManager(ServerClient):
         body: dict | SearchStringRequestBody, optional
             - if provided, the search parameters in the body will supercede other attributes.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -2341,7 +2370,7 @@ class ActorManager(ServerClient):
             "starts_with": starts_with,
             "ends_with": ends_with,
             "ignore_case": ignore_case,
-            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_type": metadata_element_type,
             "metadata_element_subtypes": metadata_element_subtypes,
             "include_only_relationships": include_only_relationships,
             "skip_relationships": skip_relationships,
@@ -2366,13 +2395,14 @@ class ActorManager(ServerClient):
         )
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     def find_actor_roles(
         self,
         search_string: str = "*",
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = "ActorRole",
+        metadata_element_type: str | None = "ActorRole",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -2399,7 +2429,7 @@ class ActorManager(ServerClient):
             Ends with the supplied string.
         ignore_case : bool, default True
             Ignore case when searching.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             The type of metadata element.
         metadata_element_subtypes : list[str], optional
             The subtypes to filter by.
@@ -2426,6 +2456,9 @@ class ActorManager(ServerClient):
         body : dict, optional
             Request body for additional parameters.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -2436,7 +2469,7 @@ class ActorManager(ServerClient):
                 starts_with=starts_with,
                 ends_with=ends_with,
                 ignore_case=ignore_case,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,
@@ -2453,11 +2486,12 @@ class ActorManager(ServerClient):
             )
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_get_actor_roles_by_name(
         self,
         name: str | None = None,
-        metadata_element_type_name: str | None = "ActorRole",
+        metadata_element_type: str | None = "ActorRole",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -2475,7 +2509,7 @@ class ActorManager(ServerClient):
         ----------
         name: str
             name to use to find matching roles.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             The type of metadata element.
         metadata_element_subtypes : list[str], optional
             The list of subtypes to filter by.
@@ -2496,6 +2530,9 @@ class ActorManager(ServerClient):
         body: dict, optional
             Provides a full request body. If specified, the body supercedes other attributes.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | str
@@ -2503,7 +2540,7 @@ class ActorManager(ServerClient):
         url = str(HttpUrl(f"{self.command_root}/actor-roles/by-name"))
         params = {
             "filter_string": name,
-            "metadata_element_type_name": metadata_element_type_name,
+            "metadata_element_type": metadata_element_type,
             "metadata_element_subtypes": metadata_element_subtypes,
             "include_only_relationships": include_only_relationships,
             "skip_relationships": skip_relationships,
@@ -2524,10 +2561,11 @@ class ActorManager(ServerClient):
             **params,
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     def get_actor_roles_by_name(
         self,
         name: str | None = None,
-        metadata_element_type_name: str | None = "ActorRole",
+        metadata_element_type: str | None = "ActorRole",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -2545,7 +2583,7 @@ class ActorManager(ServerClient):
         ----------
         name: str
             name to use to find matching roles.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             The type of metadata element.
         metadata_element_subtypes : list[str], optional
             The list of subtypes to filter by.
@@ -2566,6 +2604,9 @@ class ActorManager(ServerClient):
         body: dict, optional
             Provides a full request body. If specified, the body supercedes other attributes.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | str
@@ -2573,7 +2614,7 @@ class ActorManager(ServerClient):
         return run_sync(
             self._async_get_actor_roles_by_name(
                 name=name,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,
@@ -2617,6 +2658,9 @@ class ActorManager(ServerClient):
             The desired output columns/fields to include.
         body: dict | GetRequestBody, optional, default = None
             full request body.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -2670,6 +2714,9 @@ class ActorManager(ServerClient):
             The desired output columns/fields to include.
         body: dict | GetRequestBody, optional, default = None
             full request body.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -3930,6 +3977,7 @@ class ActorManager(ServerClient):
          """
         run_sync(self._async_delete_user_identity(user_identity_guid, body, cascade))
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_find_user_identities(
         self,
@@ -3937,7 +3985,7 @@ class ActorManager(ServerClient):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = "UserIdentity",
+        metadata_element_type: str | None = "UserIdentity",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -3964,7 +4012,7 @@ class ActorManager(ServerClient):
             Ends with the supplied string
         ignore_case : bool, [default=True], optional
             Ignore case when searching
-        metadata_element_type_name: str, optional
+        metadata_element_type: str, optional
             The type of metadata element to search for.
         metadata_element_subtypes: list[str], optional
             The subtypes of metadata element to search for.
@@ -3991,6 +4039,9 @@ class ActorManager(ServerClient):
         body: dict | SearchStringRequestBody, optional
             - if provided, the search parameters in the body will supercede other attributes.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -4001,7 +4052,7 @@ class ActorManager(ServerClient):
             "starts_with": starts_with,
             "ends_with": ends_with,
             "ignore_case": ignore_case,
-            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_type": metadata_element_type,
             "metadata_element_subtypes": metadata_element_subtypes,
             "include_only_relationships": include_only_relationships,
             "skip_relationships": skip_relationships,
@@ -4026,6 +4077,7 @@ class ActorManager(ServerClient):
         )
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def find_user_identities(
         self,
@@ -4033,7 +4085,7 @@ class ActorManager(ServerClient):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = "UserIdentity",
+        metadata_element_type: str | None = "UserIdentity",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -4060,7 +4112,7 @@ class ActorManager(ServerClient):
             Ends with the supplied string
         ignore_case : bool, [default=True], optional
             Ignore case when searching
-        metadata_element_type_name: str, optional
+        metadata_element_type: str, optional
             The type of metadata element to search for.
         metadata_element_subtypes: list[str], optional
             The subtypes of metadata element to search for.
@@ -4087,6 +4139,9 @@ class ActorManager(ServerClient):
         body: dict | SearchStringRequestBody, optional
             - if provided, the search parameters in the body will supercede other attributes.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -4097,7 +4152,7 @@ class ActorManager(ServerClient):
                 starts_with=starts_with,
                 ends_with=ends_with,
                 ignore_case=ignore_case,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,
@@ -4114,11 +4169,12 @@ class ActorManager(ServerClient):
             )
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_get_user_identities_by_name(
         self,
         name: str = None,
-        metadata_element_type_name: str | None = "UserIdentity",
+        metadata_element_type: str | None = "UserIdentity",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -4136,7 +4192,7 @@ class ActorManager(ServerClient):
         ----------
         name: str, optional
             name to use to find matching user identities.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             The type of metadata element.
         metadata_element_subtypes : list[str], optional
             The list of subtypes to filter by.
@@ -4157,6 +4213,9 @@ class ActorManager(ServerClient):
         body: dict, optional
             Provides a full request body. If specified, the body supercedes other attributes.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | str
@@ -4175,7 +4234,7 @@ class ActorManager(ServerClient):
         url = str(HttpUrl(f"{self.command_root}/user-identities/by-name"))
         params = {
             "filter_string": name,
-            "metadata_element_type_name": metadata_element_type_name,
+            "metadata_element_type": metadata_element_type,
             "metadata_element_subtypes": metadata_element_subtypes,
             "include_only_relationships": include_only_relationships,
             "skip_relationships": skip_relationships,
@@ -4196,11 +4255,12 @@ class ActorManager(ServerClient):
             **params,
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def get_user_identities_by_name(
         self,
         name: str = None,
-        metadata_element_type_name: str | None = "UserIdentity",
+        metadata_element_type: str | None = "UserIdentity",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -4218,7 +4278,7 @@ class ActorManager(ServerClient):
         ----------
         name: str, optional
             name to use to find matching user identities.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             The type of metadata element.
         metadata_element_subtypes : list[str], optional
             The list of subtypes to filter by.
@@ -4239,6 +4299,9 @@ class ActorManager(ServerClient):
         body: dict, optional
             Provides a full request body. If specified, the body supercedes other attributes.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | str
@@ -4246,7 +4309,7 @@ class ActorManager(ServerClient):
         return run_sync(
             self._async_get_user_identities_by_name(
                 name=name,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,
@@ -4290,6 +4353,9 @@ class ActorManager(ServerClient):
             The desired output columns/fields to include.
         body: dict | GetRequestBody, optional, default = None
             full request body.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -4344,6 +4410,9 @@ class ActorManager(ServerClient):
             The desired output columns/fields to include.
         body: dict | GetRequestBody, optional, default = None
             full request body.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -4804,11 +4873,12 @@ class ActorManager(ServerClient):
         """
         return run_sync(self._async_delete_contribution_record(contribution_record_guid, body))
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_get_contribution_records_by_name(
         self,
         name: str = None,
-        metadata_element_type_name: str | None = "ContributionRecord",
+        metadata_element_type: str | None = "ContributionRecord",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -4826,7 +4896,7 @@ class ActorManager(ServerClient):
         ----------
         name: str, optional
             name to use to find matching contribution records.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             The type of metadata element.
         metadata_element_subtypes : list[str], optional
             The list of subtypes to filter by.
@@ -4847,6 +4917,9 @@ class ActorManager(ServerClient):
         body: dict, optional
             Provides a full request body. If specified, the body supercedes other attributes.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | str
@@ -4865,7 +4938,7 @@ class ActorManager(ServerClient):
         url = f"{self.command_root}/contribution-records/by-name"
         params = {
             "filter_string": name,
-            "metadata_element_type_name": metadata_element_type_name,
+            "metadata_element_type": metadata_element_type,
             "metadata_element_subtypes": metadata_element_subtypes,
             "include_only_relationships": include_only_relationships,
             "skip_relationships": skip_relationships,
@@ -4886,11 +4959,12 @@ class ActorManager(ServerClient):
             **params,
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def get_contribution_records_by_name(
         self,
         name: str = None,
-        metadata_element_type_name: str | None = "ContributionRecord",
+        metadata_element_type: str | None = "ContributionRecord",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -4908,7 +4982,7 @@ class ActorManager(ServerClient):
         ----------
         name: str, optional
             name to use to find matching contribution records.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             The type of metadata element.
         metadata_element_subtypes : list[str], optional
             The list of subtypes to filter by.
@@ -4929,6 +5003,9 @@ class ActorManager(ServerClient):
         body: dict, optional
             Provides a full request body. If specified, the body supercedes other attributes.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | str
@@ -4936,7 +5013,7 @@ class ActorManager(ServerClient):
         return run_sync(
             self._async_get_contribution_records_by_name(
                 name=name,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,
@@ -4950,6 +5027,7 @@ class ActorManager(ServerClient):
             )
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_find_contribution_records(
         self,
@@ -4957,7 +5035,7 @@ class ActorManager(ServerClient):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = "ContributionRecord",
+        metadata_element_type: str | None = "ContributionRecord",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -4984,7 +5062,7 @@ class ActorManager(ServerClient):
             Ends with the supplied string
         ignore_case : bool, [default=True], optional
             Ignore case when searching
-        metadata_element_type_name: str, optional
+        metadata_element_type: str, optional
             The type of metadata element to search for.
         metadata_element_subtypes: list[str], optional
             The subtypes of metadata element to search for.
@@ -5011,6 +5089,9 @@ class ActorManager(ServerClient):
         body: dict | SearchStringRequestBody, optional
             - if provided, the search parameters in the body will supercede other attributes.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -5021,7 +5102,7 @@ class ActorManager(ServerClient):
             "starts_with": starts_with,
             "ends_with": ends_with,
             "ignore_case": ignore_case,
-            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_type": metadata_element_type,
             "metadata_element_subtypes": metadata_element_subtypes,
             "include_only_relationships": include_only_relationships,
             "skip_relationships": skip_relationships,
@@ -5045,6 +5126,7 @@ class ActorManager(ServerClient):
             **params,
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def find_contribution_records(
         self,
@@ -5052,7 +5134,7 @@ class ActorManager(ServerClient):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = "ContributionRecord",
+        metadata_element_type: str | None = "ContributionRecord",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -5079,7 +5161,7 @@ class ActorManager(ServerClient):
             Ends with the supplied string
         ignore_case : bool, [default=True], optional
             Ignore case when searching
-        metadata_element_type_name: str, optional
+        metadata_element_type: str, optional
             The type of metadata element to search for.
         metadata_element_subtypes: list[str], optional
             The subtypes of metadata element to search for.
@@ -5106,6 +5188,9 @@ class ActorManager(ServerClient):
         body: dict | SearchStringRequestBody, optional
             - if provided, the search parameters in the body will supercede other attributes.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -5116,7 +5201,7 @@ class ActorManager(ServerClient):
                 starts_with=starts_with,
                 ends_with=ends_with,
                 ignore_case=ignore_case,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,
@@ -5140,7 +5225,7 @@ class ActorManager(ServerClient):
         page_size: int = 100,
         output_format: str = "JSON",
         report_spec: Optional[str | dict] = "Contribution-Records",
-        **kwargs,
+        **kwargs: Unpack[SearchFilters],
     ) -> list | str:
         """Retrieve all contribution record metadata elements. Async Version.
 
@@ -5155,17 +5240,19 @@ class ActorManager(ServerClient):
         report_spec: dict, optional, default = "Contribution-Records"
             The desired output columns/fields to include.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
         """
         return await self._async_find_contribution_records(
-            search_string="*",
             start_from=start_from,
             page_size=page_size,
             output_format=output_format,
             report_spec=report_spec,
-            **kwargs,
+            **{"search_string": "*", **kwargs},
         )
 
     @dynamic_catch
@@ -5175,7 +5262,7 @@ class ActorManager(ServerClient):
         page_size: int = 100,
         output_format: str = "JSON",
         report_spec: Optional[str | dict] = "Contribution-Records",
-        **kwargs,
+        **kwargs: Unpack[SearchFilters],
     ) -> list | str:
         """Retrieve all contribution record metadata elements.
 
@@ -5189,6 +5276,9 @@ class ActorManager(ServerClient):
             - one of "DICT", "MERMAID" or "JSON"
         report_spec: dict, optional, default = "Contribution-Records"
             The desired output columns/fields to include.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -5234,6 +5324,9 @@ class ActorManager(ServerClient):
             The desired output columns/fields to include.
         body: dict | GetRequestBody, optional, default = None
             full request body.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -5288,6 +5381,9 @@ class ActorManager(ServerClient):
             The desired output columns/fields to include.
         body: dict | GetRequestBody, optional, default = None
             full request body.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -5983,11 +6079,12 @@ class ActorManager(ServerClient):
         """
         run_sync(self._async_detach_contact_details(element_guid, contact_details_guid, body))
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_get_contact_details_by_name(
         self,
         name: str = None,
-        metadata_element_type_name: str | None = "ContactDetails",
+        metadata_element_type: str | None = "ContactDetails",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -6005,7 +6102,7 @@ class ActorManager(ServerClient):
         ----------
         name: str, optional
             name to use to find matching contact details.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             The type of metadata element.
         metadata_element_subtypes : list[str], optional
             The list of subtypes to filter by.
@@ -6026,6 +6123,9 @@ class ActorManager(ServerClient):
         body: dict, optional
             Provides a full request body. If specified, the body supercedes other attributes.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | str
@@ -6044,7 +6144,7 @@ class ActorManager(ServerClient):
         url = f"{self.command_root}/contact-details/by-name"
         params = {
             "filter_string": name,
-            "metadata_element_type_name": metadata_element_type_name,
+            "metadata_element_type": metadata_element_type,
             "metadata_element_subtypes": metadata_element_subtypes,
             "include_only_relationships": include_only_relationships,
             "skip_relationships": skip_relationships,
@@ -6065,11 +6165,12 @@ class ActorManager(ServerClient):
             **params,
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def get_contact_details_by_name(
         self,
         name: str = None,
-        metadata_element_type_name: str | None = "ContactDetails",
+        metadata_element_type: str | None = "ContactDetails",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -6087,7 +6188,7 @@ class ActorManager(ServerClient):
         ----------
         name: str, optional
             name to use to find matching contact details.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             The type of metadata element.
         metadata_element_subtypes : list[str], optional
             The list of subtypes to filter by.
@@ -6108,6 +6209,9 @@ class ActorManager(ServerClient):
         body: dict, optional
             Provides a full request body. If specified, the body supercedes other attributes.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | str
@@ -6115,7 +6219,7 @@ class ActorManager(ServerClient):
         return run_sync(
             self._async_get_contact_details_by_name(
                 name=name,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,
@@ -6129,6 +6233,7 @@ class ActorManager(ServerClient):
             )
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_find_contact_details(
         self,
@@ -6136,7 +6241,7 @@ class ActorManager(ServerClient):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = "ContactDetails",
+        metadata_element_type: str | None = "ContactDetails",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -6163,7 +6268,7 @@ class ActorManager(ServerClient):
             Ends with the supplied string
         ignore_case : bool, [default=True], optional
             Ignore case when searching
-        metadata_element_type_name: str, optional
+        metadata_element_type: str, optional
             The type of metadata element to search for.
         metadata_element_subtypes: list[str], optional
             The subtypes of metadata element to search for.
@@ -6190,6 +6295,9 @@ class ActorManager(ServerClient):
         body: dict | SearchStringRequestBody, optional
             - if provided, the search parameters in the body will supercede other attributes.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -6200,7 +6308,7 @@ class ActorManager(ServerClient):
             "starts_with": starts_with,
             "ends_with": ends_with,
             "ignore_case": ignore_case,
-            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_type": metadata_element_type,
             "metadata_element_subtypes": metadata_element_subtypes,
             "include_only_relationships": include_only_relationships,
             "skip_relationships": skip_relationships,
@@ -6224,6 +6332,7 @@ class ActorManager(ServerClient):
             **params,
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def find_contact_details(
         self,
@@ -6231,7 +6340,7 @@ class ActorManager(ServerClient):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = "ContactDetails",
+        metadata_element_type: str | None = "ContactDetails",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -6258,7 +6367,7 @@ class ActorManager(ServerClient):
             Ends with the supplied string
         ignore_case : bool, [default=True], optional
             Ignore case when searching
-        metadata_element_type_name: str, optional
+        metadata_element_type: str, optional
             The type of metadata element to search for.
         metadata_element_subtypes: list[str], optional
             The subtypes of metadata element to search for.
@@ -6285,6 +6394,9 @@ class ActorManager(ServerClient):
         body: dict | SearchStringRequestBody, optional
             - if provided, the search parameters in the body will supercede other attributes.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -6295,7 +6407,7 @@ class ActorManager(ServerClient):
                 starts_with=starts_with,
                 ends_with=ends_with,
                 ignore_case=ignore_case,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,
@@ -6342,6 +6454,9 @@ class ActorManager(ServerClient):
             The desired output columns/fields to include.
         body: dict | GetRequestBody, optional, default = None
             full request body.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -6396,6 +6511,9 @@ class ActorManager(ServerClient):
             The desired output columns/fields to include.
         body: dict | GetRequestBody, optional, default = None
             full request body.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -6786,11 +6904,12 @@ class ActorManager(ServerClient):
         """
         return run_sync(self._async_delete_perspective(perspective_guid, body))
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_get_perspectives_by_name(
         self,
         name: str = None,
-        metadata_element_type_name: str | None = "Perspective",
+        metadata_element_type: str | None = "Perspective",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -6808,7 +6927,7 @@ class ActorManager(ServerClient):
         ----------
         name: str, optional
             name to use to find matching perspectives.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             The type of metadata element.
         metadata_element_subtypes : list[str], optional
             The list of subtypes to filter by.
@@ -6829,6 +6948,9 @@ class ActorManager(ServerClient):
         body: dict, optional
             Provides a full request body. If specified, the body supercedes other attributes.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | str
@@ -6847,7 +6969,7 @@ class ActorManager(ServerClient):
         url = str(HttpUrl(f"{self.command_root}/perspectives/by-name"))
         params = {
             "filter_string": name,
-            "metadata_element_type_name": metadata_element_type_name,
+            "metadata_element_type": metadata_element_type,
             "metadata_element_subtypes": metadata_element_subtypes,
             "include_only_relationships": include_only_relationships,
             "skip_relationships": skip_relationships,
@@ -6868,11 +6990,12 @@ class ActorManager(ServerClient):
             **params,
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def get_perspectives_by_name(
         self,
         name: str = None,
-        metadata_element_type_name: str | None = "Perspective",
+        metadata_element_type: str | None = "Perspective",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -6890,7 +7013,7 @@ class ActorManager(ServerClient):
         ----------
         name: str, optional
             name to use to find matching perspectives.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             The type of metadata element.
         metadata_element_subtypes : list[str], optional
             The list of subtypes to filter by.
@@ -6911,6 +7034,9 @@ class ActorManager(ServerClient):
         body: dict, optional
             Provides a full request body. If specified, the body supercedes other attributes.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | str
@@ -6918,7 +7044,7 @@ class ActorManager(ServerClient):
         return run_sync(
             self._async_get_perspectives_by_name(
                 name=name,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,
@@ -6932,6 +7058,7 @@ class ActorManager(ServerClient):
             )
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_find_perspectives(
         self,
@@ -6939,7 +7066,7 @@ class ActorManager(ServerClient):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = "Perspective",
+        metadata_element_type: str | None = "Perspective",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -6966,7 +7093,7 @@ class ActorManager(ServerClient):
             Ends with the supplied string
         ignore_case : bool, [default=True], optional
             Ignore case when searching
-        metadata_element_type_name: str, optional
+        metadata_element_type: str, optional
             The type of metadata element to search for.
         metadata_element_subtypes: list[str], optional
             The subtypes of metadata element to search for.
@@ -6993,6 +7120,9 @@ class ActorManager(ServerClient):
         body: dict | SearchStringRequestBody, optional
             - if provided, the search parameters in the body will supercede other attributes.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -7003,7 +7133,7 @@ class ActorManager(ServerClient):
             "starts_with": starts_with,
             "ends_with": ends_with,
             "ignore_case": ignore_case,
-            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_type": metadata_element_type,
             "metadata_element_subtypes": metadata_element_subtypes,
             "include_only_relationships": include_only_relationships,
             "skip_relationships": skip_relationships,
@@ -7027,6 +7157,7 @@ class ActorManager(ServerClient):
             **params,
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def find_perspectives(
         self,
@@ -7034,7 +7165,7 @@ class ActorManager(ServerClient):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = "Perspective",
+        metadata_element_type: str | None = "Perspective",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -7061,7 +7192,7 @@ class ActorManager(ServerClient):
             Ends with the supplied string
         ignore_case : bool, [default=True], optional
             Ignore case when searching
-        metadata_element_type_name: str, optional
+        metadata_element_type: str, optional
             The type of metadata element to search for.
         metadata_element_subtypes: list[str], optional
             The subtypes of metadata element to search for.
@@ -7088,6 +7219,9 @@ class ActorManager(ServerClient):
         body: dict | SearchStringRequestBody, optional
             - if provided, the search parameters in the body will supercede other attributes.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -7098,7 +7232,7 @@ class ActorManager(ServerClient):
                 starts_with=starts_with,
                 ends_with=ends_with,
                 ignore_case=ignore_case,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,
@@ -7145,6 +7279,9 @@ class ActorManager(ServerClient):
             The desired output columns/fields to include.
         body: dict | GetRequestBody, optional, default = None
             full request body.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -7199,6 +7336,9 @@ class ActorManager(ServerClient):
             The desired output columns/fields to include.
         body: dict | GetRequestBody, optional, default = None
             full request body.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -7589,11 +7729,12 @@ class ActorManager(ServerClient):
         """
         return run_sync(self._async_delete_skill(skill_guid, body))
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_get_skills_by_name(
         self,
         name: str = None,
-        metadata_element_type_name: str | None = "Skill",
+        metadata_element_type: str | None = "Skill",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -7611,7 +7752,7 @@ class ActorManager(ServerClient):
         ----------
         name: str, optional
             name to use to find matching skills.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             The type of metadata element.
         metadata_element_subtypes : list[str], optional
             The list of subtypes to filter by.
@@ -7632,6 +7773,9 @@ class ActorManager(ServerClient):
         body: dict, optional
             Provides a full request body. If specified, the body supercedes other attributes.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | str
@@ -7650,7 +7794,7 @@ class ActorManager(ServerClient):
         url = str(HttpUrl(f"{self.command_root}/skills/by-name"))
         params = {
             "filter_string": name,
-            "metadata_element_type_name": metadata_element_type_name,
+            "metadata_element_type": metadata_element_type,
             "metadata_element_subtypes": metadata_element_subtypes,
             "include_only_relationships": include_only_relationships,
             "skip_relationships": skip_relationships,
@@ -7671,11 +7815,12 @@ class ActorManager(ServerClient):
             **params,
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def get_skills_by_name(
         self,
         name: str = None,
-        metadata_element_type_name: str | None = "Skill",
+        metadata_element_type: str | None = "Skill",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -7693,7 +7838,7 @@ class ActorManager(ServerClient):
         ----------
         name: str, optional
             name to use to find matching skills.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             The type of metadata element.
         metadata_element_subtypes : list[str], optional
             The list of subtypes to filter by.
@@ -7714,6 +7859,9 @@ class ActorManager(ServerClient):
         body: dict, optional
             Provides a full request body. If specified, the body supercedes other attributes.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         list | str
@@ -7721,7 +7869,7 @@ class ActorManager(ServerClient):
         return run_sync(
             self._async_get_skills_by_name(
                 name=name,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,
@@ -7735,6 +7883,7 @@ class ActorManager(ServerClient):
             )
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_find_skills(
         self,
@@ -7742,7 +7891,7 @@ class ActorManager(ServerClient):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = "Skill",
+        metadata_element_type: str | None = "Skill",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -7769,7 +7918,7 @@ class ActorManager(ServerClient):
             Ends with the supplied string
         ignore_case : bool, [default=True], optional
             Ignore case when searching
-        metadata_element_type_name: str, optional
+        metadata_element_type: str, optional
             The type of metadata element to search for.
         metadata_element_subtypes: list[str], optional
             The subtypes of metadata element to search for.
@@ -7796,6 +7945,9 @@ class ActorManager(ServerClient):
         body: dict | SearchStringRequestBody, optional
             - if provided, the search parameters in the body will supercede other attributes.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -7806,7 +7958,7 @@ class ActorManager(ServerClient):
             "starts_with": starts_with,
             "ends_with": ends_with,
             "ignore_case": ignore_case,
-            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_type": metadata_element_type,
             "metadata_element_subtypes": metadata_element_subtypes,
             "include_only_relationships": include_only_relationships,
             "skip_relationships": skip_relationships,
@@ -7830,6 +7982,7 @@ class ActorManager(ServerClient):
             **params,
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def find_skills(
         self,
@@ -7837,7 +7990,7 @@ class ActorManager(ServerClient):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = "Skill",
+        metadata_element_type: str | None = "Skill",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -7864,7 +8017,7 @@ class ActorManager(ServerClient):
             Ends with the supplied string
         ignore_case : bool, [default=True], optional
             Ignore case when searching
-        metadata_element_type_name: str, optional
+        metadata_element_type: str, optional
             The type of metadata element to search for.
         metadata_element_subtypes: list[str], optional
             The subtypes of metadata element to search for.
@@ -7891,6 +8044,9 @@ class ActorManager(ServerClient):
         body: dict | SearchStringRequestBody, optional
             - if provided, the search parameters in the body will supercede other attributes.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list | str
@@ -7901,7 +8057,7 @@ class ActorManager(ServerClient):
                 starts_with=starts_with,
                 ends_with=ends_with,
                 ignore_case=ignore_case,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,
@@ -7948,6 +8104,9 @@ class ActorManager(ServerClient):
             The desired output columns/fields to include.
         body: dict | GetRequestBody, optional, default = None
             full request body.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -8002,6 +8161,9 @@ class ActorManager(ServerClient):
             The desired output columns/fields to include.
         body: dict | GetRequestBody, optional, default = None
             full request body.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------

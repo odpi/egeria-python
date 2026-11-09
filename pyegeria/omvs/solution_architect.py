@@ -14,6 +14,8 @@ from typing import Dict, List, Union, Optional
 from httpx import Response
 from loguru import logger
 
+from typing import Unpack
+from pyegeria.core.request_filters import GetFilters, ListFilters, SearchFilters
 from pyegeria.core._globals import NO_ELEMENTS_FOUND, NO_GUID_RETURNED
 from pyegeria.core._server_client import ServerClient, max_paging_size
 from pyegeria.core._validators import validate_guid
@@ -226,7 +228,7 @@ class SolutionArchitect(ServerClient):
     async def _async_find_design_patterns(self, search_string: str = "*", body: Optional[dict | SearchStringRequestBody] = None,
                                   starts_with: bool = True, ends_with: bool = False, ignore_case: bool = False,
                                   start_from: int = 0, page_size: int = 100, graph_query_depth: int = 3, output_format: str = "JSON",
-                                  report_spec: str | dict = "Design-Pattern-DrE", **kwargs):
+                                  report_spec: str | dict = "Design-Pattern-DrE", **kwargs: Unpack[SearchFilters]):
         url = f"{self.solution_architect_command_root}/design-patterns/by-search-string"
         params = {
             'graph_query_depth': graph_query_depth,
@@ -249,8 +251,12 @@ class SolutionArchitect(ServerClient):
     def find_design_patterns(self, search_string: str = "*", body: Optional[dict | SearchStringRequestBody] = None,
                            starts_with: bool = True, ends_with: bool = False, ignore_case: bool = False,
                            start_from: int = 0, page_size: int = 100, graph_query_depth: int = 3, output_format: str = "JSON",
-                           report_spec: str | dict = "Design-Pattern-DrE", **kwargs):
-        """Find design patterns."""
+                           report_spec: str | dict = "Design-Pattern-DrE", **kwargs: Unpack[SearchFilters]):
+        """Find design patterns.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+        """
         return run_sync(self._async_find_design_patterns(search_string, body, starts_with, ends_with,
                                                          ignore_case, start_from, page_size,
                                                          graph_query_depth,
@@ -258,7 +264,7 @@ class SolutionArchitect(ServerClient):
 
     async def _async_get_design_patterns_by_name(self, name: Optional[str] = None, body: Optional[dict | SearchStringRequestBody] = None,
                                          start_from: int = 0, page_size: int = max_paging_size,
-                                         graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = "Design-Pattern-DrE", **kwargs):
+                                         graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = "Design-Pattern-DrE", **kwargs: Unpack[ListFilters]):
         if name is None and "filter_string" in kwargs:
             name = kwargs.pop("filter_string")
         url = f"{self.solution_architect_command_root}/design-patterns/by-name"
@@ -278,14 +284,18 @@ class SolutionArchitect(ServerClient):
 
     def get_design_patterns_by_name(self, name: Optional[str] = None, body: Optional[dict | SearchStringRequestBody] = None,
                                   start_from: int = 0, page_size: int = max_paging_size,
-                                  graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = "Design-Pattern-DrE", **kwargs):
-        """Get design patterns by name."""
+                                  graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = "Design-Pattern-DrE", **kwargs: Unpack[ListFilters]):
+        """Get design patterns by name.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         return run_sync(self._async_get_design_patterns_by_name(name=name, body=body, start_from=start_from, page_size=page_size,
                                                                 graph_query_depth=graph_query_depth,
                                                                 output_format=output_format, report_spec=report_spec, **kwargs))
 
     async def _async_get_design_pattern_by_guid(self, guid: str = None, body: Optional[dict | GetRequestBody] = None,
-                                        graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = "Design-Pattern-DrE", **kwargs):
+                                        graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = "Design-Pattern-DrE", **kwargs: Unpack[GetFilters]):
         if guid is None and "design_pattern_guid" in kwargs:
             guid = kwargs.pop("design_pattern_guid")
         validate_guid(guid)
@@ -302,8 +312,12 @@ class SolutionArchitect(ServerClient):
                                                  _gen_output=self.generate_design_pattern_output, **params)
 
     def get_design_pattern_by_guid(self, guid: str = None, body: Optional[dict | GetRequestBody] = None,
-                                 graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = "Design-Pattern-DrE", **kwargs):
-        """Get a design pattern by GUID."""
+                                 graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = "Design-Pattern-DrE", **kwargs: Unpack[GetFilters]):
+        """Get a design pattern by GUID.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         return run_sync(self._async_get_design_pattern_by_guid(guid=guid, body=body, graph_query_depth=graph_query_depth, output_format=output_format, report_spec=report_spec, **kwargs))
 
     async def _async_update_solution_blueprint_status(self, guid: str, body: dict | UpdateElementRequestBody):
@@ -1628,6 +1642,9 @@ class SolutionArchitect(ServerClient):
                 body: dict, optional, default = None
                     - additional optional specifications for the search.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
                 Returns
                 -------
                 list[dict] | str
@@ -1663,7 +1680,6 @@ class SolutionArchitect(ServerClient):
         # all-positional call here silently mismatched almost every argument (and, once this
         # method also grew a `body` parameter, overflowed to a TypeError on every call).
         return self.find_information_supply_chains(
-            search_string="*",
             add_implementation=add_implementation,
             body=body,
             starts_with=starts_with,
@@ -1689,7 +1705,7 @@ class SolutionArchitect(ServerClient):
             start_from=start_from,
             page_size=page_size,
             property_names=property_names,
-            **kwargs
+            **{"search_string": "*", **kwargs}
         )
 
     async def _async_find_information_supply_chains(
@@ -1704,7 +1720,7 @@ class SolutionArchitect(ServerClient):
         page_size: int = 100,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = None,
-        **kwargs
+        **kwargs: Unpack[SearchFilters]
     ) -> list[dict] | str:
         """Retrieve the information supply chain metadata elements that contain the search string.
            https://egeria-project.org/concepts/information-supply-chain
@@ -1769,6 +1785,9 @@ class SolutionArchitect(ServerClient):
             The names of properties to search for.
         body: dict, optional, default = None
             - additional optional specifications for the search.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -1838,7 +1857,7 @@ class SolutionArchitect(ServerClient):
         page_size: int = 100,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = None,
-        **kwargs
+        **kwargs: Unpack[SearchFilters]
     ) -> list[dict] | str:
         """Retrieve the information supply chain metadata elements that contain the search string.
           https://egeria-project.org/concepts/information-supply-chain
@@ -1902,6 +1921,9 @@ class SolutionArchitect(ServerClient):
             The names of properties to search for.
         body: dict, optional, default = None
             - additional optional specifications for the search.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -3030,7 +3052,7 @@ class SolutionArchitect(ServerClient):
         page_size: int = 100,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Solution-Blueprint",
-        **kwargs
+        **kwargs: Unpack[SearchFilters]
     ) -> list[dict] | str:
         """Retrieve the solution blueprint elements that contain the search string.
            https://egeria-project.org/concepts/solution-blueprint
@@ -3093,6 +3115,9 @@ class SolutionArchitect(ServerClient):
             The names of properties to search for.
         body: dict, optional, default = None
             - additional optional specifications for the search.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -3158,7 +3183,7 @@ class SolutionArchitect(ServerClient):
         page_size: int = 100,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Solution-Blueprint",
-        **kwargs
+        **kwargs: Unpack[SearchFilters]
     ) -> list[dict] | str:
         """Retrieve the list of solution blueprint elements that contain the search string.
            https://egeria-project.org/concepts/solution-blueprint
@@ -3187,6 +3212,9 @@ class SolutionArchitect(ServerClient):
                 FORM - output markdown with a preamble for a form
                 REPORT - output markdown with a preamble for a report
                 MERMAID - output mermaid markdown
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -3243,13 +3271,15 @@ class SolutionArchitect(ServerClient):
                                     body: dict| SearchStringRequestBody = None, **kwargs) -> list[dict] | str:
         """Retrieve a list of all solution blueprint elements
         https://egeria-project.org/concepts/solution-blueprint
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
         """
         # NOTE: must be called with keyword arguments only. find_solution_blueprints' own
         # positional parameter order does not match this method's — a previous all-positional
         # call here silently mismatched every argument after search_string and, once this
         # method also grew a `body` parameter, overflowed to a TypeError on every call.
         return self.find_solution_blueprints(
-            search_string="*",
             body=body,
             starts_with=starts_with,
             ends_with=ends_with,
@@ -3260,8 +3290,7 @@ class SolutionArchitect(ServerClient):
             output_format=output_format,
             report_spec=report_spec,
             metadata_element_subtypes=metadata_element_subtypes,
-            skip_classified_elements=classification_names,
-            **kwargs
+            **{"search_string": "*", "skip_classified_elements": classification_names, **kwargs}
         )
 
 
@@ -4619,7 +4648,7 @@ class SolutionArchitect(ServerClient):
         page_size: int = 100,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = None,
-        **kwargs
+        **kwargs: Unpack[SearchFilters]
     ) -> list[dict] | str:
         """ Retrieve the solution component elements that contain the search string. The solutions components returned
             include information about consumers, actors, and other solution components that are associated with them.
@@ -4683,6 +4712,9 @@ class SolutionArchitect(ServerClient):
             The names of properties to search for.
         body: dict, optional, default = None
             - additional optional specifications for the search - supersedes search filter,
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -4748,7 +4780,7 @@ class SolutionArchitect(ServerClient):
         page_size: int = 100,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = None,
-        **kwargs
+        **kwargs: Unpack[SearchFilters]
     ) -> list[dict] | str:
         """ Retrieve the solution component elements that contain the search string. The solutions components returned
             include information about consumers, actors, and other solution components that are associated with them.
@@ -4773,6 +4805,9 @@ class SolutionArchitect(ServerClient):
                 FORM - output markdown with a preamble for a form
                 REPORT - output markdown with a preamble for a report
                 MERMAID - output mermaid markdown
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -4831,12 +4866,14 @@ class SolutionArchitect(ServerClient):
                                     body: dict| SearchStringRequestBody = None, **kwargs) -> list[dict] | str:
         """Retrieve a list of all solution component elements
         https://egeria-project.org/concepts/solution-components
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
         """
         # NOTE: must be called with keyword arguments only — see find_all_solution_blueprints
         # for why an all-positional call here is unsafe (parameter orders don't match, and it
         # overflows to a TypeError on every call once `body` is included positionally).
         return self.find_solution_components(
-            search_string="*",
             body=body,
             starts_with=starts_with,
             ends_with=ends_with,
@@ -4847,8 +4884,7 @@ class SolutionArchitect(ServerClient):
             output_format=output_format,
             report_spec=report_spec,
             metadata_element_subtypes=metadata_element_subtypes,
-            skip_classified_elements=classification_names,
-            **kwargs
+            **{"search_string": "*", "skip_classified_elements": classification_names, **kwargs}
         )
 
 
@@ -4992,7 +5028,7 @@ class SolutionArchitect(ServerClient):
         return response
 
     async def _async_get_solution_component_by_guid(self, guid: str = None, body: dict = None,
-                                                    graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str = "Solution-Component-DrE", **kwargs) -> dict | str:
+                                                    graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str = "Solution-Component-DrE", **kwargs: Unpack[GetFilters]) -> dict | str:
         """ Return the properties of a specific solution component. Async Version.
 
             Parameters
@@ -5010,6 +5046,9 @@ class SolutionArchitect(ServerClient):
                 MERMAID - output mermaid markdown
             report_spec: str, default = "Solution-Component-DrE"
                 Structure of output to produce:
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
             Returns
             -------
@@ -5065,7 +5104,7 @@ class SolutionArchitect(ServerClient):
         #     return self.generate_solution_components_output(element, None, output_format)
         # return response.json().get("element", NO_ELEMENTS_FOUND)
 
-    def get_solution_component_by_guid(self, guid: str = None, body: dict = None, graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = "Solution-Component-DrE", **kwargs) -> dict | str:
+    def get_solution_component_by_guid(self, guid: str = None, body: dict = None, graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = "Solution-Component-DrE", **kwargs: Unpack[GetFilters]) -> dict | str:
         """ Return the properties of a specific solution component.
 
             Parameters
@@ -5081,6 +5120,9 @@ class SolutionArchitect(ServerClient):
                 FORM - output markdown with a preamble for a form
                 REPORT - output markdown with a preamble for a report
                 MERMAID - output mermaid markdown
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
             Returns
             -------
@@ -5113,8 +5155,12 @@ class SolutionArchitect(ServerClient):
 
 
 
-    def get_component_related_elements(self, guid: str, **kwargs) -> dict:
-        """ Get related elements about the component"""
+    def get_component_related_elements(self, guid: str, **kwargs: Unpack[GetFilters]) -> dict:
+        """ Get related elements about the component
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         response = self.get_solution_component_by_guid(guid, output_format='JSON', **kwargs)
 
         if isinstance(response, str):
@@ -6026,7 +6072,7 @@ class SolutionArchitect(ServerClient):
         page_size: int = 100,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = None,
-        **kwargs
+        **kwargs: Unpack[SearchFilters]
     ) -> list[dict] | str:
         """Retrieve the solution role elements that contain the search string.
            https://egeria-project.org/concepts/actor
@@ -6089,6 +6135,9 @@ class SolutionArchitect(ServerClient):
             The names of properties to search for.
         body: dict, optional, default = None
             - additional optional specifications for the search. Body details, if provided, override search-filter.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
 
         Returns
         -------
@@ -6155,7 +6204,7 @@ class SolutionArchitect(ServerClient):
         page_size: int = 100,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = None,
-        **kwargs
+        **kwargs: Unpack[SearchFilters]
     ) -> list[dict] | str:
         """Retrieve the solution role elements that contain the search string.
            https://egeria-project.org/concepts/actor
@@ -6218,6 +6267,9 @@ class SolutionArchitect(ServerClient):
         body: dict, optional, default = None
             - additional optional specifications for the search. Body details, if provided, override search-filter.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         list[dict] | str
@@ -6279,9 +6331,11 @@ class SolutionArchitect(ServerClient):
     ) -> list[dict] | str:
         """Retrieve a list of all solution blueprint elements
         https://egeria-project.org/concepts/actor
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
         """
         return self.find_solution_roles(
-            search_string="*",
             body=body,
             starts_with=starts_with,
             ends_with=ends_with,
@@ -6291,9 +6345,8 @@ class SolutionArchitect(ServerClient):
             graph_query_depth=graph_query_depth,
             output_format=output_format,
             report_spec=report_spec,
-            skip_classified_elements=classification_names,
             metadata_element_subtypes=metadata_element_subtypes,
-            **kwargs
+            **{"search_string": "*", "skip_classified_elements": classification_names, **kwargs}
         )
 
 
@@ -6640,8 +6693,12 @@ class SolutionArchitect(ServerClient):
                                                   starts_with: bool = True, ends_with: bool = False, ignore_case: bool = False,
                                                   start_from: int = 0, page_size: int = 100,
                                                   output_format: str = "JSON", report_spec: str | dict | None = None,
-                                                  **kwargs) -> list | str:
-        """Find concept model elements matching a search string. Async version."""
+                                                  **kwargs: Unpack[SearchFilters]) -> list | str:
+        """Find concept model elements matching a search string. Async version.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+        """
         url = f"{self.solution_architect_command_root}/concept-model-elements/by-search-string"
         return await self._async_find_request(
             url, _type="ConceptModelElement", _gen_output=self._generate_concept_model_element_output,
@@ -6655,8 +6712,12 @@ class SolutionArchitect(ServerClient):
                                     starts_with: bool = True, ends_with: bool = False, ignore_case: bool = False,
                                     start_from: int = 0, page_size: int = 100,
                                     output_format: str = "JSON", report_spec: str | dict | None = None,
-                                    **kwargs) -> list | str:
-        """Find concept model elements matching a search string."""
+                                    **kwargs: Unpack[SearchFilters]) -> list | str:
+        """Find concept model elements matching a search string.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+        """
         return run_sync(self._async_find_concept_model_elements(
             search_string, body, starts_with, ends_with, ignore_case, start_from, page_size,
             output_format, report_spec, **kwargs))
@@ -6666,29 +6727,41 @@ class SolutionArchitect(ServerClient):
                                                          body: Optional[dict | SearchStringRequestBody] = None,
                                                          start_from: int = 0, page_size: int = max_paging_size,
                                                          output_format: str = "JSON", report_spec: str | dict | None = None,
-                                                         **kwargs) -> list | str:
-        """Return the concept model elements with a specific name. Async version."""
+                                                         **kwargs: Unpack[ListFilters]) -> list | str:
+        """Return the concept model elements with a specific name. Async version.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         url = f"{self.solution_architect_command_root}/concept-model-elements/by-name"
         return await self._async_get_name_request(
             url, _type="ConceptModelElement", _gen_output=self._generate_concept_model_element_output,
-            filter_string=name, body=body, start_from=start_from, page_size=page_size,
-            output_format=output_format, report_spec=report_spec, **kwargs)
+            body=body, start_from=start_from, page_size=page_size,
+            output_format=output_format, report_spec=report_spec, **{"filter_string": name, **kwargs})
 
     @dynamic_catch
     def get_concept_model_elements_by_name(self, name: str | None = None,
                                            body: Optional[dict | SearchStringRequestBody] = None,
                                            start_from: int = 0, page_size: int = max_paging_size,
                                            output_format: str = "JSON", report_spec: str | dict | None = None,
-                                           **kwargs) -> list | str:
-        """Return the concept model elements with a specific name."""
+                                           **kwargs: Unpack[ListFilters]) -> list | str:
+        """Return the concept model elements with a specific name.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         return run_sync(self._async_get_concept_model_elements_by_name(
             name, body, start_from, page_size, output_format, report_spec, **kwargs))
 
     @dynamic_catch
     async def _async_get_concept_model_element_by_guid(self, guid: str, body: Optional[dict | GetRequestBody] = None,
                                                         output_format: str = "JSON", report_spec: str | dict | None = None,
-                                                        **kwargs) -> dict | str:
-        """Return the properties of a specific concept model element. Async version."""
+                                                        **kwargs: Unpack[GetFilters]) -> dict | str:
+        """Return the properties of a specific concept model element. Async version.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         validate_guid(guid)
         url = f"{self.solution_architect_command_root}/concept-model-elements/{guid}/retrieve"
         return await self._async_get_guid_request(
@@ -6698,8 +6771,12 @@ class SolutionArchitect(ServerClient):
     @dynamic_catch
     def get_concept_model_element_by_guid(self, guid: str, body: Optional[dict | GetRequestBody] = None,
                                           output_format: str = "JSON", report_spec: str | dict | None = None,
-                                          **kwargs) -> dict | str:
-        """Return the properties of a specific concept model element."""
+                                          **kwargs: Unpack[GetFilters]) -> dict | str:
+        """Return the properties of a specific concept model element.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         return run_sync(self._async_get_concept_model_element_by_guid(
             guid, body, output_format, report_spec, **kwargs))
 
@@ -6920,8 +6997,12 @@ class SolutionArchitect(ServerClient):
                                          ignore_case: bool = False, start_from: int = 0,
                                          page_size: int = 100, graph_query_depth: int = 3,
                                          output_format: str = "JSON", report_spec: str | dict = None,
-                                         **kwargs) -> list[dict] | str:
-        """Retrieve the solution ports whose properties contain the search string. Async version."""
+                                         **kwargs: Unpack[SearchFilters]) -> list[dict] | str:
+        """Retrieve the solution ports whose properties contain the search string. Async version.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+        """
         url = f"{self.solution_architect_command_root}/solution-ports/by-search-string"
         return await self._async_find_request(url, _type="SolutionPort",
                                               _gen_output=self._generate_referenceable_output,
@@ -6938,8 +7019,12 @@ class SolutionArchitect(ServerClient):
                             ignore_case: bool = False, start_from: int = 0,
                             page_size: int = 100, graph_query_depth: int = 3,
                             output_format: str = "JSON", report_spec: str | dict = None,
-                            **kwargs) -> list[dict] | str:
-        """Retrieve the solution ports whose properties contain the search string."""
+                            **kwargs: Unpack[SearchFilters]) -> list[dict] | str:
+        """Retrieve the solution ports whose properties contain the search string.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+        """
         return run_sync(
             self._async_find_solution_ports(search_string, body, starts_with, ends_with, ignore_case,
                                             start_from, page_size, graph_query_depth, output_format,
@@ -6950,23 +7035,31 @@ class SolutionArchitect(ServerClient):
                                                 body: Optional[dict | FilterRequestBody] = None,
                                                 start_from: int = 0, page_size: int = 0,
                                                 graph_query_depth: int = 3, output_format: str = "JSON",
-                                                report_spec: str | dict = None, **kwargs) -> list | str:
-        """Retrieve the solution ports with a particular name. Async version."""
+                                                report_spec: str | dict = None, **kwargs: Unpack[ListFilters]) -> list | str:
+        """Retrieve the solution ports with a particular name. Async version.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         url = f"{self.solution_architect_command_root}/solution-ports/by-name"
         return await self._async_get_name_request(url, _type="SolutionPort",
                                                   _gen_output=self._generate_referenceable_output,
-                                                  filter_string=name, graph_query_depth=graph_query_depth,
+                                                  graph_query_depth=graph_query_depth,
                                                   start_from=start_from, page_size=page_size,
                                                   output_format=output_format, report_spec=report_spec,
-                                                  body=body, **kwargs)
+                                                  body=body, **{"filter_string": name, **kwargs})
 
     @dynamic_catch
     def get_solution_ports_by_name(self, name: str | None = None,
                                    body: Optional[dict | FilterRequestBody] = None,
                                    start_from: int = 0, page_size: int = 0,
                                    graph_query_depth: int = 3, output_format: str = "JSON",
-                                   report_spec: str | dict = None, **kwargs) -> list | str:
-        """Retrieve the solution ports with a particular name."""
+                                   report_spec: str | dict = None, **kwargs: Unpack[ListFilters]) -> list | str:
+        """Retrieve the solution ports with a particular name.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         return run_sync(
             self._async_get_solution_ports_by_name(name, body, start_from, page_size, graph_query_depth,
                                                    output_format, report_spec, **kwargs))
@@ -6974,8 +7067,12 @@ class SolutionArchitect(ServerClient):
     @dynamic_catch
     async def _async_get_solution_port_by_guid(self, solution_port_guid: str, body: Optional[dict] = None,
                                                graph_query_depth: int = 3, output_format: str = "JSON",
-                                               report_spec: str | dict = None, **kwargs) -> dict | str:
-        """Return the properties of a specific solution port. Async version."""
+                                               report_spec: str | dict = None, **kwargs: Unpack[GetFilters]) -> dict | str:
+        """Return the properties of a specific solution port. Async version.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         url = f"{self.solution_architect_command_root}/solution-ports/{solution_port_guid}/retrieve"
         return await self._async_get_guid_request(url, _type="SolutionPort",
                                                   _gen_output=self._generate_referenceable_output,
@@ -6986,8 +7083,12 @@ class SolutionArchitect(ServerClient):
     @dynamic_catch
     def get_solution_port_by_guid(self, solution_port_guid: str, body: Optional[dict] = None,
                                   graph_query_depth: int = 3, output_format: str = "JSON",
-                                  report_spec: str | dict = None, **kwargs) -> dict | str:
-        """Return the properties of a specific solution port."""
+                                  report_spec: str | dict = None, **kwargs: Unpack[GetFilters]) -> dict | str:
+        """Return the properties of a specific solution port.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         return run_sync(
             self._async_get_solution_port_by_guid(solution_port_guid, body, graph_query_depth,
                                                   output_format, report_spec, **kwargs))

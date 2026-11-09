@@ -10,6 +10,9 @@ import asyncio
 
 from loguru import logger
 from requests import Response
+from typing import Unpack
+from pyegeria.core.request_filters import deprecated_names
+from pyegeria.core.request_filters import GetFilters, ListFilters
 from pyegeria.core.utils import body_slimmer, dynamic_catch
 from pyegeria.core._server_client import ServerClient
 from pyegeria.core._globals import max_paging_size, default_timeout, NO_ELEMENTS_FOUND
@@ -2027,7 +2030,7 @@ class RuntimeManager(ServerClient):
         page_size: int = max_paging_size,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Platforms",
-        body: Optional[dict | FilterRequestBody] = None,
+        body: Optional[dict | FilterRequestBody] = None, **kwargs: Unpack[ListFilters],
     ) -> str | list | dict:
         """Returns the list of platforms with a particular name. The name is specified in the filter.
 
@@ -2048,6 +2051,9 @@ class RuntimeManager(ServerClient):
         body : dict | FilterRequestBody, optional
             Request body to pass directly to the API.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         Response
@@ -2061,7 +2067,7 @@ class RuntimeManager(ServerClient):
                 graph_query_depth=graph_query_depth,
                 output_format=output_format,
                 report_spec=report_spec,
-                body=body
+                body=body, **kwargs
             )
         )
         return response
@@ -2074,7 +2080,7 @@ class RuntimeManager(ServerClient):
         page_size: int = 0,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Platforms",
-        body: Optional[dict | FilterRequestBody] = None,
+        body: Optional[dict | FilterRequestBody] = None, **kwargs: Unpack[ListFilters],
     ) -> str | list | dict:
         """Returns the list of platforms with a particular name. The name is specified in the filter.  Async version.
 
@@ -2096,6 +2102,9 @@ class RuntimeManager(ServerClient):
 
         body : dict | FilterRequestBody, optional
             Request body to pass directly to the API.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -2121,7 +2130,7 @@ class RuntimeManager(ServerClient):
                                                   filter_string=filter_string, start_from=start_from,
                                                   page_size=page_size, graph_query_depth=graph_query_depth,
                                                   output_format=output_format,
-                                                  report_spec=report_spec, body=body)
+                                                  report_spec=report_spec, body=body, **kwargs)
 
     @dynamic_catch
     async def _async_get_platforms_by_type(
@@ -2131,7 +2140,7 @@ class RuntimeManager(ServerClient):
         page_size: int = max_paging_size,
         output_format: str = "JSON",
         report_spec: str | dict = "Platforms",
-        body: Optional[dict | FilterRequestBody] = None,
+        body: Optional[dict | FilterRequestBody] = None, **kwargs: Unpack[ListFilters],
     ) -> str | list | dict:
         """Returns the list of platforms with a particular deployed implementation type.  The value is specified in
             the filter. If it is null, or no request body is supplied, all platforms are returned.  Async version.
@@ -2153,6 +2162,9 @@ class RuntimeManager(ServerClient):
 
         body : dict | GetRequestBody, optional
             Request body to pass directly to the API.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -2177,7 +2189,7 @@ class RuntimeManager(ServerClient):
         return await self._async_get_name_request(url, _type="Platforms", _gen_output=self._generate_platform_output,
                                                   filter_string=filter_string, start_from=start_from,
                                                   page_size=page_size, output_format=output_format,
-                                                  report_spec=report_spec, body=body)
+                                                  report_spec=report_spec, body=body, **kwargs)
 
     def get_platforms_by_type(
         self,
@@ -2186,7 +2198,7 @@ class RuntimeManager(ServerClient):
         page_size: int = max_paging_size,
         output_format: str = "JSON",
         report_spec: str | dict = "Platforms",
-        body: Optional[dict | GetRequestBody] = None,
+        body: Optional[dict | GetRequestBody] = None, **kwargs: Unpack[ListFilters],
     ) -> str | list | dict:
         """Returns the list of platforms with a particular deployed implementation type.  The value is specified in
             the filter. If it is null, or no request body is supplied, all platforms are returned.
@@ -2208,6 +2220,9 @@ class RuntimeManager(ServerClient):
         body : dict, optional
             Request body to pass directly to the API.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
            A list of JSON dict with the platform reports.
@@ -2226,7 +2241,7 @@ class RuntimeManager(ServerClient):
                 page_size=page_size,
                 output_format=output_format,
                 report_spec=report_spec,
-                body=body
+                body=body, **kwargs
             )
         )
 
@@ -2237,7 +2252,7 @@ class RuntimeManager(ServerClient):
         start_from: int = 0,
         page_size: int = max_paging_size,
         output_format: str = "JSON", report_spec: str | dict = "Platforms",
-        body: Optional[dict | FilterRequestBody] = None,
+        body: Optional[dict | FilterRequestBody] = None, **kwargs,
     ) -> str | list:
         """Returns the list of platform templates for a particular deployed implementation type.  The value is
             specified in the filter. If it is null, or no request body is supplied, all platforms are returned.
@@ -2261,6 +2276,9 @@ class RuntimeManager(ServerClient):
         body : dict | FilterRequestBody, optional
             Request body to pass directly to the API.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         List of JSON dict with the platform reports.
@@ -2282,9 +2300,9 @@ class RuntimeManager(ServerClient):
 
 
         return await self._async_get_name_request(url, _type="Platforms", _gen_output=self._generate_platform_output,
-                                                  filter_string=filter_string, classification_names=["Template"],
+                                                  filter_string=filter_string, 
                                                   start_from=start_from, page_size=page_size,
-                                                  output_format=output_format, report_spec=report_spec, body=body)
+                                                  output_format=output_format, report_spec=report_spec, body=body, **{"classification_names": ["Template"], **kwargs})
 
     def get_platform_templates_by_type(
         self,
@@ -2293,7 +2311,7 @@ class RuntimeManager(ServerClient):
         start_from: int = 0,
         page_size: int = max_paging_size,
         output_format: str = "JSON", report_spec: str | dict = "Platforms",
-        body: Optional[dict | FilterRequestBody] = None,
+        body: Optional[dict | FilterRequestBody] = None, **kwargs,
     ) -> str | list:
         """Returns the list of platform templates with a particular deployed implementation type.  The value is
             specified in the filter. If it is null, or no request body is supplied, all platforms are returned.
@@ -2316,6 +2334,9 @@ class RuntimeManager(ServerClient):
         body : dict | FilterRequestBody, optional
             Request body to pass directly to the API.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         List of JSON dict with the platform reports.
@@ -2335,7 +2356,7 @@ class RuntimeManager(ServerClient):
                 page_size=page_size,
                 output_format=output_format,
                 report_spec=report_spec,
-                body=body
+                body=body, **kwargs
             )
         )
         return response
@@ -2429,7 +2450,7 @@ class RuntimeManager(ServerClient):
         platform_guid: str,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "Platforms",
-        body: Optional[dict | GetRequestBody] = None
+        body: Optional[dict | GetRequestBody] = None, **kwargs: Unpack[GetFilters]
     ) -> str | list:
         """Returns details about the platform's catalog entry (asset). Async version.
 
@@ -2443,6 +2464,9 @@ class RuntimeManager(ServerClient):
             - The specification of the report to generate. Default is "Platforms".
         body : dict | GetRequestBody, optional
             Request body to pass directly to the API.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -2460,7 +2484,7 @@ class RuntimeManager(ServerClient):
             graph_query_depth=graph_query_depth,
             output_format=output_format,
             report_spec=report_spec,
-            body=body
+            body=body, **kwargs
         )
         return response
 
@@ -2468,7 +2492,7 @@ class RuntimeManager(ServerClient):
         self,
         platform_guid: str,
         graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = "Platforms",
-        body: Optional[dict | GetRequestBody] = None,
+        body: Optional[dict | GetRequestBody] = None, **kwargs: Unpack[GetFilters],
     ) -> str | list:
         """Returns details about the platform's catalog entry (asset).
 
@@ -2484,6 +2508,9 @@ class RuntimeManager(ServerClient):
         body : dict | GetRequestBody, optional
             Request body to pass directly to the API.
 
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         List of JSON dict with the platform reports.
@@ -2496,7 +2523,7 @@ class RuntimeManager(ServerClient):
 
         """
         response = run_sync(
-            self._async_get_platform_by_guid(platform_guid, graph_query_depth, output_format, report_spec, body)
+            self._async_get_platform_by_guid(platform_guid, graph_query_depth, output_format, report_spec, body, **kwargs)
         )
         return response
 
@@ -2556,7 +2583,7 @@ class RuntimeManager(ServerClient):
         server_guid: Optional[str] = None,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "OMAGServers",
-        body: Optional[dict | GetRequestBody] = None,
+        body: Optional[dict | GetRequestBody] = None, **kwargs: Unpack[GetFilters],
     ) -> str | dict:
         """Returns details about the server's catalog entry (asset). Async version.
 
@@ -2570,6 +2597,9 @@ class RuntimeManager(ServerClient):
         - The specification of the report to generate. Default is "OMAGServers".
         body : dict | GetRequestBody, optional
             Request body to pass directly to the API.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -2590,7 +2620,7 @@ class RuntimeManager(ServerClient):
             graph_query_depth=graph_query_depth,
             output_format=output_format,
             report_spec=report_spec,
-            body=body
+            body=body, **kwargs
         )
         return response
 
@@ -2601,7 +2631,7 @@ class RuntimeManager(ServerClient):
         server_guid: Optional[str] = None,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "OMAGServers",
-        body: Optional[dict | GetRequestBody] = None,
+        body: Optional[dict | GetRequestBody] = None, **kwargs: Unpack[GetFilters],
     ) -> str | dict:
         """Returns details about the platform's catalog entry (asset).
 
@@ -2615,6 +2645,9 @@ class RuntimeManager(ServerClient):
         - The specification of the report to generate. Default is "OMAGServers".
         body : dict | GetRequestBody, optional
             Request body to pass directly to the API.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -2630,7 +2663,7 @@ class RuntimeManager(ServerClient):
         response = run_sync(
             self._async_get_server_by_guid(server_guid, output_format=output_format,
                                            graph_query_depth=graph_query_depth,
-                                           report_spec=report_spec, body=body)
+                                           report_spec=report_spec, body=body, **kwargs)
         )
         return response
 
@@ -2642,7 +2675,7 @@ class RuntimeManager(ServerClient):
         page_size: int = max_paging_size,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "OMAGServers",
-        body: Optional[dict | FilterRequestBody] = None,
+        body: Optional[dict | FilterRequestBody] = None, **kwargs: Unpack[ListFilters],
     ) -> str | list | dict:
         """Returns the list of servers with a particular name.  The name is specified in the filter. Async version.
 
@@ -2661,6 +2694,9 @@ class RuntimeManager(ServerClient):
 
         body : dict | FilterRequestBody, optional
             Request body to pass directly to the API.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -2682,7 +2718,7 @@ class RuntimeManager(ServerClient):
                                                   filter_string=filter_string, start_from=start_from,
                                                   page_size=page_size, graph_query_depth=graph_query_depth,
                                                   output_format=output_format,
-                                                  report_spec=report_spec, body=body)
+                                                  report_spec=report_spec, body=body, **kwargs)
 
     @dynamic_catch
     def get_servers_by_name(
@@ -2692,7 +2728,7 @@ class RuntimeManager(ServerClient):
         page_size: int = 0,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: str | dict = "OMAGServers",
-        body: Optional[dict | SearchStringRequestBody] = None,
+        body: Optional[dict | SearchStringRequestBody] = None, **kwargs: Unpack[ListFilters],
     ) -> str | list | dict:
         """Returns the list of servers with a particular name.  The name is specified in the filter.
 
@@ -2711,6 +2747,9 @@ class RuntimeManager(ServerClient):
 
         body : dict | SearchStringRequestBody, optional
             Request body to pass directly to the API.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -2731,7 +2770,7 @@ class RuntimeManager(ServerClient):
                 graph_query_depth=graph_query_depth,
                 output_format=output_format,
                 report_spec=report_spec,
-                body=body
+                body=body, **kwargs
             )
         )
         return response
@@ -2740,7 +2779,7 @@ class RuntimeManager(ServerClient):
     async def _async_get_servers_by_dep_impl_type(self, filter_string: str,
                                                   start_from: int = 0, page_size: int = 0, output_format:str="JSON",
                                                   report_spec: str = "OMAGServers",
-                                                  body: Optional[dict | FilterRequestBody] = None) -> str | list:
+                                                  body: Optional[dict | FilterRequestBody] = None, **kwargs: Unpack[ListFilters]) -> str | list:
         """Returns the list of servers with a particular deployed implementation type. The value is specified
             in the filter. If it is null, or no request body is supplied, all servers are returned.
             Async version.
@@ -2756,6 +2795,9 @@ class RuntimeManager(ServerClient):
            The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
         body : dict | FilterRequestBody, optional
             Request body to pass directly to the API.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -2778,13 +2820,13 @@ class RuntimeManager(ServerClient):
                                                   _gen_output=self._generate_omag_server_output,
                                                   filter_string=filter_string, start_from=start_from,
                                                   page_size=page_size, output_format=output_format,
-                                                  report_spec=report_spec, body=body)
+                                                  report_spec=report_spec, body=body, **kwargs)
 
 
     @dynamic_catch
     def get_servers_by_dep_impl_type(self, search_string: str = "*", effective_time: Optional[str] = None, start_from: int = 0,
                                      page_size: int = 0, output_format: str = "JSON", report_spec: str | dict = "OMAGServers",
-                                     body: Optional[dict | FilterRequestBody] = None) -> str | list:
+                                     body: Optional[dict | FilterRequestBody] = None, **kwargs) -> str | list:
         """Returns the list of servers with a particular deployed implementation type.
             The value is specified in the filter. If it is null, or no request body is supplied,
             all servers are returned.
@@ -2802,6 +2844,9 @@ class RuntimeManager(ServerClient):
            The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
         body : dict | GetRequestBody, optional
             Request body to pass directly to the API.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -2821,7 +2866,7 @@ class RuntimeManager(ServerClient):
         """
         response = run_sync(
             self._async_get_servers_by_dep_impl_type(search_string, start_from,page_size,
-                                                     output_format, report_spec, body)
+                                                     output_format, report_spec, body, **kwargs)
         )
         return response
 
@@ -2831,7 +2876,7 @@ class RuntimeManager(ServerClient):
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON", report_spec: dict = "OMAGServers",
-        body: Optional[dict | FilterRequestBody] = None,
+        body: Optional[dict | FilterRequestBody] = None, **kwargs: Unpack[ListFilters],
     ) -> str | list:
         """Returns the list of server templates with a particular deployed implementation type.   The value is
             specified in the filter. If it is null, or no request body is supplied, all servers are returned.
@@ -2855,6 +2900,9 @@ class RuntimeManager(ServerClient):
         body : dict | FilterRequestBody, optional
             Request body to pass directly to the API.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         List of JSONdict with the platform reports.
@@ -2871,9 +2919,9 @@ class RuntimeManager(ServerClient):
 
         return await self._async_get_name_request(url, _type="OMAGServers",
                                                   _gen_output=self._generate_omag_server_output,
-                                                  filter_string=filter_string, classification_names=["Template"],
+                                                  filter_string=filter_string, 
                                                   start_from=start_from, page_size=page_size,
-                                                  output_format=output_format, report_spec=report_spec, body=body)
+                                                  output_format=output_format, report_spec=report_spec, body=body, **{"classification_names": ["Template"], **kwargs})
 
 
     def get_server_templates_by_dep_impl_type(
@@ -2882,7 +2930,7 @@ class RuntimeManager(ServerClient):
         start_from: int = 0,
         page_size: int = max_paging_size,
         output_format: str = "JSON", report_spec: dict = "OMAGServers",
-        body: Optional[dict | FilterRequestBody] = None,
+        body: Optional[dict | FilterRequestBody] = None, **kwargs: Unpack[ListFilters],
     ) -> str | list:
         """Returns the list of server templates with a particular deployed implementation type.
             The value is specified in the filter. If it is null, or no request body is supplied,
@@ -2904,6 +2952,9 @@ class RuntimeManager(ServerClient):
         body : dict | FilterRequestBody, optional
             Request body to pass directly to the API.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         List of JSON dict with the platform reports.
@@ -2922,7 +2973,7 @@ class RuntimeManager(ServerClient):
                 page_size=page_size,
                 output_format=output_format,
                 report_spec=report_spec,
-                body=body
+                body=body, **kwargs
             )
         )
         return response
@@ -3391,11 +3442,12 @@ class RuntimeManager(ServerClient):
         """
         run_sync(self._async_delete_metadata_repository_cohort(cohort_guid, body, cascade))
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_get_metadata_repository_cohorts_by_name(
         self,
         name: str = "*",
-        metadata_element_type_name: str | None = "MetadataRepositoryCohort",
+        metadata_element_type: str | None = "MetadataRepositoryCohort",
         metadata_element_subtypes: list[str] | None = None,
         graph_query_depth: int = 3,
         start_from: int = 0,
@@ -3411,7 +3463,7 @@ class RuntimeManager(ServerClient):
         ----------
         name: str, optional
             name to use to find matching cohorts.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             The type of metadata element.
         metadata_element_subtypes : list[str], optional
             The list of subtypes to filter by.
@@ -3428,6 +3480,9 @@ class RuntimeManager(ServerClient):
         body: dict, optional
             Provides a full request body. If specified, the body supercedes other attributes.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         List | str
@@ -3437,7 +3492,7 @@ class RuntimeManager(ServerClient):
         url = f"{self.runtime_command_root}/metadata-repository-cohorts/by-name"
         params = {
             "filter_string": name,
-            "metadata_element_type_name": metadata_element_type_name,
+            "metadata_element_type": metadata_element_type,
             "metadata_element_subtypes": metadata_element_subtypes,
             "graph_query_depth": graph_query_depth,
             "start_from": start_from,
@@ -3456,11 +3511,12 @@ class RuntimeManager(ServerClient):
             **params,
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def get_metadata_repository_cohorts_by_name(
         self,
         name: str = "*",
-        metadata_element_type_name: str | None = "MetadataRepositoryCohort",
+        metadata_element_type: str | None = "MetadataRepositoryCohort",
         metadata_element_subtypes: list[str] | None = None,
         graph_query_depth: int = 3,
         start_from: int = 0,
@@ -3470,14 +3526,19 @@ class RuntimeManager(ServerClient):
         body: Optional[dict | FilterRequestBody] = None,
         **kwargs,
     ) -> list | str:
-        """Returns the list of metadata repository cohorts with a particular name."""
+        """Returns the list of metadata repository cohorts with a particular name.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         return run_sync(
             self._async_get_metadata_repository_cohorts_by_name(
-                name, metadata_element_type_name, metadata_element_subtypes, graph_query_depth,
+                name, metadata_element_type, metadata_element_subtypes, graph_query_depth,
                 start_from, page_size, output_format, report_spec, body, **kwargs
             )
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_find_metadata_repository_cohorts(
         self,
@@ -3485,7 +3546,7 @@ class RuntimeManager(ServerClient):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = "MetadataRepositoryCohort",
+        metadata_element_type: str | None = "MetadataRepositoryCohort",
         metadata_element_subtypes: list[str] | None = None,
         graph_query_depth: int = 3,
         start_from: int = 0,
@@ -3507,7 +3568,7 @@ class RuntimeManager(ServerClient):
             Ends with the supplied string.
         ignore_case : bool, [default=True], optional
             Ignore case when searching.
-        metadata_element_type_name: str, optional
+        metadata_element_type: str, optional
             The type of metadata element to search for.
         metadata_element_subtypes: list[str], optional
             The subtypes of metadata element to search for.
@@ -3524,6 +3585,9 @@ class RuntimeManager(ServerClient):
         body: dict | SearchStringRequestBody, optional
             If provided, the search parameters in the body will supercede other attributes.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         List | str
@@ -3534,7 +3598,7 @@ class RuntimeManager(ServerClient):
             "starts_with": starts_with,
             "ends_with": ends_with,
             "ignore_case": ignore_case,
-            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_type": metadata_element_type,
             "metadata_element_subtypes": metadata_element_subtypes,
             "graph_query_depth": graph_query_depth,
             "start_from": start_from,
@@ -3553,6 +3617,7 @@ class RuntimeManager(ServerClient):
             **params,
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def find_metadata_repository_cohorts(
         self,
@@ -3560,7 +3625,7 @@ class RuntimeManager(ServerClient):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = "MetadataRepositoryCohort",
+        metadata_element_type: str | None = "MetadataRepositoryCohort",
         metadata_element_subtypes: list[str] | None = None,
         graph_query_depth: int = 3,
         start_from: int = 0,
@@ -3570,10 +3635,14 @@ class RuntimeManager(ServerClient):
         body: Optional[dict | SearchStringRequestBody] = None,
         **kwargs,
     ) -> list | str:
-        """Retrieve the list of metadata repository cohorts that contain the search string."""
+        """Retrieve the list of metadata repository cohorts that contain the search string.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+        """
         return run_sync(
             self._async_find_metadata_repository_cohorts(
-                search_string, starts_with, ends_with, ignore_case, metadata_element_type_name,
+                search_string, starts_with, ends_with, ignore_case, metadata_element_type,
                 metadata_element_subtypes, graph_query_depth, start_from, page_size, output_format,
                 report_spec, body, **kwargs
             )
@@ -3587,7 +3656,7 @@ class RuntimeManager(ServerClient):
         output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         body: Optional[dict | GetRequestBody] = None,
-        **kwargs,
+        **kwargs: Unpack[GetFilters],
     ) -> dict | str:
         """Return the properties of a specific metadata repository cohort. Async version.
 
@@ -3603,6 +3672,9 @@ class RuntimeManager(ServerClient):
             The desired output columns/fields to include.
         body: dict | GetRequestBody, optional
             full request body.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -3633,9 +3705,13 @@ class RuntimeManager(ServerClient):
         output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         body: Optional[dict | GetRequestBody] = None,
-        **kwargs,
+        **kwargs: Unpack[GetFilters],
     ) -> dict | str:
-        """Return the properties of a specific metadata repository cohort."""
+        """Return the properties of a specific metadata repository cohort.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
+        """
         return run_sync(
             self._async_get_metadata_repository_cohort_by_guid(
                 guid, graph_query_depth, output_format, report_spec, body, **kwargs
@@ -3872,6 +3948,9 @@ class RuntimeManager(ServerClient):
         body: dict | FilterRequestBody, optional
             - full request specification - if provided, overrides other parameters.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         [dict] | str
@@ -3902,7 +3981,6 @@ class RuntimeManager(ServerClient):
             url,
             _type="Referenceable",
             _gen_output=self._generate_referenceable_output,
-            filter_string=category,
             start_from=start_from,
             page_size=page_size,
             skip_relationships=skip_relationships,
@@ -3910,7 +3988,7 @@ class RuntimeManager(ServerClient):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **kwargs,
+            **{"filter_string": category, **kwargs},
         )
 
     @dynamic_catch
@@ -3949,6 +4027,9 @@ class RuntimeManager(ServerClient):
             Output format set to use. If None, the default output format set is used.
         body: dict | FilterRequestBody, optional
             - full request specification - if provided, overrides other parameters.
+
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------

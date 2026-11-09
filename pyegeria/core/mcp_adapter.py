@@ -173,6 +173,7 @@ def run_report(
     user: Optional[str] = None,
     user_pass: Optional[str] = None,
     token: Optional[str] = None,
+    refresh_spec: bool = False,
 ) -> Dict[str, Any]:
     """
     Execute a format set action as an MCP-style tool. Enforces DICT/ALL by default.
@@ -183,6 +184,10 @@ def run_report(
     as that user instead of falling back to the `user`/`user_pass` service
     account. `user`/`user_pass` remain fully backward compatible when
     `token` is not given.
+
+    RS-EGERIA-TIER: `report` may be tier-addressed (`egeria:<label>`, `builtin:<label>`); pass
+    `refresh_spec=True` to fetch the spec from Egeria for this call. The result carries
+    `spec_source` beside `kind`.
     """
     description = _describe_call(report, params, view_server, view_url, user, user_pass, token)
     print(description, file=sys.stderr)
@@ -198,6 +203,7 @@ def run_report(
         user=user if user is not None else _settings.User_Profile.user_name,
         user_pass=user_pass if user_pass is not None else _settings.User_Profile.user_pwd,
         token=token,
+        refresh_spec=refresh_spec,
     )
 
 async def _async_run_report_tool(

@@ -107,8 +107,14 @@ def test_a_native_count_above_the_cap_is_trusted():
     assert notes == []
 
 
-def test_non_strict_viewer_failure_keeps_its_historical_zero():
-    assert om.count_elements(_mgr(find_error=RuntimeError("boom")), "Asset", population="viewer") == 0
+def test_a_failed_viewer_count_is_none_with_a_note_strict_or_not():
+    # 6.2.28: the non-strict viewer 0 is gone -- a failed query is not "no Assets".
+    for strict in (False, True):
+        with om.recording_unmeasured() as notes:
+            assert om.count_elements(_mgr(find_error=RuntimeError("boom")), "Asset", population="viewer",
+                                     strict=strict) is None
+        assert notes == [{"count": "Asset", "reason": "no native count is available, and the find fallback failed",
+                          "at_least": None}]
 
 
 def test_a_classification_count_names_what_it_counted():
@@ -130,14 +136,45 @@ def test_notes_are_only_kept_inside_a_recording_block():
     assert [n["count"] for n in outer] == ["Process"]
 
 
-def test_a_full_relationship_page_is_not_a_relationship_count():
+def _rel_pages(rows):
+    """get_relationships paging like Egeria: rows from the body's startFrom, then an empty page."""
+    def fake(*a, body=None, **kw):
+        start, size = body["startFrom"], body["pageSize"]
+        return rows[start:start + size]
+    return fake
+
+
+def test_a_viewer_relationship_count_reads_every_page():
+    # A full page is not the last page: the viewer count pages on until Egeria returns an empty page.
     ce = MagicMock()
-    ce.get_relationships.return_value = [{"guid": f"r{i}"} for i in range(CAP)]
+    ce.get_relationships.side_effect = _rel_pages([{"relationshipHeader": {"guid": f"r{i}"}}
+                                                   for i in range(CAP + 247)])
+    with om.recording_unmeasured() as notes:
+        assert om.count_relationships(ce, "SemanticAssignment", population="viewer") == CAP + 247
+    assert notes == []
+    assert [c.kwargs["body"]["startFrom"] for c in ce.get_relationships.call_args_list] == [0, CAP, 2 * CAP]
+
+
+def test_a_relationship_scan_that_cannot_finish_is_not_a_count():
+    # A server that ignores startFrom repeats the page: the count is not measured, never the page.
+    ce = MagicMock()
+    ce.get_relationships.return_value = [{"relationshipHeader": {"guid": f"r{i}"}} for i in range(CAP)]
     with om.recording_unmeasured() as notes:
         assert om.count_relationships(ce, "SemanticAssignment", population="viewer") is None
-    assert notes[0]["count"] == "SemanticAssignment" and notes[0]["at_least"] == CAP
-    ce.get_relationships.return_value = [{"guid": "r1"}]
+    assert notes[0]["count"] == "SemanticAssignment relationships" and notes[0]["at_least"] == CAP
+    ce.get_relationships.reset_mock(return_value=True)
+    ce.get_relationships.side_effect = _rel_pages([{"relationshipHeader": {"guid": "r1"}}])
     assert om.count_relationships(ce, "SemanticAssignment", population="viewer") == 1
+
+
+def test_a_relationship_scan_stops_at_max_scan_pages_and_is_not_measured(monkeypatch):
+    monkeypatch.setattr(om, "MAX_SCAN_PAGES", 3)
+    ce = MagicMock()
+    ce.get_relationships.side_effect = _rel_pages([{"relationshipHeader": {"guid": f"r{i}"}}
+                                                   for i in range(3 * CAP + 1)])
+    with om.recording_unmeasured() as notes:
+        assert om.count_relationships(ce, "SemanticAssignment", population="viewer") is None
+    assert "stopped after 3 pages" in notes[0]["reason"] and notes[0]["at_least"] == 3 * CAP
 
 
 def test_semantic_grounding_no_longer_reports_500_links_100_percent():
@@ -234,7 +271,9 @@ def test_a_viewer_tile_still_says_at_least_500():
 
 
 def test_a_measured_tile_is_unchanged():
-    assert _exec("Analytic Demo - Element Count by Type", type_name="DataStore") == {"kind": "json", "data": 843}
+    out = _exec("Analytic Demo - Element Count by Type", type_name="DataStore")
+    assert out.pop("spec_source")["tier"] == "local"  # RS-EGERIA-TIER: provenance beside kind, not in data
+    assert out == {"kind": "json", "data": 843}
 
 
 def test_the_breakdown_rows_keep_measured_counts_and_name_the_unmeasured_one():

@@ -144,5 +144,7 @@ ___
 
 >	**Description**: The style of layout used to arrange the reports in a dashboard. Validated against Egeria's valid metadata values for layoutStyle.
 
+>	**Valid Values**: tabs; single-column; grid
+
 
 ___

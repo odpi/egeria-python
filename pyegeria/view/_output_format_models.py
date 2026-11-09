@@ -69,7 +69,7 @@ import os
 import warnings
 from pathlib import Path
 from typing import Dict, List, Optional, Union, Any
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, PrivateAttr, field_validator, model_validator
 from loguru import logger
 __all__ = [
     'Column',
@@ -262,28 +262,41 @@ class ActionParameter(BaseModel):
     analytic_function: Optional[str] = None
     analytic_spec_params: Dict[str, Any] = Field(default_factory=dict)
 
-    @model_validator(mode="before")
+    _dropped_binders: List[str] = PrivateAttr(default_factory=list)
+
+    @model_validator(mode="wrap")
     @classmethod
-    def _drop_deprecated_binders(cls, values):
+    def _drop_deprecated_binders(cls, values, handler):
         """Accept and ignore the removed `analytic_binders` key for one release (RS-W2-3 PR-B).
 
         An empty mapping (what older generated specs serialise) is dropped silently. A non-empty
         one is dropped with a DeprecationWarning and a log warning naming the parameters: the
-        routine must declare them as `inputs` instead, or its call will lack them.
+        routine must declare them as `inputs` instead, or its call will lack them. The names are
+        kept on the model (`_dropped_binders`) so the spec resolver can report them as a warning.
+
+        The marker is a private attribute: it survives `model_copy`, but NOT `model_dump` and a
+        reload (`model_validate_json(fs.model_dump_json())` has no marker and so no warning), since
+        the dump no longer holds the key. Resolve the loaded spec, not a serialised copy of it. The
+        EGERIA tier rebuilds its specs from the cached micro-flow text, which keeps the key, so
+        its marker is set afresh on every load.
         """
+        names: List[str] = []
         if isinstance(values, dict) and "analytic_binders" in values:
             values = dict(values)
             binders = values.pop("analytic_binders")
             if binders:
-                names = ", ".join(sorted(binders)) if isinstance(binders, dict) else repr(binders)
+                names = sorted(binders) if isinstance(binders, dict) else [repr(binders)]
                 message = (
-                    f"analytic_binders is no longer supported and is ignored (binders for: {names}). "
+                    f"analytic_binders is no longer supported and is ignored (binders for: {', '.join(names)}). "
                     f"Declare these arguments as the routine's inputs (reader:<name>, viewer, subject, "
                     f"egeria_client:<Class>); the environment's role supply provides them. "
                     f"The key will be refused in a later release.")
                 warnings.warn(message, DeprecationWarning, stacklevel=2)
                 logger.warning(message)
-        return values
+        model = handler(values)
+        if names:
+            model._dropped_binders = names
+        return model
 
     @model_validator(mode="before")
     @classmethod

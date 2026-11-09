@@ -193,6 +193,7 @@ dependencies = [
     gen_md_cmd_templates = "commands.tech.generate_md_cmd_templates:main"
     gen_dr_help = "commands.tech.generate_dr_help:main"
     refresh_specs = "commands.tech.refresh_specs:main"
+    pyegeria = "commands.tech.report_specs:main"
     dr_egeria_spec_editor = "commands.tech.spec_editor:main"
 
 # pyegeria's own analytic demo specs load through the same entry-point group as any
@@ -242,6 +243,7 @@ namespaces = false
 ]
 "my_egeria" = ["**/*.tcss"]
 "commands" = ["tech/spec_editor_static/*"]
+"pyegeria" = ["view/schemas/*.json"]
 
 
 [project.optional-dependencies]

@@ -136,7 +136,11 @@ def test_report_spec_body():
     attributes["Aliases"] = {"value": ["Glossary List"]}
     body = set_collection_manager_body("ReportSpec", "ReportSpec::Glossaries", attributes)
     assert body["class"] == "ReportSpecProperties"
-    assert body["microflow"] == '[{"function": "find_glossaries"}]'
+    # RS-EGERIA-TIER: a bare list (format 0) is written as microflow/1
+    assert json.loads(body["microflow"]) == {"format": "microflow/1", "params": {},
+                                             "stages": [{"stage": "producer/find", "function": "find_glossaries",
+                                                         "params": {}}],
+                                             "formatters": {}}
     assert body["targetTypeName"] == "Glossary"
     assert body["outputTypes"] == ["MD", "JSON"]
     assert body["includePreamble"] is False
@@ -303,3 +307,60 @@ def test_dispatcher_routes_to_the_right_processor(command, expected):
     cls = dispatcher.resolve_processor_class(
         DrECommand(verb=verb, object_type=object_type, attributes={}, raw_block=""))
     assert cls is not None and cls.__name__ == expected, (command, cls)
+
+
+# ------------------------------------------------------------------ Report Spec microflow/1 (RS-EGERIA-TIER)
+
+_E_COLLECTIONS_FORMAT0 = json.dumps([{
+    "stage": "producer/find", "type": "Collection", "function": "CollectionManager.find_collections",
+    "params": {"search_string": "$search_string"}, "required_params": ["search_string"],
+    "optional_params": ["page_size", "start_from"], "out": "CollectionRow",
+    "columns": ["display_name", "qualified_name"]}])
+
+
+def test_report_spec_microflow_bare_list_is_converted_with_microflow_from_legacy():
+    from pyegeria.view.microflow import microflow_from_legacy
+    body = set_collection_manager_body("ReportSpec", "ReportSpec::E-Collections",
+                                       _a(Display_Name="E-Collections", Microflow=_E_COLLECTIONS_FORMAT0))
+    stored = json.loads(body["microflow"])
+    assert stored == json.loads(microflow_from_legacy(json.loads(_E_COLLECTIONS_FORMAT0)).to_json())
+    assert stored["format"] == "microflow/1"
+    assert stored["params"]["search_string"]["required"] is True
+    assert stored["formatters"]["ALL"]["columns"] == ["display_name", "qualified_name"]
+
+
+def test_report_spec_microflow_object_is_validated_and_kept():
+    obj = {"format": "microflow/1", "params": {"search_string": {"type": "string", "required": True}},
+           "stages": [{"stage": "producer/find", "function": "CollectionManager.find_collections",
+                       "params": {"search_string": "$search_string"}}],
+           "formatters": {"DICT": {"columns": [{"field": "display_name", "label": "Display Name"}]}}}
+    body = set_collection_manager_body("ReportSpec", "ReportSpec::X",
+                                       _a(Display_Name="X", Microflow=json.dumps(obj)))
+    assert json.loads(body["microflow"]) == obj
+
+
+@pytest.mark.parametrize("text,words", [
+    ("[{not json", "not valid JSON"),
+    ('{"format": "microflow/7", "stages": []}', "unknown microflow format"),
+    ('{"format": "microflow/1", "stages": [{"stage": "producer/find"}], "extra": 1}', "not valid"),
+])
+def test_report_spec_microflow_invalid_is_an_error_with_words(text, words):
+    with pytest.raises(ValueError, match=f"Microflow: .*{words}"):
+        set_collection_manager_body("ReportSpec", "ReportSpec::X", _a(Display_Name="X", Microflow=text))
+
+
+def test_report_spec_microflow_error_fails_preflight_validation():
+    from md_processing.v2.collection_manager_processor import CollectionManagerProcessor
+    p, _ = _processor(CollectionManagerProcessor, "Create", "Report Spec", "ReportSpec",
+                      _a(Display_Name="X", Microflow="[{not json"))
+    p.canonical_object_type = "Report Spec"
+    errors = p.check_parsed_attributes(p.parsed_output["attributes"])
+    assert len(errors) == 1 and "Report Spec 'X': Microflow: the microflow is not valid JSON" in errors[0]
+    ok, _ = _processor(CollectionManagerProcessor, "Create", "Report Spec", "ReportSpec",
+                       _a(Display_Name="X", Microflow=_E_COLLECTIONS_FORMAT0))
+    ok.canonical_object_type = "Report Spec"
+    assert ok.check_parsed_attributes(ok.parsed_output["attributes"]) == []
+    other, _ = _processor(CollectionManagerProcessor, "Create", "Collection Folder", "CollectionFolder",
+                          _a(Display_Name="X", Microflow="[{not json"))
+    other.canonical_object_type = "Collection Folder"
+    assert other.check_parsed_attributes(other.parsed_output["attributes"]) == []

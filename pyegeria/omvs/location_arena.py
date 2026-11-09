@@ -9,6 +9,7 @@ Copyright Contributors to the ODPi Egeria project.
 import asyncio
 from typing import Optional
 
+from pyegeria.core.request_filters import deprecated_names
 from pyegeria.core._server_client import ServerClient
 from pyegeria.view.base_report_formats import get_report_spec_match
 from pyegeria.view.base_report_formats import select_report_spec
@@ -957,6 +958,7 @@ class LocationArena(ServerClient):
         """
         run_sync(self._async_delete_location(location_guid, body, cascade))
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_find_locations(
         self,
@@ -964,7 +966,7 @@ class LocationArena(ServerClient):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = "Location",
+        metadata_element_type: str | None = "Location",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -991,7 +993,7 @@ class LocationArena(ServerClient):
             Ends with the supplied string
         ignore_case : bool, [default=True], optional
             Ignore case when searching
-        metadata_element_type_name: str, optional
+        metadata_element_type: str, optional
             The type of metadata element to search for.
         metadata_element_subtypes: list[str], optional
             The subtypes of metadata element to search for.
@@ -1018,6 +1020,9 @@ class LocationArena(ServerClient):
         body: dict | SearchStringRequestBody, optional
             - if provided, the search parameters in the body will supercede other attributes.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         List | str
@@ -1029,7 +1034,7 @@ class LocationArena(ServerClient):
             "starts_with": starts_with,
             "ends_with": ends_with,
             "ignore_case": ignore_case,
-            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_type": metadata_element_type,
             "metadata_element_subtypes": metadata_element_subtypes,
             "include_only_relationships": include_only_relationships,
             "skip_relationships": skip_relationships,
@@ -1053,6 +1058,7 @@ class LocationArena(ServerClient):
             **params,
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def find_locations(
         self,
@@ -1060,7 +1066,7 @@ class LocationArena(ServerClient):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = "Location",
+        metadata_element_type: str | None = "Location",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -1087,7 +1093,7 @@ class LocationArena(ServerClient):
             Ends with the supplied string
         ignore_case : bool, [default=True], optional
             Ignore case when searching
-        metadata_element_type_name: str, optional
+        metadata_element_type: str, optional
             The type of metadata element to search for.
         metadata_element_subtypes: list[str], optional
             The subtypes of metadata element to search for.
@@ -1114,6 +1120,9 @@ class LocationArena(ServerClient):
         body: dict | SearchStringRequestBody, optional
             - if provided, the search parameters in the body will supercede other attributes.
 
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
         Returns
         -------
         List | str
@@ -1124,7 +1133,7 @@ class LocationArena(ServerClient):
                 starts_with=starts_with,
                 ends_with=ends_with,
                 ignore_case=ignore_case,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,
@@ -1141,11 +1150,12 @@ class LocationArena(ServerClient):
             )
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_get_locations_by_name(
         self,
         name: str = None,
-        metadata_element_type_name: str | None = "Location",
+        metadata_element_type: str | None = "Location",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -1163,7 +1173,7 @@ class LocationArena(ServerClient):
         ----------
         name: str, optional
             name to use to find matching locations.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             The type of metadata element.
         metadata_element_subtypes : list[str], optional
             The list of subtypes to filter by.
@@ -1184,6 +1194,9 @@ class LocationArena(ServerClient):
         body: dict, optional
             Provides a full request body. If specified, the body supercedes other attributes.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         List | str
@@ -1201,7 +1214,7 @@ class LocationArena(ServerClient):
         url = f"{self.ref_location_command_base}/locations/by-name"
         params = {
             "filter_string": name,
-            "metadata_element_type_name": metadata_element_type_name,
+            "metadata_element_type": metadata_element_type,
             "metadata_element_subtypes": metadata_element_subtypes,
             "include_only_relationships": include_only_relationships,
             "skip_relationships": skip_relationships,
@@ -1222,10 +1235,11 @@ class LocationArena(ServerClient):
             **params,
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     def get_locations_by_name(
         self,
         name: str = None,
-        metadata_element_type_name: str | None = "Location",
+        metadata_element_type: str | None = "Location",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -1243,7 +1257,7 @@ class LocationArena(ServerClient):
         ----------
         name: str, optional
             name to use to find matching locations.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             The type of metadata element.
         metadata_element_subtypes : list[str], optional
             The list of subtypes to filter by.
@@ -1264,6 +1278,9 @@ class LocationArena(ServerClient):
         body: dict, optional
             Provides a full request body. If specified, the body supercedes other attributes.
 
+        Accepts the standard list filters as keyword arguments (see ``ListFilters``
+        in ``pyegeria.core.request_filters``).
+
         Returns
         -------
         List | str
@@ -1282,7 +1299,7 @@ class LocationArena(ServerClient):
         return run_sync(
             self._async_get_locations_by_name(
                 name=name,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,
@@ -1326,6 +1343,9 @@ class LocationArena(ServerClient):
             The desired output columns/fields to include.
         body: dict | GetRequestBody, optional
             full request body.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
@@ -1380,6 +1400,9 @@ class LocationArena(ServerClient):
             The desired output columns/fields to include.
         body: dict | GetRequestBody, optional
             full request body.
+
+        Accepts the standard get filters as keyword arguments (see ``GetFilters``
+        in ``pyegeria.core.request_filters``).
 
         Returns
         -------
