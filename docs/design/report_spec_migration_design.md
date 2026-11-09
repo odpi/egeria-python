@@ -27,6 +27,31 @@ Phase 2 (§6 "What we defer") — migrating `formats`, `action`, `target_type`,
 and `family` off the file, plus `refresh_specs --push` — has not been
 started.
 
+### Status against RS Wave 2 (2026-11)
+
+Report-spec Wave 2 (pyegeria 6.2.25 to 6.2.27) did not start Phase 2 and changed none of the
+Egeria mapping in this document, which is still correct for question specs. What it changed is
+what a spec's `action` *means*, which §1 and the §6 Phase 2 field list (`formats`, `action`,
+`target_type`, `family`) do not yet say:
+
+- **Routine declarations live in the registry, not in the spec.** An `action` names a routine
+  (`analytic_function`) or a find method (`function`). What the routine takes (`inputs` by role,
+  `params` with a `category`), how it is reached (`bindings`) and what it returns (`out`) are
+  declared on its registry entry (`AnalyticFunctionSpec` / `RoutineDeclaration`,
+  `pyegeria/view/analytic_registry.py`). A Phase 2 move of `action` into Egeria therefore moves a
+  *name* and its parameters, and the routine declarations stay in the registry.
+- **Resolution runs at load.** `pyegeria/view/spec_resolver.py` checks every spec when it is
+  loaded and lists the ones that cannot run, with words (`list_report_specs(with_status=True)`).
+  Any Egeria-held `action` would be resolved the same way.
+- **Non-JSON arguments are supplied by role.** The executor asks a `RoleSupply` for a routine's
+  declared inputs (`pyegeria/view/role_supply.py`); `analytic_binders` is removed.
+- **Phase 2 is still not started.** Nothing in `formats`, `action`, `target_type` or `family`
+  moved to Egeria.
+
+The Wave 2 design is in egeria-workspaces `portal-docs/Internals/report-spec-pipeline-model.md`;
+the user-facing description is [Routines, declarations and roles](../output-formats-and-report-specs.md#routines-declarations-and-roles)
+and [Will this spec run?](../output-formats-and-report-specs.md#will-this-spec-run-load-time-resolution).
+
 ---
 
 ## 1. Current Architecture Summary
