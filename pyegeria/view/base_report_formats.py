@@ -628,8 +628,11 @@ COMMON_ANNOTATIONS = {
 
 TIME_PARAMETERS = ["as_of_time", "effective_time"]
 
-#: The Asset-Graph spec's columns: the asset's own fields, then the graphs get_asset_graph_by_guid
-#: returns at the top level of its response (keys as Egeria writes them).
+from pyegeria.view.asset_graph import EDGE_COLUMNS as ASSET_GRAPH_EDGE_COLUMNS  # noqa: E402
+from pyegeria.view.asset_graph import NODE_COLUMNS as ASSET_GRAPH_NODE_COLUMNS  # noqa: E402
+
+#: The Asset-Graph spec's REPORT/MD/HTML/JSON columns: the asset's own fields, then the graphs
+#: get_asset_graph_by_guid returns at the top level of its response (keys as Egeria writes them).
 ASSET_GRAPH_COLUMNS = COMMON_COLUMNS + COMMON_METADATA_COLUMNS + [
     Column(name="Classifications", key='classifications'),
     Column(name="Created By", key='created_by'),
@@ -1419,27 +1422,26 @@ base_report_specs = FormatSetDict({
         target_type="Asset",
         heading="Asset Graph",
         description=("An asset, the elements anchored to it and their relationships, as Egeria's asset graph "
-                     "(AssetCatalog.get_asset_graph_by_guid): the asset's own fields and its mermaid graphs."),
+                     "(AssetCatalog.get_asset_graph_by_guid)."),
         annotations={},  # No specific annotations
         family="AssetCatalog",
-        # One element (the asset) with its graphs. Declared formats only (6.2.28): ALL, MD, FORM and LIST
-        # are left out on purpose. MD and FORM are Dr.Egeria update forms ("Update Asset"), which do not
-        # fit a read-only graph view; LIST is a markdown table, where a mermaid graph cannot render; and
-        # ALL, requested as an output format, rendered only the asset's name. Asking for one of them is
-        # an error with words (the executor lists the formats this spec declares), never a silent None.
+        # A graph has a shape per output format (6.2.28; pyegeria/view/asset_graph.py):
+        # - DICT/TABLE: one row per edge (from element, relationship type, to element), the asset's own
+        #   relationships included, sorted, each relationship once;
+        # - LIST: the nodes (the asset, its anchored elements, every element an edge reaches);
+        # - REPORT/MD/HTML: the asset summary, its graph(s) and the edge table;
+        # - MERMAID: the graph;
+        # - JSON: the full graph response.
+        # FORM is not declared: it is a Dr.Egeria update form, which a read-only graph does not fit. ALL is
+        # not declared either, so a format not listed here is an error with words (the executor names the
+        # declared formats), never a silent None and never one row of mermaid text.
         formats=[
-            Format(
-                types=["DICT", "TABLE", "JSON"],
-                attributes=ASSET_GRAPH_COLUMNS,
-            ),
-            Format(
-                types=["REPORT", "HTML"],
-                attributes=ASSET_GRAPH_COLUMNS,
-            ),
-            Format(
-                types=["MERMAID"],
-                attributes=[Column(name="Mermaid Graph", key='mermaidGraph')],
-            ),
+            Format(types=["DICT", "TABLE"],
+                   attributes=[Column(name=label, key=key) for label, key in ASSET_GRAPH_EDGE_COLUMNS]),
+            Format(types=["LIST"],
+                   attributes=[Column(name=label, key=key) for label, key in ASSET_GRAPH_NODE_COLUMNS]),
+            Format(types=["REPORT", "MD", "HTML", "JSON"], attributes=ASSET_GRAPH_COLUMNS),
+            Format(types=["MERMAID"], attributes=[Column(name="Mermaid Graph", key='mermaidGraph')]),
         ],
         action=ActionParameter(
             # ServerClient.get_asset_graph no longer exists; the asset graph is AssetCatalog's

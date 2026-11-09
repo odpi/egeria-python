@@ -382,8 +382,9 @@ def markdown_to_html(markdown_text: str) -> str:
     Returns:
         HTML string
     """
-    # Initialize markdown-it
-    md = MarkdownIt()
+    # Initialize markdown-it. The CommonMark preset leaves GFM tables off, so markdown tables (the
+    # Asset-Graph edge table, LIST tables) came out as text; the page's CSS already styles tables.
+    md = MarkdownIt().enable("table")
 
     # Find all mermaid code blocks
     mermaid_blocks = re.findall(r'```mermaid\n(.*?)\n```', markdown_text, re.DOTALL)

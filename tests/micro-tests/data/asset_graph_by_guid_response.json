@@ -1,5 +1,5 @@
 {
- "_recorded": "AssetCatalog.get_asset_graph_by_guid(output_format='JSON') against qs-view-server, 2026-11-09, read only; relationships trimmed to the first of 4",
+ "_recorded": "AssetCatalog.get_asset_graph_by_guid(output_format='JSON') against qs-view-server, 2026-11-09, read only, complete (4 relationships, the asset's own governedBy and requestedActions, 1 anchored element)",
  "response": {
   "class": "AssetGraph",
   "elementHeader": {
@@ -90,6 +90,146 @@
    "startTime": "2026-11-09T11:05:17.104+00:00",
    "activityStatus": "IN_PROGRESS"
   },
+  "requestedActions": [
+   {
+    "class": "RelatedMetadataElementSummary",
+    "relationshipHeader": {
+     "class": "ElementHeader",
+     "headerVersion": 0,
+     "status": "ACTIVE",
+     "type": {
+      "typeId": "a0b7ba50-4c97-4b76-9a7d-c6a00e1be646",
+      "typeName": "ActionRequester",
+      "superTypeNames": [
+       "LineageRelationship",
+       "LabeledRelationship"
+      ],
+      "typeVersion": 2,
+      "typeDescription": "The source of the action, such as a person, meeting or a governance action.",
+      "typeCategory": "RELATIONSHIP_DEF"
+     },
+     "origin": {
+      "sourceServer": "qs-metadata-store",
+      "originCategory": "LOCAL_COHORT",
+      "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+      "homeMetadataCollectionName": "qs-metadata-store"
+     },
+     "versions": {
+      "createdBy": "baudotnpa",
+      "updatedBy": "baudotnpa",
+      "maintainedBy": [
+       "baudotnpa"
+      ],
+      "createTime": "2026-11-09T11:05:15.883+00:00",
+      "updateTime": "2026-11-09T11:05:15.883+00:00",
+      "version": 1,
+      "lastRequestId": "669900de-7c7d-4916-8290-815f1547fd78"
+     },
+     "guid": "5342dbf4-07db-4e63-95a2-9ed274c8e72f"
+    },
+    "relatedElement": {
+     "elementHeader": {
+      "class": "ElementHeader",
+      "headerVersion": 0,
+      "status": "ACTIVE",
+      "type": {
+       "typeId": "c976d88a-2b11-4b40-b972-c38d41bfc6be",
+       "typeName": "EngineAction",
+       "superTypeNames": [
+        "Action",
+        "Process",
+        "Asset",
+        "Referenceable",
+        "OpenMetadataRoot"
+       ],
+       "typeVersion": 2,
+       "typeDescription": "An engine action that has been created to support the active governance of the open metadata ecosystem and/or digital landscape.",
+       "typeCategory": "ENTITY_DEF"
+      },
+      "origin": {
+       "sourceServer": "qs-metadata-store",
+       "originCategory": "LOCAL_COHORT",
+       "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+       "homeMetadataCollectionName": "qs-metadata-store"
+      },
+      "versions": {
+       "createdBy": "baudotnpa",
+       "updatedBy": "egeriagovernanceengine",
+       "maintainedBy": [
+        "baudotnpa",
+        "egeriagovernanceengine"
+       ],
+       "createTime": "2026-11-09T11:05:13.379+00:00",
+       "updateTime": "2026-11-09T11:05:17.141+00:00",
+       "version": 4,
+       "lastRequestId": "7807c843-3774-40b4-bd2c-31460308ebb9"
+      },
+      "guid": "1de658d3-6af5-4c32-b915-5fb6bd5bb524",
+      "anchor": {
+       "class": "ElementClassification",
+       "headerVersion": 0,
+       "status": "ACTIVE",
+       "type": {
+        "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+        "typeName": "Anchors",
+        "typeVersion": 1,
+        "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+        "typeCategory": "CLASSIFICATION_DEF"
+       },
+       "origin": {
+        "sourceServer": "qs-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+        "homeMetadataCollectionName": "qs-metadata-store"
+       },
+       "versions": {
+        "createdBy": "baudotnpa",
+        "updatedBy": "baudotnpa",
+        "maintainedBy": [
+         "baudotnpa"
+        ],
+        "createTime": "2026-11-09T11:05:13.365+00:00",
+        "updateTime": "2026-11-09T11:05:13.365+00:00",
+        "version": 1,
+        "lastRequestId": "669900de-7c7d-4916-8290-815f1547fd78"
+       },
+       "classificationOrigin": "ASSIGNED",
+       "classificationName": "Anchors",
+       "classificationProperties": {
+        "class": "AnchorsProperties",
+        "typeName": "Anchors",
+        "anchorGUID": "bf1d5f61-9d79-41bc-a89a-d863222585ff",
+        "anchorTypeName": "GovernanceActionProcessInstance",
+        "anchorDomainName": "Asset"
+       }
+      }
+     },
+     "properties": {
+      "class": "EngineActionProperties",
+      "typeName": "EngineAction",
+      "qualifiedName": "ProvisioningActionProcess::provisioningGovernanceActionType::95ff50a4-13fe-4479-90f2-22d4c9c48ad9:processStep1::16383ead-5a2b-480b-a1fe-cfb1b9e422bf",
+      "displayName": "provision-subscription (EgeriaGovernance)",
+      "description": "Governance Action Service that provisions the data identified in a digital subscription to the requested destination.",
+      "requestedStartTime": "2026-11-09T11:05:13.136+00:00",
+      "startTime": "2026-11-09T11:05:17.104+00:00",
+      "activityStatus": "IN_PROGRESS",
+      "domainIdentifier": 8,
+      "executorEngineGUID": "81d0292d-f074-41e3-93ec-dbecc45cc0c1",
+      "executorEngineName": "EgeriaGovernance",
+      "processName": "ProvisioningActionProcess::provisioningGovernanceActionType::95ff50a4-13fe-4479-90f2-22d4c9c48ad9@1794222312842::77bd32e3-074f-4405-98c0-8df53021a9df",
+      "processStepGUID": "83306c9d-d122-48bb-8861-519cf03ddc2b",
+      "processStepName": "ProvisioningActionProcess::provisioningGovernanceActionType::95ff50a4-13fe-4479-90f2-22d4c9c48ad9:processStep1",
+      "requesterUserId": "baudotnpa",
+      "requestType": "provision-subscription",
+      "requestParameters": {
+       "topLevelProcessLineageOnly": "true"
+      },
+      "processingEngineUserId": "egeriagovernanceengine"
+     }
+    },
+    "relatedElementAtEnd1": false
+   }
+  ],
   "governedBy": [
    {
     "class": "RelatedMetadataElementSummary",
@@ -213,6 +353,108 @@
      }
     },
     "relatedElementAtEnd1": false
+   }
+  ],
+  "anchoredElements": [
+   {
+    "elementHeader": {
+     "class": "ElementHeader",
+     "headerVersion": 0,
+     "status": "ACTIVE",
+     "type": {
+      "typeId": "c976d88a-2b11-4b40-b972-c38d41bfc6be",
+      "typeName": "EngineAction",
+      "superTypeNames": [
+       "Action",
+       "Process",
+       "Asset",
+       "Referenceable",
+       "OpenMetadataRoot"
+      ],
+      "typeVersion": 2,
+      "typeDescription": "An engine action that has been created to support the active governance of the open metadata ecosystem and/or digital landscape.",
+      "typeCategory": "ENTITY_DEF"
+     },
+     "origin": {
+      "sourceServer": "qs-metadata-store",
+      "originCategory": "LOCAL_COHORT",
+      "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+      "homeMetadataCollectionName": "qs-metadata-store"
+     },
+     "versions": {
+      "createdBy": "baudotnpa",
+      "updatedBy": "egeriagovernanceengine",
+      "maintainedBy": [
+       "baudotnpa",
+       "egeriagovernanceengine"
+      ],
+      "createTime": "2026-11-09T11:05:13.379+00:00",
+      "updateTime": "2026-11-09T11:05:17.141+00:00",
+      "version": 4,
+      "lastRequestId": "7807c843-3774-40b4-bd2c-31460308ebb9"
+     },
+     "guid": "1de658d3-6af5-4c32-b915-5fb6bd5bb524",
+     "anchor": {
+      "class": "ElementClassification",
+      "headerVersion": 0,
+      "status": "ACTIVE",
+      "type": {
+       "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+       "typeName": "Anchors",
+       "typeVersion": 1,
+       "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+       "typeCategory": "CLASSIFICATION_DEF"
+      },
+      "origin": {
+       "sourceServer": "qs-metadata-store",
+       "originCategory": "LOCAL_COHORT",
+       "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+       "homeMetadataCollectionName": "qs-metadata-store"
+      },
+      "versions": {
+       "createdBy": "baudotnpa",
+       "updatedBy": "baudotnpa",
+       "maintainedBy": [
+        "baudotnpa"
+       ],
+       "createTime": "2026-11-09T11:05:13.365+00:00",
+       "updateTime": "2026-11-09T11:05:13.365+00:00",
+       "version": 1,
+       "lastRequestId": "669900de-7c7d-4916-8290-815f1547fd78"
+      },
+      "classificationOrigin": "ASSIGNED",
+      "classificationName": "Anchors",
+      "classificationProperties": {
+       "class": "AnchorsProperties",
+       "typeName": "Anchors",
+       "anchorGUID": "bf1d5f61-9d79-41bc-a89a-d863222585ff",
+       "anchorTypeName": "GovernanceActionProcessInstance",
+       "anchorDomainName": "Asset"
+      }
+     }
+    },
+    "properties": {
+     "class": "EngineActionProperties",
+     "typeName": "EngineAction",
+     "qualifiedName": "ProvisioningActionProcess::provisioningGovernanceActionType::95ff50a4-13fe-4479-90f2-22d4c9c48ad9:processStep1::16383ead-5a2b-480b-a1fe-cfb1b9e422bf",
+     "displayName": "provision-subscription (EgeriaGovernance)",
+     "description": "Governance Action Service that provisions the data identified in a digital subscription to the requested destination.",
+     "requestedStartTime": "2026-11-09T11:05:13.136+00:00",
+     "startTime": "2026-11-09T11:05:17.104+00:00",
+     "activityStatus": "IN_PROGRESS",
+     "domainIdentifier": 8,
+     "executorEngineGUID": "81d0292d-f074-41e3-93ec-dbecc45cc0c1",
+     "executorEngineName": "EgeriaGovernance",
+     "processName": "ProvisioningActionProcess::provisioningGovernanceActionType::95ff50a4-13fe-4479-90f2-22d4c9c48ad9@1794222312842::77bd32e3-074f-4405-98c0-8df53021a9df",
+     "processStepGUID": "83306c9d-d122-48bb-8861-519cf03ddc2b",
+     "processStepName": "ProvisioningActionProcess::provisioningGovernanceActionType::95ff50a4-13fe-4479-90f2-22d4c9c48ad9:processStep1",
+     "requesterUserId": "baudotnpa",
+     "requestType": "provision-subscription",
+     "requestParameters": {
+      "topLevelProcessLineageOnly": "true"
+     },
+     "processingEngineUserId": "egeriagovernanceengine"
+    }
    }
   ],
   "relationships": [
@@ -469,6 +711,557 @@
       "qualifiedName": "PostgreSQL Tabular Data Set Collection::Coco PostgreSQL Server 1::subscription_staging.coco_austin_haz_mat__goods_inventory_stock",
       "displayName": "subscription_staging.coco_austin_haz_mat__goods_inventory_stock",
       "description": "Austin HazMat Inventory (Coco core) copy of the Goods Inventory Stock digital product.  Hazardous Material Holdings depends on it (hazardous holdings).",
+      "versionIdentifier": "V1.0",
+      "deployedImplementationType": "PostgreSQL Tabular Data Set Collection",
+      "contentStatus": "ACTIVE"
+     }
+    },
+    "relatedElementAtEnd1": false,
+    "startingElementGUID": "1de658d3-6af5-4c32-b915-5fb6bd5bb524"
+   },
+   {
+    "class": "RelatedMetadataNodeSummary",
+    "relationshipHeader": {
+     "class": "ElementHeader",
+     "headerVersion": 0,
+     "status": "ACTIVE",
+     "type": {
+      "typeId": "a0b7ba50-4c97-4b76-9a7d-c6a00e1be646",
+      "typeName": "ActionRequester",
+      "superTypeNames": [
+       "LineageRelationship",
+       "LabeledRelationship"
+      ],
+      "typeVersion": 2,
+      "typeDescription": "The source of the action, such as a person, meeting or a governance action.",
+      "typeCategory": "RELATIONSHIP_DEF"
+     },
+     "origin": {
+      "sourceServer": "qs-metadata-store",
+      "originCategory": "LOCAL_COHORT",
+      "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+      "homeMetadataCollectionName": "qs-metadata-store"
+     },
+     "versions": {
+      "createdBy": "baudotnpa",
+      "updatedBy": "baudotnpa",
+      "maintainedBy": [
+       "baudotnpa"
+      ],
+      "createTime": "2026-11-09T11:05:14.327+00:00",
+      "updateTime": "2026-11-09T11:05:14.327+00:00",
+      "version": 1,
+      "lastRequestId": "669900de-7c7d-4916-8290-815f1547fd78"
+     },
+     "guid": "070c3f4b-3899-41ab-95b3-02d93ac26a02"
+    },
+    "relatedElement": {
+     "elementHeader": {
+      "class": "ElementHeader",
+      "headerVersion": 0,
+      "status": "ACTIVE",
+      "type": {
+       "typeId": "759da11b-ebb6-4382-bdc9-72adc7c922db",
+       "typeName": "IntegrationConnector",
+       "superTypeNames": [
+        "DeployedConnector",
+        "DeployedSoftwareComponent",
+        "Process",
+        "Asset",
+        "Referenceable",
+        "OpenMetadataRoot"
+       ],
+       "typeVersion": 1,
+       "typeDescription": "A definition to control the execution of an integration connector.",
+       "typeCategory": "ENTITY_DEF"
+      },
+      "origin": {
+       "sourceServer": "qs-metadata-store",
+       "originCategory": "CONTENT_PACK",
+       "homeMetadataCollectionId": "e8e06304-2eb9-4ebe-bb8c-1ae44635244b",
+       "homeMetadataCollectionName": "OpenMetadataDigitalProductsContentPack",
+       "license": "Apache 2.0"
+      },
+      "versions": {
+       "createdBy": "Egeria Project",
+       "updatedBy": "Egeria Project",
+       "maintainedBy": [
+        "Egeria Project"
+       ],
+       "createTime": "2026-04-01T06:45:49.989+00:00",
+       "updateTime": "2026-04-01T06:45:49.989+00:00",
+       "version": 1790859400371
+      },
+      "guid": "fed3e17d-6aa0-4959-8af4-a2cbfde1717b",
+      "anchor": {
+       "class": "ElementClassification",
+       "headerVersion": 0,
+       "status": "ACTIVE",
+       "type": {
+        "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+        "typeName": "Anchors",
+        "typeVersion": 1,
+        "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+        "typeCategory": "CLASSIFICATION_DEF"
+       },
+       "origin": {
+        "sourceServer": "qs-metadata-store",
+        "originCategory": "CONTENT_PACK",
+        "homeMetadataCollectionId": "e8e06304-2eb9-4ebe-bb8c-1ae44635244b",
+        "homeMetadataCollectionName": "OpenMetadataDigitalProductsContentPack"
+       },
+       "versions": {
+        "createdBy": "Egeria Project",
+        "updatedBy": "Egeria Project",
+        "maintainedBy": [
+         "Egeria Project"
+        ],
+        "createTime": "2026-04-01T06:45:49.989+00:00",
+        "updateTime": "2026-04-01T06:45:49.989+00:00",
+        "version": 1790859400371
+       },
+       "classificationOrigin": "ASSIGNED",
+       "classificationName": "Anchors",
+       "classificationProperties": {
+        "class": "AnchorsProperties",
+        "typeName": "Anchors",
+        "anchorTypeName": "IntegrationConnector",
+        "anchorDomainName": "Asset"
+       }
+      },
+      "usageActivity": {
+       "class": "ElementClassification",
+       "headerVersion": 0,
+       "status": "ACTIVE",
+       "type": {
+        "typeId": "cfae23a1-8020-431f-a603-1f1bb0e01cb3",
+        "typeName": "UsageActivity",
+        "typeVersion": 1,
+        "typeDescription": "Describes the usage activity around an anchor element and its anchored elements: how often it is explicitly retrieved, found through searches, has its properties updated, and has its attachments and feedback updated or deleted.",
+        "typeCategory": "CLASSIFICATION_DEF"
+       },
+       "origin": {
+        "sourceServer": "qs-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+        "homeMetadataCollectionName": "qs-metadata-store"
+       },
+       "versions": {
+        "createdBy": "pepysnpa",
+        "updatedBy": "pepysnpa",
+        "maintainedBy": [
+         "pepysnpa"
+        ],
+        "createTime": "2026-11-07T16:19:11.579+00:00",
+        "updateTime": "2026-11-09T00:18:04.593+00:00",
+        "version": 13,
+        "lastRequestId": "5736f99b-3be0-4707-bd0f-d18943a85043"
+       },
+       "classificationOrigin": "ASSIGNED",
+       "classificationName": "UsageActivity",
+       "classificationProperties": {
+        "class": "UsageActivityProperties",
+        "typeName": "UsageActivity",
+        "explicitGetCount": 68,
+        "findCount": 516,
+        "updatePropertyCount": 0,
+        "updateAttachmentCount": 67,
+        "updateFeedbackCount": 0,
+        "deleteAttachmentCount": 0,
+        "deleteFeedbackCount": 0
+       }
+      }
+     },
+     "properties": {
+      "class": "IntegrationConnectorProperties",
+      "typeName": "IntegrationConnector",
+      "qualifiedName": "Egeria:IntegrationGroup:Jacquard::BaudotDigitalProductSubscriptionManagerIntegrationConnector",
+      "displayName": "BaudotDigitalProductSubscriptionManagerIntegrationConnector",
+      "description": "Notifies the subscribers of the digital products' notification types, on its refresh cycle and as their monitored resources change.",
+      "versionIdentifier": "6.3-SNAPSHOT",
+      "category": "Egeria-Supplied Connectors",
+      "resourceName": "org.odpi.openmetadata.adapters.connectors.baudot.BaudotSubscriptionManagementProvider",
+      "deployedImplementationType": "Integration Connector",
+      "activityStatus": "IN_PROGRESS"
+     }
+    },
+    "relatedElementAtEnd1": true,
+    "startingElementGUID": "1de658d3-6af5-4c32-b915-5fb6bd5bb524"
+   },
+   {
+    "class": "RelatedMetadataNodeSummary",
+    "relationshipHeader": {
+     "class": "ElementHeader",
+     "headerVersion": 0,
+     "status": "ACTIVE",
+     "type": {
+      "typeId": "a0b7ba50-4c97-4b76-9a7d-c6a00e1be646",
+      "typeName": "ActionRequester",
+      "superTypeNames": [
+       "LineageRelationship",
+       "LabeledRelationship"
+      ],
+      "typeVersion": 2,
+      "typeDescription": "The source of the action, such as a person, meeting or a governance action.",
+      "typeCategory": "RELATIONSHIP_DEF"
+     },
+     "origin": {
+      "sourceServer": "qs-metadata-store",
+      "originCategory": "LOCAL_COHORT",
+      "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+      "homeMetadataCollectionName": "qs-metadata-store"
+     },
+     "versions": {
+      "createdBy": "baudotnpa",
+      "updatedBy": "baudotnpa",
+      "maintainedBy": [
+       "baudotnpa"
+      ],
+      "createTime": "2026-11-09T11:05:15.883+00:00",
+      "updateTime": "2026-11-09T11:05:15.883+00:00",
+      "version": 1,
+      "lastRequestId": "669900de-7c7d-4916-8290-815f1547fd78"
+     },
+     "guid": "5342dbf4-07db-4e63-95a2-9ed274c8e72f"
+    },
+    "relatedElement": {
+     "elementHeader": {
+      "class": "ElementHeader",
+      "headerVersion": 0,
+      "status": "ACTIVE",
+      "type": {
+       "typeId": "206a6e44-ffe7-408b-8e59-79842d362776",
+       "typeName": "GovernanceActionProcessInstance",
+       "superTypeNames": [
+        "TransientEmbeddedProcess",
+        "EmbeddedProcess",
+        "Action",
+        "Process",
+        "Asset",
+        "Referenceable",
+        "OpenMetadataRoot"
+       ],
+       "typeVersion": 1,
+       "typeDescription": "Represents a single run of a governance action process.  It is linked to the parent governance action process using the GovernedBy relationship.",
+       "typeCategory": "ENTITY_DEF"
+      },
+      "origin": {
+       "sourceServer": "qs-metadata-store",
+       "originCategory": "LOCAL_COHORT",
+       "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+       "homeMetadataCollectionName": "qs-metadata-store"
+      },
+      "versions": {
+       "createdBy": "baudotnpa",
+       "updatedBy": "egeriagovernanceengine",
+       "maintainedBy": [
+        "baudotnpa",
+        "egeriagovernanceengine"
+       ],
+       "createTime": "2026-11-09T11:05:12.882+00:00",
+       "updateTime": "2026-11-09T11:05:17.237+00:00",
+       "version": 4,
+       "lastRequestId": "7807c843-3774-40b4-bd2c-31460308ebb9"
+      },
+      "guid": "bf1d5f61-9d79-41bc-a89a-d863222585ff",
+      "anchor": {
+       "class": "ElementClassification",
+       "headerVersion": 0,
+       "status": "ACTIVE",
+       "type": {
+        "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+        "typeName": "Anchors",
+        "typeVersion": 1,
+        "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+        "typeCategory": "CLASSIFICATION_DEF"
+       },
+       "origin": {
+        "sourceServer": "qs-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+        "homeMetadataCollectionName": "qs-metadata-store"
+       },
+       "versions": {
+        "createdBy": "baudotnpa",
+        "updatedBy": "baudotnpa",
+        "maintainedBy": [
+         "baudotnpa"
+        ],
+        "createTime": "2026-11-09T11:05:12.871+00:00",
+        "updateTime": "2026-11-09T11:05:12.871+00:00",
+        "version": 1,
+        "lastRequestId": "669900de-7c7d-4916-8290-815f1547fd78"
+       },
+       "classificationOrigin": "ASSIGNED",
+       "classificationName": "Anchors",
+       "classificationProperties": {
+        "class": "AnchorsProperties",
+        "typeName": "Anchors",
+        "anchorGUID": "33884dcc-c0b8-455e-8991-52c704a84d46",
+        "anchorTypeName": "ProvisioningActionProcess",
+        "anchorDomainName": "AuthoredReferenceable"
+       }
+      }
+     },
+     "properties": {
+      "class": "GovernanceActionProcessInstanceProperties",
+      "typeName": "GovernanceActionProcessInstance",
+      "qualifiedName": "ProvisioningActionProcess::provisioningGovernanceActionType::95ff50a4-13fe-4479-90f2-22d4c9c48ad9@1794222312842::77bd32e3-074f-4405-98c0-8df53021a9df",
+      "displayName": "provisioningGovernanceActionType@Mon Nov 09 11:05:12 GMT 2026",
+      "requestedTime": "2026-11-09T11:05:12.842+00:00",
+      "requestedStartTime": "2026-11-09T11:05:13.136+00:00",
+      "startTime": "2026-11-09T11:05:17.104+00:00",
+      "activityStatus": "IN_PROGRESS"
+     }
+    },
+    "relatedElementAtEnd1": true,
+    "startingElementGUID": "1de658d3-6af5-4c32-b915-5fb6bd5bb524"
+   },
+   {
+    "class": "RelatedMetadataNodeSummary",
+    "relationshipHeader": {
+     "class": "ElementHeader",
+     "headerVersion": 0,
+     "status": "ACTIVE",
+     "type": {
+      "typeId": "207e2594-e3e4-4be8-a12c-4c401656e241",
+      "typeName": "ActionTarget",
+      "typeVersion": 1,
+      "typeDescription": "Associates an action with one or more elements to work on.",
+      "typeCategory": "RELATIONSHIP_DEF"
+     },
+     "origin": {
+      "sourceServer": "qs-metadata-store",
+      "originCategory": "LOCAL_COHORT",
+      "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+      "homeMetadataCollectionName": "qs-metadata-store"
+     },
+     "versions": {
+      "createdBy": "baudotnpa",
+      "updatedBy": "baudotnpa",
+      "maintainedBy": [
+       "baudotnpa"
+      ],
+      "createTime": "2026-11-09T11:05:15.260+00:00",
+      "updateTime": "2026-11-09T11:05:15.260+00:00",
+      "version": 1,
+      "lastRequestId": "669900de-7c7d-4916-8290-815f1547fd78"
+     },
+     "guid": "52d9d7d6-9416-4a03-96f4-2a4bdb1e2d31"
+    },
+    "relationshipProperties": {
+     "class": "ActionTargetProperties",
+     "typeName": "ActionTarget",
+     "actionTargetName": "sourceDataSet"
+    },
+    "relatedElement": {
+     "elementHeader": {
+      "class": "ElementHeader",
+      "headerVersion": 0,
+      "status": "ACTIVE",
+      "type": {
+       "typeId": "8f5614c5-1777-4760-a500-07e60ba29746",
+       "typeName": "TabularDataSetCollection",
+       "superTypeNames": [
+        "DataSet",
+        "DataAsset",
+        "Asset",
+        "Referenceable",
+        "OpenMetadataRoot"
+       ],
+       "typeVersion": 1,
+       "typeDescription": "Collection of related tabular data sets, not necessarily stored together.",
+       "typeCategory": "ENTITY_DEF"
+      },
+      "origin": {
+       "sourceServer": "qs-metadata-store",
+       "originCategory": "LOCAL_COHORT",
+       "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+       "homeMetadataCollectionName": "qs-metadata-store"
+      },
+      "versions": {
+       "createdBy": "erinoverview",
+       "updatedBy": "erinoverview",
+       "maintainedBy": [
+        "erinoverview"
+       ],
+       "createTime": "2026-11-07T15:31:54.666+00:00",
+       "updateTime": "2026-11-07T15:31:54.666+00:00",
+       "version": 1,
+       "lastRequestId": "73251768-0a0d-4e83-90ae-74e63799ec6d",
+       "lastOperationId": "3d835fcb-4a32-4e87-8c0c-85479ca7300c"
+      },
+      "guid": "1c365ba1-9f05-4e4c-accc-98fe576ad098",
+      "anchor": {
+       "class": "ElementClassification",
+       "headerVersion": 0,
+       "status": "ACTIVE",
+       "type": {
+        "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+        "typeName": "Anchors",
+        "typeVersion": 1,
+        "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+        "typeCategory": "CLASSIFICATION_DEF"
+       },
+       "origin": {
+        "sourceServer": "qs-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+        "homeMetadataCollectionName": "qs-metadata-store"
+       },
+       "versions": {
+        "createdBy": "erinoverview",
+        "updatedBy": "erinoverview",
+        "maintainedBy": [
+         "erinoverview"
+        ],
+        "createTime": "2026-11-07T15:31:54.658+00:00",
+        "updateTime": "2026-11-07T15:31:54.658+00:00",
+        "version": 1,
+        "lastRequestId": "73251768-0a0d-4e83-90ae-74e63799ec6d"
+       },
+       "classificationOrigin": "ASSIGNED",
+       "classificationName": "Anchors",
+       "classificationProperties": {
+        "class": "AnchorsProperties",
+        "typeName": "Anchors",
+        "anchorGUID": "73568c6c-284d-4ed8-ae85-67b58d5be49c",
+        "anchorTypeName": "DigitalProduct",
+        "anchorDomainName": "AuthoredReferenceable"
+       }
+      },
+      "dataScope": {
+       "class": "ElementClassification",
+       "headerVersion": 0,
+       "status": "ACTIVE",
+       "type": {
+        "typeId": "22f996d0-c4b7-433a-af0b-6a3e9478e488",
+        "typeName": "DataScope",
+        "typeVersion": 2,
+        "typeDescription": "Identifies the scope of the data stored in the digital resource(s).",
+        "typeCategory": "CLASSIFICATION_DEF"
+       },
+       "origin": {
+        "sourceServer": "qs-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+        "homeMetadataCollectionName": "qs-metadata-store"
+       },
+       "versions": {
+        "createdBy": "egeriagovernanceengine",
+        "updatedBy": "egeriagovernanceengine",
+        "maintainedBy": [
+         "egeriagovernanceengine"
+        ],
+        "createTime": "2026-11-07T15:54:52.953+00:00",
+        "updateTime": "2026-11-07T16:29:10.552+00:00",
+        "version": 2,
+        "lastRequestId": "04d483a5-ddbc-42c1-8875-0abb1fd8afcf"
+       },
+       "classificationOrigin": "ASSIGNED",
+       "classificationName": "DataScope",
+       "classificationProperties": {
+        "class": "DataScopeProperties",
+        "typeName": "DataScope",
+        "additionalProperties": {
+         "analysisTime": "2026-11-07T16:16:45Z",
+         "lastReadInWindow": "2026-11-07T08:19:38Z",
+         "readersInWindow": "2",
+         "readsPerDay": "0.54",
+         "analysisWindowEnd": "2026-11-07T16:16:45Z",
+         "readsInWindow": "16",
+         "analysisService": "open-lineage-data-scope-governance-service",
+         "analysisWindowStart": "2026-10-08T16:16:45Z"
+        }
+       }
+      },
+      "usageActivity": {
+       "class": "ElementClassification",
+       "headerVersion": 0,
+       "status": "ACTIVE",
+       "type": {
+        "typeId": "cfae23a1-8020-431f-a603-1f1bb0e01cb3",
+        "typeName": "UsageActivity",
+        "typeVersion": 1,
+        "typeDescription": "Describes the usage activity around an anchor element and its anchored elements: how often it is explicitly retrieved, found through searches, has its properties updated, and has its attachments and feedback updated or deleted.",
+        "typeCategory": "CLASSIFICATION_DEF"
+       },
+       "origin": {
+        "sourceServer": "qs-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+        "homeMetadataCollectionName": "qs-metadata-store"
+       },
+       "versions": {
+        "createdBy": "pepysnpa",
+        "updatedBy": "pepysnpa",
+        "maintainedBy": [
+         "pepysnpa"
+        ],
+        "createTime": "2026-11-07T15:43:30.365+00:00",
+        "updateTime": "2026-11-09T00:31:03.962+00:00",
+        "version": 9,
+        "lastRequestId": "5736f99b-3be0-4707-bd0f-d18943a85043"
+       },
+       "classificationOrigin": "ASSIGNED",
+       "classificationName": "UsageActivity",
+       "classificationProperties": {
+        "class": "UsageActivityProperties",
+        "typeName": "UsageActivity",
+        "explicitGetCount": 1,
+        "findCount": 30,
+        "updatePropertyCount": 0,
+        "updateAttachmentCount": 0,
+        "updateFeedbackCount": 0,
+        "deleteAttachmentCount": 0,
+        "deleteFeedbackCount": 0
+       }
+      },
+      "dataAssetEncoding": {
+       "class": "ElementClassification",
+       "headerVersion": 0,
+       "status": "ACTIVE",
+       "type": {
+        "typeId": "3f6a1513-d3ea-4666-b5fd-c76477b0245e",
+        "typeName": "DataAssetEncoding",
+        "typeVersion": 1,
+        "typeDescription": "Description for how data is organized and represented in a data asset.",
+        "typeCategory": "CLASSIFICATION_DEF"
+       },
+       "origin": {
+        "sourceServer": "qs-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+        "homeMetadataCollectionName": "qs-metadata-store"
+       },
+       "versions": {
+        "createdBy": "erinoverview",
+        "updatedBy": "erinoverview",
+        "maintainedBy": [
+         "erinoverview"
+        ],
+        "createTime": "2026-11-07T15:31:54.662+00:00",
+        "updateTime": "2026-11-07T15:31:54.662+00:00",
+        "version": 1,
+        "lastRequestId": "73251768-0a0d-4e83-90ae-74e63799ec6d",
+        "lastOperationId": "3d835fcb-4a32-4e87-8c0c-85479ca7300c"
+       },
+       "classificationOrigin": "ASSIGNED",
+       "classificationName": "DataAssetEncoding",
+       "classificationProperties": {
+        "class": "DataAssetEncodingProperties",
+        "typeName": "DataAssetEncoding",
+        "encodingType": "relational",
+        "encodingLanguage": "SQL"
+       }
+      }
+     },
+     "properties": {
+      "class": "TabularDataSetCollectionProperties",
+      "typeName": "TabularDataSetCollection",
+      "qualifiedName": "PostgreSQL Tabular Data Set Collection::Coco PostgreSQL Server 1::coco_data_hub.goods_inventory_stock",
+      "displayName": "coco_data_hub.goods_inventory_stock",
+      "description": "The stock of materials and finished goods at every location: the current position, the movements that produced it, and the issues of material to manufacturing with their quarantine status. It also carries serialised finished goods once they are commissioned.",
       "versionIdentifier": "V1.0",
       "deployedImplementationType": "PostgreSQL Tabular Data Set Collection",
       "contentStatus": "ACTIVE"
