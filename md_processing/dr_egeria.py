@@ -504,8 +504,8 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
     reg("Update Saved Query", SavedQueryProcessor)
     reg("Link Saved Query to Results Set", SmartQueryLinkProcessor)
 
-    # Dashboard Sheets (local pyegeria-only records, not Egeria elements yet --
-    # see OVERVIEW_REPORTING_MODEL.md SS10 for the planned Collection-subtype migration)
+    # Dashboard Sheets: written to Egeria 6.3 as Dashboard -> DisplayDataSchemaType -> DisplayDataContainer
+    # -> DisplayDataField placements, and to the local JSON store during the transition (dashboard_sheet.py)
     reg("Create Dashboard Sheet", CreateDashboardSheetProcessor)
     reg("Link Report to Dashboard Sheet", LinkReportToDashboardSheetProcessor)
     reg("Add Text on Dashboard Sheet", AddTextOnDashboardSheetProcessor)
