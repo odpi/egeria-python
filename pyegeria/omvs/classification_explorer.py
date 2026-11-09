@@ -43,6 +43,26 @@ _ROOT_TYPES = frozenset({"OpenMetadataRoot", "Referenceable"})
 # '*' lists a type page by page: the caller's page_size, 100 when none is given, never more than 100.
 STAR_PAGE_MAX = 100
 
+
+def _string_condition(property_name: str, operator: str, value: str) -> dict:
+    """One SearchProperties condition on a string property."""
+    return {"property": property_name, "operator": operator,
+            "value": {"class": "PrimitiveTypePropertyValue", "typeName": "string", "primitiveValue": value}}
+
+
+def _match_operator(starts_with: bool, ends_with: bool, ignore_case: bool) -> str:
+    """The PropertyComparisonOperator for a search string, mirroring the property-value search options.
+    Egeria matches the value literally (it escapes LIKE wildcards), so no regex is needed."""
+    if starts_with and ends_with:
+        op = "EQ"
+    elif starts_with:
+        op = "STARTS_WITH"
+    elif ends_with:
+        op = "ENDS_WITH"
+    else:
+        op = "LIKE"
+    return f"CASE_INSENSITIVE_{op}" if ignore_case else op
+
 class ClassificationExplorer(ServerClient):
     """
     Client for the Classification Explorer OMVS.
@@ -2966,7 +2986,7 @@ class ClassificationExplorer(ServerClient):
         property_value: str
             - property value to be searched. '*' (or empty) with a metadata_element_type returns every element of that type (via get_elements); '*' without a type is refused.
         deployed_implementation_type: str, optional
-            - with '*', list only elements of this technology (Egeria matches deployedImplementationType containing it, case-insensitive) within metadata_element_type. Ignored for any other search string, which matches property_names within the whole type.
+            - list only elements of exactly this technology within metadata_element_type: Egeria ANDs deployedImplementationType EQUALS this value with (for a search string other than '*') property_names matching it, in one complex query, so paging stays exact.
         property_names: list[str]
             - property names to search in.
         metadata_element_type : str, default = None
@@ -3059,7 +3079,40 @@ class ClassificationExplorer(ServerClient):
         #         "effectiveTime": effective_time,
         #     }
 
-        if property_value in (None, "", "*") and body is None:
+        star = property_value in (None, "", "*")
+        if deployed_implementation_type and body is None:
+            # One technology within a shared supertype (e.g. "PostgreSQL Server" among the
+            # SoftwareServers). Both conditions are ANDed by Egeria in one complex query, so paging is
+            # exact and no other technology can appear: deployedImplementationType EQUALS the
+            # technology, AND (for a search string) one of property_names matches it.
+            conditions = [_string_condition("deployedImplementationType", "EQ", deployed_implementation_type)]
+            if not star:
+                operator = _match_operator(starts_with, ends_with, ignore_case)
+                conditions.append({"nestedConditions": {
+                    "class": "SearchProperties", "matchCriteria": "ANY",
+                    "conditions": [_string_condition(name, operator, property_value)
+                                   for name in (property_names or ["displayName", "qualifiedName"])]}})
+            filters = {
+                "anchor_domain": anchor_domain, "metadata_element_subtypes": metadata_element_subtypes,
+                "skip_relationships": skip_relationships,
+                "include_only_relationships": include_only_relationships,
+                "skip_classified_elements": skip_classified_elements,
+                "include_only_classified_elements": include_only_classified_elements,
+                "governance_zone_filter": governance_zone_filter, "as_of_time": as_of_time,
+                "limit_results_by_status": limit_results_by_status, "sequencing_order": sequencing_order,
+                "sequencing_property": sequencing_property,
+            }
+            return await self._async_find_root_elements(
+                metadata_element_type=metadata_element_type,
+                start_from=start_from,
+                page_size=min(page_size or STAR_PAGE_MAX, STAR_PAGE_MAX) if star else page_size,
+                graph_query_depth=graph_query_depth, output_format=output_format, report_spec=report_spec,
+                timeout=timeout, **{k: v for k, v in filters.items() if v is not None},
+                # the technology conditions win over any search_properties a caller passed
+                **{**kwargs, "search_properties": {"class": "SearchProperties", "matchCriteria": "ALL",
+                                                   "conditions": conditions}})
+
+        if star and body is None:
             # Egeria's property-value search refuses a null value (OPEN-METADATA-400-002), and pyegeria
             # sends '*' as null. '*' with a type therefore means "every element of that type"; without
             # a type there is nothing to ask for.
@@ -3081,16 +3134,6 @@ class ClassificationExplorer(ServerClient):
                 "limit_results_by_status": limit_results_by_status, "sequencing_order": sequencing_order,
                 "sequencing_property": sequencing_property, "graph_query_depth": graph_query_depth,
             }
-            if deployed_implementation_type:
-                # One technology within a shared supertype (e.g. "PostgreSQL Server" among the
-                # SoftwareServers): Egeria matches deployedImplementationType containing this name
-                # (literal, case-insensitive -- checked live). Done by Egeria, so paging stays correct;
-                # a client-side filter would make a short page look like the last one.
-                return await self._async_find_elements_by_property_value(
-                    deployed_implementation_type, ["deployedImplementationType"], metadata_element_type,
-                    start_from=start_from, page_size=page_size, output_format=output_format,
-                    report_spec=report_spec, timeout=timeout,
-                    **{k: v for k, v in list_filters.items() if v is not None}, **kwargs)
             return await self._async_get_elements(
                 metadata_element_type=metadata_element_type, start_from=start_from, page_size=page_size,
                 output_format=output_format, report_spec=report_spec,
@@ -3172,7 +3215,7 @@ class ClassificationExplorer(ServerClient):
         property_value: str
             - property value to be searched. '*' (or empty) with a metadata_element_type returns every element of that type (via get_elements); '*' without a type is refused.
         deployed_implementation_type: str, optional
-            - with '*', list only elements of this technology (Egeria matches deployedImplementationType containing it, case-insensitive) within metadata_element_type. Ignored for any other search string, which matches property_names within the whole type.
+            - list only elements of exactly this technology within metadata_element_type: Egeria ANDs deployedImplementationType EQUALS this value with (for a search string other than '*') property_names matching it, in one complex query, so paging stays exact.
         property_names: list[str]
             - property names to search in.
         metadata_element_type : str, default = None

@@ -135,14 +135,14 @@ specs: `displayName` and `qualifiedName`) within `metadata_element_type`.
   time: the caller's `page_size`, 100 when none is given, never more than 100 per call — page on
   with `start_from`. `'*'` with no type, or with a root type (`OpenMetadataRoot`,
   `Referenceable`), is refused: "give a search string or a narrower type".
-- `deployed_implementation_type="PostgreSQL Server"` with `'*'` lists only that technology
-  within the type (Egeria matches `deployedImplementationType` containing the name; the
-  filtering is Egeria's, so paging stays correct).
-- **Limit:** with any other search string the technology is not applied — Egeria cannot
-  combine the two in one query — so results may include other technologies of the same
-  supertype (e.g. a Kafka server whose name matches, in a Postgres-Server report). The
-  technology report specs show a *Deployed Implementation Type* column so each row's
-  technology is visible.
+- `deployed_implementation_type="PostgreSQL Server"` restricts the search to exactly that
+  technology within the type. Egeria evaluates it in one complex query:
+  `deployedImplementationType` **equals** the technology, **and**, for a search string other than
+  `'*'`, one of `property_names` matches it (`starts_with` / `ends_with` / `ignore_case` choose the
+  operator: STARTS_WITH, ENDS_WITH, EQ or LIKE (contains), case-insensitive variants with
+  `ignore_case`). So a Postgres-Server report never lists a Kafka server or a "Databricks Unity
+  Catalog Server", and paging stays exact. The technology report specs also show a *Deployed
+  Implementation Type* column.
 
 `MetadataExpert.find_metadata_elements_with_string("*")` with no type is refused with
 "give a search string or a type" instead of passing Egeria's "searchString is null" through.

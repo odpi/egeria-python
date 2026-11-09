@@ -435,25 +435,44 @@ def test_report_search_string_reaches_property_value():
     assert out == {"property_value": "pump", "property_names": ["displayName"]}
 
 
+def _conditions(body):
+    return body["searchProperties"]["conditions"]
+
+
 def test_star_with_a_technology_lists_exactly_that_technology(explorer):
     explorer.find_elements_by_property_value("*", ["displayName", "qualifiedName"],
                                              metadata_element_type="SoftwareServer",
-                                             deployed_implementation_type="PostgreSQL Server")
+                                             deployed_implementation_type="Unity Catalog Server")
     body = explorer.sent[-1]
-    assert body["metadataElementTypeName"] == "SoftwareServer"
-    assert body["propertyNames"] == ["deployedImplementationType"]
-    assert body["propertyValue"] == "PostgreSQL Server"  # matched by Egeria, so paging stays right
+    assert body["class"] == "FindRequestBody" and body["metadataElementTypeName"] == "SoftwareServer"
+    # exact, so "Databricks Unity Catalog Server" is not a "Unity Catalog Server"
+    assert _conditions(body) == [{"property": "deployedImplementationType", "operator": "EQ",
+                                  "value": {"class": "PrimitiveTypePropertyValue", "typeName": "string",
+                                            "primitiveValue": "Unity Catalog Server"}}]
+    assert body["searchProperties"]["matchCriteria"] == "ALL"
 
 
-def test_search_string_with_a_technology_searches_names_within_the_type(explorer):
-    # The documented limit: a real search string matches displayName/qualifiedName within the
-    # supertype; the technology is not applied (it cannot be combined in one Egeria query).
-    explorer.find_elements_by_property_value("orders", ["displayName", "qualifiedName"],
+def test_search_string_with_a_technology_ands_both_conditions_server_side(explorer):
+    explorer.find_elements_by_property_value("Coco", ["displayName", "qualifiedName"],
                                              metadata_element_type="SoftwareServer",
-                                             deployed_implementation_type="PostgreSQL Server")
+                                             deployed_implementation_type="PostgreSQL Server", page_size=25)
     body = explorer.sent[-1]
-    assert body["propertyNames"] == ["displayName", "qualifiedName"]
-    assert body["metadataElementTypeName"] == "SoftwareServer"
+    tech, names = _conditions(body)
+    assert tech["property"] == "deployedImplementationType" and tech["operator"] == "EQ"
+    nested = names["nestedConditions"]
+    assert nested["matchCriteria"] == "ANY"
+    assert [(c["property"], c["operator"], c["value"]["primitiveValue"]) for c in nested["conditions"]] == [
+        ("displayName", "STARTS_WITH", "Coco"), ("qualifiedName", "STARTS_WITH", "Coco")]
+    assert body["searchProperties"]["matchCriteria"] == "ALL" and body["pageSize"] == 25
+
+
+@pytest.mark.parametrize("starts, ends, ignore, op", [
+    (True, False, False, "STARTS_WITH"), (False, True, False, "ENDS_WITH"), (True, True, False, "EQ"),
+    (False, False, False, "LIKE"), (True, False, True, "CASE_INSENSITIVE_STARTS_WITH"),
+    (False, False, True, "CASE_INSENSITIVE_LIKE")])
+def test_search_options_map_to_egeria_operators(starts, ends, ignore, op):
+    from pyegeria.omvs.classification_explorer import _match_operator
+    assert _match_operator(starts, ends, ignore) == op
 
 
 def test_generator_derives_type_and_technology_from_the_command():
