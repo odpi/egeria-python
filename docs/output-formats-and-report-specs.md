@@ -545,6 +545,15 @@ that a built-in or Egeria-held spec already holds as its label or alias is dropp
 warning, so a local spec never takes over another spec's name; a local copy keeps the aliases of the spec it
 shadows. With no local specs, the registry is exactly the seed.
 
+A local spec may shadow **any** built-in, including the bootstrap core (`Referenceable`, `Default`,
+`Report-Types`, `Report-Specs`, `Report-Spec-DrE-Basic` and the like) and the Dr.Egeria display specs (the
+`*-DrE`, `*-DrE-Basic` and `*-DrE-Advanced` specs, for example `Glossary-DrE-Basic`). Doing so changes what
+Dr.Egeria and the Portal show for that label, everywhere that label is used. `builtin:<label>` still reaches the
+original, and the shadow is logged once per label per process. To undo it, remove the local spec and refresh.
+
+A stale `analytic_demos` entry point left in an editable install's metadata from before 6.2.29 is skipped by
+name, with one log line, rather than loaded; reinstall pyegeria to drop it.
+
 **Adding specs (the `CONFIG` tier).** There are two sources:
 
 - **A package's entry points (ISSUE-173).** A package contributes report specs by installing. Declare an entry point in the `pyegeria.report_specs` group that names a callable returning a `FormatSetDict` (or a plain `dict` of label to `FormatSet`), or such a dict itself:

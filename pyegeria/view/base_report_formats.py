@@ -4002,9 +4002,27 @@ def _load_entry_point(ep) -> FormatSetDict:
     return loaded if isinstance(loaded, FormatSetDict) else FormatSetDict(loaded)
 
 
+# pyegeria's own entry point, removed in 6.2.29 (the demos ship in the seed). An editable install made
+# before then still lists it in its installed metadata until reinstalled; loading it would shadow every
+# demo spec with an identical local copy, so it is skipped by name and value, with one log line.
+_REMOVED_OWN_ENTRY_POINT = ("analytic_demos", "pyegeria.view.analytic_demo_specs:get_analytic_demo_specs")
+_STALE_ENTRY_POINT_LOGGED = False
+
+
 def _report_spec_entry_points() -> list:
+    global _STALE_ENTRY_POINT_LOGGED
     found = []
-    return [(REPORT_SPEC_ENTRY_POINT_GROUP, ep) for ep in entry_points(group=REPORT_SPEC_ENTRY_POINT_GROUP)]
+    for ep in entry_points(group=REPORT_SPEC_ENTRY_POINT_GROUP):
+        if (ep.name, ep.value) == _REMOVED_OWN_ENTRY_POINT:
+            if not _STALE_ENTRY_POINT_LOGGED:
+                _STALE_ENTRY_POINT_LOGGED = True
+                logger.warning(
+                    "Skipping the stale 'analytic_demos' report-spec entry point: pyegeria no longer declares "
+                    "it (the demo specs ship in the seed since 6.2.29). Reinstall pyegeria (uv sync, or "
+                    "pip install -e .) to drop it from the installed metadata.")
+            continue
+        found.append((REPORT_SPEC_ENTRY_POINT_GROUP, ep))
+    return found
 
 
 def refresh_report_specs() -> List[Tuple[str, str]]:
@@ -4013,8 +4031,9 @@ def refresh_report_specs() -> List[Tuple[str, str]]:
     Sources, in order:
       - Every entry point in the `pyegeria.report_specs` group. Its value is a
         callable returning a FormatSetDict (or a dict of label to FormatSet),
-        or such a dict itself. This is how pyegeria's own analytic demo specs
-        load (ISSUE-173).
+        or such a dict itself (ISSUE-173). pyegeria's own analytic demo specs
+        loaded this way until 6.2.29; a stale `analytic_demos` entry left in
+        an editable install's metadata is skipped with one log line.
       - Every *.json file in the user report specs directory, alphabetically
         (PYEGERIA_USER_REPORT_SPECS_DIR / PYEGERIA_USER_FORMAT_SETS_DIR, else
         config.json's "Pyegeria User Report Specs Dir", else

@@ -274,9 +274,23 @@ def test_a_hook_that_is_not_a_bare_listed_function_is_not_written():
 
 
 def test_the_analytic_demo_entry_point_is_gone():
-    from importlib.metadata import entry_points
-    names = [ep.value for ep in entry_points(group=brf.REPORT_SPEC_ENTRY_POINT_GROUP)]
-    assert "pyegeria.view.analytic_demo_specs:get_analytic_demo_specs" not in names
+    """pyproject.toml no longer declares it. (An editable install made before 6.2.29 may still list it in its
+    installed metadata until reinstalled; `_report_spec_entry_points` skips that stale entry, tested below.)"""
+    pyproject = (Path(__file__).resolve().parents[2] / "pyproject.toml").read_text(encoding="utf-8")
+    assert "pyegeria.view.analytic_demo_specs:get_analytic_demo_specs" not in pyproject
+
+
+def test_a_stale_analytic_demo_entry_point_is_skipped_with_one_log_line(monkeypatch, warnings_logged):
+    from importlib.metadata import EntryPoint
+    group = brf.REPORT_SPEC_ENTRY_POINT_GROUP
+    stale = EntryPoint(name="analytic_demos", value="pyegeria.view.analytic_demo_specs:get_analytic_demo_specs",
+                       group=group)
+    same_name_elsewhere = EntryPoint(name="analytic_demos", value="other_pkg.specs:demos", group=group)
+    monkeypatch.setattr(brf, "entry_points", lambda group: [stale, same_name_elsewhere])
+    monkeypatch.setattr(brf, "_STALE_ENTRY_POINT_LOGGED", False)
+    for _ in range(2):
+        assert brf._report_spec_entry_points() == [(group, same_name_elsewhere)]
+    assert sum("stale 'analytic_demos'" in w for w in warnings_logged) == 1
 
 
 # ── Precedence: local > egeria > builtin (owner, 2026-11-09: "Yes, local overrides") ──
@@ -365,6 +379,26 @@ def test_a_runtime_copy_of_a_core_builtin_wins_with_one_warning(local_tier, warn
     # another source still may not take a label the local tier holds
     with pytest.raises(brf.ReportFormatCollision):
         brf.register_report_specs({"Referenceable": _local_copy("Referenceable", "X")}, source="other")
+
+
+@pytest.mark.parametrize("label", ["Default", "Report-Spec-DrE-Basic", "Report-Types", "Glossary-DrE-Basic"])
+def test_a_local_copy_may_shadow_a_bootstrap_core_or_dr_egeria_display_spec(local_tier, warnings_logged, label):
+    """Owner, 2026-11-09: "Allow and document". A local spec may shadow ANY built-in, including the bootstrap
+    core and the Dr.Egeria display specs; it changes what Dr.Egeria and the Portal show for that label,
+    `builtin:<label>` still reaches the original, and the shadow is logged once per label."""
+    from pyegeria.view._output_format_models import FormatSetDict
+    assert seed.is_bootstrap_core(label)
+    original = seed.seed_report_specs()[label]
+    FormatSetDict({label: _local_copy(label, "Mine")}).save_to_json(str(local_tier / "core.json"))
+    assert brf.refresh_report_specs() == []
+    for _ in range(3):
+        registry = brf.get_report_registry()
+    assert registry[label].heading == "Mine"
+    assert brf._REGISTRY_TIERS[label] == "local"
+    assert brf.select_report_format(label, "DICT")["heading"] == "Mine"
+    assert brf.lookup_report_spec(f"builtin:{label}")[0] is original
+    shadow = [w for w in warnings_logged if f"'{label}'" in w and "shadows" in w]
+    assert len(shadow) == 1 and "the local copy shadows the builtin copy" in shadow[0]
 
 
 def test_a_local_alias_held_by_a_builtin_is_dropped_from_the_local_copy(local_tier, warnings_logged):
