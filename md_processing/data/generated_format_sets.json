@@ -24295,7 +24295,8 @@
         "ignore_case",
         "classification_names",
         "metadata_element_subtypes",
-        "metadata_element_type"
+        "metadata_element_type",
+        "deployed_implementation_type"
       ],
       "spec_params": {
         "metadata_element_type": "SoftwareServer",
@@ -24303,7 +24304,7 @@
           "displayName",
           "qualifiedName"
         ],
-        "deployed_implementation_type": "Apache Kafka Server"
+        "default_deployed_implementation_type": "Apache Kafka Server"
       },
       "analytic_function": null,
       "analytic_spec_params": {}
@@ -24513,7 +24514,8 @@
         "ignore_case",
         "classification_names",
         "metadata_element_subtypes",
-        "metadata_element_type"
+        "metadata_element_type",
+        "deployed_implementation_type"
       ],
       "spec_params": {
         "metadata_element_type": "SoftwareServer",
@@ -24521,7 +24523,7 @@
           "displayName",
           "qualifiedName"
         ],
-        "deployed_implementation_type": "Apache Kafka Server"
+        "default_deployed_implementation_type": "Apache Kafka Server"
       },
       "analytic_function": null,
       "analytic_spec_params": {}
@@ -25485,7 +25487,8 @@
         "ignore_case",
         "classification_names",
         "metadata_element_subtypes",
-        "metadata_element_type"
+        "metadata_element_type",
+        "deployed_implementation_type"
       ],
       "spec_params": {
         "metadata_element_type": "SoftwareServer",
@@ -25493,7 +25496,7 @@
           "displayName",
           "qualifiedName"
         ],
-        "deployed_implementation_type": "PostgreSQL Server"
+        "default_deployed_implementation_type": "PostgreSQL Server"
       },
       "analytic_function": null,
       "analytic_spec_params": {}
@@ -25831,7 +25834,8 @@
         "ignore_case",
         "classification_names",
         "metadata_element_subtypes",
-        "metadata_element_type"
+        "metadata_element_type",
+        "deployed_implementation_type"
       ],
       "spec_params": {
         "metadata_element_type": "SoftwareServer",
@@ -25839,7 +25843,7 @@
           "displayName",
           "qualifiedName"
         ],
-        "deployed_implementation_type": "PostgreSQL Server"
+        "default_deployed_implementation_type": "PostgreSQL Server"
       },
       "analytic_function": null,
       "analytic_spec_params": {}
@@ -26177,7 +26181,8 @@
         "ignore_case",
         "classification_names",
         "metadata_element_subtypes",
-        "metadata_element_type"
+        "metadata_element_type",
+        "deployed_implementation_type"
       ],
       "spec_params": {
         "metadata_element_type": "RelationalDatabase",
@@ -26185,7 +26190,7 @@
           "displayName",
           "qualifiedName"
         ],
-        "deployed_implementation_type": "PostgreSQL Relational Database"
+        "default_deployed_implementation_type": "PostgreSQL Relational Database"
       },
       "analytic_function": null,
       "analytic_spec_params": {}
@@ -26523,7 +26528,8 @@
         "ignore_case",
         "classification_names",
         "metadata_element_subtypes",
-        "metadata_element_type"
+        "metadata_element_type",
+        "deployed_implementation_type"
       ],
       "spec_params": {
         "metadata_element_type": "RelationalDatabase",
@@ -26531,7 +26537,7 @@
           "displayName",
           "qualifiedName"
         ],
-        "deployed_implementation_type": "PostgreSQL Relational Database"
+        "default_deployed_implementation_type": "PostgreSQL Relational Database"
       },
       "analytic_function": null,
       "analytic_spec_params": {}
@@ -27207,7 +27213,8 @@
         "ignore_case",
         "classification_names",
         "metadata_element_subtypes",
-        "metadata_element_type"
+        "metadata_element_type",
+        "deployed_implementation_type"
       ],
       "spec_params": {
         "metadata_element_type": "SoftwareServer",
@@ -27215,7 +27222,7 @@
           "displayName",
           "qualifiedName"
         ],
-        "deployed_implementation_type": "Unity Catalog Server"
+        "default_deployed_implementation_type": "Unity Catalog Server"
       },
       "analytic_function": null,
       "analytic_spec_params": {}
@@ -27457,7 +27464,8 @@
         "ignore_case",
         "classification_names",
         "metadata_element_subtypes",
-        "metadata_element_type"
+        "metadata_element_type",
+        "deployed_implementation_type"
       ],
       "spec_params": {
         "metadata_element_type": "SoftwareServer",
@@ -27465,7 +27473,7 @@
           "displayName",
           "qualifiedName"
         ],
-        "deployed_implementation_type": "Unity Catalog Server"
+        "default_deployed_implementation_type": "Unity Catalog Server"
       },
       "analytic_function": null,
       "analytic_spec_params": {}
@@ -27675,7 +27683,8 @@
         "ignore_case",
         "classification_names",
         "metadata_element_subtypes",
-        "metadata_element_type"
+        "metadata_element_type",
+        "deployed_implementation_type"
       ],
       "spec_params": {
         "metadata_element_type": "SoftwareCapability",
@@ -27683,7 +27692,7 @@
           "displayName",
           "qualifiedName"
         ],
-        "deployed_implementation_type": "Unity Catalog Catalog"
+        "default_deployed_implementation_type": "Unity Catalog Catalog"
       },
       "analytic_function": null,
       "analytic_spec_params": {}
@@ -27893,7 +27902,8 @@
         "ignore_case",
         "classification_names",
         "metadata_element_subtypes",
-        "metadata_element_type"
+        "metadata_element_type",
+        "deployed_implementation_type"
       ],
       "spec_params": {
         "metadata_element_type": "SoftwareCapability",
@@ -27901,7 +27911,7 @@
           "displayName",
           "qualifiedName"
         ],
-        "deployed_implementation_type": "Unity Catalog Catalog"
+        "default_deployed_implementation_type": "Unity Catalog Catalog"
       },
       "analytic_function": null,
       "analytic_spec_params": {}
@@ -28143,7 +28153,8 @@
         "ignore_case",
         "classification_names",
         "metadata_element_subtypes",
-        "metadata_element_type"
+        "metadata_element_type",
+        "deployed_implementation_type"
       ],
       "spec_params": {
         "metadata_element_type": "DeployedDatabaseSchema",
@@ -28151,7 +28162,7 @@
           "displayName",
           "qualifiedName"
         ],
-        "deployed_implementation_type": "Unity Catalog Schema"
+        "default_deployed_implementation_type": "Unity Catalog Schema"
       },
       "analytic_function": null,
       "analytic_spec_params": {}
@@ -28393,7 +28404,8 @@
         "ignore_case",
         "classification_names",
         "metadata_element_subtypes",
-        "metadata_element_type"
+        "metadata_element_type",
+        "deployed_implementation_type"
       ],
       "spec_params": {
         "metadata_element_type": "DeployedDatabaseSchema",
@@ -28401,7 +28413,7 @@
           "displayName",
           "qualifiedName"
         ],
-        "deployed_implementation_type": "Unity Catalog Schema"
+        "default_deployed_implementation_type": "Unity Catalog Schema"
       },
       "analytic_function": null,
       "analytic_spec_params": {}
@@ -28815,7 +28827,8 @@
         "ignore_case",
         "classification_names",
         "metadata_element_subtypes",
-        "metadata_element_type"
+        "metadata_element_type",
+        "deployed_implementation_type"
       ],
       "spec_params": {
         "metadata_element_type": "RelationalTable",
@@ -28823,7 +28836,7 @@
           "displayName",
           "qualifiedName"
         ],
-        "deployed_implementation_type": "Unity Catalog Table"
+        "default_deployed_implementation_type": "Unity Catalog Table"
       },
       "analytic_function": null,
       "analytic_spec_params": {}
@@ -29237,7 +29250,8 @@
         "ignore_case",
         "classification_names",
         "metadata_element_subtypes",
-        "metadata_element_type"
+        "metadata_element_type",
+        "deployed_implementation_type"
       ],
       "spec_params": {
         "metadata_element_type": "RelationalTable",
@@ -29245,7 +29259,7 @@
           "displayName",
           "qualifiedName"
         ],
-        "deployed_implementation_type": "Unity Catalog Table"
+        "default_deployed_implementation_type": "Unity Catalog Table"
       },
       "analytic_function": null,
       "analytic_spec_params": {}
@@ -29519,7 +29533,8 @@
         "ignore_case",
         "classification_names",
         "metadata_element_subtypes",
-        "metadata_element_type"
+        "metadata_element_type",
+        "deployed_implementation_type"
       ],
       "spec_params": {
         "metadata_element_type": "DeployedAPI",
@@ -29527,7 +29542,7 @@
           "displayName",
           "qualifiedName"
         ],
-        "deployed_implementation_type": "Unity Catalog Function"
+        "default_deployed_implementation_type": "Unity Catalog Function"
       },
       "analytic_function": null,
       "analytic_spec_params": {}
@@ -29801,7 +29816,8 @@
         "ignore_case",
         "classification_names",
         "metadata_element_subtypes",
-        "metadata_element_type"
+        "metadata_element_type",
+        "deployed_implementation_type"
       ],
       "spec_params": {
         "metadata_element_type": "DeployedAPI",
@@ -29809,7 +29825,7 @@
           "displayName",
           "qualifiedName"
         ],
-        "deployed_implementation_type": "Unity Catalog Function"
+        "default_deployed_implementation_type": "Unity Catalog Function"
       },
       "analytic_function": null,
       "analytic_spec_params": {}
@@ -30159,7 +30175,8 @@
         "ignore_case",
         "classification_names",
         "metadata_element_subtypes",
-        "metadata_element_type"
+        "metadata_element_type",
+        "deployed_implementation_type"
       ],
       "spec_params": {
         "metadata_element_type": "StorageVolume",
@@ -30167,7 +30184,7 @@
           "displayName",
           "qualifiedName"
         ],
-        "deployed_implementation_type": "Unity Catalog Volume"
+        "default_deployed_implementation_type": "Unity Catalog Volume"
       },
       "analytic_function": null,
       "analytic_spec_params": {}
@@ -30517,7 +30534,8 @@
         "ignore_case",
         "classification_names",
         "metadata_element_subtypes",
-        "metadata_element_type"
+        "metadata_element_type",
+        "deployed_implementation_type"
       ],
       "spec_params": {
         "metadata_element_type": "StorageVolume",
@@ -30525,7 +30543,7 @@
           "displayName",
           "qualifiedName"
         ],
-        "deployed_implementation_type": "Unity Catalog Volume"
+        "default_deployed_implementation_type": "Unity Catalog Volume"
       },
       "analytic_function": null,
       "analytic_spec_params": {}

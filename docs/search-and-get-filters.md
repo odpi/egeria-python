@@ -143,6 +143,14 @@ specs: `displayName` and `qualifiedName`) within `metadata_element_type`.
   `ignore_case`). So a Postgres-Server report never lists a Kafka server or a "Databricks Unity
   Catalog Server", and paging stays exact. The technology report specs also show a *Deployed
   Implementation Type* column.
+- In the technology report specs (Kafka, Postgres server/database, Unity Catalog ...) the
+  technology is a **run parameter**, `deployed_implementation_type`, whose default is the spec's
+  own technology (the spec pins it as `default_deployed_implementation_type`):
+  - not given → the spec's technology, matched exactly;
+  - `"*"` → any technology: the report lists or searches every element of its type (e.g. every
+    `SoftwareServer`); `'*'` as the search string still lists at most 100 per call, and a root type
+    is still refused;
+  - any other value → that technology, matched exactly.
 
 `MetadataExpert.find_metadata_elements_with_string("*")` with no type is refused with
 "give a search string or a type" instead of passing Egeria's "searchString is null" through.

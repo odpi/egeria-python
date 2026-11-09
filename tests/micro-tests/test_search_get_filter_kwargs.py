@@ -484,7 +484,7 @@ def test_generator_derives_type_and_technology_from_the_command():
     ce = "ClassificationExplorer.find_elements_by_property_value"
     assert gen._generic_search_constraints("Create Postgres Server Element", {"OM_TYPE": "SoftwareServer"}, ce, {}) == {
         "metadata_element_type": "SoftwareServer", "property_names": ["displayName", "qualifiedName"],
-        "deployed_implementation_type": "PostgreSQL Server"}
+        "default_deployed_implementation_type": "PostgreSQL Server"}
     assert gen._generic_search_constraints("Create Element", {"OM_TYPE": ""}, ce, {})["metadata_element_type"] \
         == "OpenMetadataRoot"
     # an explicit type in find_constraints is kept; other find methods are untouched
@@ -497,7 +497,11 @@ def test_technology_specs_show_the_technology_column():
     from pyegeria.view.base_report_formats import get_report_registry
 
     fs = get_report_registry()["Postgres-Server-Element-DrE-Basic"]
-    assert fs.action.spec_params["deployed_implementation_type"] == "PostgreSQL Server"
+    # the spec pins a DEFAULT; the run parameter is declared optional (no unknown-filter warning, and
+    # the Portal's run form shows it)
+    assert fs.action.spec_params["default_deployed_implementation_type"] == "PostgreSQL Server"
+    assert "deployed_implementation_type" not in fs.action.spec_params
+    assert "deployed_implementation_type" in fs.action.optional_params
     assert any(c.key == "deployed_implementation_type" for c in fs.formats[0].attributes)
 
 
@@ -561,3 +565,81 @@ def test_exec_report_spec_surfaces_a_refusal(monkeypatch):
     with pytest.raises(ValueError, match="narrower type"):
         fse.exec_report_spec("R", output_format="DICT", params={"search_string": "*"},
                              view_server="v", view_url="https://x", user="u", user_pass="p", token="t")
+
+
+
+def _tech(body):
+    conds = body.get("searchProperties", {}).get("conditions", []) if isinstance(body, dict) else []
+    return [c["value"]["primitiveValue"] for c in conds if c.get("property") == "deployedImplementationType"]
+
+
+def test_technology_default_applies_when_not_given(explorer):
+    explorer.find_elements_by_property_value("*", ["displayName"], metadata_element_type="SoftwareServer",
+                                             default_deployed_implementation_type="PostgreSQL Server")
+    assert _tech(explorer.sent[-1]) == ["PostgreSQL Server"]
+
+
+def test_technology_star_means_any_technology(explorer):
+    # '*' as the technology drops the condition: every SoftwareServer, '*' still lists via get_elements
+    explorer.find_elements_by_property_value("*", ["displayName"], metadata_element_type="SoftwareServer",
+                                             deployed_implementation_type="*",
+                                             default_deployed_implementation_type="PostgreSQL Server",
+                                             page_size=500)
+    body = explorer.sent[-1]
+    assert _tech(body) == [] and body["metadataElementTypeName"] == "SoftwareServer"
+    assert body["pageSize"] == 100  # still capped
+    # a search string still matches by name, within the whole type
+    explorer.find_elements_by_property_value("Coco", ["displayName"], metadata_element_type="SoftwareServer",
+                                             deployed_implementation_type="*",
+                                             default_deployed_implementation_type="PostgreSQL Server")
+    assert explorer.sent[-1]["propertyValue"] == "Coco" and _tech(explorer.sent[-1]) == []
+
+
+def test_technology_star_keeps_the_root_type_refusal(explorer):
+    with pytest.raises(ValueError, match="narrower type"):
+        explorer.find_elements_by_property_value("*", ["displayName"], metadata_element_type="OpenMetadataRoot",
+                                                 deployed_implementation_type="*")
+
+
+def test_any_other_technology_is_an_exact_match(explorer):
+    explorer.find_elements_by_property_value("*", ["displayName"], metadata_element_type="SoftwareServer",
+                                             deployed_implementation_type="Apache Kafka Server",
+                                             default_deployed_implementation_type="PostgreSQL Server")
+    body = explorer.sent[-1]
+    assert _tech(body) == ["Apache Kafka Server"]
+    assert body["searchProperties"]["conditions"][0]["operator"] == "EQ"
+
+
+def test_report_run_param_overrides_the_technology_default(monkeypatch):
+    """Through the executor: the spec pins the default, the caller's run parameter wins, no warning."""
+    import pyegeria.view.format_set_executor as fse
+    from pyegeria.view.base_report_formats import get_report_registry
+
+    calls = []
+
+    class _Client:
+        def __init__(self, *a, **k):
+            pass
+
+        def set_bearer_token(self, token):
+            pass
+
+        def close_session(self):
+            pass
+
+        def find_elements_by_property_value(self, property_value, property_names, metadata_element_type=None,
+                                            deployed_implementation_type=None,
+                                            default_deployed_implementation_type=None, **kwargs):
+            calls.append((deployed_implementation_type, default_deployed_implementation_type))
+            return []
+
+    action = get_report_registry()["Postgres-Server-Element-DrE-Basic"].action
+    fmt = {"action": action.model_dump()}
+    monkeypatch.setattr(fse, "select_report_spec", lambda name, kind: fmt)
+    monkeypatch.setattr(fse, "_resolve_client_and_method", lambda decl: (_Client, "find_elements_by_property_value"))
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", UnknownFilterWarning)
+        for run_params in ({"search_string": "*"}, {"search_string": "*", "deployed_implementation_type": "*"}):
+            fse.exec_report_spec("Postgres-Server-Element-DrE-Basic", output_format="DICT", params=run_params,
+                                 view_server="v", view_url="https://x", user="u", user_pass="p", token="t")
+    assert calls == [(None, "PostgreSQL Server"), ("*", "PostgreSQL Server")]

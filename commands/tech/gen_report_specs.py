@@ -331,7 +331,9 @@ def _generic_search_constraints(cmd_key: str, cmd_obj: dict, find_method: str, c
         out.setdefault("property_names", list(GENERIC_PROPERTY_NAMES))
         technology = _technology_for_command(cmd_key)
         if technology:
-            out.setdefault("deployed_implementation_type", technology)
+            # A default, not a pin: the run parameter deployed_implementation_type (declared optional,
+            # so the Portal's run form shows it) overrides it, and "*" means any technology.
+            out.setdefault("default_deployed_implementation_type", technology)
     return out
 
 
@@ -436,8 +438,8 @@ def build_format_sets_from_commands(
             find_method = cmd_obj.get("find_method") or ""
             constraints = _generic_search_constraints(
                 cmd_key, cmd_obj, find_method, _safe_parse_constraints(cmd_obj.get("find_constraints")))
-            if "deployed_implementation_type" in constraints and \
-                    all(c.key != TECHNOLOGY_COLUMN.key for c in columns):
+            technology_spec = "default_deployed_implementation_type" in constraints
+            if technology_spec and all(c.key != TECHNOLOGY_COLUMN.key for c in columns):
                 columns = [*columns, Column(**TECHNOLOGY_COLUMN.model_dump())]
             extra_find = cmd_obj.get("extra_find") or ""
             extra_constraints = _safe_parse_constraints(cmd_obj.get("extra_constraints"))
@@ -449,7 +451,8 @@ def build_format_sets_from_commands(
                 action = ActionParameter(
                     function=find_method or None,
                     required_params=["search_string"] if find_method else [],
-                    optional_params=OPTIONAL_SEARCH_PARAMS if find_method else [],
+                    optional_params=([*OPTIONAL_SEARCH_PARAMS, "deployed_implementation_type"]
+                                     if technology_spec else OPTIONAL_SEARCH_PARAMS) if find_method else [],
                     spec_params=constraints or {},
                     analytic_function=extra_find or None,
                     analytic_spec_params=(extra_constraints or {}) if extra_find else {},
