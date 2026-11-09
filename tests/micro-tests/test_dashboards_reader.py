@@ -210,3 +210,48 @@ def test_runtime_registration_may_shadow_egeria(clean_registry):
     registry.set_egeria_dashboard_sheets([EgeriaDashboardSheet(name="x", heading="X from Egeria")])
     registry.register_dashboard_sheets({"x": DashboardSheet(name="x", heading="X runtime")})
     assert registry.get_dashboard_sheet_registry()["x"].heading == "X runtime"
+
+
+# ---------------------------------------------------------------------------- drift (read-back P3, 2026-11-09)
+
+async def _cdo_with_link_edits(edit):
+    fake = _egeria_with_reports(LIVE)
+    name = "Chief Data Officer Dashboard"
+    await DashboardSheetEgeriaWriter(fake).write_sheet(DashboardSheet(**LIVE[name]))
+    edit(fake)
+    loaded = await async_load_dashboard_sheet(fake, name)
+    return fake, {p.ref: p for p in loaded.placements}
+
+
+@pytest.mark.asyncio
+async def test_extra_scopedby_link_is_a_note():
+    def edit(fake):
+        field = fake.by_qn("DashboardPlacement::Chief Data Officer Dashboard::4::Governance Metrics Defined")
+        fake.relationships.append({"guid": "x1", "type": "ScopedBy", "end1": fake.by_qn("Perspective::Privacy"),
+                                   "end2": field, "props": {}})
+    _, placements = await _cdo_with_link_edits(edit)
+    p = placements["Governance Metrics Defined"]
+    assert p.perspectives == ["governance"]  # the stored labels stay the value
+    assert p.note == "ScopedBy link(s) to Perspective::Privacy are not in the stored perspectives"
+
+
+@pytest.mark.asyncio
+async def test_removed_scopedby_link_is_a_note():
+    def edit(fake):
+        field = fake.by_qn("DashboardPlacement::Chief Data Officer Dashboard::7::Data Asset Ownership")
+        owner = fake.by_qn("Perspective::Owner")
+        fake.relationships = [r for r in fake.relationships
+                              if not (r["type"] == "ScopedBy" and r["end1"] == owner and r["end2"] == field)]
+    _, placements = await _cdo_with_link_edits(edit)
+    assert placements["Data Asset Ownership"].note == "stored perspective(s) owner have no ScopedBy link in Egeria"
+
+
+@pytest.mark.asyncio
+async def test_unexplained_datadescription_link_is_a_note():
+    def edit(fake):
+        spec = fake.add_entity("ReportSpec", "ReportSpec::Something-Else", "Something-Else")
+        field = fake.by_qn("DashboardPlacement::Chief Data Officer Dashboard::4::Governance Metrics Defined")
+        fake.relationships.append({"guid": "x2", "type": "DataDescription", "end1": field, "end2": spec, "props": {}})
+    _, placements = await _cdo_with_link_edits(edit)
+    assert placements["Governance Metrics Defined"].note == (
+        "DataDescription links to ReportSpec::Something-Else, but the stored drill-down is Governance-Metric-DrE-Basic")

@@ -14,11 +14,13 @@ subclasses `EgeriaDashboardSheet` / `EgeriaPlacement`, which add only what an Eg
 `as_local_model()` drops those, giving a plain `DashboardSheet` that compares equal to the JSON record it
 was written from.
 
-Absence is said in words, never as an empty value:
+Absence and drift are said in words, never as an empty value:
   - a REPORT placement whose field exists but whose DataSetContent link is gone reads `kind: "missing"`,
     note "report link missing in Egeria" (its `ref` is the placement's name, so it can still be shown);
   - a sheet whose chain is broken (no layout schema, no sheet container) is listed with the break named
-    in `breaks`, not dropped.
+    in `breaks`, not dropped;
+  - a placement whose stored perspective labels or drill-down name disagree with its ScopedBy /
+    DataDescription links (edited in Egeria directly) gets a note naming the difference.
 
 The chain is walked with the same primitives that write it (md_processing.v2.dashboard_sheet), so the
 writer and the reader cannot disagree about its shape. Every Egeria read is bounded: page size 25,
@@ -48,7 +50,7 @@ from pydantic import Field
 
 from md_processing.v2.dashboard_sheet import (
     DASHBOARD_QN_PREFIX, DashboardSheetEgeriaWriter, _default_store_path, _load_store, dashboard_qn,
-    sheet_name_from_dashboard_qn,
+    perspective_qualified_name, sheet_name_from_dashboard_qn,
 )
 from pyegeria.view._output_dashboard_sheet_models import DashboardSheet, DashboardSheetDict, Placement
 
@@ -98,22 +100,43 @@ def _split_labels(value: Any) -> List[str]:
     return [p.strip() for p in str(value or "").split(",") if p.strip()]
 
 
-async def _perspective_labels(writer: DashboardSheetEgeriaWriter, field_guid: str) -> List[str]:
-    """Labels from the field's ScopedBy links, for a field that does not carry its labels."""
-    out = []
-    for e in await writer._related(field_guid, "ScopedBy", start_at_end=2):
-        if writer._type(e) != "Perspective":
-            continue
-        qn = (e.get("properties") or {}).get("qualifiedName") or ""
-        out.append(qn.split("::", 1)[1] if qn.startswith("Perspective::") else qn)
-    return out
+async def _scoped_by_qns(writer: DashboardSheetEgeriaWriter, field_guid: str) -> List[str]:
+    """qualifiedNames of the Perspectives linked to a placement by ScopedBy."""
+    return [(e.get("properties") or {}).get("qualifiedName") or ""
+            for e in await writer._related(field_guid, "ScopedBy", start_at_end=2)
+            if writer._type(e) == "Perspective"]
 
 
-async def _detail_spec_name(writer: DashboardSheetEgeriaWriter, field_guid: str) -> Optional[str]:
-    for e in await writer._related(field_guid, "DataDescription", start_at_end=1):
-        props = e.get("properties") or {}
-        return props.get("displayName") or props.get("qualifiedName")
-    return None
+async def _data_descriptions(writer: DashboardSheetEgeriaWriter, field_guid: str) -> List[Dict[str, Any]]:
+    return [e.get("properties") or {} for e in await writer._related(field_guid, "DataDescription", start_at_end=1)]
+
+
+def _perspective_drift(labels: List[str], linked_qns: List[str]) -> List[str]:
+    """Where the stored labels and the ScopedBy links disagree (someone edited one in Egeria), in words."""
+    expected = {perspective_qualified_name(label): label for label in labels}
+    notes = []
+    unlinked = [label for qn, label in expected.items() if qn not in linked_qns]
+    extra = [qn for qn in linked_qns if qn not in expected]
+    if unlinked:
+        notes.append(f"stored perspective(s) {', '.join(unlinked)} have no ScopedBy link in Egeria")
+    if extra:
+        notes.append(f"ScopedBy link(s) to {', '.join(extra)} are not in the stored perspectives")
+    return notes
+
+
+def _detail_drift(stored: Optional[str], linked: List[Dict[str, Any]]) -> List[str]:
+    """A DataDescription link that the stored drill-down name does not explain. A stored name with no link is
+    not drift: a spec held only in pyegeria has no element to link to."""
+    names = []
+    for props in linked:
+        qn = props.get("qualifiedName") or ""
+        names.append((props.get("displayName"), qn, qn.split("::", 1)[1] if "::" in qn else qn))
+    if not names:
+        return []
+    if stored and any(stored in n for n in names):
+        return []
+    shown = ", ".join(n[1] or n[0] or "?" for n in names)
+    return [f"DataDescription links to {shown}, but the stored drill-down is {stored or 'none'}"]
 
 
 async def read_sheet_from_chain(client: Any, sheet_name: str,
@@ -158,11 +181,20 @@ async def read_sheet_from_chain(client: Any, sheet_name: str,
         if style not in _STYLES:
             notes.append(f"presentationStyle '{style}' is not one of {', '.join(_STYLES)}; shown as kpi")
             style = "kpi"
+        # The labels and drill-down name stored on the field are what the author wrote; the ScopedBy /
+        # DataDescription links carry the graph meaning. Read both, and say where they disagree.
+        linked_qns = await _scoped_by_qns(writer, f.guid)
         if "perspectives" in f_extra:
             perspectives = _split_labels(f_extra.get("perspectives"))
+            notes += _perspective_drift(perspectives, linked_qns)
         else:
-            perspectives = await _perspective_labels(writer, f.guid)
-        detail_spec = f_extra.get("detailSpec") or await _detail_spec_name(writer, f.guid)
+            perspectives = [qn.split("::", 1)[1] if qn.startswith("Perspective::") else qn for qn in linked_qns]
+        linked_specs = await _data_descriptions(writer, f.guid)
+        detail_spec = f_extra.get("detailSpec") or None
+        if "detailSpec" in f_extra or "placementName" in f_extra:
+            notes += _detail_drift(detail_spec, linked_specs)
+        if detail_spec is None and linked_specs:
+            detail_spec = linked_specs[0].get("displayName") or linked_specs[0].get("qualifiedName")
 
         kind = fp.get("placementKind") or "report"
         if kind == "text":
