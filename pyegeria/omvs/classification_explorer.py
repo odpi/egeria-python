@@ -14,6 +14,7 @@ from httpx import Response
 from loguru import logger
 from typing import Any, Optional
 from typing import Unpack
+from pyegeria.core.request_filters import deprecated_names
 from pyegeria.core.request_filters import GetFilters, ListFilters, SearchFilters
 from pyegeria.core.request_filters import filter_body_kwargs
 from pyegeria.core._exceptions import PyegeriaException, PyegeriaInvalidParameterException
@@ -2648,11 +2649,12 @@ class ClassificationExplorer(ServerClient):
 
         return response
 
+    @deprecated_names(metadata_element_name="metadata_element_type")
     async def _async_get_elements_by_property_value(
             self,
             property_value: str = None,
             property_names: Optional[list[str]] = None,
-            metadata_element_name: Optional[str] = None,
+            metadata_element_type: Optional[str] = None,
             starts_with: bool = True,
             ends_with: bool = False,
             ignore_case: bool = False,
@@ -2690,7 +2692,7 @@ class ClassificationExplorer(ServerClient):
             - property value to be searched.
         property_names: list[str]
             - property names to search in.
-        metadata_element_name : str, default = None
+        metadata_element_type : str, default = None
             - open metadata type to be used to restrict the search
         starts_with : bool, default = True
             - Whether to match only at the start.
@@ -2778,7 +2780,7 @@ class ClassificationExplorer(ServerClient):
                                               sequencing_order=sequencing_order,
                                               sequencing_property=sequencing_property, output_format=output_format,
                                               report_spec=report_spec, start_from=start_from, page_size=page_size,
-                                              property_names=property_names, body=body, **{"metadata_element_type": metadata_element_name, **kwargs})
+                                              property_names=property_names, body=body, **{"metadata_element_type": metadata_element_type, **kwargs})
 
     def get_elements_by_property_value(
             self,
@@ -2915,11 +2917,12 @@ class ClassificationExplorer(ServerClient):
         )
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     async def _async_find_elements_by_property_value(
         self,
         property_value: str,
         property_names: list[str],
-        metadata_element_type_name: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = False,
@@ -2957,7 +2960,7 @@ class ClassificationExplorer(ServerClient):
             - property value to be searched.
         property_names: list[str]
             - property names to search in.
-        metadata_element_type_name : str, default = None
+        metadata_element_type : str, default = None
             - open metadata type to be used to restrict the search
         starts_with : bool, default = True
             - Whether to match only at the start.
@@ -3054,7 +3057,7 @@ class ClassificationExplorer(ServerClient):
             'ends_with': ends_with,
             'ignore_case': ignore_case,
             'anchor_domain': anchor_domain,
-            'metadata_element_type': metadata_element_type_name,
+            'metadata_element_type': metadata_element_type,
             'metadata_element_subtypes': metadata_element_subtypes,
             'skip_relationships': skip_relationships,
             'include_only_relationships': include_only_relationships,
@@ -3076,15 +3079,16 @@ class ClassificationExplorer(ServerClient):
         }
         params.update(kwargs)
         params = {k: v for k, v in params.items() if v is not None}
-        return await self._async_find_request(url, _type=metadata_element_type_name,
+        return await self._async_find_request(url, _type=metadata_element_type,
                                               _gen_output=self._generate_referenceable_output,
                                               search_string=property_value, **params)
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     def find_elements_by_property_value(
         self,
         property_value: str,
         property_names: list[str],
-        metadata_element_type_name: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = False,
@@ -3122,7 +3126,7 @@ class ClassificationExplorer(ServerClient):
             - property value to be searched.
         property_names: list[str]
             - property names to search in.
-        metadata_element_type_name : str, default = None
+        metadata_element_type : str, default = None
             - open metadata type to be used to restrict the search
         start_from: int, default = 0
             - index of the list to start from (0 for start).
@@ -3170,7 +3174,7 @@ class ClassificationExplorer(ServerClient):
             self._async_find_elements_by_property_value(
                 property_value,
                 property_names,
-                metadata_element_type_name,
+                metadata_element_type,
                 starts_with=starts_with,
                 ends_with=ends_with,
                 ignore_case=ignore_case,
@@ -3707,12 +3711,13 @@ class ClassificationExplorer(ServerClient):
         return response
 
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     async def _async_get_elements_by_classification_with_property_value(
             self,
             classification_name: str,
             property_value: str,
             property_names: Optional[list[str]] = None,
-            metadata_element_type_name: Optional[str] = None,
+            metadata_element_type: Optional[str] = None,
             starts_with: bool = True,
             ends_with: bool = False,
             ignore_case: bool = False,
@@ -3752,7 +3757,7 @@ class ClassificationExplorer(ServerClient):
              - property value to be searched.
          property_names: list[str]
              - property names to search in.
-         metadata_element_type_name : str, default = None
+         metadata_element_type : str, default = None
              - open metadata type to be used to restrict the search
          starts_with : bool, default = True
              - Whether to match only at the start.
@@ -3841,14 +3846,15 @@ class ClassificationExplorer(ServerClient):
                                               sequencing_order=sequencing_order,
                                               sequencing_property=sequencing_property, output_format=output_format,
                                               report_spec=report_spec, start_from=start_from, page_size=page_size,
-                                              property_names=property_names, body=body, **{"metadata_element_type": metadata_element_type_name, **kwargs})
+                                              property_names=property_names, body=body, **{"metadata_element_type": metadata_element_type, **kwargs})
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     def get_elements_by_classification_with_property_value(
             self,
             classification_name: str,
             property_value: str,
             property_names: Optional[list[str]] = None,
-            metadata_element_type_name: Optional[str] = None,
+            metadata_element_type: Optional[str] = None,
             starts_with: bool = True,
             ends_with: bool = False,
             ignore_case: bool = False,
@@ -3887,7 +3893,7 @@ class ClassificationExplorer(ServerClient):
             - property value to be searched.
         property_names: list[str]
             - property names to search in.
-        metadata_element_type_name : str, default = None
+        metadata_element_type : str, default = None
             - open metadata type to be used to restrict the search
         starts_with : bool, default = True
             - Whether to match only at the start.
@@ -3952,7 +3958,7 @@ class ClassificationExplorer(ServerClient):
                 classification_name,
                 property_value,
                 property_names,
-                metadata_element_type_name,
+                metadata_element_type,
                 starts_with,
                 ends_with,
                 ignore_case,
@@ -3980,12 +3986,13 @@ class ClassificationExplorer(ServerClient):
         )
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     async def _async_find_elements_by_classification_with_property_value(
         self,
         classification_name: str,
         property_value: str,
         property_names: list[str],
-        metadata_element_type_name: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = False,
@@ -4027,7 +4034,7 @@ class ClassificationExplorer(ServerClient):
             - property value to be searched.
         property_names: list[str]
             - property names to search in.
-        metadata_element_type_name : str, default = None
+        metadata_element_type : str, default = None
             - open metadata type to be used to restrict the search
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
@@ -4082,7 +4089,7 @@ class ClassificationExplorer(ServerClient):
             'ends_with': ends_with,
             'ignore_case': ignore_case,
             'anchor_domain': anchor_domain,
-            'metadata_element_type': metadata_element_type_name,
+            'metadata_element_type': metadata_element_type,
             'metadata_element_subtypes': metadata_element_subtypes,
             'skip_relationships': skip_relationships,
             'include_only_relationships': include_only_relationships,
@@ -4104,16 +4111,17 @@ class ClassificationExplorer(ServerClient):
         }
         params.update(kwargs)
         params = {k: v for k, v in params.items() if v is not None}
-        return await self._async_find_request(url, _type=metadata_element_type_name,
+        return await self._async_find_request(url, _type=metadata_element_type,
                                               _gen_output=self._generate_referenceable_output,
                                               search_string=property_value, **params)
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     def find_elements_by_classification_with_property_value(
         self,
         classification_name: str,
         property_value: str,
         property_names: list[str],
-        metadata_element_type_name: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = False,
@@ -4154,7 +4162,7 @@ class ClassificationExplorer(ServerClient):
             - property value to be searched.
         property_names: list[str]
             - property names to search in.
-        metadata_element_type_name : str, default = None
+        metadata_element_type : str, default = None
             - open metadata type to be used to restrict the search
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
@@ -4189,7 +4197,7 @@ class ClassificationExplorer(ServerClient):
                 classification_name,
                 property_value,
                 property_names,
-                metadata_element_type_name,
+                metadata_element_type,
                 starts_with=starts_with,
                 ends_with=ends_with,
                 ignore_case=ignore_case,
@@ -4361,13 +4369,14 @@ class ClassificationExplorer(ServerClient):
         )
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     async def _async_get_related_elements_with_property_value(
             self,
             element_guid: str,
             relationship_type: str,
             property_value: str,
             property_names: Optional[list[str]] = None,
-            metadata_element_type_name: Optional[str] = None,
+            metadata_element_type: Optional[str] = None,
             start_at_end: int = 1,
             starts_with: bool = True,
             ends_with: bool = False,
@@ -4410,7 +4419,7 @@ class ClassificationExplorer(ServerClient):
             - property value to be searched.
         property_names: list[str]
             - property names to search in.
-        metadata_element_type_name : str, default = None
+        metadata_element_type : str, default = None
             - restrict search to elements of this open metadata type
         start_at_end: int, default = 1
             - The end of the relationship to start from - typically End1
@@ -4497,15 +4506,16 @@ class ClassificationExplorer(ServerClient):
                                               sequencing_order=sequencing_order,
                                               sequencing_property=sequencing_property, output_format=output_format,
                                               report_spec=report_spec, start_from=start_from, page_size=page_size,
-                                              property_names=property_names, body=body, **{"metadata_element_type": metadata_element_type_name, **kwargs})
+                                              property_names=property_names, body=body, **{"metadata_element_type": metadata_element_type, **kwargs})
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     def get_related_elements_with_property_value(
             self,
             element_guid: str,
             relationship_type: str,
             property_value: str,
             property_names: Optional[list[str]] = None,
-            metadata_element_type_name: Optional[str] = None,
+            metadata_element_type: Optional[str] = None,
             start_at_end: int = 1,
             starts_with: bool = True,
             ends_with: bool = False,
@@ -4548,7 +4558,7 @@ class ClassificationExplorer(ServerClient):
             - property value to be searched.
         property_names: list[str]
             - property names to search in.
-        metadata_element_type_name : str, default = None
+        metadata_element_type : str, default = None
             - open metadata type to be used to restrict the search
         start_at_end: int, default = 1
             - The end of the relationship to start from - typically End1
@@ -4588,7 +4598,7 @@ class ClassificationExplorer(ServerClient):
                 relationship_type,
                 property_value,
                 property_names,
-                metadata_element_type_name,
+                metadata_element_type,
                 start_at_end,
                 starts_with,
                 ends_with,
@@ -4618,13 +4628,14 @@ class ClassificationExplorer(ServerClient):
         return response
 
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     async def _async_find_related_elements_with_property_value(
         self,
         element_guid: str,
         relationship_type: str,
         property_value: str,
         property_names: list[str],
-        metadata_element_type_name: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
         start_at_end: int = 1,
         starts_with: bool = True,
         ends_with: bool = False,
@@ -4668,7 +4679,7 @@ class ClassificationExplorer(ServerClient):
             - property value to be searched.
         property_names: list[str]
             - property names to search in.
-        metadata_element_type_name : str, default = None
+        metadata_element_type : str, default = None
             - restrict search to elements of this open metadata type
         start_at_end: int, default = 1
             - The end of the relationship to start from - typically End1
@@ -4709,7 +4720,7 @@ class ClassificationExplorer(ServerClient):
         if body is None:
             body = {
                 "class": "FindPropertyNamesProperties",
-                "metadataElementTypeName": metadata_element_type_name,
+                "metadataElementTypeName": metadata_element_type,
                 "propertyValue": property_value,
                 "propertyNames": property_names,
                 "forLineage": None,
@@ -4728,7 +4739,7 @@ class ClassificationExplorer(ServerClient):
             'ends_with': ends_with,
             'ignore_case': ignore_case,
             'anchor_domain': anchor_domain,
-            'metadata_element_type': metadata_element_type_name,
+            'metadata_element_type': metadata_element_type,
             'metadata_element_subtypes': metadata_element_subtypes,
             'skip_relationships': skip_relationships,
             'include_only_relationships': include_only_relationships,
@@ -4750,17 +4761,18 @@ class ClassificationExplorer(ServerClient):
         }
         params.update(kwargs)
         params = {k: v for k, v in params.items() if v is not None}
-        return await self._async_find_request(url, _type=metadata_element_type_name,
+        return await self._async_find_request(url, _type=metadata_element_type,
                                               _gen_output=self._generate_referenceable_output,
                                               search_string=property_value, **params)
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     def find_related_elements_with_property_value(
         self,
         element_guid: str,
         relationship_type: str,
         property_value: str,
         property_names: list[str],
-        metadata_element_type_name: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
         start_at_end: int = 1,
         starts_with: bool = True,
         ends_with: bool = False,
@@ -4804,7 +4816,7 @@ class ClassificationExplorer(ServerClient):
             - property value to be searched.
         property_names: list[str]
             - property names to search in.
-        metadata_element_type_name : str, default = None
+        metadata_element_type : str, default = None
             - restrict search to elements of this open metadata type
         start_at_end: int, default = 1
             - The end of the relationship to start from - typically End1
@@ -4842,7 +4854,7 @@ class ClassificationExplorer(ServerClient):
                 relationship_type,
                 property_value,
                 property_names,
-                metadata_element_type_name,
+                metadata_element_type,
                 start_at_end,
                 starts_with=starts_with,
                 ends_with=ends_with,
@@ -12614,10 +12626,11 @@ class ClassificationExplorer(ServerClient):
         )
 
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_find_root_elements(
         self,
-        metadata_element_type_name: str = None,
+        metadata_element_type: str = None,
         search_properties: dict = None,
         match_classifications: dict = None,
         start_from: int = 0,
@@ -12633,7 +12646,7 @@ class ClassificationExplorer(ServerClient):
 
         Parameters
         ----------
-        metadata_element_type_name: str, optional
+        metadata_element_type: str, optional
             - name of the type of element to return.
         search_properties: dict, optional
             - structure containing the search criteria for the properties.
@@ -12695,7 +12708,7 @@ class ClassificationExplorer(ServerClient):
             body_dict = {
                 'graphQueryDepth': graph_query_depth,
                 "class": "FindRequestBody",
-                "metadataElementTypeName": metadata_element_type_name,
+                "metadataElementTypeName": metadata_element_type,
                 "searchProperties": search_properties,
                 "matchClassifications": match_classifications,
                 "startFrom": start_from,
@@ -12715,14 +12728,15 @@ class ClassificationExplorer(ServerClient):
 
         if output_format.upper() != "JSON":
             return self._generate_referenceable_output(
-                elements, None, metadata_element_type_name, output_format, report_spec
+                elements, None, metadata_element_type, output_format, report_spec
             )
         return elements
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def find_root_elements(
         self,
-        metadata_element_type_name: str = None,
+        metadata_element_type: str = None,
         search_properties: dict = None,
         match_classifications: dict = None,
         start_from: int = 0,
@@ -12738,7 +12752,7 @@ class ClassificationExplorer(ServerClient):
 
         Parameters
         ----------
-        metadata_element_type_name: str, optional
+        metadata_element_type: str, optional
             - name of the type of element to return.
         search_properties: dict, optional
             - structure containing the search criteria for the properties.
@@ -12773,7 +12787,7 @@ class ClassificationExplorer(ServerClient):
         # (get_scoped_elements/get_scopes).
         return run_sync(
             self._async_find_root_elements(
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 search_properties=search_properties,
                 match_classifications=match_classifications,
                 start_from=start_from,

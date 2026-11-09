@@ -12,6 +12,7 @@ import asyncio
 from typing import Optional
 
 from typing import Unpack
+from pyegeria.core.request_filters import deprecated_names
 from pyegeria.core.request_filters import GetFilters, ListFilters, SearchFilters
 from pyegeria.omvs.collection_manager import CollectionManager
 from pyegeria.core._server_client import ServerClient
@@ -584,6 +585,7 @@ class ProductManager(CollectionManager):
             )
         )
 
+    @deprecated_names(metadata_element_subtype="metadata_element_subtypes")
     @dynamic_catch
     async def _async_find_digital_products(
         self,
@@ -596,8 +598,8 @@ class ProductManager(CollectionManager):
         page_size: int = 100,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
-        metadata_element_subtype: Optional[list[str]] = None,
-        **kwargs: Unpack[SearchFilters]
+        metadata_element_subtypes: Optional[list[str]] = None,
+        **kwargs
     ) -> list | str:
         """Returns the list of digital products matching the search string. Async version.
 
@@ -615,7 +617,7 @@ class ProductManager(CollectionManager):
             Anchor domain to filter on.
         metadata_element_type : str, optional
             Metadata element type name to filter on.
-        metadata_element_subtype : list[str], optional
+        metadata_element_subtypes : list[str], optional
             List of metadata element subtypes to filter on.
         skip_relationships : list[str], optional
             List of relationship types to skip.
@@ -667,8 +669,8 @@ class ProductManager(CollectionManager):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        if metadata_element_subtype is None:
-            metadata_element_subtype = ["DigitalProduct"]
+        if metadata_element_subtypes is None:
+            metadata_element_subtypes = ["DigitalProduct"]
 
         url = f"{self.product_manager_command_root}/collections/by-search-string"
         
@@ -684,7 +686,7 @@ class ProductManager(CollectionManager):
             'page_size': page_size,
             'output_format': output_format,
             'report_spec': report_spec,
-            'metadata_element_subtypes': metadata_element_subtype
+            'metadata_element_subtypes': metadata_element_subtypes
         }
         params.update(kwargs)
         
@@ -695,6 +697,7 @@ class ProductManager(CollectionManager):
                                                   _gen_output=self._generate_collection_output, **params)
         return response
 
+    @deprecated_names(metadata_element_subtype="metadata_element_subtypes")
     def find_digital_products(
         self,
         search_string: str = "*",
@@ -706,8 +709,8 @@ class ProductManager(CollectionManager):
         page_size: int = 100,
         graph_query_depth: int = 3, output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
-        metadata_element_subtype: Optional[list[str]] = None,
-        **kwargs: Unpack[SearchFilters]
+        metadata_element_subtypes: Optional[list[str]] = None,
+        **kwargs
     ) -> list | str:
         """Returns the list of digital products matching the search string. Sync version.
 
@@ -725,7 +728,7 @@ class ProductManager(CollectionManager):
             Anchor domain to filter on.
         metadata_element_type : str, optional
             Metadata element type name to filter on.
-        metadata_element_subtype : list[str], optional
+        metadata_element_subtypes : list[str], optional
             List of metadata element subtypes to filter on.
         skip_relationships : list[str], optional
             List of relationship types to skip.
@@ -789,7 +792,7 @@ class ProductManager(CollectionManager):
                 page_size=page_size,
                 output_format=output_format,
                 report_spec=report_spec,
-                metadata_element_subtype=metadata_element_subtype,
+                metadata_element_subtypes=metadata_element_subtypes,
                 **kwargs
             )
         )
@@ -1623,7 +1626,7 @@ class ProductManager(CollectionManager):
             Domain to anchor the search.
         metadata_element_type : str, optional
             Type of metadata element to search for.
-        metadata_element_subtype : str, optional
+        metadata_element_subtypes : list[str], optional
             Subtype of metadata element.
         skip_relationships : list[str], optional
             Relationships to skip in the graph.
@@ -1727,7 +1730,7 @@ class ProductManager(CollectionManager):
             Domain to anchor the search.
         metadata_element_type : str, optional
             Type of metadata element to search for.
-        metadata_element_subtype : str, optional
+        metadata_element_subtypes : list[str], optional
             Subtype of metadata element.
         skip_relationships : list[str], optional
             Relationships to skip in the graph.

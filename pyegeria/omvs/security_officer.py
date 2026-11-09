@@ -12,6 +12,7 @@ import uuid
 from typing import Optional, Union, Any
 
 from typing import Unpack
+from pyegeria.core.request_filters import deprecated_names
 from pyegeria.core.request_filters import ListFilters
 from pyegeria.core._server_client import ServerClient
 from pyegeria.core._globals import NO_ELEMENTS_FOUND
@@ -435,6 +436,7 @@ class SecurityOfficer(ServerClient):
     # Security Roles and Groups
     # =====================================================================
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_find_security_roles(
         self,
@@ -442,7 +444,7 @@ class SecurityOfficer(ServerClient):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = "SecurityRole",
+        metadata_element_type: str | None = "SecurityRole",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -468,7 +470,7 @@ class SecurityOfficer(ServerClient):
             "starts_with": starts_with,
             "ends_with": ends_with,
             "ignore_case": ignore_case,
-            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_type": metadata_element_type,
             "metadata_element_subtypes": metadata_element_subtypes,
             "include_only_relationships": include_only_relationships,
             "skip_relationships": skip_relationships,
@@ -492,13 +494,14 @@ class SecurityOfficer(ServerClient):
             **params,
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     def find_security_roles(
         self,
         search_string: str = "*",
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = "SecurityRole",
+        metadata_element_type: str | None = "SecurityRole",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -524,7 +527,7 @@ class SecurityOfficer(ServerClient):
                 starts_with=starts_with,
                 ends_with=ends_with,
                 ignore_case=ignore_case,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,
@@ -541,6 +544,7 @@ class SecurityOfficer(ServerClient):
             )
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_find_security_groups(
         self,
@@ -548,7 +552,7 @@ class SecurityOfficer(ServerClient):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = "SecurityGroup",
+        metadata_element_type: str | None = "SecurityGroup",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -574,7 +578,7 @@ class SecurityOfficer(ServerClient):
             "starts_with": starts_with,
             "ends_with": ends_with,
             "ignore_case": ignore_case,
-            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_type": metadata_element_type,
             "metadata_element_subtypes": metadata_element_subtypes,
             "include_only_relationships": include_only_relationships,
             "skip_relationships": skip_relationships,
@@ -598,13 +602,14 @@ class SecurityOfficer(ServerClient):
             **params,
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     def find_security_groups(
         self,
         search_string: str = "*",
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = "SecurityGroup",
+        metadata_element_type: str | None = "SecurityGroup",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -630,7 +635,7 @@ class SecurityOfficer(ServerClient):
                 starts_with=starts_with,
                 ends_with=ends_with,
                 ignore_case=ignore_case,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,
@@ -956,6 +961,7 @@ class SecurityOfficer(ServerClient):
             )
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_find_statements_of_applicability(
         self,
@@ -963,7 +969,7 @@ class SecurityOfficer(ServerClient):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = None,
+        metadata_element_type: str | None = None,
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -1004,9 +1010,10 @@ class SecurityOfficer(ServerClient):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **{"metadata_element_type": metadata_element_type_name, **kwargs},
+            **{"metadata_element_type": metadata_element_type, **kwargs},
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def find_statements_of_applicability(
         self,
@@ -1014,7 +1021,7 @@ class SecurityOfficer(ServerClient):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = None,
+        metadata_element_type: str | None = None,
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -1040,7 +1047,7 @@ class SecurityOfficer(ServerClient):
                 starts_with=starts_with,
                 ends_with=ends_with,
                 ignore_case=ignore_case,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,

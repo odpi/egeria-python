@@ -11,6 +11,7 @@ import asyncio
 from typing import Any, Optional
 
 from typing import Unpack
+from pyegeria.core.request_filters import deprecated_names
 from pyegeria.core.request_filters import GetFilters, ListFilters
 from pyegeria.core._globals import NO_ELEMENTS_FOUND
 from pyegeria.core._server_client import ServerClient
@@ -848,6 +849,7 @@ class ProjectManager(ServerClient):
         )
         return resp
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_find_projects(
         self,
@@ -855,7 +857,7 @@ class ProjectManager(ServerClient):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = None,
+        metadata_element_type: str | None = None,
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -882,7 +884,7 @@ class ProjectManager(ServerClient):
             Whether to match projects ending with the search string.
         ignore_case : bool, default=True
             Whether to ignore case when searching.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             The metadata element type to search for.
         metadata_element_subtypes : list[str], optional
             The subtypes of metadata element to search for.
@@ -941,11 +943,12 @@ class ProjectManager(ServerClient):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **{"metadata_element_type": metadata_element_type_name, **kwargs},
+            **{"metadata_element_type": metadata_element_type, **kwargs},
         )
 
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def find_projects(
         self,
@@ -953,7 +956,7 @@ class ProjectManager(ServerClient):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = None,
+        metadata_element_type: str | None = None,
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -979,7 +982,7 @@ class ProjectManager(ServerClient):
                 starts_with=starts_with,
                 ends_with=ends_with,
                 ignore_case=ignore_case,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,

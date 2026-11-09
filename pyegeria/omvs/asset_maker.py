@@ -10,6 +10,7 @@ The Asset Maker OMVS provides APIs for supporting the creation and editing of as
 import asyncio
 from typing import Any, Optional
 from typing import Unpack
+from pyegeria.core.request_filters import deprecated_names
 from pyegeria.core.request_filters import GetFilters, ListFilters
 from pyegeria.core._server_client import ServerClient
 from pyegeria.core._globals import max_paging_size, NO_ELEMENTS_FOUND, NO_GUID_RETURNED
@@ -602,11 +603,12 @@ class AssetMaker(ServerClient):
         """
         super().delete_asset(asset_guid, body)
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_get_assets_by_name(
         self,
         filter_string: str | None = None,
-        metadata_element_type_name: str | None = "Asset",
+        metadata_element_type: str | None = "Asset",
         metadata_element_subtypes: list[str] | None = None,
         include_only_classified_elements: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
@@ -625,7 +627,7 @@ class AssetMaker(ServerClient):
         ----------
         filter_string: str
             String to find in the asset properties.
-        metadata_element_type_name: str, default "Asset"
+        metadata_element_type: str, default "Asset"
             The type of asset to filter by.
         metadata_element_subtypes: list[str], optional
             The subtypes of asset to filter by.
@@ -690,7 +692,7 @@ class AssetMaker(ServerClient):
         url = f"{self.asset_command_root}/assets/by-name"
         return await self._async_get_name_request(url, _type="Asset", _gen_output=self._generate_referenceable_output,
                                                   filter_string=filter_string,
-                                                  metadata_element_type_name=metadata_element_type_name,
+                                                  metadata_element_type=metadata_element_type,
                                                   metadata_element_subtypes=metadata_element_subtypes,
                                                   include_only_relationships=include_only_relationships,
                                                   skip_relationships=skip_relationships,
@@ -699,11 +701,12 @@ class AssetMaker(ServerClient):
                                                   page_size=page_size, output_format=output_format,
                                                   report_spec=report_spec, body=body, **{"classification_names": include_only_classified_elements, **kwargs})
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def get_assets_by_name(
         self,
         filter_string: str | None = None,
-        metadata_element_type_name: str | None = "Asset",
+        metadata_element_type: str | None = "Asset",
         metadata_element_subtypes: list[str] | None = None,
         include_only_classified_elements: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
@@ -722,7 +725,7 @@ class AssetMaker(ServerClient):
         ----------
         filter_string: str
             String to find in the asset properties.
-        metadata_element_type_name: str, default "Asset"
+        metadata_element_type: str, default "Asset"
             The type of asset to filter by.
         metadata_element_subtypes: list[str], optional
             The subtypes of asset to filter by.
@@ -786,7 +789,7 @@ class AssetMaker(ServerClient):
         """
         return run_sync(
             self._async_get_assets_by_name(filter_string=filter_string,
-                                           metadata_element_type_name=metadata_element_type_name,
+                                           metadata_element_type=metadata_element_type,
                                            metadata_element_subtypes=metadata_element_subtypes,
                                            include_only_classified_elements=include_only_classified_elements,
                                            include_only_relationships=include_only_relationships,
@@ -5753,16 +5756,17 @@ class AssetMaker(ServerClient):
             self._async_update_software_capability(software_capability_guid, body)
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_get_software_capability_by_guid(
         self,
         guid: str,
-        metadata_element_type_name: str | None = "SoftwareCapability",
+        metadata_element_type: str | None = "SoftwareCapability",
         graph_query_depth: int = 3,
         output_format: str = "JSON",
         report_spec: dict | str | None = None,
         body: dict | GetRequestBody | None = None,
-        **kwargs: Unpack[GetFilters]
+        **kwargs
     ) -> dict | str:
         """Retrieve a specific software capability. Async version.
 
@@ -5770,7 +5774,7 @@ class AssetMaker(ServerClient):
         ----------
         guid: str
             Unique identifier of the software capability.
-        metadata_element_type_name: str, default "SoftwareCapability"
+        metadata_element_type: str, default "SoftwareCapability"
             Metadata element type name to include in the request body.
         graph_query_depth: int, default 3
             The depth of the graph query.
@@ -5802,7 +5806,7 @@ class AssetMaker(ServerClient):
         url = f"{self.asset_command_root}/software-capabilities/{guid}"
         return await self._async_get_guid_request(
             url,
-            _type=metadata_element_type_name,
+            _type=metadata_element_type,
             _gen_output=self._generate_referenceable_output,
             graph_query_depth=graph_query_depth,
             output_format=output_format,
@@ -5811,16 +5815,17 @@ class AssetMaker(ServerClient):
             **kwargs
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def get_software_capability_by_guid(
         self,
         guid: str,
-        metadata_element_type_name: str | None = "SoftwareCapability",
+        metadata_element_type: str | None = "SoftwareCapability",
         graph_query_depth: int = 3,
         output_format: str = "JSON",
         report_spec: dict | str | None = None,
         body: dict | GetRequestBody | None = None,
-        **kwargs: Unpack[GetFilters]
+        **kwargs
     ) -> dict | str:
         """Retrieve a specific software capability.
 
@@ -5828,7 +5833,7 @@ class AssetMaker(ServerClient):
         ----------
         guid: str
             Unique identifier of the software capability.
-        metadata_element_type_name: str, default "SoftwareCapability"
+        metadata_element_type: str, default "SoftwareCapability"
             Metadata element type name to include in the request body.
         graph_query_depth: int, default 3
             The depth of the graph query.
@@ -5860,7 +5865,7 @@ class AssetMaker(ServerClient):
         return run_sync(
             self._async_get_software_capability_by_guid(
                 guid=guid,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 graph_query_depth=graph_query_depth,
                 output_format=output_format,
                 report_spec=report_spec,
@@ -6159,18 +6164,19 @@ class AssetMaker(ServerClient):
             )
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_get_software_capabilities_by_name(
         self,
         name: str | None = None,
-        metadata_element_type_name: str | None = "SoftwareCapability",
+        metadata_element_type: str | None = "SoftwareCapability",
         graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = None,
         body: Optional[dict | FilterRequestBody] = None,
-        **kwargs: Unpack[ListFilters]
+        **kwargs
     ) -> list | str:
         """Retrieve the list of software capabilities with a particular name. Async version.
 
@@ -6178,7 +6184,7 @@ class AssetMaker(ServerClient):
         ----------
         name: str
             Name to filter software capabilities by.
-        metadata_element_type_name: str, default "SoftwareCapability"
+        metadata_element_type: str, default "SoftwareCapability"
             Metadata element type name to include in the request body.
         graph_query_depth: int, default 3
             The depth of the graph query.
@@ -6211,7 +6217,7 @@ class AssetMaker(ServerClient):
             url,
             _type="SoftwareCapability",
             _gen_output=self._generate_referenceable_output,
-            metadata_element_type_name=metadata_element_type_name,
+            metadata_element_type=metadata_element_type,
             graph_query_depth=graph_query_depth,
             start_from=start_from,
             page_size=page_size,
@@ -6221,18 +6227,19 @@ class AssetMaker(ServerClient):
             **{"filter_string": name, **kwargs}
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def get_software_capabilities_by_name(
         self,
         name: str | None = None,
-        metadata_element_type_name: str | None = "SoftwareCapability",
+        metadata_element_type: str | None = "SoftwareCapability",
         graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = None,
         body: Optional[dict | FilterRequestBody] = None,
-        **kwargs: Unpack[ListFilters]
+        **kwargs
     ) -> list | str:
         """Retrieve the list of software capabilities with a particular name.
 
@@ -6240,7 +6247,7 @@ class AssetMaker(ServerClient):
         ----------
         name: str
             Name to filter software capabilities by.
-        metadata_element_type_name: str, default "SoftwareCapability"
+        metadata_element_type: str, default "SoftwareCapability"
             Metadata element type name to include in the request body.
         graph_query_depth: int, default 3
             The depth of the graph query.
@@ -6271,7 +6278,7 @@ class AssetMaker(ServerClient):
         return run_sync(
             self._async_get_software_capabilities_by_name(
                 name=name,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 graph_query_depth=graph_query_depth,
                 start_from=start_from,
                 page_size=page_size,
@@ -6282,18 +6289,19 @@ class AssetMaker(ServerClient):
             )
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_get_software_capabilities_by_deployed_implementation_type(
         self,
         deployed_implementation_type: str,
-        metadata_element_type_name: str | None = "SoftwareCapability",
+        metadata_element_type: str | None = "SoftwareCapability",
         graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = None,
         body: Optional[dict | FilterRequestBody] = None,
-        **kwargs: Unpack[ListFilters]
+        **kwargs
     ) -> list | str:
         """Retrieve the list of software capabilities with a particular deployed implementation type. Async version.
 
@@ -6301,7 +6309,7 @@ class AssetMaker(ServerClient):
         ----------
         deployed_implementation_type: str
             Deployed implementation type to filter by (e.g., "Software Server").
-        metadata_element_type_name: str, default "SoftwareCapability"
+        metadata_element_type: str, default "SoftwareCapability"
             Metadata element type name to include in the request body.
         graph_query_depth: int, default 3
             The depth of the graph query.
@@ -6334,7 +6342,7 @@ class AssetMaker(ServerClient):
             url,
             _type="SoftwareCapability",
             _gen_output=self._generate_referenceable_output,
-            metadata_element_type_name=metadata_element_type_name,
+            metadata_element_type=metadata_element_type,
             graph_query_depth=graph_query_depth,
             start_from=start_from,
             page_size=page_size,
@@ -6344,18 +6352,19 @@ class AssetMaker(ServerClient):
             **{"filter_string": deployed_implementation_type, **kwargs}
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def get_software_capabilities_by_deployed_implementation_type(
         self,
         deployed_implementation_type: str,
-        metadata_element_type_name: str | None = "SoftwareCapability",
+        metadata_element_type: str | None = "SoftwareCapability",
         graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = None,
         body: Optional[dict | FilterRequestBody] = None,
-        **kwargs: Unpack[ListFilters]
+        **kwargs
     ) -> list | str:
         """Retrieve the list of software capabilities with a particular deployed implementation type.
 
@@ -6363,7 +6372,7 @@ class AssetMaker(ServerClient):
         ----------
         deployed_implementation_type: str
             Deployed implementation type to filter by (e.g., "Software Server").
-        metadata_element_type_name: str, default "SoftwareCapability"
+        metadata_element_type: str, default "SoftwareCapability"
             Metadata element type name to include in the request body.
         graph_query_depth: int, default 3
             The depth of the graph query.
@@ -6394,7 +6403,7 @@ class AssetMaker(ServerClient):
         return run_sync(
             self._async_get_software_capabilities_by_deployed_implementation_type(
                 deployed_implementation_type=deployed_implementation_type,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 graph_query_depth=graph_query_depth,
                 start_from=start_from,
                 page_size=page_size,

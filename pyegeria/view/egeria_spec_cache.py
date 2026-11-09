@@ -499,7 +499,7 @@ def _call(fn, *args, **kwargs):
 
 
 def _find_folder(client, qn: str) -> Optional[Dict[str, Any]]:
-    found = _call(client.get_collections_by_name, qn, metadata_element_type_name="CollectionFolder",
+    found = _call(client.get_collections_by_name, qn, metadata_element_type="CollectionFolder",
                   output_format="JSON")
     exact = [e for e in found if _props(e).get("qualifiedName") == qn]
     return exact[0] if exact else None
@@ -510,7 +510,7 @@ def _find_specs_by_label(client, label: str) -> List[Dict[str, Any]]:
     seen: Dict[str, Dict[str, Any]] = {}
     for name in (label, f"ReportSpec::{label}", f"ReportType::{label}"):
         try:
-            found = _call(client.get_collections_by_name, name, metadata_element_type_name="ReportSpec",
+            found = _call(client.get_collections_by_name, name, metadata_element_type="ReportSpec",
                           output_format="JSON")
         except Exception as exc:  # noqa: BLE001 -- one failing lookup must not hide the others
             logger.debug(f"report spec lookup by name {name!r} failed: {exc}")
@@ -974,7 +974,7 @@ async def async_fetch_spec_for_call(client, name: str) -> str:
             seen: Dict[str, Dict[str, Any]] = {}
             for nm in (label, f"ReportSpec::{label}", f"ReportType::{label}"):
                 res = _elements(await getter._async_get_collections_by_name(
-                    nm, metadata_element_type_name="ReportSpec", output_format="JSON"))
+                    nm, metadata_element_type="ReportSpec", output_format="JSON"))
                 for e in res:
                     if label_from_qualified_name(_props(e).get("qualifiedName") or "") == label and _guid(e):
                         seen[_guid(e)] = e

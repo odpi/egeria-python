@@ -298,3 +298,83 @@ def test_no_call_hard_codes_a_filter_beside_forwarded_kwargs(methods):
             if clash:
                 bad.append(f"{m.qualname}: {clash}")
     assert not bad, "\n".join(bad)
+
+
+# ---------------------------------------------------------------------------- one name everywhere
+
+def test_no_signature_uses_a_deprecated_type_name():
+    """6.2.28: the element-type filters are spelt metadata_element_type / metadata_element_subtypes
+    in every method signature; the old spellings live only in DEPRECATED_NAMES."""
+    import ast
+
+    bad = []
+    for path in sorted((REPO / "pyegeria").rglob("*.py")):
+        if path.name == "request_filters.py" or "models" in path.parts:
+            continue
+        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                a = node.args
+                for arg in a.posonlyargs + a.args + a.kwonlyargs:
+                    if arg.arg in rf.DEPRECATED_NAMES:
+                        bad.append(f"{path.relative_to(REPO)}:{node.lineno} {node.name}({arg.arg})")
+    assert not bad, "rename to the canonical name:\n" + "\n".join(bad)
+
+
+@pytest.fixture
+def explorer(monkeypatch):
+    from pyegeria.omvs.classification_explorer import ClassificationExplorer
+
+    monkeypatch.setattr(ClassificationExplorer, "check_connection", lambda self: "test")
+    client = ClassificationExplorer("view-server", "https://egeria.example:9443", "user", "pwd")
+    sent: list[dict] = []
+
+    async def fake_request(method, url, payload=None, *args, **kwargs):
+        sent.append(json.loads(payload) if isinstance(payload, str) else (payload or {}))
+        return _Response({"elements": [{"elementHeader": {"guid": "g1"}}]})
+
+    monkeypatch.setattr(client, "_async_make_request", fake_request)
+    client.sent = sent
+    return client
+
+
+def test_deprecated_type_name_still_works_with_a_warning(explorer):
+    with pytest.warns(DeprecationWarning, match="'metadata_element_type_name' is deprecated; use 'metadata_element_type'"):
+        explorer.find_elements_by_property_value("x", ["displayName"], metadata_element_type_name="EmbeddedProcess")
+    assert explorer.sent[-1]["metadataElementTypeName"] == "EmbeddedProcess"
+
+
+def test_canonical_type_name_does_not_warn(explorer):
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", DeprecationWarning)
+        explorer.find_elements_by_property_value("x", ["displayName"], metadata_element_type="EmbeddedProcess")
+    assert explorer.sent[-1]["metadataElementTypeName"] == "EmbeddedProcess"
+
+
+def test_both_type_names_with_different_values_are_refused(explorer):
+    with pytest.warns(DeprecationWarning), pytest.raises(TypeError, match="pass only 'metadata_element_type'"):
+        explorer.find_elements_by_property_value("x", ["displayName"], metadata_element_type="A",
+                                                 metadata_element_type_name="B")
+    assert not explorer.sent
+
+
+def test_deprecated_names_in_kwargs_warn_too(designer):
+    with pytest.warns(DeprecationWarning, match="'metadata_element_subtype_names' is deprecated"):
+        designer.find_data_value_specifications("*", metadata_element_subtype_names=["DataClass"])
+    assert designer.sent[-1]["metadataElementSubtypeNames"] == ["DataClass"]
+
+
+def test_lone_string_for_subtypes_becomes_a_list():
+    with pytest.warns(DeprecationWarning):
+        out = rf.canonicalize_names({"metadata_element_sub_type": "DataClass"}, owner="t")
+    assert out == {"metadata_element_subtypes": ["DataClass"]}
+
+
+def test_report_executor_canonicalizes_quietly():
+    import pyegeria.view.format_set_executor as fse
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", DeprecationWarning)
+        out = fse._normalize_report_params({"metadata_element_type_name": "X",
+                                            "metadata_element_subtype_names": "A,B"}, action_mode="find")
+    assert out["metadata_element_type"] == "X" and out["metadata_element_subtypes"] == ["A", "B"]
+    assert "metadata_element_type_name" not in out and "metadata_element_subtype_names" not in out

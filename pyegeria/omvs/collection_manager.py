@@ -14,6 +14,7 @@ from loguru import logger
 from pydantic import Field, HttpUrl
 
 from typing import Unpack
+from pyegeria.core.request_filters import deprecated_names
 from pyegeria.core.request_filters import ListFilters
 from pyegeria.core.request_filters import filter_body_kwargs
 from pyegeria.core._exceptions import PyegeriaInvalidParameterException
@@ -383,6 +384,7 @@ class CollectionManager(ServerClient):
                                                  body, output_format, report_spec))
 
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_find_collections(
             self,
@@ -390,7 +392,7 @@ class CollectionManager(ServerClient):
             starts_with: bool = True,
             ends_with: bool = False,
             ignore_case: bool = True,
-            metadata_element_type_name: Optional[str] = None,
+            metadata_element_type: Optional[str] = None,
             metadata_element_subtypes: Optional[list[str]] = None,
             include_only_relationships: Optional[list[str]] = None,
             skip_relationships: Optional[list[str]] = None,
@@ -415,7 +417,7 @@ class CollectionManager(ServerClient):
             Ends with the supplied string.
         ignore_case : bool, default True
             Ignore case when searching.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             Specific metadata element type to filter on.
         metadata_element_subtypes : list[str], optional
             List of metadata element subtypes.
@@ -459,7 +461,7 @@ class CollectionManager(ServerClient):
         """
         url = str(HttpUrl(f"{self.collection_command_root}/by-search-string"))
         
-        metadata_element_type = kwargs.pop("metadata_element_type", metadata_element_type_name)
+        metadata_element_type = kwargs.pop("metadata_element_type", metadata_element_type)
 
         # Merge explicit parameters with kwargs
         params = {
@@ -487,13 +489,14 @@ class CollectionManager(ServerClient):
                                                   **params)
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     def find_collections(
             self,
             search_string: str = "*",
             starts_with: bool = True,
             ends_with: bool = False,
             ignore_case: bool = True,
-            metadata_element_type_name: Optional[str] = None,
+            metadata_element_type: Optional[str] = None,
             metadata_element_subtypes: Optional[list[str]] = None,
             include_only_relationships: Optional[list[str]] = None,
             skip_relationships: Optional[list[str]] = None,
@@ -518,7 +521,7 @@ class CollectionManager(ServerClient):
             Ends with the supplied string.
         ignore_case : bool, default True
             Ignore case when searching.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             Specific metadata element type to filter on.
         metadata_element_subtypes : list[str], optional
             List of metadata element subtypes.
@@ -566,7 +569,7 @@ class CollectionManager(ServerClient):
                 starts_with=starts_with,
                 ends_with=ends_with,
                 ignore_case=ignore_case,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,
@@ -582,6 +585,7 @@ class CollectionManager(ServerClient):
         )
 
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_find_digital_products(
         self,
@@ -589,7 +593,7 @@ class CollectionManager(ServerClient):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
         metadata_element_subtypes: Optional[list[str]] = None,
         include_only_relationships: Optional[list[str]] = None,
         skip_relationships: Optional[list[str]] = None,
@@ -615,7 +619,7 @@ class CollectionManager(ServerClient):
             - if True, the search string must match the end of the property value
         ignore_case: bool, default = True
             - if True, the search is case-insensitive
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             - Specific metadata element type to filter on
         metadata_element_subtypes : list[str], optional
             - List of metadata element subtypes
@@ -669,7 +673,7 @@ class CollectionManager(ServerClient):
                 "ignoreCase": ignore_case,
                 "startFrom": start_from,
                 "pageSize": page_size,
-                "metadataElementTypeName": metadata_element_type_name,
+                "metadataElementTypeName": metadata_element_type,
                 "metadataElementSubtypeNames": metadata_element_subtypes,
                 "includeOnlyRelationships": include_only_relationships,
                 "skipRelationships": skip_relationships,
@@ -692,13 +696,14 @@ class CollectionManager(ServerClient):
             )
         return elements
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     def find_digital_products(
         self,
         search_string: str = "*",
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
         metadata_element_subtypes: Optional[list[str]] = None,
         include_only_relationships: Optional[list[str]] = None,
         skip_relationships: Optional[list[str]] = None,
@@ -723,7 +728,7 @@ class CollectionManager(ServerClient):
                 starts_with=starts_with,
                 ends_with=ends_with,
                 ignore_case=ignore_case,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,
@@ -845,12 +850,13 @@ class CollectionManager(ServerClient):
             )
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     @dynamic_catch
     async def _async_get_collections_by_name(
         self,
         name: str = None,
-        metadata_element_type_name: str | None = "Collection",
+        metadata_element_type: str | None = "Collection",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -877,7 +883,7 @@ class CollectionManager(ServerClient):
         url = str(HttpUrl(f"{self.collection_command_root}/by-name"))
         params = {
             "filter_string": name,
-            "metadata_element_type_name": metadata_element_type_name,
+            "metadata_element_type": metadata_element_type,
             "metadata_element_subtypes": metadata_element_subtypes,
             "include_only_relationships": include_only_relationships,
             "skip_relationships": skip_relationships,
@@ -898,10 +904,11 @@ class CollectionManager(ServerClient):
             **params,
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     def get_collections_by_name(
         self,
         name: str = None,
-        metadata_element_type_name: str | None = "Collection",
+        metadata_element_type: str | None = "Collection",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -921,7 +928,7 @@ class CollectionManager(ServerClient):
         return run_sync(
             self._async_get_collections_by_name(
                 name=name,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,

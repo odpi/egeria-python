@@ -10,6 +10,7 @@ from typing import Annotated, Literal, Optional
 
 from pydantic import Field
 
+from pyegeria.core.request_filters import deprecated_names
 from pyegeria.core._server_client import ServerClient
 from pyegeria.models import (
     NewElementRequestBody,
@@ -1287,11 +1288,12 @@ class TimeKeeper(ServerClient):
             )
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_get_context_events_by_name(
         self,
         name: str = None,
-        metadata_element_type_name: str | None = "ContextEvent",
+        metadata_element_type: str | None = "ContextEvent",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -1309,7 +1311,7 @@ class TimeKeeper(ServerClient):
         ----------
         name : str, optional
             The name to find in the properties.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             The type of metadata element.
         metadata_element_subtypes : list[str], optional
             The list of subtypes to filter by.
@@ -1356,7 +1358,7 @@ class TimeKeeper(ServerClient):
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/time-keeper/context-events/by-name"
         params = {
             "filter_string": name,
-            "metadata_element_type_name": metadata_element_type_name,
+            "metadata_element_type": metadata_element_type,
             "metadata_element_subtypes": metadata_element_subtypes,
             "include_only_relationships": include_only_relationships,
             "skip_relationships": skip_relationships,
@@ -1377,10 +1379,11 @@ class TimeKeeper(ServerClient):
             **params,
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     def get_context_events_by_name(
         self,
         name: str = None,
-        metadata_element_type_name: str | None = "ContextEvent",
+        metadata_element_type: str | None = "ContextEvent",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -1398,7 +1401,7 @@ class TimeKeeper(ServerClient):
         ----------
         name : str, optional
             The name to find in the properties.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             The type of metadata element.
         metadata_element_subtypes : list[str], optional
             The list of subtypes to filter by.
@@ -1446,7 +1449,7 @@ class TimeKeeper(ServerClient):
         return run_sync(
             self._async_get_context_events_by_name(
                 name=name,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,
@@ -1460,6 +1463,7 @@ class TimeKeeper(ServerClient):
             )
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_find_context_events(
         self,
@@ -1467,7 +1471,7 @@ class TimeKeeper(ServerClient):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = "ContextEvent",
+        metadata_element_type: str | None = "ContextEvent",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -1494,7 +1498,7 @@ class TimeKeeper(ServerClient):
             Ends with the supplied string
         ignore_case : bool, [default=True], optional
             Ignore case when searching
-        metadata_element_type_name: str, optional
+        metadata_element_type: str, optional
             The type of metadata element to search for.
         metadata_element_subtypes: list[str], optional
             The subtypes of metadata element to search for.
@@ -1535,7 +1539,7 @@ class TimeKeeper(ServerClient):
             "starts_with": starts_with,
             "ends_with": ends_with,
             "ignore_case": ignore_case,
-            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_type": metadata_element_type,
             "metadata_element_subtypes": metadata_element_subtypes,
             "include_only_relationships": include_only_relationships,
             "skip_relationships": skip_relationships,
@@ -1559,6 +1563,7 @@ class TimeKeeper(ServerClient):
             **params,
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def find_context_events(
         self,
@@ -1566,7 +1571,7 @@ class TimeKeeper(ServerClient):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = "ContextEvent",
+        metadata_element_type: str | None = "ContextEvent",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -1593,7 +1598,7 @@ class TimeKeeper(ServerClient):
             Ends with the supplied string
         ignore_case : bool, [default=True], optional
             Ignore case when searching
-        metadata_element_type_name: str, optional
+        metadata_element_type: str, optional
             The type of metadata element to search for.
         metadata_element_subtypes: list[str], optional
             The subtypes of metadata element to search for.
@@ -1633,7 +1638,7 @@ class TimeKeeper(ServerClient):
                 starts_with=starts_with,
                 ends_with=ends_with,
                 ignore_case=ignore_case,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,

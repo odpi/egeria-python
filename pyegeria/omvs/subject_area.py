@@ -10,6 +10,7 @@ from typing import Annotated, Literal, Optional
 
 from pydantic import Field
 
+from pyegeria.core.request_filters import deprecated_names
 from pyegeria.core._server_client import ServerClient
 from pyegeria.models import (
     NewElementRequestBody,
@@ -569,11 +570,12 @@ class SubjectArea(ServerClient):
             )
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_get_subject_areas_by_name(
         self,
         name: str = None,
-        metadata_element_type_name: str | None = "SubjectArea",
+        metadata_element_type: str | None = "SubjectArea",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -591,7 +593,7 @@ class SubjectArea(ServerClient):
         ----------
         name : str, optional
             The string to find in the properties.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             The type of metadata element.
         metadata_element_subtypes : list[str], optional
             The list of subtypes to filter by.
@@ -638,7 +640,7 @@ class SubjectArea(ServerClient):
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/subject-area/collections/by-name"
         params = {
             "filter_string": name,
-            "metadata_element_type_name": metadata_element_type_name,
+            "metadata_element_type": metadata_element_type,
             "metadata_element_subtypes": metadata_element_subtypes,
             "include_only_relationships": include_only_relationships,
             "skip_relationships": skip_relationships,
@@ -659,10 +661,11 @@ class SubjectArea(ServerClient):
             **params,
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     def get_subject_areas_by_name(
         self,
         name: str = None,
-        metadata_element_type_name: str | None = "SubjectArea",
+        metadata_element_type: str | None = "SubjectArea",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -680,7 +683,7 @@ class SubjectArea(ServerClient):
         ----------
         name : str, optional
             The string to find in the properties.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             The type of metadata element.
         metadata_element_subtypes : list[str], optional
             The list of subtypes to filter by.
@@ -728,7 +731,7 @@ class SubjectArea(ServerClient):
         return run_sync(
             self._async_get_subject_areas_by_name(
                 name=name,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,
@@ -742,6 +745,7 @@ class SubjectArea(ServerClient):
             )
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_find_subject_areas(
         self,
@@ -749,7 +753,7 @@ class SubjectArea(ServerClient):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = "SubjectArea",
+        metadata_element_type: str | None = "SubjectArea",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -776,7 +780,7 @@ class SubjectArea(ServerClient):
             Ends with the supplied string
         ignore_case : bool, [default=True], optional
             Ignore case when searching
-        metadata_element_type_name: str, optional
+        metadata_element_type: str, optional
             The type of metadata element to search for.
         metadata_element_subtypes: list[str], optional
             The subtypes of metadata element to search for.
@@ -817,7 +821,7 @@ class SubjectArea(ServerClient):
             "starts_with": starts_with,
             "ends_with": ends_with,
             "ignore_case": ignore_case,
-            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_type": metadata_element_type,
             "metadata_element_subtypes": metadata_element_subtypes,
             "include_only_relationships": include_only_relationships,
             "skip_relationships": skip_relationships,
@@ -842,13 +846,14 @@ class SubjectArea(ServerClient):
         )
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     def find_subject_areas(
         self,
         search_string: str = "*",
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = "SubjectArea",
+        metadata_element_type: str | None = "SubjectArea",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -875,7 +880,7 @@ class SubjectArea(ServerClient):
             Ends with the supplied string
         ignore_case : bool, [default=True], optional
             Ignore case when searching
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             The type of metadata element.
         metadata_element_subtypes : list[str], optional
             The subtypes to filter by.
@@ -915,7 +920,7 @@ class SubjectArea(ServerClient):
                 starts_with=starts_with,
                 ends_with=ends_with,
                 ignore_case=ignore_case,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,

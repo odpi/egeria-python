@@ -59,10 +59,15 @@ BY_NAME_WRAPPERS = [
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("cls, method", BY_NAME_WRAPPERS)
-async def test_by_name_wrappers_send_the_type_filter(cls, method, monkeypatch):
+@pytest.mark.parametrize("spelling", ["metadata_element_type", "metadata_element_type_name"])
+async def test_by_name_wrappers_send_the_type_filter(cls, method, spelling, monkeypatch):
     client, calls = _capture(cls, monkeypatch)
 
-    await getattr(client, method)("x", metadata_element_type_name="ProbeType")
+    if spelling == "metadata_element_type":
+        await getattr(client, method)("x", metadata_element_type="ProbeType")
+    else:  # deprecated in 6.2.28, still works
+        with pytest.warns(DeprecationWarning, match="use 'metadata_element_type'"):
+            await getattr(client, method)("x", metadata_element_type_name="ProbeType")
 
     assert calls[0]["body"]["metadataElementTypeName"] == "ProbeType"
 
@@ -78,14 +83,16 @@ async def test_name_request_accepts_the_find_request_spelling(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_name_request_prefers_the_canonical_spelling(monkeypatch):
+async def test_name_request_refuses_two_different_type_names(monkeypatch):
+    # 6.2.28: metadata_element_type is the one name; metadata_element_type_name is a deprecated
+    # alias, and giving both with different values is refused rather than silently picking one.
     client, calls = _capture(CollectionManager, monkeypatch)
 
-    await client._async_get_name_request("https://localhost:1/x/by-name", _type="T", _gen_output=None,
-                                         filter_string="x", metadata_element_type_name="Canonical",
-                                         metadata_element_type="Legacy")
-
-    assert calls[0]["body"]["metadataElementTypeName"] == "Canonical"
+    with pytest.warns(DeprecationWarning), pytest.raises(TypeError, match="pass only 'metadata_element_type'"):
+        await client._async_get_name_request("https://localhost:1/x/by-name", _type="T", _gen_output=None,
+                                             filter_string="x", metadata_element_type_name="Old",
+                                             metadata_element_type="New")
+    assert not calls
 
 
 # --- ISSUE-133 ------------------------------------------------------------------------------

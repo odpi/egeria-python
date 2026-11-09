@@ -12,6 +12,7 @@ import asyncio
 from typing import Optional
 
 from typing import Unpack
+from pyegeria.core.request_filters import deprecated_names
 from pyegeria.core.request_filters import SearchFilters
 from pyegeria.core.utils import dynamic_catch
 from pyegeria.models import SearchStringRequestBody
@@ -35,11 +36,12 @@ class ProductCatalog(CollectionManager):
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/product-catalog"
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_find_digital_product_catalogs(
             self,
             search_string: str = "*",
-            metadata_element_type_name: str = "DigitalProductCatalog",
+            metadata_element_type: str = "DigitalProductCatalog",
             starts_with: bool = True,
             ends_with: bool = False,
             ignore_case: bool = True,
@@ -48,7 +50,7 @@ class ProductCatalog(CollectionManager):
             output_format: str = "JSON",
             report_spec: Optional[str | dict] = None,
             body: Optional[dict | SearchStringRequestBody] = None,
-            **kwargs: Unpack[SearchFilters],
+            **kwargs,
     ) -> list | str:
         """Find digital product catalogs, or the products in them, through the product-catalog
         view service. Async version.
@@ -57,7 +59,7 @@ class ProductCatalog(CollectionManager):
         ----------
         search_string : str, default "*"
             String to match; "*" matches every element of the requested type.
-        metadata_element_type_name : str, default "DigitalProductCatalog"
+        metadata_element_type : str, default "DigitalProductCatalog"
             Type to search for; use "DigitalProduct" to find products.
         starts_with, ends_with, ignore_case : bool
             How the search string is matched.
@@ -89,16 +91,17 @@ class ProductCatalog(CollectionManager):
         """
         url = f"{self.product_catalog_command_root}/collections/by-search-string"
         return await self._async_find_request(
-            url, _type=metadata_element_type_name, _gen_output=self._generate_collection_output,
+            url, _type=metadata_element_type, _gen_output=self._generate_collection_output,
             search_string=search_string, starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
             start_from=start_from, page_size=page_size,
-            output_format=output_format, report_spec=report_spec, body=body, **{"metadata_element_type": metadata_element_type_name, **kwargs})
+            output_format=output_format, report_spec=report_spec, body=body, **{"metadata_element_type": metadata_element_type, **kwargs})
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def find_digital_product_catalogs(
             self,
             search_string: str = "*",
-            metadata_element_type_name: str = "DigitalProductCatalog",
+            metadata_element_type: str = "DigitalProductCatalog",
             starts_with: bool = True,
             ends_with: bool = False,
             ignore_case: bool = True,
@@ -107,7 +110,7 @@ class ProductCatalog(CollectionManager):
             output_format: str = "JSON",
             report_spec: Optional[str | dict] = None,
             body: Optional[dict | SearchStringRequestBody] = None,
-            **kwargs: Unpack[SearchFilters],
+            **kwargs,
     ) -> list | str:
         """Find digital product catalogs, or the products in them ("DigitalProduct"), through the
         product-catalog view service. See _async_find_digital_product_catalogs for the parameters.
@@ -116,5 +119,5 @@ class ProductCatalog(CollectionManager):
         in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
         """
         return run_sync(self._async_find_digital_product_catalogs(
-            search_string, metadata_element_type_name, starts_with, ends_with, ignore_case,
+            search_string, metadata_element_type, starts_with, ends_with, ignore_case,
             start_from, page_size, output_format, report_spec, body, **kwargs))

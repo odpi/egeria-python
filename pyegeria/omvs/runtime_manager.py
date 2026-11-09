@@ -11,6 +11,7 @@ import asyncio
 from loguru import logger
 from requests import Response
 from typing import Unpack
+from pyegeria.core.request_filters import deprecated_names
 from pyegeria.core.request_filters import GetFilters, ListFilters
 from pyegeria.core.utils import body_slimmer, dynamic_catch
 from pyegeria.core._server_client import ServerClient
@@ -3441,11 +3442,12 @@ class RuntimeManager(ServerClient):
         """
         run_sync(self._async_delete_metadata_repository_cohort(cohort_guid, body, cascade))
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_get_metadata_repository_cohorts_by_name(
         self,
         name: str = "*",
-        metadata_element_type_name: str | None = "MetadataRepositoryCohort",
+        metadata_element_type: str | None = "MetadataRepositoryCohort",
         metadata_element_subtypes: list[str] | None = None,
         graph_query_depth: int = 3,
         start_from: int = 0,
@@ -3461,7 +3463,7 @@ class RuntimeManager(ServerClient):
         ----------
         name: str, optional
             name to use to find matching cohorts.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             The type of metadata element.
         metadata_element_subtypes : list[str], optional
             The list of subtypes to filter by.
@@ -3490,7 +3492,7 @@ class RuntimeManager(ServerClient):
         url = f"{self.runtime_command_root}/metadata-repository-cohorts/by-name"
         params = {
             "filter_string": name,
-            "metadata_element_type_name": metadata_element_type_name,
+            "metadata_element_type": metadata_element_type,
             "metadata_element_subtypes": metadata_element_subtypes,
             "graph_query_depth": graph_query_depth,
             "start_from": start_from,
@@ -3509,11 +3511,12 @@ class RuntimeManager(ServerClient):
             **params,
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def get_metadata_repository_cohorts_by_name(
         self,
         name: str = "*",
-        metadata_element_type_name: str | None = "MetadataRepositoryCohort",
+        metadata_element_type: str | None = "MetadataRepositoryCohort",
         metadata_element_subtypes: list[str] | None = None,
         graph_query_depth: int = 3,
         start_from: int = 0,
@@ -3530,11 +3533,12 @@ class RuntimeManager(ServerClient):
         """
         return run_sync(
             self._async_get_metadata_repository_cohorts_by_name(
-                name, metadata_element_type_name, metadata_element_subtypes, graph_query_depth,
+                name, metadata_element_type, metadata_element_subtypes, graph_query_depth,
                 start_from, page_size, output_format, report_spec, body, **kwargs
             )
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_find_metadata_repository_cohorts(
         self,
@@ -3542,7 +3546,7 @@ class RuntimeManager(ServerClient):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = "MetadataRepositoryCohort",
+        metadata_element_type: str | None = "MetadataRepositoryCohort",
         metadata_element_subtypes: list[str] | None = None,
         graph_query_depth: int = 3,
         start_from: int = 0,
@@ -3564,7 +3568,7 @@ class RuntimeManager(ServerClient):
             Ends with the supplied string.
         ignore_case : bool, [default=True], optional
             Ignore case when searching.
-        metadata_element_type_name: str, optional
+        metadata_element_type: str, optional
             The type of metadata element to search for.
         metadata_element_subtypes: list[str], optional
             The subtypes of metadata element to search for.
@@ -3594,7 +3598,7 @@ class RuntimeManager(ServerClient):
             "starts_with": starts_with,
             "ends_with": ends_with,
             "ignore_case": ignore_case,
-            "metadata_element_type": metadata_element_type_name,
+            "metadata_element_type": metadata_element_type,
             "metadata_element_subtypes": metadata_element_subtypes,
             "graph_query_depth": graph_query_depth,
             "start_from": start_from,
@@ -3613,6 +3617,7 @@ class RuntimeManager(ServerClient):
             **params,
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def find_metadata_repository_cohorts(
         self,
@@ -3620,7 +3625,7 @@ class RuntimeManager(ServerClient):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = "MetadataRepositoryCohort",
+        metadata_element_type: str | None = "MetadataRepositoryCohort",
         metadata_element_subtypes: list[str] | None = None,
         graph_query_depth: int = 3,
         start_from: int = 0,
@@ -3637,7 +3642,7 @@ class RuntimeManager(ServerClient):
         """
         return run_sync(
             self._async_find_metadata_repository_cohorts(
-                search_string, starts_with, ends_with, ignore_case, metadata_element_type_name,
+                search_string, starts_with, ends_with, ignore_case, metadata_element_type,
                 metadata_element_subtypes, graph_query_depth, start_from, page_size, output_format,
                 report_spec, body, **kwargs
             )

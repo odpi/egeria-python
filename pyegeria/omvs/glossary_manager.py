@@ -16,6 +16,7 @@ from loguru import logger
 from pydantic import Field
 
 from typing import Unpack
+from pyegeria.core.request_filters import deprecated_names
 from pyegeria.core.request_filters import GetFilters
 from pyegeria.core._exceptions import PyegeriaInvalidParameterException, PyegeriaException
 from pyegeria.core._globals import NO_GUID_RETURNED
@@ -3402,6 +3403,7 @@ class GlossaryManager(CollectionManager):
         response = run_sync(self._async_get_term_relationship_types())
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_find_glossaries(
         self,
@@ -3409,7 +3411,7 @@ class GlossaryManager(CollectionManager):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = "Glossary",
+        metadata_element_type: str | None = "Glossary",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -3436,7 +3438,7 @@ class GlossaryManager(CollectionManager):
             Whether to match glossaries ending with the search string.
         ignore_case : bool, default=True
             Whether to ignore case when searching.
-        metadata_element_type_name : str, default="Glossary"
+        metadata_element_type : str, default="Glossary"
             The metadata element type to search for.
         metadata_element_subtypes : list[str], optional
             The subtypes of metadata element to search for.
@@ -3495,10 +3497,11 @@ class GlossaryManager(CollectionManager):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **{"metadata_element_type": metadata_element_type_name, **kwargs},
+            **{"metadata_element_type": metadata_element_type, **kwargs},
         )
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def find_glossaries(
         self,
@@ -3506,7 +3509,7 @@ class GlossaryManager(CollectionManager):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = "Glossary",
+        metadata_element_type: str | None = "Glossary",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -3532,7 +3535,7 @@ class GlossaryManager(CollectionManager):
                 starts_with=starts_with,
                 ends_with=ends_with,
                 ignore_case=ignore_case,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,
@@ -3581,7 +3584,7 @@ class GlossaryManager(CollectionManager):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **{"metadata_element_type_name": "Glossary", **kwargs},
+            **{"metadata_element_type": "Glossary", **kwargs},
         )
         return response
 
@@ -3795,6 +3798,7 @@ class GlossaryManager(CollectionManager):
         )
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_find_glossary_terms(
         self,
@@ -3802,7 +3806,7 @@ class GlossaryManager(CollectionManager):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = "GlossaryTerm",
+        metadata_element_type: str | None = "GlossaryTerm",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -3829,7 +3833,7 @@ class GlossaryManager(CollectionManager):
             Whether to match terms ending with the search string.
         ignore_case : bool, default=True
             Whether to ignore case when searching.
-        metadata_element_type_name : str, default="GlossaryTerm"
+        metadata_element_type : str, default="GlossaryTerm"
             The metadata element type to search for.
         metadata_element_subtypes : list[str], optional
             The subtypes of metadata element to search for.
@@ -3870,7 +3874,7 @@ class GlossaryManager(CollectionManager):
 
         response = await self._async_find_request(
             url,
-            _type=metadata_element_type_name,
+            _type=metadata_element_type,
             _gen_output=self._generate_term_output,
             search_string=search_string,
             starts_with=starts_with,
@@ -3888,11 +3892,12 @@ class GlossaryManager(CollectionManager):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **{"metadata_element_type": metadata_element_type_name, **kwargs},
+            **{"metadata_element_type": metadata_element_type, **kwargs},
         )
 
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def find_glossary_terms(
         self,
@@ -3900,7 +3905,7 @@ class GlossaryManager(CollectionManager):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = "GlossaryTerm",
+        metadata_element_type: str | None = "GlossaryTerm",
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -3926,7 +3931,7 @@ class GlossaryManager(CollectionManager):
                 starts_with=starts_with,
                 ends_with=ends_with,
                 ignore_case=ignore_case,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,

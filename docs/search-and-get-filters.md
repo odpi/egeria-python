@@ -54,6 +54,24 @@ shows each one's description.
 The activity-, content- and deployment-status finds (for example `find_digital_products`)
 accept the same filters plus their own explicit status-list parameter.
 
+### One name for the type filters
+
+Since 6.2.28 every method spells the element-type filters the same way:
+`metadata_element_type` (one type name) and `metadata_element_subtypes` (a list). The older
+spellings (`metadata_element_type_name`, `metadata_element_subtype_names`,
+`metadata_element_sub_type`, `metadata_element_subtype`, `metadata_element_name`) still work,
+with a `DeprecationWarning` naming the new one. A lone string given for a subtype list becomes
+a one-item list. Giving the old and the new name with different values raises `TypeError`,
+because pyegeria cannot tell which you meant.
+
+```python
+explorer.find_elements_by_property_value("pump", ["displayName"],
+                                         metadata_element_type="EmbeddedProcess")
+```
+
+Report specs and Dr.Egeria parameter lists may still use the old spellings; the report
+executor renames them quietly.
+
 ### Filters are checked
 
 The names you pass are checked against the fields of the request body that call sends — the
@@ -191,12 +209,23 @@ Used by the complex-query finds (find_metadata_elements, find_root_elements). Ma
 | `anchor_domain` | `anchor_domain_name` |
 | `relationship_page_size` | `relationships_page_size` |
 | `classification_names` | `include_only_classified_elements` |
-| `metadata_element_name` | `metadata_element_type_name` |
 | `limit_result_by_status` | `limit_results_by_status` |
 | `sort_order` | `sequencing_order` |
 | `output_sort_order` | `sequencing_order` |
 | `order_property_name` | `sequencing_property` |
 | `anchor_scope_id` | `anchor_scope_guid` |
+
+### Deprecated spellings
+
+These still work, with a `DeprecationWarning` naming the new name. Giving both the old and the new name with different values raises `TypeError`.
+
+| Deprecated | Use |
+|---|---|
+| `metadata_element_type_name` | `metadata_element_type` |
+| `metadata_element_name` | `metadata_element_type` |
+| `metadata_element_subtype_names` | `metadata_element_subtypes` |
+| `metadata_element_sub_type` | `metadata_element_subtypes` |
+| `metadata_element_subtype` | `metadata_element_subtypes` |
 
 Each model field's camelCase wire name (e.g. `metadataElementSubtypeNames`) is accepted as well. These rendering options are passed through to output formatting and are not warned about: `filter_string`, `include_children`, `include_peers`, `include_preamble`, `max_depth`, `refresh_spec`, `report_format`, `search_string`.
 <!-- END GENERATED FILTER TABLES -->

@@ -14,6 +14,7 @@ validation and transport.
 import asyncio
 from typing import Any, Optional
 
+from pyegeria.core.request_filters import deprecated_names
 from pyegeria.core._server_client import ServerClient
 from pyegeria.models import (
     NewElementRequestBody,
@@ -219,6 +220,7 @@ class CommunityMatters(ServerClient):
     # -----------------------------
     # Find by search string
     # -----------------------------
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_find_communities(
         self,
@@ -226,7 +228,7 @@ class CommunityMatters(ServerClient):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = None,
+        metadata_element_type: str | None = None,
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -253,7 +255,7 @@ class CommunityMatters(ServerClient):
             Whether to match communities ending with the search string.
         ignore_case : bool, default=True
             Whether to ignore case when searching.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             The metadata element type to search for.
         metadata_element_subtypes : list[str], optional
             The subtypes of metadata element to search for.
@@ -313,11 +315,12 @@ class CommunityMatters(ServerClient):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
-            **{"metadata_element_type": metadata_element_type_name, **kwargs},
+            **{"metadata_element_type": metadata_element_type, **kwargs},
         )
 
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def find_communities(
         self,
@@ -325,7 +328,7 @@ class CommunityMatters(ServerClient):
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: str | None = None,
+        metadata_element_type: str | None = None,
         metadata_element_subtypes: list[str] | None = None,
         include_only_relationships: list[str] | None = None,
         skip_relationships: list[str] | None = None,
@@ -352,7 +355,7 @@ class CommunityMatters(ServerClient):
             Whether to match communities ending with the search string.
         ignore_case : bool, default=True
             Whether to ignore case when searching.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             The metadata element type to search for.
         metadata_element_subtypes : list[str], optional
             The subtypes of metadata element to search for.
@@ -396,7 +399,7 @@ class CommunityMatters(ServerClient):
                 starts_with=starts_with,
                 ends_with=ends_with,
                 ignore_case=ignore_case,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,

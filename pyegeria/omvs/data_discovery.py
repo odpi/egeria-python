@@ -2027,15 +2027,15 @@ class DataDiscovery(ServerClient):
 
     @dynamic_catch
     async def _async_get_analysis_reports_by_name(self, name: str | None = None, start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
-        """Deprecated - use AssetMaker.get_assets_by_name(name, metadata_element_type_name="SurveyReport"). Async version."""
+        """Deprecated - use AssetMaker.get_assets_by_name(name, metadata_element_type="SurveyReport"). Async version."""
         self._warn_analysis_report("get_analysis_reports_by_name",
-                                   'AssetMaker.get_assets_by_name(name, metadata_element_type_name="SurveyReport")')
+                                   'AssetMaker.get_assets_by_name(name, metadata_element_type="SurveyReport")')
         return await self._asset_maker_client()._async_get_assets_by_name(
-            filter_string=name, metadata_element_type_name="SurveyReport", start_from=start_from,
+            filter_string=name, metadata_element_type="SurveyReport", start_from=start_from,
             page_size=page_size, **kwargs)
 
     def get_analysis_reports_by_name(self, name: str | None = None, start_from: int = 0, page_size: int = 100, **kwargs) -> list | str:
-        """Deprecated - use AssetMaker.get_assets_by_name(name, metadata_element_type_name="SurveyReport")."""
+        """Deprecated - use AssetMaker.get_assets_by_name(name, metadata_element_type="SurveyReport")."""
         return run_sync(self._async_get_analysis_reports_by_name(name, start_from, page_size, **kwargs))
 
     @dynamic_catch

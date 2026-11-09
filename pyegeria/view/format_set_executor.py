@@ -547,7 +547,22 @@ def _normalize_report_params(params: Dict[str, Any], action_mode: str = "generic
             continue
         cleaned[key] = value
 
-    return cleaned
+    return _canonical_param_names(cleaned)
+
+
+def _canonical_param_names(params: Dict[str, Any]) -> Dict[str, Any]:
+    """Rename deprecated filter spellings (metadata_element_type_name, ...) to the canonical
+    names, quietly: a report spec or Dr.Egeria parameter list is not the caller's code, so it
+    should not trip the methods' DeprecationWarning. A canonical value already present wins."""
+    from pyegeria.core.request_filters import DEPRECATED_NAMES, _canonical_value
+
+    out = dict(params)
+    for old, new in DEPRECATED_NAMES.items():
+        if old in out:
+            value = out.pop(old)
+            if out.get(new) in (None, "", []):
+                out[new] = _canonical_value(new, value)
+    return out
 
 
 def _extract_param_value(params: Dict[str, Any], param_name: str, action_mode: str = "generic") -> Any:
@@ -806,6 +821,7 @@ async def _async_run_report_impl(
 
     # Include fixed specifics
     call_params.update(spec_params)
+    call_params = _canonical_param_names(call_params)
 
     # Always include output_format and report_spec for downstream rendering
     call_params["output_format"] = output_format
@@ -1244,6 +1260,7 @@ def _exec_report_spec_impl(
 
     # Include fixed specifics
     call_params.update(spec_params)
+    call_params = _canonical_param_names(call_params)
 
     # Always include output_format and report_spec for downstream rendering
     call_params["output_format"] = output_format

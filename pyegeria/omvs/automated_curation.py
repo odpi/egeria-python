@@ -14,6 +14,7 @@ from httpx import Response
 from loguru import logger
 from pydantic import HttpUrl
 from typing import Unpack
+from pyegeria.core.request_filters import deprecated_names
 from pyegeria.core.request_filters import GetFilters, ListFilters, SearchFilters
 from pyegeria.core._globals import NO_ELEMENTS_FOUND
 from pyegeria.core._server_client import ServerClient
@@ -2744,10 +2745,11 @@ class AutomatedCuration(ServerClient):
         )
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     async def _async_get_engine_actions_by_name(
             self,
             name: str = None,
-            metadata_element_type_name: str | None = "EngineAction",
+            metadata_element_type: str | None = "EngineAction",
             metadata_element_subtypes: list[str] | None = None,
             include_only_relationships: list[str] | None = None,
             skip_relationships: list[str] | None = None,
@@ -2767,7 +2769,7 @@ class AutomatedCuration(ServerClient):
         ----------
         name : str, optional
             The name of the engine action to retrieve.
-        metadata_element_type_name : str, default "EngineAction"
+        metadata_element_type : str, default "EngineAction"
             The metadata element type to filter on.
         metadata_element_subtypes : list[str], optional
             Subtypes to filter on.
@@ -2817,11 +2819,11 @@ class AutomatedCuration(ServerClient):
 
         url = f"{self.ref_curation_command_base}/assets/by-name"
 
-        metadata_element_type = kwargs.pop("metadata_element_type", metadata_element_type_name)
+        metadata_element_type = kwargs.pop("metadata_element_type", metadata_element_type)
 
         params = {
             'filter_string': name,
-            'metadata_element_type_name': metadata_element_type,
+            'metadata_element_type': metadata_element_type,
             'metadata_element_subtypes': metadata_element_subtypes,
             'include_only_relationships': include_only_relationships,
             'skip_relationships': skip_relationships,
@@ -2840,10 +2842,11 @@ class AutomatedCuration(ServerClient):
                                                       **params)
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     def get_engine_actions_by_name(
             self,
             name: str = None,
-            metadata_element_type_name: str | None = "EngineAction",
+            metadata_element_type: str | None = "EngineAction",
             metadata_element_subtypes: list[str] | None = None,
             include_only_relationships: list[str] | None = None,
             skip_relationships: list[str] | None = None,
@@ -2862,7 +2865,7 @@ class AutomatedCuration(ServerClient):
         ----------
         name : str
             The name of the engine action to retrieve.
-        metadata_element_type_name : str, default "EngineAction"
+        metadata_element_type : str, default "EngineAction"
             The metadata element type to filter on.
         metadata_element_subtypes : list[str], optional
             Subtypes to filter on.
@@ -2904,7 +2907,7 @@ class AutomatedCuration(ServerClient):
         return run_sync(
             self._async_get_engine_actions_by_name(
                 name=name,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,
@@ -2918,13 +2921,14 @@ class AutomatedCuration(ServerClient):
             )
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     async def _async_find_engine_actions(
             self,
             search_string: str = "*",
             starts_with: bool = True,
             ends_with: bool = False,
             ignore_case: bool = True,
-            metadata_element_type_name: Optional[str] = "EngineAction",
+            metadata_element_type: Optional[str] = "EngineAction",
             metadata_element_subtypes: Optional[list[str]] = None,
             include_only_relationships: Optional[list[str]] = None,
             skip_relationships: Optional[list[str]] = None,
@@ -2950,7 +2954,7 @@ class AutomatedCuration(ServerClient):
             Ends with the supplied string.
         ignore_case : bool, default True
             Ignore case when searching.
-        metadata_element_type_name : str, default "EngineAction"
+        metadata_element_type : str, default "EngineAction"
             The metadata element type to filter on.
         metadata_element_subtypes : list[str], optional
             List of metadata element subtypes.
@@ -2992,7 +2996,7 @@ class AutomatedCuration(ServerClient):
         """
         url = f"{self.ref_curation_command_base}/assets/by-search-string"
 
-        metadata_element_type = kwargs.pop("metadata_element_type", metadata_element_type_name)
+        metadata_element_type = kwargs.pop("metadata_element_type", metadata_element_type)
 
         # Merge explicit parameters with kwargs
         params = {
@@ -3020,6 +3024,7 @@ class AutomatedCuration(ServerClient):
                                                   _gen_output=self._generate_engine_action_output, **params)
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     def find_engine_actions(
             self,
@@ -3027,7 +3032,7 @@ class AutomatedCuration(ServerClient):
             starts_with: bool = True,
             ends_with: bool = False,
             ignore_case: bool = True,
-            metadata_element_type_name: Optional[str] = "EngineAction",
+            metadata_element_type: Optional[str] = "EngineAction",
             metadata_element_subtypes: Optional[list[str]] = None,
             include_only_relationships: Optional[list[str]] = None,
             skip_relationships: Optional[list[str]] = None,
@@ -3051,7 +3056,7 @@ class AutomatedCuration(ServerClient):
             Ends with the supplied string.
         ignore_case : bool, default True
             Ignore case when searching.
-        metadata_element_type_name : str, default "EngineAction"
+        metadata_element_type : str, default "EngineAction"
             The metadata element type to filter on.
         metadata_element_subtypes : list[str], optional
             List of metadata element subtypes.
@@ -3097,7 +3102,7 @@ class AutomatedCuration(ServerClient):
                 starts_with=starts_with,
                 ends_with=ends_with,
                 ignore_case=ignore_case,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,
@@ -4826,13 +4831,14 @@ class AutomatedCuration(ServerClient):
         )
         return response
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     async def _async_find_technology_types(
         self,
         search_string: str = "*",
         starts_with: bool = False,
         ends_with: bool = False,
         ignore_case: bool = True,
-        metadata_element_type_name: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
         metadata_element_subtypes: Optional[list[str]] = None,
         include_only_relationships: Optional[list[str]] = None,
         skip_relationships: Optional[list[str]] = None,
@@ -4858,7 +4864,7 @@ class AutomatedCuration(ServerClient):
             Whether to search technology types that end with the given search string.
         ignore_case : bool, default True
             Whether to ignore case while searching technology types.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             Metadata element type to search for.
         metadata_element_subtypes : list[str], optional
             Subtypes to filter.
@@ -4908,7 +4914,7 @@ class AutomatedCuration(ServerClient):
         if 'sequencing_property' not in kwargs:
             kwargs['sequencing_property'] = "qualifiedName"
 
-        metadata_element_type = kwargs.pop("metadata_element_type", metadata_element_type_name)
+        metadata_element_type = kwargs.pop("metadata_element_type", metadata_element_type)
 
         # Merge explicit parameters with kwargs
         params = {
@@ -4936,13 +4942,14 @@ class AutomatedCuration(ServerClient):
                                               **params)
 
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     def find_technology_types(
             self,
             search_string: str = "*",
             starts_with: bool = False,
             ends_with: bool = False,
             ignore_case: bool = True,
-            metadata_element_type_name: Optional[str] = None,
+            metadata_element_type: Optional[str] = None,
             metadata_element_subtypes: Optional[list[str]] = None,
             include_only_relationships: Optional[list[str]] = None,
             skip_relationships: Optional[list[str]] = None,
@@ -4966,7 +4973,7 @@ class AutomatedCuration(ServerClient):
             Whether to search technology types that end with the given search string.
         ignore_case : bool, default True
             Whether to ignore case while searching.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             Metadata element type to search for.
         metadata_element_subtypes : list[str], optional
             List of metadata element subtypes.
@@ -5003,7 +5010,7 @@ class AutomatedCuration(ServerClient):
                 starts_with=starts_with,
                 ends_with=ends_with,
                 ignore_case=ignore_case,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 include_only_relationships=include_only_relationships,
                 skip_relationships=skip_relationships,
@@ -5017,6 +5024,7 @@ class AutomatedCuration(ServerClient):
             )
         )
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_find_technology_types_body(
         self,
@@ -5025,7 +5033,7 @@ class AutomatedCuration(ServerClient):
         ends_with: bool = False,
         ignore_case: bool = True,
         anchor_domain: Optional[str] = None,
-        metadata_element_type_name: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
         metadata_element_subtypes: Optional[list[str]] = None,
         skip_relationships: Optional[list[str]] = None,
         include_only_relationships: Optional[list[str]] = None,
@@ -5051,7 +5059,7 @@ class AutomatedCuration(ServerClient):
         Accepts the standard search filters as keyword arguments (see ``SearchFilters``
         in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
         """
-        metadata_element_type = kwargs.pop("metadata_element_type", metadata_element_type_name)
+        metadata_element_type = kwargs.pop("metadata_element_type", metadata_element_type)
         kwargs.pop("effective_time", None)
 
         return await self._async_find_technology_types(
@@ -5082,6 +5090,7 @@ class AutomatedCuration(ServerClient):
         )
 
 
+    @deprecated_names(metadata_element_type_name="metadata_element_type")
     def find_technology_types_body(
         self,
         search_string: str = "*",
@@ -5089,7 +5098,7 @@ class AutomatedCuration(ServerClient):
         ends_with: bool = False,
         ignore_case: bool = True,
         anchor_domain: Optional[str] = None,
-        metadata_element_type_name: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
         metadata_element_subtypes: Optional[list[str]] = None,
         skip_relationships: Optional[list[str]] = None,
         include_only_relationships: Optional[list[str]] = None,
@@ -5124,7 +5133,7 @@ class AutomatedCuration(ServerClient):
             Whether to ignore case while searching.
         anchor_domain : str, optional
             Anchor domain to filter.
-        metadata_element_type_name : str, optional
+        metadata_element_type : str, optional
             Metadata element type to search for.
         metadata_element_subtypes : list[str], optional
             Subtypes to filter.
@@ -5189,7 +5198,7 @@ class AutomatedCuration(ServerClient):
                 ends_with=ends_with,
                 ignore_case=ignore_case,
                 anchor_domain=anchor_domain,
-                metadata_element_type_name=metadata_element_type_name,
+                metadata_element_type=metadata_element_type,
                 metadata_element_subtypes=metadata_element_subtypes,
                 skip_relationships=skip_relationships,
                 include_only_relationships=include_only_relationships,

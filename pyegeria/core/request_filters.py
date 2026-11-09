@@ -68,6 +68,9 @@ __all__ = [
     "PUBLIC_ALIASES",
     "CALL_PARAMETERS",
     "RENDER_OPTIONS",
+    "DEPRECATED_NAMES",
+    "deprecated_names",
+    "canonicalize_names",
 ]
 
 
@@ -204,13 +207,103 @@ LEGACY_ALIASES: dict[str, str] = {
     "classification_names": "include_only_classified_elements",
     # Dr.Egeria / report-param spellings (format_set_executor._normalize_report_params maps
     # them to the canonical name but leaves the original key in the params it forwards)
-    "metadata_element_name": "metadata_element_type_name",
     "limit_result_by_status": "limit_results_by_status",
     "sort_order": "sequencing_order",
     "output_sort_order": "sequencing_order",
     "order_property_name": "sequencing_property",
     "anchor_scope_id": "anchor_scope_guid",
 }
+
+# One name everywhere (6.2.28): the element-type and subtype filters are spelt
+# metadata_element_type / metadata_element_subtypes in every signature and in **kwargs.
+# These older spellings still work, with a DeprecationWarning naming the new one.
+DEPRECATED_NAMES: dict[str, str] = {
+    "metadata_element_type_name": "metadata_element_type",
+    "metadata_element_name": "metadata_element_type",
+    "metadata_element_subtype_names": "metadata_element_subtypes",
+    "metadata_element_sub_type": "metadata_element_subtypes",
+    "metadata_element_subtype": "metadata_element_subtypes",
+}
+_LIST_VALUED = frozenset({"metadata_element_subtypes"})
+_MISSING = object()
+
+
+def _canonical_value(new: str, value: Any) -> Any:
+    """A lone string given for a list-valued filter (e.g. the old metadata_element_sub_type) becomes a list."""
+    return [value] if new in _LIST_VALUED and isinstance(value, str) else value
+
+
+def _deprecation(owner: str, old: str, new: str) -> None:
+    warnings.warn(f"{owner}: '{old}' is deprecated; use '{new}'.", DeprecationWarning,
+                  skip_file_prefixes=_SKIP_PREFIXES)
+
+
+def canonicalize_names(kwargs: dict[str, Any], *, owner: str, bound: dict[str, Any] | None = None,
+                       warn: bool = True) -> dict[str, Any]:
+    """Map deprecated spellings in ``kwargs`` onto the canonical names, in place, and return it.
+
+    Each deprecated name used raises one DeprecationWarning (unless ``warn`` is false). If the
+    canonical name is also given (in ``kwargs`` or, via ``bound``, positionally) with a different
+    value, raises ``TypeError`` -- the call is ambiguous.
+    """
+    for old in [k for k in kwargs if k in DEPRECATED_NAMES]:
+        new = DEPRECATED_NAMES[old]
+        value = _canonical_value(new, kwargs.pop(old))
+        if warn:
+            _deprecation(owner, old, new)
+        given = kwargs.get(new, _MISSING)
+        positional = False
+        if given is _MISSING and bound is not None and new in bound:
+            given, positional = bound[new], True
+        if given is not _MISSING and given is not None and value is not None \
+                and _canonical_value(new, given) != value:
+            raise TypeError(f"{owner}: '{old}' (deprecated) is {value!r} but '{new}' is {given!r}; "
+                            f"pass only '{new}'.")
+        if (given is _MISSING or given is None) and not positional:
+            kwargs[new] = value
+    return kwargs
+
+
+def deprecated_names(**renames: str):
+    """Decorator: accept the deprecated spelling(s) of a renamed parameter.
+
+    ``@deprecated_names(metadata_element_type_name="metadata_element_type")`` on a method whose
+    parameter is now ``metadata_element_type`` keeps old callers working, with a
+    DeprecationWarning, and refuses a call that gives both names with different values.
+    """
+    import functools
+
+    unknown = {o: n for o, n in renames.items() if DEPRECATED_NAMES.get(o) != n}
+    if unknown:
+        raise ValueError(f"not in DEPRECATED_NAMES: {unknown}")
+
+    def decorate(func):
+        sig = inspect.signature(func)
+        owner = func.__qualname__.replace("._async_", ".")
+
+        def fix(args, kwargs):
+            if not any(o in kwargs for o in renames):
+                return kwargs
+            rest = {k: v for k, v in kwargs.items() if k not in renames}
+            try:
+                bound = sig.bind_partial(*args, **rest).arguments
+            except TypeError:
+                bound = {}
+            positional = {k: v for k, v in bound.items() if k not in rest}
+            return canonicalize_names(dict(kwargs), owner=owner, bound=positional)
+
+        if inspect.iscoroutinefunction(func):
+            @functools.wraps(func)
+            async def wrapper(*args, **kwargs):
+                return await func(*args, **fix(args, kwargs))
+        else:
+            @functools.wraps(func)
+            def wrapper(*args, **kwargs):
+                return func(*args, **fix(args, kwargs))
+        wrapper.__deprecated_names__ = dict(renames)
+        return wrapper
+
+    return decorate
 
 # Body fields every method declares as an explicit parameter (or that the helper
 # fills itself). They are valid filter names but are not repeated in the TypedDicts,
@@ -305,6 +398,8 @@ def filter_body_kwargs(kind: str, kwargs: dict[str, Any], *, ignore: frozenset[s
     ``UnknownFilterWarning`` that names the bad key(s) and lists the valid ones;
     it is left out of the body (Pydantic would have dropped it silently anyway).
     """
+    if any(k in DEPRECATED_NAMES for k in kwargs):
+        kwargs = canonicalize_names(dict(kwargs), owner=_calling_method())
     wire = _wire_map(kind)
     body: dict[str, Any] = {}
     unknown: list[str] = []
@@ -407,6 +502,16 @@ def filter_reference_markdown() -> str:
     lines.append("|---|---|")
     for alias, field_name in {**PUBLIC_ALIASES, **LEGACY_ALIASES}.items():
         lines.append(f"| `{alias}` | `{field_name}` |")
+    lines.append("")
+    lines.append("### Deprecated spellings")
+    lines.append("")
+    lines.append("These still work, with a `DeprecationWarning` naming the new name. Giving both the old and the "
+                 "new name with different values raises `TypeError`.")
+    lines.append("")
+    lines.append("| Deprecated | Use |")
+    lines.append("|---|---|")
+    for old, new in DEPRECATED_NAMES.items():
+        lines.append(f"| `{old}` | `{new}` |")
     lines.append("")
     lines.append("Each model field's camelCase wire name (e.g. `metadataElementSubtypeNames`) is accepted as well. "
                  "These rendering options are passed through to output formatting and are not warned about: "
