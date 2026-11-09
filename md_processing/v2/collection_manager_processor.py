@@ -296,6 +296,12 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
     async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
         return None
 
+    # The Agreement Actor detach below calls this, but it was only defined on
+    # CollectionManagerProcessor, so a detach without an explicit relationship
+    # GUID died with AttributeError.  It uses nothing but self.client.
+    _async_resolve_agreement_actor_relationship_guid = (
+        CollectionManagerProcessor._async_resolve_agreement_actor_relationship_guid)
+
     def _relationship_type(self, object_type: str) -> str:
         """Which relationship this command links/detaches, or raise if none.
 
@@ -315,6 +321,19 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
         raise ValueError(
             f"{self.command.verb} {self.command.object_type}: no relationship handler for object type "
             f"'{object_type}' (OM_TYPE {om_type!r}); nothing was sent to Egeria")
+
+    def _require_guids(self, attributes: dict, *names: str) -> tuple:
+        """GUIDs of the named reference attributes, in order, or raise.
+
+        A detach whose end did not resolve must refuse with words, not send
+        ``None`` to Egeria and not report "Operation completed".
+        """
+        guids = tuple((attributes.get(n) or {}).get('guid') for n in names)
+        missing = [f"{n} ({(attributes.get(n) or {}).get('value')!r})" for n, g in zip(names, guids) if not g]
+        if missing:
+            raise ValueError(f"{self.command.verb} {self.command.object_type}: did not resolve to a GUID: "
+                             f"{', '.join(missing)}; nothing was sent to Egeria")
+        return guids
 
     def _resource_list_ends(self, attributes: dict) -> tuple[str, str]:
         """(resource guid, collection guid) for a ResourceList link/detach, or raise.
@@ -564,48 +583,58 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
                 if explicit_rel_guid:
                     await self.client._async_detach_agreement_item_by_id(explicit_rel_guid, body)
                 else:
-                    await self.client._async_detach_agreement_item(attributes.get('Agreement Name', {}).get('guid'), attributes.get('Item Name', {}).get('guid'), body)
+                    await self.client._async_detach_agreement_item(
+                        *self._require_guids(attributes, 'Agreement Name', 'Item Name'), body)
             elif rel_type == "AgreementActor":
-                guid_ag = attributes.get('Agreement Name', {}).get('guid')
-                actor_data = attributes.get('Actors', {})
-                actor_guids = actor_data.get('guid_list') or ([actor_data.get('guid')] if actor_data.get('guid') else [])
                 if explicit_rel_guid:
                     await self.client._async_detach_agreement_actor(explicit_rel_guid, body)
                 else:
+                    (guid_ag,) = self._require_guids(attributes, 'Agreement Name')
+                    actor_data = attributes.get('Actors') or {}
+                    actor_guids = [g for g in (actor_data.get('guid_list')
+                                               or ([actor_data.get('guid')] if actor_data.get('guid') else [])) if g]
+                    if not actor_guids:
+                        raise ValueError(f"{verb} {object_type}: Actors did not resolve to any GUID "
+                                         f"({actor_data.get('value')!r}); nothing was sent to Egeria")
+                    detached, not_linked = 0, []
                     for guid_ac in actor_guids:
-                        if guid_ac:
-                            rel_guid = await self._async_resolve_agreement_actor_relationship_guid(guid_ag, guid_ac)
-                            if rel_guid:
-                                await self.client._async_detach_agreement_actor(rel_guid, body)
-                            else:
-                                logger.warning(
-                                    f"No AgreementActor relationship found between agreement {guid_ag} and actor {guid_ac} - skipping detach")
+                        rel_guid = await self._async_resolve_agreement_actor_relationship_guid(guid_ag, guid_ac)
+                        if rel_guid:
+                            await self.client._async_detach_agreement_actor(rel_guid, body)
+                            detached += 1
+                        else:
+                            not_linked.append(guid_ac)
+                            logger.warning(
+                                f"No AgreementActor relationship found between agreement {guid_ag} and actor {guid_ac} - skipping detach")
+                    if not detached:
+                        raise ValueError(f"{verb} {object_type}: no AgreementActor relationship found between agreement "
+                                         f"{guid_ag} and actor(s) {', '.join(not_linked)}; nothing was sent to Egeria")
+                    if not_linked:
+                        self._add_warning(f"No AgreementActor relationship for actor(s) {', '.join(not_linked)}; "
+                                          f"those were not detached")
             elif rel_type == "CollectionMembership":
-                guid_coll = attributes.get('Collection Id', {}).get('guid')
-                guid_el = attributes.get('Element Id', {}).get('guid')
-                if not guid_coll or not guid_el:
-                    raise ValueError(f"{verb} {object_type}: Collection Id and Element Id must both resolve to a GUID "
-                                     f"(got {guid_coll!r}, {guid_el!r}); nothing was sent to Egeria")
-                await self.client._async_remove_from_collection(guid_coll, guid_el, body)
+                await self.client._async_remove_from_collection(
+                    *self._require_guids(attributes, 'Collection Id', 'Element Id'), body)
             elif rel_type == "DigitalProductDependency":
                 if explicit_rel_guid:
                     await self.client._async_detach_digital_product_dependency_by_id(explicit_rel_guid, body)
                 else:
-                    await self.client._async_detach_digital_product_dependency(attributes.get('Digital Product 1', {}).get('guid'), attributes.get('Digital Product 2', {}).get('guid'), body)
+                    await self.client._async_detach_digital_product_dependency(
+                        *self._require_guids(attributes, 'Digital Product 1', 'Digital Product 2'), body)
             elif rel_type == "BusinessCapabilityDependency":
                 await self.client._async_detach_business_capability_dependency(
-                    attributes.get('Dependent Capability', {}).get('guid'),
-                    attributes.get('Supporting Capability', {}).get('guid'), body)
+                    *self._require_guids(attributes, 'Dependent Capability', 'Supporting Capability'), body)
             elif rel_type == "DigitalSupport":
                 await self.client._async_detach_digital_support(
-                    attributes.get('Supported Capability', {}).get('guid'),
-                    attributes.get('Digital Service', {}).get('guid'), body)
+                    *self._require_guids(attributes, 'Supported Capability', 'Digital Service'), body)
             elif rel_type == "ResourceList":
                 await self.client._async_detach_collection(*self._resource_list_ends(attributes), body)
             elif rel_type == "DataDescription":
-                await self.client._async_detach_data_description(attributes.get('Element Id', {}).get('guid'), attributes.get('Collection Id', {}).get('guid'), body)
+                await self.client._async_detach_data_description(
+                    *self._require_guids(attributes, 'Element Id', 'Collection Id'), body)
             elif rel_type == "DigitalSubscriber":
-                await self.client._async_detach_subscriber(attributes.get('Subscriber Id', {}).get('guid'), attributes.get('Subscription Id', {}).get('guid'), body)
+                await self.client._async_detach_subscriber(
+                    *self._require_guids(attributes, 'Subscriber Id', 'Subscription Id'), body)
             else:  # _relationship_type() returned a type with no detach branch
                 raise ValueError(f"{verb} {object_type}: no detach handler for {rel_type}; nothing was sent to Egeria")
 

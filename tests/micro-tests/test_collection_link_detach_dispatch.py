@@ -135,7 +135,7 @@ async def test_detach_member_without_guids_fails():
     p = CollectionLinkProcessor(client=client, command=command, context={})
     p.parsed_output = {"qualified_name": "", "attributes": {"Collection Id": {"value": "x"}}}
 
-    with pytest.raises(ValueError, match="must both resolve"):
+    with pytest.raises(ValueError, match="did not resolve to a GUID"):
         await p.apply_changes()
     assert client.calls == []
 
@@ -156,3 +156,125 @@ def test_every_registered_phrasing_resolves_to_a_relationship():
         except ValueError:
             misses.append(key)
     assert misses == []
+
+
+# --- Every detach branch refuses an unresolved end (read-back P3) ---------------
+
+G1, G2 = COLLECTION_GUID, ELEMENT_GUID
+
+
+class _RecordingClient:
+    """Records every _async_detach_* / _async_remove_* call; other lookups fail."""
+
+    def __init__(self, relationships=None):
+        self.calls: list[tuple] = []
+        self.relationships = relationships if relationships is not None else []
+
+    async def _async_get_relationships(self, *args, **kwargs):
+        return self.relationships
+
+    def __getattr__(self, name):
+        if name.startswith(("_async_detach", "_async_remove")):
+            async def _record(*args, **kwargs):
+                self.calls.append((name, args[:-1]))
+            return _record
+        raise AttributeError(name)
+
+
+# (object type, both ends resolved, expected call, the end left out)
+DETACH_CASES = [
+    ("Data Description", {"Element Id": G1, "Collection Id": G2},
+     ("_async_detach_data_description", (G1, G2)), "Collection Id"),
+    ("Digital Subscriber", {"Subscriber Id": G1, "Subscription Id": G2},
+     ("_async_detach_subscriber", (G1, G2)), "Subscription Id"),
+    ("Member from Collection", {"Collection Id": G1, "Element Id": G2},
+     ("_async_remove_from_collection", (G1, G2)), "Collection Id"),
+    ("Business Capability Dependency", {"Dependent Capability": G1, "Supporting Capability": G2},
+     ("_async_detach_business_capability_dependency", (G1, G2)), "Supporting Capability"),
+    ("Digital Support", {"Supported Capability": G1, "Digital Service": G2},
+     ("_async_detach_digital_support", (G1, G2)), "Digital Service"),
+    ("Product Dependency", {"Digital Product 1": G1, "Digital Product 2": G2},
+     ("_async_detach_digital_product_dependency", (G1, G2)), "Digital Product 2"),
+    ("Agreement Item", {"Agreement Name": G1, "Item Name": G2},
+     ("_async_detach_agreement_item", (G1, G2)), "Item Name"),
+]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("object_type,attrs,expected,_missing", DETACH_CASES,
+                         ids=[c[0] for c in DETACH_CASES])
+async def test_detach_with_both_ends_sends_one_call(object_type, attrs, expected, _missing):
+    client = _RecordingClient()
+    result = await _dispatch(client, "Detach", object_type, attrs)
+
+    assert client.calls == [expected], result
+    assert result["status"] == "success", result
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("object_type,attrs,_expected,missing", DETACH_CASES,
+                         ids=[c[0] for c in DETACH_CASES])
+async def test_detach_with_an_end_left_out_fails_and_sends_nothing(object_type, attrs, _expected, missing):
+    """Through the real dispatcher: an omitted end never reaches Egeria as None.
+
+    Optional ends (Collection Id, Subscription Id) pass validation and are
+    refused by the processor; required ends are refused by validation first.
+    Either way: failure, no call, no "Operation completed".
+    """
+    client = _RecordingClient()
+    attrs = {k: v for k, v in attrs.items() if k != missing}
+    result = await _dispatch(client, "Detach", object_type, attrs)
+
+    assert client.calls == [], result
+    assert result["status"] == "failure", result
+    assert "Operation completed" not in str(result.get("output", "")), result
+    assert missing in result["message"], result
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("object_type,attrs,_expected,missing", DETACH_CASES,
+                         ids=[c[0] for c in DETACH_CASES])
+async def test_detach_backstop_refuses_unresolved_end(object_type, attrs, _expected, missing):
+    """The processor itself refuses, even when validation let an end through unresolved."""
+    client = _RecordingClient()
+    command = _command("Detach", object_type, {})
+    p = CollectionLinkProcessor(client=client, command=command, context={})
+    parsed = {k: {"value": v, "guid": v} for k, v in attrs.items()}
+    parsed[missing] = {"value": "Unresolved Name", "guid": None}
+    p.parsed_output = {"qualified_name": "", "attributes": parsed}
+
+    with pytest.raises(ValueError, match=f"did not resolve to a GUID: {missing}"):
+        await p.apply_changes()
+    assert client.calls == []
+
+
+@pytest.mark.asyncio
+async def test_detach_agreement_actor_without_actors_fails():
+    client = _RecordingClient()
+    result = await _dispatch(client, "Detach", "Agreement Actor", {"Agreement Name": G1})
+
+    assert client.calls == [], result
+    assert result["status"] == "failure", result
+    assert "Actors did not resolve" in result["message"], result
+
+
+@pytest.mark.asyncio
+async def test_detach_agreement_actor_not_linked_fails():
+    """No AgreementActor relationship between the pair: refuse, don't report success."""
+    client = _RecordingClient(relationships=[])
+    result = await _dispatch(client, "Detach", "Agreement Actor", {"Agreement Name": G1, "Actors": G2})
+
+    assert client.calls == [], result
+    assert result["status"] == "failure", result
+    assert "no AgreementActor relationship found" in result["message"], result
+
+
+@pytest.mark.asyncio
+async def test_detach_agreement_actor_by_pair_detaches_the_found_relationship():
+    """The pair lookup is reachable from CollectionLinkProcessor (was AttributeError)."""
+    client = _RecordingClient(relationships=[
+        {"relationshipGUID": "rel-1", "elementGUIDAtEnd1": G1, "elementGUIDAtEnd2": G2}])
+    result = await _dispatch(client, "Detach", "Agreement Actor", {"Agreement Name": G1, "Actors": G2})
+
+    assert client.calls == [("_async_detach_agreement_actor", ("rel-1",))], result
+    assert result["status"] == "success", result
