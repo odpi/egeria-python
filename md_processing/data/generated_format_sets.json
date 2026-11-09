@@ -96484,9 +96484,7 @@
         "metadata_element_type"
       ],
       "spec_params": {
-        "classification_names": [
-          "DigitalProductCatalog"
-        ]
+        "metadata_element_type": "DigitalProductCatalog"
       },
       "analytic_function": null,
       "analytic_spec_params": {}
@@ -97731,9 +97729,7 @@
         "metadata_element_type"
       ],
       "spec_params": {
-        "classification_names": [
-          "DigitalProductCatalog"
-        ]
+        "metadata_element_type": "DigitalProductCatalog"
       },
       "analytic_function": null,
       "analytic_spec_params": {}
