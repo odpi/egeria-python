@@ -1,0 +1,398 @@
+{
+  "local-dashboards-next-steps": {
+    "name": "local-dashboards-next-steps",
+    "heading": "Local Dashboards \u2014 Next Steps",
+    "description": "The open punch list for the Local Dashboards / Egeria Overview feature, tracked as a real Egeria Work Item List and browsable right here as a Dashboard Sheet.",
+    "aliases": [],
+    "family": null,
+    "placements": [
+      {
+        "ref": "Next Steps Work Item List",
+        "span": "2",
+        "emphasis": "kpi",
+        "content": null,
+        "perspectives": [],
+        "detail_spec": null
+      },
+      {
+        "ref": "Next Steps Membership Diagram",
+        "span": "full",
+        "emphasis": "panel",
+        "content": null,
+        "perspectives": [],
+        "detail_spec": null
+      },
+      {
+        "ref": "Project Count",
+        "span": "1",
+        "emphasis": "kpi",
+        "content": null,
+        "perspectives": [],
+        "detail_spec": null
+      },
+      {
+        "ref": "Term Count",
+        "span": "1",
+        "emphasis": "kpi",
+        "content": null,
+        "perspectives": [],
+        "detail_spec": null
+      },
+      {
+        "ref": "Term Definition Completeness",
+        "span": "2",
+        "emphasis": "kpi",
+        "content": null,
+        "perspectives": [],
+        "detail_spec": null
+      },
+      {
+        "ref": "Tasks",
+        "span": "2",
+        "emphasis": "kpi",
+        "content": null,
+        "perspectives": [],
+        "detail_spec": null
+      },
+      {
+        "ref": "My own mermaid",
+        "span": "full",
+        "emphasis": "panel",
+        "content": "This is could be a bunch of content.\n**italics?**",
+        "perspectives": [],
+        "detail_spec": null
+      },
+      {
+        "ref": "Test-MD",
+        "span": "full",
+        "emphasis": "panel",
+        "content": "This is a simple test.",
+        "perspectives": [],
+        "detail_spec": null
+      }
+    ]
+  },
+  "Assets by Type and Location Demo": {
+    "name": "Assets by Type and Location Demo",
+    "heading": "Assets by Type & Location",
+    "description": "Demo dashboard: how many assets, of which type, are cataloged, and where they're located \u2014 a mix of live charts, KPI numbers, and a location snapshot.",
+    "aliases": [],
+    "family": "dashboard",
+    "placements": [
+      {
+        "ref": "Total Cataloged Assets",
+        "span": "1",
+        "emphasis": "kpi",
+        "content": null,
+        "perspectives": [],
+        "detail_spec": null
+      },
+      {
+        "ref": "Total Locations Tracked",
+        "span": "1",
+        "emphasis": "kpi",
+        "content": null,
+        "perspectives": [],
+        "detail_spec": null
+      },
+      {
+        "ref": "Assets by Type (Pie Chart)",
+        "span": "2",
+        "emphasis": "panel",
+        "content": null,
+        "perspectives": [],
+        "detail_spec": null
+      },
+      {
+        "ref": "Assets by Type (Bar Chart)",
+        "span": "2",
+        "emphasis": "panel",
+        "content": null,
+        "perspectives": [],
+        "detail_spec": null
+      },
+      {
+        "ref": "Assets by Location Snapshot",
+        "span": "full",
+        "emphasis": "panel",
+        "content": "**Assets by Location** \u2014 snapshot as of authoring time, built from real live\n`/api/locations` data (no live \"group assets by Location\" analytic function\nexists yet, so unlike the tiles above this panel doesn't re-query on every\nview \u2014 see this step's own commentary above for what a live version would\nneed). 37 locations are tracked in Egeria; 5 currently have assets\nregistered against them, all `SoftwareServer` infrastructure, 9 assets\ntotal.\n\n```mermaid\npie title Assets by Location (SoftwareServer)\n  \"Amsterdam Data Centre\" : 5\n  \"Austin Data Center\" : 1\n  \"New York Data Center\" : 1\n  \"Sales4U\" : 1\n  \"Winchester Data Centre\" : 1\n```\n\n| Location | Asset Count | Asset Type |\n|---|---|---|\n| Amsterdam Data Centre | 5 | SoftwareServer |\n| Austin Data Center | 1 | SoftwareServer |\n| New York Data Center | 1 | SoftwareServer |\n| Sales4U | 1 | SoftwareServer |\n| Winchester Data Centre | 1 | SoftwareServer |\n\nThe remaining 32 tracked locations have no assets registered against them\nyet in this demo dataset.",
+        "perspectives": [],
+        "detail_spec": null
+      }
+    ]
+  },
+  "digital-product-portfolio": {
+    "name": "digital-product-portfolio",
+    "heading": "Digital Product Portfolio & Subscriptions",
+    "description": "A high-level view of our data product ecosystem and adoption metrics.",
+    "aliases": [],
+    "family": null,
+    "placements": [
+      {
+        "ref": "Total Products Count",
+        "span": "1",
+        "emphasis": "kpi",
+        "content": null,
+        "perspectives": [],
+        "detail_spec": null
+      },
+      {
+        "ref": "Active Subscriptions Count",
+        "span": "1",
+        "emphasis": "kpi",
+        "content": null,
+        "perspectives": [],
+        "detail_spec": null
+      },
+      {
+        "ref": "Subscription Growth Trend",
+        "span": "2",
+        "emphasis": "panel",
+        "content": null,
+        "perspectives": [],
+        "detail_spec": null
+      },
+      {
+        "ref": "Product Subscription Map",
+        "span": "full",
+        "emphasis": "panel",
+        "content": null,
+        "perspectives": [],
+        "detail_spec": null
+      }
+    ]
+  },
+  "my-team-dashboard": {
+    "name": "my-team-dashboard",
+    "heading": "My Team Dashboard",
+    "description": "Whatever this dashboard is for.",
+    "aliases": [],
+    "family": null,
+    "placements": [
+      {
+        "ref": "My Team Work Items",
+        "span": "full",
+        "emphasis": "panel",
+        "content": null,
+        "perspectives": [],
+        "detail_spec": null
+      }
+    ]
+  },
+  "Chief Data Officer Dashboard": {
+    "name": "Chief Data Officer Dashboard",
+    "heading": "How the Data Governance Program is Going",
+    "description": "Jules Keeper's view of the data governance program at Coco Pharmaceuticals: whether the program has been built, whether the DATA domain's own metrics are moving, whether the common vocabulary is in use, whether the data hub is delivering, and where things stand against the ninety day plan and the risk register.",
+    "aliases": [],
+    "family": "dashboard",
+    "placements": [
+      {
+        "ref": "Introduction",
+        "span": "full",
+        "emphasis": "panel",
+        "content": "**How is the data governance program going?**  Every tile below is a live query against Egeria, so this page changes as the domain teams, the data hub team and the data governance team add to the catalog.  The DATA domain exists in service of the domains that carry business and regulatory responsibility, so most tiles measure the shared foundation those domains depend on.  Where a governance metric has no live measure yet, the dashboard says so rather than leaving it out.",
+        "perspectives": [],
+        "detail_spec": null
+      },
+      {
+        "ref": "Section 1 - Program Built",
+        "span": "full",
+        "emphasis": "panel",
+        "content": "**1. Has the governance program been built?**  The governance definitions defined by all the governance leaders and their teams, the metrics that make them observable, and the information supply chains and blueprints that put the data in a business context.",
+        "perspectives": [],
+        "detail_spec": null
+      },
+      {
+        "ref": "Governance Definitions by Type",
+        "span": "2",
+        "emphasis": "panel",
+        "content": null,
+        "perspectives": [
+          "governance"
+        ],
+        "detail_spec": null
+      },
+      {
+        "ref": "Governance Metrics Defined",
+        "span": "1",
+        "emphasis": "kpi",
+        "content": null,
+        "perspectives": [
+          "governance"
+        ],
+        "detail_spec": "Governance-Metric-DrE-Basic"
+      },
+      {
+        "ref": "Supply Chains and Blueprints",
+        "span": "1",
+        "emphasis": "kpi",
+        "content": null,
+        "perspectives": [
+          "governance"
+        ],
+        "detail_spec": null
+      },
+      {
+        "ref": "Section 2 - DATA Metrics",
+        "span": "full",
+        "emphasis": "panel",
+        "content": "**2. Are the DATA domain's own metrics moving?**  The data governance program defines six metrics.  Three have a live measure below: *Percentage of Data Assets with Designated Owner* (Data Asset Ownership, a direct measure), *Catalog Registration Coverage* (Governance Classification Coverage and Catalog Freshness, a partial measure until discovery scanning runs) and *Lineage Coverage for Critical Data Elements* (Solution Design Context, a proxy: the first hop from an asset to the design it implements, not an end-to-end lineage path).",
+        "perspectives": [],
+        "detail_spec": null
+      },
+      {
+        "ref": "Data Asset Ownership",
+        "span": "1",
+        "emphasis": "kpi",
+        "content": null,
+        "perspectives": [
+          "governance",
+          "owner"
+        ],
+        "detail_spec": null
+      },
+      {
+        "ref": "Governance Classification Coverage",
+        "span": "1",
+        "emphasis": "kpi",
+        "content": null,
+        "perspectives": [
+          "governance",
+          "steward"
+        ],
+        "detail_spec": null
+      },
+      {
+        "ref": "Catalog Freshness",
+        "span": "1",
+        "emphasis": "kpi",
+        "content": null,
+        "perspectives": [
+          "governance",
+          "steward"
+        ],
+        "detail_spec": null
+      },
+      {
+        "ref": "Solution Design Context",
+        "span": "1",
+        "emphasis": "kpi",
+        "content": null,
+        "perspectives": [
+          "governance",
+          "engineer"
+        ],
+        "detail_spec": null
+      },
+      {
+        "ref": "Data Quality Not Yet Measured",
+        "span": "full",
+        "emphasis": "panel",
+        "content": "**Not yet measured: data quality.**  Three of the DATA domain's metrics \u2014 *Critical Data Element Quality Expectation Coverage*, *Data Quality Rule Pass Rate* (target 98% or above) and *Open Data Quality Issues by Age* (target: nothing older than seven days on critical data) \u2014 need automated quality rule results and a record of the issues they raise.  The clinical trials pipeline in `2. clinical-trials` runs quality checks, but their results are not yet recorded in the catalog in a form these tiles can count.  Until they are, the honest answer to *how good is our data?* is *we cannot yet say*, and closing this gap is the next priority for Erin Overview and Peter Profile.",
+        "perspectives": [
+          "governance",
+          "steward"
+        ],
+        "detail_spec": null
+      },
+      {
+        "ref": "Section 3 - Vocabulary",
+        "span": "full",
+        "emphasis": "panel",
+        "content": "**3. Is the common vocabulary being used?**  A glossary term is only useful once it is defined, and only does its job once it is attached to the data it describes.  The first tile shows how many terms have a definition; the second shows how many terms are actually assigned to something in the catalog.",
+        "perspectives": [],
+        "detail_spec": null
+      },
+      {
+        "ref": "Glossary Definition Completeness",
+        "span": "1",
+        "emphasis": "kpi",
+        "content": null,
+        "perspectives": [
+          "governance",
+          "steward"
+        ],
+        "detail_spec": null
+      },
+      {
+        "ref": "Glossary Terms in Use",
+        "span": "1",
+        "emphasis": "kpi",
+        "content": null,
+        "perspectives": [
+          "governance",
+          "steward"
+        ],
+        "detail_spec": null
+      },
+      {
+        "ref": "Section 4 - Data Hub",
+        "span": "full",
+        "emphasis": "panel",
+        "content": "**4. Is the data hub delivering?**  The digital products that deliver critical data between systems, how the catalog has grown over the last ninety days, and the register of strategic information supply chains the company governs and monitors at company level.",
+        "perspectives": [],
+        "detail_spec": null
+      },
+      {
+        "ref": "Digital Products Published",
+        "span": "1",
+        "emphasis": "kpi",
+        "content": null,
+        "perspectives": [],
+        "detail_spec": "Digital-Products"
+      },
+      {
+        "ref": "Catalog Growth - Last Ninety Days",
+        "span": "2",
+        "emphasis": "panel",
+        "content": null,
+        "perspectives": [],
+        "detail_spec": null
+      },
+      {
+        "ref": "Strategic Information Supply Chain Register",
+        "span": "full",
+        "emphasis": "panel",
+        "content": null,
+        "perspectives": [],
+        "detail_spec": "Information-Supply-Chain-DrE-Basic"
+      },
+      {
+        "ref": "Section 5 - Plan Risks Metrics",
+        "span": "full",
+        "emphasis": "panel",
+        "content": "**5. The plan, the risks and the metrics.**  The ninety day plan with the status of each phase and task, the company risk register built by all the governance leaders, and the full governance metric register \u2014 the metrics system the Impact Phase set out to build, of which the tiles above are the first live measures.",
+        "perspectives": [],
+        "detail_spec": null
+      },
+      {
+        "ref": "My Ninety Day Plan Progress",
+        "span": "full",
+        "emphasis": "panel",
+        "content": null,
+        "perspectives": [],
+        "detail_spec": null
+      },
+      {
+        "ref": "Company Risk Register",
+        "span": "full",
+        "emphasis": "panel",
+        "content": null,
+        "perspectives": [
+          "governance"
+        ],
+        "detail_spec": null
+      },
+      {
+        "ref": "Governance Metric Register",
+        "span": "full",
+        "emphasis": "panel",
+        "content": null,
+        "perspectives": [
+          "governance"
+        ],
+        "detail_spec": null
+      }
+    ]
+  }
+}

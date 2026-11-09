@@ -79,8 +79,11 @@ class FakeEgeria:
 
     def _header(self, guid: str) -> Dict[str, Any]:
         e = self.entities[guid]
-        return {"class": "ElementHeader", "guid": guid,
-                "type": {"typeName": e["type"], "superTypeNames": SUPERTYPES.get(e["type"], [])}}
+        header = {"class": "ElementHeader", "guid": guid,
+                  "type": {"typeName": e["type"], "superTypeNames": SUPERTYPES.get(e["type"], [])}}
+        if e.get("ownership"):
+            header["ownership"] = {"classificationName": "Ownership", "classificationProperties": e["ownership"]}
+        return header
 
     def element(self, guid: str) -> Dict[str, Any]:
         e = self.entities[guid]
@@ -151,6 +154,11 @@ class FakeEgeria:
         hits = [self.element(g) for g, e in self.entities.items()
                 if (not metadata_element_type or e["type"] == metadata_element_type)
                 and any(e["props"].get(p) == property_value for p in property_names)]
+        page = hits[start_from:start_from + page_size] if page_size else hits[start_from:]
+        return page if page else "No elements found"
+
+    async def _async_get_elements(self, metadata_element_type="Referenceable", start_from=0, page_size=10, **kwargs):
+        hits = [self.element(g) for g, e in self.entities.items() if e["type"] == metadata_element_type]
         page = hits[start_from:start_from + page_size] if page_size else hits[start_from:]
         return page if page else "No elements found"
 
@@ -255,6 +263,10 @@ class FakeEgeria:
                               if not (r["type"] == "DataSetContent" and r["end1"] == dashboard_guid
                                       and r["props"].get("queryId") == placement_qualified_name)]
         return before - len(self.relationships)
+
+    async def _async_add_ownership_to_element(self, element_guid, body, timeout=None):
+        self.writes.append(("add_ownership", element_guid, body["properties"]["owner"]))
+        self.entities[element_guid]["ownership"] = {k: v for k, v in body["properties"].items() if k != "class"}
 
     async def _async_add_scope_to_element(self, scoped_by_guid, element_guid, body=None):
         self.writes.append(("add_scope", scoped_by_guid, element_guid))
