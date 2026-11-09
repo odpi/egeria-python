@@ -2058,8 +2058,9 @@ def metric_trend(
     `metric_path` names the function the way a report spec's
     `analytic_function` does: a registered analytic function name (e.g.
     "governed_coverage"). It is resolved through the report-spec resolver
-    (ISSUE-173), so a caller-supplied value gets the same allowlist check;
-    a dotted path still works but is deprecated.
+    (ISSUE-173), so a caller-supplied value gets the same allowlist check.
+    Only registered names are accepted; a dotted path is refused
+    (AnalyticFunctionRefused, since 6.2.19).
 
     Pass both `mgr` and `ce` regardless of what the target function actually
     needs -- only the client parameter names it declares (by leading

@@ -101,6 +101,17 @@ class AnalyticFunctionRefused(ValueError):
     pass
 
 
+def _is_spec_refusal(exc: BaseException) -> bool:
+    """True when `exc` is a report spec refusal: an expected outcome, not a failure.
+
+    The refusals are the allowlist's (AllowlistRefusal), the analytic-function resolver's
+    (AnalyticFunctionRefused), a declared input the environment cannot supply (RoleRefused),
+    and a microflow this pyegeria cannot run or parse (CannotRunYet, MicroflowError).
+    """
+    from pyegeria.view.microflow import AllowlistRefusal, CannotRunYet, MicroflowError  # lazy: microflow imports this module
+    return isinstance(exc, (AllowlistRefusal, AnalyticFunctionRefused, RoleRefused, CannotRunYet, MicroflowError))
+
+
 def analytic_module_prefixes() -> tuple:
     """The allowed module prefixes: PYEGERIA_ANALYTIC_MODULE_PREFIXES if set, else the defaults."""
     raw = os.getenv("PYEGERIA_ANALYTIC_MODULE_PREFIXES", "").strip()
@@ -1379,7 +1390,9 @@ def _exec_report_spec_impl(
         raise
     except ValueError as e:
         # Never a silent None (6.2.28): the caller gets the error and its words.
-        logger.error(f"Report spec '{format_set_name}' ({output_format}) failed: {e}")
+        # A refusal is expected (WARNING); any other ValueError is a real failure (ERROR).
+        log = logger.warning if _is_spec_refusal(e) else logger.error
+        log(f"Report spec '{format_set_name}' ({output_format}) failed: {e}")
         # Re-raised, as the async path does: a plain-words refusal must not reach the caller as "no result".
         raise
 
