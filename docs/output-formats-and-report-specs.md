@@ -1100,7 +1100,7 @@ A count a routine could not establish is `None`, never `0` and never the cap (#5
 - a `SERIES`/`BAR`/`PIE` over a result that holds one becomes `kind: "absent"` too: a missing bar, or a pie re-proportioned without its missing slice, would read as an answer;
 - a dict or list result keeps its measured values; the unmeasured ones are `None` and the notes name each one.
 
-Measured results are unchanged.
+Measured results are unchanged. One exception to "never `0`": a `viewer` count with `strict=False` still returns `0` when the query itself fails; pass `strict=True` for `None`.
 
 **Population (#556, 6.2.27).** The count routines take `population=` (`"viewer"` or `"repository"`; `scope=` is a deprecated alias and passing both with different values is a `ValueError`). They now default to `"repository"`: totals count the whole repository, **including elements the viewer may not be able to see**, via the native push-down count. This is a deliberate interim choice until zone-aware push-down exists, and the registry descriptions say so. `"viewer"` is an explicit opt-in; `scope=None` omits the argument and takes the server default. A failed repository count has no find fallback, so it is `None` with a note, strict or not. Routines that scan elements (for example `certifications_summary`, `orphan_glossary_terms`, `stale_assets`) stay viewer-scoped, and no payload mixes the two populations in one ratio.
 
@@ -1167,7 +1167,7 @@ An `egeria_client:<Class>` names the class whose methods that argument calls; us
 
 **`PlainSupply`** (`pyegeria/view/role_supply.py`) is what plain pyegeria uses when you pass no `supply=`. It holds the caller's single `EgeriaTech`, or a factory that builds one on the first request. A routine that declares no `egeria_client` input therefore never connects or mints a token (ISSUE-137). For `EgeriaTech` and every class it proxies to (`egeria_tech_classes()`), `client(cls)` returns that one `EgeriaTech` itself, not a separate subclient (handing out per-class clients is later work). It supplies **no readers**, no viewer, and no subject: a routine that declares one runs only where an environment's own supply provides it (Resource Explorer or the Portal, or your own supply).
 
-**A minimal custom supply** has five methods (`RoleSupply` is a runtime-checkable `Protocol`). It must return a role or raise `RoleRefused`, or a subclass, whose words say why:
+**A minimal custom supply** has five methods (`RoleSupply` is a runtime-checkable `Protocol`). It must return a role or raise `RoleRefused`, or a subclass, whose words say why. The example is illustrative: `MyOdsReader` stands for a reader class of your own, and "My Report Spec" for a registered spec that declares `viewer` and `reader:ods`:
 
 ```python
 from pyegeria.view.role_supply import RoleRefused, NoSuchReader, Viewer
