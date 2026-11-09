@@ -241,6 +241,19 @@ def _as_dict(spec: Any) -> Dict[str, Any]:
     return dict(spec or {})
 
 
+BINDERS_DEPRECATED_PREFIX = "deprecated: analytic_binders ignored"
+
+
+def _dropped_binders(spec: Any, action: Dict[str, Any]) -> List[str]:
+    """The parameter names of a non-empty `analytic_binders` the spec carried: noted on the loaded
+    ActionParameter by its shim, or still in the action when `spec` is a plain dict."""
+    names = list(getattr(getattr(spec, "action", None), "_dropped_binders", None) or [])
+    binders = action.get("analytic_binders")
+    if binders and not names:
+        names = sorted(binders) if isinstance(binders, dict) else [repr(binders)]
+    return names
+
+
 def _target_type_name(data: Dict[str, Any]) -> Optional[str]:
     """Egeria's property name (`target_type_name`), with `target_type` read as its alias."""
     return data.get("target_type_name") or data.get("target_type")
@@ -413,6 +426,10 @@ def resolve(spec: Any, name: Optional[str] = None, *, registry_names: Optional[s
             f"Spec '{name}' cannot run on its own: it has no action, so it formats elements another call "
             f"fetched (it is a detail or a command's output format)."])
 
+    dropped = _dropped_binders(spec, action)
+    if dropped:
+        warns.append(f"{BINDERS_DEPRECATED_PREFIX} (binders for: {', '.join(dropped)}); declare these "
+                     f"arguments as the routine's inputs, which the environment's role supply provides")
     out: Dict[str, Any] = {"stages": [], "params": [], "seeds": [], "role_inputs": [], "tile_safe": None,
                            "admission": {}}
     has_find = bool(action.get("function"))
