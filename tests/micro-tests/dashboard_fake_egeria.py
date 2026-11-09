@@ -79,8 +79,11 @@ class FakeEgeria:
 
     def _header(self, guid: str) -> Dict[str, Any]:
         e = self.entities[guid]
-        return {"class": "ElementHeader", "guid": guid,
-                "type": {"typeName": e["type"], "superTypeNames": SUPERTYPES.get(e["type"], [])}}
+        header = {"class": "ElementHeader", "guid": guid,
+                  "type": {"typeName": e["type"], "superTypeNames": SUPERTYPES.get(e["type"], [])}}
+        if e.get("ownership"):
+            header["ownership"] = {"classificationName": "Ownership", "classificationProperties": e["ownership"]}
+        return header
 
     def element(self, guid: str) -> Dict[str, Any]:
         e = self.entities[guid]
@@ -260,6 +263,10 @@ class FakeEgeria:
                               if not (r["type"] == "DataSetContent" and r["end1"] == dashboard_guid
                                       and r["props"].get("queryId") == placement_qualified_name)]
         return before - len(self.relationships)
+
+    async def _async_add_ownership_to_element(self, element_guid, body, timeout=None):
+        self.writes.append(("add_ownership", element_guid, body["properties"]["owner"]))
+        self.entities[element_guid]["ownership"] = {k: v for k, v in body["properties"].items() if k != "class"}
 
     async def _async_add_scope_to_element(self, scoped_by_guid, element_guid, body=None):
         self.writes.append(("add_scope", scoped_by_guid, element_guid))

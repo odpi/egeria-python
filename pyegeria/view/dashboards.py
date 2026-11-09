@@ -271,14 +271,18 @@ def list_dashboard_sheets(client: Any = None) -> List[EgeriaDashboardSheet]:
 
 async def async_migrate_dashboard_sheets(client: Any, sheets: DashboardSheetDict, *,
                                          only: Optional[str] = None, rename: Optional[str] = None,
-                                         dry_run: bool = False) -> Dict[str, DashboardSheetEgeriaWriter]:
+                                         dry_run: bool = False,
+                                         owner: Optional[str] = None) -> Dict[str, DashboardSheetEgeriaWriter]:
     """Write sheets from the JSON store to Egeria through the PR-1 writer, one writer per sheet (so each
     sheet's actions and notes stay apart). Idempotent by qualifiedName. Never writes the store.
 
     `only` picks one sheet; `rename` writes it under another name (a scratch copy, e.g. for a live test).
+    DB-3: the sheets are shared (default zone) and owned by `owner`, by default the client's user.
     """
     if rename and not only:
         raise ValueError("--rename needs --sheet: it renames one sheet")
+    if owner is None:
+        owner = getattr(client, "user_id", None)
     selected = [sheets[only]] if only else list(sheets.values())
     results: Dict[str, DashboardSheetEgeriaWriter] = {}
     for sheet in selected:
@@ -286,9 +290,30 @@ async def async_migrate_dashboard_sheets(client: Any, sheets: DashboardSheetDict
         if rename:
             target.name = rename
         writer = DashboardSheetEgeriaWriter(client, dry_run=dry_run)
-        await writer.write_sheet(target)
+        chain = await writer.write_sheet(target)
+        if owner:
+            await _ensure_ownership(writer, chain.dashboard_guid, dashboard_qn(target.name), owner)
         results[target.name] = writer
     return results
+
+
+async def _ensure_ownership(writer: DashboardSheetEgeriaWriter, dashboard_guid: Optional[str], qn: str,
+                            owner: str) -> None:
+    """DB-3: a migrated sheet is owned by the user who migrates it -- the Dashboard's Ownership
+    classification (owner = that userId). Left alone when the Dashboard already has an owner. No zone is
+    set: the sheet is shared, in the default zone."""
+    current = None if writer._is_planned(dashboard_guid) else await writer._find(qn)
+    header = (current or {}).get("elementHeader") or {}
+    if header.get("ownership"):
+        writer.actions.append(f"unchanged Ownership {qn}")
+        return
+    writer.actions.append(f"classify Ownership {qn} (owner {owner})")
+    if writer.dry_run:
+        return
+    await writer.client.classification_manager._async_add_ownership_to_element(
+        dashboard_guid, {"class": "NewClassificationRequestBody",
+                         "properties": {"class": "OwnershipProperties", "owner": owner,
+                                        "ownerTypeName": "UserIdentity", "ownerPropertyName": "userId"}})
 
 
 # ---------------------------------------------------------------------------- command line
@@ -334,7 +359,7 @@ async def _amain(args: argparse.Namespace) -> int:
             return 1
         print(f"Migrating from {store}{' (DRY RUN: nothing is written)' if args.dry_run else ''}")
         results = await async_migrate_dashboard_sheets(client, sheets, only=args.sheet, rename=args.rename,
-                                                       dry_run=args.dry_run)
+                                                       dry_run=args.dry_run, owner=args.owner)
         for name, writer in results.items():
             _print_actions(name, writer, args.dry_run)
         return 0
@@ -369,6 +394,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     mig.add_argument("--store", help="the JSON store (default PYEGERIA_DASHBOARD_SHEETS_STORE or "
                                      "~/.pyegeria/dashboard_sheets.json)")
     mig.add_argument("--dry-run", action="store_true", help="list every write; write nothing")
+    mig.add_argument("--owner", help="owner of the migrated Dashboards (default: the signed-in user; DB-3)")
     dele = sub.add_parser("delete", help="delete a sheet's Egeria chain (never its Reports)")
     dele.add_argument("--sheet", required=True)
     dele.add_argument("--dry-run", action="store_true")

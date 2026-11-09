@@ -83,6 +83,18 @@ async def test_list_returns_all_live_sheets_and_migrate_is_idempotent():
     assert len(fake.of_type("Dashboard")) == 5 and len(fake.of_type("DisplayDataField")) == 40
     assert len(fake.rels("DataSetContent")) == 30
     assert sum(len(w.actions) for w in first.values()) > 0
+    # DB-3: owned by the migrating user (the fake has none, so owner is given), set once
+    assert [w for w in writes if w[0] == "add_ownership"] == []  # no owner known -> not classified
+
+
+@pytest.mark.asyncio
+async def test_migrate_sets_ownership_once_db3():
+    fake = _egeria_with_reports(LIVE)
+    store = DashboardSheetDict({k: DashboardSheet(**v) for k, v in LIVE.items()})
+    await async_migrate_dashboard_sheets(fake, store, only="my-team-dashboard", owner="garygeeke")
+    await async_migrate_dashboard_sheets(fake, store, only="my-team-dashboard", owner="garygeeke")
+    owned = [w for w in fake.writes if w[0] == "add_ownership"]
+    assert owned == [("add_ownership", fake.by_qn("Dashboard::my-team-dashboard"), "garygeeke")]
 
 
 @pytest.mark.asyncio
@@ -93,6 +105,17 @@ async def test_dry_run_migrate_writes_nothing():
     assert fake.writes == []
     creates = [a for w in results.values() for a in w.actions if a.startswith("create")]
     assert len(creates) == 5 * 3 + 40
+    assert not [a for w in results.values() for a in w.actions if a.startswith("classify")]  # no owner known
+
+
+@pytest.mark.asyncio
+async def test_dry_run_lists_ownership():
+    fake = _egeria_with_reports(LIVE)
+    store = DashboardSheetDict({k: DashboardSheet(**v) for k, v in LIVE.items()})
+    results = await async_migrate_dashboard_sheets(fake, store, only="my-team-dashboard", dry_run=True,
+                                                   owner="erinoverview")
+    assert "classify Ownership Dashboard::my-team-dashboard (owner erinoverview)" in results["my-team-dashboard"].actions
+    assert fake.writes == []
 
 
 @pytest.mark.asyncio
