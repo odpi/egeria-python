@@ -6,10 +6,11 @@ Egeria `Report` asset (DataSet -> Asset -> Referenceable; see
 odpi/egeria-project.ai/types/2/0239-Reports) carrying a Report Spec
 reference plus optional default execution parameters (Output Format,
 Search String, and the rest of the same 22-attribute vocabulary
-`View Report` already supports ad-hoc). Short-term design: everything
-beyond the base Referenceable properties lands in `additionalProperties`
--- no dedicated `ReportDefinition` subtype yet (see egeria-workspaces-fs
-BACKLOG.md NEXT-14). `Link Report to Dashboard Sheet` then references a
+`View Report` already supports ad-hoc). Egeria 6.3 (odpi/egeria#9432) gives
+Report a typed `outputFormat`, one `reportParameters` JSON document and the
+`ReportTypeInstance` link from its spec; all three are written. The older
+`additionalProperties` keys are still written for one release, because
+today's Portal reads them. `Link Report to Dashboard Sheet` then references a
 Report by its `Report Name` instead of a bare Report Spec name, giving a
 Dashboard Sheet placement a concrete, parameterized instance to run
 instead of an unparameterized template.
@@ -35,10 +36,20 @@ from typing import Any, Dict, Optional
 
 from loguru import logger
 
+from pyegeria.core._exceptions import PyegeriaNotFoundException
+
 from md_processing.v2.processors import AsyncBaseCommandProcessor
 from md_processing.md_processing_utils.common_md_utils import (
     set_create_body, set_element_prop_body, update_element_dictionary,
 )
+
+# Report specs are held in Egeria under two qualified-name prefixes (pipeline note v5.5 §7a hazard):
+# `ReportSpec::` from Create Report Spec, and `ReportType::` from the older report-type content.
+REPORT_SPEC_QN_PREFIXES = ("ReportSpec::", "ReportType::")
+
+# `Report Spec` / `Output Format` have typed homes; everything else in _REPORT_PARAM_ATTRS goes into the
+# one reportParameters document.
+_TYPED_REPORT_KEYS = {"reportSpec", "outputFormat"}
 
 # The 22 report-execution-parameter attributes (same set View Report exposes
 # ad-hoc) -- short-term, all of these land in additionalProperties rather
@@ -110,6 +121,47 @@ def _snake_to_camel(snake: str) -> str:
     return parts[0] + "".join(p[:1].upper() + p[1:] for p in parts[1:] if p)
 
 
+def _camel_to_snake(camel: str) -> str:
+    """camelCase -> snake_case (`searchString` -> `search_string`, `asOfTime` -> `as_of_time`)."""
+    out = []
+    for ch in camel:
+        if ch.isupper():
+            out.append("_" + ch.lower())
+        else:
+            out.append(ch)
+    return "".join(out).lstrip("_")
+
+
+def report_parameters_document(attributes: Dict[str, Any]) -> Dict[str, Any]:
+    """The one parameter document a Report carries in Egeria 6.3's `reportParameters` (pipeline note §8d).
+
+    Today's `Create Report` holds parameters three ways; they collapse into one JSON object of snake_case
+    parameter names, which is what a spec's declared `required_params`/`optional_params` use:
+      1. the common find attributes (`Search String`, `Page Size`, ...), authoring sugar;
+      2. the `Report Parameters` map, as typed;
+      3. the `Analytic Parameters` map.
+    Later sources win on a clash. Attribute defaults the parser fills in (`Graph Query Depth`, ...) are not
+    written: only what the author wrote is pinned. Values that are JSON (`25`, `true`, `[...]`) are decoded, so `Page Size 25`
+    is the number 25, not the string "25". `Report Spec` and `Output Format` are not parameters: they have
+    their own typed homes (`ReportTypeInstance`, `outputFormat`).
+    """
+    doc: Dict[str, Any] = {}
+    for canonical_name, key in _REPORT_PARAM_ATTRS.items():
+        if key in _TYPED_REPORT_KEYS:
+            continue
+        attr = attributes.get(canonical_name, {})
+        if attr.get("is_default"):
+            continue  # a spec default the author did not write: the report spec decides, not a pinned value
+        value = attr.get("value")
+        if value is not None and value != "":
+            doc[_camel_to_snake(key)] = _coerce_analytic_value(value)
+    for attr in ("Report Parameters", "Analytic Parameters"):
+        value = attributes.get(attr, {}).get("value")
+        if isinstance(value, dict):
+            doc.update({str(k): _coerce_analytic_value(v) for k, v in value.items() if v is not None})
+    return doc
+
+
 def _report_additional_properties(attributes: Dict[str, Any]) -> Dict[str, str]:
     """Merge the user's own 'Additional Properties' dict (if any) with the
     report-execution params, stringified (additionalProperties is
@@ -169,27 +221,135 @@ def _report_additional_properties(attributes: Dict[str, Any]) -> Dict[str, str]:
     return merged
 
 
+def _as_element(result: Any) -> Optional[Dict[str, Any]]:
+    """An element dict from a lookup, or None for any not-found answer (a string, an empty list, None)."""
+    if isinstance(result, dict) and result.get("elementHeader"):
+        return result
+    if isinstance(result, dict) and isinstance(result.get("element"), dict):
+        return result["element"]
+    return None
+
+
+async def find_element_by_qualified_name(client: Any, qualified_name: str) -> Optional[Dict[str, Any]]:
+    """One bounded exact lookup by qualifiedName (classification-explorer `by-unique-name`). None if absent.
+
+    Never a type-wide query: the unique-name endpoint returns at most one element.
+    """
+    if not qualified_name:
+        return None
+    try:
+        result = await client.classification_manager._async_get_element_by_unique_name(qualified_name)
+    except PyegeriaNotFoundException:
+        return None
+    return _as_element(result)
+
+
+async def find_report_spec_element(client: Any, spec_name: str) -> Optional[Dict[str, Any]]:
+    """The Egeria element for a report spec named `spec_name`, looked up under both prefixes.
+
+    Tries the name as a qualified name first (a caller may give `ReportSpec::X` or `ReportType::X`), then
+    `ReportSpec::<name>`, then `ReportType::<name>` (§7a hazard: both exist live). None if no element holds
+    the spec -- a spec held only in pyegeria has none.
+    """
+    if not spec_name:
+        return None
+    candidates = [spec_name] if spec_name.startswith(REPORT_SPEC_QN_PREFIXES) else []
+    candidates += [f"{prefix}{spec_name}" for prefix in REPORT_SPEC_QN_PREFIXES]
+    for qn in candidates:
+        element = await find_element_by_qualified_name(client, qn)
+        if element:
+            return element
+    return None
+
+
+def _props_differ(desired: Dict[str, Any], current: Dict[str, Any]) -> bool:
+    """True if any non-None desired property differs from the element's current value."""
+    for key, value in desired.items():
+        if key in ("class", "typeName") or value is None:
+            continue
+        if current.get(key) != value:
+            return True
+    return False
+
+
+async def upsert_dashboard_asset(client: Any, qualified_name: str, props: Dict[str, Any],
+                                 existing: Optional[Dict[str, Any]], *, merge_update: bool = True,
+                                 create_body: Optional[Dict[str, Any]] = None,
+                                 filter_update: Any = None) -> tuple:
+    """Create or update an Egeria 6.3 `Dashboard` asset. Returns (guid, verb_word, body_sent).
+
+    The one implementation of the Dashboard asset write, used by `Create Dashboard` (DashboardProcessor)
+    and by `Create Dashboard Sheet` / dashboard migration (dashboard_sheet.py). An existing Dashboard whose
+    properties already match is left alone (verb_word "Unchanged", nothing sent), so re-running a document
+    changes nothing.
+    """
+    if existing:
+        guid = existing["elementHeader"]["guid"]
+        if not _props_differ(props, existing.get("properties") or {}):
+            return guid, "Unchanged", None
+        update_props = filter_update(props, merge_update) if filter_update else props
+        update_body = {"class": "UpdateElementRequestBody", "properties": update_props,
+                       "mergeUpdate": merge_update}
+        await client._async_update_asset(guid, update_body)
+        return guid, "Updated", update_body
+    body = dict(create_body or {"class": "NewElementRequestBody"})
+    body["properties"] = props
+    raw_guid = await client._async_create_asset(["DashboardProperties"], body)
+    return raw_guid, "Created", body
+
+
+async def sync_report_type_instance(client: Any, report_guid: str, spec_name: str) -> Optional[str]:
+    """Link the Report to its spec's element by `ReportTypeInstance`; return a note when that cannot be done.
+
+    - Spec element found (under `ReportSpec::` or `ReportType::`): link it if not already linked, and detach
+      links to any other report type (a report runs one spec).
+    - No element (a spec held only in pyegeria): nothing is written, and the note says so -- the report
+      still runs from pyegeria's own spec registry.
+    """
+    spec_element = await find_report_spec_element(client, spec_name)
+    if not spec_element:
+        return (f"Report Spec '{spec_name}' has no Egeria element (looked for "
+                f"{' and '.join(p + spec_name for p in REPORT_SPEC_QN_PREFIXES)}): no ReportTypeInstance was "
+                f"written. The report still runs from pyegeria's own spec.")
+    spec_guid = spec_element["elementHeader"]["guid"]
+    current = await client.classification_manager._async_get_related_elements(
+        report_guid, "ReportTypeInstance", start_at_end=2, page_size=25, graph_query_depth=0)
+    linked = [e["elementHeader"]["guid"] for e in (current if isinstance(current, list) else [])
+              if isinstance(e, dict) and e.get("elementHeader")]
+    for other in linked:
+        if other != spec_guid:
+            await client.data_designer._async_detach_report_type_instance(other, report_guid)
+    if spec_guid not in linked:
+        await client.data_designer._async_link_report_type_instance(spec_guid, report_guid)
+    return None
+
+
 class ReportProcessor(AsyncBaseCommandProcessor):
-    """Processor for Create Report (and its Update transition)."""
+    """Processor for Create Report (and its Update transition).
+
+    Egeria 6.3 (odpi/egeria#9432) writes, beside the additionalProperties keys today's Portal reads (kept
+    for one release):
+      - `reportParameters`: ONE JSON document (report_parameters_document), not three parameter homes;
+      - the typed `outputFormat`;
+      - `ReportTypeInstance` from the named spec's element, found under `ReportSpec::` or `ReportType::`;
+        a spec with no element gets a note saying no link was written, not silence.
+    """
 
     async def apply_changes(self) -> str:
         attributes = self.parsed_output["attributes"]
         qualified_name = self.parsed_output.get("qualified_name") or self.derive_qualified_name(attributes)
         display_name = attributes.get("Display Name", {}).get("value") or qualified_name
 
-        if not attributes.get("Report Spec", {}).get("value"):
+        spec_name = attributes.get("Report Spec", {}).get("value")
+        if not spec_name:
             raise ValueError("Report Spec is required.")
 
         props = set_element_prop_body("Report", qualified_name, attributes)
         props["additionalProperties"] = _report_additional_properties(attributes)
-        # Egeria 6.3 (odpi/egeria#9432) gives Report typed outputFormat and reportParameters (a JSON
-        # string). Written as well as the additionalProperties keys above, which the Portal's
-        # local dashboards still read.
         props["outputFormat"] = attributes.get("Output Format", {}).get("value")
-        report_params = attributes.get("Report Parameters", {}).get("value")
-        if isinstance(report_params, dict) and report_params:
-            props["reportParameters"] = json.dumps(
-                {str(k): v for k, v in report_params.items() if v is not None})
+        parameters = report_parameters_document(attributes)
+        if parameters:
+            props["reportParameters"] = json.dumps(parameters, sort_keys=True)
         props["deployedImplementationType"] = attributes.get("Deployed Implementation Type", {}).get("value")
         props["resourceName"] = attributes.get("Resource Name", {}).get("value")
 
@@ -211,8 +371,13 @@ class ReportProcessor(AsyncBaseCommandProcessor):
         self.parsed_output["guid"] = guid
         update_element_dictionary(qualified_name, {"guid": guid, "display_name": display_name})
 
+        note = await sync_report_type_instance(self.client, guid, spec_name)
+        if note:
+            self._add_warning(note)
+
         logger.success(f"{verb_word} Report '{display_name}' with GUID {guid}")
-        return await self.render_result_markdown(guid)
+        result = await self.render_result_markdown(guid)
+        return f"{result}\n\n> {note}\n" if note else result
 
 
 class DashboardProcessor(AsyncBaseCommandProcessor):
@@ -220,8 +385,8 @@ class DashboardProcessor(AsyncBaseCommandProcessor):
     (DataSet subtype, sibling of Report; odpi/egeria#9432). Same AssetMaker path as ReportProcessor.
 
     Its sheets and placements are DisplayDataContainers / DisplayDataFields (Schema Maker family);
-    Egeria has no separate DashboardPlacement type. The local `Create Dashboard Sheet` records
-    (dashboard_sheet.py) are unchanged by this command.
+    Egeria has no separate DashboardPlacement type. The asset write itself is `upsert_dashboard_asset`,
+    which `Create Dashboard Sheet` (dashboard_sheet.py) also uses for its Dashboard.
     """
 
     async def apply_changes(self) -> str:
@@ -237,24 +402,15 @@ class DashboardProcessor(AsyncBaseCommandProcessor):
         props["refreshTimeInterval"] = attributes.get("Refresh Time Interval", {}).get("value")
         props["layoutStyle"] = attributes.get("Layout Style", {}).get("value")
 
-        if self.as_is_element:
-            guid = self.as_is_element["elementHeader"]["guid"]
-            merge_update = attributes.get("Merge Update", {}).get("value", True)
-            update_body = {
-                "class": "UpdateElementRequestBody",
-                "properties": self.filter_update_properties(props, merge_update),
-                "mergeUpdate": merge_update,
-            }
-            self.last_body = update_body
-            await self.client._async_update_asset(guid, update_body)
-            verb_word = "Updated"
-        else:
-            create_body = set_create_body("Dashboard", attributes)
-            create_body["properties"] = props
-            self.last_body = create_body
-            raw_guid = await self.client._async_create_asset(["DashboardProperties"], create_body)
-            guid = self.extract_guid_or_raise(raw_guid, "Create Dashboard")
-            verb_word = "Created"
+        guid, verb_word, body = await upsert_dashboard_asset(
+            self.client, qualified_name, props, self.as_is_element,
+            merge_update=attributes.get("Merge Update", {}).get("value", True),
+            create_body=set_create_body("Dashboard", attributes),
+            filter_update=self.filter_update_properties)
+        if body is not None:
+            self.last_body = body
+        if verb_word == "Created":
+            guid = self.extract_guid_or_raise(guid, "Create Dashboard")
 
         self.parsed_output["guid"] = guid
         update_element_dictionary(qualified_name, {"guid": guid, "display_name": display_name})

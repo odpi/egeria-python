@@ -60,12 +60,15 @@ console = Console(width=EGERIA_WIDTH)
               help="Use Advanced usage level — shows additional attributes (default: Basic)")
 @click.option("--summary-only", is_flag=True, default=False, help="Only display the summary table and errors/warnings")
 @click.option("--debug", is_flag=True, default=False, help="Print each Egeria API request URL and body to the console")
+@click.option("--local-only", is_flag=True, default=False,
+              help="Dashboard Sheet commands write the local JSON store only, not Egeria "
+                   "(sets PYEGERIA_DASHBOARD_SHEETS_LOCAL_ONLY)")
 @logger.catch
 def process_markdown_file(input_file: str, output_folder: str, directive: str,
                           do_validate: bool, do_process: bool,
                           server: str, url: str, userid: str,
                           user_pass: str, parse_summary: str, attribute_logs: str, advanced: bool,
-                          summary_only: bool, debug: bool) -> None:
+                          summary_only: bool, debug: bool, local_only: bool = False) -> None:
     """
     Process a markdown file by parsing and executing Dr. Egeria md_commands. Write output to a new file.
 
@@ -82,6 +85,8 @@ def process_markdown_file(input_file: str, output_folder: str, directive: str,
     # else: use --directive as-is (default "validate")
 
     usage_level = "Advanced" if advanced else "Basic"
+    if local_only:
+        os.environ["PYEGERIA_DASHBOARD_SHEETS_LOCAL_ONLY"] = "1"
     try:
         # Instantiate the client
         from pyegeria import EgeriaTech
