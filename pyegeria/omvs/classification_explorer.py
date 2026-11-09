@@ -2987,7 +2987,7 @@ class ClassificationExplorer(ServerClient):
         property_value: str
             - property value to be searched. '*' (or empty) with a metadata_element_type returns every element of that type (via get_elements); '*' without a type is refused.
         deployed_implementation_type: str, optional
-            - list only elements of exactly this technology within metadata_element_type: Egeria ANDs deployedImplementationType EQUALS this value with (for a search string other than '*') property_names matching it, in one complex query, so paging stays exact. "*" means any technology (no technology condition).
+            - list only elements of exactly this technology within metadata_element_type: Egeria ANDs deployedImplementationType EQUALS this value (ignoring case) with (for a search string other than '*') property_names matching it, in one complex query, so paging stays exact. "*" means any technology (no technology condition).
         default_deployed_implementation_type: str, optional
             - the technology used when deployed_implementation_type is not given (report specs pin it; a caller's deployed_implementation_type overrides it).
         property_names: list[str]
@@ -3093,7 +3093,8 @@ class ClassificationExplorer(ServerClient):
             # SoftwareServers). Both conditions are ANDed by Egeria in one complex query, so paging is
             # exact and no other technology can appear: deployedImplementationType EQUALS the
             # technology, AND (for a search string) one of property_names matches it.
-            conditions = [_string_condition("deployedImplementationType", "EQ", technology)]
+            # exact, ignoring case: "postgresql server" finds the PostgreSQL Server
+            conditions = [_string_condition("deployedImplementationType", "CASE_INSENSITIVE_EQ", technology)]
             if not star:
                 operator = _match_operator(starts_with, ends_with, ignore_case)
                 conditions.append({"nestedConditions": {
@@ -3224,7 +3225,7 @@ class ClassificationExplorer(ServerClient):
         property_value: str
             - property value to be searched. '*' (or empty) with a metadata_element_type returns every element of that type (via get_elements); '*' without a type is refused.
         deployed_implementation_type: str, optional
-            - list only elements of exactly this technology within metadata_element_type: Egeria ANDs deployedImplementationType EQUALS this value with (for a search string other than '*') property_names matching it, in one complex query, so paging stays exact. "*" means any technology (no technology condition).
+            - list only elements of exactly this technology within metadata_element_type: Egeria ANDs deployedImplementationType EQUALS this value (ignoring case) with (for a search string other than '*') property_names matching it, in one complex query, so paging stays exact. "*" means any technology (no technology condition).
         default_deployed_implementation_type: str, optional
             - the technology used when deployed_implementation_type is not given (report specs pin it; a caller's deployed_implementation_type overrides it).
         property_names: list[str]

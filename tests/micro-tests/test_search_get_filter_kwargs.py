@@ -446,7 +446,7 @@ def test_star_with_a_technology_lists_exactly_that_technology(explorer):
     body = explorer.sent[-1]
     assert body["class"] == "FindRequestBody" and body["metadataElementTypeName"] == "SoftwareServer"
     # exact, so "Databricks Unity Catalog Server" is not a "Unity Catalog Server"
-    assert _conditions(body) == [{"property": "deployedImplementationType", "operator": "EQ",
+    assert _conditions(body) == [{"property": "deployedImplementationType", "operator": "CASE_INSENSITIVE_EQ",
                                   "value": {"class": "PrimitiveTypePropertyValue", "typeName": "string",
                                             "primitiveValue": "Unity Catalog Server"}}]
     assert body["searchProperties"]["matchCriteria"] == "ALL"
@@ -458,7 +458,7 @@ def test_search_string_with_a_technology_ands_both_conditions_server_side(explor
                                              deployed_implementation_type="PostgreSQL Server", page_size=25)
     body = explorer.sent[-1]
     tech, names = _conditions(body)
-    assert tech["property"] == "deployedImplementationType" and tech["operator"] == "EQ"
+    assert tech["property"] == "deployedImplementationType" and tech["operator"] == "CASE_INSENSITIVE_EQ"
     nested = names["nestedConditions"]
     assert nested["matchCriteria"] == "ANY"
     assert [(c["property"], c["operator"], c["value"]["primitiveValue"]) for c in nested["conditions"]] == [
@@ -607,7 +607,7 @@ def test_any_other_technology_is_an_exact_match(explorer):
                                              default_deployed_implementation_type="PostgreSQL Server")
     body = explorer.sent[-1]
     assert _tech(body) == ["Apache Kafka Server"]
-    assert body["searchProperties"]["conditions"][0]["operator"] == "EQ"
+    assert body["searchProperties"]["conditions"][0]["operator"] == "CASE_INSENSITIVE_EQ"
 
 
 def test_report_run_param_overrides_the_technology_default(monkeypatch):
@@ -643,3 +643,12 @@ def test_report_run_param_overrides_the_technology_default(monkeypatch):
             fse.exec_report_spec("Postgres-Server-Element-DrE-Basic", output_format="DICT", params=run_params,
                                  view_server="v", view_url="https://x", user="u", user_pass="p", token="t")
     assert calls == [(None, "PostgreSQL Server"), ("*", "PostgreSQL Server")]
+
+
+
+def test_technology_match_ignores_case(explorer):
+    # exact, but "postgresql server" finds the PostgreSQL Server rather than an unexplained empty result
+    explorer.find_elements_by_property_value("*", ["displayName"], metadata_element_type="SoftwareServer",
+                                             deployed_implementation_type="postgresql server")
+    cond = explorer.sent[-1]["searchProperties"]["conditions"][0]
+    assert (cond["operator"], cond["value"]["primitiveValue"]) == ("CASE_INSENSITIVE_EQ", "postgresql server")

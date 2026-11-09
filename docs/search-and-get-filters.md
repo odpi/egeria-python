@@ -137,7 +137,7 @@ specs: `displayName` and `qualifiedName`) within `metadata_element_type`.
   `Referenceable`), is refused: "give a search string or a narrower type".
 - `deployed_implementation_type="PostgreSQL Server"` restricts the search to exactly that
   technology within the type. Egeria evaluates it in one complex query:
-  `deployedImplementationType` **equals** the technology, **and**, for a search string other than
+  `deployedImplementationType` **equals** the technology (ignoring case, so `"postgresql server"` works), **and**, for a search string other than
   `'*'`, one of `property_names` matches it (`starts_with` / `ends_with` / `ignore_case` choose the
   operator: STARTS_WITH, ENDS_WITH, EQ or LIKE (contains), case-insensitive variants with
   `ignore_case`). So a Postgres-Server report never lists a Kafka server or a "Databricks Unity
