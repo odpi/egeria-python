@@ -1,0 +1,485 @@
+{
+ "_recorded": "AssetCatalog.get_asset_graph_by_guid(output_format='JSON') against qs-view-server, 2026-11-09, read only; relationships trimmed to the first of 4",
+ "response": {
+  "class": "AssetGraph",
+  "elementHeader": {
+   "class": "ElementHeader",
+   "headerVersion": 0,
+   "status": "ACTIVE",
+   "type": {
+    "typeId": "206a6e44-ffe7-408b-8e59-79842d362776",
+    "typeName": "GovernanceActionProcessInstance",
+    "superTypeNames": [
+     "TransientEmbeddedProcess",
+     "EmbeddedProcess",
+     "Action",
+     "Process",
+     "Asset",
+     "Referenceable",
+     "OpenMetadataRoot"
+    ],
+    "typeVersion": 1,
+    "typeDescription": "Represents a single run of a governance action process.  It is linked to the parent governance action process using the GovernedBy relationship.",
+    "typeCategory": "ENTITY_DEF"
+   },
+   "origin": {
+    "sourceServer": "qs-metadata-store",
+    "originCategory": "LOCAL_COHORT",
+    "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+    "homeMetadataCollectionName": "qs-metadata-store"
+   },
+   "versions": {
+    "createdBy": "baudotnpa",
+    "updatedBy": "egeriagovernanceengine",
+    "maintainedBy": [
+     "baudotnpa",
+     "egeriagovernanceengine"
+    ],
+    "createTime": "2026-11-09T11:05:12.882+00:00",
+    "updateTime": "2026-11-09T11:05:17.237+00:00",
+    "version": 4,
+    "lastRequestId": "7807c843-3774-40b4-bd2c-31460308ebb9"
+   },
+   "guid": "bf1d5f61-9d79-41bc-a89a-d863222585ff",
+   "anchor": {
+    "class": "ElementClassification",
+    "headerVersion": 0,
+    "status": "ACTIVE",
+    "type": {
+     "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+     "typeName": "Anchors",
+     "typeVersion": 1,
+     "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+     "typeCategory": "CLASSIFICATION_DEF"
+    },
+    "origin": {
+     "sourceServer": "qs-metadata-store",
+     "originCategory": "LOCAL_COHORT",
+     "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+     "homeMetadataCollectionName": "qs-metadata-store"
+    },
+    "versions": {
+     "createdBy": "baudotnpa",
+     "updatedBy": "baudotnpa",
+     "maintainedBy": [
+      "baudotnpa"
+     ],
+     "createTime": "2026-11-09T11:05:12.871+00:00",
+     "updateTime": "2026-11-09T11:05:12.871+00:00",
+     "version": 1,
+     "lastRequestId": "669900de-7c7d-4916-8290-815f1547fd78"
+    },
+    "classificationOrigin": "ASSIGNED",
+    "classificationName": "Anchors",
+    "classificationProperties": {
+     "class": "AnchorsProperties",
+     "typeName": "Anchors",
+     "anchorGUID": "33884dcc-c0b8-455e-8991-52c704a84d46",
+     "anchorTypeName": "ProvisioningActionProcess",
+     "anchorDomainName": "AuthoredReferenceable"
+    }
+   }
+  },
+  "properties": {
+   "class": "GovernanceActionProcessInstanceProperties",
+   "typeName": "GovernanceActionProcessInstance",
+   "qualifiedName": "ProvisioningActionProcess::provisioningGovernanceActionType::95ff50a4-13fe-4479-90f2-22d4c9c48ad9@1794222312842::77bd32e3-074f-4405-98c0-8df53021a9df",
+   "displayName": "provisioningGovernanceActionType@Mon Nov 09 11:05:12 GMT 2026",
+   "requestedTime": "2026-11-09T11:05:12.842+00:00",
+   "requestedStartTime": "2026-11-09T11:05:13.136+00:00",
+   "startTime": "2026-11-09T11:05:17.104+00:00",
+   "activityStatus": "IN_PROGRESS"
+  },
+  "governedBy": [
+   {
+    "class": "RelatedMetadataElementSummary",
+    "relationshipHeader": {
+     "class": "ElementHeader",
+     "headerVersion": 0,
+     "status": "ACTIVE",
+     "type": {
+      "typeId": "89c3c695-9e8d-4660-9f44-ed971fd55f89",
+      "typeName": "GovernedBy",
+      "superTypeNames": [
+       "LabeledRelationship"
+      ],
+      "typeVersion": 1,
+      "typeDescription": "Shows the resources that are governed by a specific governance definition.",
+      "typeCategory": "RELATIONSHIP_DEF"
+     },
+     "origin": {
+      "sourceServer": "qs-metadata-store",
+      "originCategory": "LOCAL_COHORT",
+      "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+      "homeMetadataCollectionName": "qs-metadata-store"
+     },
+     "versions": {
+      "createdBy": "baudotnpa",
+      "updatedBy": "baudotnpa",
+      "maintainedBy": [
+       "baudotnpa"
+      ],
+      "createTime": "2026-11-09T11:05:13.014+00:00",
+      "updateTime": "2026-11-09T11:05:13.014+00:00",
+      "version": 1,
+      "lastRequestId": "669900de-7c7d-4916-8290-815f1547fd78"
+     },
+     "guid": "6d6fc1ff-4717-41cf-8f73-ea2b8025f4b1"
+    },
+    "relatedElement": {
+     "elementHeader": {
+      "class": "ElementHeader",
+      "headerVersion": 0,
+      "status": "ACTIVE",
+      "type": {
+       "typeId": "c010a7df-ac08-4ad6-ac86-c9292fae2961",
+       "typeName": "ProvisioningActionProcess",
+       "superTypeNames": [
+        "GovernanceActionProcess",
+        "GovernanceAction",
+        "GovernanceControl",
+        "GovernanceDefinition",
+        "AuthoredReferenceable",
+        "Referenceable",
+        "OpenMetadataRoot"
+       ],
+       "typeVersion": 1,
+       "typeDescription": "A governance action process that is used to provision a digital resource to a target environment.",
+       "typeCategory": "ENTITY_DEF"
+      },
+      "origin": {
+       "sourceServer": "qs-metadata-store",
+       "originCategory": "LOCAL_COHORT",
+       "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+       "homeMetadataCollectionName": "qs-metadata-store"
+      },
+      "versions": {
+       "createdBy": "egeriagovernanceengine",
+       "updatedBy": "egeriagovernanceengine",
+       "maintainedBy": [
+        "egeriagovernanceengine"
+       ],
+       "createTime": "2026-11-07T22:59:57.540+00:00",
+       "updateTime": "2026-11-07T22:59:57.540+00:00",
+       "version": 1,
+       "lastRequestId": "5c93efd8-f28d-44e9-a1db-cad2c92ae15f"
+      },
+      "guid": "33884dcc-c0b8-455e-8991-52c704a84d46",
+      "anchor": {
+       "class": "ElementClassification",
+       "headerVersion": 0,
+       "status": "ACTIVE",
+       "type": {
+        "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+        "typeName": "Anchors",
+        "typeVersion": 1,
+        "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+        "typeCategory": "CLASSIFICATION_DEF"
+       },
+       "origin": {
+        "sourceServer": "qs-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+        "homeMetadataCollectionName": "qs-metadata-store"
+       },
+       "versions": {
+        "createdBy": "egeriagovernanceengine",
+        "updatedBy": "egeriagovernanceengine",
+        "maintainedBy": [
+         "egeriagovernanceengine"
+        ],
+        "createTime": "2026-11-07T22:59:57.538+00:00",
+        "updateTime": "2026-11-07T22:59:57.538+00:00",
+        "version": 1,
+        "lastRequestId": "5c93efd8-f28d-44e9-a1db-cad2c92ae15f"
+       },
+       "classificationOrigin": "ASSIGNED",
+       "classificationName": "Anchors",
+       "classificationProperties": {
+        "class": "AnchorsProperties",
+        "typeName": "Anchors",
+        "anchorGUID": "95ff50a4-13fe-4479-90f2-22d4c9c48ad9",
+        "anchorTypeName": "DigitalSubscription",
+        "anchorDomainName": "AuthoredReferenceable"
+       }
+      }
+     },
+     "properties": {
+      "class": "ProvisioningActionProcessProperties",
+      "typeName": "ProvisioningActionProcess",
+      "qualifiedName": "ProvisioningActionProcess::provisioningGovernanceActionType::95ff50a4-13fe-4479-90f2-22d4c9c48ad9",
+      "displayName": "provisioningGovernanceActionType",
+      "description": "The governance action type that implements the provisioning action."
+     }
+    },
+    "relatedElementAtEnd1": false
+   }
+  ],
+  "relationships": [
+   {
+    "class": "RelatedMetadataNodeSummary",
+    "relationshipHeader": {
+     "class": "ElementHeader",
+     "headerVersion": 0,
+     "status": "ACTIVE",
+     "type": {
+      "typeId": "207e2594-e3e4-4be8-a12c-4c401656e241",
+      "typeName": "ActionTarget",
+      "typeVersion": 1,
+      "typeDescription": "Associates an action with one or more elements to work on.",
+      "typeCategory": "RELATIONSHIP_DEF"
+     },
+     "origin": {
+      "sourceServer": "qs-metadata-store",
+      "originCategory": "LOCAL_COHORT",
+      "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+      "homeMetadataCollectionName": "qs-metadata-store"
+     },
+     "versions": {
+      "createdBy": "baudotnpa",
+      "updatedBy": "baudotnpa",
+      "maintainedBy": [
+       "baudotnpa"
+      ],
+      "createTime": "2026-11-09T11:05:15.465+00:00",
+      "updateTime": "2026-11-09T11:05:15.465+00:00",
+      "version": 1,
+      "lastRequestId": "669900de-7c7d-4916-8290-815f1547fd78"
+     },
+     "guid": "bc072387-85c6-4e91-a5af-68be4e8d38b4"
+    },
+    "relationshipProperties": {
+     "class": "ActionTargetProperties",
+     "typeName": "ActionTarget",
+     "actionTargetName": "destinationDataSet"
+    },
+    "relatedElement": {
+     "elementHeader": {
+      "class": "ElementHeader",
+      "headerVersion": 0,
+      "status": "ACTIVE",
+      "type": {
+       "typeId": "8f5614c5-1777-4760-a500-07e60ba29746",
+       "typeName": "TabularDataSetCollection",
+       "superTypeNames": [
+        "DataSet",
+        "DataAsset",
+        "Asset",
+        "Referenceable",
+        "OpenMetadataRoot"
+       ],
+       "typeVersion": 1,
+       "typeDescription": "Collection of related tabular data sets, not necessarily stored together.",
+       "typeCategory": "ENTITY_DEF"
+      },
+      "origin": {
+       "sourceServer": "qs-metadata-store",
+       "originCategory": "LOCAL_COHORT",
+       "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+       "homeMetadataCollectionName": "qs-metadata-store"
+      },
+      "versions": {
+       "createdBy": "peterprofile",
+       "updatedBy": "peterprofile",
+       "maintainedBy": [
+        "peterprofile"
+       ],
+       "createTime": "2026-11-07T22:59:45.646+00:00",
+       "updateTime": "2026-11-07T22:59:45.646+00:00",
+       "version": 1,
+       "lastRequestId": "d57a595b-b11b-46a8-bcc4-ea44fec06456",
+       "lastOperationId": "28401e15-455a-4179-9aec-0bda05f1796b"
+      },
+      "guid": "408e542a-272d-4773-ba9b-4cea3d539f01",
+      "anchor": {
+       "class": "ElementClassification",
+       "headerVersion": 0,
+       "status": "ACTIVE",
+       "type": {
+        "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+        "typeName": "Anchors",
+        "typeVersion": 1,
+        "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+        "typeCategory": "CLASSIFICATION_DEF"
+       },
+       "origin": {
+        "sourceServer": "qs-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+        "homeMetadataCollectionName": "qs-metadata-store"
+       },
+       "versions": {
+        "createdBy": "peterprofile",
+        "updatedBy": "peterprofile",
+        "maintainedBy": [
+         "peterprofile"
+        ],
+        "createTime": "2026-11-07T22:59:45.629+00:00",
+        "updateTime": "2026-11-07T22:59:45.629+00:00",
+        "version": 1,
+        "lastRequestId": "d57a595b-b11b-46a8-bcc4-ea44fec06456"
+       },
+       "classificationOrigin": "ASSIGNED",
+       "classificationName": "Anchors",
+       "classificationProperties": {
+        "class": "AnchorsProperties",
+        "typeName": "Anchors",
+        "anchorTypeName": "TabularDataSetCollection",
+        "anchorDomainName": "Asset"
+       }
+      },
+      "dataScope": {
+       "class": "ElementClassification",
+       "headerVersion": 0,
+       "status": "ACTIVE",
+       "type": {
+        "typeId": "22f996d0-c4b7-433a-af0b-6a3e9478e488",
+        "typeName": "DataScope",
+        "typeVersion": 2,
+        "typeDescription": "Identifies the scope of the data stored in the digital resource(s).",
+        "typeCategory": "CLASSIFICATION_DEF"
+       },
+       "origin": {
+        "sourceServer": "qs-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+        "homeMetadataCollectionName": "qs-metadata-store"
+       },
+       "versions": {
+        "createdBy": "egeriagovernanceengine",
+        "updatedBy": "olcatnpa",
+        "maintainedBy": [
+         "egeriagovernanceengine",
+         "olcatnpa"
+        ],
+        "createTime": "2026-11-08T00:42:56.193+00:00",
+        "updateTime": "2026-11-09T11:05:15.494+00:00",
+        "version": 124,
+        "lastRequestId": "6859ec57-a5a4-4b18-91ca-82728bb4ea76"
+       },
+       "classificationOrigin": "ASSIGNED",
+       "classificationName": "DataScope",
+       "classificationProperties": {
+        "class": "DataScopeProperties",
+        "typeName": "DataScope",
+        "dataCollectionStartTime": "2026-11-07T23:36:00.865+00:00",
+        "dataCollectionEndTime": "2026-11-09T09:57:27.956+00:00",
+        "additionalProperties": {
+         "lastWrittenAt": "2026-11-09T09:57:27.956Z",
+         "analysisTime": "2026-11-09T09:43:16Z",
+         "writePattern": "APPENDED",
+         "lastWrittenByRunId": "ee66603d-6075-43c5-a446-ae7edb660d97",
+         "analysisWindowEnd": "2026-11-09T09:43:16Z",
+         "writersInWindow": "1",
+         "analysisService": "open-lineage-data-scope-governance-service",
+         "writesPerDay": "2.84",
+         "writesInWindow": "82",
+         "lastWriteInWindow": "2026-11-09T09:39:24Z",
+         "firstWriteInWindow": "2026-11-07T23:41:36Z",
+         "writeCount": "68",
+         "analysisWindowStart": "2026-10-10T09:43:16Z"
+        }
+       }
+      },
+      "usageActivity": {
+       "class": "ElementClassification",
+       "headerVersion": 0,
+       "status": "ACTIVE",
+       "type": {
+        "typeId": "cfae23a1-8020-431f-a603-1f1bb0e01cb3",
+        "typeName": "UsageActivity",
+        "typeVersion": 1,
+        "typeDescription": "Describes the usage activity around an anchor element and its anchored elements: how often it is explicitly retrieved, found through searches, has its properties updated, and has its attachments and feedback updated or deleted.",
+        "typeCategory": "CLASSIFICATION_DEF"
+       },
+       "origin": {
+        "sourceServer": "qs-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+        "homeMetadataCollectionName": "qs-metadata-store"
+       },
+       "versions": {
+        "createdBy": "peterprofile",
+        "updatedBy": "pepysnpa",
+        "maintainedBy": [
+         "peterprofile",
+         "pepysnpa"
+        ],
+        "createTime": "2026-11-07T22:59:45.639+00:00",
+        "updateTime": "2026-11-08T23:29:46.590+00:00",
+        "version": 8,
+        "lastRequestId": "a5b5ae2c-02f5-4114-bf0e-7b97eb0084f3"
+       },
+       "classificationOrigin": "ASSIGNED",
+       "classificationName": "UsageActivity",
+       "classificationProperties": {
+        "class": "UsageActivityProperties",
+        "typeName": "UsageActivity",
+        "explicitGetCount": 2608,
+        "findCount": 87,
+        "updatePropertyCount": 0,
+        "updateAttachmentCount": 1,
+        "updateFeedbackCount": 0,
+        "deleteAttachmentCount": 0,
+        "deleteFeedbackCount": 0
+       }
+      },
+      "dataAssetEncoding": {
+       "class": "ElementClassification",
+       "headerVersion": 0,
+       "status": "ACTIVE",
+       "type": {
+        "typeId": "3f6a1513-d3ea-4666-b5fd-c76477b0245e",
+        "typeName": "DataAssetEncoding",
+        "typeVersion": 1,
+        "typeDescription": "Description for how data is organized and represented in a data asset.",
+        "typeCategory": "CLASSIFICATION_DEF"
+       },
+       "origin": {
+        "sourceServer": "qs-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+        "homeMetadataCollectionName": "qs-metadata-store"
+       },
+       "versions": {
+        "createdBy": "peterprofile",
+        "updatedBy": "peterprofile",
+        "maintainedBy": [
+         "peterprofile"
+        ],
+        "createTime": "2026-11-07T22:59:45.639+00:00",
+        "updateTime": "2026-11-07T22:59:45.639+00:00",
+        "version": 1,
+        "lastRequestId": "d57a595b-b11b-46a8-bcc4-ea44fec06456",
+        "lastOperationId": "28401e15-455a-4179-9aec-0bda05f1796b"
+       },
+       "classificationOrigin": "ASSIGNED",
+       "classificationName": "DataAssetEncoding",
+       "classificationProperties": {
+        "class": "DataAssetEncodingProperties",
+        "typeName": "DataAssetEncoding",
+        "encodingType": "relational",
+        "encodingLanguage": "SQL"
+       }
+      }
+     },
+     "properties": {
+      "class": "TabularDataSetCollectionProperties",
+      "typeName": "TabularDataSetCollection",
+      "qualifiedName": "PostgreSQL Tabular Data Set Collection::Coco PostgreSQL Server 1::subscription_staging.coco_austin_haz_mat__goods_inventory_stock",
+      "displayName": "subscription_staging.coco_austin_haz_mat__goods_inventory_stock",
+      "description": "Austin HazMat Inventory (Coco core) copy of the Goods Inventory Stock digital product.  Hazardous Material Holdings depends on it (hazardous holdings).",
+      "versionIdentifier": "V1.0",
+      "deployedImplementationType": "PostgreSQL Tabular Data Set Collection",
+      "contentStatus": "ACTIVE"
+     }
+    },
+    "relatedElementAtEnd1": false,
+    "startingElementGUID": "1de658d3-6af5-4c32-b915-5fb6bd5bb524"
+   }
+  ],
+  "mermaidGraph": "---\ntitle: GovernanceActionProcessInstance - provisioningGovernanceActionType@Mon Nov 09 11:05:12 GMT 2026 [bf1d5f61-9d79-41bc-a89a-d863222585ff]\n---\nflowchart TD\n%%{init: {\"flowchart\": {\"htmlLabels\": false}} }%%\n\n1@{ shape: rounded, label: \"*Governance Action Process Instance*\n**provisioningGovernanceActionType@Mon Nov 09 11:05:12 GMT 2026**\"}\n2@{ shape: trap-t, label: \"*Engine Action*\n**provision-subscription (EgeriaGovernance)**\"}\n1==>|\"Action Requester\"|2\n3@{ shape: processes, label: \"*Provisioning Action Process*\n**provisioningGovernanceActionType**\"}\n1==>|\"Governed By\"|3\nstyle 1 color:#000000, fill:#e0ab18, stroke:#004563\nstyle 2 color:#000000, fill:#7fffd4, stroke:#000000\nstyle 3 color:#000000, fill:#40E0D0, stroke:#000000\n",
+  "anchorMermaidGraph": "---\ntitle: Asset - provisioningGovernanceActionType@Mon Nov 09 11:05:12 GMT 2026 [bf1d5f61-9d79-41bc-a89a-d863222585ff]\n---\nflowchart LR\n%%{init: {\"flowchart\": {\"htmlLabels\": false}} }%%\n\nsubgraph 1 [Classifications]\ndirection TB\n2@{ shape: rounded, label: \"*Anchors*\n\"}\nend\n3@{ shape: rounded, label: \"*Governance Action Process Instance*\n**provisioningGovernanceActionType@Mon Nov 09 11:05:12 GMT 2026**\"}\n4@{ shape: rounded, label: \"*Engine Action*\n**provision-subscription (EgeriaGovernance)**\"}\n5@{ shape: stadium, label: \"*Integration Connector*\n**BaudotDigitalProductSubscriptionManagerIntegrationConnector**\"}\n5==>|\"Action Requester\"|4\n3==>|\"Action Requester\"|4\nstyle 1 color:#000000, fill:#F9F7ED, stroke:#b7c0c7\nstyle 3 color:#000000, fill:#e0ab18, stroke:#004563\nstyle 4 color:#000000, fill:#ffffe0, stroke:#004563\nstyle 5 color:#000000, fill:#BDB76B, stroke:#004563\n",
+  "actionMermaidGraph": "---\ntitle: Actions associated with Asset - provisioningGovernanceActionType@Mon Nov 09 11:05:12 GMT 2026 [bf1d5f61-9d79-41bc-a89a-d863222585ff]\n---\nflowchart LR\n%%{init: {\"flowchart\": {\"htmlLabels\": false}} }%%\n\n1@{ shape: rounded, label: \"*Governance Action Process Instance*\n**provisioningGovernanceActionType@Mon Nov 09 11:05:12 GMT 2026**\"}\n2@{ shape: cyl, label: \"*Tabular Data Set Collection*\n**subscription_staging.coco_austin_haz_mat__goods_inventory_stock**\"}\n3==>|\"destinationDataSet [Action Target]\"|2\n4@{ shape: cyl, label: \"*Tabular Data Set Collection*\n**coco_data_hub.goods_inventory_stock**\"}\n3==>|\"sourceDataSet [Action Target]\"|4\nstyle 1 color:#000000, fill:#e0ab18, stroke:#004563\nstyle 2 color:#000000, fill:#BDB76B, stroke:#004563\nstyle 4 color:#000000, fill:#BDB76B, stroke:#004563\n"
+ }
+}

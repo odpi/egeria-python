@@ -628,6 +628,22 @@ COMMON_ANNOTATIONS = {
 
 TIME_PARAMETERS = ["as_of_time", "effective_time"]
 
+#: The Asset-Graph spec's columns: the asset's own fields, then the graphs get_asset_graph_by_guid
+#: returns at the top level of its response (keys as Egeria writes them).
+ASSET_GRAPH_COLUMNS = COMMON_COLUMNS + COMMON_METADATA_COLUMNS + [
+    Column(name="Classifications", key='classifications'),
+    Column(name="Created By", key='created_by'),
+    Column(name="Create Time", key='create_time'),
+    Column(name="Updated By", key='updated_by'),
+    Column(name="Update Time", key='update_time'),
+    Column(name="Version", key='version'),
+    Column(name="Open Metadata Type Name", key='type_name'),
+    Column(name="Mermaid Graph", key='mermaidGraph'),
+    Column(name="Anchor Graph", key='anchorMermaidGraph'),
+    Column(name="Action Graph", key='actionMermaidGraph'),
+    Column(name="Field Level Lineage Graph", key='fieldLevelLineageGraph'),
+]
+
 # Modularized report_specs
 base_report_specs = FormatSetDict({
     "Referenceable": FormatSet(
@@ -1402,25 +1418,28 @@ base_report_specs = FormatSetDict({
     "Asset-Graph": FormatSet(
         target_type="Asset",
         heading="Asset Graph",
-        description="Attributes that apply to all Assets",
+        description=("An asset, the elements anchored to it and their relationships, as Egeria's asset graph "
+                     "(AssetCatalog.get_asset_graph_by_guid): the asset's own fields and its mermaid graphs."),
         annotations={},  # No specific annotations
         family="AssetCatalog",
+        # One element (the asset) with its graphs. Declared formats only (6.2.28): ALL, MD, FORM and LIST
+        # are left out on purpose. MD and FORM are Dr.Egeria update forms ("Update Asset"), which do not
+        # fit a read-only graph view; LIST is a markdown table, where a mermaid graph cannot render; and
+        # ALL, requested as an output format, rendered only the asset's name. Asking for one of them is
+        # an error with words (the executor lists the formats this spec declares), never a silent None.
         formats=[
             Format(
-                types=["ALL"],
-                attributes=COMMON_COLUMNS + COMMON_METADATA_COLUMNS + [
-                    Column(name="Classifications", key='classifications'),
-                    Column(name="Created By", key='created_by'),
-                    Column(name="Create Time", key='create_time'),
-                    Column(name="Updated By", key='updated_by'),
-                    Column(name="Update Time", key='update_time'),
-                    Column(name="Version", key='version'),
-                    Column(name="Open Metadata Type Name", key='type_name'),
-                    Column(name="Mermaid Graph", key='mermaidGraph'),
-                    Column(name="Anchor Graph", key='anchorMermaidGRaph'),
-                    Column(name="Field Level Lineage Graph", key='fieldLevelLineageGraph'),
-                ],
-            )
+                types=["DICT", "TABLE", "JSON"],
+                attributes=ASSET_GRAPH_COLUMNS,
+            ),
+            Format(
+                types=["REPORT", "HTML"],
+                attributes=ASSET_GRAPH_COLUMNS,
+            ),
+            Format(
+                types=["MERMAID"],
+                attributes=[Column(name="Mermaid Graph", key='mermaidGraph')],
+            ),
         ],
         action=ActionParameter(
             # ServerClient.get_asset_graph no longer exists; the asset graph is AssetCatalog's

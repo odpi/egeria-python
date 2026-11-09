@@ -1308,8 +1308,9 @@ def _exec_report_spec_impl(
         print_validation_error(e)
         raise
     except ValueError as e:
-        import traceback
-        traceback.print_exc()
+        # Never a silent None (6.2.28): the caller gets the error and its words.
+        logger.error(f"Report spec '{format_set_name}' ({output_format}) failed: {e}")
+        raise
 
     finally:
         try:
