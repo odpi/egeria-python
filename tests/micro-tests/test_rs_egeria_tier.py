@@ -315,8 +315,91 @@ def test_allowlist_refuses_python_binding_and_dotted_analytic():
         mfm.check_allowlist(mf)
 
 
-def test_denylist_is_a_named_empty_constant():
-    assert mfm.FIND_METHOD_DENYLIST == frozenset()
+_WRITE_CSV = "get_create_csv_data_file_element_from_template"
+
+
+def test_denylist_refuses_the_csv_template_write_on_every_class_and_async_twin():
+    assert f"AutomatedCuration.{_WRITE_CSV}" in mfm.FIND_METHOD_DENYLIST
+    for decl in (f"AutomatedCuration.{_WRITE_CSV}", f"AutomatedCuration._async_{_WRITE_CSV}",
+                 f"EgeriaTech.{_WRITE_CSV}", f"_client_new.{_WRITE_CSV}"):
+        ok, why = mfm.find_method_allowed(decl)
+        assert not ok and "denylist" in why, (decl, why)
+
+
+# Write words, per the Architect's read-back of stage 1 (P1). A name matches when one of its
+# _-separated words starts with one; a docstring's first line when a word there does.
+_WRITE_WORDS = r"(create|add|update|delete|remove|attach|detach|set|start|stop|run|register|refresh|clear|load)"
+
+# Reviewed 2026-11-09: each passes the allowlist, matches a write word, and is a read. Why it matched:
+_REVIEWED_READS = {
+    "find_tabular_data_sets": "'data sets' (set) - retrieves tabular data set elements",
+    "get_tabular_data_set": "'data set' (set) - retrieves a tabular data set report",
+    "get_active_configuration": "'if it is running' - returns a server's configuration",
+    "get_active_server_instance_status": "'services running' - status of a server's services",
+    "get_approved_engine_actions": "'approved to run' - lists engine actions",
+    "get_attached_collections": "'attached' - lists linked collections",
+    "get_attached_comments": "'attached' - lists comments",
+    "get_attached_likes": "'attached' - lists likes",
+    "get_attached_note_logs": "'attached' - lists note logs",
+    "get_attached_ratings": "'attached' - lists ratings",
+    "get_attached_tags": "'attached' - lists informal tags",
+    "get_connector_config": "'connector running' - reads configuration properties",
+    "get_integration_connector_config_properties": "'connector running' - reads configuration properties",
+    "get_connector_type": "'as registered' - returns a connector type",
+    "get_endpoints_by_network_address": "'address' (add) - POST to /endpoints/by-network-address, a search",
+    "get_platform_report": "'running platform' - returns platform details",
+    "get_server_report": "'running server' - returns server details",
+    "get_project_hierarchy": "'starting with' - returns a project hierarchy",
+    "get_registered_services": "'registered' - lists registered services",
+    "get_security_posture_history": "'test run' - returns posture summaries",
+    "get_software_capabilities_for_infrastructure": "'attached' - lists software capabilities",
+    "get_user_list": "'registered' - lists platform users",
+    "get_valid_classification_types": "'can be attached' - returns TypeDefs",
+    "get_valid_relationship_types": "'can be attached' - returns TypeDefs",
+}
+
+
+def test_no_allowlisted_method_reads_as_a_write():
+    """Scan every method on the EgeriaTech classes that passes the allowlist for write words in its
+    name or its docstring's first line. Any hit must be on the denylist (and so not pass) or in
+    `_REVIEWED_READS`. A new hit means: read the method; if it writes, add it to
+    FIND_METHOD_DENYLIST; if it reads, add it to `_REVIEWED_READS` with why it matched."""
+    import inspect
+    import re
+    from pyegeria.view.spec_resolver import _egeria_tech_classes
+
+    name_re = re.compile(r"(^|_)" + _WRITE_WORDS)
+    doc_re = re.compile(r"\b" + _WRITE_WORDS, re.I)
+    passing, hits = 0, {}
+    for cls in _egeria_tech_classes():
+        for attr in dir(cls):
+            bare = attr[len("_async_"):] if attr.startswith("_async_") else attr
+            if not bare.startswith(("find_", "get_", "list_")) or not callable(getattr(cls, attr, None)):
+                continue
+            ok, _why = mfm.find_method_allowed(f"{cls.__name__}.{attr}")
+            if not ok:
+                continue
+            passing += 1
+            doc = (inspect.getdoc(getattr(cls, attr)) or "").strip().splitlines()
+            first = doc[0] if doc else ""
+            if name_re.search(bare) or doc_re.search(first):
+                hits.setdefault(bare, f"{cls.__name__}.{attr}: {first[:120]}")
+    assert passing > 1000  # the scan really ran over the client classes
+    assert _WRITE_CSV not in hits
+    unreviewed = {k: v for k, v in hits.items() if k not in _REVIEWED_READS}
+    assert not unreviewed, unreviewed
+    stale = set(_REVIEWED_READS) - set(hits)
+    assert not stale, f"reviewed entries no longer hit (remove them): {sorted(stale)}"
+
+
+def test_unknown_stage_keys_are_recorded_as_notes():
+    mf, _, _ = mfm.parse_microflow({"format": "microflow/1", "stages": [
+        {"stage": "producer/find", "function": "CollectionManager.find_collections",
+         "analytic_binders": {"x": 1}, "colour": "blue"}],
+        "formatters": {"DICT": {"columns": ["display_name"]}}})
+    notes = []
+    mfm.microflow_to_format_set(mf, label="T", notes=notes)
+    assert any("stage 0 (producer/find)" in n and "analytic_binders, colour" in n for n in notes), notes
 
 
 # ── 3. The sync ──

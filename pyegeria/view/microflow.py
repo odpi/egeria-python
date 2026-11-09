@@ -56,9 +56,17 @@ __all__ = [
 
 MICROFLOW_FORMAT = "microflow/1"
 
-#: Find methods an Egeria-held spec may never name even though they pass the name rules. Empty in
-#: stage 1; kept as a named constant so a later release can add to it in one place (§7a "Safety").
-FIND_METHOD_DENYLIST: frozenset = frozenset()
+#: Find methods an Egeria-held spec may never name even though they pass the name rules (§7a
+#: "Safety"). A name prefix is not proof a method is read-only: each entry here starts with get_,
+#: find_ or list_ but writes to Egeria. An entry denies the method on every class that has it (and its
+#: `_async_` twin), since EgeriaTech and its subclasses inherit it. The micro-test
+#: `test_no_allowlisted_method_reads_as_a_write` scans every method that passes the rules for write
+#: words and fails on any hit that is neither here nor in its reviewed list.
+FIND_METHOD_DENYLIST: frozenset = frozenset({
+    # "Create a CSV file element from a template if it doesn't exist": an Egeria write.
+    "AutomatedCuration.get_create_csv_data_file_element_from_template",
+})
+_DENIED_METHOD_NAMES = frozenset(e.rsplit(".", 1)[-1] for e in FIND_METHOD_DENYLIST)
 
 #: Legacy class names that today's built-in specs use and the executor maps to a client class
 #: (`_resolve_client_and_method` falls back to EgeriaTech for an unknown name). Listed explicitly so
@@ -276,7 +284,8 @@ def find_method_allowed(func_decl: Any) -> Tuple[bool, str]:
 
     Allowed: `Class.method` (exactly one dot) where `Class` is an EgeriaTech client class (or a
     name the executor maps to one, `_CLIENT_CLASS_MAP` / `LEGACY_CLASS_ALIASES`), the method exists
-    there, its name starts with find_, get_ or list_, and it is not on `FIND_METHOD_DENYLIST`."""
+    there, its name starts with find_, get_ or list_, and it is not on `FIND_METHOD_DENYLIST` (on any
+    class)."""
     from pyegeria.view.format_set_executor import _CLIENT_CLASS_MAP
     from pyegeria.view.spec_resolver import _find_method
 
@@ -301,7 +310,8 @@ def find_method_allowed(func_decl: Any) -> Tuple[bool, str]:
     if not bare.startswith(_READ_ONLY_PREFIXES):
         return False, (f"its find method '{func_decl}' is not read-only by name (it must start with "
                        f"{', '.join(_READ_ONLY_PREFIXES)})")
-    if func_decl in FIND_METHOD_DENYLIST or f"{class_name}.{bare}" in FIND_METHOD_DENYLIST:
+    if (func_decl in FIND_METHOD_DENYLIST or f"{class_name}.{bare}" in FIND_METHOD_DENYLIST
+            or bare in _DENIED_METHOD_NAMES):
         return False, f"its find method '{func_decl}' is on the denylist"
     method, why = _find_method(f"{class_name}.{bare}")
     if method is None:
@@ -426,6 +436,11 @@ def microflow_to_format_set(mf: MicroflowV1, *, label: str, heading: Optional[st
     notes = notes if notes is not None else []
     stages = list(mf.stages)
     kinds = [s.stage for s in stages]
+    for i, s in enumerate(stages):
+        unknown = sorted((s.model_extra or {}).keys())
+        if unknown:
+            notes.append(f"stage {i} ({s.stage}) carries key(s) this pyegeria does not read: "
+                         f"{', '.join(unknown)}; ignored")
     unsupported = [k for k in kinds if k not in _STAGE_KINDS_RUNNABLE]
     if unsupported:
         raise CannotRunYet(", ".join(sorted(set(unsupported))))
