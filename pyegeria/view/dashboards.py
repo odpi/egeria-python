@@ -39,7 +39,6 @@ the store record.
 from __future__ import annotations
 
 import argparse
-import asyncio
 import os
 import sys
 from typing import Any, Dict, List, Literal, Optional
@@ -403,7 +402,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     args = parser.parse_args(argv)
     logger.remove()
     logger.add(sys.stderr, level=os.environ.get("PYEGERIA_DASHBOARDS_LOG_LEVEL", "WARNING"))
-    return asyncio.run(_amain(args))
+    from pyegeria.core.async_runner import run_sync
+    return run_sync(_amain(args))
 
 
 if __name__ == "__main__":
