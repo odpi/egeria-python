@@ -17,13 +17,11 @@ uv sync
 ## Running the apps
 This package contains two Textual apps:
 
-- **My Profile** (`DemoCode/My_Profile/`) — the actively developed app, and the one
-  the Egeria-Workspaces portal serves:
+- **My Profile** (`my_egeria/my_profile.py`) — the production user profile and catalog TUI app, and the one the Egeria-Workspaces portal serves:
   ```bash
-  uv run my_profile            # or: python -m my_egeria.DemoCode.My_Profile.my_egeria
+  uv run my_profile            # or: python -m my_egeria.my_profile
   ```
-- **MyEgeria** — the original glossary/collection browser (not under active
-  development; several of its secondary screens are incomplete):
+- **MyEgeria** (`my_egeria/main.py`) — the glossary and collection browser:
   ```bash
   uv run my-egeria             # or: python -m my_egeria.main
   ```

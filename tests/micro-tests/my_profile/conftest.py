@@ -30,7 +30,7 @@ if str(here) not in sys.path:
 # finds it ahead of the (editable-installed) package the tests import the app through.
 import my_egeria  # noqa: E402,F401
 
-profile_path = root_path / "my_egeria" / "my_egeria" / "DemoCode" / "My_Profile"
+profile_path = root_path / "my_egeria" / "my_egeria"
 if str(profile_path) not in sys.path:
     sys.path.insert(0, str(profile_path))
 

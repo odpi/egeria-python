@@ -10,7 +10,7 @@ import pytest
 from textual.app import App
 from textual.widgets import Button, Input, Static
 
-from my_egeria.DemoCode.My_Profile.my_egeria import MyProfileApp
+from my_egeria.my_profile import MyProfileApp
 from ChangeUserScreen import ChangeUserScreen
 from ConnectionErrorScreen import ConnectionErrorScreen, RETRY_INTERVAL
 from SplashScreen import SplashScreen
@@ -199,7 +199,7 @@ class TestAppConnectionAndUserChange:
     @pytest.mark.asyncio
     async def test_connection_failure_message_names_platform(self):
         app = MyProfileApp()
-        with patch("my_egeria.DemoCode.My_Profile.my_egeria.MyProfile",
+        with patch("my_egeria.my_profile.MyProfile",
                    side_effect=PyegeriaConnectionException(None, None, ConnectionError("refused"))):
             assert await app._load_profile_and_populate() is False
         assert app.load_error == f"Unable to connect to the Egeria platform at {app.platform_url}."

@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 # Ensure project root is on sys.path
-root_path = Path(__file__).resolve().parents[4]
+root_path = Path(__file__).resolve().parents[2]
 if str(root_path) not in sys.path:
     sys.path.append(str(root_path))
 

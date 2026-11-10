@@ -7,7 +7,7 @@ The **My Profile App** is a terminal user interface (TUI), built with [Textual](
 
 This manual describes how to *use* the app. For how it works internally (screens, handlers, Egeria calls and flow diagrams) see the [My Profile Reference Guide](My-Egeria-Doc.md).
 
-The app's source is in `my_egeria/my_egeria/DemoCode/My_Profile/`.
+The app's source is in `my_egeria/my_egeria/`.
 
 ## Table of Contents
 
@@ -74,11 +74,10 @@ From the app folder, inside the project's virtual environment:
 
 ```bash
 my_profile                 # installed console script, runs from any directory
-# or, from the app folder:
-cd my_egeria/my_egeria/DemoCode/My_Profile
-python my_egeria.py
+# or with python:
+python -m my_egeria.my_profile
 # or, with the Textual developer console (needs textual-dev, a dev dependency):
-textual run --dev my_egeria.py
+textual run --dev my_egeria/my_egeria/my_profile.py
 ```
 
 Use Python 3.13: Textual currently fails on Python 3.14 (an assertion in `textual/rlock.py` at startup).

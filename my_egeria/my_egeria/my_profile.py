@@ -12,7 +12,7 @@ from typing import Any
 import asyncio
 
 # Add the project root to sys.path to allow running this script from any directory
-root_path = Path(__file__).resolve().parents[4]
+root_path = Path(__file__).resolve().parents[2]
 if str(root_path) not in sys.path:
     sys.path.append(str(root_path))
 
@@ -100,7 +100,7 @@ from community_handler import CommunitiesMixin
 
 class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, ElementsCrudMixin, FeedbackMixin,
                    BookmarksMixin, NetworkMixin, CommunitiesMixin):
-    """My Profile App.
+    """My Profile / My Egeria App.
 
     Retrieves a user's profile from Egeria and displays current work items.
     If no profile is found, offers a UI to create one.
@@ -963,8 +963,12 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         eclient.close_session()
         return guid
 
+# Aliases for backward and forward compatibility
+MyEgeriaApp = MyProfileApp
+
+
 def main() -> None:
-    """Entry point for the my_profile console script."""
+    """Entry point for the my_egeria / my_profile console script."""
     MyProfileApp().run()
 
 

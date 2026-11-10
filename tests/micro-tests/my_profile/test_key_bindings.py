@@ -39,7 +39,7 @@ import StatusScreen
 import TechnologyTypeScreens
 import UserIdentitiesScreen
 import ViewSubscriptionsScreen
-from my_egeria.DemoCode.My_Profile.my_egeria import MyProfileApp
+from my_egeria.my_profile import MyProfileApp
 
 MODULES = [
     AddCommentScreen, AddToElementsScreens, CommunitiesScreen, CommunityScreen, CreateProfileScreen, CreateSubscriptionRequestScreen,

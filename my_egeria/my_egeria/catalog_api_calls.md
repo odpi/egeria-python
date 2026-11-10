@@ -1,6 +1,6 @@
 # Catalog (Shop for Data) — pyegeria API Call Reference
 
-This document maps each UI function in the **Catalogs / Shop for Data** flow of `my_egeria.py`
+This document maps each UI function in the **Catalogs / Shop for Data** flow of `my_profile.py`
 to the underlying pyegeria API calls it makes.
 
 ---
