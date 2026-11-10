@@ -172,7 +172,7 @@ re-test candidates moved into *Awaiting re-test* below the open sections.
   create-from-template) and 7 (`viewElementGUID`) are still open.
 
 **Open pyegeria items**
-- ISSUE-181 (HIGH): Dr.Egeria Parent ID on an Update deletes an unrelated relationship of the parent type, e.g. a folder's member
+- ISSUE-181 (HIGH): Dr.Egeria Parent ID on an Update deleted an unrelated relationship of the parent type, e.g. a folder's member (fixed for 6.2.32; moves to the Appendix on release)
 - ISSUE-174: link methods discarded the new relationship GUID (fixed for 6.2.19; moves to the Appendix on release)
 - ISSUE-155: pyegeria gaps against Egeria `main` since 6.2 (omvs_audit + source diff, V6.2..05a5e982)
 - ISSUE-150: Dr.Egeria commands for an Analytic Function's Egeria declaration: a GovernanceActionType that Resource Explorer runs as an engine host, plus a synchronous path that bypasses Egeria
@@ -196,7 +196,7 @@ into the entry now, so it isn't rediscovered from scratch later.
 
 ### ISSUE-181: Parent ID on an Update deletes an unrelated relationship of the parent type (e.g. a folder's member)
 
-**Layer:** pyegeria (Dr.Egeria) · **Severity:** HIGH: silent membership loss, no error or warning · **Status:** open · **Found:** 2026-11-10, by the publish-portal-specs builder while renaming `ReportSpecFolder::EgeriaPortal` (fe5aad27); confirmed by the Architect's read-back of consumer folders phase 1 (e71e4e90).
+**Layer:** pyegeria (Dr.Egeria) · **Severity:** HIGH: silent membership loss, no error or warning · **Status:** fixed 2026-11-10 on branch `fix/ops-commands-review` (the proposed fix below; separate commit from ISSUE-175..180), targets 6.2.32 · **Found:** 2026-11-10, by the publish-portal-specs builder while renaming `ReportSpecFolder::EgeriaPortal` (fe5aad27); confirmed by the Architect's read-back of consumer folders phase 1 (e71e4e90).
 
 **What:** `AsyncBaseCommandProcessor._sync_parent_relationship` (`md_processing/v2/processors.py`) runs after every successful Create/Update/… that names a `Parent ID` and `Parent Relationship Type Name`. Its steps:
 1. It lists the element's relationships with `metadata_expert._async_get_all_related_elements(guid)`, i.e. `startingAtEnd=0`, **either end**, and only the first page.
@@ -220,7 +220,9 @@ On fe5aad27 this would have dropped one of its two ReportSpec members. The build
 
 Moving an element becomes an explicit `Remove Member from Collection` (or a relationship delete). pyegeria can't tell which earlier link it created itself, so "delete only the link it created" isn't safe either.
 
-**Workaround until fixed:** to nest an element that already has relationships of that type, use `Add Member to Collection`, not `Parent ID`.
+**Done:** as proposed, in `_sync_parent_relationship` and a new `_parent_links_of_type`. Micro-tests in `tests/micro-tests/test_parent_id_update_keeps_memberships.py`: the folder repro, with the server filtering ends and with the server returning both ends, an existing link to the parent, the parent found on a later page, a different parent kept and reported, and the parent at end 2. `elementAtEnd1` ("is the related element at end 1") and `startingAtEnd` 1/2 are as in Egeria's `RelatedMetadataElement` and `ClassificationExplorerResource`. Not yet run against a live Egeria (laz was down for the #9438 upgrade).
+
+**Workaround before 6.2.32:** to nest an element that already has relationships of that type, use `Add Member to Collection`, not `Parent ID`.
 
 ### ISSUE-180: `commands/ops/README.md` described files that no longer exist
 

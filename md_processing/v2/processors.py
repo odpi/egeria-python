@@ -481,6 +481,14 @@ class AsyncBaseCommandProcessor(ABC):
         Anchor ID / Anchor Scope ID are NOT handled here - Egeria implements
         anchoring as a classification, not a relationship, so this mechanism
         doesn't apply to them.
+
+        Add only, never delete (ISSUE-181). Only relationships with this element
+        at the child end (the end opposite the parent) are compared, and an
+        existing link to a different parent is left in place and reported. It
+        used to look at both ends and delete the last link of the type that was
+        not the named parent: on a folder, that was one of its own members'
+        CollectionMembership links. To move an element, remove the old link
+        explicitly (e.g. Remove Member from Collection).
         """
         parent_guid = attributes.get("Parent ID", {}).get("guid")
         if not parent_guid or str(parent_guid).startswith("(Planned:"):
@@ -501,41 +509,11 @@ class AsyncBaseCommandProcessor(ABC):
         end_1_guid, end_2_guid = (parent_guid, guid) if parent_at_end1 else (guid, parent_guid)
 
         try:
-            existing = await self.client.metadata_expert._async_get_all_related_elements(guid)
-            current_parent_guid = None
-            current_relationship_guid = None
-            # _async_get_all_related_elements returns a dict, not a list -
-            # {"startingElement": {...}, "elementList": [...], "mermaidGraph": ...} -
-            # and each elementList entry is the low-level MetadataExpert shape
-            # (type.typeName / relationshipGUID / element.elementGUID), NOT the
-            # friendlier relationshipHeader/relatedElement shape returned by
-            # domain-specific get-by-guid calls like ProjectManager's (confirmed
-            # by inspecting a live response - the two are genuinely different).
-            element_list = existing.get("elementList", []) if isinstance(existing, dict) else []
-            for rel in element_list:
-                try:
-                    if rel["type"]["typeName"] != rel_type:
-                        continue
-                    related_guid = rel["element"]["elementGUID"]
-                except (KeyError, TypeError):
-                    continue
-                current_parent_guid = related_guid
-                current_relationship_guid = rel.get("relationshipGUID")
+            other_parents = []
+            async for related_guid in self._parent_links_of_type(guid, rel_type, parent_at_end1):
                 if related_guid == parent_guid:
-                    break
-
-            if current_parent_guid == parent_guid:
-                return  # Already correct - idempotent no-op.
-
-            if current_parent_guid and current_relationship_guid:
-                # Re-parenting: remove the stale relationship of this type first.
-                # An explicit body is required here - passing none crashes with
-                # AttributeError inside pyegeria's _async_open_metadata_delete_body_request
-                # (its validator returns None for a None body, then unconditionally
-                # calls .model_dump() on that None).
-                await self.client.metadata_expert._async_delete_related_elements(
-                    current_relationship_guid, {"class": "OpenMetadataDeleteRequestBody"}
-                )
+                    return  # Already linked - idempotent no-op.
+                other_parents.append(related_guid)
 
             body = {
                 "class": "NewRelatedElementsRequestBody",
@@ -546,10 +524,53 @@ class AsyncBaseCommandProcessor(ABC):
             if isinstance(rel_props, dict):
                 body["properties"] = rel_props
             await self.client.metadata_expert._async_create_related_elements(body)
-            self.add_related_result("Parent Relationship", guid=parent_guid, message=f"Linked via {rel_type}")
+            message = f"Linked via {rel_type}"
+            if other_parents:
+                message += (f"; existing {rel_type} link(s) to {', '.join(other_parents)} left in place"
+                            " (remove them explicitly to move the element)")
+            self.add_related_result("Parent Relationship", guid=parent_guid, message=message)
         except PyegeriaException as e:
             logger.error(f"Error syncing parent relationship for {guid}: {e}")
             self.add_related_result("Parent Relationship", guid=guid, status="failure", message=str(e))
+
+    _PARENT_LINK_PAGE_SIZE = 100
+    _PARENT_LINK_MAX_PAGES = 100  # a bound, in case a server ignores startFrom
+
+    async def _parent_links_of_type(self, guid: str, rel_type: str, parent_at_end1: bool):
+        """Yield the GUIDs at the parent end of `guid`'s `rel_type` relationships.
+
+        Only relationships with `guid` at the child end count: end 2 when the
+        parent is at end 1, and the other way round. Egeria filters by
+        `startingAtEnd`, and each entry's `elementAtEnd1`, when present, is
+        checked as well. Pages until an empty page (a short page is not the last).
+
+        `_async_get_all_related_elements` returns a dict - {"startingElement",
+        "elementList", "mermaidGraph"} - whose entries are the low-level
+        MetadataExpert shape (type.typeName / relationshipGUID /
+        element.elementGUID), not the relationshipHeader/relatedElement shape of
+        the domain get-by-guid calls.
+        """
+        child_end = 2 if parent_at_end1 else 1
+        start = 0
+        for _ in range(self._PARENT_LINK_MAX_PAGES):
+            page = await self.client.metadata_expert._async_get_all_related_elements(
+                guid, starting_at_end=child_end, start_from=start,
+                page_size=self._PARENT_LINK_PAGE_SIZE)
+            element_list = page.get("elementList") if isinstance(page, dict) else None
+            if not element_list:
+                return
+            for rel in element_list:
+                try:
+                    if rel["type"]["typeName"] != rel_type:
+                        continue
+                    related_guid = rel["element"]["elementGUID"]
+                except (KeyError, TypeError):
+                    continue
+                at_end1 = rel.get("elementAtEnd1")
+                if at_end1 is not None and bool(at_end1) != bool(parent_at_end1):
+                    continue  # the related element is at the child end: not a parent link
+                yield related_guid
+            start += len(element_list)
 
     def effective_for_lineage(self) -> bool:
         """Whether this command's requests are sent with forLineage=true.
