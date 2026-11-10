@@ -193,6 +193,59 @@ into the entry now, so it isn't rediscovered from scratch later.
 
 ---
 
+### ISSUE-180: `commands/ops/README.md` described files that no longer exist
+
+**Layer:** pyegeria docs · **Status:** fixed 2026-11-10 on branch `fix/ops-commands-review`, targets 6.2.32 · **Found:** 2026-11-10, Mandy's review of the operations commands (main 9e50cd81, 6.2.30, and a live quickstart).
+
+**What:** the README listed `get_eng_action_status.py`, `view_*` and other modules that are gone, and described non-ops widgets. `gov_server_actions.py`'s module docstring said it "restarts an integration daemon". This file's ISSUE entry on dead entry points pointed at `hey_egeria_ops start`/`stop`; the commands are `hey_egeria_ops tell servers start|stop`.
+
+**Fix (done):** the README is rewritten for the current `monitor_*` / `list_*` displays, `refresh_integration_daemon`, `restart_integration_daemon`, `load_archive` and `gov_server_actions`, with their console scripts and `hey_egeria_ops` commands. The module docstring and the stale command names are corrected.
+
+### ISSUE-179: catalog targets were given BOTH_DIRECTIONS / ARCHIVE whatever the connector registered
+
+**Layer:** pyegeria · **Status:** fixed 2026-11-10 on branch `fix/ops-commands-review`, targets 6.2.32 · **Found:** 2026-11-10, Mandy's review of the operations commands (main 9e50cd81, 6.2.30, and a live quickstart). Silent wrong behaviour.
+
+**What:** `AutomatedCuration.add_catalog_target` / `update_catalog_target` and their async forms defaulted `permitted_sync="BOTH_DIRECTIONS"` and `delete_method="ARCHIVE"`. Egeria inherits the connector's registered `permittedSynchronization` only when the target's is null (`RequestedCatalogTargetsManager`), so every add overrode it (a FROM_THIRD_PARTY connector got BOTH_DIRECTIONS targets), and every update, e.g. `tell integration-daemon update-target <guid> <new-name>`, reset both fields.
+
+**Fix (done):** both default to None in all four methods, so they are left out of the request unless given ("unset - inherit the connector's setting"; on an update, unchanged). The `add-target` / `update-target` commands pass neither. Micro-tests check the fields are absent when not supplied, and sent when given.
+
+### ISSUE-178: `tell servers stop` never found a server
+
+**Layer:** pyegeria · **Status:** fixed 2026-11-10 on branch `fix/ops-commands-review`, targets 6.2.32 · **Found:** 2026-11-10, Mandy's review of the operations commands (main 9e50cd81, 6.2.30, and a live quickstart).
+
+**What:** `stop_server` called `shutdown_server(None, server)`, which looked the name up as `qualifiedName == "qs-engine-host"`. A live server's qualified name is `Engine Host Server::https://localhost:9443::qs-engine-host`, so it never matched. `--server` was not required, and commented-out options were left in.
+
+**Fix (done):** `shutdown_server` (sync and async) takes `display_name` and `organization_name` and resolves the server by its resource name, as `activate_server_with_stored_config` does. The command calls it with `display_name=<server>` and `--organization-name`, `--server` is required, the docstring says what it does, and the leftovers are removed. Checked live, read-only: the resource name `Coco Pharmaceuticals.qs-engine-host` finds the server; the qualifiedName lookup does not.
+
+### ISSUE-177: `tell servers start` passed a GUID as the server's name, found by a lookup that finds nothing
+
+**Layer:** pyegeria · **Status:** fixed 2026-11-10 on branch `fix/ops-commands-review`, targets 6.2.32 · **Found:** 2026-11-10, Mandy's review of the operations commands (main 9e50cd81, 6.2.30, and a live quickstart).
+
+**What:** `start_server` looked the server up by property `name` (live: "No elements found"), then passed that value in the `display_name` slot of `activate_server_with_stored_config(server_guid, display_name, ...)`. `--server` silently defaulted to `qs-metadata-store`.
+
+**Fix (done):** the command calls `activate_server_with_stored_config(display_name=<server>, organization_name=...)` and lets the method resolve it by resource name; `--server` is required; the docstring is fixed. `activate_server_with_stored_config`, `shutdown_server` and `refresh_gov_eng_config` now resolve through one helper, `RuntimeManager._resolved_server_guid`, which raises `PyegeriaInvalidParameterException` when no server matches, instead of sending "No elements found" to Egeria as a GUID.
+
+### ISSUE-176: `tell engine-host refresh` ignored its GUID option and could not find the engine host by name
+
+**Layer:** pyegeria · **Status:** fixed 2026-11-10 on branch `fix/ops-commands-review`, targets 6.2.32 · **Found:** 2026-11-10, Mandy's review of the operations commands (main 9e50cd81, 6.2.30, and a live quickstart).
+
+**What:** the option was declared `-engine-host-guid` (single dash) and its value was never used: the command always refreshed `c.engine_host` by name. And `refresh_gov_eng_config` looked a name up as qualifiedName `Engine Host::<name>`, which finds nothing live, so the by-name path failed too.
+
+**Fix (done):** `--engine-host-guid` is passed as `server_guid`; without it the configured engine host is used by name, now resolved by resource name (`refresh_gov_eng_config` gains `organization_name`). `--engine` refreshes one governance engine (`gov_engine_name`). The docstring says "Ask the engine host to reload its governance engine configuration".
+
+### ISSUE-175: `hey_egeria_ops show integrations --targets` could not be run
+
+**Layer:** pyegeria · **Status:** fixed 2026-11-10 on branch `fix/ops-commands-review`, targets 6.2.32 · **Found:** 2026-11-10, Mandy's review of the operations commands (main 9e50cd81, 6.2.30, and a live quickstart).
+
+**What:** `commands/cli/egeria_ops.py` registered `@integrations.command("--targets")`, which click parses as an option, so the command was unreachable; its function was also named `integrations_status`, shadowing the status command. `commands/cli/egeria.py` registered it as `targets` but with the same shadowing name and an argument declared as `"--connector"`.
+
+**Fix (done):** both register `targets` with a `connector` argument and the function `integrations_targets`.
+
+### Egeria team follow-ups from the same review (not pyegeria)
+
+- `PostgresConfigurationProperty.REPOSITORY_MODE` is declared `DataType.DATE` with a date example (copied from `DEFAULT_AS_OF_TIME`); it should be a string, e.g. `readOnly`.
+- `IntegrationConnectorHandler.getRegistrationChange()` and `IntegrationGroupHandler.refreshRegisteredIntegrationConnector()` take `metadataSourceQualifiedName` from `getMetadataCollectionQualifiedName()` instead of `getMetadataSourceQualifiedName()`.
+
 ### ISSUE-174: 142 `link_*` methods throw away the relationship GUID the shared helper now returns
 
 **Layer:** pyegeria · **Status:** fixed 2026-10-31 on branch `fix/link-methods-return-guid`, targets 6.2.19 · **Found:** 2026-10-31, Resource Explorer D1-b ("Link the pack's 22 schemas"). `AssetMaker.link_data_set_content` returns None, so the handler re-reads each schema after every attach to learn the new DataSetContent relationship's GUID.
@@ -7901,7 +7954,7 @@ to fail):
   five point at files that no longer exist.
 - `start_daemon`/`stop_daemon` → `commands.ops.engine_actions` - file no
   longer exists; equivalent functionality lives on today as
-  `hey_egeria_ops start`/`hey_egeria_ops stop`
+  `hey_egeria_ops tell servers start`/`hey_egeria_ops tell servers stop`
   (`gov_server_actions.py`'s `start_server`/`stop_server` - those are click
   subcommands taking a `@click.pass_context` config object, not standalone
   entry points, so this isn't a 1:1 script rename).
