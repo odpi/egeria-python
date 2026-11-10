@@ -110,24 +110,35 @@ def _client_origin(client) -> Tuple[str, str]:
     return parts.scheme.lower(), parts.netloc.lower()
 
 
-def _allowed_endpoint(query_url: Any, client) -> Tuple[str, Tuple[str, ...]]:
-    """The pyegeria method and body classes for a stored Query URL, or SavedQueryRefused."""
+def _allowed_endpoint(query_url: Any, client) -> Tuple[str, Tuple[str, ...], Optional[str]]:
+    """The pyegeria method, body classes and an optional note for a stored Query URL, or SavedQueryRefused.
+
+    The URL is checked, never followed: the call always goes to this client's own platform. So the stored
+    host is not the boundary (the Portal stores queryURL from inside its container, e.g.
+    https://host.docker.internal:9443/..., while a notebook or EA uses https://localhost:9443): a different
+    http(s) scheme or host:port is accepted and noted. User info, a query string, a fragment, a
+    scheme-relative URL, an odd path, another view server and a path off the allow-list are refused."""
     if not isinstance(query_url, str) or not query_url.strip():
         raise SavedQueryRefused("The saved query has no Query URL, so there is no stored request to run.")
     raw = query_url.strip()
     if any(c in raw for c in ("\\", "%", "\n", "\r", "\t", " ")):
         raise SavedQueryRefused(f"The saved query's Query URL {raw!r} has characters a query endpoint path "
                                 f"never has, so it is not run.")
+    if raw.startswith("//"):
+        raise SavedQueryRefused(f"The saved query's Query URL {raw!r} is scheme-relative, so it is not run.")
     parts = urlsplit(raw)
     if parts.query or parts.fragment:
         raise SavedQueryRefused(f"The saved query's Query URL {raw!r} carries a query string or fragment; "
                                 f"only a bare endpoint path is run.")
-    if parts.scheme or parts.netloc or raw.startswith("//"):
-        scheme, origin = _client_origin(client)
-        if "@" in parts.netloc or parts.scheme.lower() != scheme or parts.netloc.lower() != origin:
-            raise SavedQueryRefused(
-                f"The saved query's Query URL names {parts.scheme}://{parts.netloc}, not this platform: a stored "
-                f"URL never chooses where your token is sent, so it is not run.")
+    note = None
+    if parts.scheme or parts.netloc:
+        if parts.scheme.lower() not in ("http", "https") or not parts.netloc:
+            raise SavedQueryRefused(f"The saved query's Query URL {raw!r} is not an http(s) URL, so it is not run.")
+        if "@" in parts.netloc:
+            raise SavedQueryRefused(f"The saved query's Query URL {raw!r} carries user info, so it is not run.")
+        if (parts.scheme.lower(), parts.netloc.lower()) != _client_origin(client):
+            note = (f"the stored URL names {parts.scheme}://{parts.netloc}; the request went to this client's "
+                    f"platform ({getattr(client, 'platform_url', '')}), never to the stored host")
     path = parts.path if parts.path.startswith("/") else "/" + parts.path
     if "//" in path or any(seg in (".", "..") for seg in path.split("/")):
         raise SavedQueryRefused(f"The saved query's Query URL path {path!r} is not a plain endpoint path, "
@@ -142,7 +153,8 @@ def _allowed_endpoint(query_url: Any, client) -> Tuple[str, Tuple[str, ...]]:
     if path not in ALLOWED_QUERY_ENDPOINTS:
         raise SavedQueryRefused(f"The saved query's Query URL path {path!r} is not one of the query endpoints a "
                                 f"Report may run ({', '.join(sorted(ALLOWED_QUERY_ENDPOINTS))}).")
-    return ALLOWED_QUERY_ENDPOINTS[path]
+    method, classes = ALLOWED_QUERY_ENDPOINTS[path]
+    return method, classes, note
 
 
 def _request_body(stored: Any, classes: Tuple[str, ...]) -> Dict[str, Any]:
@@ -228,18 +240,25 @@ def saved_query(client, name: str, mode: str = "cached", output: str = "count",
     params : values for the SavedQuery's declared parameters (see "Parameters" below)
     page_size, max_pages : the read's page size and bound; a read stopped by the bound is a lower bound
 
-    Parameters (a saved query as a template, brief §9)
-    --------------------------------------------------
+    Parameters (a saved query as a template, brief §9; one model with the Portal)
+    -----------------------------------------------------------------------------
     A SavedQuery may declare `additionalProperties.parameters`, a JSON list of
-    {"name", "type": "string"|"int"|"bool"|"enum", "default", "required", "values" (for an enum)}.
-    Its request body names a parameter as a whole value, "{{name}}", which is replaced by the typed
-    value: never concatenated into a string, never put in a key, and never in the URL, which is not a
-    template at all. An undeclared name, a missing required value, a value of the wrong type, or a
-    placeholder anywhere else is refused with a sentence. With no declaration, any `params` is refused.
-    The result carries `params`, the values it ran with (defaults included). A cached answer is the
-    one its last refresh made, so it is returned only when the refresh recorded the same values
-    (`additionalProperties.lastRefreshParams`); otherwise it is refused, and the reason points to live
-    mode. A cached answer is never returned as if it matched other values.
+    {"name", "type", "default"?, "searchPath"?, "requestPath"?}. The type is one of the Portal's:
+    string/str, integer/int, number/float, boolean/bool, list/array. There are no placeholders: the
+    stored bodies stay valid requests, which Egeria's Smart Collections connector runs literally.
+    - `searchPath` (default: `name`) is a dotted path into the stored Portal search (`formula`, else
+      `additionalProperties.searchSpec`), where the Portal's refresh applies the value.
+    - `requestPath` is a dotted path into the stored `queryRequestBody`, where live mode applies the
+      value: typed, as a value only, never in a key and never in the URL, which is not a template.
+    - Effective value, the same rule as the Portal: the value given, else the stored search value at
+      `searchPath`, else the default. A cached answer is returned only when `lastRefreshParams` (which
+      the Portal records for every declared name) equals that map; otherwise it is refused, and the
+      reason points to live mode. The result carries `params`, labelled "as of <time>, for k=v, ...".
+    - Live mode: a given value goes to its `requestPath`. A parameter with no `requestPath` applies to
+      the Portal's search only, so live mode refuses it when it is given, or when its effective value
+      would be its default (the stored request can't carry that).
+    An undeclared name, a value of the wrong type, a string with control characters or over 512
+    characters, a bad path, or params on a query that declares none, is refused with a sentence.
 
     Returns a dict:
     - `value`: the count; None when it is not established or is only a lower bound;
@@ -286,45 +305,58 @@ def saved_query(client, name: str, mode: str = "cached", output: str = "count",
 
     try:
         declared = _declared_parameters(additional.get("parameters"))
-        values = _bind_parameters(declared, params)
+        effective = _effective_parameters(declared, params, _stored_search(props, additional))
     except SavedQueryRefused as refused:
         return _result(name, mode, output, state="not_established", reason=refused.sentence,
                        absence="not_applicable", refused=True)
 
     if mode == "cached":
+        used = effective
         if declared:
             recorded = _recorded_parameters(additional.get("lastRefreshParams"))
             if recorded is None:
                 return _not_measured(name, "cached", output, f"the cached answer does not record the parameter "
-                                     f"values it was refreshed with, so it cannot stand for {_label(values)}; "
+                                     f"values it was refreshed with, so it cannot stand for {_label(effective)}; "
                                      f"use mode live")
-            if recorded != values:
+            if recorded != effective:
                 return _not_measured(name, "cached", output, f"the cached answer is for {_label(recorded)}, not "
-                                     f"{_label(values)}; use mode live for these values")
+                                     f"{_label(effective)}; use mode live for these values")
         out = _cached(client, name, output, additional, page_size, max_pages)
     else:
         try:
-            props = dict(props, queryRequestBody=_substitute(props.get("queryRequestBody"), values))
+            method, classes, note = _allowed_endpoint(props.get("queryURL"), client)
+            body = _request_body(props.get("queryRequestBody"), classes)
+            body, used = _apply_request_parameters(declared, params, body, effective,
+                                                   _stored_search(props, additional))
         except SavedQueryRefused as refused:
+            logger.warning(f"saved_query: refused to run {name!r}: {refused.sentence}")
             return _result(name, mode, output, state="not_established", reason=refused.sentence,
                            absence="not_applicable", refused=True)
-        out = _live(client, name, output, props, page_size, max_pages)
+        out = _live(client, name, output, method, body, page_size, max_pages)
+        out["how"] = f"{method} on this client's platform" + (f"; {note}" if note else "")
     if declared:
-        out["params"] = values
+        out["params"] = used
         if out.get("subtitle"):
             out["subtitle"] = out["subtitle"].replace(f"as of {out['asOf']}",
-                                                      f"as of {out['asOf']}, for {_label(values)}", 1)
+                                                      f"as of {out['asOf']}, for {_label(used)}", 1)
     return out
 
 
-# ── parameters ─────────────────────────────────────────────────────────────
+# ── parameters: one model with the Portal (insights_handler, b9dce798) ──────
 
-_PARAM_TYPES = ("string", "int", "bool", "enum")
-_PLACEHOLDER = re.compile(r"^\{\{([A-Za-z_][A-Za-z0-9_]*)\}\}$")
+# The Portal's types, read the same way: no coercion, and a bool is never an int.
+_PARAM_TYPES = {
+    "string": (str,), "str": (str,),
+    "integer": (int,), "int": (int,),
+    "number": (int, float), "float": (int, float),
+    "boolean": (bool,), "bool": (bool,),
+    "list": (list,), "array": (list,),
+}
+_PATH = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*(\.([A-Za-z_][A-Za-z0-9_]*|[0-9]+))*$")
 _MAX_STRING = 512
 
 
-def _json_list(raw: Any, what: str) -> Any:
+def _json_value(raw: Any, what: str) -> Any:
     if isinstance(raw, str):
         if not raw.strip():
             return None
@@ -335,76 +367,152 @@ def _json_list(raw: Any, what: str) -> Any:
     return raw
 
 
-def _declared_parameters(raw: Any) -> Dict[str, Dict[str, Any]]:
-    decl = _json_list(raw, "declared parameters")
+def _declared_parameters(raw: Any) -> List[Dict[str, Any]]:
+    decl = _json_value(raw, "declared parameters")
     if decl is None:
-        return {}
+        return []
     if not isinstance(decl, list):
         raise SavedQueryRefused("The saved query's declared parameters are not a list.")
-    out: Dict[str, Dict[str, Any]] = {}
+    out: List[Dict[str, Any]] = []
+    seen = set()
     for d in decl:
-        if not isinstance(d, dict) or not isinstance(d.get("name"), str) or not re.fullmatch(
-                r"[A-Za-z_][A-Za-z0-9_]*", d["name"]):
-            raise SavedQueryRefused(f"The saved query declares a parameter {d!r} with no plain name.")
-        kind = d.get("type") or "string"
-        if kind not in _PARAM_TYPES:
-            raise SavedQueryRefused(f"The saved query's parameter {d['name']!r} has type {kind!r}; the types are "
-                                    f"{', '.join(_PARAM_TYPES)}.")
-        if kind == "enum" and not (isinstance(d.get("values"), list) and d["values"]):
-            raise SavedQueryRefused(f"The saved query's enum parameter {d['name']!r} lists no values.")
-        if d["name"] in out:
-            raise SavedQueryRefused(f"The saved query declares the parameter {d['name']!r} twice.")
-        out[d["name"]] = {"type": kind, "values": d.get("values"), "required": bool(d.get("required")),
-                          "default": d.get("default")}
-        if d.get("default") is not None:
-            _typed(d["name"], out[d["name"]], d["default"])  # a bad default is refused too
+        name = d.get("name") if isinstance(d, dict) else None
+        if not isinstance(name, str) or not _PATH.match(name):
+            raise SavedQueryRefused(f"The saved query declares a parameter {d!r} with no plain (dotted) name.")
+        if name in seen:
+            raise SavedQueryRefused(f"The saved query declares the parameter {name!r} twice.")
+        seen.add(name)
+        ptype = str(d.get("type") or "string").lower()
+        if ptype not in _PARAM_TYPES:
+            raise SavedQueryRefused(f"The saved query's parameter {name!r} has type {ptype!r}; the types are "
+                                    f"string, integer, number, boolean, list.")
+        for key in ("searchPath", "requestPath"):
+            if d.get(key) is not None and (not isinstance(d[key], str) or not _PATH.match(d[key])):
+                raise SavedQueryRefused(f"The saved query's parameter {name!r} has a {key} {d[key]!r} that is not "
+                                        f"a plain dotted path.")
+        entry = {**d, "type": ptype}
+        if "default" in d and d["default"] is not None:
+            _check_value(name, entry, d["default"])  # a bad default is refused too
+        out.append(entry)
     return out
 
 
-def _typed(name: str, decl: Dict[str, Any], value: Any) -> Any:
-    kind = decl["type"]
-    if kind == "int":
-        if isinstance(value, bool) or not (isinstance(value, int) or isinstance(value, str)
-                                           and re.fullmatch(r"-?[0-9]{1,18}", value)):
-            raise SavedQueryRefused(f"Parameter {name!r} takes an int, not {value!r}.")
-        return int(value)
-    if kind == "bool":
-        if isinstance(value, bool):
-            return value
-        if isinstance(value, str) and value.lower() in ("true", "false"):
-            return value.lower() == "true"
-        raise SavedQueryRefused(f"Parameter {name!r} takes true or false, not {value!r}.")
-    if not isinstance(value, str):
-        raise SavedQueryRefused(f"Parameter {name!r} takes a string, not {value!r}.")
-    if len(value) > _MAX_STRING or any(ord(c) < 32 for c in value) or "{{" in value or "}}" in value:
-        raise SavedQueryRefused(f"Parameter {name!r}: the value is too long, has control characters, or "
-                                f"looks like a placeholder.")
-    if kind == "enum" and value not in decl["values"]:
-        raise SavedQueryRefused(f"Parameter {name!r} takes one of {decl['values']}, not {value!r}.")
+def _check_value(name: str, p: Dict[str, Any], value: Any) -> Any:
+    ptype = p["type"]
+    if (isinstance(value, bool) and ptype not in ("boolean", "bool")) or not isinstance(value, _PARAM_TYPES[ptype]):
+        raise SavedQueryRefused(f"Parameter {name!r} must be a {ptype}, not {type(value).__name__} ({value!r}).")
+    for v in (value if isinstance(value, list) else [value]):
+        if isinstance(v, str) and (len(v) > _MAX_STRING or any(ord(c) < 32 for c in v)):
+            raise SavedQueryRefused(f"Parameter {name!r}: a value is over {_MAX_STRING} characters or has "
+                                    f"control characters.")
+        if isinstance(value, list) and not (v is None or isinstance(v, (str, int, float, bool))):
+            raise SavedQueryRefused(f"Parameter {name!r}: a list holds plain values only.")
     return value
 
 
-def _bind_parameters(declared: Dict[str, Dict[str, Any]], given: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+def _path_parts(path: str) -> List[Any]:
+    return [int(x) if x.isdigit() else x for x in path.split(".")]
+
+
+def _get_path(obj: Any, path: str) -> Any:
+    cur = obj
+    for part in _path_parts(path):
+        try:
+            cur = cur[part]
+        except (KeyError, IndexError, TypeError):
+            return None
+    return cur
+
+
+def _set_path(obj: Any, path: str, value: Any, name: str) -> None:
+    parts = _path_parts(path)
+    cur = obj
+    for part in parts[:-1]:
+        try:
+            cur = cur[part]
+        except (KeyError, IndexError, TypeError):
+            raise SavedQueryRefused(f"Parameter {name!r}: its requestPath {path!r} points at nothing in the "
+                                    f"stored request (no {part!r}).")
+    if isinstance(cur, (dict, list)) is False or (isinstance(cur, list) and not isinstance(parts[-1], int)):
+        raise SavedQueryRefused(f"Parameter {name!r}: its requestPath {path!r} points at nothing in the stored "
+                                f"request.")
+    try:
+        cur[parts[-1]] = value
+    except (IndexError, TypeError):
+        raise SavedQueryRefused(f"Parameter {name!r}: its requestPath {path!r} points at nothing in the stored "
+                                f"request.")
+
+
+def _stored_search(props: Dict[str, Any], additional: Dict[str, Any]) -> Dict[str, Any]:
+    """The Portal's stored search: `formula`, else `additionalProperties.searchSpec` (as the Portal reads it)."""
+    for raw in (props.get("formula"), additional.get("searchSpec")):
+        try:
+            spec = _json_value(raw, "stored search")
+        except SavedQueryRefused:
+            spec = None
+        if isinstance(spec, dict) and spec:
+            return spec
+    return {}
+
+
+def _effective_parameters(declared: List[Dict[str, Any]], given: Optional[Dict[str, Any]],
+                          search: Dict[str, Any]) -> Dict[str, Any]:
+    """Every declared name's effective value, by the Portal's rule: the value given, else the stored search
+    value at searchPath, else the default. This is what the Portal records as lastRefreshParams."""
     given = dict(given or {})
     if given and not declared:
         raise SavedQueryRefused(f"The saved query declares no parameters, so {sorted(given)} cannot be set.")
-    unknown = sorted(k for k in given if k not in declared)
+    by_name = {p["name"]: p for p in declared}
+    unknown = sorted(k for k in given if k not in by_name)
     if unknown:
-        raise SavedQueryRefused(f"The saved query does not declare {unknown}; it declares {sorted(declared)}.")
+        raise SavedQueryRefused(f"The saved query does not declare {unknown}; it declares {sorted(by_name)}.")
     values: Dict[str, Any] = {}
-    for pname, decl in declared.items():
-        if pname in given and given[pname] is not None:
-            values[pname] = _typed(pname, decl, given[pname])
-        elif decl["default"] is not None:
-            values[pname] = _typed(pname, decl, decl["default"])
-        elif decl["required"]:
-            raise SavedQueryRefused(f"Parameter {pname!r} is required and has no default.")
+    for name, p in by_name.items():
+        stored = _get_path(search, p.get("searchPath") or name)
+        if name in given:
+            values[name] = _check_value(name, p, given[name])
+        elif stored is None and "default" in p:
+            values[name] = _check_value(name, p, p["default"]) if p["default"] is not None else None
+        else:
+            values[name] = stored
     return values
+
+
+def _apply_request_parameters(declared, given, body, effective, search) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    """The stored request with each parameter applied at its requestPath (typed, a value only), and the
+    values the run used. A parameter with no requestPath can't change the request, so it is refused when
+    it is given, or when its effective value is its default (not the stored search's own value)."""
+    given = dict(given or {})
+    body = json.loads(json.dumps(body))  # never change the stored copy
+    used: Dict[str, Any] = {}
+    for p in declared:
+        name, rp = p["name"], p.get("requestPath")
+        if not rp:
+            from_search = _get_path(search, p.get("searchPath") or name) is not None
+            if name in given or not from_search and effective.get(name) is not None:
+                raise SavedQueryRefused(f"Parameter {name!r} applies to the Portal's search only (it has no "
+                                        f"requestPath), so it cannot be set live; use mode cached, or refresh it "
+                                        f"in the Portal with that value.")
+            used[name] = effective.get(name)
+            continue
+        if name in given:
+            value = effective[name]
+        else:
+            stored = _get_path(body, rp)
+            value = stored if stored is not None else (
+                _check_value(name, p, p["default"]) if p.get("default") is not None else None)
+            if stored is not None:
+                used[name] = stored
+                continue
+        if value is not None:
+            _set_path(body, rp, value, name)
+        used[name] = value
+    return body, used
 
 
 def _recorded_parameters(raw: Any) -> Optional[Dict[str, Any]]:
     try:
-        rec = _json_list(raw, "recorded refresh parameters")
+        rec = _json_value(raw, "recorded refresh parameters")
     except SavedQueryRefused:
         return None
     return rec if isinstance(rec, dict) else None
@@ -412,40 +520,6 @@ def _recorded_parameters(raw: Any) -> Optional[Dict[str, Any]]:
 
 def _label(values: Dict[str, Any]) -> str:
     return ", ".join(f"{k}={json.dumps(v)}" for k, v in sorted(values.items())) or "no parameter values"
-
-
-def _substitute(stored: Any, values: Dict[str, Any]) -> Any:
-    """The stored request body with each whole-value "{{name}}" replaced by its typed value. A placeholder
-    in a key, inside a longer string, or for a value not bound is refused. The URL is never touched."""
-    if isinstance(stored, str):
-        if "{{" not in stored:
-            return stored
-        try:
-            stored = json.loads(stored)
-        except ValueError:
-            return stored  # _request_body refuses it with its own sentence
-
-    def walk(node: Any) -> Any:
-        if isinstance(node, dict):
-            for k in node:
-                if "{{" in str(k) or "}}" in str(k):
-                    raise SavedQueryRefused("A placeholder appears in a key of the saved query's request body; "
-                                            "placeholders are values only.")
-            return {k: walk(v) for k, v in node.items()}
-        if isinstance(node, list):
-            return [walk(v) for v in node]
-        if isinstance(node, str) and ("{{" in node or "}}" in node):
-            m = _PLACEHOLDER.match(node)
-            if not m:
-                raise SavedQueryRefused(f"The saved query's request body has a placeholder inside a longer string "
-                                        f"({node!r}); a placeholder must be a whole value.")
-            if m.group(1) not in values:
-                raise SavedQueryRefused(f"The saved query's request body names {m.group(1)!r}, which has no value "
-                                        f"(it is not declared, or has no default and was not given).")
-            return values[m.group(1)]
-        return node
-
-    return walk(stored)
 
 
 def _cached(client, name, output, additional, page_size, max_pages):
@@ -470,14 +544,7 @@ def _cached(client, name, output, additional, page_size, max_pages):
     return _answer(name, "cached", output, members, capped, as_of)
 
 
-def _live(client, name, output, props, page_size, max_pages):
-    try:
-        method, classes = _allowed_endpoint(props.get("queryURL"), client)
-        body = _request_body(props.get("queryRequestBody"), classes)
-    except SavedQueryRefused as refused:
-        logger.warning(f"saved_query: refused to run {name!r}: {refused.sentence}")
-        return _result(name, "live", output, state="not_established", reason=refused.sentence,
-                       absence="not_applicable", refused=True)
+def _live(client, name, output, method, body, page_size, max_pages):
     fn = getattr(client, method)
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
     try:

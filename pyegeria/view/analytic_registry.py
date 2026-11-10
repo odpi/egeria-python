@@ -1924,9 +1924,10 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
             AnalyticParam(name="output", type="str", default="count",
                           description="count (a KPI) or list (the elements)."),
             AnalyticParam(name="params", type="dict",
-                          description="Values for the SavedQuery's declared parameters (typed; body values "
-                                      "only, never the URL). A cached answer is returned only for the values "
-                                      "its refresh recorded."),
+                          description="Values for the SavedQuery's declared parameters (the Portal's model: "
+                                      "searchPath for its search, requestPath for live; typed, values only, "
+                                      "never the URL). A cached answer is returned only for the values its "
+                                      "refresh recorded."),
             AnalyticParam(name="page_size", type="int", default=500,
                           description="Elements per page read (at most 1000)."),
             AnalyticParam(name="max_pages", type="int", default=20,
