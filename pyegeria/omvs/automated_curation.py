@@ -4189,8 +4189,8 @@ class AutomatedCuration(ServerClient):
             metadata_src_qual_name: Optional[str] = None,
             config_properties: dict = None,
             template_properties: dict = None,
-            permitted_sync: str = "BOTH_DIRECTIONS",
-            delete_method: str = "ARCHIVE",
+            permitted_sync: Optional[str] = None,
+            delete_method: Optional[str] = None,
     ) -> str:
         """Add a catalog target to an integration connector.
 
@@ -4212,10 +4212,13 @@ class AutomatedCuration(ServerClient):
             Configuration properties for the catalog target.
         template_properties : dict, optional
             Template properties for the catalog target.
-        permitted_sync : str, default "BOTH_DIRECTIONS"
-            The permitted synchronization direction.
-        delete_method : str, default "ARCHIVE"
-            The delete method for the catalog target.
+        permitted_sync : str, optional
+            The permitted synchronization direction (BOTH_DIRECTIONS, FROM_THIRD_PARTY or TO_THIRD_PARTY).
+            Unset - inherit the connector's setting: Egeria uses the connector's registered
+            permittedSynchronization when the target's is null. On an update, unset leaves it unchanged.
+        delete_method : str, optional
+            The delete method for the catalog target (LOOK_FOR_LINEAGE, ARCHIVE, SOFT_DELETE or PURGE).
+            Unset - inherit the connector's setting; on an update, unset leaves it unchanged.
 
         Returns
         -------
@@ -4259,8 +4262,8 @@ class AutomatedCuration(ServerClient):
             metadata_src_qual_name: Optional[str] = None,
             config_properties: dict = None,
             template_properties: dict = None,
-            permitted_sync: str = "BOTH_DIRECTIONS",
-            delete_method: str = "ARCHIVE",
+            permitted_sync: Optional[str] = None,
+            delete_method: Optional[str] = None,
     ) -> str:
         """Add a catalog target to an integration connector.
 
@@ -4280,10 +4283,13 @@ class AutomatedCuration(ServerClient):
             Configuration properties for the catalog target.
         template_properties : dict, optional
             Template properties for the catalog target.
-        permitted_sync : str, default "BOTH_DIRECTIONS"
-            The permitted synchronization direction.
-        delete_method : str, default "ARCHIVE"
-            The delete method for the catalog target.
+        permitted_sync : str, optional
+            The permitted synchronization direction (BOTH_DIRECTIONS, FROM_THIRD_PARTY or TO_THIRD_PARTY).
+            Unset - inherit the connector's setting: Egeria uses the connector's registered
+            permittedSynchronization when the target's is null. On an update, unset leaves it unchanged.
+        delete_method : str, optional
+            The delete method for the catalog target (LOOK_FOR_LINEAGE, ARCHIVE, SOFT_DELETE or PURGE).
+            Unset - inherit the connector's setting; on an update, unset leaves it unchanged.
 
         Returns
         -------
@@ -4314,8 +4320,8 @@ class AutomatedCuration(ServerClient):
             metadata_src_qual_name: Optional[str] = None,
             config_properties: dict = None,
             template_properties: dict = None,
-            permitted_sync: str = "BOTH_DIRECTIONS",
-            delete_method: str = "ARCHIVE",
+            permitted_sync: Optional[str] = None,
+            delete_method: Optional[str] = None,
     ) -> None:
         """Update a catalog target.
 
@@ -4335,10 +4341,13 @@ class AutomatedCuration(ServerClient):
             Configuration properties for the catalog target.
         template_properties : dict, optional
             Template properties for the catalog target.
-        permitted_sync : str, default "BOTH_DIRECTIONS"
-            The permitted synchronization direction.
-        delete_method : str, default "ARCHIVE"
-            The delete method for the catalog target.
+        permitted_sync : str, optional
+            The permitted synchronization direction (BOTH_DIRECTIONS, FROM_THIRD_PARTY or TO_THIRD_PARTY).
+            Unset - inherit the connector's setting: Egeria uses the connector's registered
+            permittedSynchronization when the target's is null. On an update, unset leaves it unchanged.
+        delete_method : str, optional
+            The delete method for the catalog target (LOOK_FOR_LINEAGE, ARCHIVE, SOFT_DELETE or PURGE).
+            Unset - inherit the connector's setting; on an update, unset leaves it unchanged.
 
         Returns
         -------
@@ -4378,8 +4387,8 @@ class AutomatedCuration(ServerClient):
             metadata_src_qual_name: Optional[str] = None,
             config_properties: dict = None,
             template_properties: dict = None,
-            permitted_sync: str = "BOTH_DIRECTIONS",
-            delete_method: str = "ARCHIVE",
+            permitted_sync: Optional[str] = None,
+            delete_method: Optional[str] = None,
     ) -> None:
         """Update a catalog target.
 
@@ -4397,10 +4406,13 @@ class AutomatedCuration(ServerClient):
             Configuration properties for the catalog target.
         template_properties : dict, optional
             Template properties for the catalog target.
-        permitted_sync : str, default "BOTH_DIRECTIONS"
-            The permitted synchronization direction.
-        delete_method : str, default "ARCHIVE"
-            The delete method for the catalog target.
+        permitted_sync : str, optional
+            The permitted synchronization direction (BOTH_DIRECTIONS, FROM_THIRD_PARTY or TO_THIRD_PARTY).
+            Unset - inherit the connector's setting: Egeria uses the connector's registered
+            permittedSynchronization when the target's is null. On an update, unset leaves it unchanged.
+        delete_method : str, optional
+            The delete method for the catalog target (LOOK_FOR_LINEAGE, ARCHIVE, SOFT_DELETE or PURGE).
+            Unset - inherit the connector's setting; on an update, unset leaves it unchanged.
 
         Returns
         -------

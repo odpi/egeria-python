@@ -62,8 +62,8 @@ async def test_add_catalog_target_sends_new_relationship_request_body(monkeypatc
         "connectionName": "conn",
         "configurationProperties": {"a": "b"},
         "templates": {"tmpl": "tmpl-guid"},
-        "permittedSynchronization": "BOTH_DIRECTIONS",
-        "deleteMethod": "ARCHIVE",
+        # ISSUE-179 (6.2.32): unset, permittedSynchronization and deleteMethod are not sent, so the target
+        # inherits the connector's registered settings.
     }
 
 
