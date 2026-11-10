@@ -10,7 +10,7 @@ This short tutorial explains how to configure applications that use pyegeria. It
 
 #### How configuration is resolved
 
-pyegeria provides helpers in `pyegeria.config` (re-exported in `pyegeria.__init__`) to load settings:
+pyegeria provides helpers in `pyegeria.core.config` (re-exported in `pyegeria.__init__`) to load settings:
 
 - `load_app_config(env_file: str | None = None)`: loads and caches configuration
 - `get_app_config(env_file: str | None = None)`: returns the loaded configuration model
@@ -194,7 +194,7 @@ Values provided via environment variables take precedence over JSON and defaults
 
 ### Troubleshooting tips
 
-- Call `from pyegeria.config import pretty_print_config; pretty_print_config(safe=True)` to print the effective configuration (safely masks secrets) to the console.
+- Call `from pyegeria.core.config import pretty_print_config; pretty_print_config(safe=True)` to print the effective configuration (safely masks secrets) to the console.
 - If logging isn’t writing files, verify `Logging.enable_logging` is `true` and `Logging.log_directory` exists and is writable in your environment.
 - In Jupyter, ensure `Egeria Jupyter` is `true` to improve table/pager rendering in rich outputs.
 
