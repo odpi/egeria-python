@@ -426,7 +426,7 @@ ___
 
 >	**Attribute Type**: Simple
 
->	**Description**: The userId that owns the sheet's Dashboard (its Ownership classification, owner type UserIdentity). Leave it empty for the signed-in user. Set once: a Dashboard that already has an owner keeps it. Not written to Egeria with --local-only or with no Egeria connection.
+>	**Description**: The userId that owns the sheet's Dashboard (its Ownership classification, owner type UserIdentity). Leave it empty for the user the command runs as (in the Portal, by default, its service user). Set once: a Dashboard that already has an owner keeps it. Not written to Egeria with --local-only or with no Egeria connection.
 
 
 ### User Defined Status

@@ -559,3 +559,11 @@ async def test_local_only_sets_no_ownership(egeria, monkeypatch, no_client):
     result = await _run(client, "Create", "Dashboard Sheet", {**CREATE, "Dashboard Owner": "peterprofile"})
     assert egeria.writes == []
     assert "**Ownership**: not written (local only)" in result["output"]
+
+
+def test_dashboard_owner_says_the_default_is_the_user_the_command_runs_as():
+    import json as _json
+    spec = _json.loads((_pl.Path(__file__).resolve().parents[2] / "md_processing" / "data" / "compact_commands"
+                        / "commands_report_compact.json").read_text())
+    text = spec["attribute_definitions"]["Dashboard Owner"]["description"]
+    assert "the user the command runs as" in text and "signed-in" not in text

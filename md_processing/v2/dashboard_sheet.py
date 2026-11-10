@@ -809,7 +809,8 @@ class CreateDashboardSheetProcessor(_DashboardSheetProcessorMixin, AsyncBaseComm
         sheets = _load_store(path)
         aliases = list(sheets[name].aliases) if name in sheets else []
 
-        # DB-3: owned by the signed-in user unless Dashboard Owner names another userId; set once.
+        # DB-3: owned by the user the command runs as (client.user_id; in the Portal, by default, its service
+        # user) unless Dashboard Owner names another userId; set once.
         explicit_owner = attributes.get("Dashboard Owner", {}).get("value") or None
         owner = explicit_owner or getattr(self.client, "user_id", None) or None
         ownership = {}
