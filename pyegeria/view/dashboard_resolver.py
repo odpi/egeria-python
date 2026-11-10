@@ -49,9 +49,9 @@ from pydantic import BaseModel, ConfigDict, Field
 
 __all__ = [
     "NOT_VISIBLE", "REPORT_GONE", "ResolvedPlacement", "ResolvedReport", "ResolvedSheet",
-    "async_list_dashboard_sheets_for_viewer", "async_resolve_dashboard_sheet", "is_not_visible_error",
-    "list_dashboard_sheets_for_viewer", "placements_for_perspective", "report_from_element",
-    "resolve_dashboard_sheet",
+    "async_list_dashboard_sheets_for_viewer", "async_resolve_dashboard_sheet", "async_resolve_sheet",
+    "is_not_visible_error", "list_dashboard_sheets_for_viewer", "placements_for_perspective",
+    "report_from_element", "resolve_dashboard_sheet", "resolve_sheet",
 ]
 
 #: The reason a restricted placement gives (§4.7): the same words whichever element is hidden.
@@ -325,9 +325,19 @@ async def async_resolve_dashboard_sheet(client: Any, name: str, *, perspective: 
     sheet = await read_sheet_from_chain(client, name)
     if sheet is None:
         return None
+    return await async_resolve_sheet(client, sheet, perspective=perspective, run=run, spec_lookup=spec_lookup,
+                                     check_spec_visibility=check_spec_visibility)
+
+
+async def async_resolve_sheet(client: Any, sheet: Any, *, perspective: Optional[str] = None, run: bool = False,
+                              spec_lookup: Optional[Callable] = None,
+                              check_spec_visibility: bool = True) -> ResolvedSheet:
+    """Resolve a sheet the caller has ALREADY read from Egeria (an EgeriaDashboardSheet, e.g. from its own
+    cache of load_dashboard_sheet), so an app that caches sheet reads does not walk the chain twice. The
+    sheet must have been read as the same viewer as `client`. Otherwise as async_resolve_dashboard_sheet."""
     resolved = ResolvedSheet(name=sheet.name, heading=sheet.heading, description=sheet.description or "",
-                             family=sheet.family, aliases=list(sheet.aliases or []), guid=sheet.guid,
-                             breaks=list(sheet.breaks), perspective=perspective,
+                             family=sheet.family, aliases=list(sheet.aliases or []), guid=getattr(sheet, "guid", None),
+                             breaks=list(getattr(sheet, "breaks", None) or []), perspective=perspective,
                              viewer=getattr(client, "user_id", None))
     resolutions = _all_resolutions()
     lookup = spec_lookup or _default_spec_lookup
@@ -380,6 +390,14 @@ def resolve_dashboard_sheet(client: Any, name: str, *, perspective: Optional[str
     return run_sync(async_resolve_dashboard_sheet(client, name, perspective=perspective, run=run,
                                                   spec_lookup=spec_lookup,
                                                   check_spec_visibility=check_spec_visibility))
+
+
+def resolve_sheet(client: Any, sheet: Any, *, perspective: Optional[str] = None, run: bool = False,
+                  spec_lookup: Optional[Callable] = None, check_spec_visibility: bool = True) -> ResolvedSheet:
+    """Sync form of async_resolve_sheet."""
+    from pyegeria.core.async_runner import run_sync
+    return run_sync(async_resolve_sheet(client, sheet, perspective=perspective, run=run, spec_lookup=spec_lookup,
+                                        check_spec_visibility=check_spec_visibility))
 
 
 def list_dashboard_sheets_for_viewer(client: Any) -> List[Any]:

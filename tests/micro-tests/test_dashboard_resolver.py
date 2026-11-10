@@ -257,3 +257,14 @@ async def test_live_sheets_resolve_to_the_readers_placements(name):
     assert [(p.ref, p.kind, p.span, p.emphasis, p.perspectives, p.detail_spec) for p in sheet.placements] == \
         [(p.ref, p.kind, p.span, p.emphasis, p.perspectives, p.detail_spec) for p in read.placements]
     assert all(p.kind in ("report", "text") and not p.restricted for p in sheet.placements)
+
+
+def test_resolve_an_already_read_sheet_sync():
+    """resolve_sheet: an app that caches its sheet read hands the sheet over; same answer, sync form."""
+    from pyegeria.core.async_runner import run_sync
+    fake, guids = run_sync(_mixed())
+    fake.hidden.add(guids["Secret Count"])
+    read = run_sync(async_load_dashboard_sheet(fake, "mixed"))
+    sheet = dr.resolve_sheet(fake, read, spec_lookup=spec_lookup)
+    assert [p.kind for p in sheet.placements] == ["text", "report", "restricted", "report"]
+    assert sheet.guid == read.guid and sheet.name == "mixed"
