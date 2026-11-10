@@ -172,6 +172,7 @@ re-test candidates moved into *Awaiting re-test* below the open sections.
   create-from-template) and 7 (`viewElementGUID`) are still open.
 
 **Open pyegeria items**
+- ISSUE-181 (HIGH): Dr.Egeria Parent ID on an Update deletes an unrelated relationship of the parent type, e.g. a folder's member
 - ISSUE-174: link methods discarded the new relationship GUID (fixed for 6.2.19; moves to the Appendix on release)
 - ISSUE-155: pyegeria gaps against Egeria `main` since 6.2 (omvs_audit + source diff, V6.2..05a5e982)
 - ISSUE-150: Dr.Egeria commands for an Analytic Function's Egeria declaration: a GovernanceActionType that Resource Explorer runs as an engine host, plus a synchronous path that bypasses Egeria
@@ -192,6 +193,34 @@ Dr.Egeria-side work each will need once that capability ships is written
 into the entry now, so it isn't rediscovered from scratch later.
 
 ---
+
+### ISSUE-181: Parent ID on an Update deletes an unrelated relationship of the parent type (e.g. a folder's member)
+
+**Layer:** pyegeria (Dr.Egeria) · **Severity:** HIGH: silent membership loss, no error or warning · **Status:** open · **Found:** 2026-11-10, by the publish-portal-specs builder while renaming `ReportSpecFolder::EgeriaPortal` (fe5aad27); confirmed by the Architect's read-back of consumer folders phase 1 (e71e4e90).
+
+**What:** `AsyncBaseCommandProcessor._sync_parent_relationship` (`md_processing/v2/processors.py`) runs after every successful Create/Update/… that names a `Parent ID` and `Parent Relationship Type Name`. Its steps:
+1. It lists the element's relationships with `metadata_expert._async_get_all_related_elements(guid)`, i.e. `startingAtEnd=0`, **either end**, and only the first page.
+2. It keeps the **last** relationship of the parent type that is not the named parent.
+3. It deletes that relationship ("re-parenting"), then links the named parent.
+
+Step 1 doesn't check which end the element is at, so a relationship where the element is the *parent* counts as "the current parent". A collection is end 1 of its members' `CollectionMembership` links. Updating a folder with a Parent ID (at end 1, the default) therefore deletes one of the folder's own member links. Even at the right end, the delete is wrong for many-to-many types: an element may sit in several collections, and Parent ID would silently drop one.
+
+**Repro (no Egeria needed; see the micro-test):**
+1. Folder F has `CollectionMembership` F→S1 and F→S2, and no parent.
+2. Process `Update Collection Folder` for F with `Parent ID` = root R and `Parent Relationship Type Name` = `CollectionMembership`.
+3. Result: F→S2 (the last one listed) is deleted, and R→F is created. Nothing in the output says a link was removed.
+
+On fe5aad27 this would have dropped one of its two ReportSpec members. The builder linked the folder with `Add Member to Collection` instead.
+
+**Proposed fix:** add only, never delete:
+- Read only the relationships with the element at the child end: `startingAtEnd` = 2 when the parent is at end 1 (else 1), and check each entry's `elementAtEnd1`.
+- Page until an empty page.
+- If the named parent is already linked, do nothing.
+- Otherwise create the link. Any link to a different parent stays in place and is named in the output.
+
+Moving an element becomes an explicit `Remove Member from Collection` (or a relationship delete). pyegeria can't tell which earlier link it created itself, so "delete only the link it created" isn't safe either.
+
+**Workaround until fixed:** to nest an element that already has relationships of that type, use `Add Member to Collection`, not `Parent ID`.
 
 ### ISSUE-180: `commands/ops/README.md` described files that no longer exist
 
