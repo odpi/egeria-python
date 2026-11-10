@@ -4,7 +4,9 @@ Covers: sub-folders followed inside a consumer folder (and not, by default, insi
 folder); the cycle guard; the depth cap ("depth cap reached", nothing pruned on a capped walk);
 never walking up to the root or across into a sibling consumer; a sub-folder read error keeping
 the cached specs; and the consumer index ({label: [consumers]}), including "not read" and
-"partial" so that absence is never shown as "used by none". No live Egeria: an in-memory fake.
+"partial" so that absence is never shown as "used by none"; §9 enforced in code (a shared cache
+never takes a zoned spec); and a sub-folder that is not visible or not found counts as gone (its
+specs are pruned), unlike a genuine read error. No live Egeria: an in-memory fake.
 """
 from __future__ import annotations
 
@@ -45,7 +47,8 @@ class Tree:
         self.view_server = "qs-view-server"
         self.by_guid = {}
         self.members = {}
-        self.failing = set()   # GUIDs whose members cannot be read
+        self.failing = set()   # GUIDs whose members cannot be read (a genuine error)
+        self.refusals = {}     # GUID -> exception raised when its members are read
         self.root_error = None
         self.member_reads = []
         self._n = 100
@@ -77,6 +80,8 @@ class Tree:
         self.member_reads.append(collection_guid)
         if collection_guid in self.failing:
             raise RuntimeError("HTTP 500 from the view server")
+        if collection_guid in self.refusals:
+            raise self.refusals[collection_guid]
         return copy.deepcopy(self.members.get(collection_guid)) or "No elements found"
 
     def get_collection_by_guid(self, guid, output_format="JSON", **_):
@@ -309,3 +314,96 @@ def test_cli_recursive_flags():
             with pytest.raises(SystemExit):
                 cli.main(argv)
             assert seen["ns"].recursive is want
+
+
+# ── §9: a shared cache never takes a zoned spec ──
+
+def zone(el, *zones, where="header"):
+    """Put governance zones on an element the way Egeria 6.2 returns them (own header key), or in
+    the legacy classifications list."""
+    cls = {"class": "ElementClassification", "classificationName": "ZoneMembership",
+           "classificationProperties": {"zoneMembership": list(zones)}}
+    if where == "header":
+        el["elementHeader"]["zoneMembership"] = cls
+    else:
+        el["elementHeader"]["classifications"] = [cls]
+    return el
+
+
+@pytest.fixture
+def zoned_tree(portal_tree):
+    """Portal holds A, and Z1 (zoned) directly; Overview holds B, and Z2 (zoned, legacy list) in the sub-folder."""
+    t, portal, overview, tiles = portal_tree
+    z1, z2 = zone(t.new_spec("Spec-Z1"), "finance"), zone(t.new_spec("Spec-Z2"), "hr", where="classifications")
+    t.link(portal, z1)
+    t.link(overview, z2)
+    return t, portal, overview, z1, z2
+
+
+def test_a_shared_sync_skips_zoned_specs_in_the_folder_and_its_sub_folders(tier, zoned_tree):
+    t, *_ = zoned_tree
+    report = esc.sync_report_specs(t, folders=[PORTAL], shared=True, index_consumers=False)
+    assert sorted(report.added) == ["Spec-A", "Spec-B", "Spec-C"]
+    skipped = dict(report.skipped)
+    assert skipped["Spec-Z1"].startswith("zoned: not synced into a shared cache") and "finance" in skipped["Spec-Z1"]
+    assert skipped["Spec-Z2"].startswith("zoned: not synced into a shared cache") and "hr" in skipped["Spec-Z2"]
+    assert not {"Spec-Z1", "Spec-Z2"} & set(manifest(tier)["entries"])
+
+
+def test_a_private_sync_still_takes_zoned_specs(tier, zoned_tree):
+    t, *_ = zoned_tree
+    report = esc.sync_report_specs(t, folders=[PORTAL], index_consumers=False)
+    assert {"Spec-Z1", "Spec-Z2"} <= set(report.added)
+
+
+def test_a_spec_zoned_after_it_was_cached_is_pruned_from_a_shared_cache(tier, portal_tree):
+    t, portal, *_ = portal_tree
+    esc.sync_report_specs(t, folders=[PORTAL], shared=True, index_consumers=False)
+    a = next(m for m in t.members[portal["elementHeader"]["guid"]]
+             if m["properties"]["qualifiedName"] == "ReportSpec::Spec-A")
+    zone(a, "finance")
+    zone(t.by_guid[a["elementHeader"]["guid"]], "finance")
+    # The manifest stays shared without passing shared= again.
+    report = esc.sync_report_specs(t, folders=[PORTAL], index_consumers=False)
+    assert report.pruned == ["Spec-A"] and "Spec-A" not in manifest(tier)["entries"]
+
+
+def test_zones_only_on_the_full_element_are_still_caught(tier, portal_tree):
+    t, portal, *_ = portal_tree
+    z = t.new_spec("Spec-Z3")
+    t.link(portal, copy.deepcopy(z))         # the member listing carries no zones
+    zone(t.by_guid[z["elementHeader"]["guid"]], "finance")  # the full element does
+    report = esc.sync_report_specs(t, folders=[PORTAL], shared=True, index_consumers=False)
+    assert "Spec-Z3" in dict(report.skipped) and "Spec-Z3" not in manifest(tier)["entries"]
+
+
+def test_the_index_leaves_zoned_labels_out(tier, rooted):
+    t, _root = rooted
+    advisor = t.get_collections_by_name(ADVISOR, metadata_element_type="CollectionFolder")[0]
+    t.link(advisor, zone(t.new_spec("Spec-Z"), "finance"))
+    idx = esc.build_consumer_index(t)
+    assert "Spec-Z" not in idx["index"] and any("Spec-Z: zoned" in n for n in idx["notes"])
+
+
+# ── A sub-folder that is not visible or not found is gone, not unread ──
+
+@pytest.mark.parametrize("exc", [
+    RuntimeError("OPEN-METADATA-SECURITY-403-020 The element abc is not visible to user erinoverview"),
+    RuntimeError("OMAG-REPOSITORY-HANDLER-404-001 Unknown guid"),
+], ids=["not-visible", "not-found"])
+def test_a_hidden_or_deleted_sub_folder_prunes_its_specs(tier, portal_tree, exc):
+    t, _portal, overview, _tiles = portal_tree
+    esc.sync_report_specs(t, folders=[PORTAL], shared=True, index_consumers=False)
+    t.refusals[overview["elementHeader"]["guid"]] = exc
+    report = esc.sync_report_specs(t, folders=[PORTAL], index_consumers=False)
+    assert sorted(report.pruned) == ["Spec-B", "Spec-C"]
+    assert any("not visible or not found" in n for n in report.notes)
+    assert not any("could not be read" in why for _, why in report.skipped)
+
+
+def test_a_genuine_sub_folder_error_still_keeps_the_cache(tier, portal_tree):
+    t, _portal, overview, _tiles = portal_tree
+    esc.sync_report_specs(t, folders=[PORTAL], index_consumers=False)
+    t.refusals[overview["elementHeader"]["guid"]] = TimeoutError("read timed out")
+    report = esc.sync_report_specs(t, folders=[PORTAL], index_consumers=False)
+    assert not report.pruned and {"Spec-B", "Spec-C"} <= set(manifest(tier)["entries"])

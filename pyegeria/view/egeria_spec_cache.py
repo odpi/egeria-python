@@ -326,6 +326,29 @@ def _props(el: Dict[str, Any]) -> Dict[str, Any]:
     return el.get("properties") or {}
 
 
+def _zones(el: Dict[str, Any]) -> List[str]:
+    """The governance zones on an element. In Egeria 6.2 ZoneMembership is its own header key
+    (`elementHeader.zoneMembership.classificationProperties.zoneMembership`), not an entry of
+    `elementHeader.classifications`; both places are read, so a list-only check never reports
+    "no zones" for a zoned element."""
+    header = _header(el)
+    found: List[str] = []
+    candidates = [header.get("zoneMembership")] + [c for c in (header.get("classifications") or [])
+                                                   if isinstance(c, dict)
+                                                   and c.get("classificationName") == "ZoneMembership"]
+    for c in candidates:
+        if not isinstance(c, dict):
+            continue
+        z = (c.get("classificationProperties") or {}).get("zoneMembership")
+        if isinstance(z, str):
+            z = [z]
+        found.extend(str(v) for v in (z or []) if v)
+    return sorted(set(found))
+
+
+ZONED_REASON = "zoned: not synced into a shared cache (until B6's public-only read)"
+
+
 def _elements(result: Any) -> List[Dict[str, Any]]:
     if isinstance(result, dict):
         result = [result]
@@ -594,6 +617,17 @@ class _Walk:
     capped: List[str] = field(default_factory=list)            # sub-folders the depth cap stopped
     not_followed: List[Tuple[str, str]] = field(default_factory=list)
     errors: List[Tuple[str, str]] = field(default_factory=list)  # sub-folders whose members could not be read
+    gone: List[Tuple[str, str]] = field(default_factory=list)    # sub-folders not visible or not found
+
+
+def _is_gone_error(exc: BaseException) -> bool:
+    """A read refused because the element is not visible to the caller, or not found: the folder is
+    gone for this reader. Anything else (timeout, 5xx, refused connection) is a genuine error."""
+    try:
+        from pyegeria.view.dashboard_resolver import _is_not_found_error, is_not_visible_error
+        return bool(is_not_visible_error(exc) or _is_not_found_error(exc))
+    except Exception:  # noqa: BLE001 -- if the classifiers cannot load, keep the cache (the safe side)
+        return False
 
 
 def _walk_folder(client, folder: Dict[str, Any], *, recursive: bool, depth_cap: int = DEPTH_CAP,
@@ -620,8 +654,13 @@ def _walk_folder(client, folder: Dict[str, Any], *, recursive: bool, depth_cap: 
             try:
                 listed = _call(client.get_collection_members, collection_guid=_guid(current),
                                output_format="JSON")
-            except Exception as exc:  # noqa: BLE001 -- a sub-folder error keeps the consumer's cached specs
-                w.errors.append((path, str(exc)))
+            except Exception as exc:  # noqa: BLE001
+                if _is_gone_error(exc):
+                    # Not visible (zoned away from the reader) or deleted: its specs are no longer
+                    # published through this folder, so they are pruned, never kept as "unread".
+                    w.gone.append((path, str(exc)))
+                else:  # a genuine error (timeout, 5xx): an outage must not unpublish the consumer
+                    w.errors.append((path, str(exc)))
                 continue
         w.read.append(path)
         for m in listed:
@@ -664,7 +703,9 @@ def sync_report_specs(client, *, folders: Optional[Iterable[str]] = None, specs:
       synced folder, or gone from Egeria, are pruned and named.
     - `include_drafts`: DRAFT and PROPOSED specs go to the separate `drafts/` cache.
     - `shared`: mark the cache shared (a fetch-on-call never writes a shared cache). Default:
-      keep what the manifest says (False for a new cache).
+      keep what the manifest says (False for a new cache). A shared cache never takes a spec that
+      carries a governance zone (report-spec consumer folders §9, until B6's public-only read): it
+      is skipped as "zoned: not synced into a shared cache", and a cached copy is pruned.
     - `recursive`: follow CollectionFolder members of each folder (cycle-safe, at most `depth_cap`
       levels below it; never up to the root nor across into a sibling consumer folder). Default
       (None): on for consumer folders (`ReportSpecFolder::Consumer::...`), off for any other folder.
@@ -717,6 +758,8 @@ def sync_report_specs(client, *, folders: Optional[Iterable[str]] = None, specs:
                 report.notes.append(f"{qn}: depth cap reached ({depth_cap} levels below it); not read, so its "
                                     f"cached specs are kept: " + ", ".join(walk.capped))
             report.notes.extend(f"{path}: not followed, {why}" for path, why in walk.not_followed)
+            report.notes.extend(f"{path}: not visible or not found, so its specs are no longer published through "
+                                f"{qn}: {why}" for path, why in walk.gone)
             if walk.errors:
                 unread_folders.add(qn)
                 report.skipped.extend((path, f"the sub-folder's members could not be read, so {qn}'s specs are "
@@ -742,6 +785,7 @@ def sync_report_specs(client, *, folders: Optional[Iterable[str]] = None, specs:
         main_dir, drafts_dir = directory, directory / DRAFTS_DIR
         main_old, drafts_old = _read_manifest(main_dir), _read_manifest(drafts_dir)
         main_new = _new_manifest(main_old, identity, shared)
+        shared_cache = bool(main_new.get("shared"))  # §9: a shared cache never holds a zoned spec
         drafts_new = _new_manifest(drafts_old, identity, shared)
         drafts_report = SyncReport(cache_dir=str(drafts_dir), folders=folder_qns) if include_drafts else None
 
@@ -777,6 +821,9 @@ def sync_report_specs(client, *, folders: Optional[Iterable[str]] = None, specs:
 
         registry_names = _known_names() | set(candidates)
         for label, [(g, m, fl, pinned)] in candidates.items():
+            if shared_cache and _zones(m):
+                report.skipped.append((label, f"{ZONED_REASON}; zones {', '.join(_zones(m))}"))
+                continue
             status_notes: List[str] = []
             status = _status(m, status_notes)
             if status == _ACTIVE:
@@ -801,6 +848,9 @@ def sync_report_specs(client, *, folders: Optional[Iterable[str]] = None, specs:
                 continue
             try:
                 full = _get_full(client, g) or m
+                if shared_cache and _zones(full):  # the member listing may not carry the header's zones
+                    rep.skipped.append((label, f"{ZONED_REASON}; zones {', '.join(_zones(full))}"))
+                    continue
                 built = _build(full, folders=folders_now, identity=identity, registry_names=registry_names)
             except _Skip as s:
                 rep.skipped.append((s.who, s.reason))
@@ -941,6 +991,7 @@ def build_consumer_index(client, *, root: Optional[str] = None, depth_cap: int =
             unread.append(name)
             continue
         problems = [f"{p}: {e}" for p, e in walk.errors]
+        out["notes"].extend(f"{name}: {p} not visible or not found" for p, _e in walk.gone)
         if walk.capped:
             problems.append(f"depth cap reached ({depth_cap} levels); not read: " + ", ".join(walk.capped))
         if problems:
@@ -952,6 +1003,10 @@ def build_consumer_index(client, *, root: Optional[str] = None, depth_cap: int =
                 label, _qn = _identify(m)
             except _Skip:
                 continue  # not a well-formed spec: the sync reports those; the facet ignores them
+            if _zones(m):
+                # The index is a shared file shown to every viewer: a zoned spec's label stays out (§9).
+                out["notes"].append(f"{name}: {label}: {ZONED_REASON}")
+                continue
             labels.add(label)
         for label in labels:
             index.setdefault(label, []).append(name)
