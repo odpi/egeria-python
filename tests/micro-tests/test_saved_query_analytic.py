@@ -335,184 +335,177 @@ def test_through_the_report_executor_it_runs_on_the_viewers_own_client():
 
 
 # ── parameters (brief §9): one model with the Portal (P-2) ──
+# The fixture is the Portal's (egeria-workspaces PyegeriaWebHandler/tests/fixtures/saved_query_portal_shaped.json,
+# fix/portal-saved-query-seedable @3afa0e82), copied byte-identical. Its cases[] are the contract: the
+# effective values here must equal cases[].effective.
 
-FIXTURE = json.load(open(os.path.join(os.path.dirname(__file__), "data",
-                                      "portal_saved_query_parameters_2026_11_10.json")))
-FQN = FIXTURE["properties"]["qualifiedName"]
-REL = "relationship_conditions.0.relationship_type"
+FIXTURE_PATH = os.path.join(os.path.dirname(__file__), "data", "saved_query_portal_shaped.json")
+FIXTURE = json.load(open(FIXTURE_PATH))
+SQ = FIXTURE["savedQuery"]
+FQN = SQ["properties"]["qualifiedName"]
+MIN_LEVEL_PATH = "matchClassifications.conditions.0.searchProperties.conditions.0.value.primitiveValue"
 
 
-def _portal(**changes):
-    """The shared fixture as a find returns it (an OpenMetadataElement), with `changes` to its
-    additionalProperties (None removes one) or, for formula / queryRequestBody / queryURL, its properties."""
-    props = json.loads(json.dumps(FIXTURE["properties"]))
-    additional = props.pop("additionalProperties")
+def _shared(drop=(), **changes):
+    """The fixture's SavedQuery (as get_asset_by_guid returns it), with `changes` to its additionalProperties,
+    or to formula / queryRequestBody / queryURL, and the declared parameters named in `drop` removed."""
+    el = json.loads(json.dumps(SQ))
+    props = el["properties"]
+    additional = props["additionalProperties"]
     for k, v in changes.items():
         target = props if k in ("formula", "queryRequestBody", "queryURL") else additional
         if v is None:
             target.pop(k, None)
         else:
             target[k] = v if isinstance(v, str) else json.dumps(v)
-    pvm = {k: _str(v) for k, v in props.items()}
-    pvm["additionalProperties"] = {"class": "MapTypePropertyValue", "mapValues": {
-        "class": "InstanceProperties", "propertyValueMap": {k: _str(v) for k, v in additional.items()}}}
-    return {"elementGUID": FIXTURE["guid"], "type": {"typeName": "SavedQuery"},
-            "elementProperties": {"class": "ElementProperties", "propertyValueMap": pvm}}
+    if drop:
+        declared = [d for d in json.loads(additional["parameters"]) if d["name"] not in drop]
+        additional["parameters"] = json.dumps(declared)
+    return el
 
 
 def _ran(viewer):
     return [c[1] for c in viewer.calls[1:] if c[0] == "find"]
 
 
-def _declare(*entries):
-    return {"parameters": list(entries)}
+@pytest.mark.parametrize("case", FIXTURE["cases"], ids=[c["why"][:40] for c in FIXTURE["cases"]])
+def test_effective_values_are_the_contracts(case):
+    props = SQ["properties"]
+    declared = sq._declared_parameters(props["additionalProperties"]["parameters"])
+    search = sq._stored_search(props, props["additionalProperties"])
+    assert sq._effective_parameters(declared, case["request"], search) == case["effective"]
 
 
-# cached: the Portal's own record matches pyegeria's effective values
-
-def test_the_portal_fixture_cached_answer_matches_and_is_labelled():
-    out = saved_query(_Viewer(stored=[_portal()], members=37), FQN)
-    assert out["value"] == 37
-    assert out["params"] == {"type_name": "Asset", REL: "DataFlow"}
-    assert out["subtitle"] == ('as of 2026-11-10T22:41:07+00:00, for '
-                               'relationship_conditions.0.relationship_type="DataFlow", type_name="Asset"')
+def test_the_refresh_record_is_the_portals_effective_map():
+    assert json.loads(SQ["properties"]["additionalProperties"]["lastRefreshParams"]) == \
+        FIXTURE["lastRefresh"]["lastRefreshParams"]
 
 
-def test_the_stored_search_value_wins_over_the_default_so_no_false_refusal():
-    # type_name's default is DataSet, but the stored search holds Asset, and the Portal recorded Asset
-    out = saved_query(_Viewer(stored=[_portal()], members=5), FQN)
-    assert out["value"] == 5 and out["params"]["type_name"] == "Asset"
+# cached: one Results Set, one answer, for the values its refresh recorded
+
+RECORDED = FIXTURE["lastRefresh"]["lastRefreshParams"]
+REFRESHED_WITH = FIXTURE["lastRefresh"]["overrides"]
 
 
-def test_the_default_applies_only_when_the_stored_search_has_no_value():
-    search = json.loads(FIXTURE["properties"]["formula"])
-    search["type_name"] = None
-    q = _portal(formula=search, lastRefreshParams={"type_name": "DataSet", REL: "DataFlow"})
-    out = saved_query(_Viewer(stored=[q], members=4), FQN)
-    assert out["value"] == 4 and out["params"]["type_name"] == "DataSet"
+def test_a_cached_answer_for_the_refreshed_values_is_returned_and_labelled():
+    out = saved_query(_Viewer(stored=[_shared()], members=7), FQN, params=REFRESHED_WITH)
+    assert out["value"] == 7 and out["params"] == RECORDED
+    label = ", ".join(f"{k}={json.dumps(v)}" for k, v in sorted(RECORDED.items()))
+    assert out["subtitle"] == f"as of 2026-11-10T18:00:00+00:00, for {label}"
 
 
-def test_search_spec_is_read_when_formula_is_empty_as_the_portal_does():
-    q = _portal(formula="", searchSpec=FIXTURE["properties"]["formula"])
-    assert saved_query(_Viewer(stored=[q], members=2), FQN)["value"] == 2
-
-
-def test_search_path_names_where_the_portal_applies_it():
-    params = [{"name": "kind", "type": "string", "searchPath": "type_name"}]
-    q = _portal(parameters=params, lastRefreshParams={"kind": "Asset"})
-    out = saved_query(_Viewer(stored=[q], members=6), FQN)
-    assert out["value"] == 6 and out["params"] == {"kind": "Asset"}
+@pytest.mark.parametrize("case", FIXTURE["cases"], ids=[c["why"][:40] for c in FIXTURE["cases"]])
+def test_each_contract_case_is_served_cached_only_when_it_is_what_was_recorded(case):
+    viewer = _Viewer(stored=[_shared()], members=7)
+    out = saved_query(viewer, FQN, params=case["request"])
+    if case["effective"] == RECORDED:
+        assert out["value"] == 7 and out["params"] == RECORDED
+    else:
+        assert out["value"] is None and out["state"] == "not_established"
+        assert "use mode live" in out["state_reason"] and "the cached answer is for " in out["state_reason"]
+        assert [c[0] for c in viewer.calls] == ["find"]  # the members were never read
 
 
 def test_a_cached_answer_for_other_values_is_never_returned():
-    viewer = _Viewer(stored=[_portal()], members=37)
-    out = saved_query(viewer, FQN, params={"type_name": "DataSet"})
-    assert out["value"] is None and out["state"] == "not_established"
-    assert ('is for relationship_conditions.0.relationship_type="DataFlow", type_name="Asset", not '
-            'relationship_conditions.0.relationship_type="DataFlow", type_name="DataSet"') in out["state_reason"]
-    assert "use mode live" in out["state_reason"]
-    assert [c[0] for c in viewer.calls] == ["find"]  # the members were never read
-
-
-def test_the_cache_key_is_every_declared_value():
-    q = _portal(lastRefreshParams={"type_name": "Asset", REL: "Lineage"})
-    out = saved_query(_Viewer(stored=[q], members=9), FQN)
-    assert out["value"] is None and 'relationship_type="Lineage"' in out["state_reason"]
-
-
-def test_a_cached_answer_that_did_not_record_its_values_is_not_used():
-    out = saved_query(_Viewer(stored=[_portal(lastRefreshParams=None)], members=9), FQN)
-    assert out["value"] is None and "does not record the parameter values" in out["state_reason"]
-
-
-# live: values go to requestPath, typed; no placeholders; the stored bodies stay runnable
-
-def test_live_applies_a_value_at_its_request_path():
-    viewer = _Viewer(stored=[_portal()], answer=3)
-    out = saved_query(viewer, FQN, mode="live", params={"type_name": "DataSet"})
-    assert out["value"] == 3
-    assert {b["metadataElementTypeName"] for b in _ran(viewer)} == {"DataSet"}
-    assert out["params"] == {"type_name": "DataSet", REL: "DataFlow"}
-
-
-def test_live_with_no_values_runs_the_stored_request_as_stored():
-    viewer = _Viewer(stored=[_portal()], answer=2)
-    out = saved_query(viewer, FQN, mode="live")
-    assert _ran(viewer)[0]["metadataElementTypeName"] == "Asset"
-    assert out["params"] == {"type_name": "Asset", REL: "DataFlow"}
-
-
-def test_the_stored_request_is_never_changed():
-    q = _portal()
-    before = json.dumps(q, sort_keys=True)
-    saved_query(_Viewer(stored=[q], answer=1), FQN, mode="live", params={"type_name": "DataSet"})
-    assert json.dumps(q, sort_keys=True) == before
-
-
-def test_a_portal_only_parameter_cannot_be_set_live():
-    viewer = _Viewer(stored=[_portal()], answer=3)
-    out = saved_query(viewer, FQN, mode="live", params={REL: "Lineage"})
-    assert out["refused"] is True and "applies to the Portal's search only" in out["state_reason"]
-    assert "use mode cached, or refresh it in the Portal" in out["state_reason"]
+    other = {"min_level": RECORDED["min_level"] + 1}
+    viewer = _Viewer(stored=[_shared()], members=7)
+    out = saved_query(viewer, FQN, params=other)
+    assert out["value"] is None and f"min_level={RECORDED['min_level'] + 1}" in out["state_reason"]
     assert [c[0] for c in viewer.calls] == ["find"]
 
 
-def test_a_portal_only_parameter_on_its_default_is_refused_live():
-    params = [{"name": "page_size", "type": "integer", "default": 100}]  # the stored search has none
-    viewer = _Viewer(stored=[_portal(parameters=params)], answer=3)
+def test_a_cached_answer_that_did_not_record_its_values_is_not_used():
+    out = saved_query(_Viewer(stored=[_shared(lastRefreshParams=None)], members=7), FQN, params=REFRESHED_WITH)
+    assert out["value"] is None and "does not record the parameter values" in out["state_reason"]
+
+
+def test_search_spec_is_read_when_formula_is_empty_as_the_portal_does():
+    q = _shared(formula="", searchSpec=SQ["properties"]["formula"])
+    assert saved_query(_Viewer(stored=[q], members=2), FQN, params=REFRESHED_WITH)["value"] == 2
+
+
+# live: effective values (from formula) go to requestPath, typed, as values only
+
+def test_live_is_refused_while_a_portal_only_parameter_is_declared():
+    viewer = _Viewer(stored=[_shared()], answer=3)
+    out = saved_query(viewer, FQN, mode="live", params={"min_level": 4})
+    assert out["refused"] is True and "'sort' applies to the Portal's search only" in out["state_reason"]
+    assert [c[0] for c in viewer.calls] == ["find"]
+
+
+def test_live_refuses_a_portal_only_parameter_that_is_given():
+    params = [{"name": "sort", "type": "string", "searchPath": "sort_by"}]
+    out = saved_query(_Viewer(stored=[_shared(parameters=params)], answer=3), FQN, mode="live",
+                      params={"sort": "qualifiedName"})
+    assert out["refused"] is True and "applies to the Portal's search only" in out["state_reason"]
+
+
+@pytest.mark.parametrize("case", FIXTURE["cases"], ids=[c["why"][:40] for c in FIXTURE["cases"]])
+def test_live_sends_the_contracts_effective_values(case):
+    request_ = {k: v for k, v in case["request"].items() if k != "sort"}
+    viewer = _Viewer(stored=[_shared(drop=("sort",))], answer=45)
+    out = saved_query(viewer, FQN, mode="live", params=request_)
+    eff = {k: v for k, v in case["effective"].items() if k != "sort"}
+    sent = _ran(viewer)
+    assert out["value"] == 45 and out["params"] == eff
+    assert {b["metadataElementTypeName"] for b in sent} == {eff["asset_type"]}
+    assert {sq._get_path(b, MIN_LEVEL_PATH) for b in sent} == {eff["min_level"]}
+    assert [b["startFrom"] for b in sent] == list(range(0, 45, eff["page_size"])) + [45]  # read in pages of page_size
+    assert {b["pageSize"] for b in sent} == {eff["page_size"]}
+
+
+def test_the_stored_value_is_formulas_not_the_request_bodys():
+    body = json.loads(SQ["properties"]["queryRequestBody"])
+    body["metadataElementTypeName"] = "Process"  # the request body disagrees with formula (type_name DataSet)
+    viewer = _Viewer(stored=[_shared(drop=("sort",), queryRequestBody=body)], answer=1)
     out = saved_query(viewer, FQN, mode="live")
-    assert out["refused"] is True and "'page_size' applies to the Portal's search only" in out["state_reason"]
+    assert _ran(viewer)[0]["metadataElementTypeName"] == "DataSet"
+    assert out["params"]["asset_type"] == "DataSet"
 
 
-def test_a_nested_request_path_sets_a_value_only():
-    body = json.loads(FIXTURE["properties"]["queryRequestBody"])
-    body["searchProperties"] = {"class": "SearchProperties", "matchCriteria": "ALL", "conditions": [
-        {"property": "displayName", "operator": "EQ",
-         "value": {"class": "PrimitiveTypePropertyValue", "typeName": "string", "primitiveValue": "Sales"}}]}
-    params = [{"name": "label", "type": "string", "requestPath": "searchProperties.conditions.0.value.primitiveValue"}]
-    viewer = _Viewer(stored=[_portal(queryRequestBody=body, parameters=params)], answer=1)
-    out = saved_query(viewer, FQN, mode="live", params={"label": 'Q4 "x" {{y}} https://evil.example.com/../'})
-    sent = _ran(viewer)[0]
-    assert sent["searchProperties"]["conditions"][0]["value"]["primitiveValue"] == 'Q4 "x" {{y}} https://evil.example.com/../'
-    assert sent["searchProperties"]["conditions"][0]["property"] == "displayName"  # data, never a key
-    assert out["value"] == 1
+def test_the_stored_request_is_never_changed():
+    q = _shared(drop=("sort",))
+    before = json.dumps(q, sort_keys=True)
+    saved_query(_Viewer(stored=[q], answer=1), FQN, mode="live", params={"asset_type": "Asset"})
+    assert json.dumps(q, sort_keys=True) == before
+
+
+def test_a_parameter_never_moves_where_the_read_starts():
+    params = [{"name": "skip", "type": "integer", "default": 0, "requestPath": "startFrom"}]
+    out = saved_query(_Viewer(stored=[_shared(parameters=params)], answer=1), FQN, mode="live")
+    assert out["refused"] is True and "paging the live read owns" in out["state_reason"]
 
 
 def test_a_request_path_that_points_nowhere_is_refused():
-    params = [{"name": "type_name", "type": "string", "requestPath": "searchProperties.conditions.0.property"}]
-    out = saved_query(_Viewer(stored=[_portal(parameters=params)], answer=1), FQN, mode="live",
-                      params={"type_name": "DataSet"})
+    params = [{"name": "x", "type": "string", "default": "y", "requestPath": "searchProperties.conditions.0.property"}]
+    out = saved_query(_Viewer(stored=[_shared(parameters=params)], answer=1), FQN, mode="live")
     assert out["refused"] is True and "points at nothing" in out["state_reason"]
+
+
+def test_a_string_value_is_data_only():
+    viewer = _Viewer(stored=[_shared(drop=("sort",))], answer=1)
+    value = 'Q4 "x" {{y}} https://evil.example.com/../'
+    saved_query(viewer, FQN, mode="live", params={"asset_type": value})
+    sent = _ran(viewer)[0]
+    assert sent["metadataElementTypeName"] == value
+    assert all(c[0] == "find" for c in viewer.calls)  # still pyegeria's own find on the viewer's client
 
 
 @pytest.mark.parametrize("given,words", [
     ({"queryURL": "https://evil.example.com/x"}, "does not declare ['queryURL']"),   # a URL, as a name
     ({"../servers/x": "y"}, "does not declare"),                                    # path chars, as a name
-    ({"type_name": 5}, "must be a string, not int"),                                # type mismatch
-    ({"type_name": True}, "must be a string, not bool"),
-    ({"type_name": ["Asset"]}, "must be a string, not list"),
-    ({"type_name": "a\nb"}, "control characters"),
-    ({"type_name": "x" * 600}, "over 512 characters"),
+    ({"asset_type": 5}, "must be a string, not int"),                               # type mismatch
+    ({"min_level": "4"}, "must be a integer, not str"),
+    ({"min_level": True}, "must be a integer, not bool"),
+    ({"page_size": 2.5}, "must be a integer, not float"),
+    ({"asset_type": "a\nb"}, "control characters"),
+    ({"asset_type": "x" * 600}, "over 512 characters"),
 ])
 def test_injection_and_type_mismatch_are_refused_and_nothing_runs(given, words):
-    viewer = _Viewer(stored=[_portal()], answer=3)
+    viewer = _Viewer(stored=[_shared(drop=("sort",))], answer=3)
     out = saved_query(viewer, FQN, mode="live", params=given)
     assert out["refused"] is True and out["value"] is None and words in out["state_reason"]
     assert [c[0] for c in viewer.calls] == ["find"]
-
-
-@pytest.mark.parametrize("ptype,good,bad", [
-    ("integer", 30, "30"), ("integer", 30, True), ("number", 1.5, "1.5"), ("boolean", False, "false"),
-    ("list", ["a", "b"], "a,b"),
-])
-def test_types_are_the_portals_with_no_coercion(ptype, good, bad):
-    body = {**json.loads(FIXTURE["properties"]["queryRequestBody"]), "x": None}
-    params = [{"name": "x", "type": ptype, "requestPath": "x"}]
-    viewer = _Viewer(stored=[_portal(queryRequestBody=body, parameters=params)], answer=1)
-    assert saved_query(viewer, FQN, mode="live", params={"x": good})["value"] == 1
-    assert _ran(viewer)[0]["x"] == good
-    assert saved_query(_Viewer(stored=[_portal(queryRequestBody=body, parameters=params)]), FQN, mode="live",
-                       params={"x": bad})["refused"] is True
 
 
 def test_params_on_a_query_that_declares_none_are_refused():
@@ -533,13 +526,5 @@ def test_params_on_a_query_that_declares_none_are_refused():
     ([{"name": "x", "searchPath": "https://evil.example.com"}], "not a plain dotted path"),
 ])
 def test_a_bad_declaration_is_refused(params, words):
-    out = saved_query(_Viewer(stored=[_portal(parameters=params)], answer=1), FQN, mode="live")
+    out = saved_query(_Viewer(stored=[_shared(parameters=params)], answer=1), FQN, mode="live")
     assert out["refused"] is True and words in out["state_reason"]
-
-
-def test_the_url_is_never_parameterised():
-    params = [{"name": "type_name", "type": "string", "requestPath": "metadataElementTypeName"}]
-    viewer = _Viewer(stored=[_portal(parameters=params)], answer=1)
-    saved_query(viewer, FQN, mode="live", params={"type_name": "https://evil.example.com"})
-    assert all(c[0] == "find" for c in viewer.calls)  # still pyegeria's own find on the viewer's client
-    assert _ran(viewer)[0]["metadataElementTypeName"] == "https://evil.example.com"  # data only

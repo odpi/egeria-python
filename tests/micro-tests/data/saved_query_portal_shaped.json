@@ -1,0 +1,83 @@
+{
+  "about": "A Portal-shaped SavedQuery as the Egeria Portal (insights_handler, fix/portal-saved-query-seedable) stores it after a refresh; shared with pyegeria's saved_query report source (Architect P-2, 2026-11-10). One parameter model: {name, type, default?, searchPath?, requestPath?}; searchPath defaults to name; no {{}} placeholders. Effective value = request, else the stored value at the path, else the default. lastRefreshParams records that value for EVERY declared name, as a JSON string (Egeria additionalProperties are strings). formula and queryRequestBody come from the Portal's own _search_spec and _smart_collection_query_call. 'sort' has no requestPath, so pyegeria must refuse live with it. 'The stored value' means the value at searchPath in formula (what the Portal ran); with no request, each requestPath in queryRequestBody holds that same value here, so both sides agree. This query is registered as a Smart Collection (smartCollection: true): Egeria re-runs queryRequestBody itself, so a Portal refresh refuses values other than the stored ones (P-3) and stamps the stored effective values, as lastRefresh shows.",
+  "savedQuery": {
+    "elementHeader": {
+      "guid": "3f1c2b9e-0000-4000-8000-000000000001",
+      "type": {
+        "typeName": "SavedQuery"
+      }
+    },
+    "properties": {
+      "class": "SavedQueryProperties",
+      "typeName": "SavedQuery",
+      "qualifiedName": "SavedQuery::insights-query::Sensitive data sets::a1b2c3d4",
+      "displayName": "Sensitive data sets",
+      "description": "Data sets at or above a confidentiality level",
+      "formula": "{\"type_name\": \"DataSet\", \"match_criteria\": \"ALL\", \"conditions\": [{\"classification\": \"Confidentiality\", \"property\": \"confidentialityLevel\", \"operator\": \"GTE\", \"value\": 3, \"value_type\": \"int\"}], \"value_conditions\": [], \"value_match_criteria\": \"ALL\", \"relationship_conditions\": [], \"relationship_match_criteria\": \"ALL\", \"exclude_types\": [], \"sort_by\": null, \"sort_dir\": \"asc\", \"as_of_time\": null}",
+      "formulaType": "egeria-insights-search-v1",
+      "queryURL": "https://host.docker.internal:9443/servers/qs-view-server/api/open-metadata/metadata-expert/metadata-elements/by-search-conditions",
+      "queryRequestBody": "{\"class\": \"FindRequestBody\", \"limitResultsByStatus\": [\"ACTIVE\"], \"metadataElementTypeName\": \"DataSet\", \"matchClassifications\": {\"class\": \"SearchClassifications\", \"matchCriteria\": \"ALL\", \"conditions\": [{\"name\": \"Confidentiality\", \"searchProperties\": {\"class\": \"SearchProperties\", \"matchCriteria\": \"ALL\", \"conditions\": [{\"property\": \"confidentialityLevel\", \"operator\": \"GTE\", \"value\": {\"class\": \"PrimitiveTypePropertyValue\", \"typeName\": \"int\", \"primitiveValue\": 3}}]}}]}, \"graphQueryDepth\": 0, \"startFrom\": 0, \"pageSize\": 500}",
+      "additionalProperties": {
+        "pyegeriaInsightsQuery": "true",
+        "queryUrl": "/api/insights/search",
+        "queryHttpMethod": "POST",
+        "resultsSetGuid": "3f1c2b9e-0000-4000-8000-000000000002",
+        "smartQueryRelGuid": "3f1c2b9e-0000-4000-8000-000000000003",
+        "parameters": "[{\"name\": \"asset_type\", \"type\": \"string\", \"default\": \"Asset\", \"searchPath\": \"type_name\", \"requestPath\": \"metadataElementTypeName\"}, {\"name\": \"min_level\", \"type\": \"integer\", \"default\": 3, \"searchPath\": \"conditions.0.value\", \"requestPath\": \"matchClassifications.conditions.0.searchProperties.conditions.0.value.primitiveValue\"}, {\"name\": \"page_size\", \"type\": \"integer\", \"default\": 500, \"requestPath\": \"pageSize\"}, {\"name\": \"sort\", \"type\": \"string\", \"default\": \"displayName\", \"searchPath\": \"sort_by\"}]",
+        "lastRefreshedTime": "2026-11-10T18:00:00+00:00",
+        "resultCount": "7",
+        "lastRefreshParams": "{\"asset_type\": \"DataSet\", \"min_level\": 3, \"page_size\": 500, \"sort\": \"displayName\"}",
+        "favorite": "false",
+        "smartCollection": "true"
+      }
+    }
+  },
+  "lastRefresh": {
+    "overrides": {},
+    "lastRefreshParams": {
+      "asset_type": "DataSet",
+      "min_level": 3,
+      "page_size": 500,
+      "sort": "displayName"
+    }
+  },
+  "cases": [
+    {
+      "why": "no request: a stored value wins over a differing default (asset_type); a default fills a path the search lacks (page_size, sort)",
+      "request": {},
+      "effective": {
+        "asset_type": "DataSet",
+        "min_level": 3,
+        "page_size": 500,
+        "sort": "displayName"
+      }
+    },
+    {
+      "why": "one parameter requested; the rest are stored or default",
+      "request": {
+        "min_level": 4
+      },
+      "effective": {
+        "asset_type": "DataSet",
+        "min_level": 4,
+        "page_size": 500,
+        "sort": "displayName"
+      }
+    },
+    {
+      "why": "every parameter requested",
+      "request": {
+        "asset_type": "Asset",
+        "min_level": 1,
+        "page_size": 20,
+        "sort": "qualifiedName"
+      },
+      "effective": {
+        "asset_type": "Asset",
+        "min_level": 1,
+        "page_size": 20,
+        "sort": "qualifiedName"
+      }
+    }
+  ]
+}

@@ -254,9 +254,11 @@ def saved_query(client, name: str, mode: str = "cached", output: str = "count",
       `searchPath`, else the default. A cached answer is returned only when `lastRefreshParams` (which
       the Portal records for every declared name) equals that map; otherwise it is refused, and the
       reason points to live mode. The result carries `params`, labelled "as of <time>, for k=v, ...".
-    - Live mode: a given value goes to its `requestPath`. A parameter with no `requestPath` applies to
-      the Portal's search only, so live mode refuses it when it is given, or when its effective value
-      would be its default (the stored request can't carry that).
+    - Live mode: every parameter's effective value (from `formula`, never the value already in
+      `queryRequestBody`) is set at its `requestPath`; a declared `pageSize` becomes the read's page
+      size, and `startFrom` stays the read's own. A parameter with no `requestPath` applies to the
+      Portal's search only, so live mode refuses it when it is given, or when its effective value is a
+      default the stored search doesn't hold.
     An undeclared name, a value of the wrong type, a string with control characters or over 512
     characters, a bad path, or params on a query that declares none, is refused with a sentence.
 
@@ -332,6 +334,8 @@ def saved_query(client, name: str, mode: str = "cached", output: str = "count",
             logger.warning(f"saved_query: refused to run {name!r}: {refused.sentence}")
             return _result(name, mode, output, state="not_established", reason=refused.sentence,
                            absence="not_applicable", refused=True)
+        if any(p.get("requestPath") == "pageSize" for p in declared) and isinstance(body.get("pageSize"), int):
+            page_size = max(1, min(body["pageSize"], 1000))  # a declared page size is the read's page size
         out = _live(client, name, output, method, body, page_size, max_pages)
         out["how"] = f"{method} on this client's platform" + (f"; {note}" if note else "")
     if declared:
@@ -478,32 +482,37 @@ def _effective_parameters(declared: List[Dict[str, Any]], given: Optional[Dict[s
     return values
 
 
+# Paging keys the live read owns: a parameter may set the page size (it becomes the read's page size),
+# never where the read starts.
+_PAGING_OWNED = ("startFrom",)
+
+
 def _apply_request_parameters(declared, given, body, effective, search) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-    """The stored request with each parameter applied at its requestPath (typed, a value only), and the
-    values the run used. A parameter with no requestPath can't change the request, so it is refused when
-    it is given, or when its effective value is its default (not the stored search's own value)."""
+    """The stored request with every parameter's effective value set at its requestPath (typed, a value
+    only), on a copy, and the values the run used.
+
+    The effective value is the Portal's: the value given, else the value at searchPath in the stored
+    search (`formula`, what the Portal ran), else the default. It is NOT the value already at requestPath
+    in queryRequestBody: the two can differ (the Portal strips paging from formula, while queryRequestBody
+    always says pageSize 500), and the Portal's record of a refresh is keyed on the former. A parameter with
+    no requestPath can't change the request, so live mode is refused when it is given, or when its effective
+    value is not what the stored search holds (a default)."""
     given = dict(given or {})
     body = json.loads(json.dumps(body))  # never change the stored copy
     used: Dict[str, Any] = {}
     for p in declared:
         name, rp = p["name"], p.get("requestPath")
+        value = effective.get(name)
         if not rp:
             from_search = _get_path(search, p.get("searchPath") or name) is not None
-            if name in given or not from_search and effective.get(name) is not None:
+            if name in given or (not from_search and value is not None):
                 raise SavedQueryRefused(f"Parameter {name!r} applies to the Portal's search only (it has no "
                                         f"requestPath), so it cannot be set live; use mode cached, or refresh it "
                                         f"in the Portal with that value.")
-            used[name] = effective.get(name)
+            used[name] = value
             continue
-        if name in given:
-            value = effective[name]
-        else:
-            stored = _get_path(body, rp)
-            value = stored if stored is not None else (
-                _check_value(name, p, p["default"]) if p.get("default") is not None else None)
-            if stored is not None:
-                used[name] = stored
-                continue
+        if _path_parts(rp)[0] in _PAGING_OWNED:
+            raise SavedQueryRefused(f"Parameter {name!r}: its requestPath {rp!r} is paging the live read owns.")
         if value is not None:
             _set_path(body, rp, value, name)
         used[name] = value
