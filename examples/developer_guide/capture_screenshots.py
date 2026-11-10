@@ -21,7 +21,7 @@ from textual.widgets import DataTable, Input
 HERE = Path(__file__).resolve().parent
 REPO_ROOT = HERE.parents[1]
 IMAGES = REPO_ROOT / "docs" / "images" / "developer-guide"
-MY_PROFILE_DIR = REPO_ROOT / "my_egeria" / "my_egeria" / "DemoCode" / "My_Profile"
+MY_PROFILE_DIR = REPO_ROOT / "my_egeria" / "my_egeria"
 SIZE = (150, 42)
 
 sys.path.append(str(MY_PROFILE_DIR))
@@ -62,7 +62,7 @@ async def capture_examples() -> None:
 
 
 async def capture_my_profile() -> None:
-    from my_egeria.DemoCode.My_Profile.my_egeria import MyProfileApp
+    from my_egeria.my_profile import MyProfileApp
 
     app = MyProfileApp()
     async with app.run_test(size=SIZE) as pilot:

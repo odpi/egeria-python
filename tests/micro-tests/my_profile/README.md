@@ -4,7 +4,7 @@
 # tests/micro-tests/my_profile
 
 Tests for the `MyProfileApp` Textual TUI in
-`my_egeria/my_egeria/DemoCode/My_Profile/` — not the `pyegeria.omvs.my_profile`
+`my_egeria/my_egeria/` — not the `pyegeria.omvs.my_profile`
 OMVS client, which is covered in `tests/functional-tests/`.
 
 The suite runs two ways from the same test code.

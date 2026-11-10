@@ -34,6 +34,7 @@ include = ["my_egeria", "my_egeria.*"]
 [project.scripts]
 # Terminal mode
 my-egeria = "my_egeria.main:main"
+my-profile = "my_egeria.my_profile:main"
 # Local browser mode (textual-serve); env: MY_EGERIA_HOST, MY_EGERIA_PORT, MY_PROFILE_PORT
 serve-my-egeria = "my_egeria.serve:serve_my_egeria"
 serve-my-profile = "my_egeria.serve:serve_my_profile"

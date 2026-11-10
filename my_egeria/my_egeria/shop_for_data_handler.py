@@ -17,7 +17,7 @@ from textual.widget import Widget
 from textual.worker import Worker, WorkerState
 
 # Ensure project root is on sys.path
-root_path = Path(__file__).resolve().parents[4]
+root_path = Path(__file__).resolve().parents[2]
 if str(root_path) not in sys.path:
     sys.path.append(str(root_path))
 

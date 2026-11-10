@@ -36,6 +36,7 @@ For detailed information on using pyegeria, see:
 - [docs/user_programming.md](docs/user_programming.md): A comprehensive guide to the programming model, configuration, and client usage.
 - [docs/output-formats-and-report-specs.md](docs/output-formats-and-report-specs.md): Guidance on output formats and report specs (including nested/master–detail).
 - [md_processing/v2/README.md](md_processing/v2/README.md): Detailed documentation on the Dr. Egeria v2 (Async) markdown processing engine, including rules for attribute validation and reference resolution.
+- [my_egeria/README.md](my_egeria/README.md): Documentation and user guides for the My Egeria and My Profile Textual TUI applications.
 
 ### Report specs: families and filtering
 
