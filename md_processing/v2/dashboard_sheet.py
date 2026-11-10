@@ -795,8 +795,14 @@ class CreateDashboardSheetProcessor(_DashboardSheetProcessorMixin, AsyncBaseComm
         is_update = name in sheets
         sheets.upsert(name, DashboardSheet(name=name, heading=heading, description=description, family=family))
         sheets.save_to_json(path)
+        zones_note = ""
         if local_reason:
+            # `name` stands in for the GUID (the sheet is in the local store only), so the base
+            # processor must not sync anything to Egeria with it.
             self.parsed_output["guid"] = name
+            self.parsed_output["local_only"] = local_reason
+            if attributes.get("Zone Membership", {}).get("value"):
+                zones_note = "\n- **Zone Membership**: not written (local only)"
 
         verb_word = "Updated" if is_update else "Created"
         logger.success(f"{verb_word} Dashboard Sheet '{name}' (local store {path}; Egeria: "
@@ -808,6 +814,7 @@ class CreateDashboardSheetProcessor(_DashboardSheetProcessorMixin, AsyncBaseComm
             f"- **Description**: {description or '_(none)_'}\n"
             f"- **Family**: {family or '_(none)_'}\n"
             f"- **Local store**: {path}"
+            f"{zones_note}"
             f"{_egeria_section(writer, local_reason)}"
         )
 

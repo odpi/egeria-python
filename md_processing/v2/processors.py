@@ -457,6 +457,11 @@ class AsyncBaseCommandProcessor(ABC):
             logger.error(f"Error syncing Zone Membership for {guid}: {e}")
             self.add_related_result("Zone Membership", guid=guid, status="failure", message=str(e))
 
+    def _note_local_only_syncs(self, attributes: Dict[str, Any]) -> None:
+        """Record that a Zone Membership given on a local-only write was not written to Egeria."""
+        if attributes.get("Zone Membership", {}).get("value"):
+            self.add_related_result("Zone Membership", status="skipped", message="not written (local only)")
+
     async def _sync_parent_relationship(self, guid: str, attributes: Dict[str, Any]) -> None:
         """
         Establish the relationship declared by 'Parent ID' + 'Parent Relationship
@@ -1215,10 +1220,15 @@ class AsyncBaseCommandProcessor(ABC):
                 update_element_dictionary(qn, {"guid": guid, "display_name": d_name})
 
             if guid and self.command.verb in ["Create", "Define", "Register", "Add", "Update", "Modify", "Upsert"]:
-                await self._sync_zone_membership(guid, attributes)
-                await self._sync_parent_relationship(guid, attributes)
-                await self._sync_governance_classifications(guid, attributes)
-                await self._sync_referenceable_classifications(guid, attributes)
+                if self.parsed_output.get("local_only"):
+                    # Written to a local store only (e.g. a Dashboard Sheet with no Egeria connection):
+                    # `guid` is not an Egeria GUID, so nothing is synced to Egeria.
+                    self._note_local_only_syncs(attributes)
+                else:
+                    await self._sync_zone_membership(guid, attributes)
+                    await self._sync_parent_relationship(guid, attributes)
+                    await self._sync_governance_classifications(guid, attributes)
+                    await self._sync_referenceable_classifications(guid, attributes)
 
         deferred = bool(self.parsed_output.get("deferred")) and not self.context.get("final_round")
 
