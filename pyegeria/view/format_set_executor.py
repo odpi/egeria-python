@@ -1018,9 +1018,12 @@ def _exec_analytic_chart(
     )
     envelope = _result_envelope(result)
     result = _jsonable(result)
+    # W2 (6.2.34): a trend whose only unmeasured points are lower bounds is drawn, each bound
+    # plotted at its bound and labelled "≥N", with a subtitle saying how many there are.
+    bounded = _bounded_trend(result) if chart_kind == "line" and notes else None
     # A count in the result was not measured: its value is None, and a chart would draw that as
     # a missing bar, a gap or a re-proportioned pie. Withhold the chart and say why instead.
-    if notes and (envelope is None or envelope["state"] in CHARTABLE_STATES):
+    if notes and bounded is None and (envelope is None or envelope["state"] in CHARTABLE_STATES):
         envelope = _unmeasured_envelope(notes)
     absence = _absence_for(envelope, action["analytic_function"])
     # Chart only an established answer (ISSUE-140): measured, or nothing_found (a real
@@ -1045,6 +1048,19 @@ def _exec_analytic_chart(
         out = {"kind": "json", "data": chart, **({"absence": absence} if absence else {})}
         return _with_envelope(out, envelope)
 
+    if chart_kind == "line" and bounded is not None:
+        records, n_bounds = bounded
+        chart = generate_vega_line_chart(records, x_field="label", y_fields=["value"], title=heading,
+                                         x_label="Label", y_label="Count")
+        if not chart:
+            return _with_envelope({"kind": "json", "data": result}, envelope)
+        chart = _mark_lower_bounds(chart)
+        chart["title"] = {"text": heading, "subtitle": (
+            f"{n_bounds} of {len(records)} points are lower bounds (shown as \u2265N): "
+            f"the count stopped at its page cap")}
+        return {"kind": "json", "data": chart, "unmeasured": notes,
+                **({"absence": absence} if absence else {})}
+
     if chart_kind == "line":
         if not isinstance(result, list) or not all(isinstance(pt, dict) for pt in result):
             return _with_envelope({"kind": "json", "data": result}, envelope)
@@ -1068,6 +1084,44 @@ def _exec_analytic_chart(
     chart = (generate_vega_bar_chart(cat_values, title=heading) if chart_kind == "bar"
              else generate_vega_pie_chart(cat_values, title=heading))
     return _chart_out(chart)
+
+
+def _bounded_trend(result: Any) -> Optional[Tuple[List[Dict[str, Any]], int]]:
+    """A scalar `metric_trend` series whose every inexact point is a lower bound: the records to
+    plot (a bound at its bound, flagged `lowerBound`, with its `display` "≥N") and how many bounds.
+    None for anything else, so the caller withholds the chart as before."""
+    if not isinstance(result, list) or not result:
+        return None
+    records, n_bounds = [], 0
+    for pt in result:
+        m = pt.get("measurement") if isinstance(pt, dict) else None
+        if not isinstance(m, dict) or "display" not in pt:
+            return None  # not a scalar metric_trend point
+        if m.get("exact") and isinstance(pt.get("value"), (int, float)):
+            records.append({"label": pt.get("label"), "date": pt.get("date"), "value": pt["value"],
+                            "display": pt["display"], "lowerBound": False})
+        elif m.get("capped") and m.get("at_least") is not None and m.get("how") != "error":
+            n_bounds += 1
+            records.append({"label": pt.get("label"), "date": pt.get("date"), "value": m["at_least"],
+                            "display": pt["display"], "lowerBound": True})
+        else:
+            return None  # a point with no number at all: no chart
+    return (records, n_bounds) if n_bounds else None
+
+
+def _mark_lower_bounds(chart: Dict[str, Any]) -> Dict[str, Any]:
+    """Layer a "≥N" label over every lower-bound point, and show `display` in the tooltip, so a
+    bound is never read as an exact number."""
+    line = {k: chart.pop(k) for k in ("mark", "encoding")}
+    line["mark"] = {"type": "line", "point": True}
+    line["encoding"]["tooltip"] = [{"field": "label", "type": "nominal"},
+                                   {"field": "display", "type": "nominal", "title": "Count"}]
+    label = {"transform": [{"filter": "datum.lowerBound"}],
+             "mark": {"type": "text", "dy": -10},
+             "encoding": {"x": line["encoding"]["x"], "y": line["encoding"]["y"],
+                          "text": {"field": "display", "type": "nominal"}}}
+    chart["layer"] = [line, label]
+    return chart
 
 
 def _as_category_value_dict(result: Any) -> Optional[Dict[str, Union[int, float]]]:

@@ -128,7 +128,7 @@ class _Supply:
 # ── The 28 built-in declarations ──
 
 def test_every_builtin_declares_its_client_inputs_and_they_match_its_binding():
-    assert len(BUILTIN_ANALYTIC_FUNCTIONS) == 28
+    assert len(BUILTIN_ANALYTIC_FUNCTIONS) == 29  # + saved_query (6.2.34)
     served = {c.__name__ for c in egeria_tech_classes()}
     for name, entry in BUILTIN_ANALYTIC_FUNCTIONS.items():
         assert entry.inputs, f"{name} declares no inputs"
