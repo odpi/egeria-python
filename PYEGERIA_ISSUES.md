@@ -172,7 +172,7 @@ re-test candidates moved into *Awaiting re-test* below the open sections.
   create-from-template) and 7 (`viewElementGUID`) are still open.
 
 **Open pyegeria items**
-- ISSUE-182: an element hidden by zone security (403-020) is reported as AUTHORIZATION_ERROR_401 (filed 2026-11-10, no fix yet)
+- ISSUE-182: an element hidden by zone security (403-020) was reported as AUTHORIZATION_ERROR_401 (fixed in 6.2.34)
 - ISSUE-181 (HIGH): Dr.Egeria Parent ID on an Update deleted an unrelated relationship of the parent type, e.g. a folder's member (fixed for 6.2.32; moves to the Appendix on release)
 - ISSUE-174: link methods discarded the new relationship GUID (fixed for 6.2.19; moves to the Appendix on release)
 - ISSUE-155: pyegeria gaps against Egeria `main` since 6.2 (omvs_audit + source diff, V6.2..05a5e982)
@@ -197,7 +197,7 @@ into the entry now, so it isn't rediscovered from scratch later.
 
 ### ISSUE-182: an element hidden by zone security is reported as "AUTHORIZATION_ERROR_401"
 
-**Layer:** pyegeria · **Severity:** medium: misleading diagnosis, no wrong data · **Status:** open (filed only; no fix requested yet) · **Found:** 2026-11-10 on 6.2.32 (laz), reading a Report zoned `['peterprofile']` as erinoverview; the Architect confirmed `is_not_visible_error` is True for it.
+**Layer:** pyegeria · **Severity:** medium: misleading diagnosis, no wrong data · **Status:** fixed 2026-11-10 on branch `docs/issue-182-unauthorized-banner`; released in 6.2.34 · **Found:** 2026-11-10 on 6.2.32 (laz), reading a Report zoned `['peterprofile']` as erinoverview; the Architect confirmed `is_not_visible_error` is True for it.
 
 **What:** `get_element_by_guid` as erinoverview on that Report, through `BaseServerClient._async_get_element_by_guid_`, logs a banner that starts:
 
@@ -234,6 +234,16 @@ Related: `PyegeriaErrorCode` labels 401 `AUTHORIZATION_ERROR` and 403 `AUTHENTIC
 - `str(e)` names 403 and the message id and doesn't say `AUTHORIZATION_ERROR_401`.
 
 Also check that a bare transport 401 still says `AUTHORIZATION_ERROR_401` and its credentials action.
+
+**Done:**
+- `PyegeriaErrorCode.FORBIDDEN_ERROR` is new: message_id `AUTHORIZATION_ERROR_403`, message "HTTP Code: 403 <Egeria's message, starting with its id> (user `<user>`)", and a "a new token will not help" action.
+- `PyegeriaUnauthorizedException` uses it when Egeria's `relatedHTTPCode` is 403, and sets `egeria_message_id`. A transport 401 or a wrapped 401 is unchanged.
+- Class and `related_http_code` are unchanged, and the token retry still fires only on a transport 401.
+- The message_id keeps the `AUTHORIZATION_ERROR` prefix and the text carries "HTTP Code: 403". This is because the Portal's `_is_auth_error` helpers match those substrings (tech_catalog and audit handlers match only "AUTHORIZATION_ERROR"/"NOT_AUTHORIZED"). With it, `egeria_error_mapping._auth_status` now answers 403 instead of 401.
+- trellis classifies by class and by the OPEN-METADATA-SECURITY-403 marker. Egeria's sentence is still the first marker occurrence, so `_refusal_sentence` is unchanged.
+- **The 401/403 name swap is not changed.** `AUTHORIZATION_ERROR_401` is matched as text by the Portal (10 handlers, both stacks) and trellis (`egeria_clients.classify_token_check_failure`), so renaming it is a coordinated change for later. `AUTHENTICATION_ERROR` (403) is unused and marked so.
+
+Tests: `tests/micro-tests/test_issue_182_forbidden_banner.py`.
 
 ### ISSUE-181: Parent ID on an Update deletes an unrelated relationship of the parent type (e.g. a folder's member)
 
