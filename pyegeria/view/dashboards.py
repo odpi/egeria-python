@@ -57,7 +57,8 @@ from pyegeria.view._output_dashboard_sheet_models import DashboardSheet, Dashboa
 __all__ = [
     "EgeriaDashboardSheet", "EgeriaPlacement", "REPORT_LINK_MISSING", "as_local_model",
     "async_list_dashboard_sheets", "async_load_dashboard_sheet", "async_migrate_dashboard_sheets",
-    "list_dashboard_sheets", "load_dashboard_sheet", "main", "read_sheet_from_chain",
+    "async_resolve_dashboard_sheet", "list_dashboard_sheets", "load_dashboard_sheet", "main",
+    "read_sheet_from_chain", "resolve_dashboard_sheet",
 ]
 
 PAGE_SIZE = 25
@@ -72,6 +73,10 @@ class EgeriaPlacement(Placement):
     kind: Literal["report", "text", "missing"] = "report"
     note: Optional[str] = None
     source: str = "egeria"
+    #: The Report's GUID: the linked one for a bound placement; for a "missing" one, the GUID the writer
+    #: recorded on the field (`reportGUID`), if any, so the resolver can tell a Report the viewer may not
+    #: see from one that is gone.
+    report_guid: Optional[str] = None
 
 
 class EgeriaDashboardSheet(DashboardSheet):
@@ -208,7 +213,8 @@ async def read_sheet_from_chain(client: Any, sheet_name: str,
             binding = bindings.get(f.qualified_name) or {"state": "unbound", "links": []}
             if binding.get("state") == "bound" and binding.get("report_name"):
                 placement = EgeriaPlacement(ref=binding["report_name"], span=span, emphasis=style,
-                                            perspectives=perspectives, detail_spec=detail_spec, kind="report")
+                                            perspectives=perspectives, detail_spec=detail_spec, kind="report",
+                                            report_guid=binding.get("report_guid"))
             else:
                 if binding.get("state") == "ambiguous":
                     notes.insert(0, f"{len(binding['links'])} reports are linked to this placement in Egeria; "
@@ -216,7 +222,8 @@ async def read_sheet_from_chain(client: Any, sheet_name: str,
                 else:
                     notes.insert(0, REPORT_LINK_MISSING)
                 placement = EgeriaPlacement(ref=f.display_name, span=span, emphasis=style,
-                                            perspectives=perspectives, detail_spec=detail_spec, kind="missing")
+                                            perspectives=perspectives, detail_spec=detail_spec, kind="missing",
+                                            report_guid=f_extra.get("reportGUID") or None)
         if notes:
             placement.note = "; ".join(notes)
         sheet.placements.append(placement)
@@ -296,6 +303,20 @@ def list_dashboard_sheets(client: Any = None) -> List[EgeriaDashboardSheet]:
     async def _go():
         return await async_list_dashboard_sheets(client or await _signed_in_client())
     return run_sync(_go())
+
+
+# ---------------------------------------------------------------------------- the data step (B4 / D4)
+
+async def async_resolve_dashboard_sheet(client: Any, name: str, **kwargs: Any):
+    """The shared dashboard data step; see pyegeria.view.dashboard_resolver."""
+    from pyegeria.view.dashboard_resolver import async_resolve_dashboard_sheet as _resolve
+    return await _resolve(client, name, **kwargs)
+
+
+def resolve_dashboard_sheet(client: Any, name: str, **kwargs: Any):
+    """Sync form of async_resolve_dashboard_sheet; see pyegeria.view.dashboard_resolver."""
+    from pyegeria.view.dashboard_resolver import resolve_dashboard_sheet as _resolve
+    return _resolve(client, name, **kwargs)
 
 
 # ---------------------------------------------------------------------------- migration
