@@ -335,6 +335,31 @@ def _get_mermaid_graph_value(element: dict, key: str | None) -> Any:
     return None
 
 
+def _zone_membership_text(header: Any) -> str:
+    """The zones an element is in, as one string ("a, b"); "" when it is in none.
+
+    Egeria v6 returns them as an ElementClassification at
+    elementHeader.zoneMembership (its classificationProperties.zoneMembership is
+    a list, or a single string), not in properties or elementHeader.classifications.
+    An older header that lists a ZoneMembership entry in classifications is read too.
+    """
+    if not isinstance(header, dict):
+        return ""
+    candidates = [header.get("zoneMembership")]
+    for item in header.get("classifications") or []:
+        if isinstance(item, dict) and item.get("classificationName") == "ZoneMembership":
+            candidates.append(item)
+    for cls in candidates:
+        if not isinstance(cls, dict):
+            continue
+        zones = (cls.get("classificationProperties") or {}).get("zoneMembership")
+        if isinstance(zones, str):
+            zones = [zones]
+        if isinstance(zones, (list, tuple)):
+            return ", ".join(str(z) for z in zones if z not in (None, ""))
+    return ""
+
+
 def _extract_referenceable_properties(element: dict[str, Any]) -> dict[str, Any]:
     # Get general header attributes
     guid = element.get('elementHeader', {}).get("guid", None)
@@ -417,6 +442,7 @@ def _extract_referenceable_properties(element: dict[str, Any]) -> dict[str, Any]
         "content_status": contentStatus,
         "activity_status": activityStatus,
         "deployment_status": deploymentStatus,
+        "zone_membership": _zone_membership_text(element.get('elementHeader')),
         }
 
 
@@ -1909,6 +1935,12 @@ def populate_common_columns(
                 column['value'] = val
                 continue
                 
+        # 0a) Zone Membership: v6 keeps it as an ElementClassification in the header;
+        # show the zones as one string, never the classification object.
+        if key == 'zone_membership' and not props.get('zoneMembership'):
+            column['value'] = _zone_membership_text(header)
+            continue
+
         # 1) Try properties (camelCase conversion)
         key_camel = to_camel_case(key)
         if key_camel in props:
