@@ -17,7 +17,7 @@ from typing import Unpack
 from pyegeria.core.request_filters import deprecated_names
 from pyegeria.core.request_filters import ListFilters
 from pyegeria.core.request_filters import filter_body_kwargs
-from pyegeria.core._exceptions import PyegeriaInvalidParameterException
+from pyegeria.core._exceptions import PyegeriaInvalidParameterException, PyegeriaNotFoundException
 from pyegeria.core._globals import NO_ELEMENTS_FOUND, NO_GUID_RETURNED
 from pyegeria.view.base_report_formats import select_report_spec, get_report_spec_match
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
@@ -1186,6 +1186,36 @@ class CollectionManager(ServerClient):
         )
 
 
+    async def _resolve_collection_guid(self, collection_name: Optional[str] = None,
+                                       collection_qname: Optional[str] = None) -> str:
+        """The GUID of the collection with this qualifiedName (tried first) or display name.
+
+        Raises PyegeriaInvalidParameterException when neither is given, and PyegeriaNotFoundException
+        (relatedHTTPCode 404) when nothing matches. The shared __async_get_guid__ helper is not used
+        alone here: a qualifiedName it can't find surfaced as "Neither server_guid nor server_name
+        were provided", and a display name it can't find came back as the string NO_ELEMENTS_FOUND,
+        which was then put in the URL as if it were a GUID.
+        """
+        if not (collection_qname or collection_name):
+            raise PyegeriaInvalidParameterException(None, None, {
+                "reason": "Give collection_guid, collection_qname or collection_name."})
+        guid = None
+        if collection_qname:
+            try:
+                guid = await self.__async_get_guid__(None, None, "qualifiedName", collection_qname, None)
+            except PyegeriaInvalidParameterException:
+                guid = None   # not found: the helper falls through to its "nothing given" error
+        if (not guid or guid == NO_ELEMENTS_FOUND) and collection_name:
+            guid = await self.__async_get_guid__(None, collection_name, "displayName", None, None)
+        if not guid or guid == NO_ELEMENTS_FOUND:
+            named = collection_qname or collection_name
+            raise PyegeriaNotFoundException(None, None, {
+                "reason": f"The collection {named!r} was not found.",
+                "relatedHTTPCode": 404,
+                "collection": named,
+            })
+        return guid
+
     @dynamic_catch
     async def _async_get_collection_members(self, collection_guid: Optional[str] = None, collection_name: Optional[str] = None,
                                             collection_qname: Optional[str] = None, body: Optional[dict | ResultsRequestBody] = None, start_from: int = 0,
@@ -1196,14 +1226,14 @@ class CollectionManager(ServerClient):
         Parameters
         ----------
         collection_guid: str,
-            identity of the collection to return members for. If none, collection_name or
-            collection_qname are used.
+            identity of the collection to return members for. Used only when neither
+            collection_qname nor collection_name is given.
         collection_name: str,
-            display the name of the collection to return members for. If none, collection_guid
-            or collection_qname are used.
+            display name of the collection to return members for. Used when collection_qname
+            is not given or matches nothing; wins over collection_guid.
         collection_qname: str,
-            qualified name of the collection to return members for. If none, collection_guid
-            or collection_name are used.
+            qualified name of the collection to return members for. Wins over collection_name
+            and collection_guid (a GUID goes stale when the collection is re-created).
         body: dict, optional, default = None
             Providing the body allows full control of the request and replaces filter parameters.
         start_from: int, [default=0], optional
@@ -1249,9 +1279,17 @@ class CollectionManager(ServerClient):
 
         """
 
-        if collection_guid is None:
-            collection_guid = self.__get_guid__(collection_guid, collection_name, "displayName",
-                                                collection_qname, None, )
+        # A name wins over a GUID (qualifiedName > display name > GUID): a Report that carries both, e.g. a
+        # stale collectionGuid left beside a newer collectionQname by a merge update, must follow the name.
+        # A GUID-only call is unchanged.
+        if collection_qname or collection_name:
+            resolved = await self._resolve_collection_guid(collection_name, collection_qname)
+            if collection_guid and collection_guid != resolved:
+                logger.info(f"get_collection_members: collection_guid {collection_guid} ignored; "
+                            f"{collection_qname or collection_name!r} names {resolved}")
+            collection_guid = resolved
+        elif not collection_guid:
+            collection_guid = await self._resolve_collection_guid(None, None)   # raises: nothing given
 
         url = str(HttpUrl(f"{self.collection_command_root}/{collection_guid}/members"))
 
@@ -1276,14 +1314,14 @@ class CollectionManager(ServerClient):
         Parameters
         ----------
         collection_guid: str,
-            identity of the collection to return members for. If none, collection_name or
-            collection_qname are used.
+            identity of the collection to return members for. Used only when neither
+            collection_qname nor collection_name is given.
         collection_name: str,
-            display the name of the collection to return members for. If none, collection_guid
-            or collection_qname are used.
+            display name of the collection to return members for. Used when collection_qname
+            is not given or matches nothing; wins over collection_guid.
         collection_qname: str,
-            qualified name of the collection to return members for. If none, collection_guid
-            or collection_name are used.
+            qualified name of the collection to return members for. Wins over collection_name
+            and collection_guid (a GUID goes stale when the collection is re-created).
         body: dict, optional, default = None
             Providing the body allows full control of the request and replaces filter parameters.
         start_from: int, [default=0], optional

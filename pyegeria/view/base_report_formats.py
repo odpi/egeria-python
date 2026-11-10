@@ -2465,8 +2465,11 @@ base_report_specs = FormatSetDict({
         formats=[COLLECTION_DICT, COLLECTION_TABLE],
         action=ActionParameter(
             function="CollectionManager.get_collection_members",
-            required_params=["collection_guid"],
-            optional_params=OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS + ["body"],
+            # One of the three names the collection. A Report should pin it by qualifiedName
+            # (collection_qname): a GUID goes stale when the collection is re-created (W1).
+            required_params=[],
+            optional_params=["collection_guid", "collection_qname", "collection_name"]
+                            + OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS + ["body"],
             spec_params={"output_format": "DICT"},
         )
     ),
