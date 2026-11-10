@@ -172,6 +172,7 @@ re-test candidates moved into *Awaiting re-test* below the open sections.
   create-from-template) and 7 (`viewElementGUID`) are still open.
 
 **Open pyegeria items**
+- ISSUE-182: an element hidden by zone security (403-020) is reported as AUTHORIZATION_ERROR_401 (filed 2026-11-10, no fix yet)
 - ISSUE-181 (HIGH): Dr.Egeria Parent ID on an Update deleted an unrelated relationship of the parent type, e.g. a folder's member (fixed for 6.2.32; moves to the Appendix on release)
 - ISSUE-174: link methods discarded the new relationship GUID (fixed for 6.2.19; moves to the Appendix on release)
 - ISSUE-155: pyegeria gaps against Egeria `main` since 6.2 (omvs_audit + source diff, V6.2..05a5e982)
@@ -193,6 +194,46 @@ Dr.Egeria-side work each will need once that capability ships is written
 into the entry now, so it isn't rediscovered from scratch later.
 
 ---
+
+### ISSUE-182: an element hidden by zone security is reported as "AUTHORIZATION_ERROR_401"
+
+**Layer:** pyegeria · **Severity:** medium: misleading diagnosis, no wrong data · **Status:** open (filed only; no fix requested yet) · **Found:** 2026-11-10 on 6.2.32 (laz), reading a Report zoned `['peterprofile']` as erinoverview; the Architect confirmed `is_not_visible_error` is True for it.
+
+**What:** `get_element_by_guid` as erinoverview on that Report, through `BaseServerClient._async_get_element_by_guid_`, logs a banner that starts:
+
+```
+=> AUTHORIZATION_ERROR_401
+=> User not authorized received for user - `erinoverview`.
+```
+
+Egeria actually said something different. The reply was wrapped in HTTP 200, with `relatedHTTPCode` 403, `OPEN-METADATA-SECURITY-403-020` and `exceptionClassName` …`UserNotAuthorizedException`: the element is in a zone this user can't see. Those fields appear lower down, under "Egeria error information", but the first two lines say 401.
+
+**Why it happens:**
+- `_base_server_client._async_make_request` raises `PyegeriaUnauthorizedException` for two different failures:
+  - a transport 401 (a bad or expired token);
+  - an Egeria-wrapped 401/403 whose exception is a `UserNotAuthorizedException` (`_is_authorization_failure`).
+- `PyegeriaUnauthorizedException.__init__` (`pyegeria/core/_exceptions.py`) always uses `PyegeriaErrorCode.AUTHORIZATION_ERROR`, whose `http_code` is 401 and `message_id` is `AUTHORIZATION_ERROR_401`. The `message_id` becomes `pyegeria_code`, the banner's first line, whatever Egeria returned.
+
+**Why it matters:** the two need opposite responses.
+- A 401 means "re-authenticate": get a new token or check the credentials. The error's own `user_action` says the same.
+- A 403-020 means "this element is hidden from you by zone security": a new token changes nothing.
+
+An operator reading the banner chases credentials. In the Portal, one zoned Report on a Dashboard Sheet then looks like a broken sign-in.
+
+Related: `PyegeriaErrorCode` labels 401 `AUTHORIZATION_ERROR` and 403 `AUTHENTICATION_ERROR`, which is the wrong way round. A 401 is unauthenticated; a 403 is authenticated but not permitted.
+
+**Proposed fix:**
+- Build the banner from what Egeria returned. When `additional_info` carries `relatedHTTPCode` / `exceptionErrorMessageId`, the first lines would read, for example, "403 OPEN-METADATA-SECURITY-403-020: not visible to user `erinoverview`", followed by Egeria's own message and user action.
+- Keep `AUTHORIZATION_ERROR_401` and its "check your credentials" action only for a real transport 401.
+- Keep the exception class (`PyegeriaUnauthorizedException`, a `PyegeriaAPIException`) and `related_http_code` unchanged, so callers don't break. That covers the 401 retry in `_async_make_request` and `dashboard_resolver.is_not_visible_error`, which already checks for 403.
+- Optionally, distinguish the two cases on the exception itself (e.g. `e.not_visible` or `e.message_id`), so callers don't have to parse text.
+
+**Test to add:** an Egeria-wrapped 200 response with `relatedHTTPCode` 403, `exceptionClassName` `org.odpi.openmetadata.frameworks.openmetadata.ffdc.UserNotAuthorizedException` and `exceptionErrorMessageId` `OPEN-METADATA-SECURITY-403-020`. Check that:
+- the exception is still a `PyegeriaUnauthorizedException`;
+- `related_http_code` is 403;
+- `str(e)` names 403 and the message id and doesn't say `AUTHORIZATION_ERROR_401`.
+
+Also check that a bare transport 401 still says `AUTHORIZATION_ERROR_401` and its credentials action.
 
 ### ISSUE-181: Parent ID on an Update deletes an unrelated relationship of the parent type (e.g. a folder's member)
 
