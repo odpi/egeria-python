@@ -309,7 +309,10 @@ def test_semantic_grounding_counts_distinct_assets_not_links():
 def _column_assignment(i, column, asset, memento=False):
     end1 = {"guid": column, "type": {"typeName": "TabularColumn",
                                      "superTypeNames": ["SchemaAttribute", "SchemaElement", "Referenceable"]},
-            "anchor": {"anchorGUID": asset, "anchorTypeName": "CSVFile", "anchorDomainName": "Asset"}}
+            # as live: the anchor is an ElementClassification, its fields under classificationProperties
+            "anchor": {"class": "ElementClassification", "classificationName": "Anchors",
+                       "classificationProperties": {"class": "AnchorsProperties", "anchorGUID": asset,
+                                                    "anchorTypeName": "CSVFile", "anchorDomainName": "Asset"}}}
     if memento:
         end1["memento"] = {"classificationName": "Memento"}
     return {"relationshipHeader": {"guid": f"r{i}"}, "end1": end1,
@@ -321,8 +324,10 @@ def test_semantic_grounding_counts_the_asset_a_columns_term_grounds():
     # a deleted (memento) column of a3 grounds nothing; a process not anchored to an Asset counts for nothing.
     process = {"relationshipHeader": {"guid": "rp"},
                "end1": {"guid": "p1", "type": {"typeName": "SubscribingActionProcess", "superTypeNames": ["Referenceable"]},
-                        "anchor": {"anchorGUID": "p1", "anchorTypeName": "SubscribingActionProcess",
-                                   "anchorDomainName": "Referenceable"}},
+                        "anchor": {"class": "ElementClassification", "classificationName": "Anchors",
+                                   "classificationProperties": {"anchorGUID": "p1",
+                                                                "anchorTypeName": "SubscribingActionProcess",
+                                                                "anchorDomainName": "Referenceable"}}},
                "end2": {"guid": "tp", "type": {"typeName": "GlossaryTerm"}}}
     rels = [_column_assignment(0, "c1", "a1"), _column_assignment(1, "c2", "a1"),
             _column_assignment(2, "c3", "a2"), _column_assignment(3, "c4", "a3", memento=True), process]
@@ -334,6 +339,25 @@ def test_semantic_grounding_counts_the_asset_a_columns_term_grounds():
     assert result["groundedAssets"] == 2 and result["groundedAssetPct"] == 10
     assert result["groundedAssetNote"] is None
     assert result["groundingLinksNotOnAsset"] == 2   # the memento column and the process: shown, not dropped
+
+
+def test_semantic_grounding_on_live_relationship_ends():
+    import json
+    from pathlib import Path
+    live = json.loads((Path(__file__).parent / "data" / "semantic_assignment_live_ends_2026_11_11.json").read_text())
+    rels = live["relationships"]
+    column, process = rels[0]["end1"], rels[1]["end1"]
+    assert column["type"]["typeName"] == "TabularColumn" and process["type"]["typeName"] == "SubscribingActionProcess"
+    asset = column["anchor"]["classificationProperties"]["anchorGUID"]
+    assert om._grounded_asset_guid(column) == asset     # read from anchor.classificationProperties
+    assert om._grounded_asset_guid(process) is None      # anchored to a DigitalProduct, not an Asset
+    mgr = _mgr(count_metadata_elements=MagicMock(return_value=50),
+               count_relationships_between_elements=MagicMock(return_value=2))
+    ce = MagicMock()
+    ce.get_relationships.side_effect = _pages(rels)
+    result = om.semantic_grounding(mgr, ce)
+    assert result["groundedAssets"] == 1 and result["groundedAssetPct"] == 2
+    assert result["groundingLinksNotOnAsset"] == 1 and result["groundingLinksScanned"] == 2
 
 
 def test_semantic_grounding_asset_itself_and_its_columns_count_once():

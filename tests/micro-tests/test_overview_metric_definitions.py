@@ -37,6 +37,6 @@ def test_semantic_grounding_spec_names_distinct_assets_and_keeps_links_apart():
     assert "on it or on any of its parts (tables, columns)" in text  # owner's definition
     assert "links, not Assets" in text
     returns = get_analytic_registry()["semantic_grounding"].returns
-    for field in ("groundedAssets", "groundedAssetTotal", "groundedAssetPct", "groundedAssetNote", "groundingLinksNotOnAsset",
+    for field in ("groundedAssets", "groundedAssetTotal", "groundedAssetPct", "groundedAssetNote", "groundingLinksScanned", "groundingLinksNotOnAsset",
                   "groundingLinks", "groundingPct"):
         assert field in returns

@@ -185,7 +185,8 @@ _DEMOS: Dict[str, FormatSet] = {
         what="groundedAssets = the number of DISTINCT Assets with a glossary term on it or on any of its "
              "parts (tables, columns): a SemanticAssignment on the Asset itself, or on an element anchored to "
              "it, counts that Asset once. A deleted element grounds nothing. groundingLinksNotOnAsset = the "
-             "links that ground no Asset (a term on a process, say). groundedAssetPct = that number as a percent of all Assets "
+             "links that ground no Asset (a term on a process, say); groundingLinksScanned = the links "
+             "the scan read (the ones you can see, so it can be below groundingLinks). groundedAssetPct = that number as a percent of all Assets "
              "(groundedAssetTotal). Both are what you can see: the count comes from a scan of every "
              "SemanticAssignment, and the total is counted in the same population, so groundedAssetPct "
              "is empty, and groundedAssetNote says why, when your Asset total cannot be counted -- never "
@@ -197,7 +198,7 @@ _DEMOS: Dict[str, FormatSet] = {
         analytic_function_name="semantic_grounding",
         demo_params={},
         result_shape="dict (groundedAssets, groundedAssetTotal, groundedAssetPct, groundedAssetNote, "
-                     "groundingLinksNotOnAsset, groundingLinks, groundingPct)",
+                     "groundingLinksScanned, groundingLinksNotOnAsset, groundingLinks, groundingPct)",
     ),
     "Analytic Demo - AI Context Readiness": _demo(
         heading="AI Context Readiness Funnel",

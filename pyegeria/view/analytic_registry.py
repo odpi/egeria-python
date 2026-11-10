@@ -1197,7 +1197,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                     "Cost: two native counts (sub-second), a relationship scan (one read per 500 links) and a "
                     "viewer Asset count beside it (slow on a large catalog: it can time out).",
         returns="dict (groundedAssets, groundedAssetTotal, groundedAssetPct, groundedAssetNote, "
-                "groundingLinksNotOnAsset, groundingLinks, groundingPct)",
+                "groundingLinksScanned, groundingLinksNotOnAsset, groundingLinks, groundingPct)",
         generic=False,
         binding_note="Fixed to the SemanticAssignment relationship type -- not a parameter.",
         params=[_as_of()],
@@ -1230,6 +1230,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                 _field("groundedAssetTotal", "Assets you can see", "int", unit="Assets"),
                 _field("groundedAssetPct", "Share of Assets grounded", "int", unit="percent"),
                 _field("groundedAssetNote", "Why the share is empty", "string"),
+                _field("groundingLinksScanned", "Term links you can see (scanned)", "int", unit="relationships"),
                 _field("groundingLinksNotOnAsset", "Term links not on an Asset", "int", unit="relationships"),
                 _field("groundingLinks", "Grounding links", "int", unit="relationships"),
                 _field("groundingPct", "Links per hundred Assets", "int", unit="percent"),

@@ -1305,8 +1305,12 @@ def _grounded_asset_guid(end: Dict[str, Any]) -> Optional[str]:
     if "Asset" in ({end_type.get("typeName")} | set(end_type.get("superTypeNames") or [])):
         return end.get("guid") or None
     anchor = end.get("anchor") or {}
-    if isinstance(anchor, dict) and anchor.get("anchorDomainName") == "Asset":
-        return anchor.get("anchorGUID") or None
+    if not isinstance(anchor, dict):
+        return None
+    # An ElementClassification: its fields are under classificationProperties (a bare dict is accepted too).
+    props = anchor.get("classificationProperties") or anchor
+    if isinstance(props, dict) and props.get("anchorDomainName") == "Asset":
+        return props.get("anchorGUID") or None
     return None
 
 
@@ -1326,7 +1330,10 @@ def semantic_grounding(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Any]:
       page): an Asset-typed end counts as itself, any other end as the Asset
       its `anchor` names (no extra reads), and a deleted (`memento`) end not
       at all. `groundingLinksNotOnAsset` counts the scanned links that
-      ground no Asset (a term on a process, say), so none silently drop out. A scan sees only what the caller may see, so the
+      ground no Asset (a term on a process, say), so none silently drop out.
+      `groundingLinksScanned` is the number of links the scan read: the links
+      you can see. It can be below `groundingLinks`, the native repository
+      count, by the links you cannot see; it is never added to it. A scan sees only what the caller may see, so the
       Asset total it divides by is counted in the same, viewer population
       (`groundedAssetTotal`), on its own thread while the scan pages. When
       that total cannot be measured (it times out on a large catalog),
@@ -1343,7 +1350,8 @@ def semantic_grounding(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Any]:
 
     Returns {"groundedAssets": int|None, "groundedAssetTotal": int|None,
     "groundedAssetPct": int|None, "groundedAssetNote": str|None,
-    "groundingLinksNotOnAsset": int|None, "groundingLinks": int|None,
+    "groundingLinksScanned": int|None, "groundingLinksNotOnAsset": int|None,
+    "groundingLinks": int|None,
     "groundingPct": int|None}.
     """
     pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="grounding-assets")
@@ -1357,6 +1365,7 @@ def semantic_grounding(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Any]:
 
     grounded = None
     links_not_on_asset = None
+    links_scanned = None
     try:
         rels = _all_relationships(ce, "SemanticAssignment", as_of)  # every page: one page is not the set
         if rels is not None:
@@ -1370,6 +1379,7 @@ def semantic_grounding(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Any]:
                     off_asset += 1  # e.g. a term on a process: reported, never silently dropped
             grounded = len(assets)
             links_not_on_asset = off_asset
+            links_scanned = len(rels)
     except Exception as exc:  # noqa: BLE001
         logger.debug(f"semantic_grounding: SemanticAssignment scan failed: {exc}")
         _not_measured("SemanticAssignment relationships", f"the scan failed ({type(exc).__name__})")
@@ -1393,7 +1403,8 @@ def semantic_grounding(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Any]:
     elif asset_total == 0:
         note = "The share of Assets grounded is empty: you can see no Assets."
     return {"groundedAssets": grounded, "groundedAssetTotal": asset_total, "groundedAssetPct": grounded_pct,
-            "groundedAssetNote": note, "groundingLinksNotOnAsset": links_not_on_asset,
+            "groundedAssetNote": note, "groundingLinksScanned": links_scanned,
+            "groundingLinksNotOnAsset": links_not_on_asset,
             "groundingLinks": links, "groundingPct": pct}
 
 

@@ -265,7 +265,7 @@ def test_end_to_end_a_two_client_routine_gets_the_callers_one_client_in_both_slo
     finally:
         om_spy.undo()
     assert result["kind"] == "json" and set(result["data"]) == {
-        "groundedAssets", "groundedAssetTotal", "groundedAssetPct", "groundedAssetNote", "groundingLinksNotOnAsset",
+        "groundedAssets", "groundedAssetTotal", "groundedAssetPct", "groundedAssetNote", "groundingLinksScanned", "groundingLinksNotOnAsset",
         "groundingLinks", "groundingPct"}
     assert len(fake_tech) == 1 and fake_tech[0].tokens == ["caller-token"] and fake_tech[0].minted == 0
     assert seen["mgr"] is seen["ce"] is fake_tech[0]
