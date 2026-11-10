@@ -26,3 +26,20 @@ compact-spec `family`.
 These files are generated — don't hand-edit them; re-run
 `gen_md_cmd_templates` after changing a compact command spec instead (see
 the root `CLAUDE.md`'s "Key CLI tools" section).
+
+## Shipped in the pyegeria wheel
+
+`basic/` and `advanced/` here are also the templates installed with
+pyegeria: `setup.py`'s `build_py` hook copies them into
+`md_processing/data/templates/{basic,advanced}/` in the wheel (the sdist
+carries them via `MANIFEST.in`). This folder stays the only copy in git.
+Read them through the accessor rather than by path, so a consumer always
+gets the templates that match the installed Dr.Egeria executor:
+
+```python
+from md_processing.templates import list_templates, read_template, templates_source
+
+list_templates("basic")                      # [TemplateInfo(family, command, ...), ...]
+read_template("Create Glossary", "advanced")  # markdown text
+templates_source("basic")                    # "package" (wheel) or "checkout" (source / editable)
+```

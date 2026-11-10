@@ -869,7 +869,7 @@ def main(commands_json, output_path, emit, merge, list_names, usage_level):
                 _merge_generated_sets_and_report_status(sets)
         elif emit == "code":
             output_file = output_path or Prompt.ask(
-                "Output Python File:", default="pyegeria/dr_egeria_reports.py"
+                "Output Python File:", default="pyegeria/view/dr_egeria_reports.py"
             )
             code = format_sets_to_python_code(sets)
             Path(output_file).parent.mkdir(parents=True, exist_ok=True)
