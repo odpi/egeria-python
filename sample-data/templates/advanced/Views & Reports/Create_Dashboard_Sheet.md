@@ -1,6 +1,7 @@
 ___
 
 ## Create Dashboard Sheet
+> Creates or updates a Dashboard Sheet: a named, ordered layout of report and text placements, held in Egeria as a Dashboard with its layout (a DisplayDataSchemaType, the sheet's DisplayDataContainer, and one DisplayDataField per placement). Re-running it updates the sheet in place. The local JSON store (PYEGERIA_DASHBOARD_SHEETS_STORE) is a fallback: with --local-only or no Egeria connection, only the store is written, and the command output says so.
 >
 >	**Alternative Names**: Sheet
 
@@ -418,6 +419,14 @@ ___
 >	**Attribute Type**: Simple
 
 >	**Description**: A user defined content status = only valid if content status is OTHER.
+
+
+### Dashboard Owner
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: The userId that owns the sheet's Dashboard (its Ownership classification, owner type UserIdentity). Leave it empty for the user the command runs as (in the Portal, by default, its service user). Set once: a Dashboard that already has an owner keeps it. Not written to Egeria with --local-only or with no Egeria connection.
 
 
 ### User Defined Status

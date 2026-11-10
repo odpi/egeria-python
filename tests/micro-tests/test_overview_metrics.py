@@ -269,17 +269,129 @@ def test_certifications_summary_degrades_on_failure():
 
 # ── semantic_grounding ────────────────────────────────────────────────────
 
+def _assignment(i, asset, end1_type=("CSVFile", ["DataFile", "Asset", "Referenceable"])):
+    type_name, supers = end1_type
+    return {"relationshipHeader": {"guid": f"r{i}"},
+            "end1": {"guid": asset, "type": {"typeName": type_name, "superTypeNames": supers}},
+            "end2": {"guid": f"t{i}", "type": {"typeName": "GlossaryTerm", "superTypeNames": ["Referenceable"]}}}
+
+
 def test_semantic_grounding_computes_percent():
     mgr = _mgr(count_metadata_elements=MagicMock(return_value=100),
                count_relationships_between_elements=MagicMock(return_value=61))
     ce = MagicMock()
+    ce.get_relationships.side_effect = _pages([])
     result = om.semantic_grounding(mgr, ce)
     assert result["groundingLinks"] == 61
     assert result["groundingPct"] == 61
-    # both counts in the repository population; the relationship count goes through mgr (R4)
-    assert mgr.count_metadata_elements.call_args.kwargs == {"push_down": True}
+    # links: both native counts in the repository population; the relationship count goes through mgr (R4).
+    # grounded Assets: the Asset total in the viewer population (the scan's own population).
+    assert sorted(c.kwargs["push_down"] for c in mgr.count_metadata_elements.call_args_list) == [False, True]
     assert mgr.count_relationships_between_elements.call_args.kwargs == {"push_down": True}
-    ce.get_relationships.assert_not_called()
+
+
+def test_semantic_grounding_counts_distinct_assets_not_links():
+    # 6 links: asset a1 three times, a2 twice, and one link to a non-Asset (a glossary category)
+    rels = [_assignment(0, "a1"), _assignment(1, "a1"), _assignment(2, "a1"), _assignment(3, "a2"),
+            _assignment(4, "a2"), _assignment(5, "c1", ("GlossaryCategory", ["Referenceable"]))]
+    mgr = _mgr(count_metadata_elements=MagicMock(return_value=40),
+               count_relationships_between_elements=MagicMock(return_value=6))
+    ce = MagicMock()
+    ce.get_relationships.side_effect = _pages(rels)
+    result = om.semantic_grounding(mgr, ce)
+    assert result["groundedAssets"] == 2          # distinct Assets, not 6 links
+    assert result["groundingLinksNotOnAsset"] == 1  # the glossary-category link
+    assert result["groundedAssetTotal"] == 40         # the viewer Asset total
+    assert result["groundedAssetPct"] == 5            # 2 / 40
+    assert result["groundingLinks"] == 6 and result["groundingPct"] == 15   # links per hundred Assets
+
+
+def _column_assignment(i, column, asset, memento=False):
+    end1 = {"guid": column, "type": {"typeName": "TabularColumn",
+                                     "superTypeNames": ["SchemaAttribute", "SchemaElement", "Referenceable"]},
+            # as live: the anchor is an ElementClassification, its fields under classificationProperties
+            "anchor": {"class": "ElementClassification", "classificationName": "Anchors",
+                       "classificationProperties": {"class": "AnchorsProperties", "anchorGUID": asset,
+                                                    "anchorTypeName": "CSVFile", "anchorDomainName": "Asset"}}}
+    if memento:
+        end1["memento"] = {"classificationName": "Memento"}
+    return {"relationshipHeader": {"guid": f"r{i}"}, "end1": end1,
+            "end2": {"guid": f"t{i}", "type": {"typeName": "GlossaryTerm", "superTypeNames": ["Referenceable"]}}}
+
+
+def test_semantic_grounding_counts_the_asset_a_columns_term_grounds():
+    # As live: terms on Assets' columns, never on Assets. Columns c1, c2 of a1 and c3 of a2 ground 2 Assets;
+    # a deleted (memento) column of a3 grounds nothing; a process not anchored to an Asset counts for nothing.
+    process = {"relationshipHeader": {"guid": "rp"},
+               "end1": {"guid": "p1", "type": {"typeName": "SubscribingActionProcess", "superTypeNames": ["Referenceable"]},
+                        "anchor": {"class": "ElementClassification", "classificationName": "Anchors",
+                                   "classificationProperties": {"anchorGUID": "p1",
+                                                                "anchorTypeName": "SubscribingActionProcess",
+                                                                "anchorDomainName": "Referenceable"}}},
+               "end2": {"guid": "tp", "type": {"typeName": "GlossaryTerm"}}}
+    rels = [_column_assignment(0, "c1", "a1"), _column_assignment(1, "c2", "a1"),
+            _column_assignment(2, "c3", "a2"), _column_assignment(3, "c4", "a3", memento=True), process]
+    mgr = _mgr(count_metadata_elements=MagicMock(return_value=20),
+               count_relationships_between_elements=MagicMock(return_value=5))
+    ce = MagicMock()
+    ce.get_relationships.side_effect = _pages(rels)
+    result = om.semantic_grounding(mgr, ce)
+    assert result["groundedAssets"] == 2 and result["groundedAssetPct"] == 10
+    assert result["groundedAssetNote"] is None
+    assert result["groundingLinksNotOnAsset"] == 2   # the memento column and the process: shown, not dropped
+
+
+def test_semantic_grounding_on_live_relationship_ends():
+    import json
+    from pathlib import Path
+    live = json.loads((Path(__file__).parent / "data" / "semantic_assignment_live_ends_2026_11_11.json").read_text())
+    rels = live["relationships"]
+    column, process = rels[0]["end1"], rels[1]["end1"]
+    assert column["type"]["typeName"] == "TabularColumn" and process["type"]["typeName"] == "SubscribingActionProcess"
+    asset = column["anchor"]["classificationProperties"]["anchorGUID"]
+    assert om._grounded_asset_guid(column) == asset     # read from anchor.classificationProperties
+    assert om._grounded_asset_guid(process) is None      # anchored to a DigitalProduct, not an Asset
+    mgr = _mgr(count_metadata_elements=MagicMock(return_value=50),
+               count_relationships_between_elements=MagicMock(return_value=2))
+    ce = MagicMock()
+    ce.get_relationships.side_effect = _pages(rels)
+    result = om.semantic_grounding(mgr, ce)
+    assert result["groundedAssets"] == 1 and result["groundedAssetPct"] == 2
+    assert result["groundingLinksNotOnAsset"] == 1 and result["groundingLinksScanned"] == 2
+
+
+def test_semantic_grounding_asset_itself_and_its_columns_count_once():
+    # a term on the CSV file asset a1 itself, and on two columns of a1's table: one Asset
+    rels = [_assignment(0, "a1"), _column_assignment(1, "c1", "a1"), _column_assignment(2, "c2", "a1")]
+    mgr = _mgr(count_metadata_elements=MagicMock(return_value=10),
+               count_relationships_between_elements=MagicMock(return_value=3))
+    ce = MagicMock()
+    ce.get_relationships.side_effect = _pages(rels)
+    result = om.semantic_grounding(mgr, ce)
+    assert result["groundedAssets"] == 1 and result["groundedAssetPct"] == 10
+    assert result["groundingLinksNotOnAsset"] == 0
+
+
+def test_semantic_grounding_share_is_not_measured_when_the_viewer_asset_total_is_not():
+    rels = [_assignment(0, "a1"), _assignment(1, "a2")]
+
+    def count(body, push_down=None, **kw):
+        if push_down is False:
+            raise TimeoutError("viewer count timed out")
+        return 100
+
+    mgr = _mgr(count_metadata_elements=MagicMock(side_effect=count),
+               count_relationships_between_elements=MagicMock(return_value=2))
+    mgr.find_metadata_elements.side_effect = lambda *a, **k: [{"elementHeader": {"guid": f"x{i}"}} for i in range(om.DEFAULT_CAP)]
+    ce = MagicMock()
+    ce.get_relationships.side_effect = _pages(rels)
+    with om.recording_unmeasured() as notes:
+        result = om.semantic_grounding(mgr, ce)
+    assert result["groundedAssets"] == 2           # the count always shows
+    assert result["groundedAssetTotal"] is None and result["groundedAssetPct"] is None   # never mixed populations
+    assert result["groundedAssetNote"].startswith("The share of Assets grounded was not measured")
+    assert any(n["count"] == "Asset" for n in notes)
+    assert result["groundingLinks"] == 2 and result["groundingPct"] == 2
 
 
 def test_semantic_grounding_handles_zero_cataloged():

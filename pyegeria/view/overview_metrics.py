@@ -1292,23 +1292,120 @@ def stale_assets(mgr, as_of: Optional[str] = None, days: int = 180) -> Dict[str,
     return {"staleCount": stale_count, "assetTotal": total}
 
 
+def _grounded_asset_guid(end: Dict[str, Any]) -> Optional[str]:
+    """The Asset a SemanticAssignment end grounds, or None.
+
+    The end itself when it is an Asset (its type, or one of its supertypes, is Asset); otherwise the
+    Asset it is anchored to, read from the `anchor` the relationship end carries (anchorDomainName
+    "Asset") -- live, terms are assigned to Assets' columns (TabularColumn), not to Assets directly.
+    An end carrying `memento` (deleted, visible only to lineage) grounds nothing."""
+    if not isinstance(end, dict) or end.get("memento"):
+        return None
+    end_type = end.get("type") or {}
+    if "Asset" in ({end_type.get("typeName")} | set(end_type.get("superTypeNames") or [])):
+        return end.get("guid") or None
+    anchor = end.get("anchor") or {}
+    if not isinstance(anchor, dict):
+        return None
+    # An ElementClassification: its fields are under classificationProperties (a bare dict is accepted too).
+    props = anchor.get("classificationProperties") or anchor
+    if isinstance(props, dict) and props.get("anchorDomainName") == "Asset":
+        return props.get("anchorGUID") or None
+    return None
+
+
 def semantic_grounding(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Any]:
     """
-    Semantic-grounding tally: `SemanticAssignment` relationships (term <->
-    asset), as a count and as a percentage of the broad `Asset` supertype
-    count -- the "meaning layer" that grounds AI context.
+    Semantic-grounding tally: how much of the catalog is linked to glossary
+    terms by `SemanticAssignment` -- the "meaning layer" that grounds AI context.
 
-    Both counts are native and in the repository population (the whole
-    repository, including elements the viewer may not be able to see), so the
-    percentage never divides one population by the other. `mgr` is the
-    MetadataExpert the repository relationship count needs.
+    Two measures, each in one population:
 
-    Returns {"groundingLinks": int|None, "groundingPct": int|None}.
+    - `groundedAssets` / `groundedAssetPct` (6.2.31): the number of
+      DISTINCT Assets grounded by a glossary term -- the Asset itself, or one
+      of its anchored elements such as a column, has a SemanticAssignment --
+      and that number as a percent of all Assets. Egeria cannot count the
+      distinct ends of a relationship type natively, so the count comes from a
+      scan of every SemanticAssignment (paged until Egeria returns an empty
+      page): an Asset-typed end counts as itself, any other end as the Asset
+      its `anchor` names (no extra reads), and a deleted (`memento`) end not
+      at all. `groundingLinksNotOnAsset` counts the scanned links that
+      ground no Asset (a term on a process, say), so none silently drop out.
+      `groundingLinksScanned` is the number of links the scan read: the links
+      you can see. It can be below `groundingLinks`, the native repository
+      count, by the links you cannot see; it is never added to it. A scan sees only what the caller may see, so the
+      Asset total it divides by is counted in the same, viewer population
+      (`groundedAssetTotal`), on its own thread while the scan pages. When
+      that total cannot be measured (it times out on a large catalog),
+      `groundedAssetPct` is None and `groundedAssetNote` says why: never a
+      viewer count over a repository total. An incomplete scan makes both
+      None, with a note too.
+    - `groundingLinks` / `groundingPct`: the native, repository-wide count of
+      SemanticAssignment relationships, and that count per hundred Assets
+      (the repository Asset total), at most 100. This is links, not Assets:
+      one Asset with three terms counts three times, and a link to a
+      non-Asset counts too. Kept for callers that read it.
+
+    `mgr` is the MetadataExpert the native counts need.
+
+    Returns {"groundedAssets": int|None, "groundedAssetTotal": int|None,
+    "groundedAssetPct": int|None, "groundedAssetNote": str|None,
+    "groundingLinksScanned": int|None, "groundingLinksNotOnAsset": int|None,
+    "groundingLinks": int|None,
+    "groundingPct": int|None}.
     """
+    pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="grounding-assets")
+    total_future = pool.submit(contextvars.copy_context().run, count_elements, mgr, "Asset", as_of,
+                               strict=True, population=SCOPE_VIEWER)
+    pool.shutdown(wait=False)
+
     cataloged = count_elements(mgr, "Asset", as_of, strict=True, population=SCOPE_REPOSITORY)
     links = count_relationships(ce, "SemanticAssignment", as_of, expert=mgr, population=SCOPE_REPOSITORY)
     pct = min(100, round(100 * links / cataloged)) if cataloged and links is not None else None
-    return {"groundingLinks": links, "groundingPct": pct}
+
+    grounded = None
+    links_not_on_asset = None
+    links_scanned = None
+    try:
+        rels = _all_relationships(ce, "SemanticAssignment", as_of)  # every page: one page is not the set
+        if rels is not None:
+            assets: set = set()
+            off_asset = 0
+            for r in rels:
+                found = [a for a in (_grounded_asset_guid(r.get(k) if isinstance(r, dict) else None)
+                                     for k in ("end1", "end2")) if a]
+                assets.update(found)
+                if not found:
+                    off_asset += 1  # e.g. a term on a process: reported, never silently dropped
+            grounded = len(assets)
+            links_not_on_asset = off_asset
+            links_scanned = len(rels)
+    except Exception as exc:  # noqa: BLE001
+        logger.debug(f"semantic_grounding: SemanticAssignment scan failed: {exc}")
+        _not_measured("SemanticAssignment relationships", f"the scan failed ({type(exc).__name__})")
+
+    try:
+        asset_total = total_future.result()
+    except Exception as exc:  # noqa: BLE001 -- count_elements does not raise; belt and braces
+        logger.debug(f"semantic_grounding: viewer Asset count failed: {exc}")
+        _not_measured("Asset", f"the count failed ({type(exc).__name__})")
+        asset_total = None
+
+    grounded_pct = (min(100, round(100 * grounded / asset_total))
+                    if grounded is not None and asset_total else None)
+    note = None
+    if grounded is None:
+        note = ("Grounded Assets were not measured: the scan of glossary-term assignments failed or was "
+                "incomplete.")
+    elif asset_total is None:
+        note = ("The share of Assets grounded was not measured: the total of Assets you can see could not be "
+                "counted (the count timed out, or it stopped at its page limit).")
+    elif asset_total == 0:
+        note = "The share of Assets grounded is empty: you can see no Assets."
+    return {"groundedAssets": grounded, "groundedAssetTotal": asset_total, "groundedAssetPct": grounded_pct,
+            "groundedAssetNote": note, "groundingLinksScanned": links_scanned,
+            "groundingLinksNotOnAsset": links_not_on_asset,
+            "groundingLinks": links, "groundingPct": pct}
 
 
 def context_readiness_funnel(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Optional[int]]:

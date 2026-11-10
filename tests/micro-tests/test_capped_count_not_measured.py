@@ -182,8 +182,11 @@ def test_semantic_grounding_no_longer_reports_500_links_100_percent():
     ce = MagicMock()
     ce.get_relationships.return_value = [{"guid": f"r{i}"} for i in range(CAP)]
     with om.recording_unmeasured() as notes:
-        assert om.semantic_grounding(mgr, ce) == {"groundingLinks": None, "groundingPct": None}
-    assert {n["count"] for n in notes} == {"Asset", "SemanticAssignment"}
+        r = om.semantic_grounding(mgr, ce)
+        assert r.pop("groundedAssetNote").startswith("Grounded Assets were not measured")
+        assert r == {"groundedAssets": None, "groundedAssetTotal": None, "groundedAssetPct": None, "groundingLinksScanned": None, "groundingLinksNotOnAsset": None, "groundingLinks": None, "groundingPct": None}
+    # the native link count and Asset counts, and the distinct-Asset scan (which saw one page again)
+    assert {n["count"] for n in notes} == {"Asset", "SemanticAssignment", "SemanticAssignment relationships"}
 
 
 def test_counts_by_type_and_its_sum_never_add_a_lower_bound_into_a_total():
@@ -298,8 +301,10 @@ def test_no_chart_is_drawn_over_an_unmeasured_count(fmt):
 
 def test_semantic_grounding_spec_reports_nulls_and_why():
     out = _exec("Analytic Demo - Semantic Grounding")
-    assert out["data"] == {"groundingLinks": None, "groundingPct": None}
-    assert {n["count"] for n in out["unmeasured"]} == {"Asset", "SemanticAssignment"}
+    assert out["data"].pop("groundedAssetNote").startswith("Grounded Assets were not measured")
+    assert out["data"] == {"groundedAssets": None, "groundedAssetTotal": None, "groundedAssetPct": None, "groundingLinksScanned": None, "groundingLinksNotOnAsset": None, "groundingLinks": None, "groundingPct": None}
+    assert {n["count"] for n in out["unmeasured"]} == {"Asset", "SemanticAssignment",
+                                                        "SemanticAssignment relationships"}
     rel = next(n for n in out["unmeasured"] if n["count"] == "SemanticAssignment")
     assert rel["reason"].startswith("no native relationship count is available")
 

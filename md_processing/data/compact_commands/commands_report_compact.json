@@ -105,7 +105,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "The unique name of a Dashboard Sheet \u2014 a local pyegeria-managed record (planned to become a Collection subtype in Egeria; see Container/ContainerDict in pyegeria.view._output_container_models for the current pre-Egeria model). Used both to define a new Dashboard Sheet's identity (Create Dashboard Sheet) and to reference an existing one (Link Report to Dashboard Sheet).",
+      "description": "The unique name of a Dashboard Sheet, held in Egeria as a Dashboard with its layout (a DisplayDataSchemaType, the sheet's DisplayDataContainer, and one DisplayDataField per placement). Used both to name a new Dashboard Sheet (Create Dashboard Sheet) and to refer to an existing one (Link Report to Dashboard Sheet, Add Text on Dashboard Sheet).",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -114,7 +114,7 @@
       "min_cardinality": 1,
       "max_cardinality": 1,
       "level": "Basic",
-      "Journal Entry": "The unique name of a Container \u2014 a local pyegeria-managed record (see Container/ContainerDict in pyegeria.view._output_container_models), not an Egeria element. Used both to define a new Container's identity (Create Container) and to reference an existing one (Link Report to Container)."
+      "Journal Entry": "The unique name of a Container \u2014 a local pyegeria-managed record (see Container/ContainerDict in pyegeria.view._output_container_models), not an Egeria element. Used both to define a new Container's identity (Create Container) and to reference an existing one (Link Report to Container). 2026-11-10: wording updated -- since 6.2.29 the sheet is held in Egeria (\u00a78d chain); the local store is a fallback."
     },
     "Effective Time": {
       "variable_name": "effective_time",
@@ -295,7 +295,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "Markdown text to display at this placement \u2014 section headers, explanations, captions. Rendered as-is (mermaid fences supported), no Egeria element involved.",
+      "description": "Markdown text to display at this placement -- section headers, explanations, captions. Rendered as-is (mermaid fences supported). Held in Egeria as the placement's markdownContent.",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -1028,6 +1028,25 @@
       "max_cardinality": 1,
       "level": "Basic",
       "Journal Entry": "2026-11-07 -- Egeria 6.3 report specs / measurements / dashboards (odpi/egeria#9432)."
+    },
+    "Dashboard Owner": {
+      "variable_name": "dashboard_owner",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "The userId that owns the sheet's Dashboard (its Ownership classification, owner type UserIdentity). Leave it empty for the user the command runs as (in the Portal, by default, its service user). Set once: a Dashboard that already has an owner keeps it. Not written to Egeria with --local-only or with no Egeria connection.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Advanced",
+      "Journal Entry": "2026-11-10: added -- Create Dashboard Sheet sets Ownership the way `pyegeria.view.dashboards migrate --owner` does (DB-3)."
     }
   },
   "bundles": {
@@ -1172,6 +1191,7 @@
     "Dashboard Sheet Base": {
       "inherits": "Collection Base",
       "own_attributes": [
+        "Dashboard Owner",
         "Dashboard Sheet Description",
         "Dashboard Sheet Family",
         "Dashboard Sheet Heading"
@@ -1313,7 +1333,7 @@
         "Sheet"
       ],
       "family": "Views & Reports",
-      "description": "",
+      "description": "Creates or updates a Dashboard Sheet: a named, ordered layout of report and text placements, held in Egeria as a Dashboard with its layout (a DisplayDataSchemaType, the sheet's DisplayDataContainer, and one DisplayDataField per placement). Re-running it updates the sheet in place. The local JSON store (PYEGERIA_DASHBOARD_SHEETS_STORE) is a fallback: with --local-only or no Egeria connection, only the store is written, and the command output says so.",
       "verb": "Create",
       "upsert": true,
       "attach": false,
@@ -1325,14 +1345,14 @@
       "OM_TYPE": "",
       "bundle": "Dashboard Sheet Base",
       "custom_attributes": [],
-      "Journal Entry": "Creates a named, ordered, nestable Dashboard Sheet \u2014 a local pyegeria-managed layout record (see Container/ContainerDict in pyegeria.view._output_container_models), NOT yet an Egeria element. PLANNED: Dashboard Sheet will become an Egeria Collection subtype \u2014 when that lands, this bundle (Dashboard Sheet Base) should switch BundleInherits from none to Collection Base (see /Command Specifications/Common Bundles/Collection Base), picking up Purpose + the full Referenceable/AuthoredReferenceable chain. Not immediate \u2014 until then this stays a local record: no upsert, no qualified name prefix, mirroring the Report command's own non-element-creation pattern. 2026-11-07: dropped the 'Dashboard' alias -- 'Create Dashboard' now creates an Egeria Dashboard (odpi/egeria#9432)."
+      "Journal Entry": "Creates or updates a Dashboard Sheet, written to Egeria as the \u00a78d chain: Dashboard (Dashboard::<name>) --Schema--> DisplayDataSchemaType --AttributeForSchema--> DisplayDataContainer (the sheet); placements are DisplayDataFields under it. Upsert by qualifiedName. 2026-11-07: dropped the 'Dashboard' alias -- 'Create Dashboard' now creates an Egeria Dashboard (odpi/egeria#9432). 2026-11-10: wording updated -- since 6.2.29 the sheet is held in Egeria (\u00a78d chain); the local store is a fallback."
     },
     "Link Report to Dashboard Sheet": {
       "display_name": "",
       "qn_prefix": "",
       "alternate_names": [],
       "family": "Views & Reports",
-      "description": "",
+      "description": "Places a Report into a Dashboard Sheet as an ordered placement, with layout hints (span and emphasis). In Egeria the placement is a DisplayDataField of the sheet, and the Report is linked from the Dashboard (DataSetContent). Re-running it with the same Report Name updates the placement in place. The Dashboard Sheet must already exist (Create Dashboard Sheet). The local JSON store (PYEGERIA_DASHBOARD_SHEETS_STORE) is a fallback: with --local-only or no Egeria connection, only the store is written, and the command output says so.",
       "verb": "Link",
       "upsert": false,
       "attach": false,
@@ -1344,14 +1364,14 @@
       "OM_TYPE": "",
       "bundle": "Report to Dashboard Sheet Link Base",
       "custom_attributes": [],
-      "Journal Entry": "Places a Report Spec (FormatSet) into a Dashboard Sheet as an ordered Placement, with layout hints (span/emphasis). A local pyegeria Container/Placement record, not an Egeria relationship \u2014 no upsert. The target Dashboard Sheet must already exist (created via Create Dashboard Sheet)."
+      "Journal Entry": "Places a Report into a Dashboard Sheet as an ordered placement (DisplayDataField, placementKind 'report'), with span/emphasis; the Report is linked by DataSetContent from the Dashboard. 2026-11-10: wording updated -- since 6.2.29 the sheet is held in Egeria (\u00a78d chain); the local store is a fallback."
     },
     "Add Text on Dashboard Sheet": {
       "display_name": "",
       "qn_prefix": "",
       "alternate_names": [],
       "family": "Views & Reports",
-      "description": "Places literal markdown text (a section header, explanation, or caption) into a Dashboard Sheet as an ordered Placement, alongside Report placements. A local pyegeria Placement record, not an Egeria element or relationship \u2014 no upsert. The target Dashboard Sheet must already exist (Create Dashboard Sheet).",
+      "description": "Places literal markdown text (a section header, explanation, or caption) into a Dashboard Sheet as an ordered placement, alongside Report placements. In Egeria the placement is a DisplayDataField of the sheet that holds the text. Re-running it with the same Placement Name updates it in place. The Dashboard Sheet must already exist (Create Dashboard Sheet). The local JSON store (PYEGERIA_DASHBOARD_SHEETS_STORE) is a fallback: with --local-only or no Egeria connection, only the store is written, and the command output says so.",
       "verb": "Place",
       "upsert": false,
       "attach": false,
@@ -1363,7 +1383,7 @@
       "OM_TYPE": "",
       "bundle": "Text Placement Base",
       "custom_attributes": [],
-      "Journal Entry": "Places a Report Spec (FormatSet) into a Dashboard Sheet as an ordered Placement, with layout hints (span/emphasis). A local pyegeria Container/Placement record, not an Egeria relationship \u2014 no upsert. The target Dashboard Sheet must already exist (created via Create Dashboard Sheet)."
+      "Journal Entry": "Places markdown text into a Dashboard Sheet as an ordered placement (DisplayDataField, placementKind 'text', markdownContent). 2026-11-10: wording updated -- since 6.2.29 the sheet is held in Egeria (\u00a78d chain); the local store is a fallback."
     },
     "Create Saved Query": {
       "display_name": "Saved Query",
