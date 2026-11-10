@@ -1903,6 +1903,52 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
             ],
         ),
     ),
+    "saved_query": AnalyticFunctionSpec(
+        name="saved_query",
+        function="pyegeria.view.saved_query.saved_query",
+        inputs=["egeria_client:EgeriaTech"],
+        description="The answer of a SavedQuery, named by qualifiedName and found as the viewer (zones "
+                    "apply): a count for a KPI tile, or a list. mode=cached reads its Results Set (the last "
+                    "refresh, shown 'as of' its time); mode=live runs the stored request now with the "
+                    "viewer's token, only through an allow-listed view-server query endpoint on this "
+                    "platform (a stored URL never chooses where the token goes). A read stopped at its "
+                    "bound is a lower bound ('\u2265N'), never a total. "
+                    "Cost: one lookup plus one call per page of the answer (500 per page, 20 pages at most).",
+        returns="dict (value, display, capped, atLeast, asOf, elements for a list)",
+        generic=True,
+        params=[
+            AnalyticParam(name="name", type="str", required=True,
+                          description="The SavedQuery's qualifiedName."),
+            AnalyticParam(name="mode", type="str", default="cached",
+                          description="cached (its Results Set, as of the last refresh) or live (run it now)."),
+            AnalyticParam(name="output", type="str", default="count",
+                          description="count (a KPI) or list (the elements)."),
+            AnalyticParam(name="page_size", type="int", default=500,
+                          description="Elements per page read (at most 1000)."),
+            AnalyticParam(name="max_pages", type="int", default=20,
+                          description="Pages read at most; a read stopped here is a lower bound."),
+        ],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            measures=[_measure("value", "elements", "value", population="viewer", as_of="asOf")],
+            absence=_absence(
+                not_measured="The saved query's answer was not read: it was never refreshed, it records no "
+                             "Results Set, no saved query by that name is visible to you, or the read failed.",
+                not_permitted="The saved query, its Results Set or its request is not visible to you.",
+                not_applicable="The saved query's stored request is not one a Report may run: its Query URL "
+                               "names another host or a path outside the allow-listed query endpoints.",
+                nothing_found="Read: the saved query's answer is empty.",
+            ),
+            out=[
+                _field("value", "Elements", "int", unit="elements"),
+                _field("display", "Shown as", "string"),
+                _field("capped", "Lower bound", "bool"),
+                _field("atLeast", "At least", "int", unit="elements"),
+                _field("asOf", "As of", "string"),
+                _field("elements", "Elements", "list<string>"),
+            ],
+        ),
+    ),
     "asset_composition": AnalyticFunctionSpec(
         name="asset_composition",
         function="pyegeria.view.overview_metrics.asset_composition",
