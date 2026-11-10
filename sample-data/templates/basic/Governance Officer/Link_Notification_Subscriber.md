@@ -65,4 +65,12 @@ ___
 >	**Default Value**: REQUESTED
 
 
+### Zone Membership
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple List
+
+>	**Description**: Zones scope visibility of elements to different users.
+
+
 ___

@@ -199,6 +199,14 @@ ___
 >	**Description**: A list of search keywords.
 
 
+### Zone Membership
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple List
+
+>	**Description**: Zones scope visibility of elements to different users.
+
+
 ### GUID
 >	**Input Required**: False
 

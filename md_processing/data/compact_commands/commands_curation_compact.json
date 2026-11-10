@@ -2223,7 +2223,7 @@
       "input_required": false,
       "min_cardinality": 0,
       "max_cardinality": 1,
-      "level": "Advanced",
+      "level": "Basic",
       "Journal Entry": ""
     },
     "Target Element": {

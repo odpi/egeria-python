@@ -65,6 +65,14 @@ ___
 >	**Default Value**: REQUESTED
 
 
+### Zone Membership
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple List
+
+>	**Description**: Zones scope visibility of elements to different users.
+
+
 ### Effective From
 >	**Input Required**: False
 
@@ -145,14 +153,6 @@ ___
 >	**Description**: Is the element at end2 an anchor to end1?
 
 >	**Default Value**: false
-
-
-### Zone Membership
->	**Input Required**: False
-
->	**Attribute Type**: Simple List
-
->	**Description**: Zones scope visibility of elements to different users.
 
 
 ___

@@ -436,26 +436,23 @@ class AsyncBaseCommandProcessor(ABC):
         not a plain Referenceable property) to the element just created/updated.
 
         Egeria's classification handler reclassifies in place, so a single
-        add_zone_membership call is safe for both create and update; an empty/cleared
-        list removes the classification instead.
+        add_zone_membership call is safe for both create and update.
+
+        An empty or absent Zone Membership sets no zones and leaves any existing
+        zones as they are, on Create and on Update. The Basic templates show the
+        attribute with no value, so a blank heading must not clear an element's
+        zones. To remove zones, use "Declassify Zone Membership".
         """
-        zone_attr = attributes.get("Zone Membership", {})
-        if "value" not in zone_attr:
+        zones = attributes.get("Zone Membership", {}).get("value")
+        if not zones:
             return
-        zones = zone_attr.get("value")
         try:
-            if zones:
-                body = {
-                    "class": "NewClassificationRequestBody",
-                    "properties": {"class": "ZoneMembershipProperties", "zoneMembership": zones},
-                }
-                await self.client._async_add_zone_membership(guid, body)
-                self.add_related_result("Zone Membership", guid=guid, message=f"Set to {zones}")
-            else:
-                await self.client._async_clear_zone_membership(
-                    guid, {"class": "DeleteClassificationRequestBody"}
-                )
-                self.add_related_result("Zone Membership", guid=guid, message="Cleared")
+            body = {
+                "class": "NewClassificationRequestBody",
+                "properties": {"class": "ZoneMembershipProperties", "zoneMembership": zones},
+            }
+            await self.client._async_add_zone_membership(guid, body)
+            self.add_related_result("Zone Membership", guid=guid, message=f"Set to {zones}")
         except PyegeriaException as e:
             logger.error(f"Error syncing Zone Membership for {guid}: {e}")
             self.add_related_result("Zone Membership", guid=guid, status="failure", message=str(e))
