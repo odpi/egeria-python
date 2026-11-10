@@ -7,10 +7,13 @@ Copyright Contributors to the ODPi Egeria project.
 registry's EGERIA tier reads (report-spec pipeline model §7a "Sync"; RS-EGERIA-TIER stage 1).
 
     pyegeria report-specs sync [--folder QN]... [--spec LABEL]... [--include-drafts]
-                               [--cache-dir D] [--shared]
+                               [--cache-dir D] [--shared] [--recursive | --no-recursive]
 
 With no --folder and no --spec it takes the folders configured in "Pyegeria Report Spec Folders"
 (config.json) or PYEGERIA_REPORT_SPEC_FOLDERS; with none configured it says so and syncs nothing.
+Sub-folders of a consumer folder (`ReportSpecFolder::Consumer::...`) are followed by default
+(cycle-safe, depth-capped, never into a sibling consumer); --recursive/--no-recursive overrides that
+for every folder. A folder sync also refreshes the consumer index ("Used by").
 It prints the sync report as it is. Credentials come from the usual pyegeria settings
 (EGERIA_VIEW_SERVER, EGERIA_VIEW_SERVER_URL, EGERIA_USER, EGERIA_USER_PASSWORD) or the options.
 """
@@ -34,7 +37,7 @@ def _sync(args) -> int:
         client.create_egeria_bearer_token()
         report = sync_report_specs(client, folders=args.folder or None, specs=args.spec or None,
                                    include_drafts=args.include_drafts, cache_dir=args.cache_dir,
-                                   shared=True if args.shared else None)
+                                   shared=True if args.shared else None, recursive=args.recursive)
     except SyncAlreadyRunning as exc:
         print(str(exc), file=sys.stderr)
         return 2
@@ -63,6 +66,11 @@ def main(argv=None) -> int:
                                                         "else ~/.pyegeria/cache/report_specs/<platform>/<server>).")
     sync.add_argument("--shared", action="store_true",
                       help="Mark the cache shared: a fetch-on-call never writes into it.")
+    rec = sync.add_mutually_exclusive_group()
+    rec.add_argument("--recursive", dest="recursive", action="store_true", default=None,
+                     help="Follow sub-folders of every folder (default: only of consumer folders).")
+    rec.add_argument("--no-recursive", dest="recursive", action="store_false",
+                     help="Read each folder's direct members only.")
     sync.add_argument("--json", action="store_true", help="Print the report as JSON.")
     sync.add_argument("--server", help="View server name.")
     sync.add_argument("--url", help="View server platform URL.")
