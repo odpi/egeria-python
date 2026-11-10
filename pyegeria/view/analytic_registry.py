@@ -1878,6 +1878,10 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
             AnalyticParam(name="metric_params", type="dict",
                           description="Extra keyword arguments forwarded to the target function at "
                                        "every snapshot (e.g. classifications for count_elements)."),
+            AnalyticParam(name="strict", type="bool", default=False,
+                          description="Raise TrendNotExact when any point is not exact (a lower bound, "
+                                      "not measured or failed), instead of returning it; passed to a "
+                                      "target that takes strict."),
         ],
         declaration=AnalyticDeclaration(
             result_kind="series",
@@ -1894,6 +1898,8 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                 _field("label", "Snapshot", "string"),
                 _field("date", "Date", "string"),
                 _field("value", "Value", "float"),
+                _field("display", "Shown as", "string"),
+                _field("measurement", "Measurement", "map<string,string>"),
             ],
         ),
     ),
