@@ -19,6 +19,14 @@ ___
 >	**Description**: A text entry into a journal.
 
 
+### Zone Membership
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple List
+
+>	**Description**: Zones scope visibility of elements to different users.
+
+
 ### Effective From
 >	**Input Required**: False
 
@@ -81,14 +89,6 @@ ___
 >	**Attribute Type**: Simple
 
 >	**Description**: A user provided or system generated request id for a conversation.
-
-
-### Zone Membership
->	**Input Required**: False
-
->	**Attribute Type**: Simple List
-
->	**Description**: Zones scope visibility of elements to different users.
 
 
 ___

@@ -475,3 +475,30 @@ async def test_rerun_itemises_every_unchanged_element_and_link(egeria):
     kinds = sorted(a.split()[1] for a in second.actions)
     assert kinds == sorted(["Dashboard", "DisplayDataSchemaType", "Schema", "DisplayDataContainer",
                             "AttributeForSchema", "DisplayDataField", "NestedSchemaAttribute", "DataSetContent"])
+
+
+# ---------------------------------------------------------------------------- zone membership, local only
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("no_client", [False, True], ids=["local-only-env", "no-egeria-connection"])
+async def test_local_only_sheet_does_not_sync_zones_to_egeria(egeria, _store, monkeypatch, no_client):
+    """A sheet written to the local store only has no Egeria GUID (its name stands in for one), so the
+    base processor's post-execution syncs must not run: Zone Membership is reported as not written."""
+    if no_client:
+        client = None
+    else:
+        monkeypatch.setenv(LOCAL_ONLY_ENV, "1")
+        client = egeria
+    result = await _run(client, "Create", "Dashboard Sheet", {**CREATE, "Zone Membership": "quarantine"})
+
+    assert egeria.writes == []
+    assert "**Zone Membership**: not written (local only)" in result["output"]
+    assert "Zone Membership - SKIPPED" in result["message"]
+    assert SHEET in DashboardSheetDict.load_from_json(str(_store))
+
+
+@pytest.mark.asyncio
+async def test_local_only_sheet_without_zones_reports_nothing_about_zones(egeria, monkeypatch):
+    monkeypatch.setenv(LOCAL_ONLY_ENV, "1")
+    result = await _run(egeria, "Create", "Dashboard Sheet", CREATE)
+    assert "Zone Membership" not in result["output"] and "Zone Membership" not in result["message"]
