@@ -110,3 +110,18 @@ def test_parent_at_end2_reads_the_element_at_end1():
     assert expert.reads[0][1] == 1
     assert expert.deleted == []
     assert expert.created == [(MEMBERSHIP, "child", "parent")]
+
+
+def test_too_many_pages_adds_nothing_and_says_so():
+    rels = [(f"m-{i}", MEMBERSHIP, f"other-{i}", "folder") for i in range(10)]
+    expert = _MetadataExpert(rels)
+    proc = object.__new__(_Processor)
+    proc.client = type("C", (), {"metadata_expert": expert})()
+    proc.related_results = []
+    proc._PARENT_LINK_PAGE_SIZE, proc._PARENT_LINK_MAX_PAGES = 2, 3
+    attributes = {"Parent ID": {"guid": "root"}, "Parent Relationship Type Name": {"value": MEMBERSHIP}}
+    asyncio.run(proc._sync_parent_relationship("folder", attributes))
+    proc_results = proc.related_results
+    assert expert.created == [] and expert.deleted == []
+    assert proc_results[-1]["status"] == "failure"
+    assert "could not read every CollectionMembership link; not added" in proc_results[-1]["message"]

@@ -39,6 +39,10 @@ def _is_egeria_multiple_entities_error(exc: BaseException) -> bool:
     return "404-002" in text or "entities where found" in text
 
 
+class _ParentLinksIncomplete(Exception):
+    """The parent-end links could not all be read within the page bound (ISSUE-181)."""
+
+
 class AsyncBaseCommandProcessor(ABC):
     """
     Base class for all v2 Dr.Egeria command processors.
@@ -510,10 +514,16 @@ class AsyncBaseCommandProcessor(ABC):
 
         try:
             other_parents = []
-            async for related_guid in self._parent_links_of_type(guid, rel_type, parent_at_end1):
-                if related_guid == parent_guid:
-                    return  # Already linked - idempotent no-op.
-                other_parents.append(related_guid)
+            try:
+                async for related_guid in self._parent_links_of_type(guid, rel_type, parent_at_end1):
+                    if related_guid == parent_guid:
+                        return  # Already linked - idempotent no-op.
+                    other_parents.append(related_guid)
+            except _ParentLinksIncomplete:
+                # Adding without seeing every link could duplicate the parent link.
+                self.add_related_result("Parent Relationship", guid=parent_guid, status="failure",
+                                        message=f"could not read every {rel_type} link; not added")
+                return
 
             body = {
                 "class": "NewRelatedElementsRequestBody",
@@ -571,6 +581,7 @@ class AsyncBaseCommandProcessor(ABC):
                     continue  # the related element is at the child end: not a parent link
                 yield related_guid
             start += len(element_list)
+        raise _ParentLinksIncomplete(rel_type)
 
     def effective_for_lineage(self) -> bool:
         """Whether this command's requests are sent with forLineage=true.
