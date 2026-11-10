@@ -186,15 +186,24 @@ def field_placement_name(properties: Dict[str, Any]) -> str:
 
 
 def placement_field_properties(sheet_name: str, position: int, placement: Placement,
-                               qualified_name: Optional[str] = None) -> Dict[str, Any]:
+                               qualified_name: Optional[str] = None,
+                               report_guid: Optional[str] = None) -> Dict[str, Any]:
     """The DisplayDataField properties for one placement.
 
     The perspective labels and the drill-down spec name are also kept on the field (additionalProperties
     `perspectives`, comma-separated, and `detailSpec`): the ScopedBy / DataDescription links carry the graph
     meaning, but only when the element exists, and a label is not recoverable from the element it maps to
     ("owner" and "Data Owner" both map to Perspective::Owner). The reader gives back the labels as written.
+
+    A REPORT placement also keeps its Report's GUID (`reportGUID`), when known. Egeria drops a Report the
+    viewer may not see from the viewer's relationship reads entirely, so without it a zone-restricted Report
+    reads exactly like a deleted one. With it, an explicit read tells them apart: Egeria answers "not
+    authorized" for an element in a zone the viewer cannot see, and "not found" for one that is gone
+    (pyegeria.view.dashboard_resolver).
     """
     extra: Dict[str, str] = {"placementName": placement.ref}
+    if report_guid and placement_kind(placement) == "report":
+        extra["reportGUID"] = report_guid
     if placement.perspectives:
         extra["perspectives"] = ",".join(placement.perspectives)
     if placement.detail_spec:
@@ -541,11 +550,15 @@ class DashboardSheetEgeriaWriter:
         sheet = chain.sheet_name
         fields = await self.list_fields(chain.container_guid)
         existing = next((f for f in fields if f.display_name == placement.ref), None)
+        if report_guid and not _is_guid_like(report_guid):
+            report_guid = None  # "(Planned: ...)" or a not-found string from attribute resolution
+        if report_guid is None and placement_kind(placement) == "report":
+            report_guid = await self._resolve_report(placement.ref)
 
         if existing:
             _refuse_kind_clash(sheet, placement, existing.properties.get("placementKind") or "report")
             pos = existing.position if existing.position is not None else (position or 0)
-            props = placement_field_properties(sheet, pos, placement, existing.qualified_name)
+            props = placement_field_properties(sheet, pos, placement, existing.qualified_name, report_guid)
             field_guid = existing.guid
             if _field_props_differ(props, existing.properties):
                 await self._update_schema_attribute(field_guid, props)
@@ -559,7 +572,7 @@ class DashboardSheetEgeriaWriter:
                 pos = position
             else:  # never reuse a taken position (after a removal, an index can equal one)
                 pos = max(taken) + 1 if taken else 1
-            props = placement_field_properties(sheet, pos, placement)
+            props = placement_field_properties(sheet, pos, placement, report_guid=report_guid)
             found = None if self._is_planned(chain.container_guid) else await self._find(props["qualifiedName"])
             if found:
                 field_guid = self._guid(found)
@@ -575,14 +588,15 @@ class DashboardSheetEgeriaWriter:
                      "properties": {"class": "NestedSchemaAttributeProperties", "position": pos}})
 
         qn = props["qualifiedName"]
-        await self._sync_report_link(chain, placement, qn, report_guid)
+        await self._sync_report_link(chain, placement, qn, report_guid, resolved=True)
         await self._sync_perspectives(field_guid, placement)
         await self._sync_detail_spec(field_guid, placement)
         return field_guid
 
     async def _sync_report_link(self, chain: SheetChain, placement: Placement, qn: str,
-                                report_guid: Optional[str]) -> None:
-        """DataSetContent Dashboard -> Report, queryId = the placement's qualifiedName."""
+                                report_guid: Optional[str], *, resolved: bool = False) -> None:
+        """DataSetContent Dashboard -> Report, queryId = the placement's qualifiedName. `resolved`: the
+        caller already looked the Report up by name, so None means not found (no second lookup)."""
         binding: Dict[str, Any] = {"state": "unbound", "links": []}
         if not self._is_planned(chain.dashboard_guid):
             bindings = await self.client.asset_maker._async_get_placement_reports(chain.dashboard_guid, [qn])
@@ -593,7 +607,7 @@ class DashboardSheetEgeriaWriter:
             return
         if report_guid and not _is_guid_like(report_guid):
             report_guid = None  # "(Planned: ...)" or a not-found string from attribute resolution
-        if report_guid is None:
+        if report_guid is None and not resolved:
             report_guid = await self._resolve_report(placement.ref)
         if not report_guid:
             self._note(f"Report '{placement.ref}' was not found in Egeria: placement '{placement.ref}' on sheet "
