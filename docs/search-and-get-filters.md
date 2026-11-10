@@ -134,7 +134,11 @@ specs: `displayName` and `qualifiedName`) within `metadata_element_type`.
 - `'*'` with a type lists the elements of that type (it calls `get_elements`), one page at a
   time: the caller's `page_size`, 100 when none is given, never more than 100 per call — page on
   with `start_from`. `'*'` with no type, or with a root type (`OpenMetadataRoot`,
-  `Referenceable`), is refused: "give a search string or a narrower type".
+  `Referenceable`), is refused: "give a search string or a narrower type". The refusal is
+  `pyegeria.core.request_filters.SearchRefused`, a `ValueError` subclass, raised before any request
+  is sent to Egeria (`find_elements_by_property_value` and `find_metadata_elements_with_string`
+  raise it), so `except ValueError` still catches it. A report spec run that hits it logs a
+  warning rather than an error.
 - `deployed_implementation_type="PostgreSQL Server"` restricts the search to exactly that
   technology within the type. Egeria evaluates it in one complex query:
   `deployedImplementationType` **equals** the technology (ignoring case, so `"postgresql server"` works), **and**, for a search string other than
