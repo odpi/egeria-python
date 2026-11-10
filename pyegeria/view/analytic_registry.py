@@ -1923,6 +1923,10 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                           description="cached (its Results Set, as of the last refresh) or live (run it now)."),
             AnalyticParam(name="output", type="str", default="count",
                           description="count (a KPI) or list (the elements)."),
+            AnalyticParam(name="params", type="dict",
+                          description="Values for the SavedQuery's declared parameters (typed; body values "
+                                      "only, never the URL). A cached answer is returned only for the values "
+                                      "its refresh recorded."),
             AnalyticParam(name="page_size", type="int", default=500,
                           description="Elements per page read (at most 1000)."),
             AnalyticParam(name="max_pages", type="int", default=20,

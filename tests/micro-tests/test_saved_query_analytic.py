@@ -310,3 +310,162 @@ def test_through_the_report_executor_it_runs_on_the_viewers_own_client():
     assert out["value"] == 4
     assert supply.asked == ["EgeriaTech"]
     assert all(c[0] == "find" for c in viewer.calls)
+
+
+# ── parameters (brief §9): a saved query as a template ──
+
+PARAMS = json.dumps([{"name": "type_name", "type": "enum", "values": ["Asset", "DataSet", "Process"], "default": "Asset"},
+                     {"name": "label", "type": "string"},
+                     {"name": "days", "type": "int", "default": 180},
+                     {"name": "active", "type": "bool", "default": True}])
+TEMPLATE = {"class": "FindRequestBody", "metadataElementTypeName": "{{type_name}}", "limitResultsByStatus": ["ACTIVE"],
+            "searchProperties": {"class": "SearchProperties", "matchCriteria": "ALL", "conditions": [
+                {"property": "displayName", "operator": "EQ", "value": {"class": "PrimitiveTypePropertyValue",
+                                                                       "typeName": "string",
+                                                                       "primitiveValue": "{{label}}"}}]},
+            "graphQueryDepth": 0}
+
+
+def _param_query(body=TEMPLATE, params=PARAMS, last=None, url=PORTAL_URL, refreshed="2026-11-10T18:02:11+00:00"):
+    el = _saved_query(query_url=url, body=json.dumps(body), refreshed=refreshed)
+    amap = el["elementProperties"]["propertyValueMap"]["additionalProperties"]["mapValues"]["propertyValueMap"]
+    amap["parameters"] = _str(params)
+    if last is not None:
+        amap["lastRefreshParams"] = _str(json.dumps(last))
+    return el
+
+
+def _ran(viewer):
+    return [c[1] for c in viewer.calls[1:] if c[0] == "find"]
+
+
+def test_declared_parameters_are_substituted_as_typed_values():
+    viewer = _Viewer(stored=[_param_query()], answer=3)
+    out = saved_query(viewer, QN, mode="live", params={"type_name": "DataSet", "label": "Sales \"Q4\" {x}"})
+    body = _ran(viewer)[0]
+    assert body["metadataElementTypeName"] == "DataSet"
+    assert body["searchProperties"]["conditions"][0]["value"]["primitiveValue"] == "Sales \"Q4\" {x}"  # data
+    assert out["params"] == {"type_name": "DataSet", "label": "Sales \"Q4\" {x}", "days": 180, "active": True}
+    assert out["value"] == 3 and "for active=true, days=180, label=" in out["subtitle"]
+
+
+def test_defaults_apply_and_are_reported():
+    viewer = _Viewer(stored=[_param_query(body={**TEMPLATE, "searchProperties": None})], answer=1)
+    out = saved_query(viewer, QN, mode="live")
+    assert _ran(viewer)[0]["metadataElementTypeName"] == "Asset"
+    assert out["params"] == {"type_name": "Asset", "days": 180, "active": True}
+
+
+def test_an_int_parameter_stays_an_int():
+    body = {**TEMPLATE, "searchProperties": None, "pageLimitDays": "{{days}}", "active": "{{active}}"}
+    viewer = _Viewer(stored=[_param_query(body=body)], answer=1)
+    saved_query(viewer, QN, mode="live", params={"days": "30", "active": "false"})
+    sent = _ran(viewer)[0]
+    assert sent["pageLimitDays"] == 30 and sent["active"] is False
+
+
+@pytest.mark.parametrize("given,words", [
+    ({"queryURL": "https://evil.example.com/x"}, "does not declare ['queryURL']"),     # a URL, as a name
+    ({"../servers/x": "y"}, "does not declare"),                                      # path chars, as a name
+    ({"type_name": "Asset/../../asset-maker"}, "takes one of"),                       # path chars, as a value
+    ({"type_name": "https://evil.example.com"}, "takes one of"),                      # a URL, as a value
+    ({"days": "30; drop"}, "takes an int"),                                           # a type mismatch
+    ({"days": True}, "takes an int"),
+    ({"days": 1.5}, "takes an int"),
+    ({"active": "yes"}, "takes true or false"),
+    ({"label": 7}, "takes a string"),
+    ({"label": "{{type_name}}"}, "looks like a placeholder"),                         # no second-order templates
+    ({"label": "a\nb"}, "control characters"),
+    ({"label": "x" * 600}, "too long"),
+])
+def test_injection_and_type_mismatch_are_refused_and_nothing_runs(given, words):
+    viewer = _Viewer(stored=[_param_query()], answer=3)
+    out = saved_query(viewer, QN, mode="live", params=given)
+    assert out["refused"] is True and out["value"] is None and words in out["state_reason"]
+    assert [c[0] for c in viewer.calls] == ["find"]
+
+
+def test_a_url_or_path_in_a_string_value_is_data_and_never_moves_the_request():
+    viewer = _Viewer(stored=[_param_query()], answer=2)
+    out = saved_query(viewer, QN, mode="live", params={"label": "https://evil.example.com/../../x"})
+    assert out["value"] == 2
+    sent = _ran(viewer)[0]
+    assert sent["searchProperties"]["conditions"][0]["value"]["primitiveValue"] == "https://evil.example.com/../../x"
+    assert sent["metadataElementTypeName"] == "Asset"  # the request is still pyegeria's own find
+
+
+def test_params_on_a_query_that_declares_none_are_refused():
+    out = saved_query(_Viewer(answer=1), QN, mode="live", params={"type_name": "DataSet"})
+    assert out["refused"] is True and "declares no parameters" in out["state_reason"]
+
+
+def test_a_missing_required_parameter_is_refused():
+    params = json.dumps([{"name": "type_name", "type": "string", "required": True}])
+    out = saved_query(_Viewer(stored=[_param_query(params=params)], answer=1), QN, mode="live")
+    assert out["refused"] is True and "is required" in out["state_reason"]
+
+
+@pytest.mark.parametrize("body,words", [
+    ({**TEMPLATE, "{{type_name}}": "x"}, "in a key"),
+    ({**TEMPLATE, "metadataElementTypeName": "Prefix{{type_name}}"}, "inside a longer string"),
+    ({**TEMPLATE, "metadataElementTypeName": "{{undeclared}}"}, "names 'undeclared'"),
+])
+def test_a_placeholder_anywhere_but_a_whole_value_is_refused(body, words):
+    viewer = _Viewer(stored=[_param_query(body=body)], answer=1)
+    out = saved_query(viewer, QN, mode="live", params={"label": "x"})
+    assert out["refused"] is True and words in out["state_reason"]
+    assert [c[0] for c in viewer.calls] == ["find"]
+
+
+@pytest.mark.parametrize("params,words", [
+    ("not json", "not JSON"),
+    (json.dumps({"name": "x"}), "not a list"),
+    (json.dumps([{"name": "bad name"}]), "no plain name"),
+    (json.dumps([{"name": "x", "type": "float"}]), "the types are"),
+    (json.dumps([{"name": "x", "type": "enum"}]), "lists no values"),
+    (json.dumps([{"name": "x"}, {"name": "x"}]), "twice"),
+    (json.dumps([{"name": "x", "type": "int", "default": "abc"}]), "takes an int"),
+])
+def test_a_bad_declaration_is_refused(params, words):
+    out = saved_query(_Viewer(stored=[_param_query(params=params)], answer=1), QN, mode="live")
+    assert out["refused"] is True and words in out["state_reason"]
+
+
+def test_the_url_is_never_a_template():
+    url = PORTAL_URL.replace("by-search-conditions", "{{type_name}}")
+    viewer = _Viewer(stored=[_param_query(url=url)], answer=1)
+    out = saved_query(viewer, QN, mode="live", params={"type_name": "DataSet"})
+    assert out["refused"] is True and [c[0] for c in viewer.calls] == ["find"]
+
+
+# the cache: one Results Set holds one answer, for the values it was refreshed with
+
+def test_a_cached_answer_is_labelled_with_the_values_it_was_refreshed_with():
+    last = {"type_name": "Asset", "days": 180, "active": True}
+    out = saved_query(_Viewer(stored=[_param_query(last=last)], members=9), QN)
+    assert out["value"] == 9 and out["params"] == last
+    assert out["subtitle"] == 'as of 2026-11-10T18:02:11+00:00, for active=true, days=180, type_name="Asset"'
+
+
+def test_a_cached_answer_for_other_values_is_never_returned():
+    last = {"type_name": "Asset", "days": 180, "active": True}
+    viewer = _Viewer(stored=[_param_query(last=last)], members=9)
+    out = saved_query(viewer, QN, params={"type_name": "DataSet"})
+    assert out["value"] is None and out["state"] == "not_established"
+    assert 'is for active=true, days=180, type_name="Asset", not active=true, days=180, type_name="DataSet"' \
+        in out["state_reason"]
+    assert "use mode live" in out["state_reason"]
+    assert [c[0] for c in viewer.calls] == ["find"]  # the members were never read
+
+
+def test_the_cache_key_is_every_value_defaults_included():
+    last = {"type_name": "Asset", "days": 30, "active": True}  # refreshed with days=30
+    out = saved_query(_Viewer(stored=[_param_query(last=last)], members=9), QN)  # defaults: days=180
+    assert out["value"] is None and "days=30" in out["state_reason"] and "days=180" in out["state_reason"]
+    out = saved_query(_Viewer(stored=[_param_query(last=last)], members=9), QN, params={"days": "30"})
+    assert out["value"] == 9
+
+
+def test_a_cached_answer_that_did_not_record_its_values_is_not_used():
+    out = saved_query(_Viewer(stored=[_param_query(last=None)], members=9), QN)
+    assert out["value"] is None and "does not record the parameter values" in out["state_reason"]
