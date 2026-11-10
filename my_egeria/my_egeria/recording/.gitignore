@@ -1,6 +1,0 @@
-# Ignore generated recording output files and temporary captures
-output/
-*.mp4
-*.gif
-*.webm
-*.png
