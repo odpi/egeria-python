@@ -387,16 +387,22 @@ RECORDED = FIXTURE["lastRefresh"]["lastRefreshParams"]
 REFRESHED_WITH = FIXTURE["lastRefresh"]["overrides"]
 
 
+def _unregistered(**changes):
+    return _shared(smartCollection="false", **changes)
+
+
+# cached, not registered: the answer stands for the values its last refresh recorded
+
 def test_a_cached_answer_for_the_refreshed_values_is_returned_and_labelled():
-    out = saved_query(_Viewer(stored=[_shared()], members=7), FQN, params=REFRESHED_WITH)
-    assert out["value"] == 7 and out["params"] == RECORDED
+    out = saved_query(_Viewer(stored=[_unregistered()], members=7), FQN, params=REFRESHED_WITH)
+    assert out["value"] == 7 and out["params"] == RECORDED and "keptCurrentBy" not in out
     label = ", ".join(f"{k}={json.dumps(v)}" for k, v in sorted(RECORDED.items()))
     assert out["subtitle"] == f"as of 2026-11-10T18:00:00+00:00, for {label}"
 
 
 @pytest.mark.parametrize("case", FIXTURE["cases"], ids=[c["why"][:40] for c in FIXTURE["cases"]])
 def test_each_contract_case_is_served_cached_only_when_it_is_what_was_recorded(case):
-    viewer = _Viewer(stored=[_shared()], members=7)
+    viewer = _Viewer(stored=[_unregistered()], members=7)
     out = saved_query(viewer, FQN, params=case["request"])
     if case["effective"] == RECORDED:
         assert out["value"] == 7 and out["params"] == RECORDED
@@ -408,20 +414,90 @@ def test_each_contract_case_is_served_cached_only_when_it_is_what_was_recorded(c
 
 def test_a_cached_answer_for_other_values_is_never_returned():
     other = {"min_level": RECORDED["min_level"] + 1}
-    viewer = _Viewer(stored=[_shared()], members=7)
+    viewer = _Viewer(stored=[_unregistered()], members=7)
     out = saved_query(viewer, FQN, params=other)
     assert out["value"] is None and f"min_level={RECORDED['min_level'] + 1}" in out["state_reason"]
     assert [c[0] for c in viewer.calls] == ["find"]
 
 
+def test_an_unregistered_refresh_with_other_values_is_served_for_those_values():
+    recorded = {**RECORDED, "min_level": 4}
+    q = _unregistered(lastRefreshParams=recorded)
+    assert saved_query(_Viewer(stored=[q], members=5), FQN, params={"min_level": 4})["value"] == 5
+    assert saved_query(_Viewer(stored=[q], members=5), FQN)["value"] is None
+
+
 def test_a_cached_answer_that_did_not_record_its_values_is_not_used():
-    out = saved_query(_Viewer(stored=[_shared(lastRefreshParams=None)], members=7), FQN, params=REFRESHED_WITH)
+    out = saved_query(_Viewer(stored=[_unregistered(lastRefreshParams=None)], members=7), FQN,
+                      params=REFRESHED_WITH)
     assert out["value"] is None and "does not record the parameter values" in out["state_reason"]
 
 
+def test_never_refreshed_and_not_registered_is_not_an_answer():
+    out = saved_query(_Viewer(stored=[_unregistered(lastRefreshedTime="")], members=7), FQN)
+    assert out["value"] is None and "never been refreshed" in out["state_reason"]
+
+
 def test_search_spec_is_read_when_formula_is_empty_as_the_portal_does():
-    q = _shared(formula="", searchSpec=SQ["properties"]["formula"])
+    q = _unregistered(formula="", searchSpec=SQ["properties"]["formula"])
     assert saved_query(_Viewer(stored=[q], members=2), FQN, params=REFRESHED_WITH)["value"] == 2
+
+
+# cached, registered as a Smart Collection (P-3): Egeria re-runs the STORED request, so the answer stands
+# only for the stored effective values, whatever a refresh recorded
+
+STORED = FIXTURE["cases"][0]["effective"]  # the effective values with no request
+
+
+def test_the_fixture_is_a_registered_smart_collection():
+    assert SQ["properties"]["additionalProperties"]["smartCollection"] == "true"
+
+
+def test_a_registered_answer_is_served_for_its_stored_values_and_labelled_kept_current():
+    out = saved_query(_Viewer(stored=[_shared()], members=7), FQN)
+    assert out["value"] == 7 and out["params"] == STORED
+    assert out["keptCurrentBy"].startswith("Egeria (Smart Collection")
+    label = ", ".join(f"{k}={json.dumps(v)}" for k, v in sorted(STORED.items()))
+    assert out["subtitle"] == f"kept current by Egeria \u00b7 as of 2026-11-10T18:00:00+00:00, for {label}"
+
+
+@pytest.mark.parametrize("case", FIXTURE["cases"], ids=[c["why"][:40] for c in FIXTURE["cases"]])
+def test_a_registered_answer_is_served_only_for_the_stored_values(case):
+    viewer = _Viewer(stored=[_shared()], members=7)
+    out = saved_query(viewer, FQN, params=case["request"])
+    if case["effective"] == STORED:
+        assert out["value"] == 7
+    else:
+        assert out["value"] is None and "is a Smart Collection, kept current by Egeria" in out["state_reason"]
+        assert "use mode live" in out["state_reason"]
+        assert [c[0] for c in viewer.calls] == ["find"]
+
+
+def test_a_registered_answer_ignores_a_refresh_record_naming_other_values():
+    # a Portal refresh with min_level 4 would be overwritten by Egeria within the half hour
+    q = _shared(lastRefreshParams={**STORED, "min_level": 4})
+    assert saved_query(_Viewer(stored=[q], members=7), FQN)["value"] == 7
+    out = saved_query(_Viewer(stored=[q], members=7), FQN, params={"min_level": 4})
+    assert out["value"] is None and "kept current by Egeria" in out["state_reason"]
+
+
+def test_a_registered_answer_needs_no_portal_refresh_time():
+    out = saved_query(_Viewer(stored=[_shared(lastRefreshedTime="", lastRefreshParams=None)], members=3), FQN)
+    assert out["value"] == 3 and out["asOf"] is None
+    assert out["subtitle"].startswith("kept current by Egeria \u00b7 no refresh time recorded, for ")
+
+
+def test_a_registered_query_with_no_parameters_is_served_and_labelled():
+    q = _shared(parameters=None, lastRefreshParams=None)
+    out = saved_query(_Viewer(stored=[q], members=4), FQN)
+    assert out["value"] == 4 and "params" not in out
+    assert out["subtitle"] == "kept current by Egeria \u00b7 as of 2026-11-10T18:00:00+00:00"
+
+
+def test_live_is_not_limited_by_registration():
+    viewer = _Viewer(stored=[_shared(drop=("sort",))], answer=2)
+    out = saved_query(viewer, FQN, mode="live", params={"min_level": 5})
+    assert out["value"] == 2 and out["params"]["min_level"] == 5 and "keptCurrentBy" not in out
 
 
 # live: effective values (from formula) go to requestPath, typed, as values only

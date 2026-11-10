@@ -259,6 +259,11 @@ def saved_query(client, name: str, mode: str = "cached", output: str = "count",
       size, and `startFrom` stays the read's own. A parameter with no `requestPath` applies to the
       Portal's search only, so live mode refuses it when it is given, or when its effective value is a
       default the stored search doesn't hold.
+    - A SavedQuery registered as a Smart Collection (`additionalProperties.smartCollection == "true"`,
+      the Portal's test) is re-run by Egeria's SmartCollectionsMembershipManager about every 30
+      minutes from its stored request. Its cached answer stands only for the stored effective values
+      (whatever a refresh recorded), is labelled "kept current by Egeria", and is refused for other
+      values, pointing to live mode.
     An undeclared name, a value of the wrong type, a string with control characters or over 512
     characters, a bad path, or params on a query that declares none, is refused with a sentence.
 
@@ -312,7 +317,17 @@ def saved_query(client, name: str, mode: str = "cached", output: str = "count",
         return _result(name, mode, output, state="not_established", reason=refused.sentence,
                        absence="not_applicable", refused=True)
 
-    if mode == "cached":
+    registered = _is_registered_smart_collection(additional)
+    if mode == "cached" and registered:
+        # P-3: Egeria's SmartCollectionsMembershipManager re-runs the STORED request about every 30 minutes,
+        # so the Results Set answers only for the stored effective values, whatever a refresh recorded.
+        used = _effective_parameters(declared, None, _stored_search(props, additional)) if declared else {}
+        if declared and effective != used:
+            return _not_measured(name, "cached", output, f"this saved query is a Smart Collection, kept current by "
+                                 f"Egeria with its stored values ({_label(used)}), so its cached answer cannot "
+                                 f"stand for {_label(effective)}; use mode live for these values")
+        out = _cached(client, name, output, additional, page_size, max_pages, kept_current=True)
+    elif mode == "cached":
         used = effective
         if declared:
             recorded = _recorded_parameters(additional.get("lastRefreshParams"))
@@ -340,10 +355,17 @@ def saved_query(client, name: str, mode: str = "cached", output: str = "count",
         out["how"] = f"{method} on this client's platform" + (f"; {note}" if note else "")
     if declared:
         out["params"] = used
-        if out.get("subtitle"):
+        if out.get("subtitle") and out.get("asOf"):
             out["subtitle"] = out["subtitle"].replace(f"as of {out['asOf']}",
                                                       f"as of {out['asOf']}, for {_label(used)}", 1)
+        elif out.get("subtitle"):
+            out["subtitle"] = f"{out['subtitle']}, for {_label(used)}"
     return out
+
+
+def _is_registered_smart_collection(additional: Dict[str, Any]) -> bool:
+    """The Portal's own test (insights_handler._is_registered_smart_collection)."""
+    return str((additional or {}).get("smartCollection") or "").strip().lower() == "true"
 
 
 # ── parameters: one model with the Portal (insights_handler, b9dce798) ──────
@@ -531,13 +553,13 @@ def _label(values: Dict[str, Any]) -> str:
     return ", ".join(f"{k}={json.dumps(v)}" for k, v in sorted(values.items())) or "no parameter values"
 
 
-def _cached(client, name, output, additional, page_size, max_pages):
+def _cached(client, name, output, additional, page_size, max_pages, kept_current=False):
     as_of = additional.get("lastRefreshedTime") or None
     results_set = additional.get("resultsSetGuid") or None
     if not results_set:
         return _not_measured(name, "cached", output, "the saved query records no Results Set, so it has no "
                                                      "cached answer; use mode live, or refresh it")
-    if not as_of:
+    if not as_of and not kept_current:
         return _not_measured(name, "cached", output, "the saved query has never been refreshed, so its "
                                                      "Results Set holds no answer yet (not an empty answer)")
     try:
@@ -550,7 +572,14 @@ def _cached(client, name, output, additional, page_size, max_pages):
             return _result(name, "cached", output, state="not_established", absence="not_permitted",
                            reason="the saved query's Results Set is not visible to you")
         return _not_measured(name, "cached", output, f"its Results Set could not be read ({type(exc).__name__})")
-    return _answer(name, "cached", output, members, capped, as_of)
+    out = _answer(name, "cached", output, members, capped, as_of)
+    if kept_current:
+        out["keptCurrentBy"] = "Egeria (Smart Collection, re-run about every 30 minutes from the stored request)"
+        when = f" \u00b7 as of {as_of}" if as_of else " \u00b7 no refresh time recorded"
+        if out["state"] in ("measured", "nothing_found"):
+            out["subtitle"] = "kept current by Egeria" + when + (
+                f" \u00b7 at least {out['atLeast']}: the read stopped at its bound" if out.get("capped") else "")
+    return out
 
 
 def _live(client, name, output, method, body, page_size, max_pages):
