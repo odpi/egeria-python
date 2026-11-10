@@ -1186,27 +1186,32 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         function="pyegeria.view.overview_metrics.semantic_grounding",
         inputs=["egeria_client:MetadataExpert", "egeria_client:ClassificationExplorer"],
         description="Semantic grounding -- the meaning layer that grounds AI. groundedAssets is the "
-                    "number of DISTINCT Assets with at least one SemanticAssignment, and groundedAssetPct that "
+                    "number of DISTINCT Assets grounded by a glossary term (the Asset itself, or an element "
+                    "anchored to it such as a column, has a SemanticAssignment), and groundedAssetPct that "
                     "number as a percent of all Assets: both in the viewer population (a scan of every "
                     "SemanticAssignment the caller may see, over a viewer Asset count), so groundedAssetPct is "
-                    "None, with its reason, when the viewer Asset total cannot be measured. groundingLinks is "
+                    "None, and groundedAssetNote says why, when the viewer Asset total cannot be measured. groundingLinks is "
                     "the native, repository-wide count of SemanticAssignment links, and groundingPct links per "
                     "hundred Assets (repository; links, not distinct Assets). Takes two leading clients "
                     "(mgr, ce) -- the executor supplies the same EgeriaTech instance for both. "
                     "Cost: two native counts (sub-second), a relationship scan (one read per 500 links) and a "
                     "viewer Asset count beside it (slow on a large catalog: it can time out).",
-        returns="dict (groundedAssets, groundedAssetTotal, groundedAssetPct, groundingLinks, groundingPct)",
+        returns="dict (groundedAssets, groundedAssetTotal, groundedAssetPct, groundedAssetNote, "
+                "groundingLinksNotOnAsset, groundingLinks, groundingPct)",
         generic=False,
         binding_note="Fixed to the SemanticAssignment relationship type -- not a parameter.",
         params=[_as_of()],
         declaration=AnalyticDeclaration(
             result_kind="measure",
             measures=[
-                _measure("grounded_assets", "distinct Assets with at least one SemanticAssignment",
+                _measure("grounded_assets", "distinct Assets grounded by a glossary term (directly or through "
+                         "an anchored element such as a column)",
                          "groundedAssets", population="viewer",
                          basis=_basis("groundedAssetTotal", "Assets you can see")),
-                _measure("grounded_asset_percent", "percent of Assets with at least one SemanticAssignment",
+                _measure("grounded_asset_percent", "percent of Assets grounded by a glossary term",
                          "groundedAssetPct", population="viewer"),
+                _measure("grounding_links_not_on_asset", "SemanticAssignment links that ground no Asset "
+                         "(on an element not anchored to an Asset)", "groundingLinksNotOnAsset", population="viewer"),
                 _measure("grounding_links", "SemanticAssignment relationships", "groundingLinks",
                          population="repository"),
                 # links / Assets, not the share of Assets with a link: one Asset may carry several.
@@ -1224,6 +1229,8 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                 _field("groundedAssets", "Grounded Assets", "int", unit="Assets"),
                 _field("groundedAssetTotal", "Assets you can see", "int", unit="Assets"),
                 _field("groundedAssetPct", "Share of Assets grounded", "int", unit="percent"),
+                _field("groundedAssetNote", "Why the share is empty", "string"),
+                _field("groundingLinksNotOnAsset", "Term links not on an Asset", "int", unit="relationships"),
                 _field("groundingLinks", "Grounding links", "int", unit="relationships"),
                 _field("groundingPct", "Links per hundred Assets", "int", unit="percent"),
             ],

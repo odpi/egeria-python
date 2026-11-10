@@ -33,8 +33,10 @@ def test_governed_coverage_registry_entry_is_not_a_share_of_assets():
 
 def test_semantic_grounding_spec_names_distinct_assets_and_keeps_links_apart():
     text = _spec_description("Analytic Demo - Semantic Grounding")
-    assert "DISTINCT Assets" in text and "groundedAssetPct" in text
+    assert "DISTINCT Assets" in text and "groundedAssetPct" in text and "groundedAssetNote" in text
+    assert "on it or on any of its parts (tables, columns)" in text  # owner's definition
     assert "links, not Assets" in text
     returns = get_analytic_registry()["semantic_grounding"].returns
-    for field in ("groundedAssets", "groundedAssetTotal", "groundedAssetPct", "groundingLinks", "groundingPct"):
+    for field in ("groundedAssets", "groundedAssetTotal", "groundedAssetPct", "groundedAssetNote", "groundingLinksNotOnAsset",
+                  "groundingLinks", "groundingPct"):
         assert field in returns

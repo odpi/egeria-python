@@ -182,11 +182,13 @@ _DEMOS: Dict[str, FormatSet] = {
     ),
     "Analytic Demo - Semantic Grounding": _demo(
         heading="Semantic Grounding Coverage",
-        what="groundedAssets = the number of DISTINCT Assets linked to at least one glossary term "
-             "(SemanticAssignment); groundedAssetPct = that number as a percent of all Assets "
+        what="groundedAssets = the number of DISTINCT Assets with a glossary term on it or on any of its "
+             "parts (tables, columns): a SemanticAssignment on the Asset itself, or on an element anchored to "
+             "it, counts that Asset once. A deleted element grounds nothing. groundingLinksNotOnAsset = the "
+             "links that ground no Asset (a term on a process, say). groundedAssetPct = that number as a percent of all Assets "
              "(groundedAssetTotal). Both are what you can see: the count comes from a scan of every "
              "SemanticAssignment, and the total is counted in the same population, so groundedAssetPct "
-             "is empty (not measured, with the reason) when your Asset total cannot be counted -- never "
+             "is empty, and groundedAssetNote says why, when your Asset total cannot be counted -- never "
              "a number mixing populations. groundingLinks = the number of SemanticAssignment links "
              "across the whole repository, and groundingPct = links per hundred Assets (at most 100): "
              "that is links, not Assets -- an Asset with three terms counts three times. A per-asset "
@@ -194,7 +196,8 @@ _DEMOS: Dict[str, FormatSet] = {
              "gap for later.",
         analytic_function_name="semantic_grounding",
         demo_params={},
-        result_shape="dict (groundedAssets, groundedAssetTotal, groundedAssetPct, groundingLinks, groundingPct)",
+        result_shape="dict (groundedAssets, groundedAssetTotal, groundedAssetPct, groundedAssetNote, "
+                     "groundingLinksNotOnAsset, groundingLinks, groundingPct)",
     ),
     "Analytic Demo - AI Context Readiness": _demo(
         heading="AI Context Readiness Funnel",
