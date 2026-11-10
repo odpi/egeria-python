@@ -112,3 +112,28 @@ def test_exec_report_spec_passes_the_qualified_name_through(monkeypatch):
     fse.exec_report_spec("Collection Members", output_format="DICT", params={"collection_qname": QN},
                          view_server="v", view_url="https://x", user="u", user_pass="p")
     assert calls == [{"collection_guid": None, "collection_qname": QN, "collection_name": None}]
+
+
+# W1-1 (read-back): a name wins over a GUID. A merge update that adds collectionQname to a Report leaves
+# the stale collectionGuid beside it; the qualifiedName must be the one used.
+
+def test_a_stale_guid_beside_a_valid_qualified_name_uses_the_qualified_name(client):
+    _members(client, collection_guid="0affb580-stale", collection_qname=QN)
+    assert client.requests[-1].endswith("/collections/coll-guid-1/members")
+    assert "0affb580-stale" not in client.requests[-1]
+
+
+def test_a_display_name_also_wins_over_a_guid(client):
+    _members(client, collection_guid="0affb580-stale", collection_name="Local Dashboards - Next Steps")
+    assert client.requests[-1].endswith("/collections/coll-guid-1/members")
+
+
+def test_a_qualified_name_wins_over_a_display_name(client):
+    _members(client, collection_qname=QN, collection_name="Gone")
+    assert client.lookups == [("qualifiedName", QN)]
+
+
+def test_a_valid_guid_beside_a_missing_name_is_refused_not_used(client):
+    with pytest.raises(PyegeriaNotFoundException):
+        _members(client, collection_guid="g-direct", collection_qname="Coco::Gone::1.0")
+    assert client.requests == []

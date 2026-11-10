@@ -1226,14 +1226,14 @@ class CollectionManager(ServerClient):
         Parameters
         ----------
         collection_guid: str,
-            identity of the collection to return members for. If none, collection_name or
-            collection_qname are used.
+            identity of the collection to return members for. Used only when neither
+            collection_qname nor collection_name is given.
         collection_name: str,
-            display the name of the collection to return members for. If none, collection_guid
-            or collection_qname are used.
+            display name of the collection to return members for. Used when collection_qname
+            is not given or matches nothing; wins over collection_guid.
         collection_qname: str,
-            qualified name of the collection to return members for. If none, collection_guid
-            or collection_name are used.
+            qualified name of the collection to return members for. Wins over collection_name
+            and collection_guid (a GUID goes stale when the collection is re-created).
         body: dict, optional, default = None
             Providing the body allows full control of the request and replaces filter parameters.
         start_from: int, [default=0], optional
@@ -1279,8 +1279,17 @@ class CollectionManager(ServerClient):
 
         """
 
-        if not collection_guid:
-            collection_guid = await self._resolve_collection_guid(collection_name, collection_qname)
+        # A name wins over a GUID (qualifiedName > display name > GUID): a Report that carries both, e.g. a
+        # stale collectionGuid left beside a newer collectionQname by a merge update, must follow the name.
+        # A GUID-only call is unchanged.
+        if collection_qname or collection_name:
+            resolved = await self._resolve_collection_guid(collection_name, collection_qname)
+            if collection_guid and collection_guid != resolved:
+                logger.info(f"get_collection_members: collection_guid {collection_guid} ignored; "
+                            f"{collection_qname or collection_name!r} names {resolved}")
+            collection_guid = resolved
+        elif not collection_guid:
+            collection_guid = await self._resolve_collection_guid(None, None)   # raises: nothing given
 
         url = str(HttpUrl(f"{self.collection_command_root}/{collection_guid}/members"))
 
@@ -1305,14 +1314,14 @@ class CollectionManager(ServerClient):
         Parameters
         ----------
         collection_guid: str,
-            identity of the collection to return members for. If none, collection_name or
-            collection_qname are used.
+            identity of the collection to return members for. Used only when neither
+            collection_qname nor collection_name is given.
         collection_name: str,
-            display the name of the collection to return members for. If none, collection_guid
-            or collection_qname are used.
+            display name of the collection to return members for. Used when collection_qname
+            is not given or matches nothing; wins over collection_guid.
         collection_qname: str,
-            qualified name of the collection to return members for. If none, collection_guid
-            or collection_name are used.
+            qualified name of the collection to return members for. Wins over collection_name
+            and collection_guid (a GUID goes stale when the collection is re-created).
         body: dict, optional, default = None
             Providing the body allows full control of the request and replaces filter parameters.
         start_from: int, [default=0], optional
