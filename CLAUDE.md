@@ -71,6 +71,10 @@ validate_compact_specs
 gen_md_cmd_templates                # Basic attributes only
 gen_md_cmd_templates --advanced     # All attributes
 
+# Rendered templates (sample-data/templates/{basic,advanced}) also ship in the
+# wheel as md_processing/data/templates/ (copied by setup.py's build_py hook);
+# read them with md_processing.templates.list_templates()/read_template().
+
 # Local web editor for compact command JSON (attributes/bundles/commands) —
 # replaces Tinderbox for editing existing families. One-time: uv sync --extra spec-editor
 dr_egeria_spec_editor                   # http://localhost:8420
