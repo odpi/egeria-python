@@ -917,8 +917,9 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         name="governed_coverage",
         function="pyegeria.view.overview_metrics.governed_coverage",
         inputs=["egeria_client:MetadataExpert"],
-        description="Share of assets carrying at least one governance classification, plus a "
-                    "by-classification / top-zones breakdown. "
+        description="Count of elements of any type that the caller can see carrying at least one of the "
+                    "five governance classifications -- not a share of Assets -- plus a by-classification / "
+                    "top-zones breakdown. "
                     "Cost: one find, paged until Egeria returns an empty page (an incomplete scan is not measured), seconds.",
         returns="dict (governedCount, governedCapped, byClassification, topZones)",
         generic=False,
@@ -1184,19 +1185,28 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
         name="semantic_grounding",
         function="pyegeria.view.overview_metrics.semantic_grounding",
         inputs=["egeria_client:MetadataExpert", "egeria_client:ClassificationExplorer"],
-        description="SemanticAssignment relationship count and coverage percent -- the meaning layer "
-                    "that grounds AI. Takes two leading clients (mgr, ce) -- the executor supplies the "
-                    "same EgeriaTech instance for both. "
-                    "Both counts are native, in the repository population, so the percentage never divides "
-                    "one population by the other. "
-                    "Cost: two native counts, sub-second each." + REPOSITORY_WORDS,
-        returns="dict (groundingLinks, groundingPct)",
+        description="Semantic grounding -- the meaning layer that grounds AI. groundedAssets is the "
+                    "number of DISTINCT Assets with at least one SemanticAssignment, and groundedAssetPct that "
+                    "number as a percent of all Assets: both in the viewer population (a scan of every "
+                    "SemanticAssignment the caller may see, over a viewer Asset count), so groundedAssetPct is "
+                    "None, with its reason, when the viewer Asset total cannot be measured. groundingLinks is "
+                    "the native, repository-wide count of SemanticAssignment links, and groundingPct links per "
+                    "hundred Assets (repository; links, not distinct Assets). Takes two leading clients "
+                    "(mgr, ce) -- the executor supplies the same EgeriaTech instance for both. "
+                    "Cost: two native counts (sub-second), a relationship scan (one read per 500 links) and a "
+                    "viewer Asset count beside it (slow on a large catalog: it can time out).",
+        returns="dict (groundedAssets, groundedAssetTotal, groundedAssetPct, groundingLinks, groundingPct)",
         generic=False,
         binding_note="Fixed to the SemanticAssignment relationship type -- not a parameter.",
         params=[_as_of()],
         declaration=AnalyticDeclaration(
             result_kind="measure",
             measures=[
+                _measure("grounded_assets", "distinct Assets with at least one SemanticAssignment",
+                         "groundedAssets", population="viewer",
+                         basis=_basis("groundedAssetTotal", "Assets you can see")),
+                _measure("grounded_asset_percent", "percent of Assets with at least one SemanticAssignment",
+                         "groundedAssetPct", population="viewer"),
                 _measure("grounding_links", "SemanticAssignment relationships", "groundingLinks",
                          population="repository"),
                 # links / Assets, not the share of Assets with a link: one Asset may carry several.
@@ -1204,14 +1214,16 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                          "at most 100", "groundingPct", population="repository"),
             ],
             absence=_absence(
-                not_measured="Semantic grounding was not measured: the SemanticAssignment count or the "
-                             "Asset count to divide by failed or timed out, or the server could not "
-                             "answer it in the repository population.",
+                not_measured="Semantic grounding was not measured: the SemanticAssignment scan or count, or "
+                             "the Asset count to divide by, failed, timed out or was incomplete.",
                 not_permitted="You are not permitted to read the semantic assignments.",
                 not_applicable=_always_applies("Semantic grounding"),
                 nothing_found="Counted: no glossary term is assigned to anything.",
             ),
             out=[
+                _field("groundedAssets", "Grounded Assets", "int", unit="Assets"),
+                _field("groundedAssetTotal", "Assets you can see", "int", unit="Assets"),
+                _field("groundedAssetPct", "Share of Assets grounded", "int", unit="percent"),
                 _field("groundingLinks", "Grounding links", "int", unit="relationships"),
                 _field("groundingPct", "Links per hundred Assets", "int", unit="percent"),
             ],

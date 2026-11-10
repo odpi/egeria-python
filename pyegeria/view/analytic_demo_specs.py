@@ -129,13 +129,15 @@ _DEMOS: Dict[str, FormatSet] = {
     ),
     "Analytic Demo - Governance Coverage": _demo(
         heading="Governance Classification Coverage",
-        what="Count of elements carrying at least one governance classification "
-             "(ZoneMembership/Confidentiality/Criticality/Impact/Retention) -- NOT a percentage "
-             "despite 'coverage' in the name (there's no cheap total-elements denominator to "
-             "divide by yet). The find is paged until Egeria returns an empty page, so governedCount "
-             "is every governed element (governedCapped is false when measured). byClassification "
-             "and topZones are nested breakdowns of the same governedCount elements -- pick BAR "
-             "below for a chart of byClassification.",
+        what="Count of elements of ANY type that you can see carrying at least one of the five governance "
+             "classifications (ZoneMembership/Confidentiality/Criticality/Impact/Retention) -- not a share "
+             "of Assets, and not a percentage. It counts what the caller may see (zone security applies), "
+             "by a find paged until Egeria returns an empty page, so governedCount is every governed element "
+             "you can see (governedCapped is false when measured). It is not the Overview's Governed tile, "
+             "which counts Assets only, natively across the whole repository, as a share of all Assets: the "
+             "two numbers differ by definition. byClassification and topZones are nested breakdowns of the "
+             "same elements (byClassification tallies every classification they carry, not only the five) "
+             "-- pick BAR below for a chart of byClassification.",
         analytic_function_name="governed_coverage",
         demo_params={},
         result_shape="dict (governedCount, governedCapped, byClassification, topZones)",
@@ -180,17 +182,19 @@ _DEMOS: Dict[str, FormatSet] = {
     ),
     "Analytic Demo - Semantic Grounding": _demo(
         heading="Semantic Grounding Coverage",
-        what="groundingLinks = count of SemanticAssignment relationships (term<->asset). "
-             "groundingPct = that count as a percent of the broad Asset supertype count; both are "
-             "native counts over the whole repository, including elements the viewer may not see "
-             "(i.e. 'percent of Assets' as the denominator, capped at 100 -- an asset with "
-             "multiple assignments can push the raw ratio over 100%, which is why it's capped, "
-             "not because grounding coverage is literally bounded there). A per-asset detail "
-             "breakdown (which assets are/aren't grounded) isn't available from this metric --  "
-             "a real gap for later.",
+        what="groundedAssets = the number of DISTINCT Assets linked to at least one glossary term "
+             "(SemanticAssignment); groundedAssetPct = that number as a percent of all Assets "
+             "(groundedAssetTotal). Both are what you can see: the count comes from a scan of every "
+             "SemanticAssignment, and the total is counted in the same population, so groundedAssetPct "
+             "is empty (not measured, with the reason) when your Asset total cannot be counted -- never "
+             "a number mixing populations. groundingLinks = the number of SemanticAssignment links "
+             "across the whole repository, and groundingPct = links per hundred Assets (at most 100): "
+             "that is links, not Assets -- an Asset with three terms counts three times. A per-asset "
+             "breakdown (which assets are or aren't grounded) isn't available from this metric -- a real "
+             "gap for later.",
         analytic_function_name="semantic_grounding",
         demo_params={},
-        result_shape="dict (groundingLinks, groundingPct)",
+        result_shape="dict (groundedAssets, groundedAssetTotal, groundedAssetPct, groundingLinks, groundingPct)",
     ),
     "Analytic Demo - AI Context Readiness": _demo(
         heading="AI Context Readiness Funnel",

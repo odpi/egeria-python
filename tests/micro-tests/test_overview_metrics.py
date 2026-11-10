@@ -269,17 +269,61 @@ def test_certifications_summary_degrades_on_failure():
 
 # ── semantic_grounding ────────────────────────────────────────────────────
 
+def _assignment(i, asset, end1_type=("CSVFile", ["DataFile", "Asset", "Referenceable"])):
+    type_name, supers = end1_type
+    return {"relationshipHeader": {"guid": f"r{i}"},
+            "end1": {"guid": asset, "type": {"typeName": type_name, "superTypeNames": supers}},
+            "end2": {"guid": f"t{i}", "type": {"typeName": "GlossaryTerm", "superTypeNames": ["Referenceable"]}}}
+
+
 def test_semantic_grounding_computes_percent():
     mgr = _mgr(count_metadata_elements=MagicMock(return_value=100),
                count_relationships_between_elements=MagicMock(return_value=61))
     ce = MagicMock()
+    ce.get_relationships.side_effect = _pages([])
     result = om.semantic_grounding(mgr, ce)
     assert result["groundingLinks"] == 61
     assert result["groundingPct"] == 61
-    # both counts in the repository population; the relationship count goes through mgr (R4)
-    assert mgr.count_metadata_elements.call_args.kwargs == {"push_down": True}
+    # links: both native counts in the repository population; the relationship count goes through mgr (R4).
+    # grounded Assets: the Asset total in the viewer population (the scan's own population).
+    assert sorted(c.kwargs["push_down"] for c in mgr.count_metadata_elements.call_args_list) == [False, True]
     assert mgr.count_relationships_between_elements.call_args.kwargs == {"push_down": True}
-    ce.get_relationships.assert_not_called()
+
+
+def test_semantic_grounding_counts_distinct_assets_not_links():
+    # 6 links: asset a1 three times, a2 twice, and one link to a non-Asset (a glossary category)
+    rels = [_assignment(0, "a1"), _assignment(1, "a1"), _assignment(2, "a1"), _assignment(3, "a2"),
+            _assignment(4, "a2"), _assignment(5, "c1", ("GlossaryCategory", ["Referenceable"]))]
+    mgr = _mgr(count_metadata_elements=MagicMock(return_value=40),
+               count_relationships_between_elements=MagicMock(return_value=6))
+    ce = MagicMock()
+    ce.get_relationships.side_effect = _pages(rels)
+    result = om.semantic_grounding(mgr, ce)
+    assert result["groundedAssets"] == 2          # distinct Assets, not 6 links
+    assert result["groundedAssetTotal"] == 40         # the viewer Asset total
+    assert result["groundedAssetPct"] == 5            # 2 / 40
+    assert result["groundingLinks"] == 6 and result["groundingPct"] == 15   # links per hundred Assets
+
+
+def test_semantic_grounding_share_is_not_measured_when_the_viewer_asset_total_is_not():
+    rels = [_assignment(0, "a1"), _assignment(1, "a2")]
+
+    def count(body, push_down=None, **kw):
+        if push_down is False:
+            raise TimeoutError("viewer count timed out")
+        return 100
+
+    mgr = _mgr(count_metadata_elements=MagicMock(side_effect=count),
+               count_relationships_between_elements=MagicMock(return_value=2))
+    mgr.find_metadata_elements.side_effect = lambda *a, **k: [{"elementHeader": {"guid": f"x{i}"}} for i in range(om.DEFAULT_CAP)]
+    ce = MagicMock()
+    ce.get_relationships.side_effect = _pages(rels)
+    with om.recording_unmeasured() as notes:
+        result = om.semantic_grounding(mgr, ce)
+    assert result["groundedAssets"] == 2           # the count always shows
+    assert result["groundedAssetTotal"] is None and result["groundedAssetPct"] is None   # never mixed populations
+    assert any(n["count"] == "Asset" for n in notes)
+    assert result["groundingLinks"] == 2 and result["groundingPct"] == 2
 
 
 def test_semantic_grounding_handles_zero_cataloged():
