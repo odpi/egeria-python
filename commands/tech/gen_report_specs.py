@@ -72,6 +72,9 @@ GENERATED_REPORT_EXCLUDED_KEYS = {
     "anchor_id",
     "anchor_scope_id",
     "anchor_scope_ids",
+    # Create Dashboard Sheet's owner input: written as the Dashboard's Ownership classification, not a
+    # property, so a column for it would always be empty -- and an empty owner reads as "no owner".
+    "dashboard_owner",
     "external_source_guid",
     "external_source_name",
     "for_duplicate_processing",

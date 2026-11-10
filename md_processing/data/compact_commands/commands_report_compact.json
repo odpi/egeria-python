@@ -1028,6 +1028,25 @@
       "max_cardinality": 1,
       "level": "Basic",
       "Journal Entry": "2026-11-07 -- Egeria 6.3 report specs / measurements / dashboards (odpi/egeria#9432)."
+    },
+    "Dashboard Owner": {
+      "variable_name": "dashboard_owner",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "The userId that owns the sheet's Dashboard (its Ownership classification, owner type UserIdentity). Leave it empty for the signed-in user. Set once: a Dashboard that already has an owner keeps it. Not written to Egeria with --local-only or with no Egeria connection.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Advanced",
+      "Journal Entry": "2026-11-10: added -- Create Dashboard Sheet sets Ownership the way `pyegeria.view.dashboards migrate --owner` does (DB-3)."
     }
   },
   "bundles": {
@@ -1172,6 +1191,7 @@
     "Dashboard Sheet Base": {
       "inherits": "Collection Base",
       "own_attributes": [
+        "Dashboard Owner",
         "Dashboard Sheet Description",
         "Dashboard Sheet Family",
         "Dashboard Sheet Heading"

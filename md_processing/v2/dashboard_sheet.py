@@ -465,6 +465,29 @@ class DashboardSheetEgeriaWriter:
                                 f"{sheet_container_qn(sheet_name)}")
         return chain
 
+    async def ensure_ownership(self, dashboard_guid: Optional[str], qn: str, owner: str) -> str:
+        """DB-3: the Dashboard's Ownership classification (owner = a userId), set once. A Dashboard that
+        already has an owner keeps it. No zone is set. Used by `Create Dashboard Sheet` and by
+        `python -m pyegeria.view.dashboards migrate`.
+
+        Returns "set", "unchanged" (already owned) or "planned" (dry run)."""
+        current = None if self._is_planned(dashboard_guid) else await self._find(qn)
+        existing = (((current or {}).get("elementHeader") or {}).get("ownership") or {})
+        if existing:
+            have = (existing.get("classificationProperties") or {}).get("owner")
+            self.actions.append(f"unchanged Ownership {qn}")
+            if have and have != owner:
+                self._note(f"Dashboard '{qn}' is already owned by '{have}'; its owner was not changed to '{owner}'.")
+            return "unchanged"
+        self.actions.append(f"classify Ownership {qn} (owner {owner})")
+        if self.dry_run:
+            return "planned"
+        await self.client.classification_manager._async_add_ownership_to_element(
+            dashboard_guid, {"class": "NewClassificationRequestBody",
+                             "properties": {"class": "OwnershipProperties", "owner": owner,
+                                            "ownerTypeName": "UserIdentity", "ownerPropertyName": "userId"}})
+        return "set"
+
     # ------------------------------------------------------------ placements
 
     async def _resolve_report(self, report_name: str) -> Optional[str]:
@@ -786,23 +809,35 @@ class CreateDashboardSheetProcessor(_DashboardSheetProcessorMixin, AsyncBaseComm
         sheets = _load_store(path)
         aliases = list(sheets[name].aliases) if name in sheets else []
 
+        # DB-3: owned by the signed-in user unless Dashboard Owner names another userId; set once.
+        explicit_owner = attributes.get("Dashboard Owner", {}).get("value") or None
+        owner = explicit_owner or getattr(self.client, "user_id", None) or None
+        ownership = {}
+
         async def _work(writer: DashboardSheetEgeriaWriter):
             chain = await writer.ensure_sheet(name, heading, description, family, aliases)
             self.parsed_output["guid"] = chain.dashboard_guid
+            if owner:
+                ownership["status"] = await writer.ensure_ownership(chain.dashboard_guid, dashboard_qn(name), owner)
 
         writer, local_reason = await self._with_egeria(_work)
 
         is_update = name in sheets
         sheets.upsert(name, DashboardSheet(name=name, heading=heading, description=description, family=family))
         sheets.save_to_json(path)
-        zones_note = ""
+        status_notes = ""
         if local_reason:
             # `name` stands in for the GUID (the sheet is in the local store only), so the base
             # processor must not sync anything to Egeria with it.
             self.parsed_output["guid"] = name
             self.parsed_output["local_only"] = local_reason
             if attributes.get("Zone Membership", {}).get("value"):
-                zones_note = "\n- **Zone Membership**: not written (local only)"
+                status_notes = "\n- **Zone Membership**: not written (local only)"
+            status_notes += "\n- **Ownership**: not written (local only)"
+        elif ownership.get("status") == "set":
+            status_notes = f"\n- **Ownership**: {owner}"
+        elif ownership.get("status") == "unchanged":
+            status_notes = "\n- **Ownership**: unchanged (already owned)"
 
         verb_word = "Updated" if is_update else "Created"
         logger.success(f"{verb_word} Dashboard Sheet '{name}' (local store {path}; Egeria: "
@@ -814,7 +849,7 @@ class CreateDashboardSheetProcessor(_DashboardSheetProcessorMixin, AsyncBaseComm
             f"- **Description**: {description or '_(none)_'}\n"
             f"- **Family**: {family or '_(none)_'}\n"
             f"- **Local store**: {path}"
-            f"{zones_note}"
+            f"{status_notes}"
             f"{_egeria_section(writer, local_reason)}"
         )
 

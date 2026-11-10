@@ -502,3 +502,60 @@ async def test_local_only_sheet_without_zones_reports_nothing_about_zones(egeria
     monkeypatch.setenv(LOCAL_ONLY_ENV, "1")
     result = await _run(egeria, "Create", "Dashboard Sheet", CREATE)
     assert "Zone Membership" not in result["output"] and "Zone Membership" not in result["message"]
+
+
+# ---------------------------------------------------------------------------- ownership (DB-3, as migrate)
+
+def _owners(fake):
+    return [w for w in fake.writes if w[0] == "add_ownership"]
+
+
+@pytest.mark.asyncio
+async def test_create_sets_ownership_for_the_signed_in_user_once(egeria):
+    egeria.user_id = "garygeeke"
+    first = await _run(egeria, "Create", "Dashboard Sheet", CREATE)
+    writes = list(egeria.writes)
+    second = await _run(egeria, "Create", "Dashboard Sheet", CREATE)
+
+    dashboard = egeria.by_qn(f"Dashboard::{SHEET}")
+    assert _owners(egeria) == [("add_ownership", dashboard, "garygeeke")]
+    assert egeria.writes == writes  # the re-run writes nothing
+    assert "**Ownership**: garygeeke" in first["output"]
+    assert "**Ownership**: unchanged (already owned)" in second["output"]
+    assert "no change: already as written" in second["output"]
+
+
+@pytest.mark.asyncio
+async def test_dashboard_owner_names_another_user(egeria):
+    egeria.user_id = "garygeeke"
+    await _run(egeria, "Create", "Dashboard Sheet", {**CREATE, "Dashboard Owner": "peterprofile"})
+    assert _owners(egeria) == [("add_ownership", egeria.by_qn(f"Dashboard::{SHEET}"), "peterprofile")]
+
+
+@pytest.mark.asyncio
+async def test_an_owned_dashboard_keeps_its_owner_and_says_so(egeria):
+    egeria.user_id = "garygeeke"
+    await _run(egeria, "Create", "Dashboard Sheet", CREATE)
+    result = await _run(egeria, "Create", "Dashboard Sheet", {**CREATE, "Dashboard Owner": "peterprofile"})
+    assert [w[2] for w in _owners(egeria)] == ["garygeeke"]
+    assert "already owned by 'garygeeke'" in result["output"]
+
+
+@pytest.mark.asyncio
+async def test_no_known_user_and_no_owner_sets_no_ownership(egeria):
+    result = await _run(egeria, "Create", "Dashboard Sheet", CREATE)  # the fake has no user_id
+    assert _owners(egeria) == [] and "Ownership" not in result["output"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("no_client", [False, True], ids=["local-only-env", "no-egeria-connection"])
+async def test_local_only_sets_no_ownership(egeria, monkeypatch, no_client):
+    egeria.user_id = "garygeeke"
+    if no_client:
+        client = None
+    else:
+        monkeypatch.setenv(LOCAL_ONLY_ENV, "1")
+        client = egeria
+    result = await _run(client, "Create", "Dashboard Sheet", {**CREATE, "Dashboard Owner": "peterprofile"})
+    assert egeria.writes == []
+    assert "**Ownership**: not written (local only)" in result["output"]
