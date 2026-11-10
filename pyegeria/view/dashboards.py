@@ -330,21 +330,9 @@ async def async_migrate_dashboard_sheets(client: Any, sheets: DashboardSheetDict
 
 async def _ensure_ownership(writer: DashboardSheetEgeriaWriter, dashboard_guid: Optional[str], qn: str,
                             owner: str) -> None:
-    """DB-3: a migrated sheet is owned by the user who migrates it -- the Dashboard's Ownership
-    classification (owner = that userId). Left alone when the Dashboard already has an owner. No zone is
-    set: the sheet is shared, in the default zone."""
-    current = None if writer._is_planned(dashboard_guid) else await writer._find(qn)
-    header = (current or {}).get("elementHeader") or {}
-    if header.get("ownership"):
-        writer.actions.append(f"unchanged Ownership {qn}")
-        return
-    writer.actions.append(f"classify Ownership {qn} (owner {owner})")
-    if writer.dry_run:
-        return
-    await writer.client.classification_manager._async_add_ownership_to_element(
-        dashboard_guid, {"class": "NewClassificationRequestBody",
-                         "properties": {"class": "OwnershipProperties", "owner": owner,
-                                        "ownerTypeName": "UserIdentity", "ownerPropertyName": "userId"}})
+    """DB-3: a migrated sheet is owned by the user who migrates it. The one implementation is
+    `DashboardSheetEgeriaWriter.ensure_ownership`, which `Create Dashboard Sheet` uses too."""
+    await writer.ensure_ownership(dashboard_guid, qn, owner)
 
 
 # ---------------------------------------------------------------------------- command line

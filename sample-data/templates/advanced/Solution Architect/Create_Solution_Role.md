@@ -103,6 +103,14 @@ ___
 >	**Description**: A list of search keywords.
 
 
+### Zone Membership
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple List
+
+>	**Description**: Zones scope visibility of elements to different users.
+
+
 ### GUID
 >	**Input Required**: False
 
@@ -305,14 +313,6 @@ ___
 >	**Description**: Repository or element header status for an element.
 
 >	**Default Value**: ACTIVE
-
-
-### Zone Membership
->	**Input Required**: False
-
->	**Attribute Type**: Simple List
-
->	**Description**: Zones scope visibility of elements to different users.
 
 
 ### Additional Properties

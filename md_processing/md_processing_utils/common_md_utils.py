@@ -353,7 +353,8 @@ def set_rel_prop_body(object_type: str, attributes: dict)->dict:
     # found silently dropped (declared in the compact spec, never read
     # anywhere) via scripts/dr_egeria_attribute_consumption_audit.py.
     if prop_name == "NotificationSubscriber":
-        body["zoneMembership"] = attributes.get('Zone Membership', {}).get('value')
+        # An empty Zone Membership sets no zones (None), not an empty list.
+        body["zoneMembership"] = attributes.get('Zone Membership', {}).get('value') or None
         body["lastNotification"] = attributes.get('Last Notification', {}).get('value')
         body["activityStatus"] = attributes.get('Activity Status', {}).get('value')
     elif prop_name == "AssignmentScope":

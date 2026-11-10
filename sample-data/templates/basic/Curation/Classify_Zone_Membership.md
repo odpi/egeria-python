@@ -19,4 +19,12 @@ ___
 >	**Description**: A text entry into a journal.
 
 
+### Zone Membership
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple List
+
+>	**Description**: Zones scope visibility of elements to different users.
+
+
 ___
