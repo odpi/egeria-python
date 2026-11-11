@@ -33,7 +33,7 @@ from urllib.parse import urlsplit
 
 from loguru import logger
 
-__all__ = ["saved_query", "SavedQueryRefused", "ALLOWED_QUERY_ENDPOINTS", "SAVED_QUERY_PAGE_SIZE",
+__all__ = ["saved_query", "delete_saved_query", "SavedQueryRefused", "ALLOWED_QUERY_ENDPOINTS", "SAVED_QUERY_PAGE_SIZE",
            "SAVED_QUERY_MAX_PAGES"]
 
 # Allow-listed view-server query endpoints (path below /servers/<view server>), each with the pyegeria
@@ -83,6 +83,11 @@ def _properties(el: Dict[str, Any]) -> Dict[str, Any]:
 
 def _guid(el: Dict[str, Any]) -> str:
     return el.get("elementGUID") or (el.get("elementHeader") or {}).get("guid") or ""
+
+
+def _type_names(el: Dict[str, Any]) -> List[str]:
+    t = (el.get("elementHeader") or {}).get("type") or {}
+    return [t.get("typeName") or ""] + list(t.get("superTypeNames") or [])
 
 
 def _type_name(el: Dict[str, Any]) -> str:
@@ -259,9 +264,11 @@ def saved_query(client, name: str, mode: str = "cached", output: str = "count",
       size, and `startFrom` stays the read's own. A parameter with no `requestPath` applies to the
       Portal's search only, so live mode refuses it when it is given, or when its effective value is a
       default the stored search doesn't hold.
-    - A SavedQuery registered as a Smart Collection (`additionalProperties.smartCollection == "true"`,
-      the Portal's test) is re-run by Egeria's SmartCollectionsMembershipManager about every 30
-      minutes from its stored request. Its cached answer stands only for the stored effective values
+    - A SavedQuery registered as a Smart Collection is re-run by Egeria's Smart Collections integration
+      connector about every 30 minutes from its stored request. Registered means what Egeria records, not a
+      flag: a Results Set linked to it by SmartQuery is a CatalogTarget of an IntegrationConnector, under
+      the connector's target name `resultsSetToMaintain` (6.2.35; the Portal's `smartCollection` flag was
+      the test before). That Results Set is the one read. Its cached answer stands only for the stored effective values
       (whatever a refresh recorded), is labelled "kept current by Egeria", and is refused for other
       values, pointing to live mode.
     An undeclared name, a value of the wrong type, a string with control characters or over 512
@@ -317,8 +324,9 @@ def saved_query(client, name: str, mode: str = "cached", output: str = "count",
         return _result(name, mode, output, state="not_established", reason=refused.sentence,
                        absence="not_applicable", refused=True)
 
-    registered = _is_registered_smart_collection(additional)
-    if mode == "cached" and registered:
+    registered, registration_note = (_smart_collection_results_set(client, _guid(exact[0])) if mode == "cached"
+                                     else (None, None))
+    if registered:
         # P-3: Egeria's SmartCollectionsMembershipManager re-runs the STORED request about every 30 minutes,
         # so the Results Set answers only for the stored effective values, whatever a refresh recorded.
         used = _effective_parameters(declared, None, _stored_search(props, additional)) if declared else {}
@@ -326,7 +334,8 @@ def saved_query(client, name: str, mode: str = "cached", output: str = "count",
             return _not_measured(name, "cached", output, f"this saved query is a Smart Collection, kept current by "
                                  f"Egeria with its stored values ({_label(used)}), so its cached answer cannot "
                                  f"stand for {_label(effective)}; use mode live for these values")
-        out = _cached(client, name, output, additional, page_size, max_pages, kept_current=True)
+        out = _cached(client, name, output, {**additional, "resultsSetGuid": registered}, page_size, max_pages,
+                      kept_current=True)
     elif mode == "cached":
         used = effective
         if declared:
@@ -353,6 +362,8 @@ def saved_query(client, name: str, mode: str = "cached", output: str = "count",
             page_size = max(1, min(body["pageSize"], 1000))  # a declared page size is the read's page size
         out = _live(client, name, output, method, body, page_size, max_pages)
         out["how"] = f"{method} on this client's platform" + (f"; {note}" if note else "")
+    if registration_note:
+        out["note"] = registration_note
     if declared:
         out["params"] = used
         if out.get("subtitle") and out.get("asOf"):
@@ -363,9 +374,40 @@ def saved_query(client, name: str, mode: str = "cached", output: str = "count",
     return out
 
 
-def _is_registered_smart_collection(additional: Dict[str, Any]) -> bool:
-    """The Portal's own test (insights_handler._is_registered_smart_collection)."""
-    return str((additional or {}).get("smartCollection") or "").strip().lower() == "true"
+#: The catalog target name Egeria's Smart Collections integration connector declares for the Results Sets it
+#: maintains (SmartCollectionsCatalogTarget.CATALOG_TARGET, Egeria #9200).
+SMART_COLLECTIONS_TARGET = "resultsSetToMaintain"
+
+
+def _related(client, guid: str, relationship: str, end: int) -> List[Dict[str, Any]]:
+    return _elements(client.get_related_elements(guid, relationship, start_at_end=end, start_from=0, page_size=50,
+                                                 output_format="JSON"))
+
+
+def _smart_collection_results_set(client, saved_query_guid: str) -> Tuple[Optional[str], Optional[str]]:
+    """(the GUID of the Results Set that makes this SavedQuery a Smart Collection, or None; a note when the
+    lookup could not be made, else None).
+
+    Registered is what Egeria records: a Results Set linked to the SavedQuery by SmartQuery (the SavedQuery is
+    end 2) that is a CatalogTarget (the Results Set is end 2) of an IntegrationConnector under the target name
+    `resultsSetToMaintain`. Not a name and not a flag. A read that fails is not a registration: the query then
+    takes the ordinary cached path, which serves only the values its refresh recorded, so it is never wrong."""
+    if not saved_query_guid:
+        return None, None
+    try:
+        for rs in _related(client, saved_query_guid, "SmartQuery", 2):
+            if "ResultsSet" not in _type_names(rs):
+                continue
+            for connector in _related(client, _guid(rs), "CatalogTarget", 2):
+                rel = (connector.get("relatedBy") or {}).get("relationshipProperties") or {}
+                if ("IntegrationConnector" in _type_names(connector)
+                        and rel.get("catalogTargetName") == SMART_COLLECTIONS_TARGET):
+                    return _guid(rs), None
+    except Exception as exc:  # noqa: BLE001 -- not registered as far as this viewer can tell; said in the answer
+        logger.debug(f"saved_query: Smart Collection lookup for {saved_query_guid} failed: {exc}")
+        return None, (f"whether this saved query is a Smart Collection could not be read ({type(exc).__name__}), "
+                      f"so it is answered as one that is not")
+    return None, None
 
 
 # ── parameters: one model with the Portal (insights_handler, b9dce798) ──────
@@ -559,7 +601,15 @@ def _cached(client, name, output, additional, page_size, max_pages, kept_current
     if not results_set:
         return _not_measured(name, "cached", output, "the saved query records no Results Set, so it has no "
                                                      "cached answer; use mode live, or refresh it")
-    if not as_of and not kept_current:
+    if kept_current:
+        # Egeria's Smart Collections connector stamps the Results Set's completionTime on every refresh, so that
+        # is when this answer is from. With no refresh recorded anywhere, the Results Set holds nothing YET: an
+        # empty membership there is "not refreshed yet", never 0 (the Architect's LD-2 read-back, 2026-11-11).
+        as_of = _results_set_completion(client, results_set) or as_of
+        if not as_of:
+            return _not_measured(name, "cached", output, "this saved query is a Smart Collection that Egeria has "
+                                 "not refreshed yet, so its Results Set holds no answer yet (not an empty answer)")
+    elif not as_of:
         return _not_measured(name, "cached", output, "the saved query has never been refreshed, so its "
                                                      "Results Set holds no answer yet (not an empty answer)")
     try:
@@ -580,6 +630,20 @@ def _cached(client, name, output, additional, page_size, max_pages, kept_current
             out["subtitle"] = "kept current by Egeria" + when + (
                 f" \u00b7 at least {out['atLeast']}: the read stopped at its bound" if out.get("capped") else "")
     return out
+
+
+def _results_set_completion(client, results_set_guid: str) -> Optional[str]:
+    """When Egeria last refreshed a Smart Collection's Results Set (its completionTime), or None when it has not,
+    or the Results Set cannot be read (then the Portal's refresh time, if any, is what there is)."""
+    try:
+        found = _elements(client.get_collection_by_guid(results_set_guid, output_format="JSON"))
+    except Exception as exc:  # noqa: BLE001 -- unknown, not "never": the caller falls back to the Portal's time
+        logger.debug(f"saved_query: Results Set {results_set_guid} could not be read: {exc}")
+        return None
+    when = _properties(found[0]).get("completionTime") if found else None
+    if isinstance(when, (int, float)) and when > 0:   # epoch milliseconds
+        return datetime.fromtimestamp(when / 1000, tz=timezone.utc).isoformat(timespec="seconds")
+    return str(when) if when else None
 
 
 def _live(client, name, output, method, body, page_size, max_pages):
@@ -604,3 +668,70 @@ def _answer(name, mode, output, elements, capped, as_of):
         return _result(name, mode, output, state="nothing_found", absence="nothing_found", count=0,
                        elements=listed, as_of=as_of, reason="the saved query's answer is empty")
     return _result(name, mode, output, state="measured", count=n, elements=listed, capped=capped, as_of=as_of)
+
+
+# ── deleting a saved query (6.2.35) ──
+
+DELETE_LINK_PAGE = 50
+DELETE_LINK_MAX_PAGES = 40
+
+
+def _all_related(client, guid: str, relationship: str, end: int) -> List[Dict[str, Any]]:
+    """Every element related to `guid` by `relationship`, read until Egeria returns an EMPTY page (a short page is
+    not the last page). More than DELETE_LINK_MAX_PAGES pages is refused rather than half read."""
+    out: List[Dict[str, Any]] = []
+    for page in range(DELETE_LINK_MAX_PAGES):
+        got = _elements(client.get_related_elements(guid, relationship, start_at_end=end,
+                                                    start_from=page * DELETE_LINK_PAGE,
+                                                    page_size=DELETE_LINK_PAGE, output_format="JSON"))
+        if not got:
+            return out
+        out.extend(got)
+    raise RuntimeError(f"delete_saved_query: {guid} has more than {DELETE_LINK_MAX_PAGES * DELETE_LINK_PAGE} "
+                       f"{relationship} links; refused rather than delete with some left behind")
+
+
+def delete_saved_query(client, saved_query_guid: str) -> Dict[str, Any]:
+    """Delete a SavedQuery, detaching its SmartQuery links first, so no Results Set is left linked to a query
+    that no longer exists.
+
+    Egeria deletes only what the deleted element anchors; a SmartQuery link to an independently anchored Results
+    Set is left behind, and blocks the delete (OMAG-GENERIC-HANDLERS-403-005). So every Results Set linked to the
+    SavedQuery by SmartQuery (found from Egeria's relationships, not from the Portal's additionalProperties) is
+    detached through the dedicated endpoint, and then the SavedQuery is deleted.
+
+    The Results Sets themselves are kept: deleting one also means unlinking its members and, for a Smart
+    Collection, its catalog target, which is the owner's call. They are named in the result.
+
+    Returns {"deleted": guid, "detached": [results set guids], "results_sets_kept": [...]}. A link that cannot be
+    detached stops the delete, raising RuntimeError with the reason, so nothing is half done silently.
+    """
+    if not saved_query_guid:
+        raise ValueError("delete_saved_query: the SavedQuery's GUID is required")
+    # It deletes only a SavedQuery: an asset delete reaches any element it is given a GUID for (remove_note's once
+    # reached a UserIdentity), so the element is read and its type checked first (the Architect's 6.2.35 read-back).
+    try:
+        found = _elements(client.get_asset_by_guid(saved_query_guid, graph_query_depth=0, output_format="JSON"))
+    except Exception as exc:  # said; nothing is deleted
+        raise RuntimeError(f"delete_saved_query: {saved_query_guid} could not be read ({type(exc).__name__}: "
+                           f"{exc}), so it was not deleted") from exc
+    kinds = _type_names(found[0]) if found else []
+    if "SavedQuery" not in kinds:
+        raise RuntimeError(f"delete_saved_query: {saved_query_guid} is "
+                           f"{'a ' + kinds[0] if kinds and kinds[0] else 'not found'}, not a SavedQuery; "
+                           f"nothing was deleted")
+    linked = _all_related(client, saved_query_guid, "SmartQuery", 2)
+    detached: List[str] = []
+    for rs in linked:
+        rs_guid = _guid(rs)
+        if not rs_guid:
+            continue
+        try:
+            client.detach_smart_query(rs_guid, saved_query_guid)
+        except Exception as exc:  # said, and the delete does not go ahead
+            raise RuntimeError(f"delete_saved_query: the SmartQuery link from Results Set {rs_guid} could not be "
+                               f"detached ({type(exc).__name__}: {exc}); the saved query was not deleted") from exc
+        detached.append(rs_guid)
+    client.delete_asset(saved_query_guid)
+    logger.info(f"Deleted saved query {saved_query_guid}; detached {len(detached)} SmartQuery link(s)")
+    return {"deleted": saved_query_guid, "detached": detached, "results_sets_kept": list(detached)}
