@@ -147,7 +147,10 @@ def recording_list_requests():
     """Record, for the calls made inside this block, what the last list request sent and got back:
     yields the caller's own dict (keys `cap`, `graph_query_depth`, `include_only_relationships`,
     `skip_relationships`). A coroutine run inside the block (sync wrappers run it in a task that copies
-    this context) writes into the same dict, which the caller reads after the call."""
+    this context) writes into the same dict, which the caller reads after the call.
+
+    The record keeps the LAST list request of the call: a find method that made a second list request
+    internally would report that request's depth and cap. Today's report-spec finds make one."""
     record: dict = {}
     token = LIST_REQUEST_RECORD.set(record)
     try:

@@ -9,6 +9,9 @@ means the comment names none.
 
 Used by the structured TABLE and native DICT (R1) to tell a relationship that was read and is absent
 ("none") from one that was not requested ("not read"): Egeria omits an empty relationship list.
+
+Do not edit by hand. Regenerate with `scripts/gen_egeria_relationship_fields.py <egeria checkout>`
+when Egeria adds relationships.
 """
 
 RELATIONSHIP_FIELDS = {
