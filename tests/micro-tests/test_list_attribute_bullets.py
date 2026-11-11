@@ -1,0 +1,79 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright Contributors to the ODPi Egeria project.
+"""6.2.39: a bulleted list attribute keeps one item per bullet; a comma inside a bullet stays in it.
+
+Dr.Egeria used to split every list value on commas, semicolons and newlines, so the CDO workbook's
+"Recovery Objective Coverage and Achievement" metric (4 bullets, two with commas) was stored in Egeria
+with 6 implications (see the governance_metrics capture). The commands below are copied verbatim from
+egeria-workspaces coco-workbooks/4. keeping-safe/it-governance-program.md."""
+import asyncio
+import gzip
+import json
+from pathlib import Path
+
+import pytest
+
+from md_processing.md_processing_utils.common_md_proc_utils import split_list_value
+from md_processing.md_processing_utils.common_md_utils import split_tb_string
+from md_processing.md_processing_utils.md_processing_constants import load_commands
+from md_processing.v2.parsing import parse_dr_egeria_content
+
+pytestmark = pytest.mark.unit
+
+DATA = Path(__file__).parent / "data"
+EXCERPT = (DATA / "dr_egeria" / "it_governance_program_excerpt.md").read_text()
+
+METRIC_IMPLICATIONS = [
+    "Coverage and achievement are distinct measures and both are required",
+    "Results go to the Service Owner and the depending domain, not only to IT",
+    "Services supporting regulatory deadlines are reported separately",
+    "Persistent shortfall is evidence for renegotiating the objective, not for repeated failure reporting",
+]
+IMPERATIVE_FIRST = "Service characteristics must be agreed with the depending domain, not set by IT alone"
+
+
+def _parsed():
+    load_commands()
+    return asyncio.run(parse_dr_egeria_content(EXCERPT))
+
+
+def test_the_workbook_metric_has_four_implications():
+    metric = next(c for c in _parsed() if c["object_type"] == "Governance Metric")
+    assert metric["attributes"]["Implications"]["value"] == METRIC_IMPLICATIONS
+
+
+def test_the_workbook_imperative_keeps_its_comma():
+    imperative = next(c for c in _parsed() if c["object_type"] == "Business Imperative")
+    implications = imperative["attributes"]["Implications"]["value"]
+    assert implications[0] == IMPERATIVE_FIRST and len(implications) == 4
+
+
+def test_egeria_holds_the_split_value_today():
+    """The bug as captured read-only on laz (2026-11-11): the same metric stored with 6 implications."""
+    capture = json.loads(gzip.open(DATA / "report_specs" / "governance_metrics.json.gz").read())
+    stored = next(e["properties"]["implications"] for c in capture["calls"]
+                  for e in (c["answer"].get("elements") or [])
+                  if "Coverage and achievement are distinct measures" in " ".join(e["properties"].get("implications") or []))
+    assert len(stored) == 6 and "not only to IT" in stored
+
+
+@pytest.mark.parametrize("text, expected", [
+    ("a, b", ["a", "b"]),                                         # a single line still splits
+    ("a; b", ["a", "b"]),
+    ("- one, with a comma", ["one, with a comma"]),               # one bullet stays one item
+    ("- a, b\n- c", ["a, b", "c"]),
+    ("* a, b\n+ c", ["a, b", "c"]),
+    ("first line, with comma\nsecond", ["first line, with comma", "second"]),  # multi-line: a line is an item
+    ("\n- a\n\n- b\n", ["a", "b"]),
+    ("", []),
+    (None, None),
+    (["x", " y "], ["x", "y"]),
+    ("-5, 6", ["-5", "6"]),                                       # "-5" is not a bullet
+    ("- Item 1; - Item 2, Item 3", ["Item 1", "Item 2", "Item 3"]),  # an inline bulleted list on one line
+])
+def test_split_list_value(text, expected):
+    assert split_list_value(text) == expected
+
+
+def test_spec_metadata_splitting_is_unchanged():
+    assert split_tb_string("Display Name; Name, Title") == ["Display Name", "Name", "Title"]

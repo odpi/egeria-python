@@ -76,6 +76,40 @@ def split_tb_string(input: str)-> [Any]:
             results.append(item)
     return results
 
+_LIST_BULLET = re.compile(r'^\s*[\-\*\+]\s+')
+#: A separator followed by another bullet marker: an inline list on one line ("- a; - b, c").
+_INLINE_BULLETS = re.compile(r'[;,]\s*[\-\*\+]\s+')
+
+
+def split_list_value(text: Any) -> list | None:
+    """The items of a list attribute's VALUE (Simple List, List, NameList, Reference Name List).
+
+    - A bulleted or multi-line value: each bullet (or line) is one item, verbatim -- a comma inside a
+      bullet is part of the item ("- agreed with the depending domain, not set by IT alone" is one
+      item). A leading markdown bullet (`- `, `* `, `+ `) is stripped.
+    - A single-line value is split on commas and semicolons ("a, b" is two items), including an inline
+      bulleted list on one line ("- a; - b, c" is three); a single bullet on its own line is one item.
+
+    Until 6.2.39 every value was split on commas, semicolons and newlines, so a bullet with a comma
+    became two items. Spec metadata (labels, valid values) still uses `split_tb_string`.
+    """
+    if text is None:
+        return None
+    if isinstance(text, (list, tuple)):
+        return [str(i).strip() for i in text if str(i).strip()]
+    lines = [line for line in str(text).splitlines() if line.strip()]
+    if not lines:
+        return []
+    if len(lines) > 1:
+        items = [_LIST_BULLET.sub('', line).strip() for line in lines]
+        return [item for item in items if item]
+    line = lines[0]
+    if _LIST_BULLET.match(line) and not _INLINE_BULLETS.search(line):
+        return [_LIST_BULLET.sub('', line).strip()]  # one bullet: one item, commas and all
+    items = [_LIST_BULLET.sub('', item).strip() for item in re.split(r'[;,]+', line)]
+    return [item for item in items if item]
+
+
 def str_to_bool(value: str) -> bool:
     """Converts a string to a boolean value."""
     return value.lower() in ("yes", "true", "t", "1")
