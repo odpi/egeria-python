@@ -66,6 +66,7 @@ __all__ = [
     "egeria_tier_info",
     "spec_footer",
     "fetched_spec",
+    "fetched_spec_source",
     "split_tier_prefix",
     "label_from_qualified_name",
 ]
@@ -1045,6 +1046,17 @@ def fetched_spec(name: str):
         return None
     hit = _FETCHED.get((m.group("label"), int(m.group("version"))))
     return hit[0] if hit else None
+
+
+def fetched_spec_source(name: str) -> Optional[Dict[str, Any]]:
+    """The provenance of a spec fetched this process ("<label>@v<N>", with or without "egeria:"), or None:
+    tier, label, guid, version, header_version, fetched_at, fetched, shared, qualified_name."""
+    _tier, rest = split_tier_prefix(name)
+    m = _FETCHED_SUFFIX.match(rest or "") if isinstance(rest, str) else None
+    if not m:
+        return None
+    hit = _FETCHED.get((m.group("label"), int(m.group("version"))))
+    return dict(hit[1]) if hit else None
 
 
 def _fetch_target(name: str) -> str:
