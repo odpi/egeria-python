@@ -50,7 +50,7 @@ from pydantic import BaseModel, ConfigDict, Field
 __all__ = [
     "NOT_VISIBLE", "REPORT_GONE", "ResolvedPlacement", "ResolvedReport", "ResolvedSheet",
     "async_list_dashboard_sheets_for_viewer", "async_resolve_dashboard_sheet", "async_resolve_sheet",
-    "is_not_visible_error", "list_dashboard_sheets_for_viewer", "placements_for_perspective",
+    "is_not_visible_error", "list_dashboard_sheets_for_viewer", "placements_for_perspective", "SPEC_NOT_IN_FOLDER",
     "report_from_element", "resolve_dashboard_sheet", "resolve_sheet",
 ]
 
@@ -58,6 +58,9 @@ __all__ = [
 NOT_VISIBLE = "not visible to you"
 #: A Report this viewer was linked to but Egeria no longer holds.
 REPORT_GONE = "the Report this placement shows is no longer in Egeria"
+#: A placement whose spec no tier here holds, fetched from Egeria as the viewer: consumer folders govern
+#: what a tool LISTS, not whether a spec a sheet already references can RUN (Architect, B7a read-back).
+SPEC_NOT_IN_FOLDER = "held in Egeria, not in this tool's folder"
 
 #: Egeria's message ids for "this element is in a zone you cannot see": an explicit read (403-020) and a
 #: filtered one (500-002, normally swallowed by the server, matched in case it surfaces).
@@ -106,6 +109,8 @@ class ResolvedPlacement(BaseModel):
     refusal: Optional[str] = None       # the spec resolver's words when not runnable
     result: Optional[Dict[str, Any]] = None   # with run=True: exec_report_spec's result
     error: Optional[str] = None         # what went wrong finding the spec or running it, in words
+    #: The internal name ("egeria:<label>@v<N>") a spec fetched as the viewer runs under; None otherwise.
+    fetched_as: Optional[str] = None
 
 
 class ResolvedSheet(BaseModel):
@@ -253,7 +258,7 @@ def _run_report(client: Any, placement: ResolvedPlacement) -> Dict[str, Any]:
     analytic = bool(getattr(action, "analytic_function", None)) if action is not None else False
     params = dict(report.analytic_params if analytic else report.params)
     return exec_report_spec(
-        placement.spec, output_format=report.output_format or "DICT", params=params,
+        placement.fetched_as or placement.spec, output_format=report.output_format or "DICT", params=params,
         view_server=getattr(client, "server_name", None) or getattr(client, "view_server", None),
         view_url=getattr(client, "platform_url", None), user=getattr(client, "user_id", None),
         user_pass=getattr(client, "user_pwd", None), token=getattr(client, "token", None))
@@ -261,10 +266,38 @@ def _run_report(client: Any, placement: ResolvedPlacement) -> Dict[str, Any]:
 
 # ---------------------------------------------------------------------------- the data step
 
+def _fetched_not_synced(source: Optional[Dict[str, Any]]) -> bool:
+    """An EGERIA-tier spec that is in the cache only because a call fetched it: no synced folder holds it."""
+    if not source or source.get("tier") != "egeria" or not source.get("label"):
+        return False
+    from pyegeria.view.egeria_spec_cache import egeria_tier_info
+    info = egeria_tier_info(source["label"])
+    return bool(info) and not info.get("folders")
+
+
+async def _fetch_as_viewer(client: Any, label: str) -> Tuple[Any, Optional[Dict[str, Any]], Optional[str], Optional[str]]:
+    """Fetch a spec no tier holds from Egeria, as the viewer `client` (Egeria's zone check on this read is
+    the authority). `(FormatSet, spec_source, internal name, None)`, or `(None, None, None, why)` with
+    Egeria's or pyegeria's words; `why` is None when this client cannot read collections at all."""
+    if not callable(getattr(client, "_async_get_collections_by_name", None)):
+        return None, None, None, None
+    from pyegeria.view.egeria_spec_cache import async_fetch_spec_for_call, fetched_spec, fetched_spec_source
+    try:
+        name = await async_fetch_spec_for_call(client, label)
+    except Exception as exc:  # noqa: BLE001 -- the placement says why, in words
+        why = NOT_VISIBLE if is_not_visible_error(exc) or is_not_visible_error(exc.__cause__ or exc) else None
+        return None, None, None, why or " ".join(str(exc).split())[:300]
+    internal = name.split(":", 1)[1] if name.startswith("egeria:") else name
+    fs = fetched_spec(internal)
+    if fs is None:
+        return None, None, None, f"'{name}' was fetched but is not loadable"
+    return fs, fetched_spec_source(internal), name, None
+
+
 async def _resolve_report_placement(client: Any, base: Dict[str, Any], p: Any, resolutions: Dict[str, Any],
                                     spec_lookup: Callable, check_spec_visibility: bool,
                                     spec_visibility: Dict[str, asyncio.Future], gate: asyncio.Semaphore,
-                                    ) -> ResolvedPlacement:
+                                    fetch_missing: bool = True) -> ResolvedPlacement:
     guid = getattr(p, "report_guid", None)
     kind = getattr(p, "kind", "report")
     note = getattr(p, "note", None)
@@ -288,10 +321,24 @@ async def _resolve_report_placement(client: Any, base: Dict[str, Any], p: Any, r
         out.error = f"Report '{report.name}' names no report spec"
         return out
     fs, source = spec_lookup(report.report_spec)
+    if fs is None and fetch_missing:
+        async with gate:
+            fs, source, fetched_as, why = await _fetch_as_viewer(client, report.report_spec)
+        if fs is None:
+            out.error = f"report spec '{report.report_spec}' was not found in any tier" + (
+                f", and fetching it from Egeria as {getattr(client, 'user_id', None) or 'the viewer'} failed: {why}"
+                if why else "")
+            return out
+        out.fetched_as = fetched_as
+        out.note = f"{out.note}; {SPEC_NOT_IN_FOLDER}" if out.note else SPEC_NOT_IN_FOLDER
     if fs is None:
         out.error = f"report spec '{report.report_spec}' was not found in any tier"
         return out
     out.format_set, out.spec_source = fs, source
+    if out.fetched_as is None and _fetched_not_synced(source):
+        # Fetched as a viewer on an earlier view and written through to a per-user cache: it is in a tier now,
+        # but still in none of this tool's folders, so it still says so (Architect, LD-1 read-back).
+        out.note = f"{out.note}; {SPEC_NOT_IN_FOLDER}" if out.note else SPEC_NOT_IN_FOLDER
     spec_guid = (source or {}).get("guid") if (source or {}).get("tier") == "egeria" else None
     if check_spec_visibility and spec_guid:
         # The EGERIA tier may be filled by another user (the app's service user, into a shared cache);
@@ -311,7 +358,8 @@ async def _resolve_report_placement(client: Any, base: Dict[str, Any], p: Any, r
 
 async def async_resolve_dashboard_sheet(client: Any, name: str, *, perspective: Optional[str] = None,
                                         run: bool = False, spec_lookup: Optional[Callable] = None,
-                                        check_spec_visibility: bool = True) -> Optional[ResolvedSheet]:
+                                        check_spec_visibility: bool = True,
+                                        fetch_missing: bool = True) -> Optional[ResolvedSheet]:
     """Resolve the Egeria-held sheet `name` as the viewer `client` is signed in as. None if Egeria holds
     no such sheet for this viewer (a sheet in a zone they cannot see reads the same as no sheet).
 
@@ -320,18 +368,21 @@ async def async_resolve_dashboard_sheet(client: Any, name: str, *, perspective: 
     `check_spec_visibility`: re-read an EGERIA-tier spec by GUID as this viewer (one read per distinct spec).
     `run`: also run each runnable report placement (exec_report_spec, as the viewer); off by default, since
     an app that runs placements itself (the Portal) only needs the data.
+    `fetch_missing`: a placement whose spec no tier holds is fetched from Egeria as this viewer and noted
+    SPEC_NOT_IN_FOLDER: consumer folders govern what a tool lists, not whether a referenced spec can run.
+    A spec the viewer cannot read stays absent, with Egeria's reason in `error`.
     """
     from pyegeria.view.dashboards import read_sheet_from_chain
     sheet = await read_sheet_from_chain(client, name)
     if sheet is None:
         return None
     return await async_resolve_sheet(client, sheet, perspective=perspective, run=run, spec_lookup=spec_lookup,
-                                     check_spec_visibility=check_spec_visibility)
+                                     check_spec_visibility=check_spec_visibility, fetch_missing=fetch_missing)
 
 
 async def async_resolve_sheet(client: Any, sheet: Any, *, perspective: Optional[str] = None, run: bool = False,
                               spec_lookup: Optional[Callable] = None,
-                              check_spec_visibility: bool = True) -> ResolvedSheet:
+                              check_spec_visibility: bool = True, fetch_missing: bool = True) -> ResolvedSheet:
     """Resolve a sheet the caller has ALREADY read from Egeria (an EgeriaDashboardSheet, e.g. from its own
     cache of load_dashboard_sheet), so an app that caches sheet reads does not walk the chain twice. The
     sheet must have been read as the same viewer as `client`. Otherwise as async_resolve_dashboard_sheet."""
@@ -356,7 +407,7 @@ async def async_resolve_sheet(client: Any, sheet: Any, *, perspective: Optional[
             work.append(_text())
         else:
             work.append(_resolve_report_placement(client, base, p, resolutions, lookup, check_spec_visibility,
-                                                  spec_visibility, gate))
+                                                  spec_visibility, gate, fetch_missing))
     resolved.placements = list(await asyncio.gather(*work))
 
     if run:
@@ -374,33 +425,37 @@ async def async_resolve_sheet(client: Any, sheet: Any, *, perspective: Optional[
     return resolved
 
 
-async def async_list_dashboard_sheets_for_viewer(client: Any) -> List[Any]:
+async def async_list_dashboard_sheets_for_viewer(client: Any, folders: Optional[List[str]] = None) -> List[Any]:
     """The sheets Egeria holds that the viewer `client` is signed in as can see. Listing is per viewer:
     a sheet in a zone they cannot see is not listed, so an app caching this keys it by the viewer's
-    credential identity, never a shared key."""
+    credential identity, never a shared key. `folders` (else the configured dashboard folders) scopes it
+    as `async_list_dashboard_sheets` does; the result is its DashboardSheetListing, notes included."""
     from pyegeria.view.dashboards import async_list_dashboard_sheets
-    return await async_list_dashboard_sheets(client)
+    return await async_list_dashboard_sheets(client, folders)
 
 
 def resolve_dashboard_sheet(client: Any, name: str, *, perspective: Optional[str] = None, run: bool = False,
                             spec_lookup: Optional[Callable] = None,
-                            check_spec_visibility: bool = True) -> Optional[ResolvedSheet]:
+                            check_spec_visibility: bool = True,
+                            fetch_missing: bool = True) -> Optional[ResolvedSheet]:
     """Sync form of async_resolve_dashboard_sheet."""
     from pyegeria.core.async_runner import run_sync
     return run_sync(async_resolve_dashboard_sheet(client, name, perspective=perspective, run=run,
                                                   spec_lookup=spec_lookup,
-                                                  check_spec_visibility=check_spec_visibility))
+                                                  check_spec_visibility=check_spec_visibility,
+                                                  fetch_missing=fetch_missing))
 
 
 def resolve_sheet(client: Any, sheet: Any, *, perspective: Optional[str] = None, run: bool = False,
-                  spec_lookup: Optional[Callable] = None, check_spec_visibility: bool = True) -> ResolvedSheet:
+                  spec_lookup: Optional[Callable] = None, check_spec_visibility: bool = True,
+                  fetch_missing: bool = True) -> ResolvedSheet:
     """Sync form of async_resolve_sheet."""
     from pyegeria.core.async_runner import run_sync
     return run_sync(async_resolve_sheet(client, sheet, perspective=perspective, run=run, spec_lookup=spec_lookup,
-                                        check_spec_visibility=check_spec_visibility))
+                                        check_spec_visibility=check_spec_visibility, fetch_missing=fetch_missing))
 
 
-def list_dashboard_sheets_for_viewer(client: Any) -> List[Any]:
+def list_dashboard_sheets_for_viewer(client: Any, folders: Optional[List[str]] = None) -> List[Any]:
     """Sync form of async_list_dashboard_sheets_for_viewer."""
     from pyegeria.core.async_runner import run_sync
-    return run_sync(async_list_dashboard_sheets_for_viewer(client))
+    return run_sync(async_list_dashboard_sheets_for_viewer(client, folders))

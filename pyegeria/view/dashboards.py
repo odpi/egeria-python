@@ -6,7 +6,16 @@ Dashboard sheets held in Egeria: the reader, and the migration from the local JS
 (report-spec pipeline note v5.5 §8d / §10.6(c); BRIEF RS-DASH PR-2).
 
     load_dashboard_sheet(name)   -> the sheet, read from its Egeria element chain, or None
-    list_dashboard_sheets()      -> every sheet held in Egeria (Dashboard::* elements)
+    list_dashboard_sheets()      -> the sheets in the configured dashboard folders; with none configured,
+                                    every sheet held in Egeria (Dashboard::* elements), and it says so
+    read_dashboard_consumer_index() -> {sheet: [consumer, ...]} over the dashboard folder tree
+
+Dashboard folders (LD-1) mirror report-spec consumer folders: a root `RootCollection::DashboardSheets`
+(PYEGERIA_DASHBOARD_ROOT) holds one `DashboardFolder::Consumer::<App>` CollectionFolder per consumer
+(Portal, EgeriaAdvisor, ...), sub-folders allowed; a sheet's `Dashboard` element is the member, and one
+sheet may sit in several consumer folders. Which folders a listing takes: PYEGERIA_DASHBOARD_FOLDERS
+(comma-separated), else config.json's "Pyegeria Dashboard Folders". The walk is egeria_folders', the
+same one the report-spec cache uses.
 
 Both return today's `DashboardSheet` / `Placement` model, so a consumer keeps its code. The objects are the
 subclasses `EgeriaDashboardSheet` / `EgeriaPlacement`, which add only what an Egeria-held sheet must say:
@@ -41,6 +50,7 @@ the store record.
 from __future__ import annotations
 
 import argparse
+import asyncio
 import os
 import sys
 from typing import Any, Dict, List, Literal, Optional
@@ -52,12 +62,16 @@ from md_processing.v2.dashboard_sheet import (
     DASHBOARD_QN_PREFIX, DashboardSheetEgeriaWriter, _default_store_path, _load_store, dashboard_qn,
     perspective_qualified_name, sheet_name_from_dashboard_qn,
 )
+from pyegeria.view import egeria_folders as _folders
 from pyegeria.view._output_dashboard_sheet_models import DashboardSheet, DashboardSheetDict, Placement
 
 __all__ = [
-    "EgeriaDashboardSheet", "EgeriaPlacement", "REPORT_LINK_MISSING", "as_local_model",
-    "async_list_dashboard_sheets", "async_load_dashboard_sheet", "async_migrate_dashboard_sheets",
-    "async_resolve_dashboard_sheet", "list_dashboard_sheets", "load_dashboard_sheet", "main",
+    "DASHBOARD_CONSUMER_PREFIX", "DASHBOARD_CONSUMERS_FORMAT", "DASHBOARD_FOLDERS_ENV", "DASHBOARD_ROOT_ENV",
+    "DEFAULT_DASHBOARD_ROOT", "DashboardSheetListing", "EgeriaDashboardSheet", "EgeriaPlacement",
+    "NO_FOLDERS_NOTE", "REPORT_LINK_MISSING", "as_local_model", "async_list_dashboard_sheets",
+    "async_load_dashboard_sheet", "async_migrate_dashboard_sheets", "async_resolve_dashboard_sheet",
+    "build_dashboard_consumer_index", "configured_dashboard_folders", "configured_dashboard_root",
+    "list_dashboard_sheets", "load_dashboard_sheet", "main", "read_dashboard_consumer_index",
     "read_sheet_from_chain", "resolve_dashboard_sheet",
 ]
 
@@ -65,6 +79,13 @@ PAGE_SIZE = 25
 REPORT_LINK_MISSING = "report link missing in Egeria"
 _SPANS = ("1", "2", "full")
 _STYLES = ("kpi", "panel")
+
+DASHBOARD_ROOT_ENV = "PYEGERIA_DASHBOARD_ROOT"
+DEFAULT_DASHBOARD_ROOT = "RootCollection::DashboardSheets"
+DASHBOARD_CONSUMER_PREFIX = "DashboardFolder::Consumer::"
+DASHBOARD_FOLDERS_ENV = "PYEGERIA_DASHBOARD_FOLDERS"
+DASHBOARD_CONSUMERS_FORMAT = "pyegeria-dashboard-consumers/1"
+NO_FOLDERS_NOTE = "no dashboard folders configured: listing every Dashboard:: sheet"
 
 
 class EgeriaPlacement(Placement):
@@ -85,6 +106,25 @@ class EgeriaDashboardSheet(DashboardSheet):
     source: str = "egeria"
     guid: Optional[str] = None
     breaks: List[str] = Field(default_factory=list)
+    #: The configured dashboard folders the sheet was found in (empty for an unfiltered listing).
+    folders: List[str] = Field(default_factory=list)
+    #: The consumers those folders belong to (`DashboardFolder::Consumer::<App>`).
+    used_by: List[str] = Field(default_factory=list)
+
+
+class DashboardSheetListing(list):
+    """The sheets a listing found (a plain list, so existing callers keep working), and how it read them.
+
+    `notes` says what the reader should know: no folders configured, a folder not found or not readable,
+    a sub-folder the walk could not read. `folders` has one entry per configured folder: its
+    `qualifiedName`, `status` ("read", "partial", "not found", "not read"), `reason` and `sheets`. A
+    folder that could not be read is never reported as an empty one."""
+
+    def __init__(self, sheets: Any = (), *, notes: Optional[List[str]] = None,
+                 folders: Optional[List[Dict[str, Any]]] = None) -> None:
+        super().__init__(sheets)
+        self.notes: List[str] = list(notes or [])
+        self.folders: List[Dict[str, Any]] = list(folders or [])
 
 
 def as_local_model(sheet: DashboardSheet) -> DashboardSheet:
@@ -252,9 +292,7 @@ async def _dashboard_elements(client: Any) -> List[Dict[str, Any]]:
         start += len(items)
 
 
-async def async_list_dashboard_sheets(client: Any) -> List[EgeriaDashboardSheet]:
-    """Every sheet held in Egeria, by name. A Dashboard whose chain is broken (for example one made with
-    plain `Create Dashboard`) is listed with its `breaks`, not dropped."""
+async def _all_sheets(client: Any) -> List[EgeriaDashboardSheet]:
     sheets: List[EgeriaDashboardSheet] = []
     seen = set()
     for element in await _dashboard_elements(client):
@@ -267,6 +305,131 @@ async def async_list_dashboard_sheets(client: Any) -> List[EgeriaDashboardSheet]
             sheets.append(sheet)
     sheets.sort(key=lambda s: s.name.lower())
     return sheets
+
+
+def configured_dashboard_folders() -> List[str]:
+    """The folders a listing takes: PYEGERIA_DASHBOARD_FOLDERS (comma-separated qualified names), else
+    config.json's "Pyegeria Dashboard Folders". Empty by default."""
+    env_val = os.getenv(DASHBOARD_FOLDERS_ENV)
+    if env_val is not None:
+        return [p.strip() for p in env_val.split(",") if p.strip()]
+    try:
+        from pyegeria.core.config import settings
+        return list(getattr(settings.Environment, "pyegeria_dashboard_folders", None) or [])
+    except Exception:  # noqa: BLE001 -- settings may not load in every context; then nothing is configured
+        return []
+
+
+def configured_dashboard_root() -> str:
+    """The root of the dashboard folder tree: PYEGERIA_DASHBOARD_ROOT, else RootCollection::DashboardSheets."""
+    return (os.getenv(DASHBOARD_ROOT_ENV) or "").strip() or DEFAULT_DASHBOARD_ROOT
+
+
+def _is_dashboard_member(el: Dict[str, Any]) -> bool:
+    """A sheet's Dashboard element: type Dashboard, qualifiedName Dashboard::<sheet>."""
+    qn = (el.get("properties") or {}).get("qualifiedName") or ""
+    return "Dashboard" in _folders._type_names(el) and bool(sheet_name_from_dashboard_qn(qn))
+
+
+def _used_by(folder: Dict[str, Any]) -> List[str]:
+    """The consumer a configured folder belongs to: its own name if it is a consumer folder, the consumer
+    segment of its qualified name if it is a sub-folder of one, else none."""
+    qn = (folder.get("properties") or {}).get("qualifiedName") or ""
+    if _folders.is_top_consumer_qn(qn, DASHBOARD_CONSUMER_PREFIX):
+        return [_folders.consumer_name(folder, DASHBOARD_CONSUMER_PREFIX)]
+    if _folders.is_consumer_qn(qn, DASHBOARD_CONSUMER_PREFIX):
+        return [qn[len(DASHBOARD_CONSUMER_PREFIX):].split("::", 1)[0]]
+    return []
+
+
+def _walk_dashboard_folders(client: Any, folder_qns: List[str], depth_cap: int):
+    """Read each configured folder (recursively, inside its consumer) and gather its Dashboard members.
+    Synchronous, like the report-spec cache's walk: callers in a loop run it in a worker thread.
+
+    Returns ({sheet name: {"element", "folders", "used_by"}}, notes, per-folder status)."""
+    found: Dict[str, Dict[str, Any]] = {}
+    notes: List[str] = []
+    status: List[Dict[str, Any]] = []
+    identity = _folders.client_identity(client)
+    stop = [configured_dashboard_root()]
+    for qn in folder_qns:
+        entry: Dict[str, Any] = {"qualifiedName": qn, "status": "read", "reason": None, "sheets": 0}
+        status.append(entry)
+        try:
+            folder = _folders.find_folder(client, qn)
+        except Exception as exc:  # noqa: BLE001 -- one folder failing must not hide the others
+            entry.update(status="not read", reason=f"could not be read: {exc}")
+            notes.append(f"{qn}: {entry['reason']}")
+            continue
+        if folder is None:
+            entry.update(status="not found", reason=f"not found, or not visible to {identity}")
+            notes.append(f"{qn}: {entry['reason']}")
+            continue
+        try:
+            walk = _folders.walk_folder(client, folder, recursive=True, consumer_prefix=DASHBOARD_CONSUMER_PREFIX,
+                                        depth_cap=depth_cap, stop_qns=stop, member=_is_dashboard_member)
+        except Exception as exc:  # noqa: BLE001
+            entry.update(status="not read", reason=f"its members could not be read: {exc}")
+            notes.append(f"{qn}: {entry['reason']}")
+            continue
+        problems = [f"{p}: {e}" for p, e in walk.errors]
+        if walk.capped:
+            problems.append(f"depth cap reached ({depth_cap} levels); not read: " + ", ".join(walk.capped))
+        if problems:
+            entry.update(status="partial", reason="; ".join(problems))
+            notes.append(f"{qn}: not fully read: {entry['reason']}")
+        notes.extend(f"{qn}: {p} not visible or not found" for p, _e in walk.gone)
+        used_by = _used_by(folder)
+        names = set()
+        for m in walk.members:
+            name = sheet_name_from_dashboard_qn((m.get("properties") or {}).get("qualifiedName") or "")
+            hit = found.setdefault(name, {"element": m, "folders": [], "used_by": []})
+            if qn not in hit["folders"]:
+                hit["folders"].append(qn)
+            hit["used_by"].extend(u for u in used_by if u not in hit["used_by"])
+            names.add(name)
+        entry["sheets"] = len(names)
+    return found, notes, status
+
+
+async def async_list_dashboard_sheets(client: Any, folders: Optional[List[str]] = None, *,
+                                      depth_cap: int = _folders.DEPTH_CAP) -> DashboardSheetListing:
+    """The sheets held in Egeria, by name, as a DashboardSheetListing.
+
+    `folders` (else `configured_dashboard_folders()`): only the sheets in those CollectionFolders, followed
+    recursively inside their consumer folder, each tagged with `folders` and `used_by`; a folder not found
+    or not readable is named in `notes` and `folders`, never shown as empty. With no folders: every
+    `Dashboard::` sheet, as before, and `notes` says that is what it is. A Dashboard whose chain is broken
+    (for example one made with plain `Create Dashboard`) is listed with its `breaks`, not dropped."""
+    chosen = configured_dashboard_folders() if folders is None else [f for f in folders if f]
+    if not chosen:
+        return DashboardSheetListing(await _all_sheets(client), notes=[NO_FOLDERS_NOTE])
+    found, notes, status = await asyncio.to_thread(_walk_dashboard_folders, client, chosen, depth_cap)
+    sheets: List[EgeriaDashboardSheet] = []
+    for name in sorted(found, key=str.lower):
+        hit = found[name]
+        sheet = await read_sheet_from_chain(client, name, dashboard=hit["element"])
+        if sheet is None:
+            notes.append(f"{name}: in {', '.join(hit['folders'])}, but its Dashboard could not be read")
+            continue
+        sheet.folders, sheet.used_by = list(hit["folders"]), sorted(hit["used_by"])
+        sheets.append(sheet)
+    return DashboardSheetListing(sheets, notes=notes, folders=status)
+
+
+def _sheet_key(m: Dict[str, Any], consumer: str, notes: List[str]) -> Optional[str]:
+    return sheet_name_from_dashboard_qn((m.get("properties") or {}).get("qualifiedName") or "")
+
+
+def build_dashboard_consumer_index(client: Any, *, root: Optional[str] = None,
+                                   depth_cap: int = _folders.DEPTH_CAP) -> Dict[str, Any]:
+    """Read the dashboard folder tree once: `{sheet: [consumer, ...]}` with how it was read, in the shape of
+    the report-spec consumer index (`status` read / partial / not read, `consumers`, `notes`; each consumer
+    entry counts its `sheets`). A tree that could not be read is "not read" with a reason, never empty."""
+    return _folders.read_consumer_tree(client, root_qn=root or configured_dashboard_root(),
+                                       consumer_prefix=DASHBOARD_CONSUMER_PREFIX, key=_sheet_key,
+                                       fmt=DASHBOARD_CONSUMERS_FORMAT, depth_cap=depth_cap,
+                                       member=_is_dashboard_member, count_field="sheets")
 
 
 def _client_from_env() -> Any:
@@ -296,13 +459,28 @@ def load_dashboard_sheet(name: str, client: Any = None) -> Optional[EgeriaDashbo
     return run_sync(_go())
 
 
-def list_dashboard_sheets(client: Any = None) -> List[EgeriaDashboardSheet]:
+def list_dashboard_sheets(client: Any = None, folders: Optional[List[str]] = None) -> DashboardSheetListing:
     """Sync form of async_list_dashboard_sheets. With no client, one is made from the environment."""
     from pyegeria.core.async_runner import run_sync
 
     async def _go():
-        return await async_list_dashboard_sheets(client or await _signed_in_client())
+        return await async_list_dashboard_sheets(client or await _signed_in_client(), folders)
     return run_sync(_go())
+
+
+def read_dashboard_consumer_index(client: Any = None, *, root: Optional[str] = None,
+                                  depth_cap: int = _folders.DEPTH_CAP) -> Dict[str, Any]:
+    """The dashboard consumer index, read from Egeria now (sheets have no local cache to read it from).
+    With no client, one is made from the environment; a failure to sign in is "not read", with its reason."""
+    if client is None:
+        from pyegeria.core.async_runner import run_sync
+        try:
+            client = run_sync(_signed_in_client())
+        except Exception as exc:  # noqa: BLE001 -- said in the result, never an empty index
+            return {"format": DASHBOARD_CONSUMERS_FORMAT, "root": root or configured_dashboard_root(),
+                    "status": "not read", "reason": f"could not sign in to Egeria: {exc}", "consumers": [],
+                    "index": {}, "notes": []}
+    return build_dashboard_consumer_index(client, root=root, depth_cap=depth_cap)
 
 
 # ---------------------------------------------------------------------------- the data step (B4 / D4)
