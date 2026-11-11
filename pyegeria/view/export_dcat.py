@@ -36,7 +36,8 @@ out of a member listing what the viewer cannot see, which the notes always say.
 
 **Paging.** Members (and search results) are read page by page, startFrom advancing by the page
 size, until a page comes back empty; a short page is not the last page (Egeria's paging contract).
-A page that repeats what was already read ends the reading with a note.
+Pages may overlap; an element is read once. Reading stops early, with a note saying which,
+only on a page identical to the one before it or after two pages in a row with nothing new.
 
 **Determinism.** Node IRIs are built from GUIDs (``urn:egeria:guid:<guid>``), never blank nodes,
 and the output is sorted by node and property, so the same metadata gives the same bytes.
@@ -158,23 +159,36 @@ class _Notes:
 def _paged(read, page_size: int, notes: _Notes, what: str) -> List[Dict[str, Any]]:
     """Read pages until one comes back empty, advancing startFrom by the full page size each time
     (Egeria's paging contract: a short page is not the last page, and only an empty one is). Egeria
-    answers "no elements" with a string, which counts as an empty page. A page that brings no
-    element not already read (a server that ignores startFrom) ends the reading, with a note; it is
-    never counted twice (ISSUE-185)."""
+    answers "no elements" with a string, which counts as an empty page.
+
+    Pages may overlap (laz's asset-domain search returns short pages that share elements), so an
+    element already read is skipped, never counted twice (ISSUE-185), and a page with nothing new
+    does not by itself end the reading. Reading stops early only when a page is identical to the
+    one before it (the server ignored startFrom) or after two pages in a row bring nothing new; the
+    note says which, since later pages, if any, were not read."""
     items: List[Dict[str, Any]] = []
     seen: set = set()
     start = 0
+    previous: Optional[List[str]] = None
+    no_new_in_a_row = 0
     for _ in range(_MAX_PAGES):
         page = read(start, page_size)
         if not _is_list(page) or not page:
             return items
-        new = [e for e in page if _guid(e) not in seen]
-        if not new:
-            notes.add(f"Stopped reading {what} at startFrom {start}: Egeria answered with elements already read "
-                      f"(it repeated a page), so later pages, if any, were not read.")
+        guids = [_guid(e) for e in page]
+        if guids == previous:
+            notes.add(f"Stopped reading {what} at startFrom {start}: Egeria answered with exactly the page before "
+                      f"it (it ignored startFrom), so later pages, if any, were not read.")
             return items
+        new = [e for e in page if _guid(e) not in seen]
         seen.update(_guid(e) for e in new)
         items.extend(new)
+        no_new_in_a_row = 0 if new else no_new_in_a_row + 1
+        if no_new_in_a_row == 2:
+            notes.add(f"Stopped reading {what} at startFrom {start}: two pages in a row held only elements already "
+                      f"read, so later pages, if any, were not read.")
+            return items
+        previous = guids
         start += page_size
     notes.add(f"Stopped reading {what} after {_MAX_PAGES} pages of {page_size}: the catalog may be incomplete.")
     return items
@@ -422,6 +436,22 @@ def serialise(graph: Graph, fmt: str) -> str:
 
 # ── The routine ──
 
+def _nothing_exported(outcome: Dict[str, int], viewer: str, *, searched: bool) -> str:
+    """Why the catalog has no dataset, from what happened to each element in scope. An empty scope,
+    a scope of only Bitol types or non-Assets, and Assets the viewer could not read are different
+    answers and are never reported as one another."""
+    if not any(outcome.values()):
+        where = "the search matched nothing" if searched else "the scope has no members"
+        return f"No dataset exported: {where} that {viewer} can see."
+    words = {"bitol": "a DigitalProduct or Agreement (Bitol's, not DCAT's)",
+             "not_asset": "not an Asset",
+             "not_visible": f"not visible to {viewer}",
+             "not_found": "no longer found when read",
+             "unreadable": "could not be read"}
+    parts = [f"{n} {words[k]}" for k, n in outcome.items() if n]
+    return f"No dataset exported: of the {sum(outcome.values())} element(s) in scope, " + "; ".join(parts) + "."
+
+
 def export_dcat(client: Any, scope: Optional[str] = None, search_string: Optional[str] = None,
                 format: str = "jsonld", page_size: int = 50, **_ignored: Any) -> Dict[str, Any]:
     """Export the Assets in ``scope`` (a collection qualifiedName or GUID) or matching
@@ -458,6 +488,7 @@ def export_dcat(client: Any, scope: Optional[str] = None, search_string: Optiona
 
     seen = set()
     exported = 0
+    outcome = {"bitol": 0, "not_asset": 0, "not_visible": 0, "not_found": 0, "unreadable": 0}
     for member in sorted(members, key=_guid):
         guid = _guid(member)
         if not guid or guid in seen:
@@ -467,9 +498,11 @@ def export_dcat(client: Any, scope: Optional[str] = None, search_string: Optiona
         kinds = [t for t in BITOL_TYPES if t == type_name or t in supers]
         if kinds:
             b.notes.add(f"{_qn(member)}: a {kinds[0]}, not a DCAT dataset (Bitol)")
+            outcome["bitol"] += 1
             continue
         if not (type_name == "Asset" or "Asset" in supers):
             b.notes.add(f"{_qn(member)}: a {type_name or 'element of unknown type'}, not an Asset, so not a DCAT dataset")
+            outcome["not_asset"] += 1
             continue
         try:
             element = client.get_element_by_guid(guid, output_format="JSON",
@@ -478,19 +511,23 @@ def export_dcat(client: Any, scope: Optional[str] = None, search_string: Optiona
             if _not_visible(exc):
                 b.notes.add(f"{_qn(member)}: not visible to {viewer} (Egeria refused the read: zone security); "
                             f"it is in scope but not exported")
+                outcome["not_visible"] += 1
             elif _not_found(exc):
                 b.notes.add(f"{_qn(member)}: listed in scope but no longer found when read; not exported")
+                outcome["not_found"] += 1
             else:
                 b.notes.add(f"{_qn(member)}: could not be read ({type(exc).__name__}); not exported")
+                outcome["unreadable"] += 1
             continue
         if not isinstance(element, dict):
             b.notes.add(f"{_qn(member)}: listed in scope but no longer found when read; not exported")
+            outcome["not_found"] += 1
             continue
         b.dataset(catalog, element)
         exported += 1
 
     if exported == 0:
-        b.notes.add(f"No dataset exported: no Asset in scope is visible to {viewer}.")
+        b.notes.add(_nothing_exported(outcome, viewer, searched=not scope))
     if not any(True for _ in b.g.subjects(RDF.type, DCAT.DataService)):
         b.notes.add("dcat:DataService omitted: no DeployedAPI with an endpoint in scope.")
     b.notes.add("dcat:contactPoint omitted: this exporter does not read owners' contact details.")
