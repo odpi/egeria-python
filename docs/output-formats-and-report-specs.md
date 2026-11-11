@@ -376,6 +376,35 @@ Notes
 
 ---
 
+### Structured tables and native rows
+
+Report specs render complex values (lists, maps, related elements) from **native values**. Two caller
+flags expose them; neither is a spec field, and the defaults return today's shapes unchanged.
+
+- `exec_report_spec(name, output_format="TABLE", table_shape="structured")` returns:
+
+  ```
+  {"kind": "table",
+   "columns": [{"key", "name", "type", "render", "detail_spec", "valid_values", "max_items", "max_lines"}],
+   "rows": [{key: native value}],
+   "total": int | None, "shown": int, "notes": [str]}
+  ```
+
+  `type` is inferred from the column's values: `scalar` (a short value), `text` (long or multi-line),
+  `list` (of scalars), `map`, `elements` (related elements) or `table` (sub-rows, e.g. a `detail_spec`
+  column). A column that mixes kinds takes the widest and the notes say so. `render` is the column's own,
+  else the default for its type (`text`, `bullets`, `kv`, `join`, `subtable`). Related elements are
+  `{guid, qualifiedName, displayName, type}`. A table shows two levels: an object inside a sub-row is
+  reduced to `{count, names, guid?}` with a note. `total` is the row count when the query did not fill
+  its page; when it did, `total` is `None` and the notes say "more may exist" (Egeria's paging contract).
+- `exec_report_spec(name, output_format="DICT", dict_shape="native")` (and `generate_output(...,
+  dict_shape="native")`) returns DICT rows with native values: lists stay lists, related elements are
+  objects with both names, classifications and zones are lists, and `format=True` columns are not
+  stringified. The default `"flat"` is unchanged. `dict_shape` does not change TABLE (its structured form
+  is `table_shape`).
+- Both apply to find-method specs; DOCUMENT, chart and analytic results ignore them. Any other value is
+  refused with a sentence. `_async_run_report` takes the same flags.
+
 ### Document outputs
 
 A **DOCUMENT** spec produces one document in a published standard (for example DCAT-AP 3 as

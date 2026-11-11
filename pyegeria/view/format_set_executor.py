@@ -44,6 +44,8 @@ from pyegeria.view.overview_metrics import recording_unmeasured
 from pyegeria.view._output_format_models import DOCUMENT_OUTPUT_TYPE, check_document_file_name
 from pyegeria.view.document_validators import run_document_validator
 from pyegeria.core._server_client import recording_list_requests
+from pyegeria.view.output_formatter import check_dict_shape, dict_shape_for_call
+from pyegeria.view.structured_table import build_structured_table, check_table_shape
 
 _CLIENT_CLASS_MAP = {
     "CollectionManager": "pyegeria.omvs.collection_manager.CollectionManager",
@@ -767,6 +769,9 @@ async def _async_run_report(
     output_format: str = "DICT",
     params: Optional[Dict[str, Any]] = None,
     refresh_spec: bool = False,
+    *,
+    table_shape: Optional[str] = None,
+    dict_shape: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Run a report spec with an async EgeriaTech client (see `_async_run_report_impl`).
 
@@ -776,7 +781,8 @@ async def _async_run_report(
     if refresh_spec:
         from pyegeria.view.egeria_spec_cache import async_fetch_spec_for_call
         report_name = await async_fetch_spec_for_call(egeria_client, report_name)
-    result = await _async_run_report_impl(report_name, egeria_client, output_format=output_format, params=params)
+    result = await _async_run_report_impl(report_name, egeria_client, output_format=output_format, params=params,
+                                          table_shape=table_shape, dict_shape=dict_shape)
     return _with_spec_source(result, report_name, output_format)
 
 
@@ -785,6 +791,9 @@ async def _async_run_report_impl(
     egeria_client: EgeriaTech,
     output_format: str = "DICT",
     params: Optional[Dict[str, Any]] = None,
+    *,
+    table_shape: Optional[str] = None,
+    dict_shape: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
         Execute the action for a given format set and return a normalized result structure.
@@ -796,6 +805,7 @@ async def _async_run_report_impl(
         - {"kind":"unknown","raw": any}
         """
     params = coerce_paging_params(dict(params or {}))
+    row_shape = _row_shape(str(output_format or "DICT").upper(), table_shape, dict_shape)
     user_name = egeria_client.user_id
     user_pwd = egeria_client.user_pwd
 
@@ -935,13 +945,16 @@ async def _async_run_report_impl(
         except Exception as auth_err:
             # Do not fail the entire call if token refresh fails; downstream call may still work
             logger.debug(f"Token creation/lookup issue: {auth_err}")
-        with recording_list_requests() as list_record:
+        with recording_list_requests() as list_record, dict_shape_for_call(row_shape):
             result = await func(**call_params)
 
         if not result or result == NO_ELEMENTS_FOUND:
             return {"kind": "empty"}
         cap_notes = page_cap_notes(func, call_params, result, list_record)
 
+        if output_format == "TABLE" and table_shape == "structured":
+            return build_structured_table(result, (fmt.get("formats") or {}).get("attributes") or [],
+                                          notes=cap_notes, capped=bool(cap_notes))
         if output_format in {"DICT", "JSON", "ALL", "TABLE"}:
             # Return raw data (list/dict/any) — do not stringify here; include TABLE to enable Rich rendering upstream
             return {"kind": "json", "data": result, **({"notes": cap_notes} if cap_notes else {})}
@@ -1238,6 +1251,19 @@ def coerce_paging_params(params: Dict[str, Any]) -> Dict[str, Any]:
     return params
 
 
+def _row_shape(output_format: str, table_shape: Optional[str], dict_shape: Optional[str]) -> str:
+    """The DICT row shape a find call runs with (R1): "native" for DICT + dict_shape="native" and for
+    TABLE + table_shape="structured", else "flat" (TABLE stays flat under dict_shape: its structured
+    form is table_shape). Unknown values are refused with a sentence."""
+    table_shape = check_table_shape(table_shape)
+    dict_shape = check_dict_shape(dict_shape)
+    if output_format == "DICT" and dict_shape == "native":
+        return "native"
+    if output_format == "TABLE" and table_shape == "structured":
+        return "native"
+    return "flat"
+
+
 def _spec_display_name(format_set_name: Any) -> str:
     if isinstance(format_set_name, dict):
         return str(format_set_name.get("_report_spec_name") or format_set_name.get("heading") or "?")
@@ -1357,10 +1383,18 @@ def exec_report_spec(
     token: Optional[str] = None,
     supply: Optional[RoleSupply] = None,
     refresh_spec: bool = False,
+    table_shape: Optional[str] = None,
+    dict_shape: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Execute the action for a given report spec (see `_exec_report_spec_impl` for the result
     shapes).
+
+    R1: `table_shape="structured"` with output_format TABLE returns the structured table
+    (`pyegeria.view.structured_table`, `kind: "table"`); `dict_shape="native"` with DICT returns rows
+    with native values. Both are caller flags; the defaults ("rows", "flat") return today's shapes, and
+    any other value is refused with a sentence. They apply to a find-method spec only: DOCUMENT, chart
+    and analytic results ignore them.
 
     RS-EGERIA-TIER: the name may be tier-addressed (`egeria:<label>`, `builtin:<label>`,
     `seed:<label>`). The result carries `spec_source` (`{"tier", "label", "version", "guid"?,
@@ -1374,7 +1408,7 @@ def exec_report_spec(
                                           user=user, user_pass=user_pass, token=token)
     result = _exec_report_spec_impl(format_set_name, output_format=output_format, params=params,
                                     view_server=view_server, view_url=view_url, user=user, user_pass=user_pass,
-                                    token=token, supply=supply)
+                                    token=token, supply=supply, table_shape=table_shape, dict_shape=dict_shape)
     return _with_spec_source(result, format_set_name, (output_format or "DICT").upper())
 
 
@@ -1407,6 +1441,8 @@ def _exec_report_spec_impl(
     user_pass: str = settings.User_Profile.user_pwd,
     token: Optional[str] = None,
     supply: Optional[RoleSupply] = None,
+    table_shape: Optional[str] = None,
+    dict_shape: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Execute the action for a given format set and return a normalized result structure.
@@ -1448,6 +1484,7 @@ def _exec_report_spec_impl(
     """
     output_format = (output_format or "DICT").upper()
     params = coerce_paging_params(_normalize_report_params(dict(params or {}), action_mode="find"))
+    row_shape = _row_shape(output_format, table_shape, dict_shape)
 
     # SERIES/BAR/PIE are not Format-row output types like TABLE/DICT/REPORT --
     # they don't need per-column formatting at all, just the analytic
@@ -1604,13 +1641,16 @@ def _exec_report_spec_impl(
         call_params = _bind_search_parameter(func, call_params)
         _warn_dropped_params(format_set_name, params, call_params,
                              [*required_params, *optional_params, *spec_params])
-        with recording_list_requests() as list_record:
+        with recording_list_requests() as list_record, dict_shape_for_call(row_shape):
             result = func(**call_params)
 
         if not result or result == NO_ELEMENTS_FOUND:
             return {"kind": "empty"}
         cap_notes = page_cap_notes(func, call_params, result, list_record)
 
+        if output_format == "TABLE" and table_shape == "structured":
+            return build_structured_table(result, (fmt.get("formats") or {}).get("attributes") or [],
+                                          notes=cap_notes, capped=bool(cap_notes))
         if output_format in {"DICT", "JSON", "ALL", "TABLE"}:
             # Return raw data (list/dict/any) — do not stringify here
             return {"kind": "json", "data": result, **({"notes": cap_notes} if cap_notes else {})}

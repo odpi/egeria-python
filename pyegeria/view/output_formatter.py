@@ -22,6 +22,9 @@ import re
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from pyegeria.core._globals import MERMAID_GRAPH_TITLES, MERMAID_GRAPHS
+from contextlib import contextmanager
+from contextvars import ContextVar
+
 from pyegeria.core.utils import (camel_to_title_case, get_item_display_name)
 from pyegeria.core.config import settings
 from markdown_it import MarkdownIt
@@ -333,6 +336,91 @@ def _get_mermaid_graph_value(element: dict, key: str | None) -> Any:
         if isinstance(element_key, str) and element_key.lower() == key_lower:
             return value
     return None
+
+
+#: How DICT rows are shaped (R1): "flat" (default, today's stringified values) or "native" (lists stay
+#: lists; related elements are {guid, qualifiedName, displayName, type}; classifications and zones are
+#: lists; no format=True stringification). Set for one call by generate_output(dict_shape=...) or the
+#: executor, so find methods that render through their own generator pick it up without a new argument.
+DICT_SHAPES = ("flat", "native")
+_DICT_SHAPE: ContextVar[str] = ContextVar("pyegeria_dict_shape", default="flat")
+
+
+def check_dict_shape(dict_shape: Optional[str]) -> str:
+    """The dict shape asked for, or a refusal in words."""
+    shape = (dict_shape or "flat")
+    if shape not in DICT_SHAPES:
+        raise ValueError(f"dict_shape must be one of {', '.join(DICT_SHAPES)}, not {dict_shape!r}")
+    return shape
+
+
+@contextmanager
+def dict_shape_for_call(dict_shape: Optional[str]):
+    """Use `dict_shape` for DICT rows built inside this block."""
+    token = _DICT_SHAPE.set(check_dict_shape(dict_shape))
+    try:
+        yield
+    finally:
+        _DICT_SHAPE.reset(token)
+
+
+def current_dict_shape() -> str:
+    return _DICT_SHAPE.get()
+
+
+def related_ref(item: Any) -> Any:
+    """A related element as R1's native object {guid, qualifiedName, displayName, name, type} (only the
+    keys it has). Reads `relatedElement` (the Egeria 6 relationship shape) or the item itself; a string
+    stays a string."""
+    if not isinstance(item, dict):
+        return item
+    related = item.get('relatedElement') or item.get('related_element')
+    node = related if isinstance(related, dict) else item
+    props = (node.get('properties') or {}) if isinstance(related, dict) else {}
+    header = node.get('elementHeader') or {}
+    type_ = header.get('type')
+    ref = {"guid": header.get('guid') or node.get('guid'),
+           "qualifiedName": props.get('qualifiedName') or item.get('qualifiedName'),
+           "displayName": props.get('displayName') or item.get('displayName'),
+           "name": props.get('name') or item.get('name'),
+           "type": type_.get('typeName') if isinstance(type_, dict) else None}
+    return {k: v for k, v in ref.items() if v not in (None, "")}
+
+
+def _legacy_name(value: Any) -> Optional[str]:
+    if isinstance(value, dict):
+        return value.get('qualifiedName') or value.get('displayName') or value.get('name')
+    if value in (None, ""):
+        return None
+    return str(value)
+
+
+def _legacy_text(value: Any) -> str:
+    """The flat text a native value has always rendered as (R1: every legacy string comes from here).
+    A list joins its items' names with ", " (an unnamed related element is left out, as before); a
+    related element or classification gives its name, qualifiedName first; a scalar its str."""
+    if isinstance(value, list):
+        return ", ".join(n for n in (_legacy_name(v) for v in value) if n)
+    return _legacy_name(value) or ""
+
+
+def _zone_list(header: Any) -> list:
+    """The zones an element is in, as a list (R1's native value)."""
+    if not isinstance(header, dict):
+        return []
+    candidates = [header.get("zoneMembership")]
+    for item in header.get("classifications") or []:
+        if isinstance(item, dict) and item.get("classificationName") == "ZoneMembership":
+            candidates.append(item)
+    for cls in candidates:
+        if not isinstance(cls, dict):
+            continue
+        zones = (cls.get("classificationProperties") or {}).get("zoneMembership")
+        if isinstance(zones, str):
+            zones = [zones]
+        if isinstance(zones, (list, tuple)):
+            return [str(z) for z in zones if z not in (None, "")]
+    return []
 
 
 def _zone_membership_text(header: Any) -> str:
@@ -1651,6 +1739,8 @@ def generate_entity_dict(elements: List[Dict],
     """
     result = []
     row_context_keys = []
+    # DICT under dict_shape="native"; TABLE only under the executor's structured request (R1)
+    native_shape = output_format in ('DICT', 'TABLE') and current_dict_shape() == "native"
 
     #####
     # Add attributes based on column spec if available, otherwise, add all
@@ -1702,10 +1792,13 @@ def generate_entity_dict(elements: List[Dict],
                 name = column.get('name')
                 value = column.get('value')
                 detail_spec = column.get('detail_spec')
-                
+
                 if (value in (None, "")) and key in additional_props:
                     value = additional_props[key]
-                if column.get('format'):
+                if native_shape:
+                    if 'native' in column:
+                        value = column['native']  # R1: lists, related elements as objects
+                elif column.get('format'):
                     value = format_for_markdown_table(value, guid)
 
                 # Master-Detail support for DICT format
@@ -1922,6 +2015,7 @@ def populate_common_columns(
     
     # Pre-compute relationship values for efficiency
     relationship_values = {}
+    relationship_natives = {}  # R1: the same values, native (related elements as objects)
     if include_relationships:
         formats = columns_struct.get('formats') or {}
         columns = formats.get('attributes') if isinstance(formats, dict) else None
@@ -1937,27 +2031,19 @@ def populate_common_columns(
                     key_camel = RELATIONSHIP_KEY_ALIASES[key_snake]  # fix-now F7
                 if key_camel in element:
                     top_val = element.get(key_camel)
-                    derived_value = ""
+                    if isinstance(top_val, (list, dict)) and col.get('detail_spec'):
+                        relationship_values[key_snake] = top_val  # raw, for master-detail
+                        continue
                     if isinstance(top_val, list):
-                        if col.get('detail_spec'):
-                            relationship_values[key_snake] = top_val
-                            continue
-                        names = []
-                        for item in top_val:
-                            nm = _extract_name_from_relationship_item(item)
-                            if nm:
-                                names.append(nm)
-                        derived_value = ", ".join(names)
+                        native = [related_ref(item) for item in top_val]
                     elif isinstance(top_val, dict):
-                        if col.get('detail_spec'):
-                            relationship_values[key_snake] = top_val  # Preserve raw dict for master-detail
-                            continue
-                        nm = _extract_name_from_relationship_item(top_val)
-                        derived_value = nm or ""
+                        native = related_ref(top_val)
                     else:
-                        derived_value = str(top_val) if top_val is not None else ""
+                        native = top_val
+                    derived_value = _legacy_text(native)
                     if derived_value:
                         relationship_values[key_snake] = derived_value
+                        relationship_natives[key_snake] = native
     
     # Single pass through columns - consolidate all operations
     col_data = columns_struct
@@ -1975,6 +2061,7 @@ def populate_common_columns(
         # Skip if already has a value
         if column.get('value') not in (None, ""):
             continue
+        column.pop('native', None)
         
         # 0) Dot notation path resolution
         if "." in key:
@@ -1991,7 +2078,9 @@ def populate_common_columns(
         # 0a) Zone Membership: v6 keeps it as an ElementClassification in the header;
         # show the zones as one string, never the classification object.
         if key == 'zone_membership' and not props.get('zoneMembership'):
-            column['value'] = _zone_membership_text(header)
+            zones = _zone_list(header)
+            column['native'] = zones
+            column['value'] = _legacy_text(zones)
             continue
 
         # 1) Try properties (camelCase conversion)
@@ -2004,20 +2093,23 @@ def populate_common_columns(
         if key_camel in header:
             h_val = header.get(key_camel)
             if isinstance(h_val, list):
-                # Summarize list of objects (like projectRoles)
-                names = []
+                # A list of classifications (like projectKinds): native {name, properties?}; the
+                # legacy text joins the names with ", " (fix-now F1).
+                native = []
                 for item in h_val:
                     if isinstance(item, dict):
-                        # Try to find a name generically
                         nm = item.get('classificationName') or item.get('name') or item.get('displayName') or item.get('qualifiedName')
                         if nm:
-                            names.append(nm)
+                            entry = {"name": nm}
+                            if item.get('classificationProperties'):
+                                entry["properties"] = item['classificationProperties']
+                            native.append(entry)
                         else:
-                            # If no name found, maybe it's a simple dict we can stringify or just skip
-                            names.append(str(item))
+                            native.append(str(item))  # nameless: its text, as before
                     else:
-                        names.append(str(item))
-                column['value'] = ", ".join(names)  # fix-now F1: no stray newline
+                        native.append(str(item))
+                column['native'] = native
+                column['value'] = _legacy_text(native)
             elif isinstance(h_val, dict):
                 # Generic fallback for dicts in header
                 column['value'] = h_val.get('name') or h_val.get('displayName') or h_val.get('qualifiedName') or str(h_val)
@@ -2037,6 +2129,8 @@ def populate_common_columns(
         # 3) Try relationship values
         if include_relationships and key in relationship_values:
             column['value'] = relationship_values[key]
+            if key in relationship_natives:
+                column['native'] = relationship_natives[key]
             continue
         
         # 4) Try subject area
@@ -2454,6 +2548,7 @@ def generate_output(elements: Union[Dict, List[Dict]],
                get_additional_props_func: Optional[Callable] = None,
                columns_struct: dict = None,
                include_preamble: bool = True,
+               dict_shape: Optional[str] = None,
                **kwargs) -> Union[str, list[dict]]:
     """
     Generate output in the specified format for the given elements.
@@ -2520,6 +2615,10 @@ def generate_output(elements: Union[Dict, List[Dict]],
         return markdown_to_html(report_output)
 
     if output_format in ('DICT', 'TABLE'):
+        if dict_shape is not None:  # R1: an explicit shape for this call; otherwise the caller's context
+            with dict_shape_for_call(dict_shape):
+                return generate_entity_dict(elements, extract_properties_func, get_additional_props_func,
+                                            columns_struct=columns_struct, output_format=output_format)
         return generate_entity_dict(elements, extract_properties_func, get_additional_props_func, columns_struct=columns_struct, output_format=output_format)
     elif output_format == 'LIST':
         return generate_entity_md_table(elements, search_string, entity_type, extract_properties_func, columns_struct, get_additional_props_func, output_format=output_format)

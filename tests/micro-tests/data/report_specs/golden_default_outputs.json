@@ -1,0 +1,126 @@
+{
+ "digital_products/DICT": {
+  "bytes": 83876,
+  "sha256": "90b2eef7e5e014d38b0b1679ca6f639de3826366d9cffbeeffbee0c93fe3b0d0"
+ },
+ "digital_products/FORM": {
+  "bytes": 100142,
+  "sha256": "bddd500b87a8714ce0f7fd35bf52b58f2e88f71d5bff6a7b60230a39a4babc5a"
+ },
+ "digital_products/LIST": {
+  "bytes": 57554,
+  "sha256": "c5efb2a45df6f8e3cde36ca92e6bcf31fd9e5a1ccd5071b7256391c82402061a"
+ },
+ "digital_products/MD": {
+  "bytes": 198,
+  "sha256": "4ef779c4b83d77bd5f3586d3638fa0dc6ccfb1437083e03204120f40a110ca7b"
+ },
+ "digital_products/REPORT": {
+  "bytes": 294016,
+  "sha256": "527c85f3cf0ab9e3f07ebd19551a811a1843baa708a59b9985e954bbb6c743d9"
+ },
+ "digital_products/TABLE": {
+  "bytes": 83876,
+  "sha256": "90b2eef7e5e014d38b0b1679ca6f639de3826366d9cffbeeffbee0c93fe3b0d0"
+ },
+ "governance_metrics/DICT": {
+  "bytes": 98156,
+  "sha256": "d768d53f70e3536805c29a3640878201b9f838f3fbd5a3594a69d5d128f465ec"
+ },
+ "governance_metrics/FORM": {
+  "bytes": 105490,
+  "sha256": "5c423d8bcb9b76c9e25f3b3c42157c82edc527ad7656e85a4d4bcbd249db655c"
+ },
+ "governance_metrics/LIST": {
+  "bytes": 84044,
+  "sha256": "b615f7c3b9063134d16041b69c66c6bb3e08eac3badc17594f3426a5990bcd75"
+ },
+ "governance_metrics/MD": {
+  "bytes": 106293,
+  "sha256": "9859fd8a32b440c8a77311a55b9e97989c4595aada02ad62ca959c4f65f00db2"
+ },
+ "governance_metrics/REPORT": {
+  "bytes": 95950,
+  "sha256": "0da5abf22431ae62c5e1e28833fd4d0166ebf5b8974f1e397449b11306b5a737"
+ },
+ "governance_metrics/TABLE": {
+  "bytes": 98156,
+  "sha256": "d768d53f70e3536805c29a3640878201b9f838f3fbd5a3594a69d5d128f465ec"
+ },
+ "isc_register/DICT": {
+  "bytes": 2570,
+  "sha256": "bda70a2bd897830d1031f20f428fc95d1d598fe4e15892af0d6e316de05e3276"
+ },
+ "isc_register/FORM": {
+  "bytes": 1274,
+  "sha256": "6163a9312ed5ee77e009124f23c6f4f85c36a2dad8a97fe90fdf9da87b41c760"
+ },
+ "isc_register/LIST": {
+  "bytes": 1222,
+  "sha256": "920e1e2f4581fa0362a78a557a49be480f5e6db18c8d2622655e46cd3720fd47"
+ },
+ "isc_register/MD": {
+  "bytes": 1142,
+  "sha256": "cd2ad89329f36d5bf8d2aaef51615efd6b286c815eb06181a1a6e1b928406736"
+ },
+ "isc_register/MERMAID": {
+  "bytes": 9285,
+  "sha256": "1086ab97d808ca89b56b93948b281f013d9ea17667ced6044751da8d85e3f800"
+ },
+ "isc_register/REPORT": {
+  "bytes": 11874,
+  "sha256": "3b103681e889cc72759e411f5fc874c9ce96a48d1001c9c6df27938e7d0d9a0c"
+ },
+ "isc_register/TABLE": {
+  "bytes": 2522,
+  "sha256": "b0478889ce47d9b18a4db850448470f5b4f20515aca13c769064a74215f91508"
+ },
+ "ninety_day_plan/DICT": {
+  "bytes": 19461,
+  "sha256": "86f6a54f616121d04fac995737279003ec43d44b6fa875b49f9699aed5c431d3"
+ },
+ "ninety_day_plan/FORM": {
+  "bytes": 22736,
+  "sha256": "f549cc573b37d790594fe27ccb68587b4d9a1685af865d0fed2661946cad9c67"
+ },
+ "ninety_day_plan/LIST": {
+  "bytes": 12430,
+  "sha256": "283f46f3c29d0eff2799b3def77f2ac83513e5a216a2e07cda16a08c73b7bdba"
+ },
+ "ninety_day_plan/MD": {
+  "bytes": 22632,
+  "sha256": "4821a3261ccfac5d246c9de554b67e13a2d3bf8d06d9427d3da67d10bdfa710b"
+ },
+ "ninety_day_plan/REPORT": {
+  "bytes": 13040,
+  "sha256": "aa96cd50bfcca43372184cddf64b69ed6b08bee3458748fdd71d998671350a61"
+ },
+ "ninety_day_plan/TABLE": {
+  "bytes": 19461,
+  "sha256": "86f6a54f616121d04fac995737279003ec43d44b6fa875b49f9699aed5c431d3"
+ },
+ "risk_register/DICT": {
+  "bytes": 17526,
+  "sha256": "f2c534a24381f99ff4de9bd5ac1eab603c268f3aac2a58c521cba7651ad07ff0"
+ },
+ "risk_register/FORM": {
+  "bytes": 19379,
+  "sha256": "905aa52b7a1d3a3a9627f21c505173b82230dc50a9a73fc00f5e445250939114"
+ },
+ "risk_register/LIST": {
+  "bytes": 14913,
+  "sha256": "69026418e7cab2c63b99ae99ff90b73e5758aeba1d8f7e96c5eeaa0b0cfde171"
+ },
+ "risk_register/MD": {
+  "bytes": 19394,
+  "sha256": "0f5f5dd25e619993bf6c7150ae860f982ac968dfed98ae450c30fa5f5f767916"
+ },
+ "risk_register/REPORT": {
+  "bytes": 18158,
+  "sha256": "a72a577a82546bdf575e7b86f0b65a47ab3b8442f522b932ed0c6ca4d87c27bb"
+ },
+ "risk_register/TABLE": {
+  "bytes": 17526,
+  "sha256": "f2c534a24381f99ff4de9bd5ac1eab603c268f3aac2a58c521cba7651ad07ff0"
+ }
+}
