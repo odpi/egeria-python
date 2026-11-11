@@ -393,7 +393,7 @@ FormatSet(
         "media_type": "application/json",
         "file_name": "{scope}-toy.json",          # filled from the run's parameters
         "validator": "json-schema",               # optional, a registered validator name
-        "validator_options": {"schema": "/path/to/toy.schema.json"},
+        "validator_options": {"schema": "package:my_exporters/schemas/toy.schema.json"},
     })])
 ```
 
@@ -428,8 +428,11 @@ presented as conforming:
 
 - no validator declared: `not_validated`, "no validator is declared for this standard";
 - a validator name not registered: `not_validated`, "the validator <name> is not registered";
-- a validator that raises: `not_validated`, "the validator <name> failed: <error>". A crash says
-  nothing about the document, so it is never a finding and never `invalid`.
+- a validator that raises: `not_validated`, "the validator <name> failed: <error type>[ at line L,
+  column C]". A crash says nothing about the document, so it is never a finding and never
+  `invalid`. The parser's own text is never put in `reason`: it can quote the input.
+- a spec's `schema`/`shapes` option that is not a `package:` reference: `not_validated`, "was not
+  run" (and refused when the spec loads as a model).
 
 `notes` is always present too: every field the exporter omitted or left empty is named there
 with the reason.
@@ -443,11 +446,13 @@ registered raises `DocumentValidatorCollision`. Two are built in:
 - `shacl` (pySHACL over rdflib): option `shapes` (Turtle), for JSON-LD, Turtle, RDF/XML,
   N-Triples… by media type. Findings read "<severity> <focus node> <path>: <message>".
 
-A validator **never fetches over the network**. `schema`/`shapes` are a local path, a `file://`
-URL or package data (`package:<dotted.package>/<resource path>`); an `http(s)` reference is
-refused, and so is JSON-LD whose `@context` names a remote document (inline the context).
-`make_shacl_validator(shapes)` binds the `shacl` built-in to one shapes graph, for registering a
-validator per standard. rdflib, pySHACL and jsonschema are plain pyegeria dependencies, so
+A validator **never fetches over the network**. In a report spec, `schema`/`shapes` must be
+package data (`package:<dotted.package>/<resource path>`): specs can be held in Egeria and written
+by any user, so a spec may not make pyegeria read a local file or a URL. Code may pass a local path
+or `file://` URL to the validator functions directly, and `make_shacl_validator(shapes)` binds the
+`shacl` built-in to one shapes graph, for registering a validator per standard. An `http(s)`
+reference is refused; a JSON Schema `$ref` that is not in the schema is `Unresolvable`, never
+fetched; JSON-LD whose `@context` names another document is refused (inline the context). rdflib, pySHACL and jsonschema are plain pyegeria dependencies, so
 `not_validated` never means "an extra is missing".
 
 **CLI.** `run_report --report <spec> --output-format DOCUMENT --output <dir> --param scope=...`

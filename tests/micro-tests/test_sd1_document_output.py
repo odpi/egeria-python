@@ -40,6 +40,11 @@ def _clean():
     brf.clear_runtime_report_specs()
 
 
+def _bound_schema(text, media_type):
+    """A programmatic validator bound to a local schema (local paths are for code, not specs)."""
+    return json_schema_validator(text, media_type, schema=SCHEMA)
+
+
 def _doc(**kw):
     base = dict(standard="toy-1", media_type="application/json", file_name="{scope}-toy.json")
     base.update(kw)
@@ -159,13 +164,15 @@ def test_not_validated_when_validator_not_registered(monkeypatch):
 
 def test_valid_with_json_schema(monkeypatch):
     _exporter(monkeypatch)
-    out = _run(_spec(validator="json-schema", validator_options={"schema": SCHEMA}))
-    assert out["validation"] == {"state": "valid", "validator": "json-schema", "findings": [], "reason": None}
+    register_document_validators({"toy-schema": _bound_schema})
+    out = _run(_spec(validator="toy-schema"))
+    assert out["validation"] == {"state": "valid", "validator": "toy-schema", "findings": [], "reason": None}
 
 
 def test_invalid_with_json_schema(monkeypatch):
     _exporter(monkeypatch, returns={"text": json.dumps({"name": "x", "age": -1})})
-    out = _run(_spec(validator="json-schema", validator_options={"schema": SCHEMA}))
+    register_document_validators({"toy-schema": _bound_schema})
+    out = _run(_spec(validator="toy-schema"))
     assert out["validation"]["state"] == "invalid"
     assert out["validation"]["findings"] == ["/age: -1 is less than the minimum of 0"]
     assert out["notes"] == []
@@ -181,7 +188,7 @@ def test_validator_crash_is_not_validated_with_the_error(monkeypatch):
     out = _run(_spec(validator="boom"))
     assert out["validation"]["state"] == "not_validated"
     assert out["validation"]["findings"] == []
-    assert out["validation"]["reason"] == "the validator boom failed: RuntimeError: shapes file is corrupt"
+    assert out["validation"]["reason"] == "the validator boom failed: RuntimeError"   # never the error's text
 
 
 def test_exporter_plain_string_and_bad_return(monkeypatch):
@@ -258,7 +265,8 @@ def test_validators_never_fetch_over_the_network():
     remote_ctx = json.dumps({"@context": "https://example.org/ctx.jsonld", "@id": "urn:x"})
     with pytest.raises(DocumentValidatorRefused, match="would fetch over the network"):
         shacl_validator(remote_ctx, "application/ld+json", shapes=SHAPES)
-    v = run_document_validator(remote_ctx, "application/ld+json", "shacl", {"shapes": SHAPES})
+    register_document_validators({"toy-shacl": make_shacl_validator(SHAPES)})
+    v = run_document_validator(remote_ctx, "application/ld+json", "toy-shacl")
     assert v["state"] == "not_validated" and "would fetch over the network" in v["reason"]
 
 
@@ -285,8 +293,8 @@ def test_shacl_validator_reads_inline_json_ld():
 
 def test_executor_with_shacl(monkeypatch):
     _exporter(monkeypatch, returns={"text": _TTL_HEAD + "<urn:ds:2> a dcat:Dataset ."})
-    out = _run(_spec(media_type="text/turtle", file_name="{scope}.ttl", validator="shacl",
-                     validator_options={"shapes": SHAPES}))
+    register_document_validators({"toy-shacl": make_shacl_validator(SHAPES)})
+    out = _run(_spec(media_type="text/turtle", file_name="{scope}.ttl", validator="toy-shacl"))
     assert out["validation"]["state"] == "invalid"
     assert out["validation"]["findings"] == ["Violation <urn:ds:2> dct:title: missing dct:title"]
 
@@ -339,3 +347,93 @@ def test_validation_line_states():
     assert run_report.validation_line(_doc_result()) == "Validation: valid (json-schema)"
     inv = _doc_result(validation={"state": "invalid", "validator": "shacl", "findings": ["a", "b"], "reason": None})
     assert run_report.validation_line(inv) == "Validation: invalid (shacl, 2 findings)"
+
+
+# ── SD-1 read-back C1: the json-schema validator never fetches a remote $ref ──
+
+@pytest.fixture
+def no_network(monkeypatch):
+    """Fail the test on any attempt to open a URL or a socket connection."""
+    import socket
+    import urllib.request
+
+    attempts = []
+
+    def refuse(*a, **k):
+        attempts.append(a[:1])
+        raise AssertionError(f"network access attempted: {a[:1]}")
+
+    monkeypatch.setattr(urllib.request, "urlopen", refuse)
+    monkeypatch.setattr(socket.socket, "connect", refuse)
+    return attempts
+
+
+def test_json_schema_remote_ref_is_unresolvable_not_fetched(tmp_path, no_network):
+    schema = tmp_path / "remote-ref.schema.json"
+    schema.write_text(json.dumps({"$schema": "https://json-schema.org/draft/2020-12/schema",
+                                  "$ref": "http://127.0.0.1:9/remote.schema.json"}))
+    register_document_validators({"remote-ref": lambda t, m: json_schema_validator(t, m, schema=str(schema))})
+    v = run_document_validator('{"a": 1}', "application/json", "remote-ref")
+    assert v["state"] == "not_validated"
+    assert "Unresolvable" in v["reason"]
+    assert no_network == []
+
+
+def test_json_schema_local_ref_still_resolves(tmp_path, no_network):
+    schema = tmp_path / "local-ref.schema.json"
+    schema.write_text(json.dumps({"$schema": "https://json-schema.org/draft/2020-12/schema",
+                                  "$defs": {"n": {"type": "integer"}}, "properties": {"a": {"$ref": "#/$defs/n"}}}))
+    assert json_schema_validator('{"a": "x"}', "application/json", schema=str(schema)) == \
+        (False, ["/a: 'x' is not of type 'integer'"])
+    assert no_network == []
+
+
+# ── SD-1 read-back C2: a spec cannot make pyegeria read a local file, and reason never quotes input ──
+
+@pytest.mark.parametrize("ref", [SCHEMA, Path(SCHEMA).as_uri(), "~/.ssh/id_rsa", "https://example.org/s.json"])
+def test_spec_validator_options_must_be_package_references(ref):
+    with pytest.raises(ValidationError, match="must be a package: reference"):
+        DocumentSpec(**_doc(validator="json-schema", validator_options={"schema": ref}))
+    with pytest.raises(ValidationError, match="must be a package: reference"):
+        DocumentSpec(**_doc(validator="shacl", validator_options={"shapes": ref}))
+
+
+def test_spec_given_as_a_dict_is_refused_at_run_too(monkeypatch, tmp_path):
+    secret = tmp_path / "secrets.env"
+    secret.write_text("DB_PASSWORD=hunter2-not-real\n")
+    _exporter(monkeypatch, returns={"text": "@prefix x: <urn:x#> ."})
+    spec = {"heading": "Raw", "description": "d", "action": {"analytic_function": "toy_export"},
+            "formats": [{"types": ["DOCUMENT"], "document": {
+                "standard": "s", "media_type": "text/turtle", "file_name": "x.ttl",
+                "validator": "shacl", "validator_options": {"shapes": str(secret)}}}]}
+    out = fse.exec_report_spec(spec, output_format="DOCUMENT", params={}, view_server="vs",
+                               view_url="https://x", user="u", user_pass="p")
+    assert out["validation"]["state"] == "not_validated"
+    assert "must be a package: reference" in out["validation"]["reason"]
+    assert "hunter2" not in json.dumps(out)
+
+
+def test_package_reference_is_accepted():
+    spec = DocumentSpec(**_doc(validator="json-schema",
+                               validator_options={"schema": "package:pyegeria.view/schemas/microflow-1.json"}))
+    doc = json.dumps({"format": "microflow/1", "params": {}, "stages": [], "formatters": {"ALL": {"columns": []}}})
+    v = run_document_validator(doc, "application/json", spec.validator, spec.validator_options)
+    assert v["state"] in ("valid", "invalid") and v["reason"] is None
+
+
+def test_parse_errors_never_quote_the_input(tmp_path):
+    secret = tmp_path / "secrets.env"
+    secret.write_text("DB_PASSWORD=hunter2-not-real\nAPI_KEY=fake-123\n")
+    register_document_validators({"secret-shapes": make_shacl_validator(str(secret))})
+    v = run_document_validator("@prefix x: <urn:x#> .", "text/turtle", "secret-shapes")
+    assert v["state"] == "not_validated" and v["reason"].startswith("the validator secret-shapes failed: ")
+    assert "hunter2" not in v["reason"] and "API_KEY" not in v["reason"]
+    # the document text too: a bad document is reported by error type and line, not quoted
+    bad = "DB_PASSWORD=hunter2-not-real is not turtle"
+    v = run_document_validator(bad, "text/turtle", "shacl",
+                               {"shapes": "package:pyegeria.view/schemas/microflow-1.json"})
+    assert "hunter2" not in json.dumps(v)
+    register_document_validators({"toy-json": _bound_schema})
+    v = run_document_validator('{"secret": "hunter2", ', "application/json", "toy-json")
+    assert v["state"] == "not_validated" and "hunter2" not in v["reason"]
+    assert v["reason"] == "the validator toy-json failed: JSONDecodeError at line 1, column 23"

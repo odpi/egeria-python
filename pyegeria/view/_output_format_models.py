@@ -183,14 +183,27 @@ class DocumentSpec(BaseModel):
         validator: an optional registered document-validator name
             (`pyegeria.view.document_validators`). With none, every result says
             `not_validated` and why.
-        validator_options: options passed to the validator, e.g. {"shapes": "<local path>"}
-            for the built-in `shacl`, {"schema": "<local path>"} for `json-schema`.
+        validator_options: options passed to the validator, e.g. {"shapes": "package:<pkg>/<path>"}
+            for the built-in `shacl`, {"schema": "package:<pkg>/<path>"} for `json-schema`. A
+            file reference here must be a `package:` reference: a spec may be held in Egeria and
+            written by any user, so it may not name a local file or URL.
     """
     standard: str
     media_type: str
     file_name: str
     validator: Optional[str] = None
     validator_options: Dict[str, Any] = Field(default_factory=dict)
+
+    @field_validator("validator_options")
+    @classmethod
+    def _package_references_only(cls, v):
+        """A spec may be held in Egeria and written by any user, so it may not make the Portal or
+        EA read a local file: `schema`/`shapes` must be `package:` references (SD-1 read-back C2)."""
+        from pyegeria.view.document_validators import spec_option_refusal
+        reason = spec_option_refusal(v)
+        if reason:
+            raise ValueError(f"DOCUMENT {reason}")
+        return v
 
     @field_validator("file_name")
     @classmethod

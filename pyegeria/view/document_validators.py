@@ -18,8 +18,10 @@ Two built-ins ship with pyegeria:
 - ``shacl``: option ``shapes``, a SHACL shapes graph (same kinds of reference) to check RDF
   text against with pySHACL.
 
-**A validator never fetches over the network.** A schema or shapes reference is a local path, a
-``file://`` URL or package data (``package:<dotted.package>/<resource path>``). An ``http(s)``
+**A validator never fetches over the network.** A schema or shapes reference is package data
+(``package:<dotted.package>/<resource path>``); programmatic callers may also give a local path or a
+``file://`` URL, but a report spec may not (``spec_option_refusal``), since specs can be held in
+Egeria and written by any user. A failed validator's ``reason`` never quotes parser text. An ``http(s)``
 reference raises ``DocumentValidatorRefused``, and so does RDF text whose JSON-LD ``@context``
 names a remote document (rdflib would fetch it). The executor reports a raised validator as
 ``not_validated`` with the error, never as a finding.
@@ -84,15 +86,22 @@ def _parse_structured_text(text: str, media_type: str) -> Any:
 def json_schema_validator(text: str, media_type: str, *, schema: str) -> Tuple[bool, List[str]]:
     """Check JSON (or YAML, by media type) ``text`` against the JSON Schema ``schema`` names.
 
-    A ``$ref`` the schema cannot resolve locally is an error, not a fetch: no retrieval is
-    configured, so ``referencing`` raises rather than going to the network."""
+    A ``$ref`` the schema cannot resolve locally is an error, not a fetch: the validator is given
+    an empty ``referencing.Registry`` with no ``retrieve``, so an unknown (remote) ``$ref`` raises
+    ``Unresolvable`` instead of going to the network."""
     import jsonschema
 
     schema_doc = json.loads(read_local_reference(schema, what="JSON Schema"))
     instance = _parse_structured_text(text, media_type)
+    from referencing import Registry
+
     validator_cls = jsonschema.validators.validator_for(schema_doc)
     validator_cls.check_schema(schema_doc)
-    errors = sorted(validator_cls(schema_doc).iter_errors(instance),
+    # An empty registry with no `retrieve`: a $ref the schema cannot resolve locally raises
+    # Unresolvable. Without `registry=`, jsonschema falls back to a registry that urlopens remote
+    # $refs (SD-1 read-back C1).
+    validator = validator_cls(schema_doc, registry=Registry())
+    errors = sorted(validator.iter_errors(instance),
                     key=lambda e: (list(map(str, e.absolute_path)), e.message))
     findings = [f"{'/' + '/'.join(map(str, e.absolute_path)) if e.absolute_path else '(document)'}: {e.message}"
                 for e in errors]
@@ -152,7 +161,7 @@ def parse_rdf_offline(text: str, media_type: str, *, what: str = "document"):
         remote = _remote_contexts(json.loads(text))
         if remote:
             raise DocumentValidatorRefused(
-                f"the {what}'s JSON-LD @context names another document ({', '.join(sorted(set(remote)))}); "
+                f"the {what}'s JSON-LD @context names another document ({len(set(remote))} reference(s)); "
                 f"reading it would fetch over the network, which a validator never does. Inline the context")
     graph = Graph()
     graph.parse(data=text, format=fmt)
@@ -263,6 +272,49 @@ def clear_runtime_document_validators() -> None:
 
 # ── Running a document's validator (the executor's half of the contract) ──
 
+#: Validator options that name a file to read. From a spec definition (which may be held in Egeria
+#: and written by any user) each must be a ``package:`` reference: pyegeria's own package data or an
+#: installed exporter package's. Local paths and file:// URLs stay available to programmatic
+#: callers only (``make_shacl_validator(path)``, ``json_schema_validator(..., schema=path)``).
+REFERENCE_OPTIONS = ("schema", "shapes")
+
+
+def spec_option_refusal(options: Dict[str, Any] | None) -> str | None:
+    """Why a spec's validator_options are refused, or None. Only ``package:`` references may name a
+    file from a spec definition (SD-1 read-back C2)."""
+    for key in REFERENCE_OPTIONS:
+        value = (options or {}).get(key)
+        if value is None:
+            continue
+        if not isinstance(value, str) or not value.strip().startswith("package:"):
+            return (f"validator option '{key}' must be a package: reference (package:<dotted.package>/<path>) "
+                    f"when it comes from a report spec; a spec may not name a local file or URL")
+    return None
+
+
+def _error_words(exc: BaseException) -> str:
+    """What a failed validator says in ``reason``: never the parser's text, which can quote the input
+    (the document, or a schema/shapes file). The error type, plus line and column when known, and our
+    own refusal sentences, which carry no file content."""
+    if isinstance(exc, DocumentValidatorRefused):
+        return f"{type(exc).__name__}: {exc}"
+    try:  # jsonschema wraps referencing's errors; name the real one
+        exc = object.__getattribute__(exc, "_wrapped")
+    except AttributeError:
+        pass
+    ref = getattr(exc, "ref", None)
+    if isinstance(ref, str):  # a $ref the schema could not resolve: name it (it is the schema's, not input)
+        return f"{type(exc).__name__}: the $ref {ref} is not resolvable without a network fetch"
+    line = getattr(exc, "lineno", None) or getattr(exc, "lines", None)
+    col = getattr(exc, "colno", None)
+    mark = getattr(exc, "problem_mark", None)
+    if mark is not None:
+        line, col = getattr(mark, "line", -1) + 1, getattr(mark, "column", -1) + 1
+    where = ""
+    if isinstance(line, int):
+        where = f" at line {line}" + (f", column {col}" if isinstance(col, int) else "")
+    return f"{type(exc).__name__}{where}"
+
 def run_document_validator(text: str, media_type: str, validator: str | None,
                            options: Dict[str, Any] | None = None) -> Dict[str, Any]:
     """The ``validation`` block of a DOCUMENT result. Always returned, never omitted:
@@ -272,8 +324,10 @@ def run_document_validator(text: str, media_type: str, validator: str | None,
     - ``findings``: the validator's sentences (empty when it found nothing or did not run);
     - ``reason``: why the document was not validated, or None when it was.
 
-    A validator that raises is ``not_validated`` with its error as the reason: a crash says
-    nothing about the document, so it is never reported as a finding or as ``invalid``."""
+    A validator that raises is ``not_validated`` with its error type (and line/column) as the
+    reason, never the parser's text: a crash says nothing about the document, so it is never
+    reported as a finding or as ``invalid``. ``options`` come from a spec definition, so a
+    ``schema``/``shapes`` option that is not a ``package:`` reference is refused (not run)."""
     if not validator:
         return {"state": "not_validated", "validator": None, "findings": [],
                 "reason": "no validator is declared for this standard"}
@@ -281,11 +335,15 @@ def run_document_validator(text: str, media_type: str, validator: str | None,
     if fn is None:
         return {"state": "not_validated", "validator": validator, "findings": [],
                 "reason": f"the validator {validator} is not registered"}
+    refusal = spec_option_refusal(options)
+    if refusal:
+        return {"state": "not_validated", "validator": validator, "findings": [],
+                "reason": f"the validator {validator} was not run: {refusal}"}
     try:
         valid, findings = fn(text, media_type, **(options or {}))
     except Exception as exc:  # noqa: BLE001 -- any crash is reported, never raised or counted as a finding
         return {"state": "not_validated", "validator": validator, "findings": [],
-                "reason": f"the validator {validator} failed: {type(exc).__name__}: {exc}"}
+                "reason": f"the validator {validator} failed: {_error_words(exc)}"}
     findings = [str(f) for f in (findings or [])]
     return {"state": "valid" if valid else "invalid", "validator": validator, "findings": findings,
             "reason": None}
