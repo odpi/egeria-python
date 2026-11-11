@@ -404,6 +404,32 @@ def _legacy_text(value: Any) -> str:
     return _legacy_name(value) or ""
 
 
+_LINK_WRAP = re.compile(r"^\s*\[(.*)\]\(#[^)]*\)\s*$", re.S)
+
+
+def value_names(value: Any) -> list:
+    """The names a DICT cell holds, whether the row is native or flat (R4): a native list gives each
+    item's qualifiedName (else displayName, name or its text); a flat string is split on commas, after
+    unwrapping format_for_markdown_table's "[text](#guid)" link. Never iterates a string by character."""
+    if value in (None, ""):
+        return []
+    if isinstance(value, dict):
+        value = [value]
+    if isinstance(value, (list, tuple)):
+        out = []
+        for item in value:
+            name = (item.get("qualifiedName") or item.get("displayName") or item.get("name")
+                    if isinstance(item, dict) else item)
+            if name not in (None, ""):
+                out.append(str(name).strip())
+        return out
+    text = str(value)
+    m = _LINK_WRAP.match(text)
+    if m:
+        text = m.group(1)
+    return [part.strip() for part in text.split(",") if part.strip()]
+
+
 def _zone_list(header: Any) -> list:
     """The zones an element is in, as a list (R1's native value)."""
     if not isinstance(header, dict):

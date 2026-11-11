@@ -28,6 +28,25 @@ from textual.containers import Container, Horizontal, HorizontalScroll, Scrollab
 from textual.widgets import Static, Button, DataTable, Header, Footer, Input, Tree, Label
 
 
+
+#: How many list items a TUI cell shows before "+N more" (R4).
+TUI_CELL_ITEMS = 10
+
+
+def tui_cell(value):
+    """One TUI table cell for a list or a dict (R4): a list joins its items' names with ", " (+N more
+    past TUI_CELL_ITEMS); a dict is JSON. Neither becomes extra columns."""
+    import json as _json
+    from pyegeria.view.output_formatter import value_names
+    if isinstance(value, dict):
+        return _json.dumps(value, ensure_ascii=False, default=str)
+    if isinstance(value, (list, tuple)):
+        names = value_names(list(value)) if any(isinstance(v, dict) for v in value) else [str(v) for v in value]
+        shown = names[:TUI_CELL_ITEMS]
+        rest = len(names) - len(shown)
+        return ", ".join(shown) + (f" (+{rest} more)" if rest else "")
+    return value
+
 class RunSpec(App):
     CSS_PATH = "my_reports.tcss"
 
@@ -310,14 +329,9 @@ class RunSpec(App):
                 self.log(f"list_item: {list_item}")
                 for key, value in response_dict.items():
                     self.log(f"key: {key}, value: {value}")
-                    if isinstance(value, dict):
-                        for vkey, vvalue in value.items():
-                            self.log(f"vkey: {vkey}, vvalue: {vvalue}")
-                            self.rotated_table.setdefault(str(vkey), []).append(vvalue)
-                    elif isinstance(value, list):
-                        for v in value:
-                            self.log(f"v: {v}")
-                            self.rotated_table.setdefault(str(v), []).append(" ")
+                    if isinstance(value, (dict, list)):
+                        # R4: one cell, never extra columns (a native DICT holds lists and objects)
+                        self.rotated_table.setdefault(str(key), []).append(tui_cell(value))
                     elif key == "kind" and value == "empty":
                         key_str: str = "NoData"
                         message: str = "For That Asset Type in this repository"
@@ -332,12 +346,8 @@ class RunSpec(App):
                 self.log(f"key: {key}, value: {value}")
                 if key == "kind":
                     continue
-                elif isinstance(value, dict):
-                    for vkey, vvalue in value.items():
-                        self.rotated_table.setdefault(str(vkey), []).append(vvalue)
-                elif isinstance(value, list):
-                    for v in value:
-                        self.rotated_table.setdefault(str(v), []).append(" ")
+                elif isinstance(value, (dict, list)):
+                    self.rotated_table.setdefault(str(key), []).append(tui_cell(value))  # R4: one cell
                 elif key == "kind" and value == "empty":
                     key_str = "NoData"
                     message = "For That Asset Type in this repository"
