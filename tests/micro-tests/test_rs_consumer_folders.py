@@ -76,13 +76,20 @@ class Tree:
                 and (metadata_element_type in (None, e["elementHeader"]["type"]["typeName"]))]
         return copy.deepcopy(hits) or "No elements found"
 
-    def get_collection_members(self, collection_guid=None, output_format="JSON", **_):
-        self.member_reads.append(collection_guid)
+    def get_collection_members(self, collection_guid=None, output_format="JSON", start_from=0, page_size=0, **_):
+        if start_from == 0:   # one entry per folder read; a read pages on to its empty page (6.2.36)
+            self.member_reads.append(collection_guid)
         if collection_guid in self.failing:
             raise RuntimeError("HTTP 500 from the view server")
         if collection_guid in self.refusals:
             raise self.refusals[collection_guid]
-        return copy.deepcopy(self.members.get(collection_guid)) or "No elements found"
+        return copy.deepcopy(self._page(self.members.get(collection_guid), start_from, page_size)) or "No elements found"
+
+    @staticmethod
+    def _page(items, start_from, page_size):
+        """Egeria's paging: startFrom/pageSize slice the members (pageSize 0 is the server's default, here all)."""
+        items = list(items or [])
+        return items[start_from:start_from + page_size] if page_size else items[start_from:]
 
     def get_collection_by_guid(self, guid, output_format="JSON", **_):
         e = self.by_guid.get(guid)

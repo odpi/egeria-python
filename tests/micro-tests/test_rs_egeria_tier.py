@@ -92,8 +92,10 @@ class FakeEgeria:
                 if name in (e["properties"]["qualifiedName"], e["properties"]["displayName"])]
         return hits or "No elements found"
 
-    def get_collection_members(self, collection_guid=None, output_format="JSON", **_):
-        return copy.deepcopy(self.members.get(collection_guid)) or "No elements found"
+    def get_collection_members(self, collection_guid=None, output_format="JSON", start_from=0, page_size=0, **_):
+        items = list(self.members.get(collection_guid) or [])
+        items = items[start_from:start_from + page_size] if page_size else items[start_from:]
+        return copy.deepcopy(items) or "No elements found"
 
     def get_collection_by_guid(self, guid, output_format="JSON", **_):
         self.full_fetches.append(guid)
