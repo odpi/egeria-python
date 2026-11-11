@@ -278,7 +278,7 @@ def test_shacl_validator_tiny_inputs():
     bad = _TTL_HEAD + "<urn:ds:2> a dcat:Dataset ."
     assert shacl_validator(good, "text/turtle", shapes=SHAPES) == (True, [])
     ok, findings = shacl_validator(bad, "text/turtle", shapes=SHAPES)
-    assert not ok and findings == ["Violation <urn:ds:2> dct:title: missing dct:title"]
+    assert not ok and findings == ["Dataset <urn:ds:2>: missing dct:title"]
 
 
 def test_shacl_validator_reads_inline_json_ld():
@@ -296,7 +296,7 @@ def test_executor_with_shacl(monkeypatch):
     register_document_validators({"toy-shacl": make_shacl_validator(SHAPES)})
     out = _run(_spec(media_type="text/turtle", file_name="{scope}.ttl", validator="toy-shacl"))
     assert out["validation"]["state"] == "invalid"
-    assert out["validation"]["findings"] == ["Violation <urn:ds:2> dct:title: missing dct:title"]
+    assert out["validation"]["findings"] == ["Dataset <urn:ds:2>: missing dct:title"]
 
 
 # ── The CLI ──

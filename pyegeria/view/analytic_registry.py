@@ -2054,6 +2054,41 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                 ("OTHER", "Other"))],
         ),
     ),
+    "export_dcat": AnalyticFunctionSpec(
+        name="export_dcat",
+        function="pyegeria.view.export_dcat.export_dcat",
+        inputs=["egeria_client:EgeriaTech"],
+        description="A DCAT-AP 3 catalog (JSON-LD or Turtle) of the Assets in a collection, or of the assets "
+                    "matching a search, read as the caller (SD-2). DigitalProducts and Agreements are Bitol's "
+                    "and are named in the notes, never exported; zoned Assets the caller can read are marked "
+                    "NON_PUBLIC; every property left out is named in the notes. Returns a document "
+                    "({text, notes}) for a DOCUMENT report spec such as 'DCAT Catalog'. Cost: one member "
+                    "listing (paged to an empty page) plus one element read per Asset.",
+        returns="document (dict: text, notes)",
+        generic=True,
+        family="Standard Documents",
+        params=[
+            AnalyticParam(name="scope", type="str",
+                          description="The catalog: a collection or folder qualifiedName, or its GUID."),
+            AnalyticParam(name="search_string", type="str",
+                          description="Instead of scope: assets in the asset domain matching this string."),
+            AnalyticParam(name="format", type="str", default="jsonld",
+                          description="jsonld (default) or turtle."),
+            AnalyticParam(name="page_size", type="int", default=50,
+                          description="Members (or search results) read per page; reading stops at an empty page."),
+        ],
+        declaration=AnalyticDeclaration(
+            result_kind="finding",
+            absence=_absence(
+                not_measured="The catalog was not exported: reading the scope from Egeria failed.",
+                not_permitted="You are not permitted to read this collection.",
+                not_applicable="A DCAT catalog does not apply: the scope names no collection you can read.",
+                nothing_found="Exported: no Asset in scope is visible to you, so the catalog lists no "
+                              "dataset; the notes say what was left out and why.",
+            ),
+            out=[_field("text", "Document", "string"), _field("notes", "Notes", "list<string>")],
+        ),
+    ),
 }
 
 _RUNTIME_ANALYTIC_FUNCTIONS = AnalyticFunctionDict()

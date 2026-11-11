@@ -246,7 +246,7 @@ namespaces = false
 ]
 "my_egeria" = ["**/*.tcss"]
 "commands" = ["tech/spec_editor_static/*"]
-"pyegeria" = ["view/schemas/*.json", "view/seed/*.json"]
+"pyegeria" = ["view/schemas/*.json", "view/seed/*.json", "view/data/dcat-ap-3/*"]
 
 
 [project.optional-dependencies]

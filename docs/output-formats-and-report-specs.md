@@ -459,6 +459,29 @@ fetched; JSON-LD whose `@context` names another document is refused (inline the 
 writes the document to `<dir>/<file_name>` and prints the validation line and any notes. It
 refuses to overwrite an existing file unless `--force` is given.
 
+#### DCAT Catalog (DCAT-AP 3)
+
+The built-in specs **DCAT Catalog** (JSON-LD) and **DCAT Catalog (Turtle)** export the Assets in
+a collection or folder as a DCAT-AP 3 catalog. The exporter is the analytic function
+`export_dcat` (`pyegeria/view/export_dcat.py`); the validator is `dcat-ap-3-shacl`, pySHACL over
+the DCAT-AP 3.0.1 shapes vendored in `pyegeria/view/data/dcat-ap-3/` (CC BY 4.0; source, commit
+and hashes in the README there).
+
+```bash
+run_report --report "DCAT Catalog" --output-format DOCUMENT --output ./out --param scope=DashboardFolder::Consumer::Portal
+```
+
+- `scope` is a collection qualifiedName or GUID; `export_dcat` also takes `search_string` (assets
+  in the asset domain), `format` (`jsonld` or `turtle`) and `page_size`.
+- A `dcat:Dataset` is an **Asset**. DigitalProducts and Agreements are Bitol's: each is named in
+  the notes ("<qn>: a DigitalProduct, not a DCAT dataset (Bitol)"), never exported.
+- It reads as the caller. A zoned Asset the caller can read is `dct:accessRights NON_PUBLIC`. A
+  member Egeria refuses with a 403 is noted as "not visible to <user>", never as absent.
+- Identity is the qualifiedName (`dct:identifier`); the GUID is `adms:identifier`. Nodes are
+  `urn:egeria:guid:<guid>` IRIs and the output is sorted, so the same metadata gives the same bytes.
+- Every property left out says why in the notes, grouped by reason with the datasets it applies
+  to (no Ownership, no License, no access path, no keywords...).
+
 ---
 
 ### Vega-Lite Graphs and Automated Extraction

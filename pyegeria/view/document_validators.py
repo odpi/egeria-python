@@ -177,10 +177,27 @@ def _short(graph, node) -> str:
         return str(node)
 
 
+def _focus_label(data_graph, node) -> str:
+    """How a finding names its focus node: its class's local name and its dct:identifier when it has
+    them ("Dataset Sales::Orders"), else the node as written ("<urn:x>")."""
+    from rdflib import URIRef
+    from rdflib.namespace import DCTERMS, RDF
+
+    types = sorted(str(t) for t in data_graph.objects(node, RDF.type))
+    kind = types[0].rsplit("#", 1)[-1].rsplit("/", 1)[-1] if types else ""
+    ident = data_graph.value(node, DCTERMS.identifier)
+    name = str(ident) if ident is not None else (f"<{node}>" if isinstance(node, URIRef) else str(node))
+    return f"{kind} {name}" if kind else name
+
+
 def shacl_findings(data_graph, shapes_graph) -> Tuple[bool, List[str]]:
-    """Run pySHACL and return ``(conforms, findings)``; one finding per validation result, as
-    "<severity> <focus node> <path>: <message>", sorted so the list is stable. Warnings and
-    infos are listed but do not make the document invalid."""
+    """Run pySHACL and return ``(conforms, findings)``; one finding per validation result, per focus
+    node and path, sorted so the list is stable:
+
+    - a missing mandatory property (sh:minCount) reads "<Class> <identifier>: missing <path>";
+    - anything else reads "<Class> <identifier>: <path>: <message>".
+
+    Results of severity Warning or Info are prefixed with it; they do not make the document invalid."""
     import pyshacl
     from rdflib import Namespace
     from rdflib.namespace import RDF
@@ -189,18 +206,21 @@ def shacl_findings(data_graph, shapes_graph) -> Tuple[bool, List[str]]:
     conforms, results_graph, _ = pyshacl.validate(
         data_graph, shacl_graph=shapes_graph, inference="none", allow_warnings=True,
         do_owl_imports=False, advanced=True)
-    for prefix, ns in list(data_graph.namespace_manager.namespaces()):
-        results_graph.namespace_manager.bind(prefix, ns, override=False)
     findings: List[str] = []
     for result in results_graph.subjects(RDF.type, SH.ValidationResult):
         severity = results_graph.value(result, SH.resultSeverity)
         focus = results_graph.value(result, SH.focusNode)
         path = results_graph.value(result, SH.resultPath)
         message = results_graph.value(result, SH.resultMessage)
-        sev = _short(results_graph, severity).split(":")[-1].split("#")[-1] if severity is not None else "Violation"
-        findings.append(f"{sev} {_short(results_graph, focus)} {_short(results_graph, path)}: "
-                        f"{message if message is not None else 'does not conform'}")
-    return bool(conforms), sorted(findings)
+        component = results_graph.value(result, SH.sourceConstraintComponent)
+        prefix = "" if severity in (None, SH.Violation) else f"{str(severity).rsplit('#', 1)[-1]}: "
+        where = _focus_label(data_graph, focus)
+        if component == SH.MinCountConstraintComponent and path is not None:
+            findings.append(f"{prefix}{where}: missing {_short(data_graph, path)}")
+        else:
+            findings.append(f"{prefix}{where}: {_short(data_graph, path)}: "
+                            f"{message if message is not None else 'does not conform'}")
+    return bool(conforms), sorted(set(findings))
 
 
 def shacl_validator(text: str, media_type: str, *, shapes: str,
@@ -228,9 +248,13 @@ def make_shacl_validator(shapes: str, shapes_media_type: str = "text/turtle") ->
 
 # ── The registry ──
 
+#: DCAT-AP 3.0.1's SHACL shapes, vendored (see pyegeria/view/data/dcat-ap-3/README.md).
+DCAT_AP_3_SHAPES = "package:pyegeria.view/data/dcat-ap-3/dcat-ap-SHACL.ttl"
+
 _BUILTIN_VALIDATORS: Dict[str, DocumentValidator] = {
     "json-schema": json_schema_validator,
     "shacl": shacl_validator,
+    "dcat-ap-3-shacl": make_shacl_validator(DCAT_AP_3_SHAPES),
 }
 _RUNTIME_VALIDATORS: Dict[str, DocumentValidator] = {}
 

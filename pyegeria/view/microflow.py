@@ -228,6 +228,9 @@ class Formatter(BaseModel):
     field: Optional[str] = None
     label: Optional[str] = None
     same_as: Optional[str] = None
+    #: A DOCUMENT formatter's document block (SD-1): standard, media_type, file_name, validator,
+    #: validator_options. Carried as written; the FormatSet model checks it.
+    document: Optional[Dict[str, Any]] = None
 
     @model_validator(mode="after")
     def _one_of(self):
@@ -669,7 +672,7 @@ def microflow_to_format_set(mf: MicroflowV1, *, label: str, heading: Optional[st
             cols = [_to_column(c, column_cache) for c in f.columns]
         else:
             cols = [_to_column({"field": f.field, "label": f.label} if f.label else f.field, column_cache)]
-        fmt = Format(types=[out_type], attributes=cols)
+        fmt = Format(types=[out_type], attributes=cols, document=f.document)
         formats.append(fmt)
         by_type[out_type] = fmt
     if not formats:
@@ -758,5 +761,7 @@ def _formatters_of(fs) -> Dict[str, Dict[str, Any]]:
                 raise MicroflowError(f"output type {key} is listed by two formats; microflow/1 holds one formatter "
                                      f"per output type")
             formatters[key] = {"columns": cols} if first is None else {"same_as": first}
+            if first is None and fmt.get("document"):
+                formatters[key]["document"] = {k: v for k, v in fmt["document"].items() if v not in (None, {}, [])}
             first = first or key
     return formatters

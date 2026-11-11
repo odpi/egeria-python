@@ -447,6 +447,10 @@ def _build(el: Dict[str, Any], *, folders: List[str], identity: str, registry_na
         raise _Skip(label, str(exc))
     except MicroflowError as exc:
         raise _Skip(label, str(exc))
+    except ValueError as exc:  # pydantic's ValidationError: e.g. a DOCUMENT block that refuses to load (SD-2 N2)
+        errors = getattr(exc, "errors", None)
+        words = "; ".join(e.get("msg", "") for e in errors()) if callable(errors) else str(exc)
+        raise _Skip(label, f"the spec does not load: {words}")
     result = resolve(fs, label, registry_names=registry_names if registry_names is not None else _known_names())
     if isinstance(result, Unrunnable):
         raise _Skip(label, f"refused by load-time resolution: {result.unrunnable_reason}")

@@ -280,7 +280,9 @@ def test_output_format_list_covers_the_report_format_registry():
     from pyegeria.view.base_report_formats import get_report_registry
     spec = get_command_spec("Create Report")
     attr = next(a for a in spec["Attributes"] if a.get("name") == "Output Format")
-    registry_types = {t for fs in get_report_registry().values() for f in fs.formats for t in f.types} - {"ALL"}
+    # DOCUMENT (SD-1/SD-2) is not offered by Create Report yet: rendering a document report is SD-3
+    # (Portal/EA), so a Report's Output Format cannot name it until then.
+    registry_types = {t for fs in get_report_registry().values() for f in fs.formats for t in f.types} - {"ALL", "DOCUMENT"}
     assert registry_types <= set(attr["valid_values"])
     assert "KPI" in attr["valid_values"]
     assert attr["property_name"] == "outputFormat"
