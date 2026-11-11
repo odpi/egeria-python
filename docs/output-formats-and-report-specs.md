@@ -35,25 +35,65 @@ profile = client.get_my_profile(output_format="DICT", report_spec="My-User-MD")
 
 pyegeria supports multiple output types. Each report spec declares which types it supports.
 
-- DICT: Python list/dict structures — best for programmatic use and tests. This format provides a "materialized" view where properties are cleaned up and nested elements are promoted to logical keys.
-- JSON: Raw Egeria response dictionary — ideal for advanced users who need to process the exact response from the Egeria platform without any pyegeria-specific transformations.
-- LIST: Markdown table (horizontal). Good for compact overviews. Nested values are automatically summarized (names/display names). If a `detail_spec` is configured, master rows include `[details]` links to rich detail sections appended below the table.
-- REPORT: Rich Markdown (vertical). Ideal for deep dives. Renders nested dict/list values as hierarchical bullet lists (using the hyphen `-` as the default bullet character) and includes vertical detail sections for master-detail columns.
+- DICT: Python list/dict structures — best for programmatic use and tests. A "materialized" view: properties are
+  cleaned up and nested elements are promoted to logical keys. By default values are flat strings (a relationship
+  column is "a, b"); `dict_shape="native"` returns native lists and objects instead (see
+  [Complex values](#complex-values-structured-tables-and-native-rows)).
+- JSON: Raw Egeria response — for advanced users who need the exact response from the Egeria platform. It ignores
+  the report spec's columns by design.
+- TABLE: rows for a table. `exec_report_spec` returns the same rows as DICT unless the caller asks for
+  `table_shape="structured"`, which returns a typed table (`kind: "table"`). The `run_report` CLI asks for the
+  structured table and draws it with Rich.
+- LIST: Markdown table (horizontal). Good for compact overviews. A list of scalars is shown as bullets in its cell,
+  related elements are joined by name, and a `detail_spec` column adds a `[details]` link to a detail section
+  appended below the table.
+- REPORT: Rich Markdown (vertical). Ideal for deep dives. Renders lists as markdown lists, nested values as
+  hierarchical bullet lists, and `detail_spec` columns as sub-reports.
 - REPORT-GRAPH: Recursive, linked Markdown report. Builds anchor-linked sections per element (by GUID), and adds link lists for peer and child/nested elements; recurses while avoiding cycles.
 - FORM: Markdown suitable for Dr.Egeria editable forms. Complex values are summarized to keep the form concise and manageable.
 - MD: Plain Markdown (legacy simple rendering).
 - MERMAID: Mermaid graph text for supported responses.
 - HTML: HTML wrapper around Markdown (when enabled in generators).
 - GRAPH: Generates a standalone HTML page natively rendering dynamic Vega-Lite visualizations. Functions identically to `HTML` when rendering but signals intent for rich visualization output.
-- TABLE: Used for generating a rich textual table for terminal display.
+- SERIES / BAR / PIE: Vega-Lite charts of an analytic function's result.
+- DOCUMENT: one document in a published standard (for example a DCAT-AP 3 catalog), built by an exporter and
+  validated (see [Document outputs](#document-outputs)).
 
 Tip: Use DICT for APIs and automation; use LIST for dashboards/browsing; use REPORT for deep, readable details; use FORM when producing updateable forms.
 
+### Which output type for which surface
+
+A report spec does not say which surface it is for: the output type states the intent, and each surface has its
+own renderer for it.
+
+- **Who renders what:**
+  - The **Portal** (Local Dashboards, Report Specs, the Explorer), **Trellis** (Egeria Advisor, Resource Explorer)
+    and the **terminal** (the `run_report` CLI, the Textual TUIs) render: they draw tables, markdown and charts.
+  - **MCP and A2A** clients take un-rendered output: DICT rows (or the structured TABLE), which the model reads.
+  - **JSON** is Egeria's raw response and ignores the report spec, by design. DICT is the structured form.
+- **Choosing a type:**
+  - **A number** → DICT, through an analytic function (a KPI). **A trend** → SERIES. **Proportions** → BAR/PIE.
+  - **Rows of things with a few fields, possibly with lists** → TABLE. Every surface draws it as a table and
+    handles lists and small sub-tables.
+  - **One thing in depth, or prose** → REPORT (or FORM for an editable record).
+  - **A quick name list with drill-down links** → LIST.
+  - **Relationships as a picture** → MERMAID.
+  - **A standard file** (DCAT, ...) → DOCUMENT.
+  - **Data for a program** → DICT (structured, spec-shaped; `dict_shape="native"` for native values) or JSON (raw
+    Egeria).
+- **Nesting:** a table shows **two levels**: the row, and a cell drawn as bullets, key–values or a sub-table of
+  scalars. A third level (an object inside a sub-table cell) is shown as a count and names, with a note. For real
+  hierarchies use REPORT, MERMAID or a LIST with drill-down.
+
 ### Custom Column Formatting
 
-You can customize how column data is rendered in `LIST` format (Markdown tables) by setting the `format` attribute to a string, such as `"bulleted-list"`.
+You can customize how column data is rendered by setting the `format` attribute to a string, such as `"bulleted-list"`.
 
-- `bulleted-list`: Renders list values as a vertical bulleted list using HTML line breaks (`<br>`) within the Markdown table cell. This is useful for improving the readability of long lists.
+- `bulleted-list`: Renders list values as a vertical bulleted list: in a `LIST` table cell with HTML line breaks
+  (`<br>`), and in `REPORT`/`MD` as a markdown list (since 6.2.37).
+
+For lists, maps and related elements in general, prefer the column's `render` (see
+[Column render intents](#column-render-intents)); `format` stays for compatibility.
 
 Example:
 ```python
@@ -100,6 +140,12 @@ Report specs are defined using Pydantic models in `pyegeria/view/_output_format_
   - `key`: property key to extract from the data (snake_case or camelCase supported)
   - `format`: optional flag to apply formatting suitable for tables/links
   - `detail_spec`: optional name of another report spec to render a nested detail section (master–detail)
+  - `valid_values`: optional list or map of the values the column may hold
+  - `render`, `max_items`, `max_lines`, `label` (6.2.37, all optional): how the value is drawn; see
+    [Column render intents](#column-render-intents)
+- Format (DOCUMENT only)
+  - `document`: the standard, media type, file name and validator of a DOCUMENT format; see
+    [Document outputs](#document-outputs)
 
 Example (Python) — simplified snippet:
 
@@ -258,13 +304,15 @@ Egeria OMVS responses often include related elements and nested hierarchies. pye
   - related element properties (e.g., `name`, `qualifiedName`, `guid`, `type`, `description`)
   - recursively processed `nested_elements`
 - Schema‑driven promotion: if the current spec includes attributes with `detail_spec`, pyegeria builds a type→key map from those linked specs and promotes matching nested elements into those keys. Example: a role that has nested `Project` items becomes `{"projects": [ ... ]}` when the column points to a `Project` detail spec.
-- Smart Summarization: when rendering collections in tables (`LIST` or CLI `TABLE`), pyegeria now attempts to summarize them by joining the names or display names of child elements, rather than just showing a count.
+- Smart Summarization: when rendering collections in tables (`LIST` or CLI `TABLE`), pyegeria draws them by the column's render intent (names joined, bullets, key–values, or a count past `max_items`), never only a count (see [Column render intents](#column-render-intents)).
 
 ### How formats handle nested values
 
-- DICT: returns full nested dict/lists for downstream processing (materialized).
+- DICT: returns full nested dict/lists for downstream processing (materialized). Relationship columns are joined
+  strings unless the caller asks for `dict_shape="native"`.
 - JSON: returns the raw Egeria response structure.
-- LIST: shows a compact summary (names/identifiers) in the master row and adds a `[details]` link if a `detail_spec` is configured. A detail section is appended below using the linked spec.
+- LIST: draws each cell by the column's render intent (bullets, joined names, key–values, a count) and adds a `[details]` link if a `detail_spec` is configured. A detail section is appended below using the linked spec.
+- TABLE (structured): sub-rows as a nested table, two levels at most (see [Which output type for which surface](#which-output-type-for-which-surface)).
 - REPORT: renders nested dicts/lists as hierarchical markdown bullet lists (using the hyphen `-` as the default bullet character) for a clean read-only view.
 - FORM: shows summarized values only to keep the form updateable and concise.
 
@@ -376,65 +424,147 @@ Notes
 
 ---
 
-### Structured tables and native rows
+### Complex values: structured tables and native rows
 
-Report specs render complex values (lists, maps, related elements) from **native values**. Two caller
-flags expose them; neither is a spec field, and the defaults return today's shapes unchanged.
+Since 6.2.37, report specs keep **native values** (lists, maps, related elements) while they read an element, and
+each output type renders them at the edge. Two **caller flags** expose the native values. Neither is a spec field,
+and their defaults return today's shapes unchanged, so existing applications work as before.
 
-- `exec_report_spec(name, output_format="TABLE", table_shape="structured")` returns:
+#### The structured TABLE (`table_shape="structured"`)
 
-  ```
-  {"kind": "table",
-   "columns": [{"key", "name", "type", "render", "detail_spec", "valid_values", "max_items", "max_lines"}],
-   "rows": [{key: native value}],
-   "total": int | None, "shown": int, "notes": [str]}
-  ```
+```python
+from pyegeria.view.format_set_executor import exec_report_spec
 
-  `type` is inferred from the column's values: `scalar` (a short value), `text` (long or multi-line),
-  `list` (of scalars), `map`, `elements` (related elements) or `table` (sub-rows, e.g. a `detail_spec`
-  column). A column that mixes kinds takes the widest and the notes say so. `render` is the column's own,
-  else the default for its type (`text`, `bullets`, `kv`, `join`, `subtable`). Related elements are
-  `{guid, qualifiedName, displayName, type}`. A table shows two levels: an object inside a sub-row is
-  reduced to `{count, names, guid?}` with a note. `total` is the row count when the query did not fill
-  its page; when it did, `total` is `None` and the notes say "more may exist" (Egeria's paging contract).
-  `total_basis` says what `total` rests on: `"one page"` (the one page the query returned; a short page
-  is not promised to be the last).
-  An empty relationship cell says what it means: when the request asked for that relationship (graph
-  depth 1 or more, not filtered out) it is an explicit empty list and the notes say "none"; when it did
-  not, the cell is `null` and the notes say "not read". Egeria omits a relationship an element does not
-  have, so this is the only way to tell the two apart. The flat DICT and text outputs stay blank.
-- `exec_report_spec(name, output_format="DICT", dict_shape="native")` (and `generate_output(...,
-  dict_shape="native")`) returns DICT rows with native values: lists stay lists, related elements are
-  objects with both names, classifications and zones are lists, and `format=True` columns are not
-  stringified. The default `"flat"` is unchanged. `dict_shape` does not change TABLE (its structured form
-  is `table_shape`).
-- A column can say how it renders (R2), all optional:
-  - `render`: `text`, `join`, `bullets`, `kv`, `subtable`, `count` or `link`. Unset, it follows the
-    value's type (above); a column of related elements with more than `max_items` in a cell defaults to
-    `count`. `subtable` without a `detail_spec` uses the objects' own scalar keys.
-  - `max_items` (default 10): list items shown before "+N more".
-  - `max_lines` (default 3): lines of long text shown in web-oriented outputs. Markdown documents
-    (REPORT, LIST) do not clamp.
-  - `label`: `qualified_name` (the default) or `display_name`, the name a related element shows in text
-    outputs. Set it per column (Digital-Products sets `display_name` on Product Manager and License);
-    there is no global switch, because consumers split qualifiedNames.
-  These fields travel in Egeria-held specs (microflow column items; `label` travels as `related_label`,
-  since an item's own `label` is the column's title).
-- Renderers draw from native values (R3):
-  - **LIST (markdown table cells):** a list of scalars is bullets, one item per line (`a<br>b`), with
-    "+N more" past `max_items`; related elements are joined, "a, b (+N more: c, d)", in the column's
-    `label`; a map is `k: v<br>...`; a `count` column shows the number. `|` is escaped and newlines
-    become `<br>`. A `format=True` or `detail_spec` column keeps its own rendering. REPORT and LIST are
-    documents, not tiles, so long text is not clamped.
-  - **REPORT:** lists are markdown lists, and `detail_spec` columns are sub-reports after the row.
-  - **CLI (`run_report --output-format TABLE`):** asks for the structured table and draws it with Rich:
-    bullets one per line, a map as a nested table, long text cut at `max_lines` with "…", a sub-table as
-    a separate table after the main one titled "<row name> · <column>", and columns that do not fit the
-    terminal dropped from the end of the author's order with a footer naming them. The library function
-    `list_generic` keeps the flat rows unless asked (`table_shape="structured"`); the Textual report TUI
-    stays on flat rows.
-- Both apply to find-method specs; DOCUMENT, chart and analytic results ignore them. Any other value is
-  refused with a sentence. `_async_run_report` takes the same flags.
+table = exec_report_spec("Risk-DrE-Basic", output_format="TABLE", table_shape="structured",
+                         params={"search_string": "CocoPharma::Risk::"})
+```
+
+returns
+
+```
+{"kind": "table",
+ "columns": [{"key", "name", "type", "render", "detail_spec", "valid_values", "max_items", "max_lines"}, ...],
+ "rows": [{key: native value, ...}, ...],
+ "total": int | None, "total_basis": "one page", "shown": int,
+ "notes": [str, ...]}
+```
+
+- **`columns`**: each column's `type` is inferred from its values: `scalar` (a short value), `text` (long or
+  multi-line), `list` (of scalars), `map`, `elements` (related elements) or `table` (sub-rows, e.g. a
+  `detail_spec` column). A column that mixes kinds takes the widest, and the notes say so. `render` is the
+  column's own, else the default for its type (below).
+- **`rows`**: keyed by column **key** (not display name). Related elements are
+  `{guid, qualifiedName, displayName, type}`, so a renderer can show the display name and link by GUID.
+- **`total`, `shown`, `total_basis`**: `shown` is the number of rows. When the query filled its page size,
+  `total` is `None` and the notes say "Showing the first 100: the query stopped at its page size of 100; more may
+  exist." (Egeria's paging contract: only an empty page proves the end). Otherwise `total` is the row count, and
+  `total_basis` says what it rests on: `"one page"`, the single page the query returned.
+- **Empty relationship cells say what they mean.** Egeria omits a relationship an element does not have, so an
+  empty cell could mean "none" or "not asked for". The structured table tells them apart from the request it sent:
+  - requested (graph depth 1 or more, not excluded by a relationship filter) and absent: an explicit `[]`, and a
+    note such as "Solution Blueprint: none on 100 rows (read at graph depth 3).";
+  - not requested: `null`, and a note such as "Members: not read on 1 row (graph depth 0).";
+  - when the request cannot tell: `null` and "not established".
+- **Two levels**: an object inside a sub-row is reduced to `{count, names, guid?}`, with a note.
+- `_async_run_report(name, client, output_format="TABLE", table_shape="structured")` returns the same shape.
+
+#### Native DICT rows (`dict_shape="native"`)
+
+`exec_report_spec(name, output_format="DICT", dict_shape="native")` (and `generate_output(..., dict_shape="native")`
+and the async twin) returns DICT rows keyed by display name, as DICT always is, but with native values:
+
+- lists stay lists;
+- related elements are objects with both names, `{guid, qualifiedName, displayName, type}`;
+- classifications (`{name, properties?}`) and zones are lists;
+- `format=True` columns are not stringified (no link wrapping, no `|` escaping): a consumer that renders a native
+  value as markdown escapes it itself;
+- empty relationship cells and their notes follow the structured table's rules.
+
+The default, `"flat"`, is unchanged; `dict_shape` does not change TABLE (its structured form is `table_shape`).
+Any other `table_shape` or `dict_shape` value is refused with a sentence. Both flags apply to find-method specs:
+DOCUMENT, chart and analytic results ignore them.
+
+A consumer that must read both shapes uses `pyegeria.view.output_formatter.value_names(value)`: the names a DICT
+cell holds, from a native list (qualifiedName first) or a flat string (split on commas, a `[text](#guid)` link
+unwrapped), never a string iterated character by character. My Egeria's Shop for Data uses it.
+
+```python
+from pyegeria.view.output_formatter import value_names
+
+value_names([{"guid": "g1", "qualifiedName": "Folder::A"}])   # ['Folder::A']
+value_names(" [Folder::A, Folder::B](#g1) ")                    # ['Folder::A', 'Folder::B']
+```
+
+#### Column render intents
+
+A column can say how its value is drawn. All four fields are optional; unset, the default follows the value's
+type, so existing specs need no edit.
+
+| `render` | Draws | LIST cell (markdown) | CLI (Rich) | Default for |
+|---|---|---|---|---|
+| `text` | the value as text | `**Likelihood:** Low — ...` | wrapped, cut at `max_lines` with "…" | `scalar`, `text` |
+| `join` | names joined | `QN::a, QN::b (+2 more: QN::c, QN::d)` | `a, b (+2 more)` | `elements` |
+| `bullets` | one item per line | `first<br>second<br>+1 more` | `• first` per line | `list` |
+| `kv` | key–value pairs | `contactName: Robbie<br>hospital: Oak Dene` | a nested two-column table | `map` |
+| `subtable` | sub-rows | with a `detail_spec`: `3 items [details](#...)` and a detail section; without: the names joined | "3 items · see below", then a separate table | `table` |
+| `count` | the number of items | `14` | `14` | `elements` with more than `max_items` in a cell |
+| `link` | a link to the element | today drawn like `join` | today drawn like `join` | (never a default; for renderers that link by GUID) |
+
+- `max_items` (default 10): items shown before "+N more".
+- `max_lines` (default 3): lines of long text shown in web-oriented and terminal outputs. Markdown documents
+  (REPORT, LIST) are documents, not tiles, and do not clamp.
+- `label`: `qualified_name` (the default) or `display_name`, the name a related element shows in text outputs.
+  It is set per column, never globally, because consumers split and link qualifiedNames. The built-in
+  Digital-Products spec sets `display_name` on Product Manager and License.
+- `subtable` without a `detail_spec` uses the objects' own scalar keys.
+
+```python
+Column(name="Description", key="description", render="text", max_lines=4)
+Column(name="Implications", key="implications", render="bullets", max_items=5)
+Column(name="Product Manager", key="assigned_actors", label="display_name")
+```
+
+These fields travel in Egeria-held specs: a microflow column item carries `render`, `max_items` and `max_lines`
+under those names, and `label` as `related_label` (an item's own `label` is the column's title). A held spec with
+a bad value is skipped with the reason, never a sync failure.
+
+#### How each surface draws them
+
+- **LIST (markdown table cells):** by the column's render intent, as in the table above. `|` is escaped and
+  newlines become `<br>`. A `format=True` or `detail_spec` column keeps its own rendering.
+- **REPORT:** lists are markdown lists, and `detail_spec` columns are sub-reports after the row.
+- **CLI (`run_report --output-format TABLE`):** asks for the structured table and draws it with Rich: bullets one
+  per line, a map as a nested table, long text cut at `max_lines` with "…", each sub-table as a separate table after
+  the main one titled "<row name> · <column>", and columns that do not fit the terminal dropped from the end of
+  the author's order with a footer naming them. Caps and notes are printed after the table. The library function
+  `list_generic` keeps flat rows unless asked (`table_shape="structured"`); the Textual report TUI stays on flat
+  rows and shows a list as one joined cell.
+- **Portal and Egeria Advisor:** they render DICT rows today; asking for the structured table is their next step.
+
+### Rendered text and notes (6.2.37)
+
+6.2.37 corrected how report specs render **text** (REPORT, LIST, MD, FORM, HTML and the CLI table). DICT and JSON
+row shapes did not change. Anything that parses pyegeria's rendered text should expect:
+
+- **F1:** header classifications are joined with `", "` (no stray newline before the comma).
+- **F2:** REPORT/MD/FORM show a `False` or `0` value instead of dropping it.
+- **F3:** FORM/MD say "Diagram omitted in this format; see REPORT or MERMAID." instead of silently dropping a
+  diagram; `links`, `implemented by` and `sub_components` render as values.
+- **F4:** the CLI table shows list items with "(+N more)", never only "N items", and a map as one `k: v; ...` cell
+  instead of dotted columns.
+- **F5:** the CLI table keeps the author's column order and names the columns it cannot show
+  ("+N more columns: ...").
+- **F6:** LIST never drops an unnamed object in a list value: it shows its first text value or
+  "(unnamed <type>)".
+- **F7:** the Digital-Products `Members` column reads Egeria's `collectionMembers`. Relationship columns show
+  qualifiedNames unless a column sets `label: display_name`.
+- **F8:** a result that filled its page size says so: "Showing the first 100: the query stopped at its page size of
+  100; more may exist." It comes as `notes` beside `data` (DICT/TABLE), as a line at the end of text output, and
+  under the CLI table. It never says only "100". `page_size` and `start_from` given as text are converted to whole
+  numbers, and anything else is refused in words.
+- **F9:** markdown table cells escape `|` and turn newlines into `<br>`; markdown emphasis is kept.
+- **F10:** `format="bulleted-list"` works in REPORT/MD (a markdown list), not only in LIST.
+- **LIST cells** follow the column's render intent: a list of scalars is bullets (`a<br>b`) instead of "a, b".
 
 ### Document outputs
 
@@ -463,9 +593,11 @@ Load rules (each refusal is a sentence):
   analytic function is refused: a find returns elements, not a document.
 - `DOCUMENT` stands alone in its format row, needs its `document` block, and the spec has no
   other formats. Only a DOCUMENT format carries a `document` block.
-- `file_name` is a single file name: no path separators, no `..`, not hidden. Parameter values
-  filled into it are made file-name safe (`Folder::Sales/EU` becomes `Folder_Sales_EU`) and the
-  result is checked again. A parameter the run did not supply is refused.
+- `file_name` is a single file name: no path separators, no `..`, not hidden. Each `{field}` is a
+  plain parameter name, or alternatives separated by `|` (6.2.38): `{scope|search_string}` takes the
+  first one the run supplies. Values filled into it are made file-name safe (`Folder::Sales/EU`
+  becomes `Folder_Sales_EU`) and the result is checked again. A field none of whose parameters the
+  run supplied is refused ("needs one of the parameters 'scope', 'search_string'").
 
 Run it with `exec_report_spec(name, output_format="DOCUMENT", params={...})`. Any other output
 format asked of a DOCUMENT spec is refused with a sentence naming DOCUMENT, and DOCUMENT asked of
@@ -500,11 +632,14 @@ with the reason.
 **Validators** are registered by name with
 `pyegeria.view.document_validators.register_document_validators({name: fn})`, where
 `fn(text, media_type, **validator_options) -> (valid: bool, findings: list[str])`; a name already
-registered raises `DocumentValidatorCollision`. Two are built in:
+registered raises `DocumentValidatorCollision`. Three are built in:
 
 - `json-schema` (jsonschema): option `schema`, for JSON or YAML text;
 - `shacl` (pySHACL over rdflib): option `shapes` (Turtle), for JSON-LD, Turtle, RDF/XML,
-  N-Triples… by media type. Findings read "<severity> <focus node> <path>: <message>".
+  N-Triples… by media type. Findings are per focus node and path: "Dataset <identifier>: missing
+  dct:description", or "<Class> <identifier>: <path>: <message>"; warnings are prefixed and do not
+  make the document invalid;
+- `dcat-ap-3-shacl`: `shacl` bound to the DCAT-AP 3.0.1 shapes shipped with pyegeria.
 
 A validator **never fetches over the network**. In a report spec, `schema`/`shapes` must be
 package data (`package:<dotted.package>/<resource path>`): specs can be held in Egeria and written
@@ -528,11 +663,17 @@ the DCAT-AP 3.0.1 shapes vendored in `pyegeria/view/data/dcat-ap-3/` (CC BY 4.0;
 and hashes in the README there).
 
 ```bash
+# A collection or folder: writes ./out/DashboardFolder_Consumer_Portal-dcat.jsonld
 run_report --report "DCAT Catalog" --output-format DOCUMENT --output ./out --param scope=DashboardFolder::Consumer::Portal
+
+# Or the assets matching a search (6.2.38): the file is named from the search string
+run_report --report "DCAT Catalog (Turtle)" --output-format DOCUMENT --output ./out --param "search_string=DataLake::PROJ-CT"
 ```
 
-- `scope` is a collection qualifiedName or GUID; `export_dcat` also takes `search_string` (assets
-  in the asset domain), `format` (`jsonld` or `turtle`) and `page_size`.
+- Give `scope` (a collection qualifiedName or GUID) or `search_string` (assets in the asset
+  domain). Both specs name their file `{scope|search_string}-dcat.jsonld` (or `.ttl`); a run with
+  neither is refused. `export_dcat` also takes `format` (`jsonld` or `turtle`; each built-in spec
+  fixes its own) and `page_size`; it reads page by page until an empty page.
 - A `dcat:Dataset` is an **Asset**. DigitalProducts and Agreements are Bitol's: each is named in
   the notes ("<qn>: a DigitalProduct, not a DCAT dataset (Bitol)"), never exported.
 - It reads as the caller. A zoned Asset the caller can read is `dct:accessRights NON_PUBLIC`. A
@@ -1069,7 +1210,10 @@ pyegeria provides ready-to-use CLI commands to discover and run report specs.
 
 - `list_reports`: Lists all registered report specs with their Family, Description, and Available Formats. Use `--search/-s` to filter by name, family, description, or aliases.
 - `run_report`: Executes a report spec and renders output:
-  - `TABLE`: paged, interactive Rich table in the terminal
+  - `TABLE`: a Rich table in the terminal, drawn from the structured table (lists one per line, sub-tables after
+    the main table, dropped columns and "more may exist" notes in a footer)
+  - `DOCUMENT`: writes the document to `--output <dir>` as its file name (`--force` to overwrite) and prints the
+    validation line
   - `MD`/`REPORT`/`FORM`/`LIST`/`HTML`: writes a timestamped file to your outbox
   - `DICT`: returns machine-readable data (materialized)
   - `JSON`: returns raw machine-readable data from Egeria
