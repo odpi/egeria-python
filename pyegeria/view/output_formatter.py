@@ -387,21 +387,24 @@ def related_ref(item: Any) -> Any:
     return {k: v for k, v in ref.items() if v not in (None, "")}
 
 
-def _legacy_name(value: Any) -> Optional[str]:
+def _legacy_name(value: Any, label: Optional[str] = None) -> Optional[str]:
     if isinstance(value, dict):
+        if label == "display_name":  # Column.label (R2): the display name, opted in per column
+            return value.get('displayName') or value.get('name') or value.get('qualifiedName')
         return value.get('qualifiedName') or value.get('displayName') or value.get('name')
     if value in (None, ""):
         return None
     return str(value)
 
 
-def _legacy_text(value: Any) -> str:
+def _legacy_text(value: Any, label: Optional[str] = None) -> str:
     """The flat text a native value has always rendered as (R1: every legacy string comes from here).
     A list joins its items' names with ", " (an unnamed related element is left out, as before); a
-    related element or classification gives its name, qualifiedName first; a scalar its str."""
+    related element or classification gives its name, qualifiedName first unless the column's
+    `label` is "display_name" (R2); a scalar its str."""
     if isinstance(value, list):
-        return ", ".join(n for n in (_legacy_name(v) for v in value) if n)
-    return _legacy_name(value) or ""
+        return ", ".join(n for n in (_legacy_name(v, label) for v in value) if n)
+    return _legacy_name(value, label) or ""
 
 
 _LINK_WRAP = re.compile(r"^\s*\[(.*)\]\(#[^)]*\)\s*$", re.S)
@@ -2066,7 +2069,7 @@ def populate_common_columns(
                         native = related_ref(top_val)
                     else:
                         native = top_val
-                    derived_value = _legacy_text(native)
+                    derived_value = _legacy_text(native, col.get('label'))
                     if derived_value:
                         relationship_values[key_snake] = derived_value
                         relationship_natives[key_snake] = native

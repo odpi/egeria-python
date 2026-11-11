@@ -530,13 +530,20 @@ def _title(key: str) -> str:
     return " ".join(w[:1].upper() + w[1:] for w in words if w) or key
 
 
+#: The column-item key that carries `Column.label` (qualified_name / display_name). A column item's own
+#: "label" is the column's title, so the related-element label has its own key (R2).
+RELATED_LABEL_KEY = "related_label"
+
+
 def _to_column(item: ColumnItem, cache: Optional[Dict[Any, Any]] = None):
     """The `Column` for a formatter's column item. With `cache` (the seed loader passes one for the whole
     seed), an identical item yields the one shared `Column`, as the Python constants share theirs: 15,475
     columns in the 437 shipped specs are 642 distinct ones. Nothing changes a Column after it is built."""
     if cache is not None:
         key = item if isinstance(item, str) else (item.get("field"), item.get("label"), item.get("format"),
-                                                  item.get("detail_spec"), repr(item.get("valid_values")))
+                                                  item.get("detail_spec"), repr(item.get("valid_values")),
+                                                  item.get("render"), item.get("max_items"), item.get("max_lines"),
+                                                  item.get(RELATED_LABEL_KEY))
         col = cache.get(key)
         if col is None:
             col = cache[key] = _to_column(item)
@@ -549,9 +556,11 @@ def _to_column(item: ColumnItem, cache: Optional[Dict[Any, Any]] = None):
         return Column(name=_title(item), key=item)
     data: Dict[str, Any] = {"key": item["field"], "name": item.get("label") or
                             _column_catalog().get(item["field"], {}).get("name") or _title(item["field"])}
-    for k in ("format", "detail_spec", "valid_values"):
+    for k in ("format", "detail_spec", "valid_values", "render", "max_items", "max_lines"):
         if k in item and item[k] is not None:
             data[k] = item[k]
+    if item.get(RELATED_LABEL_KEY) is not None:  # Column.label; "label" is the column's title here
+        data["label"] = item[RELATED_LABEL_KEY]
     return Column(**data)
 
 
@@ -753,6 +762,11 @@ def _formatters_of(fs) -> Dict[str, Dict[str, Any]]:
                 item["detail_spec"] = c["detail_spec"]
             if c.get("valid_values"):
                 item["valid_values"] = c["valid_values"]
+            for k in ("render", "max_items", "max_lines"):  # R2: carried, or Egeria-held specs lose them
+                if c.get(k) is not None:
+                    item[k] = c[k]
+            if c.get("label") is not None:
+                item[RELATED_LABEL_KEY] = c["label"]
             cols.append(item)
         first: Optional[str] = None
         for t in fmt["types"]:

@@ -151,10 +151,10 @@ def test_f7_members_read_collection_members(monkeypatch):
 
 def test_f7_relationship_names_stay_qualified_names_by_default(monkeypatch):
     """The global display-name flip is held (F7 read-back): My Egeria splits qualifiedNames and the "::"
-    link wrap needs them. A display-name label is a per-column choice (Column.label, R2)."""
+    link wrap needs them. A display name is a per-column opt-in (Column.label, R2; Digital-Products sets
+    it on Product Manager and License), so an unlabelled column keeps qualifiedNames."""
     rows = ReportReplay(monkeypatch, "digital_products").run("DICT")["data"]
-    pm = [r["Product Manager"] for r in rows if r["Product Manager"]]
-    assert pm and all(v.endswith("_productManager") for v in pm)
+    assert all("::" in r["Members"] for r in rows)
 
 
 def test_f7_absent_relationships_are_genuinely_none(monkeypatch):

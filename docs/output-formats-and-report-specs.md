@@ -408,6 +408,18 @@ flags expose them; neither is a spec field, and the defaults return today's shap
   objects with both names, classifications and zones are lists, and `format=True` columns are not
   stringified. The default `"flat"` is unchanged. `dict_shape` does not change TABLE (its structured form
   is `table_shape`).
+- A column can say how it renders (R2), all optional:
+  - `render`: `text`, `join`, `bullets`, `kv`, `subtable`, `count` or `link`. Unset, it follows the
+    value's type (above); a column of related elements with more than `max_items` in a cell defaults to
+    `count`. `subtable` without a `detail_spec` uses the objects' own scalar keys.
+  - `max_items` (default 10): list items shown before "+N more".
+  - `max_lines` (default 3): lines of long text shown in web-oriented outputs. Markdown documents
+    (REPORT, LIST) do not clamp.
+  - `label`: `qualified_name` (the default) or `display_name`, the name a related element shows in text
+    outputs. Set it per column (Digital-Products sets `display_name` on Product Manager and License);
+    there is no global switch, because consumers split qualifiedNames.
+  These fields travel in Egeria-held specs (microflow column items; `label` travels as `related_label`,
+  since an item's own `label` is the column's title).
 - Both apply to find-method specs; DOCUMENT, chart and analytic results ignore them. Any other value is
   refused with a sentence. `_async_run_report` takes the same flags.
 

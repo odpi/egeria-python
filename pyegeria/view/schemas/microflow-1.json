@@ -56,12 +56,17 @@
                 {"type": "object", "required": ["field"], "properties": {
                   "field": {"type": "string"}, "label": {"type": "string"},
                   "format": {"type": ["boolean", "string"]}, "detail_spec": {"type": "string"},
-                  "valid_values": {"type": ["array", "object"]}}}
+                  "valid_values": {"type": ["array", "object"]},
+                  "render": {"enum": ["text", "join", "bullets", "kv", "subtable", "count", "link"]},
+                  "max_items": {"type": "integer", "minimum": 1}, "max_lines": {"type": "integer", "minimum": 1},
+                  "related_label": {"enum": ["qualified_name", "display_name"],
+                                    "description": "Column.label: the name a related element shows in text outputs; 'label' is the column's title"}}}
               ]}}
             ]
           },
           "field": {"type": "string"},
           "label": {"type": "string"},
+          "document": {"type": "object", "description": "A DOCUMENT formatter's document block (SD-1): standard, media_type, file_name, validator, validator_options."},
           "same_as": {"type": "string",
                       "description": "An output format written earlier in formatters whose formatter this one shares (a Format with several types). It carries no columns or field of its own."}
         },

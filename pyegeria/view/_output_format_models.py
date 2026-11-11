@@ -68,7 +68,7 @@ import json
 import os
 import warnings
 from pathlib import Path
-from typing import Dict, List, Optional, Union, Any
+from typing import Dict, List, Literal, Optional, Union, Any
 from pydantic import BaseModel, Field, PrivateAttr, field_validator, model_validator
 from loguru import logger
 __all__ = [
@@ -130,6 +130,10 @@ def load_format_sets_from_json(file_path: str) -> Dict[str, 'FormatSet']:
         logger.error(f"Error loading format sets from {file_path}: {e}")
         raise
 
+COLUMN_RENDERS = ("text", "join", "bullets", "kv", "subtable", "count", "link")
+COLUMN_LABELS = ("qualified_name", "display_name")
+
+
 class Column(BaseModel):
     """
     Represents an attribute (formerly called a column) in an output format.
@@ -140,6 +144,14 @@ class Column(BaseModel):
         format: Whether the attribute's value should be formatted
         detail_spec: Optional report spec to use for detailed rendering of this column
         valid_values: Optional list or dict of valid values for Enum mapping
+        render: How a renderer draws the value (R2): text, join, bullets, kv, subtable, count or link.
+            Unset, it follows the value's type (scalar/text -> text, list -> bullets, map -> kv,
+            related elements -> join, sub-rows -> subtable). `subtable` without detail_spec uses the
+            objects' own scalar keys.
+        max_items: Items a list cell shows before "+N more" (effective default 10).
+        max_lines: Lines a long text cell shows in web-oriented outputs (effective default 3).
+        label: Which name a related element shows in text outputs: "qualified_name" (the default,
+            today's text) or "display_name". Set per column, never globally (the F7 read-back).
     """
     name: str
     key: str
@@ -147,6 +159,10 @@ class Column(BaseModel):
     format: Union[bool, str] = False
     detail_spec: Optional[str] = None
     valid_values: Optional[Union[List[str], Dict[str, str]]] = None
+    render: Optional[Literal["text", "join", "bullets", "kv", "subtable", "count", "link"]] = None
+    max_items: Optional[int] = Field(default=None, ge=1)
+    max_lines: Optional[int] = Field(default=None, ge=1)
+    label: Optional[Literal["qualified_name", "display_name"]] = None
 
 # New preferred alias for Column
 Attribute = Column

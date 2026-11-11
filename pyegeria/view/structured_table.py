@@ -29,6 +29,9 @@ _WIDTH = {t: i for i, t in enumerate(COLUMN_TYPES)}
 #: The render a column gets when its spec sets none (R2 makes it a spec field; this is the default).
 DEFAULT_RENDER = {"scalar": "text", "text": "text", "list": "bullets", "map": "kv", "elements": "join",
                   "table": "subtable"}
+#: The effective defaults of Column.max_items / Column.max_lines (R2, owner §7.2).
+DEFAULT_MAX_ITEMS = 10
+DEFAULT_MAX_LINES = 3
 #: Text longer than this, or with a line break, is "text" (clamped by renderers), not a short scalar.
 _LONG_TEXT = 120
 
@@ -220,6 +223,10 @@ def build_structured_table(dict_rows: Any, attributes: List[Any], *, notes: Opti
         col["type"] = widest
         if not col.get("render"):
             col["render"] = DEFAULT_RENDER[widest]
+            if widest == "elements":  # R2: a column of long element lists counts, past max_items
+                limit = col.get("max_items") or DEFAULT_MAX_ITEMS
+                if any(isinstance(r.get(col["key"]), list) and len(r[col["key"]]) > limit for r in rows):
+                    col["render"] = "count"
         if widest == "table":
             for row in rows:
                 if isinstance(row.get(col["key"]), list):

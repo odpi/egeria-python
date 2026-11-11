@@ -2676,8 +2676,8 @@ formats=[
                     Column(name='Members', key='members', format=True),
                     Column(name='Uses Products', key='uses_digital_products'),
                     Column(name='Used by Products', key='used_by_digital_products'),
-                    Column(name='Product Manager', key='assigned_actors'),
-                    Column(name='License', key='governed_by'),
+                    Column(name='Product Manager', key='assigned_actors', label='display_name'),
+                    Column(name='License', key='governed_by', label='display_name'),
                     Column(name='Solution Blueprint', key='solution_designs'),
                 ]),
             Format(
@@ -2693,8 +2693,8 @@ formats=[
                     Column(name='Members', key='members', format=True),
                     Column(name='Uses Products', key='uses_digital_products'),
                     Column(name='Used by Products', key='used_by_digital_products'),
-                    Column(name='Product Manager', key='assigned_actors'),
-                    Column(name='License', key='governed_by'),
+                    Column(name='Product Manager', key='assigned_actors', label='display_name'),
+                    Column(name='License', key='governed_by', label='display_name'),
                     Column(name='Solution Blueprint', key='solution_designs'),
                     Column(name="Mermaid", key="mermaid")
                 ],
