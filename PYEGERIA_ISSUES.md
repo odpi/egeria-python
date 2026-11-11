@@ -172,6 +172,8 @@ re-test candidates moved into *Awaiting re-test* below the open sections.
   create-from-template) and 7 (`viewElementGUID`) are still open.
 
 **Open pyegeria items**
+- ISSUE-184: a Smart Collection was recognised by the Portal's `smartCollection` flag, not by Egeria's catalog target (fixed for 6.2.35)
+- ISSUE-183: deleting a SavedQuery left its SmartQuery links, and pyegeria had no delete that detached them (fixed for 6.2.35)
 - ISSUE-182: an element hidden by zone security (403-020) was reported as AUTHORIZATION_ERROR_401 (fixed in 6.2.34)
 - ISSUE-181 (HIGH): Dr.Egeria Parent ID on an Update deleted an unrelated relationship of the parent type, e.g. a folder's member (fixed for 6.2.32; moves to the Appendix on release)
 - ISSUE-174: link methods discarded the new relationship GUID (fixed for 6.2.19; moves to the Appendix on release)
@@ -194,6 +196,26 @@ Dr.Egeria-side work each will need once that capability ships is written
 into the entry now, so it isn't rediscovered from scratch later.
 
 ---
+
+### ISSUE-184: a Smart Collection was recognised by a flag, not by Egeria's record
+
+**Layer:** pyegeria · **Severity:** medium: a cached answer could be served as "kept current by Egeria" when it was not, or refused when it was · **Status:** fixed 2026-11-11 on branch `feat/smart-collection-catalog-target`, targets 6.2.35 · **Found:** backlog, from the Smart Collections design (Egeria #9200, 0725).
+
+**What:** `saved_query` treated a SavedQuery as a registered Smart Collection when `additionalProperties.smartCollection == "true"`, the Portal's flag. Egeria records registration differently: the Smart Collections integration connector maintains a Results Set that is its CatalogTarget, under the target name `resultsSetToMaintain` (`SmartCollectionsCatalogTarget.CATALOG_TARGET`), and the SavedQuery reaches that Results Set through SmartQuery. A flag can be set without the registration, or the registration made without the flag, so the "answered only for the stored values" rule could apply to the wrong queries.
+
+**Done:** `_smart_collection_results_set` reads SmartQuery from the SavedQuery (end 2) and CatalogTarget from each Results Set (end 2); registered means an IntegrationConnector holds it as `resultsSetToMaintain`, and that Results Set is the one read. Only in cached mode. A failed read is not a registration (the ordinary cached path then serves only recorded values, so it is never wrong).
+
+Tests: `tests/micro-tests/test_saved_query_analytic.py`, with a CatalogTarget related element captured read-only from a quickstart platform (`data/catalog_target_related_2026_11_11.json`).
+
+### ISSUE-183: deleting a SavedQuery left its SmartQuery links behind
+
+**Layer:** pyegeria · **Severity:** medium: an orphaned link, and a delete Egeria refuses · **Status:** fixed 2026-11-11 on branch `feat/saved-query-delete-detach`, targets 6.2.35 · **Found:** backlog; the Portal's insights handler works around it by hand.
+
+**What:** pyegeria had no SavedQuery delete beyond `delete_asset`. Egeria deletes only what the deleted element anchors, so a SmartQuery link to an independently anchored Results Set was left behind, and blocks the delete (OMAG-GENERIC-HANDLERS-403-005). The Portal detaches it first, finding it from its own `additionalProperties` markers.
+
+**Done:** `pyegeria.view.saved_query.delete_saved_query(client, guid)` finds every Results Set linked by SmartQuery from Egeria's relationships, detaches each (`detach_smart_query`), then deletes the SavedQuery. Results Sets are kept and named in the result. A link that cannot be detached stops the delete with the reason.
+
+Tests: `tests/micro-tests/test_saved_query_delete.py`.
 
 ### ISSUE-182: an element hidden by zone security is reported as "AUTHORIZATION_ERROR_401"
 
