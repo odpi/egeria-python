@@ -14,7 +14,7 @@ rationale). `SavedQuery` is a `DataSet` -> `Asset` subtype, so this uses
 `AssetMaker`'s generic asset endpoints (`_async_create_asset`/
 `_async_update_asset`) exactly like `ReportProcessor` does.
 
-Only `queryURL`/`queryRequestBody` are set as typed properties -- confirmed
+`queryURL`/`queryRequestBody` and (6.2.34) DataSet's `formula`/`formulaType` are set as typed properties -- confirmed
 against the current Egeria source (`SavedQueryProperties.java`) that
 `queryType` has no field on this bean at all (it's a pre-existing,
 unrelated `OpenMetadataProperty` used elsewhere), so a `Query Type`
@@ -53,6 +53,10 @@ class SavedQueryProcessor(AsyncBaseCommandProcessor):
         props = set_element_prop_body("SavedQuery", qualified_name, attributes)
         props["queryURL"] = attributes.get("Query URL", {}).get("value")
         props["queryRequestBody"] = attributes.get("Query Request Body", {}).get("value")
+        # DataSetProperties' formula / formulaType: the Portal's insights refresh re-runs `formula`
+        # (formulaType egeria-insights-search-v1), so a seeded SavedQuery carries its query (6.2.34).
+        props["formula"] = attributes.get("Formula", {}).get("value")
+        props["formulaType"] = attributes.get("Formula Type", {}).get("value")
         props["deployedImplementationType"] = attributes.get("Deployed Implementation Type", {}).get("value")
         props["resourceName"] = attributes.get("Resource Name", {}).get("value")
 

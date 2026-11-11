@@ -51,6 +51,19 @@ class PyegeriaErrorCode(Enum):
         "system_action": "The user credentials provided were not authorized.",
         "user_action": "Check that your user credentials are correct - please see documentation, if unsure.",
         }
+    # ISSUE-182: Egeria's own 403 (UserNotAuthorizedException, e.g. OPEN-METADATA-SECURITY-403-020, an element
+    # in a zone the user can't see). The user IS signed in; a new token changes nothing. The message_id keeps the
+    # AUTHORIZATION_ERROR prefix because callers (the Portal's _is_auth_error helpers) match that substring.
+    FORBIDDEN_ERROR = {
+        "http_code": 403,
+        "egeria_code": "From Egeria",
+        "message_id": "AUTHORIZATION_ERROR_403",
+        "message_template": "HTTP Code: 403 {0} (user `{1}`)",
+        "system_action": "Egeria refused the request: the user is signed in but may not see or do this.",
+        "user_action": "A new token will not help. Check the user's governance zones and permissions "
+                       "(see Egeria's message), or use another user.",
+        }
+    # Unused (only in commented-out code). The 401/403 names are the wrong way round - see ISSUE-182.
     AUTHENTICATION_ERROR = {
         "http_code": 403,
         "egeria_code": "From Egeria",
@@ -327,15 +340,28 @@ class PyegeriaUnauthorizedException(PyegeriaAPIException):
     """
     def __init__(self, response: Response,
                  context: dict = None, additional_info: dict = None, e: Exception = None) -> None:
-        PyegeriaException.__init__(self, response, PyegeriaErrorCode.AUTHORIZATION_ERROR,
-                         context, additional_info, e)
+        info = additional_info or {}
+        # ISSUE-182: report what Egeria said. A transport 401 (bad or expired token), or an Egeria-wrapped 401,
+        # stays AUTHORIZATION_ERROR_401; Egeria's own 403 (e.g. OPEN-METADATA-SECURITY-403-020, not visible
+        # to the user) is AUTHORIZATION_ERROR_403 with its HTTP code and message id. Same class either way.
+        forbidden = str(info.get("relatedHTTPCode", "")) == "403"
+        PyegeriaException.__init__(self, response,
+                                   PyegeriaErrorCode.FORBIDDEN_ERROR if forbidden else PyegeriaErrorCode.AUTHORIZATION_ERROR,
+                                   context, additional_info, e)
+        self.egeria_message_id = info.get("exceptionErrorMessageId") or ""
         # PyegeriaAPIException.__init__ normally sets this from the Egeria-wrapped
         # JSON body; since we bypass it, set it here too so `except
         # PyegeriaAPIException as e: e.related_http_code` keeps working for both
         # the Egeria-wrapped-200 case (additional_info carries relatedHTTPCode)
         # and the bare-401 transport case (fall back to the real HTTP status).
         self.related_http_code = (additional_info or {}).get("relatedHTTPCode") or getattr(response, "status_code", None)
-        self.message = self.error_details["message_template"].format((additional_info or {}).get("userid", ""))
+        user = info.get("userid", "")
+        if forbidden:
+            egeria_msg = str(info.get("exceptionErrorMessage") or "")
+            detail = egeria_msg if self.egeria_message_id in egeria_msg else f"{self.egeria_message_id} {egeria_msg}"
+            self.message = self.error_details["message_template"].format(detail.strip() or "Egeria refused the request", user)
+        else:
+            self.message = self.error_details["message_template"].format(user)
         # See PyegeriaInvalidParameterException's comment above.
         logger.info(self.__str__().replace("{", "{{").replace("}", "}}"), ip=self.response_url, http_code=self.response_code, pyegeria_code=self.pyegeria_code)
 
