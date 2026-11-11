@@ -206,7 +206,7 @@ into the entry now, so it isn't rediscovered from scratch later.
 
 **Done:** the method passes its paging on; `_with_paging` adds a call's paging to a body that sets none; `_read_pages` counts distinct elements and stops, not capped, with "paging did not advance" when a page brings nothing new; the three unbounded paging loops (`dashboards._dashboard_elements`, the dashboard sheet writer's `_related` and Report-name read) stop the same way.
 
-**Audit:** of 101 list methods taking `start_from`/`page_size`, this was the only one not forwarding them. Single-call member reads that do not page (they read the server's default page): `egeria_folders` (folder walks), `base_report_formats` (report-type members), `commands/cat/get_collection_tree.py`. Not changed here; worth paging if a folder can exceed the default page.
+**Audit:** of 101 list methods taking `start_from`/`page_size`, this was the only one not forwarding them. `egeria_folders` read each folder in one unpaged call (the Architect's LD-3 note N2); it now pages every folder to its end, deduplicated, and a folder over 10,000 members is reported as not fully read (`FolderTooLarge`). Still single-call member reads (the server's default page): `base_report_formats` (report-type members) and `commands/cat/get_collection_tree.py`; worth paging if those can exceed the default page.
 
 Tests: `tests/micro-tests/test_collection_members_paging.py`.
 
