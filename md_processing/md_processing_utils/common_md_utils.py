@@ -129,13 +129,13 @@ def _split_multiline(lines: list) -> list:
     - **With bullets:** each bullet is an item. A non-bullet line after a bullet joins it when it is a
       wrapped continuation (indented, or starting in lower case); otherwise -- a closing sentence, say
       -- it is its own item. Lines before the first bullet (an intro) are their own items.
-    - **Without bullets:** clearly wrapped prose -- every line break falls inside a sentence (the line
-      before it does not end in . ! ? ; : and is long, or the next line starts in lower case) -- is one
-      item, its lines joined with spaces. Otherwise each line is an item (a line list).
+    - **Without bullets:** clearly wrapped prose -- every line but the last is at least 60 characters
+      long and does not end a sentence (. ! ? ; :) -- is one item, its lines joined with spaces. Otherwise
+      each line is an item (a line list): a short line, even in lower case ("crm", "erp", "data
+      quality"), stands alone.
     Commas are never split inside a multi-line value."""
     if not any(_LIST_BULLET.match(line) for line in lines):
-        if all(not _SENTENCE_END.search(a.rstrip()) and (b.lstrip()[:1].islower() or len(a.rstrip()) >= _WRAP_WIDTH)
-               for a, b in zip(lines, lines[1:])):
+        if all(not _SENTENCE_END.search(a.rstrip()) and len(a.rstrip()) >= _WRAP_WIDTH for a in lines[:-1]):
             return [" ".join(line.strip() for line in lines)]
         return [line.strip() for line in lines if line.strip()]
     items: list = []

@@ -64,7 +64,7 @@ def test_egeria_holds_the_split_value_today():
     ("- a, b\n- c", ["a, b", "c"]),
     ("* a, b\n+ c", ["a, b", "c"]),
     ("First line, with comma\nSecond", ["First line, with comma", "Second"]),  # a line list: a line is an item
-    ("first line, with comma\nsecond", ["first line, with comma second"]),     # wrapped prose: one item
+    ("first line, with comma\nsecond", ["first line, with comma", "second"]),  # short lines: a line list
     ("\n- a\n\n- b\n", ["a", "b"]),
     ("", []),
     (None, None),
@@ -118,3 +118,18 @@ def test_a_mixed_block_keeps_intro_bullets_and_closing_line_apart():
 ])
 def test_continuation_rules(text, expected):
     assert split_list_value(text) == expected
+
+
+def test_a_short_lower_case_keyword_list_stays_a_list():
+    """n2: lower case alone never makes a wrap in a block without bullets."""
+    assert split_list_value("crm\nerp\ndata quality") == ["crm", "erp", "data quality"]
+
+
+def test_a_short_lower_case_line_after_a_bullet_continues_it():
+    """Pinned: inside a bulleted block, a non-bullet line in lower case after a bullet that did not end its
+    sentence is that bullet's wrapped continuation, however short; after a finished bullet it stands alone."""
+    from md_processing.md_processing_utils.common_md_utils import _continues
+    assert _continues("- Service characteristics must be agreed", "erp") is True
+    assert split_list_value("- crm and\nerp\n- data quality") == ["crm and erp", "data quality"]
+    assert _continues("- Service characteristics are agreed.", "erp") is False
+    assert _continues("- crm", "Data Quality") is False
