@@ -9,6 +9,8 @@ different client capabilities. It also provides the common methods used to make 
 
 import asyncio
 import json
+from contextlib import contextmanager
+from contextvars import ContextVar
 import os
 import re
 import time
@@ -133,6 +135,25 @@ def _with_paging(body: dict, start_from: int, page_size: int) -> dict:
     if page_size and not ({"pageSize", "page_size"} & body.keys()):
         out["pageSize"] = page_size
     return out
+
+
+#: The record of the list requests made in the current call, when a caller asked for one
+#: (`recording_list_requests`): a per-call dict, so concurrent runs never share it (read-back C1).
+LIST_REQUEST_RECORD: "ContextVar[Optional[dict]]" = ContextVar("pyegeria_list_request_record", default=None)
+
+
+@contextmanager
+def recording_list_requests():
+    """Record, for the calls made inside this block, what the last list request sent and got back:
+    yields the caller's own dict (keys `cap`, `graph_query_depth`, `include_only_relationships`,
+    `skip_relationships`). A coroutine run inside the block (sync wrappers run it in a task that copies
+    this context) writes into the same dict, which the caller reads after the call."""
+    record: dict = {}
+    token = LIST_REQUEST_RECORD.set(record)
+    try:
+        yield record
+    finally:
+        LIST_REQUEST_RECORD.reset(token)
 
 class ServerClient(BaseServerClient):
     """
@@ -6495,22 +6516,30 @@ class ServerClient(BaseServerClient):
             validated_body = None
         return validated_body
 
-    #: (shown, page_size, start_from) when the last list request filled its page, else None. Set by
-    #: every list helper; read by exec_report_spec to say "the first N ...; more may exist" (fix-now F8).
-    last_page_cap = None
-
     def _elements_noting_page_cap(self, response, default):
-        """The `elements` of a list answer, recording on the client whether the answer filled the page
-        size that was sent (read back from the request itself, so every helper is covered)."""
+        """The `elements` of a list answer. When a caller is recording (`recording_list_requests`), the
+        answer's facts go into the caller's own record, read back from the request that was sent, so
+        every list helper is covered: `cap` = (shown, page_size, start_from) when the answer filled the
+        page size, plus the graph depth and relationship filters sent. Nothing is kept on the client: a
+        client shared by concurrent runs (dashboard tiles) never mixes one run's cap with another's
+        (fix-now F8, read-back C1)."""
         elements = response.json().get("elements", default)
-        self.last_page_cap = None
+        record = LIST_REQUEST_RECORD.get()
+        if record is None:
+            return elements
         try:
             sent = json.loads(response.request.content or b"{}")
         except Exception:  # noqa: BLE001 -- no request body (a GET) or not JSON: nothing to record
             return elements
-        page_size = sent.get("pageSize") if isinstance(sent, dict) else None
-        if isinstance(elements, list) and isinstance(page_size, int) and page_size > 0 and len(elements) >= page_size:
-            self.last_page_cap = (len(elements), page_size, sent.get("startFrom") or 0)
+        if not isinstance(sent, dict):
+            return elements
+        page_size = sent.get("pageSize")
+        record["cap"] = ((len(elements), page_size, sent.get("startFrom") or 0)
+                         if isinstance(elements, list) and isinstance(page_size, int) and page_size > 0
+                         and len(elements) >= page_size else None)
+        record["graph_query_depth"] = sent.get("graphQueryDepth")
+        record["include_only_relationships"] = sent.get("includeOnlyRelationships")
+        record["skip_relationships"] = sent.get("skipRelationships")
         return elements
 
     @dynamic_catch

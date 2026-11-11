@@ -9,6 +9,7 @@ scripts/capture_report_fixtures.py, so each output format renders offline exactl
 
 A request the fixture does not hold fails the test with its method, path and body.
 """
+import asyncio
 import copy
 import gzip
 import json
@@ -46,6 +47,7 @@ class ReportReplay:
             path = p.path + (f"?{p.query}" if p.query else "")
             body = json.loads(payload) if isinstance(payload, str) and payload.strip().startswith("{") else payload
             self.requests.append((request_type.upper(), path, body))
+            await asyncio.sleep(0)  # yield, so concurrent runs on one client really interleave
             call = self.answers.get(_key(request_type, path, body))
             if call is None:
                 raise AssertionError(f"no recorded answer for {request_type} {path} {json.dumps(body, default=str)}")
@@ -60,6 +62,12 @@ class ReportReplay:
             monkeypatch.setattr(cls, "_async_make_request", replay)
             if hasattr(cls, "check_connection"):
                 monkeypatch.setattr(cls, "check_connection", lambda self: "replay", raising=False)
+
+    def add(self, name):
+        """Also answer another fixture's requests (two tiles on one client)."""
+        for c in load_fixture(name)["calls"]:
+            self.answers[_key(c["method"], c["path"], c["body"])] = c
+        return self
 
     def run(self, output_format, **params):
         return exec_report_spec(self.fixture["spec"], output_format=output_format,

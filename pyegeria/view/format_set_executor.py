@@ -43,6 +43,7 @@ from pyegeria.view.role_supply import PlainSupply, RoleRefused, RoleSupply, supp
 from pyegeria.view.overview_metrics import recording_unmeasured
 from pyegeria.view._output_format_models import DOCUMENT_OUTPUT_TYPE, check_document_file_name
 from pyegeria.view.document_validators import run_document_validator
+from pyegeria.core._server_client import recording_list_requests
 
 _CLIENT_CLASS_MAP = {
     "CollectionManager": "pyegeria.omvs.collection_manager.CollectionManager",
@@ -934,12 +935,12 @@ async def _async_run_report_impl(
         except Exception as auth_err:
             # Do not fail the entire call if token refresh fails; downstream call may still work
             logger.debug(f"Token creation/lookup issue: {auth_err}")
-        _reset_page_cap(func)
-        result = await func(**call_params)
+        with recording_list_requests() as list_record:
+            result = await func(**call_params)
 
         if not result or result == NO_ELEMENTS_FOUND:
             return {"kind": "empty"}
-        cap_notes = page_cap_notes(func, call_params, result)
+        cap_notes = page_cap_notes(func, call_params, result, list_record)
 
         if output_format in {"DICT", "JSON", "ALL", "TABLE"}:
             # Return raw data (list/dict/any) — do not stringify here; include TABLE to enable Rich rendering upstream
@@ -1192,26 +1193,20 @@ def _effective_page_size(func: Any, call_params: Dict[str, Any]) -> Optional[int
     return default if isinstance(default, int) and default > 0 else None
 
 
-def _reset_page_cap(func: Any) -> None:
-    owner = getattr(func, "__self__", None)
-    if owner is not None and hasattr(owner, "last_page_cap"):
-        owner.last_page_cap = None
-
-
 def _cap_words(shown: int, size: int, start: int) -> str:
     first = f"rows {start + 1}-{start + shown}" if start else f"the first {shown}"
     return f"Showing {first}: the query stopped at its page size of {size}; more may exist."
 
 
-def page_cap_notes(func: Any, call_params: Dict[str, Any], result: Any) -> List[str]:
+def page_cap_notes(func: Any, call_params: Dict[str, Any], result: Any,
+                   record: Optional[Dict[str, Any]] = None) -> List[str]:
     """Fix-now F8: a find result that filled its page says so, never a bare N. Egeria's paging
     contract means a full page may or may not be the last, so the words are "more may exist".
 
-    The client records whether the answer filled the page size it sent (`last_page_cap`), which
-    covers a find method that renders text itself; a plain list result is checked against the page
-    size sent (or the find function's own default) as well."""
-    owner = getattr(func, "__self__", None)
-    cap = getattr(owner, "last_page_cap", None)
+    `record` is this call's own list-request record (`recording_list_requests`), which covers a find
+    method that renders text itself; a plain list result is checked against the page size sent (or the
+    find function's own default) as well. No state is read from the client (read-back C1)."""
+    cap = (record or {}).get("cap")
     if cap:
         shown, size, start = cap
         return [_cap_words(shown, size, start)]
@@ -1609,12 +1604,12 @@ def _exec_report_spec_impl(
         call_params = _bind_search_parameter(func, call_params)
         _warn_dropped_params(format_set_name, params, call_params,
                              [*required_params, *optional_params, *spec_params])
-        _reset_page_cap(func)
-        result = func(**call_params)
+        with recording_list_requests() as list_record:
+            result = func(**call_params)
 
         if not result or result == NO_ELEMENTS_FOUND:
             return {"kind": "empty"}
-        cap_notes = page_cap_notes(func, call_params, result)
+        cap_notes = page_cap_notes(func, call_params, result, list_record)
 
         if output_format in {"DICT", "JSON", "ALL", "TABLE"}:
             # Return raw data (list/dict/any) — do not stringify here

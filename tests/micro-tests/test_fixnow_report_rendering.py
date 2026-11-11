@@ -238,3 +238,35 @@ def test_f10_bulleted_list_in_a_table_cell():
     element = copy.deepcopy(_elements("risk_register")[0])
     out = _render([element], [Column(name="Implications", key="implications", format="bulleted-list")], "LIST")
     assert "<br> - " in out
+
+
+# ── F8, read-back C1: concurrent runs on one shared client never mix their caps ──
+
+def test_f8_concurrent_runs_on_one_client_keep_their_own_notes(monkeypatch):
+    """Two runs of Digital-Products on one client (so one shared ProductManager sub-client): one stops at
+    its page size of 100 (capped), one asks for 200 and gets the same 100 real elements (not capped).
+    Interleaved, each must keep its own note; nothing is kept on the client."""
+    import asyncio
+    from pyegeria.egeria_tech_client import EgeriaTech
+    replay = ReportReplay(monkeypatch, "digital_products").add("risk_register")
+    find = next(c for c in replay.fixture["calls"] if c["method"] == "POST")
+    bigger = dict(find["body"], pageSize=200)
+    replay.answers[replay_mod._key("POST", find["path"], bigger)] = {**find, "body": bigger}
+    client = EgeriaTech("qs-view-server", "https://localhost:9443", user_id="erinoverview", user_pwd="")
+    client.set_bearer_token("replay-token")
+    dp, risk = load_fixture("digital_products"), load_fixture("risk_register")
+
+    def run(spec_fx, fmt, **extra):
+        return fse._async_run_report(spec_fx["spec"], client, output_format=fmt,
+                                     params={**spec_fx["params"], **extra})
+
+    async def all_runs():
+        return await asyncio.gather(run(dp, "DICT"), run(dp, "DICT", page_size=200),
+                                    run(dp, "REPORT"), run(dp, "REPORT", page_size=200), run(risk, "DICT"))
+
+    capped, uncapped, capped_text, uncapped_text, risk_dict = asyncio.run(all_runs())
+    words = "Showing the first 100: the query stopped at its page size of 100; more may exist."
+    assert capped["notes"] == [words] and capped_text["notes"] == [words]
+    assert "notes" not in uncapped and "notes" not in uncapped_text and "notes" not in risk_dict
+    assert len(uncapped["data"]) == 100
+    assert not any(hasattr(sub, "last_page_cap") for sub in [client, *getattr(client, "_subclients", {}).values()])
