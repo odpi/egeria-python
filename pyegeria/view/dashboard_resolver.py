@@ -374,12 +374,13 @@ async def async_resolve_sheet(client: Any, sheet: Any, *, perspective: Optional[
     return resolved
 
 
-async def async_list_dashboard_sheets_for_viewer(client: Any) -> List[Any]:
+async def async_list_dashboard_sheets_for_viewer(client: Any, folders: Optional[List[str]] = None) -> List[Any]:
     """The sheets Egeria holds that the viewer `client` is signed in as can see. Listing is per viewer:
     a sheet in a zone they cannot see is not listed, so an app caching this keys it by the viewer's
-    credential identity, never a shared key."""
+    credential identity, never a shared key. `folders` (else the configured dashboard folders) scopes it
+    as `async_list_dashboard_sheets` does; the result is its DashboardSheetListing, notes included."""
     from pyegeria.view.dashboards import async_list_dashboard_sheets
-    return await async_list_dashboard_sheets(client)
+    return await async_list_dashboard_sheets(client, folders)
 
 
 def resolve_dashboard_sheet(client: Any, name: str, *, perspective: Optional[str] = None, run: bool = False,
@@ -400,7 +401,7 @@ def resolve_sheet(client: Any, sheet: Any, *, perspective: Optional[str] = None,
                                         check_spec_visibility=check_spec_visibility))
 
 
-def list_dashboard_sheets_for_viewer(client: Any) -> List[Any]:
+def list_dashboard_sheets_for_viewer(client: Any, folders: Optional[List[str]] = None) -> List[Any]:
     """Sync form of async_list_dashboard_sheets_for_viewer."""
     from pyegeria.core.async_runner import run_sync
-    return run_sync(async_list_dashboard_sheets_for_viewer(client))
+    return run_sync(async_list_dashboard_sheets_for_viewer(client, folders))
