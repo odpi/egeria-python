@@ -14,6 +14,7 @@ Nothing reaches Egeria.
 """
 import json
 import os
+import sys
 
 import pytest
 
@@ -62,15 +63,53 @@ def _member(i):
             "properties": {"qualifiedName": f"Asset::{i}", "displayName": f"Asset {i}"}}
 
 
+# Egeria's record of a Smart Collection (6.2.35): the SavedQuery -> SmartQuery -> a Results Set that is a
+# CatalogTarget of the Smart Collections integration connector, under its target name "resultsSetToMaintain".
+# The connector end is the CatalogTarget related element captured from a quickstart platform (see the fixture's
+# _about), with only the connector's names and the catalogTargetName changed.
+with open(os.path.join(os.path.dirname(__file__), "data", "catalog_target_related_2026_11_11.json")) as _f:
+    CAPTURED = json.load(_f)
+SMART_RS = "5e7a0000-0000-0000-0000-00000000c0de"
+
+
+def _smart_shapes(target_name="resultsSetToMaintain", connector_type="IntegrationConnector"):
+    connector = json.loads(json.dumps(CAPTURED["catalogTargetFromTarget"]))
+    connector["elementHeader"]["type"]["typeName"] = connector_type
+    connector["properties"]["qualifiedName"] = "Egeria:IntegrationGroup:SmartCollections::SmartCollectionsIntegrationConnector"
+    connector["properties"]["displayName"] = "Smart Collections Integration Connector"
+    rel = connector["relatedBy"]["relationshipProperties"]
+    for k in ("templates", "metadataCollectionQualifiedName"):
+        rel.pop(k, None)
+    rel["catalogTargetName"] = target_name
+    results_set = {"elementHeader": {"guid": SMART_RS, "type": {"typeName": "ResultsSet",
+                                                               "superTypeNames": ["Collection", "Referenceable"]}},
+                   "relatedBy": {"relationshipHeader": {"guid": "sq-rel", "type": {"typeName": "SmartQuery"}},
+                                 "relationshipProperties": {"class": "SmartQueryProperties", "typeName": "SmartQuery"}},
+                   "properties": {"qualifiedName": "ResultsSet::insights-query::a1b2"}}
+    return results_set, connector
+
+
 class _Viewer:
     """The viewer's own client. Records every call; it is the only way anything is reached."""
     platform_url, view_server = PLATFORM, VIEW
 
-    def __init__(self, stored=None, answer=0, members=0, lookup_error=None, run_error=None):
+    def __init__(self, stored=None, answer=0, members=0, lookup_error=None, run_error=None, smart=False):
         self.stored = [_saved_query()] if stored is None else stored
         self.answer, self.members = answer, members
         self.lookup_error, self.run_error = lookup_error, run_error
+        self.smart = smart        # True: Egeria records this SavedQuery as a Smart Collection (see _smart_shapes)
         self.calls = []
+
+    def get_related_elements(self, guid, relationship_type=None, start_at_end=1, **kw):
+        self.calls.append(("related", guid, relationship_type, start_at_end))
+        if not self.smart:
+            return "No elements found"
+        results_set, connector = _smart_shapes()
+        if relationship_type == "SmartQuery" and start_at_end == 2:
+            return [results_set]
+        if relationship_type == "CatalogTarget" and start_at_end == 2 and guid == SMART_RS:
+            return [connector]
+        return "No elements found"
 
     def find_metadata_elements(self, body=None, **kw):
         self.calls.append(("find", json.loads(json.dumps(body))))
@@ -98,8 +137,9 @@ def test_cached_count_is_the_results_set_as_of_its_refresh():
     assert out["value"] == 37 and out["display"] == "37" and out["state"] == "measured"
     assert out["asOf"] == "2026-11-10T18:02:11+00:00"
     assert out["subtitle"] == "as of 2026-11-10T18:02:11+00:00"
-    assert [c[0] for c in viewer.calls] == ["find", "members", "members"]  # paged to the empty page
-    assert viewer.calls[1][1] == "rs-guid"
+    reads = [c for c in viewer.calls if c[0] != "related"]   # relationship reads: is it a Smart Collection? (no)
+    assert [c[0] for c in reads] == ["find", "members", "members"]  # paged to the empty page
+    assert reads[1][1] == "rs-guid"
 
 
 def test_cached_list_names_each_member():
@@ -114,7 +154,7 @@ def test_never_refreshed_is_not_an_empty_answer():
     out = saved_query(viewer, QN)
     assert out["value"] is None and out["state"] == "not_established" and out["absence"] == "not_measured"
     assert "never been refreshed" in out["state_reason"]
-    assert [c[0] for c in viewer.calls] == ["find"]
+    assert [c[0] for c in viewer.calls if c[0] != "related"] == ["find"]
 
 
 def test_an_empty_refreshed_answer_is_nothing_found():
@@ -264,7 +304,7 @@ def test_every_other_url_is_refused_with_a_sentence_and_reaches_nothing(url, wor
     assert out["refused"] is True and out["value"] is None
     assert out["state"] == "not_established" and out["absence"] == "not_applicable"
     assert words in out["state_reason"]
-    assert [c[0] for c in viewer.calls] == ["find"]  # the lookup only: the stored request never ran
+    assert [c[0] for c in viewer.calls if c[0] != "related"] == ["find"]  # the lookup only: the stored request never ran
 
 
 @pytest.mark.parametrize("body,words", [
@@ -277,7 +317,7 @@ def test_a_request_body_that_is_not_a_find_is_refused(body, words):
     viewer = _Viewer(stored=[_saved_query(body=body)], answer=5)
     out = saved_query(viewer, QN, mode="live")
     assert out["refused"] is True and words in out["state_reason"]
-    assert [c[0] for c in viewer.calls] == ["find"]
+    assert [c[0] for c in viewer.calls if c[0] != "related"] == ["find"]
 
 
 def test_the_allow_list_is_the_one_find_endpoint():
@@ -409,7 +449,7 @@ def test_each_contract_case_is_served_cached_only_when_it_is_what_was_recorded(c
     else:
         assert out["value"] is None and out["state"] == "not_established"
         assert "use mode live" in out["state_reason"] and "the cached answer is for " in out["state_reason"]
-        assert [c[0] for c in viewer.calls] == ["find"]  # the members were never read
+        assert [c[0] for c in viewer.calls if c[0] != "related"] == ["find"]  # the members were never read
 
 
 def test_a_cached_answer_for_other_values_is_never_returned():
@@ -417,7 +457,7 @@ def test_a_cached_answer_for_other_values_is_never_returned():
     viewer = _Viewer(stored=[_unregistered()], members=7)
     out = saved_query(viewer, FQN, params=other)
     assert out["value"] is None and f"min_level={RECORDED['min_level'] + 1}" in out["state_reason"]
-    assert [c[0] for c in viewer.calls] == ["find"]
+    assert [c[0] for c in viewer.calls if c[0] != "related"] == ["find"]
 
 
 def test_an_unregistered_refresh_with_other_values_is_served_for_those_values():
@@ -449,12 +489,15 @@ def test_search_spec_is_read_when_formula_is_empty_as_the_portal_does():
 STORED = FIXTURE["cases"][0]["effective"]  # the effective values with no request
 
 
-def test_the_fixture_is_a_registered_smart_collection():
+def test_the_portals_flag_alone_does_not_register_it():
+    # 6.2.35: registered is what Egeria records (SmartQuery -> Results Set -> CatalogTarget), not the Portal's flag.
     assert SQ["properties"]["additionalProperties"]["smartCollection"] == "true"
+    out = saved_query(_Viewer(stored=[_shared()], members=7), FQN)
+    assert "keptCurrentBy" not in out
 
 
 def test_a_registered_answer_is_served_for_its_stored_values_and_labelled_kept_current():
-    out = saved_query(_Viewer(stored=[_shared()], members=7), FQN)
+    out = saved_query(_Viewer(stored=[_shared()], members=7, smart=True), FQN)
     assert out["value"] == 7 and out["params"] == STORED
     assert out["keptCurrentBy"].startswith("Egeria (Smart Collection")
     label = ", ".join(f"{k}={json.dumps(v)}" for k, v in sorted(STORED.items()))
@@ -463,33 +506,33 @@ def test_a_registered_answer_is_served_for_its_stored_values_and_labelled_kept_c
 
 @pytest.mark.parametrize("case", FIXTURE["cases"], ids=[c["why"][:40] for c in FIXTURE["cases"]])
 def test_a_registered_answer_is_served_only_for_the_stored_values(case):
-    viewer = _Viewer(stored=[_shared()], members=7)
+    viewer = _Viewer(stored=[_shared()], members=7, smart=True)
     out = saved_query(viewer, FQN, params=case["request"])
     if case["effective"] == STORED:
         assert out["value"] == 7
     else:
         assert out["value"] is None and "is a Smart Collection, kept current by Egeria" in out["state_reason"]
         assert "use mode live" in out["state_reason"]
-        assert [c[0] for c in viewer.calls] == ["find"]
+        assert [c[0] for c in viewer.calls if c[0] != "related"] == ["find"]
 
 
 def test_a_registered_answer_ignores_a_refresh_record_naming_other_values():
     # a Portal refresh with min_level 4 would be overwritten by Egeria within the half hour
     q = _shared(lastRefreshParams={**STORED, "min_level": 4})
-    assert saved_query(_Viewer(stored=[q], members=7), FQN)["value"] == 7
-    out = saved_query(_Viewer(stored=[q], members=7), FQN, params={"min_level": 4})
+    assert saved_query(_Viewer(stored=[q], members=7, smart=True), FQN)["value"] == 7
+    out = saved_query(_Viewer(stored=[q], members=7, smart=True), FQN, params={"min_level": 4})
     assert out["value"] is None and "kept current by Egeria" in out["state_reason"]
 
 
 def test_a_registered_answer_needs_no_portal_refresh_time():
-    out = saved_query(_Viewer(stored=[_shared(lastRefreshedTime="", lastRefreshParams=None)], members=3), FQN)
+    out = saved_query(_Viewer(stored=[_shared(lastRefreshedTime="", lastRefreshParams=None)], members=3, smart=True), FQN)
     assert out["value"] == 3 and out["asOf"] is None
     assert out["subtitle"].startswith("kept current by Egeria \u00b7 no refresh time recorded, for ")
 
 
 def test_a_registered_query_with_no_parameters_is_served_and_labelled():
     q = _shared(parameters=None, lastRefreshParams=None)
-    out = saved_query(_Viewer(stored=[q], members=4), FQN)
+    out = saved_query(_Viewer(stored=[q], members=4, smart=True), FQN)
     assert out["value"] == 4 and "params" not in out
     assert out["subtitle"] == "kept current by Egeria \u00b7 as of 2026-11-10T18:00:00+00:00"
 
@@ -506,7 +549,7 @@ def test_live_is_refused_while_a_portal_only_parameter_is_declared():
     viewer = _Viewer(stored=[_shared()], answer=3)
     out = saved_query(viewer, FQN, mode="live", params={"min_level": 4})
     assert out["refused"] is True and "'sort' applies to the Portal's search only" in out["state_reason"]
-    assert [c[0] for c in viewer.calls] == ["find"]
+    assert [c[0] for c in viewer.calls if c[0] != "related"] == ["find"]
 
 
 def test_live_refuses_a_portal_only_parameter_that_is_given():
@@ -581,7 +624,7 @@ def test_injection_and_type_mismatch_are_refused_and_nothing_runs(given, words):
     viewer = _Viewer(stored=[_shared(drop=("sort",))], answer=3)
     out = saved_query(viewer, FQN, mode="live", params=given)
     assert out["refused"] is True and out["value"] is None and words in out["state_reason"]
-    assert [c[0] for c in viewer.calls] == ["find"]
+    assert [c[0] for c in viewer.calls if c[0] != "related"] == ["find"]
 
 
 def test_params_on_a_query_that_declares_none_are_refused():
@@ -604,3 +647,41 @@ def test_params_on_a_query_that_declares_none_are_refused():
 def test_a_bad_declaration_is_refused(params, words):
     out = saved_query(_Viewer(stored=[_shared(parameters=params)], answer=1), FQN, mode="live")
     assert out["refused"] is True and words in out["state_reason"]
+
+
+# ── Smart Collection: detected by Egeria's record, the catalog target (6.2.35) ──
+
+def test_registration_reads_the_results_set_egeria_records_not_the_flags_guid():
+    viewer = _Viewer(stored=[_shared(resultsSetGuid="the-flags-results-set")], members=3, smart=True)
+    out = saved_query(viewer, FQN)
+    assert out["keptCurrentBy"].startswith("Egeria (Smart Collection")
+    assert {c[1] for c in viewer.calls if c[0] == "members"} == {SMART_RS}   # paged, all from Egeria's Results Set
+    assert [c[2:] for c in viewer.calls if c[0] == "related"] == [("SmartQuery", 2), ("CatalogTarget", 2)]
+
+
+def test_a_catalog_target_of_another_connector_is_not_a_smart_collection(monkeypatch):
+    # the captured connector, as captured: a catalog target named "unity"
+    monkeypatch.setattr(sys.modules[__name__], "_smart_shapes",
+                        lambda: (_smart_shapes()[0], json.loads(json.dumps(CAPTURED["catalogTargetFromTarget"]))))
+    out = saved_query(_Viewer(stored=[_unregistered()], members=7, smart=True), FQN, params=REFRESHED_WITH)
+    assert "keptCurrentBy" not in out and out["value"] == 7
+
+
+def test_the_target_must_be_held_by_an_integration_connector(monkeypatch):
+    monkeypatch.setattr(sys.modules[__name__], "_smart_shapes", lambda: _smart_shapes(connector_type="Process"))
+    out = saved_query(_Viewer(stored=[_shared()], members=7, smart=True), FQN)
+    assert "keptCurrentBy" not in out
+
+
+def test_a_lookup_that_fails_is_not_a_registration():
+    class Failing(_Viewer):
+        def get_related_elements(self, *a, **kw):
+            raise RuntimeError("HTTP 500 from the view server")
+    out = saved_query(Failing(stored=[_unregistered()], members=7), FQN, params=REFRESHED_WITH)
+    assert "keptCurrentBy" not in out and out["value"] == 7     # the ordinary cached path, for its recorded values
+
+
+def test_live_mode_never_looks_up_registration():
+    viewer = _Viewer(stored=[_shared(drop=("sort",))], answer=2, smart=True)
+    saved_query(viewer, FQN, mode="live", params={"min_level": 5})
+    assert not [c for c in viewer.calls if c[0] == "related"]

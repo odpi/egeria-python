@@ -85,6 +85,11 @@ def _guid(el: Dict[str, Any]) -> str:
     return el.get("elementGUID") or (el.get("elementHeader") or {}).get("guid") or ""
 
 
+def _type_names(el: Dict[str, Any]) -> List[str]:
+    t = (el.get("elementHeader") or {}).get("type") or {}
+    return [t.get("typeName") or ""] + list(t.get("superTypeNames") or [])
+
+
 def _type_name(el: Dict[str, Any]) -> str:
     t = el.get("type") or (el.get("elementHeader") or {}).get("type") or {}
     return t.get("typeName") or ""
@@ -259,9 +264,11 @@ def saved_query(client, name: str, mode: str = "cached", output: str = "count",
       size, and `startFrom` stays the read's own. A parameter with no `requestPath` applies to the
       Portal's search only, so live mode refuses it when it is given, or when its effective value is a
       default the stored search doesn't hold.
-    - A SavedQuery registered as a Smart Collection (`additionalProperties.smartCollection == "true"`,
-      the Portal's test) is re-run by Egeria's SmartCollectionsMembershipManager about every 30
-      minutes from its stored request. Its cached answer stands only for the stored effective values
+    - A SavedQuery registered as a Smart Collection is re-run by Egeria's Smart Collections integration
+      connector about every 30 minutes from its stored request. Registered means what Egeria records, not a
+      flag: a Results Set linked to it by SmartQuery is a CatalogTarget of an IntegrationConnector, under
+      the connector's target name `resultsSetToMaintain` (6.2.35; the Portal's `smartCollection` flag was
+      the test before). That Results Set is the one read. Its cached answer stands only for the stored effective values
       (whatever a refresh recorded), is labelled "kept current by Egeria", and is refused for other
       values, pointing to live mode.
     An undeclared name, a value of the wrong type, a string with control characters or over 512
@@ -317,8 +324,8 @@ def saved_query(client, name: str, mode: str = "cached", output: str = "count",
         return _result(name, mode, output, state="not_established", reason=refused.sentence,
                        absence="not_applicable", refused=True)
 
-    registered = _is_registered_smart_collection(additional)
-    if mode == "cached" and registered:
+    registered = _smart_collection_results_set(client, _guid(exact[0])) if mode == "cached" else None
+    if registered:
         # P-3: Egeria's SmartCollectionsMembershipManager re-runs the STORED request about every 30 minutes,
         # so the Results Set answers only for the stored effective values, whatever a refresh recorded.
         used = _effective_parameters(declared, None, _stored_search(props, additional)) if declared else {}
@@ -326,7 +333,8 @@ def saved_query(client, name: str, mode: str = "cached", output: str = "count",
             return _not_measured(name, "cached", output, f"this saved query is a Smart Collection, kept current by "
                                  f"Egeria with its stored values ({_label(used)}), so its cached answer cannot "
                                  f"stand for {_label(effective)}; use mode live for these values")
-        out = _cached(client, name, output, additional, page_size, max_pages, kept_current=True)
+        out = _cached(client, name, output, {**additional, "resultsSetGuid": registered}, page_size, max_pages,
+                      kept_current=True)
     elif mode == "cached":
         used = effective
         if declared:
@@ -363,9 +371,37 @@ def saved_query(client, name: str, mode: str = "cached", output: str = "count",
     return out
 
 
-def _is_registered_smart_collection(additional: Dict[str, Any]) -> bool:
-    """The Portal's own test (insights_handler._is_registered_smart_collection)."""
-    return str((additional or {}).get("smartCollection") or "").strip().lower() == "true"
+#: The catalog target name Egeria's Smart Collections integration connector declares for the Results Sets it
+#: maintains (SmartCollectionsCatalogTarget.CATALOG_TARGET, Egeria #9200).
+SMART_COLLECTIONS_TARGET = "resultsSetToMaintain"
+
+
+def _related(client, guid: str, relationship: str, end: int) -> List[Dict[str, Any]]:
+    return _elements(client.get_related_elements(guid, relationship, start_at_end=end, start_from=0, page_size=50,
+                                                 output_format="JSON"))
+
+
+def _smart_collection_results_set(client, saved_query_guid: str) -> Optional[str]:
+    """The GUID of the Results Set that makes this SavedQuery a Smart Collection, or None.
+
+    Registered is what Egeria records: a Results Set linked to the SavedQuery by SmartQuery (the SavedQuery is
+    end 2) that is a CatalogTarget (the Results Set is end 2) of an IntegrationConnector under the target name
+    `resultsSetToMaintain`. Not a name and not a flag. A read that fails is not a registration: the query then
+    takes the ordinary cached path, which serves only the values its refresh recorded, so it is never wrong."""
+    if not saved_query_guid:
+        return None
+    try:
+        for rs in _related(client, saved_query_guid, "SmartQuery", 2):
+            if "ResultsSet" not in _type_names(rs):
+                continue
+            for connector in _related(client, _guid(rs), "CatalogTarget", 2):
+                rel = (connector.get("relatedBy") or {}).get("relationshipProperties") or {}
+                if ("IntegrationConnector" in _type_names(connector)
+                        and rel.get("catalogTargetName") == SMART_COLLECTIONS_TARGET):
+                    return _guid(rs)
+    except Exception as exc:  # noqa: BLE001 -- not registered as far as this viewer can tell; see the docstring
+        logger.debug(f"saved_query: Smart Collection lookup for {saved_query_guid} failed: {exc}")
+    return None
 
 
 # ── parameters: one model with the Portal (insights_handler, b9dce798) ──────
