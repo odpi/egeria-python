@@ -151,16 +151,86 @@ class Column(BaseModel):
 # New preferred alias for Column
 Attribute = Column
 
+DOCUMENT_OUTPUT_TYPE = "DOCUMENT"
+
+
+def check_document_file_name(file_name: str) -> Optional[str]:
+    """Why a document file name (or its template) is refused, or None when it is safe: a file
+    name is one name in the output directory, never a path. No separators, no `..`, not empty,
+    not hidden."""
+    if not isinstance(file_name, str) or not file_name.strip():
+        return "the file name is empty"
+    if "/" in file_name or "\\" in file_name:
+        return f"the file name '{file_name}' contains a path separator; it must be a single file name"
+    if ".." in file_name:
+        return f"the file name '{file_name}' contains '..'; it must be a single file name"
+    if file_name.startswith(".") or file_name.startswith("~"):
+        return f"the file name '{file_name}' starts with '{file_name[0]}'; it must be a plain file name"
+    if "\x00" in file_name:
+        return "the file name contains a NUL character"
+    return None
+
+
+class DocumentSpec(BaseModel):
+    """What a DOCUMENT format produces (SD-1): one document in a published standard.
+
+    Fields:
+        standard: the standard the document conforms to, e.g. "dcat-ap-3".
+        media_type: its media type, e.g. "application/ld+json".
+        file_name: a template filled from the run's parameters, e.g. "{scope}-dcat.jsonld".
+            A single file name: path separators and ".." are refused here and again after the
+            parameters are filled in.
+        validator: an optional registered document-validator name
+            (`pyegeria.view.document_validators`). With none, every result says
+            `not_validated` and why.
+        validator_options: options passed to the validator, e.g. {"shapes": "<local path>"}
+            for the built-in `shacl`, {"schema": "<local path>"} for `json-schema`.
+    """
+    standard: str
+    media_type: str
+    file_name: str
+    validator: Optional[str] = None
+    validator_options: Dict[str, Any] = Field(default_factory=dict)
+
+    @field_validator("file_name")
+    @classmethod
+    def _safe_file_name(cls, v):
+        reason = check_document_file_name(v)
+        if reason:
+            raise ValueError(f"DOCUMENT file_name refused: {reason}")
+        return v
+
+
 class Format(BaseModel):
     """
     Represents a format configuration with types and attributes.
     
     Fields:
-        types: The output types this format supports (e.g., "DICT", "TABLE", "ALL")
-        attributes: The attributes (formerly columns) to include in the output
+        types: The output types this format supports (e.g., "DICT", "TABLE", "ALL", "DOCUMENT")
+        attributes: The attributes (formerly columns) to include in the output. A DOCUMENT
+            format has none: its exporter builds the whole document.
+        document: For a DOCUMENT format only (and required there): the standard, media type,
+            file name template and optional validator. See `DocumentSpec`.
     """
     types: List[str]
-    attributes: List[Union[Column, Dict[str, Any]]]
+    attributes: List[Union[Column, Dict[str, Any]]] = Field(default_factory=list)
+    document: Optional[DocumentSpec] = None
+
+    @model_validator(mode="after")
+    def _document_block_matches_type(self):
+        """A DOCUMENT format stands alone in its row and carries a `document` block; no other
+        format carries one."""
+        types = [str(t).upper() for t in self.types]
+        if DOCUMENT_OUTPUT_TYPE in types:
+            if len(types) > 1:
+                raise ValueError(
+                    f"A DOCUMENT format cannot share its row with other output types ({', '.join(self.types)}): "
+                    f"a document is not a rendering of attributes")
+            if self.document is None:
+                raise ValueError("A DOCUMENT format needs a 'document' block (standard, media_type, file_name)")
+        elif self.document is not None:
+            raise ValueError(f"Only a DOCUMENT format carries a 'document' block, not {', '.join(self.types)}")
+        return self
     
     @model_validator(mode="before")
     @classmethod
@@ -398,6 +468,48 @@ class FormatSet(BaseModel):
             else:
                 result.append(item)
         return result
+
+    @model_validator(mode="after")
+    def _document_spec_rules(self):
+        """A report spec with a DOCUMENT format (SD-1) is a document spec:
+
+        - its document is built by an exporter, so its action needs an `analytic_function`;
+        - a `function` (find) with no analytic function is refused, since a find returns
+          elements to render column by column, not a document;
+        - it has no other formats, since every other output type is refused for it at run time.
+        """
+        doc_formats = [f for f in self.formats if isinstance(f, Format) and f.document is not None]
+        if not doc_formats:
+            return self
+        others = [t for f in self.formats if isinstance(f, Format) and f.document is None for t in f.types]
+        if len(doc_formats) > 1:
+            raise ValueError(f"Report spec '{self.heading}' has {len(doc_formats)} DOCUMENT formats; "
+                             f"a document spec produces exactly one document")
+        if others:
+            raise ValueError(f"Report spec '{self.heading}' is a DOCUMENT spec and cannot also offer "
+                             f"{', '.join(others)}: a DOCUMENT spec produces only its document")
+        action = self.action
+        if action is None or isinstance(action, dict):
+            fn = (action or {}).get("function") if isinstance(action, dict) else None
+            analytic = (action or {}).get("analytic_function") if isinstance(action, dict) else None
+        else:
+            fn, analytic = action.function, action.analytic_function
+        if not analytic:
+            if fn:
+                raise ValueError(
+                    f"Report spec '{self.heading}' has a DOCUMENT format and a find function ({fn}) but no "
+                    f"analytic_function: a find returns elements, not a document. Name an exporter as the "
+                    f"action's analytic_function")
+            raise ValueError(f"Report spec '{self.heading}' has a DOCUMENT format but no action.analytic_function; "
+                             f"a document is built by an exporter registered as an analytic function")
+        return self
+
+    def document_format(self) -> Optional["Format"]:
+        """This spec's DOCUMENT format, or None when it is not a document spec."""
+        for f in self.formats:
+            if isinstance(f, Format) and f.document is not None:
+                return f
+        return None
 
     @field_validator('question_spec', mode='before')
     @classmethod

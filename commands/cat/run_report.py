@@ -90,6 +90,12 @@ def list_generic(
     params = dict(params or {})
     ofmt = (output_format or "TABLE").upper()
 
+    if ofmt == "DOCUMENT":
+        # SD-1: a document spec's exporter takes its own parameters; exec_report_spec refuses a
+        # spec that is not a document spec, and the caller writes the file (write_document).
+        return exec_report_spec(report_spec, output_format="DOCUMENT", params=params, view_server=view_server,
+                                view_url=view_url, user=user, user_pass=user_pass)
+
     # Load format spec to introspect required/optional params
     # First, validate existence of the report regardless of type
     fmt_any = select_report_spec(report_spec, "ANY")
@@ -384,12 +390,54 @@ def write_output_file(content: str, report_spec: str, suffix: str) -> str:
     return full_file_path
 
 
-def main():
+def validation_line(result: Mapping[str, Any]) -> str:
+    """One line saying whether a DOCUMENT result was validated, by what, and what was found."""
+    v = result.get("validation") or {}
+    state = v.get("state", "not_validated")
+    if state == "not_validated":
+        return f"Validation: not validated ({v.get('reason') or 'no reason given'})"
+    findings = v.get("findings") or []
+    tail = f", {len(findings)} finding{'s' if len(findings) != 1 else ''}" if findings else ""
+    return f"Validation: {state} ({v.get('validator')}{tail})"
+
+
+def write_document(result: Mapping[str, Any], output_dir: str, *, force: bool = False) -> str:
+    """Write a DOCUMENT result's text to `output_dir/<file_name>` and return the path.
+
+    The file name is the result's own (already checked by the executor) and is checked again
+    here: it must name a file directly inside `output_dir`. An existing file is not overwritten
+    unless `force` is set (FileExistsError, with the path)."""
+    from pyegeria.view._output_format_models import check_document_file_name
+
+    if result.get("kind") != "document":
+        raise ValueError(f"not a DOCUMENT result (kind {result.get('kind')!r})")
+    file_name = str(result.get("file_name") or "")
+    reason = check_document_file_name(file_name)
+    if reason:
+        raise ValueError(f"DOCUMENT file_name refused: {reason}")
+    out_dir = os.path.abspath(os.path.expanduser(output_dir))
+    os.makedirs(out_dir, exist_ok=True)
+    path = os.path.join(out_dir, file_name)
+    if os.path.dirname(os.path.abspath(path)) != out_dir:
+        raise ValueError(f"DOCUMENT file_name refused: '{file_name}' does not name a file in {out_dir}")
+    if os.path.exists(path) and not force:
+        raise FileExistsError(f"{path} already exists; pass --force to overwrite it")
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(str(result.get("text", "")))
+    return path
+
+
+def main(argv: Sequence[str] | None = None):
     parser = argparse.ArgumentParser(description="Generic list command using exec_report_spec")
     parser.add_argument("--report", dest="report_spec", help="Report spec name to execute (see report specs)")
     parser.add_argument("--output-format", dest="output_format", default="TABLE",
-                        choices=["TABLE", "MD", "REPORT", "REPORT-GRAPH", "FORM", "HTML", "MERMAID", "LIST", "JSON", "DICT"],
-                        help="Output rendering format")
+                        choices=["TABLE", "MD", "REPORT", "REPORT-GRAPH", "FORM", "HTML", "MERMAID", "LIST", "JSON", "DICT",
+                                 "DOCUMENT"],
+                        help="Output rendering format (DOCUMENT: a standard document from a document spec)")
+    parser.add_argument("--output", dest="output_dir",
+                        help="DOCUMENT only: directory to write the document to, as its file name")
+    parser.add_argument("--force", action="store_true",
+                        help="DOCUMENT only: overwrite the file if it already exists")
     parser.add_argument("--server", dest="server", help="Egeria view server name", default=app_config.egeria_view_server)
     parser.add_argument("--url", dest="url", help="Egeria platform URL", default=app_config.egeria_view_server_url)
     parser.add_argument("--userid", dest="user", help="User Id", default=EGERIA_USER)
@@ -398,7 +446,7 @@ def main():
     parser.add_argument("--params-json", dest="params_json", help="JSON string of parameters for the report spec")
     parser.add_argument("--param", dest="params_kv", action="append", default=[], help="Repeated key=value parameters")
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Prompt for report spec if not provided
     report_spec = args.report_spec or Prompt.ask("Enter the report spec to execute").strip()
@@ -423,6 +471,29 @@ def main():
         width=settings.Environment.egeria_width,
         force_terminal=not app_config.egeria_jupyter,
     )
+
+    if output_format == "DOCUMENT":
+        if not args.output_dir:
+            console.print("[bold red]DOCUMENT output needs --output <dir> to write the document to[/]")
+            return 2
+        try:
+            result = list_generic(report_spec, output_format="DOCUMENT", params=params, view_server=args.server,
+                                  view_url=args.url, user=args.user, user_pass=args.password)
+            path = write_document(result, args.output_dir, force=args.force)
+        except FileExistsError as e:
+            console.print(f"[bold red]{e}[/]")
+            return 1
+        except ValueError as e:
+            console.print(f"[bold red]{e}[/]")
+            return 1
+        except PyegeriaException as e:
+            print_exception_response(e)
+            return 1
+        print(f"==> {result.get('standard')} document written to {path}")
+        print(validation_line(result))
+        for note in result.get("notes") or []:
+            print(f"  note: {note}")
+        return 0
 
     try:
         # Use shared function with prompting enabled for missing required params

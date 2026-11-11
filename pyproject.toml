@@ -49,6 +49,9 @@ dependencies = [
     "textual-serve>=1.1.3",
     "textual-web",
     "fastapi>=0.141.1",
+    "rdflib>=7.6.0",
+    "pyshacl>=0.40.2",
+    "jsonschema>=4.26.0",
 ]
 
 [project.scripts]

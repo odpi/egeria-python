@@ -376,6 +376,86 @@ Notes
 
 ---
 
+### Document outputs
+
+A **DOCUMENT** spec produces one document in a published standard (for example DCAT-AP 3 as
+JSON-LD), not a rendering of columns. The document is built by an **exporter**: a function
+registered as an analytic function (`register_analytic_functions`) and named as the spec's
+`action.analytic_function`. A DOCUMENT spec has exactly one format, of type `DOCUMENT`, and it
+carries a `document` block:
+
+```python
+FormatSet(
+    heading="Toy Catalog", description="A toy document",
+    action=ActionParameter(analytic_function="toy_export"),
+    formats=[Format(types=["DOCUMENT"], document={
+        "standard": "toy-1",
+        "media_type": "application/json",
+        "file_name": "{scope}-toy.json",          # filled from the run's parameters
+        "validator": "json-schema",               # optional, a registered validator name
+        "validator_options": {"schema": "/path/to/toy.schema.json"},
+    })])
+```
+
+Load rules (each refusal is a sentence):
+
+- `DOCUMENT` needs `action.analytic_function`. A DOCUMENT spec with a `function` (a find) and no
+  analytic function is refused: a find returns elements, not a document.
+- `DOCUMENT` stands alone in its format row, needs its `document` block, and the spec has no
+  other formats. Only a DOCUMENT format carries a `document` block.
+- `file_name` is a single file name: no path separators, no `..`, not hidden. Parameter values
+  filled into it are made file-name safe (`Folder::Sales/EU` becomes `Folder_Sales_EU`) and the
+  result is checked again. A parameter the run did not supply is refused.
+
+Run it with `exec_report_spec(name, output_format="DOCUMENT", params={...})`. Any other output
+format asked of a DOCUMENT spec is refused with a sentence naming DOCUMENT, and DOCUMENT asked of
+any other spec is refused. The exporter returns `{"text": str, "notes": [str, ...]}` (or a plain
+string). The result is:
+
+```
+{"kind": "document",
+ "standard": "toy-1", "media_type": "application/json", "file_name": "Sales-toy.json",
+ "text": "...",
+ "validation": {"state": "valid" | "invalid" | "not_validated",
+                "validator": "json-schema" | None,
+                "findings": ["/age: -1 is less than the minimum of 0", ...],
+                "reason": None | "why it was not validated"},
+ "notes": ["what the exporter left out, and why", ...]}
+```
+
+`validation` is **always present**; an unvalidated document says so and why, and is never
+presented as conforming:
+
+- no validator declared: `not_validated`, "no validator is declared for this standard";
+- a validator name not registered: `not_validated`, "the validator <name> is not registered";
+- a validator that raises: `not_validated`, "the validator <name> failed: <error>". A crash says
+  nothing about the document, so it is never a finding and never `invalid`.
+
+`notes` is always present too: every field the exporter omitted or left empty is named there
+with the reason.
+
+**Validators** are registered by name with
+`pyegeria.view.document_validators.register_document_validators({name: fn})`, where
+`fn(text, media_type, **validator_options) -> (valid: bool, findings: list[str])`; a name already
+registered raises `DocumentValidatorCollision`. Two are built in:
+
+- `json-schema` (jsonschema): option `schema`, for JSON or YAML text;
+- `shacl` (pySHACL over rdflib): option `shapes` (Turtle), for JSON-LD, Turtle, RDF/XML,
+  N-Triples… by media type. Findings read "<severity> <focus node> <path>: <message>".
+
+A validator **never fetches over the network**. `schema`/`shapes` are a local path, a `file://`
+URL or package data (`package:<dotted.package>/<resource path>`); an `http(s)` reference is
+refused, and so is JSON-LD whose `@context` names a remote document (inline the context).
+`make_shacl_validator(shapes)` binds the `shacl` built-in to one shapes graph, for registering a
+validator per standard. rdflib, pySHACL and jsonschema are plain pyegeria dependencies, so
+`not_validated` never means "an extra is missing".
+
+**CLI.** `run_report --report <spec> --output-format DOCUMENT --output <dir> --param scope=...`
+writes the document to `<dir>/<file_name>` and prints the validation line and any notes. It
+refuses to overwrite an existing file unless `--force` is given.
+
+---
+
 ### Vega-Lite Graphs and Automated Extraction
 
 PyEgeria supports dynamic Vega-Lite visualization for categorical data. Instead of manually extracting charting attributes for each API payload, the `materialize_egeria_summary` engine automatically scans Egeria API responses for numeric dictionaries (e.g. `typeMembership: {"Asset": 5, "GlossaryTerm": 10}`). When found, it automatically generates two attributes at the root level of the materialized object:

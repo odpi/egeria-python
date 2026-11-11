@@ -17,6 +17,8 @@ import asyncio
 import inspect
 import json
 import os
+import re
+import string
 import sys
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
@@ -39,6 +41,8 @@ from pyegeria.view.analytic_registry import get_analytic_registry as get_analyti
 from pyegeria.egeria_tech_client import EgeriaTech
 from pyegeria.view.role_supply import PlainSupply, RoleRefused, RoleSupply, supply_inputs
 from pyegeria.view.overview_metrics import recording_unmeasured
+from pyegeria.view._output_format_models import DOCUMENT_OUTPUT_TYPE, check_document_file_name
+from pyegeria.view.document_validators import run_document_validator
 
 _CLIENT_CLASS_MAP = {
     "CollectionManager": "pyegeria.omvs.collection_manager.CollectionManager",
@@ -794,6 +798,13 @@ async def _async_run_report_impl(
     user_name = egeria_client.user_id
     user_pwd = egeria_client.user_pwd
 
+    # SD-1: DOCUMENT specs run through exec_report_spec (the analytic/role-supply path), which
+    # this find-only async path does not have. Refuse in words rather than fail inside it.
+    if str(output_format).upper() == DOCUMENT_OUTPUT_TYPE or _document_spec_struct(report_name) is not None:
+        raise ValueError(
+            f"Report spec '{report_name}' ({output_format}): DOCUMENT output runs through exec_report_spec "
+            f"(output_format='DOCUMENT'), not the async find path")
+
     # Resolve the format set and action
     effective_format = "REPORT" if output_format in ["HTML", "MARKDOWN"] else output_format
     if effective_format == "JSON":
@@ -1161,6 +1172,113 @@ def _as_category_value_dict(result: Any) -> Optional[Dict[str, Union[int, float]
     return None
 
 
+def _spec_display_name(format_set_name: Any) -> str:
+    if isinstance(format_set_name, dict):
+        return str(format_set_name.get("_report_spec_name") or format_set_name.get("heading") or "?")
+    return str(format_set_name)
+
+
+def _document_spec_struct(format_set_name: Any) -> Optional[Dict[str, Any]]:
+    """The selected-spec struct (as `select_report_spec` returns it) when this spec is a DOCUMENT
+    spec, else None. A spec passed as a dict is read as given (a FormatSet dict or a selected
+    struct); by name it is looked up across tiers and aliases."""
+    if isinstance(format_set_name, dict):
+        formats = format_set_name.get("formats")
+        rows = formats if isinstance(formats, list) else [formats] if formats else []
+        for row in rows:
+            row = row.dict() if hasattr(row, "dict") and not isinstance(row, dict) else row
+            if isinstance(row, dict) and row.get("document"):
+                struct = dict(format_set_name)
+                struct["formats"] = row
+                action = struct.get("action")
+                if action is not None and not isinstance(action, dict):
+                    struct["action"] = action.model_dump()
+                return struct
+        return None
+    try:
+        struct = select_report_spec(format_set_name, DOCUMENT_OUTPUT_TYPE)
+    except Exception:  # noqa: BLE001 -- an unknown name is reported by the normal path below
+        return None
+    if struct and isinstance(struct.get("formats"), dict) and struct["formats"].get("document"):
+        return struct
+    return None
+
+
+_FILE_NAME_UNSAFE = re.compile(r"[^A-Za-z0-9._+-]+")
+
+
+def fill_document_file_name(template: str, params: Dict[str, Any]) -> str:
+    """Fill a DOCUMENT file-name template from the run's parameters.
+
+    Only plain `{name}` fields are allowed (no attribute or index access). Each value is made
+    file-name safe (anything but letters, digits and `._+-` becomes `_`, and `..` is broken up),
+    so a qualifiedName such as `Folder::Sales/EU` cannot become a path. The result is checked
+    again; a template that still names a path, or a parameter the run did not supply, is refused
+    with a sentence."""
+    values: Dict[str, str] = {}
+    for _literal, field, spec, conversion in string.Formatter().parse(template):
+        if field is None:
+            continue
+        if not field.isidentifier():
+            raise ValueError(f"DOCUMENT file_name template '{template}' has field '{{{field}}}'; only plain "
+                             f"parameter names are allowed")
+        if spec or conversion:
+            raise ValueError(f"DOCUMENT file_name template '{template}' formats field '{field}'; only plain "
+                             f"parameter names are allowed")
+        raw = params.get(field)
+        if raw in (None, ""):
+            raise ValueError(f"DOCUMENT file_name template '{template}' needs parameter '{field}', which this "
+                             f"run did not supply")
+        safe = _FILE_NAME_UNSAFE.sub("_", str(raw)).replace("..", "_").strip("._") or "_"
+        values[field] = safe
+    file_name = template.format(**values)
+    reason = check_document_file_name(file_name)
+    if reason:
+        raise ValueError(f"DOCUMENT file_name refused: {reason}")
+    return file_name
+
+
+def _exec_document(
+    name: str, struct: Dict[str, Any], *, params: Dict[str, Any],
+    view_server: str, view_url: str, user: str, user_pass: str,
+    token: Optional[str] = None, supply: Optional[RoleSupply] = None,
+) -> Dict[str, Any]:
+    """Run a DOCUMENT spec (SD-1): call its exporter, validate what it returns, and return
+
+    {"kind": "document", "standard", "media_type", "file_name", "text",
+     "validation": {"state", "validator", "findings", "reason"}, "notes": [...]}
+
+    The exporter is the action's analytic function; it returns `{"text": str, "notes"?: [str]}`
+    (or a plain string, read as text with no notes). `validation` and `notes` are always present:
+    an empty `notes` means the exporter had nothing to say about the document's content. A
+    validator that raises leaves the document `not_validated` with its error, never `invalid`.
+    """
+    action = struct.get("action") or {}
+    if not action.get("analytic_function"):
+        raise ValueError(f"Report spec '{name}' has a DOCUMENT format but no analytic_function (exporter)")
+    doc = struct["formats"]["document"]
+    fill_from = {**(action.get("analytic_spec_params") or {}),
+                 **{k: v for k, v in params.items() if v not in (None, "")}}
+    file_name = fill_document_file_name(doc["file_name"], fill_from)
+
+    result = _run_analytic_function(action, params=params, view_server=view_server, view_url=view_url,
+                                    user=user, user_pass=user_pass, token=token, supply=supply)
+    if isinstance(result, str):
+        text, notes = result, []
+    elif isinstance(result, dict) and isinstance(result.get("text"), str):
+        text = result["text"]
+        raw_notes = result.get("notes") or []
+        notes = [str(n) for n in (raw_notes if isinstance(raw_notes, list) else [raw_notes])]
+    else:
+        raise ValueError(
+            f"Report spec '{name}': exporter '{action['analytic_function']}' returned "
+            f"{type(result).__name__}, not a document ({{'text': str, 'notes'?: [str]}})")
+    validation = run_document_validator(text, doc["media_type"], doc.get("validator"),
+                                        doc.get("validator_options") or {})
+    return {"kind": "document", "standard": doc["standard"], "media_type": doc["media_type"],
+            "file_name": file_name, "text": text, "validation": validation, "notes": notes}
+
+
 def exec_report_spec(
     format_set_name: str | dict,
     *,
@@ -1271,6 +1389,24 @@ def _exec_report_spec_impl(
     # Vega-Lite chart. Dispatch before the normal Format-row lookup (which
     # would reject them as unsupported, since no FormatSet declares a
     # "SERIES"/"BAR"/"PIE" Format row).
+    # DOCUMENT (SD-1): a document spec answers only DOCUMENT, and DOCUMENT is answered only by a
+    # document spec. Checked before the chart dispatch so SERIES/BAR/PIE are refused too.
+    doc_struct = _document_spec_struct(format_set_name)
+    if doc_struct is not None or output_format == DOCUMENT_OUTPUT_TYPE:
+        name = _spec_display_name(format_set_name)
+        if doc_struct is None:
+            raise ValueError(
+                f"Report spec '{name}' does not produce a document: DOCUMENT output is only for a spec "
+                f"with a DOCUMENT format (an exporter). Run 'list_reports' to see available reports.")
+        if output_format != DOCUMENT_OUTPUT_TYPE:
+            doc = doc_struct["formats"]["document"]
+            raise ValueError(
+                f"Report spec '{name}' is a DOCUMENT spec: it produces one {doc['standard']} document "
+                f"({doc['media_type']}), not {output_format}. Ask for output_format DOCUMENT.")
+        return _exec_document(
+            name, doc_struct, params=params, view_server=view_server, view_url=view_url, user=user,
+            user_pass=user_pass, token=token, supply=supply)
+
     _CHART_KINDS = {"SERIES": "line", "BAR": "bar", "PIE": "pie"}
     if output_format in _CHART_KINDS:
         return _exec_analytic_chart(
