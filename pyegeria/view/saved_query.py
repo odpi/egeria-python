@@ -215,18 +215,32 @@ def _not_measured(name, mode, output, reason):
     return _result(name, mode, output, state="not_established", reason=reason, absence="not_measured")
 
 
-def _read_pages(fetch, page_size: int, max_pages: int) -> Tuple[List[Dict[str, Any]], bool]:
-    """Every element `fetch(start_from, page_size)` returns, paging until an empty page. Returns
-    (elements, capped): capped when `max_pages` pages were read and the next was not shown to be empty."""
+PAGING_STALLED = "paging did not advance"
+
+
+def _read_pages(fetch, page_size: int, max_pages: int) -> Tuple[List[Dict[str, Any]], bool, Optional[str]]:
+    """Every distinct element `fetch(start_from, page_size)` returns, paging until an empty page. Returns
+    (elements, capped, note):
+    - capped: `max_pages` pages each brought new elements and the next was not shown to be empty;
+    - note: set when a page brought nothing new (a server that ignores startFrom returns the same page again):
+      the read stops there, says so, and is NOT capped. Until 6.2.36 such repetition was counted, page after page,
+      and a 3-member Results Set read as "at least 60" (ISSUE-185)."""
     found: List[Dict[str, Any]] = []
+    seen: set = set()
     start = 0
     for _ in range(max_pages):
         page = _elements(fetch(start, page_size))
         if not page:
-            return found, False
-        found.extend(page)
+            return found, False, None
+        fresh = [e for e in page if (_guid(e) or id(e)) not in seen]
+        if not fresh:
+            return found, False, (f"{PAGING_STALLED}: the read from position {start} returned only elements "
+                                  f"already read, so it stopped at the {len(found)} distinct ones")
+        for e in fresh:
+            seen.add(_guid(e) or id(e))
+        found.extend(fresh)
         start += len(page)
-    return found, True
+    return found, True, None
 
 
 def saved_query(client, name: str, mode: str = "cached", output: str = "count",
@@ -363,7 +377,7 @@ def saved_query(client, name: str, mode: str = "cached", output: str = "count",
         out = _live(client, name, output, method, body, page_size, max_pages)
         out["how"] = f"{method} on this client's platform" + (f"; {note}" if note else "")
     if registration_note:
-        out["note"] = registration_note
+        out["note"] = f"{out['note']}; {registration_note}" if out.get("note") else registration_note
     if declared:
         out["params"] = used
         if out.get("subtitle") and out.get("asOf"):
@@ -613,7 +627,7 @@ def _cached(client, name, output, additional, page_size, max_pages, kept_current
         return _not_measured(name, "cached", output, "the saved query has never been refreshed, so its "
                                                      "Results Set holds no answer yet (not an empty answer)")
     try:
-        members, capped = _read_pages(
+        members, capped, paging_note = _read_pages(
             lambda start, size: client.get_collection_members(collection_guid=results_set, start_from=start,
                                                               page_size=size, output_format="JSON"),
             page_size, max_pages)
@@ -622,7 +636,7 @@ def _cached(client, name, output, additional, page_size, max_pages, kept_current
             return _result(name, "cached", output, state="not_established", absence="not_permitted",
                            reason="the saved query's Results Set is not visible to you")
         return _not_measured(name, "cached", output, f"its Results Set could not be read ({type(exc).__name__})")
-    out = _answer(name, "cached", output, members, capped, as_of)
+    out = _answer(name, "cached", output, members, capped, as_of, paging_note)
     if kept_current:
         out["keptCurrentBy"] = "Egeria (Smart Collection, re-run about every 30 minutes from the stored request)"
         when = f" \u00b7 as of {as_of}" if as_of else " \u00b7 no refresh time recorded"
@@ -650,7 +664,7 @@ def _live(client, name, output, method, body, page_size, max_pages):
     fn = getattr(client, method)
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
     try:
-        found, capped = _read_pages(
+        found, capped, paging_note = _read_pages(
             lambda start, size: fn(body={**body, "startFrom": start, "pageSize": size, "graphQueryDepth": 0}),
             page_size, max_pages)
     except Exception as exc:  # noqa: BLE001
@@ -658,16 +672,20 @@ def _live(client, name, output, method, body, page_size, max_pages):
             return _result(name, "live", output, state="not_established", absence="not_permitted",
                            reason="Egeria refused the saved query's request for you")
         return _not_measured(name, "live", output, f"the saved query's request failed ({type(exc).__name__})")
-    return _answer(name, "live", output, found, capped, now)
+    return _answer(name, "live", output, found, capped, now, paging_note)
 
 
-def _answer(name, mode, output, elements, capped, as_of):
+def _answer(name, mode, output, elements, capped, as_of, note=None):
     n = len(elements)
     listed = [_summary(e) for e in elements] if output == "list" else None
     if n == 0:
-        return _result(name, mode, output, state="nothing_found", absence="nothing_found", count=0,
-                       elements=listed, as_of=as_of, reason="the saved query's answer is empty")
-    return _result(name, mode, output, state="measured", count=n, elements=listed, capped=capped, as_of=as_of)
+        out = _result(name, mode, output, state="nothing_found", absence="nothing_found", count=0,
+                      elements=listed, as_of=as_of, reason="the saved query's answer is empty")
+    else:
+        out = _result(name, mode, output, state="measured", count=n, elements=listed, capped=capped, as_of=as_of)
+    if note:
+        out["note"] = note
+    return out
 
 
 # ── deleting a saved query (6.2.35) ──
