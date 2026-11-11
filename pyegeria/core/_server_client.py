@@ -120,6 +120,19 @@ __all__ = [
     # Exceptions
 
 
+
+def _with_paging(body: dict, start_from: int, page_size: int) -> dict:
+    """A caller's body, with the call's own paging when the body sets none (6.2.36). Paging given as arguments was
+    dropped whenever a body was passed, so a loop that pages with start_from/page_size and a body re-read page 1."""
+    if not (start_from or page_size):
+        return body
+    out = dict(body)
+    if start_from and not ({"startFrom", "start_from"} & body.keys()):
+        out["startFrom"] = start_from
+    if page_size and not ({"pageSize", "page_size"} & body.keys()):
+        out["pageSize"] = page_size
+    return out
+
 class ServerClient(BaseServerClient):
     """
     An abstract class used to establish connectivity for an Egeria Client
@@ -6620,7 +6633,8 @@ class ServerClient(BaseServerClient):
         if isinstance(body, FilterRequestBody):
             validated_body = body
         elif isinstance(body, dict):
-            validated_body = self._validate_body(self._filter_request_adapter.validate_python, body)
+            validated_body = self._validate_body(self._filter_request_adapter.validate_python,
+                                                 _with_paging(body, start_from, page_size))
         else:
             filter_string = None if filter_string == "*" else filter_string
             classification_names = None if classification_names == [] else classification_names
@@ -7232,7 +7246,8 @@ class ServerClient(BaseServerClient):
         if isinstance(body, ResultsRequestBody):
             validated_body = body
         elif isinstance(body, dict):
-            validated_body = self._validate_body(self._results_request_adapter.validate_python, body)
+            validated_body = self._validate_body(self._results_request_adapter.validate_python,
+                                                 _with_paging(body, start_from, page_size))
         else:
             body = {
                 "class": "ResultsRequestBody",

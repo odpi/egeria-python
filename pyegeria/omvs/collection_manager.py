@@ -1298,8 +1298,12 @@ class CollectionManager(ServerClient):
         # are never guaranteed to share the collection's own type (e.g. a
         # WorkItemList's members are Projects), so the default request body must
         # not filter results by it.
+        # start_from / page_size are this method's own parameters, so they are not in **kwargs: until 6.2.36 they were
+        # never passed on, every call read the first page, and a reader paging to an empty page re-read the same
+        # members until its bound (a 3-member Results Set read as "at least 60", ISSUE-185).
         response = await self._async_get_results_body_request(url, _type="Collection",
                                                   _gen_output=self._generate_collection_output,
+                                                  start_from=start_from, page_size=page_size,
                                                   output_format=output_format, report_spec=report_spec,
                                                   body=body, filter_results_by_type=False, **kwargs)
 

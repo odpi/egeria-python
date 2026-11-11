@@ -280,6 +280,7 @@ async def _dashboard_elements(client: Any) -> List[Dict[str, Any]]:
     small type; only an empty page ends the read) and filtered here: a starts-with search on qualifiedName
     took 21 s on the live platform with no Dashboards at all, the type read 2.8 s."""
     out: List[Dict[str, Any]] = []
+    seen: set = set()
     start = 0
     while True:
         page = await client.classification_manager._async_get_elements(
@@ -287,6 +288,12 @@ async def _dashboard_elements(client: Any) -> List[Dict[str, Any]]:
         items = [e for e in page if isinstance(e, dict) and e.get("elementHeader")] if isinstance(page, list) else []
         if not items:
             return out
+        fresh = [e for e in items if (e.get("elementHeader") or {}).get("guid") not in seen]
+        if not fresh:   # a page of elements already read: paging did not advance, and would never end (6.2.36)
+            logger.warning(f"dashboards: paging did not advance at position {start}; stopped with {len(seen)} read")
+            return out
+        seen.update((e.get("elementHeader") or {}).get("guid") for e in fresh)
+        items = fresh
         out.extend(e for e in items
                    if ((e.get("properties") or {}).get("qualifiedName") or "").startswith(DASHBOARD_QN_PREFIX))
         start += len(items)

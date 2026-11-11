@@ -326,7 +326,11 @@ class DashboardSheetEgeriaWriter:
             items = [e for e in page if isinstance(e, dict) and e.get("elementHeader")] if isinstance(page, list) else []
             if not items:
                 return out
-            out.extend(items)
+            known = {self._guid(e) for e in out}
+            if all(self._guid(e) in known for e in items):   # paging did not advance; it would never end (6.2.36)
+                logger.warning(f"dashboard sheet: paging of {relationship} for {guid} did not advance at {start}")
+                return out
+            out.extend(e for e in items if self._guid(e) not in known)
             start += len(items)
 
     @staticmethod
@@ -509,6 +513,7 @@ class DashboardSheetEgeriaWriter:
         when the name is shared with an element of another type -- seen live 2026-11-09 for 'Term
         Definition Completeness' and 'Governance Classification Coverage', both real Reports."""
         matches: List[str] = []
+        seen: set = set()
         start = 0
         while True:
             try:
@@ -520,6 +525,11 @@ class DashboardSheetEgeriaWriter:
             items = [e for e in page if isinstance(e, dict) and e.get("elementHeader")] if isinstance(page, list) else []
             if not items:
                 break
+            if all(self._guid(e) in seen for e in items):   # paging did not advance; it would never end (6.2.36)
+                logger.warning(f"dashboard sheet: paging of Reports named {report_name!r} did not advance at {start}")
+                break
+            items = [e for e in items if self._guid(e) not in seen]
+            seen.update(self._guid(e) for e in items)
             matches += [self._guid(e) for e in items
                         if (e.get("properties") or {}).get("displayName") == report_name
                         and self._type(e) == "Report"]
