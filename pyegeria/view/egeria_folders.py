@@ -84,6 +84,35 @@ def _call(fn, *args, **kwargs):
     return _elements(result)
 
 
+MEMBERS_PAGE = 100
+MEMBERS_MAX_PAGES = 100
+
+
+class FolderTooLarge(RuntimeError):
+    """A folder has more members than one walk reads; reported as a folder not fully read, never as a short one."""
+
+
+def _members(client, collection_guid: str) -> List[Dict[str, Any]]:
+    """Every member of a collection, each once: paged until Egeria returns an EMPTY page (a short page is not the
+    last), deduplicated by GUID, and stopped when a page brings nothing new (a server that ignores paging returns the
+    same page again; 6.2.36). It used to be one unpaged call, so a folder over the server's default page was
+    silently truncated (Architect, LD-3 note N2). More than MEMBERS_MAX_PAGES pages raises FolderTooLarge."""
+    out: List[Dict[str, Any]] = []
+    seen: set = set()
+    for page_no in range(MEMBERS_MAX_PAGES):
+        page = _call(client.get_collection_members, collection_guid=collection_guid,
+                     start_from=page_no * MEMBERS_PAGE, page_size=MEMBERS_PAGE, output_format="JSON")
+        if not page:
+            return out
+        fresh = [m for m in page if (_guid(m) or id(m)) not in seen]
+        if not fresh:
+            return out
+        for m in fresh:
+            seen.add(_guid(m) or id(m))
+        out.extend(fresh)
+    raise FolderTooLarge(f"more than {MEMBERS_MAX_PAGES * MEMBERS_PAGE} members; not read to the end")
+
+
 def client_identity(client) -> str:
     return str(getattr(client, "user_id", "") or "?")
 
@@ -170,11 +199,10 @@ def walk_folder(client, folder: Dict[str, Any], *, recursive: bool, consumer_pre
     while queue:
         current, depth, path = queue.pop(0)
         if depth == 0:
-            listed = _call(client.get_collection_members, collection_guid=_guid(current), output_format="JSON")
+            listed = _members(client, _guid(current))
         else:
             try:
-                listed = _call(client.get_collection_members, collection_guid=_guid(current),
-                               output_format="JSON")
+                listed = _members(client, _guid(current))
             except Exception as exc:  # noqa: BLE001
                 if is_gone_error(exc):
                     # Not visible (zoned away from the reader) or deleted: what it held is no longer
@@ -246,7 +274,7 @@ def read_consumer_tree(client, *, root_qn: str, consumer_prefix: str, key: Membe
     if not roots:
         return _not_read(out, f"the root {root_qn} was not found, or is not visible to {identity}")
     try:
-        listed = _call(client.get_collection_members, collection_guid=_guid(roots[0]), output_format="JSON")
+        listed = _members(client, _guid(roots[0]))
     except Exception as exc:  # noqa: BLE001
         return _not_read(out, f"the members of the root {root_qn} could not be read: {exc}")
     folders = [m for m in listed if is_folder(m)]

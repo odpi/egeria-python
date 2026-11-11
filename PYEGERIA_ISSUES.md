@@ -172,6 +172,7 @@ re-test candidates moved into *Awaiting re-test* below the open sections.
   create-from-template) and 7 (`viewElementGUID`) are still open.
 
 **Open pyegeria items**
+- ISSUE-185: get_collection_members ignored start_from/page_size, so a paged read repeated page 1 ("≥60" for 3) (fixed for 6.2.36)
 - ISSUE-184: a Smart Collection was recognised by the Portal's `smartCollection` flag, not by Egeria's catalog target (fixed for 6.2.35)
 - ISSUE-183: deleting a SavedQuery left its SmartQuery links, and pyegeria had no delete that detached them (fixed for 6.2.35)
 - ISSUE-182: an element hidden by zone security (403-020) was reported as AUTHORIZATION_ERROR_401 (fixed in 6.2.34)
@@ -196,6 +197,18 @@ Dr.Egeria-side work each will need once that capability ships is written
 into the entry now, so it isn't rediscovered from scratch later.
 
 ---
+
+### ISSUE-185: get_collection_members ignored start_from and page_size
+
+**Layer:** pyegeria · **Severity:** HIGH: a false figure on a live tile · **Status:** fixed 2026-11-11 on branch `fix/collection-members-paging`, targets 6.2.36 · **Found:** 2026-11-11, the Architect's live Route B read-back on laz: (0,50), (3,50), (50,50), (0,2) and (2,2) all returned the same 3 members.
+
+**What:** `_async_get_collection_members` takes `start_from` and `page_size` as its own parameters, so they are not in `**kwargs`, and it never passed them to `_async_get_results_body_request`: every call read the first page. `saved_query._read_pages` pages until an empty page, so it re-read the same 3 members until `max_pages` and reported `capped`, `atLeast` 60. Separately, both request helpers dropped paging arguments whenever a caller passed a body.
+
+**Done:** the method passes its paging on; `_with_paging` adds a call's paging to a body that sets none; `_read_pages` counts distinct elements and stops, not capped, with "paging did not advance" when a page brings nothing new; the three unbounded paging loops (`dashboards._dashboard_elements`, the dashboard sheet writer's `_related` and Report-name read) stop the same way.
+
+**Audit:** of 101 list methods taking `start_from`/`page_size`, this was the only one not forwarding them. `egeria_folders` read each folder in one unpaged call (the Architect's LD-3 note N2); it now pages every folder to its end, deduplicated, and a folder over 10,000 members is reported as not fully read (`FolderTooLarge`). Still single-call member reads (the server's default page): `base_report_formats` (report-type members) and `commands/cat/get_collection_tree.py`; worth paging if those can exceed the default page.
+
+Tests: `tests/micro-tests/test_collection_members_paging.py`.
 
 ### ISSUE-184: a Smart Collection was recognised by a flag, not by Egeria's record
 

@@ -53,10 +53,12 @@ class FolderEgeria(FakeEgeria):
                 and metadata_element_type in (None, e["type"])]
         return copy.deepcopy(hits) or "No elements found"
 
-    def get_collection_members(self, collection_guid=None, output_format="JSON", **_):
+    def get_collection_members(self, collection_guid=None, output_format="JSON", start_from=0, page_size=0, **_):
         if collection_guid in self.failing:
             raise RuntimeError("HTTP 500 from the view server")
-        return [self.element(g) for g in self.members.get(collection_guid, [])] or "No elements found"
+        guids = self.members.get(collection_guid, [])
+        guids = guids[start_from:start_from + page_size] if page_size else guids[start_from:]
+        return [self.element(g) for g in guids] or "No elements found"
 
 
 async def _sheet(fake, name):
@@ -212,3 +214,31 @@ async def test_an_unreadable_consumer_makes_the_index_partial(tree):
     idx = dash.build_dashboard_consumer_index(tree["fake"])
     assert idx["status"] == "partial" and "Portal" in idx["reason"]
     assert idx["index"] == {"Ops": ["EgeriaAdvisor", "Portal"]}
+
+
+def test_a_folder_larger_than_one_page_is_read_to_the_end(tree, monkeypatch):
+    """6.2.36 (LD-3 note N2): the walk pages until an empty page; it used to be one unpaged read."""
+    monkeypatch.setattr(folders, "MEMBERS_PAGE", 2)
+    fake = tree["fake"]
+    for i in range(5):
+        fake.put(tree["portal"], fake.add_entity("Report", f"DeployedReport::R{i}", f"R{i}"))
+    walk = folders.walk_folder(fake, fake.element(tree["portal"]), recursive=False,
+                               consumer_prefix=dash.DASHBOARD_CONSUMER_PREFIX)
+    assert len(walk.members) == 7          # Ops, the Exec folder and five Reports, over four pages
+
+
+def test_a_folder_over_the_bound_is_not_read_as_a_short_one(tree, monkeypatch):
+    monkeypatch.setattr(folders, "MEMBERS_PAGE", 1)
+    monkeypatch.setattr(folders, "MEMBERS_MAX_PAGES", 1)
+    listing = dash.build_dashboard_consumer_index(tree["fake"])
+    # the root itself (two consumers) is over the bound here, so the whole tree is "not read", with the reason
+    assert listing["status"] == "not read" and "not read to the end" in listing["reason"] and listing["index"] == {}
+
+
+def test_a_server_that_ignores_paging_ends_the_walk(tree, monkeypatch):
+    fake = tree["fake"]
+    real = fake.get_collection_members
+    monkeypatch.setattr(fake, "get_collection_members", lambda **kw: real(**{**kw, "start_from": 0}))
+    walk = folders.walk_folder(fake, fake.element(tree["portal"]), recursive=True,
+                               consumer_prefix=dash.DASHBOARD_CONSUMER_PREFIX)
+    assert sorted(m["properties"]["qualifiedName"] for m in walk.members) == ["Dashboard::Board", "Dashboard::Ops"]
