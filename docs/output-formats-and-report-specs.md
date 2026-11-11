@@ -673,7 +673,11 @@ run_report --report "DCAT Catalog (Turtle)" --output-format DOCUMENT --output ./
 - Give `scope` (a collection qualifiedName or GUID) or `search_string` (assets in the asset
   domain). Both specs name their file `{scope|search_string}-dcat.jsonld` (or `.ttl`); a run with
   neither is refused. `export_dcat` also takes `format` (`jsonld` or `turtle`; each built-in spec
-  fixes its own) and `page_size`; it reads page by page until an empty page.
+  fixes its own) and `page_size`; it reads page by page until an empty page. A search-scoped
+  catalog may carry the note "Stopped reading ... Egeria answered with exactly the page before it
+  (it ignored startFrom)": that is expected until Egeria fixes paging on its asset-domain search
+  (the Egeria team is investigating). The page that was read is exported in full; the note says
+  that later pages, if any, were not read.
 - A `dcat:Dataset` is an **Asset**. DigitalProducts and Agreements are Bitol's: each is named in
   the notes ("<qn>: a DigitalProduct, not a DCAT dataset (Bitol)"), never exported.
 - It reads as the caller. A zoned Asset the caller can read is `dct:accessRights NON_PUBLIC`. A
