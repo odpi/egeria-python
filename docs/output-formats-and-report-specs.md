@@ -397,6 +397,12 @@ flags expose them; neither is a spec field, and the defaults return today's shap
   `{guid, qualifiedName, displayName, type}`. A table shows two levels: an object inside a sub-row is
   reduced to `{count, names, guid?}` with a note. `total` is the row count when the query did not fill
   its page; when it did, `total` is `None` and the notes say "more may exist" (Egeria's paging contract).
+  `total_basis` says what `total` rests on: `"one page"` (the one page the query returned; a short page
+  is not promised to be the last).
+  An empty relationship cell says what it means: when the request asked for that relationship (graph
+  depth 1 or more, not filtered out) it is an explicit empty list and the notes say "none"; when it did
+  not, the cell is `null` and the notes say "not read". Egeria omits a relationship an element does not
+  have, so this is the only way to tell the two apart. The flat DICT and text outputs stay blank.
 - `exec_report_spec(name, output_format="DICT", dict_shape="native")` (and `generate_output(...,
   dict_shape="native")`) returns DICT rows with native values: lists stay lists, related elements are
   objects with both names, classifications and zones are lists, and `format=True` columns are not

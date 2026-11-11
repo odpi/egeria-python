@@ -45,7 +45,7 @@ from pyegeria.view._output_format_models import DOCUMENT_OUTPUT_TYPE, check_docu
 from pyegeria.view.document_validators import run_document_validator
 from pyegeria.core._server_client import recording_list_requests
 from pyegeria.view.output_formatter import check_dict_shape, dict_shape_for_call
-from pyegeria.view.structured_table import build_structured_table, check_table_shape
+from pyegeria.view.structured_table import build_structured_table, check_table_shape, mark_relationship_absence
 
 _CLIENT_CLASS_MAP = {
     "CollectionManager": "pyegeria.omvs.collection_manager.CollectionManager",
@@ -954,7 +954,11 @@ async def _async_run_report_impl(
 
         if output_format == "TABLE" and table_shape == "structured":
             return build_structured_table(result, (fmt.get("formats") or {}).get("attributes") or [],
-                                          notes=cap_notes, capped=bool(cap_notes))
+                                          notes=cap_notes, capped=bool(cap_notes), record=list_record)
+        if output_format == "DICT" and row_shape == "native" and isinstance(result, list):
+            cap_notes = cap_notes + mark_relationship_absence(  # "none" / "not read" (R1 follow-up)
+                result, [c if isinstance(c, dict) else c.model_dump()
+                         for c in (fmt.get("formats") or {}).get("attributes") or []], list_record, keyed_by="name")
         if output_format in {"DICT", "JSON", "ALL", "TABLE"}:
             # Return raw data (list/dict/any) — do not stringify here; include TABLE to enable Rich rendering upstream
             return {"kind": "json", "data": result, **({"notes": cap_notes} if cap_notes else {})}
@@ -1650,7 +1654,11 @@ def _exec_report_spec_impl(
 
         if output_format == "TABLE" and table_shape == "structured":
             return build_structured_table(result, (fmt.get("formats") or {}).get("attributes") or [],
-                                          notes=cap_notes, capped=bool(cap_notes))
+                                          notes=cap_notes, capped=bool(cap_notes), record=list_record)
+        if output_format == "DICT" and row_shape == "native" and isinstance(result, list):
+            cap_notes = cap_notes + mark_relationship_absence(  # "none" / "not read" (R1 follow-up)
+                result, [c if isinstance(c, dict) else c.model_dump()
+                         for c in (fmt.get("formats") or {}).get("attributes") or []], list_record, keyed_by="name")
         if output_format in {"DICT", "JSON", "ALL", "TABLE"}:
             # Return raw data (list/dict/any) — do not stringify here
             return {"kind": "json", "data": result, **({"notes": cap_notes} if cap_notes else {})}

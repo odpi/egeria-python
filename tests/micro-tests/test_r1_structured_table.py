@@ -239,3 +239,53 @@ def test_the_async_twin_matches(monkeypatch, fmt, kw):
     a = _async_run("risk_register", fmt, **kw)
     sync.pop("spec_source", None), a.pop("spec_source", None)
     assert a == sync
+
+
+# ── R1 follow-up: "none" (read) versus "not read"; total_basis ──
+
+from pyegeria.view.structured_table import mark_relationship_absence, read_status, relationship_field  # noqa: E402
+
+
+def test_absent_relationships_read_at_depth_are_none(monkeypatch):
+    out = _run(ReportReplay(monkeypatch, "digital_products"), "TABLE", table_shape="structured")
+    assert all(r["solution_designs"] == [] and r["uses_digital_products"] == [] for r in out["rows"])
+    for col in ("Uses Products", "Used by Products", "Solution Blueprint"):
+        assert f"{col}: none on 100 rows (read at graph depth 3)." in out["notes"]
+    assert "Product Manager: none on 73 rows (read at graph depth 3)." in out["notes"]
+    assert out["total_basis"] == "one page"
+
+
+def test_native_dict_carries_the_same_meaning(monkeypatch):
+    replay = ReportReplay(monkeypatch, "digital_products")
+    native = _run(replay, "DICT", dict_shape="native")
+    assert all(r["Solution Blueprint"] == [] for r in native["data"])
+    assert "Solution Blueprint: none on 100 rows (read at graph depth 3)." in native["notes"]
+    flat = _run(replay, "DICT")                                      # flat DICT is unchanged: blank, no such note
+    assert all(r["Solution Blueprint"] in (None, "") for r in flat["data"])
+    assert not any("none on" in n for n in flat["notes"])
+
+
+def test_not_requested_relationships_say_not_read(monkeypatch):
+    rows = [{"solution_designs": None, "members": []}]
+    cols = [{"key": "solution_designs", "name": "Solution Blueprint"}, {"key": "members", "name": "Members"}]
+    notes = mark_relationship_absence(rows, cols, {"graph_query_depth": 0})
+    assert rows == [{"solution_designs": None, "members": None}]
+    assert notes == ["Solution Blueprint: not read on 1 row (graph depth 0).", "Members: not read on 1 row (graph depth 0)."]
+
+
+@pytest.mark.parametrize("record, expected", [
+    ({"graph_query_depth": 3}, "none"),
+    ({"graph_query_depth": 0}, "not read"),
+    ({}, "not established"),
+    ({"graph_query_depth": 3, "include_only_relationships": ["CollectionMembership"]}, "not read"),
+    ({"graph_query_depth": 3, "include_only_relationships": ["DigitalProductDependency"]}, "none"),
+    ({"graph_query_depth": 3, "skip_relationships": ["DigitalProductDependency"]}, "not read"),
+])
+def test_read_status(record, expected):
+    assert read_status("usesDigitalProducts", record)[0] == expected
+
+
+def test_relationship_fields_are_egeria_fields():
+    assert relationship_field("uses_digital_products") == "usesDigitalProducts"
+    assert relationship_field("members") == "collectionMembers"             # the F7 alias
+    assert relationship_field("description") is None                        # a property, not a relationship

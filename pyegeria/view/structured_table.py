@@ -102,6 +102,65 @@ def _two_levels(rows: List[Dict[str, Any]], column_name: str, notes: List[str]) 
     return out
 
 
+# ── "none" (read) versus "not read", for relationship columns (R1 follow-up) ──
+
+def relationship_field(key: Optional[str]) -> Optional[str]:
+    """The Egeria element field a column key reads, when it is a relationship list (else None)."""
+    from pyegeria.models import to_camel_case
+    from pyegeria.view.egeria_relationship_fields import RELATIONSHIP_FIELDS
+    from pyegeria.view.output_formatter import RELATIONSHIP_KEY_ALIASES
+    if not key:
+        return None
+    for field in (to_camel_case(key), RELATIONSHIP_KEY_ALIASES.get(key)):
+        if field in RELATIONSHIP_FIELDS:
+            return field
+    return None
+
+
+def read_status(field: str, record: Optional[Dict[str, Any]]) -> Tuple[str, str]:
+    """Whether the request read this relationship: ("none", why) when it was requested (graph depth >= 1,
+    not excluded by a relationship filter) -- so an absent value means there is none; ("not read", why)
+    when the request did not ask for it; ("not established", why) when the record cannot tell."""
+    from pyegeria.view.egeria_relationship_fields import RELATIONSHIP_FIELDS
+    types = set(RELATIONSHIP_FIELDS.get(field, ()))
+    depth = (record or {}).get("graph_query_depth")
+    if not isinstance(depth, int):
+        return "not established", "the request did not say its graph depth"
+    if depth < 1:
+        return "not read", f"graph depth {depth}"
+    include = set((record or {}).get("include_only_relationships") or [])
+    skip = set((record or {}).get("skip_relationships") or [])
+    if include and not types:
+        return "not established", "a relationship filter was set and this field's relationship type is not known"
+    if include and not types & include:
+        return "not read", "not among the request's includeOnlyRelationships"
+    if skip and types and types <= skip:
+        return "not read", "in the request's skipRelationships"
+    return "none", f"read at graph depth {depth}"
+
+
+def mark_relationship_absence(rows: List[Dict[str, Any]], columns: List[Dict[str, Any]],
+                              record: Optional[Dict[str, Any]], *, keyed_by: str = "key") -> List[str]:
+    """For each relationship column, give an empty cell its meaning (structured TABLE and native DICT
+    only; flat DICT and text are unchanged): requested and absent -> an explicit empty list and a note
+    "none"; not requested -> None and a note "not read"; unknowable -> None and "not established"."""
+    notes: List[str] = []
+    for col in columns:
+        field = relationship_field(col.get("key"))
+        if field is None:
+            continue
+        cell_key = col.get(keyed_by)
+        empty = [r for r in rows if isinstance(r, dict) and r.get(cell_key) in (None, "", [])]
+        if not empty:
+            continue
+        status, why = read_status(field, record)
+        for r in empty:
+            r[cell_key] = [] if status == "none" else None
+        n = len(empty)
+        notes.append(f"{col.get('name')}: {status} on {n} row{'s' if n != 1 else ''} ({why}).")
+    return notes
+
+
 def _column_meta(attributes: List[Any]) -> List[Dict[str, Any]]:
     meta = []
     for col in attributes:
@@ -113,9 +172,15 @@ def _column_meta(attributes: List[Any]) -> List[Dict[str, Any]]:
 
 
 def build_structured_table(dict_rows: Any, attributes: List[Any], *, notes: Optional[List[str]] = None,
-                           capped: bool = False) -> Dict[str, Any]:
+                           capped: bool = False, record: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """The structured TABLE from native DICT rows (keyed by column display name, as DICT is) and the
-    spec format's attributes. `capped` says the query filled its page (its words are in `notes`)."""
+    spec format's attributes. `capped` says the query filled its page (its words are in `notes`);
+    `record` is the call's list-request record (graph depth and relationship filters sent), which tells
+    an absent relationship that was read ("none") from one that was not ("not read").
+
+    `total_basis` says what `total` rests on: "one page" (the single page the query returned; Egeria's
+    paging contract does not promise a short page is the last) -- the only basis today -- or later
+    "counted" / "paged to empty". `total` is None when the page was full."""
     notes = list(notes or [])
     rows_in = dict_rows if isinstance(dict_rows, list) else ([dict_rows] if isinstance(dict_rows, dict) else [])
     columns = _column_meta(attributes)
@@ -159,8 +224,10 @@ def build_structured_table(dict_rows: Any, attributes: List[Any], *, notes: Opti
             for row in rows:
                 if isinstance(row.get(col["key"]), list):
                     row[col["key"]] = _two_levels(row[col["key"]], col["name"], notes)
+    notes += mark_relationship_absence(rows, columns, record)
     ordered = ["key", "name", "type", "render", "detail_spec", "valid_values", "max_items", "max_lines"]
     columns = [{k: c.get(k) for k in ordered} for c in columns]
     unique_notes = list(dict.fromkeys(notes))
     return {"kind": "table", "columns": columns, "rows": rows,
-            "total": None if capped else len(rows), "shown": len(rows), "notes": unique_notes}
+            "total": None if capped else len(rows), "total_basis": "one page", "shown": len(rows),
+            "notes": unique_notes}
