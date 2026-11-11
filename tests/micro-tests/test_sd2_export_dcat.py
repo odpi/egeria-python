@@ -453,3 +453,38 @@ def test_a_held_document_spec_that_refuses_to_load_is_skipped_with_words(bad, wo
         esc._build(_held_spec(bad), folders=[], identity="erinoverview", registry_names=set())
     assert caught.value.who == "Held DCAT"
     assert caught.value.reason.startswith("the spec does not load:") and words in caught.value.reason
+
+
+# ── 6.2.38 F-DCAT1: the seed spec runs with scope or with search_string ──
+
+@pytest.mark.parametrize("spec_name, ext", [("DCAT Catalog", "jsonld"), ("DCAT Catalog (Turtle)", "ttl")])
+def test_seed_spec_runs_with_a_search_string(spec_name, ext):
+    fx = _fixture("clinical_trial_files")
+    out = fse.exec_report_spec(spec_name, output_format="DOCUMENT", params=dict(fx["params"]),
+                               supply=PlainSupply(Replay(fx)), view_server="vs", view_url="https://x",
+                               user="u", user_pass="p")
+    assert out["kind"] == "document"
+    assert out["file_name"] == f"DataLake_PROJ-CT-TBDF_WeeklyMeasurements_Oak_Dene_Hospital_PROJ-CT-TBDF_00002-dcat.{ext}"
+    assert len(_graph(out["text"], "json-ld" if ext == "jsonld" else "turtle")) > 0
+    assert out["validation"]["findings"] == EXPECTED_FINDINGS["clinical_trial_files"]
+
+
+def test_seed_spec_still_runs_with_a_scope():
+    fx = _fixture("portal_dashboards")
+    out = fse.exec_report_spec("DCAT Catalog", output_format="DOCUMENT", params={"scope": fx["params"]["scope"]},
+                               supply=PlainSupply(Replay(fx)), view_server="vs", view_url="https://x",
+                               user="u", user_pass="p")
+    assert out["file_name"] == "DashboardFolder_Consumer_Portal-dcat.jsonld"
+
+
+def test_seed_spec_with_neither_is_refused_in_words():
+    with pytest.raises(ValueError, match="needs one of the parameters 'scope', 'search_string'"):
+        fse.exec_report_spec("DCAT Catalog", output_format="DOCUMENT", params={}, view_server="vs",
+                             view_url="https://x", user="u", user_pass="p")
+
+
+def test_file_name_alternatives():
+    assert fse.fill_document_file_name("{scope|search_string}.json", {"search_string": "a b"}) == "a_b.json"
+    assert fse.fill_document_file_name("{scope|search_string}.json", {"scope": "S", "search_string": "x"}) == "S.json"
+    with pytest.raises(ValueError, match="only plain parameter names"):
+        fse.fill_document_file_name("{scope|x.y}.json", {"scope": "S"})

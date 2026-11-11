@@ -4718,26 +4718,27 @@ _QUESTION_SPEC_FORMATS = FormatSetDict({
     # analytic function export_dcat. Run with output_format "DOCUMENT" and a `scope` parameter.
     "DCAT Catalog": FormatSet(
         heading="DCAT Catalog",
-        description="A DCAT-AP 3 catalog (JSON-LD) of the Assets in a collection or folder, read as you. Give "
-                    "`scope`: the collection's qualifiedName or GUID. DigitalProducts and Agreements are Bitol's "
+        description="A DCAT-AP 3 catalog (JSON-LD) of the Assets in a collection or folder (or of the assets matching a search), read as you. Give "
+                    "`scope`: the collection's qualifiedName or GUID, or `search_string`. DigitalProducts and Agreements are Bitol's "
                     "and are named in the notes, not exported; validated against the vendored DCAT-AP 3.0.1 "
                     "SHACL shapes. Run with output_format DOCUMENT.",
         family="Standard Documents",
         target_type="Collection",
         formats=[Format(types=["DOCUMENT"], document={
             "standard": "dcat-ap-3", "media_type": "application/ld+json",
-            "file_name": "{scope}-dcat.jsonld", "validator": "dcat-ap-3-shacl"})],
+            "file_name": "{scope|search_string}-dcat.jsonld", "validator": "dcat-ap-3-shacl"})],
         action=ActionParameter(analytic_function="export_dcat", analytic_spec_params={"format": "jsonld"}),
     ),
     "DCAT Catalog (Turtle)": FormatSet(
         heading="DCAT Catalog (Turtle)",
         description="The DCAT Catalog document as Turtle: a DCAT-AP 3 catalog of the Assets in a collection or "
-                    "folder, read as you. Give `scope`. Run with output_format DOCUMENT.",
+                    "folder (or of the assets matching a search), read as you. Give `scope` or "
+                    "`search_string`. Run with output_format DOCUMENT.",
         family="Standard Documents",
         target_type="Collection",
         formats=[Format(types=["DOCUMENT"], document={
             "standard": "dcat-ap-3", "media_type": "text/turtle",
-            "file_name": "{scope}-dcat.ttl", "validator": "dcat-ap-3-shacl"})],
+            "file_name": "{scope|search_string}-dcat.ttl", "validator": "dcat-ap-3-shacl"})],
         action=ActionParameter(analytic_function="export_dcat", analytic_spec_params={"format": "turtle"}),
     ),
 })

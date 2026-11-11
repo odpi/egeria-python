@@ -1306,28 +1306,32 @@ _FILE_NAME_UNSAFE = re.compile(r"[^A-Za-z0-9._+-]+")
 def fill_document_file_name(template: str, params: Dict[str, Any]) -> str:
     """Fill a DOCUMENT file-name template from the run's parameters.
 
-    Only plain `{name}` fields are allowed (no attribute or index access). Each value is made
-    file-name safe (anything but letters, digits and `._+-` becomes `_`, and `..` is broken up),
-    so a qualifiedName such as `Folder::Sales/EU` cannot become a path. The result is checked
-    again; a template that still names a path, or a parameter the run did not supply, is refused
-    with a sentence."""
-    values: Dict[str, str] = {}
-    for _literal, field, spec, conversion in string.Formatter().parse(template):
+    A field is a plain parameter name, or alternatives separated by `|` (6.2.38): `{scope|search_string}`
+    takes the first one the run supplies, so one template serves an exporter that takes either. Nothing
+    else is allowed (no attribute or index access, no format spec). Each value is made file-name safe
+    (anything but letters, digits and `._+-` becomes `_`, and `..` is broken up), so a qualifiedName such
+    as `Folder::Sales/EU` cannot become a path. The result is checked again; a template that still names
+    a path, or a field none of whose parameters the run supplied, is refused with a sentence."""
+    out: List[str] = []
+    for literal, field, spec, conversion in string.Formatter().parse(template):
+        out.append(literal)
         if field is None:
             continue
-        if not field.isidentifier():
+        names = field.split("|")
+        if not all(n.isidentifier() for n in names):
             raise ValueError(f"DOCUMENT file_name template '{template}' has field '{{{field}}}'; only plain "
-                             f"parameter names are allowed")
+                             f"parameter names (or alternatives a|b) are allowed")
         if spec or conversion:
             raise ValueError(f"DOCUMENT file_name template '{template}' formats field '{field}'; only plain "
                              f"parameter names are allowed")
-        raw = params.get(field)
-        if raw in (None, ""):
-            raise ValueError(f"DOCUMENT file_name template '{template}' needs parameter '{field}', which this "
-                             f"run did not supply")
-        safe = _FILE_NAME_UNSAFE.sub("_", str(raw)).replace("..", "_").strip("._") or "_"
-        values[field] = safe
-    file_name = template.format(**values)
+        raw = next((params.get(n) for n in names if params.get(n) not in (None, "")), None)
+        if raw is None:
+            wanted = f"parameter '{names[0]}'" if len(names) == 1 else "one of the parameters " + ", ".join(
+                f"'{n}'" for n in names)
+            raise ValueError(f"DOCUMENT file_name template '{template}' needs {wanted}, which this run did not "
+                             f"supply")
+        out.append(_FILE_NAME_UNSAFE.sub("_", str(raw)).replace("..", "_").strip("._") or "_")
+    file_name = "".join(out)
     reason = check_document_file_name(file_name)
     if reason:
         raise ValueError(f"DOCUMENT file_name refused: {reason}")
