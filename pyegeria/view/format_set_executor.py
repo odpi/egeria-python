@@ -794,7 +794,7 @@ async def _async_run_report_impl(
         - {"kind":"text","mime": "text/markdown"|"text/html","content": str}
         - {"kind":"unknown","raw": any}
         """
-    params = dict(params or {})
+    params = coerce_paging_params(dict(params or {}))
     user_name = egeria_client.user_id
     user_pwd = egeria_client.user_pwd
 
@@ -934,14 +934,16 @@ async def _async_run_report_impl(
         except Exception as auth_err:
             # Do not fail the entire call if token refresh fails; downstream call may still work
             logger.debug(f"Token creation/lookup issue: {auth_err}")
+        _reset_page_cap(func)
         result = await func(**call_params)
 
         if not result or result == NO_ELEMENTS_FOUND:
             return {"kind": "empty"}
+        cap_notes = page_cap_notes(func, call_params, result)
 
         if output_format in {"DICT", "JSON", "ALL", "TABLE"}:
             # Return raw data (list/dict/any) — do not stringify here; include TABLE to enable Rich rendering upstream
-            return {"kind": "json", "data": result}
+            return {"kind": "json", "data": result, **({"notes": cap_notes} if cap_notes else {})}
 
         # For narrative formats, try to use generate_output if the result is structured
         if output_format in {"REPORT", "REPORT-GRAPH", "MD", "FORM", "LIST", "HTML", "MERMAID", "GRAPH"}:
@@ -967,7 +969,11 @@ async def _async_run_report_impl(
                 content = preamble + content
 
             mime = "text/html" if output_format in ["HTML", "GRAPH"] else "text/markdown"
-            return {"kind": "text", "mime": mime, "content": content}
+            if cap_notes:  # fix-now F8: a capped result says so in the text too
+                content = content.rstrip("\n") + "\n\n" + "\n".join(
+                    (f"<p><em>{n}</em></p>" if mime == "text/html" else f"_{n}_") for n in cap_notes) + "\n"
+            return {"kind": "text", "mime": mime, "content": content,
+                    **({"notes": cap_notes} if cap_notes else {})}
 
         return {"kind": "unknown", "raw": result}
 
@@ -1170,6 +1176,71 @@ def _as_category_value_dict(result: Any) -> Optional[Dict[str, Union[int, float]
             value_key = numeric_keys[0]
             return {str(r.get(label_key)): r.get(value_key) for r in result if r.get(label_key) is not None}
     return None
+
+
+def _effective_page_size(func: Any, call_params: Dict[str, Any]) -> Optional[int]:
+    """The page size a find call ran with: the one sent, else the find function's own default
+    (e.g. find_digital_products' page_size=100). None when neither is a positive whole number (the
+    server then chose, and pyegeria cannot know its cap)."""
+    sent = call_params.get("page_size")
+    if isinstance(sent, int) and sent > 0:
+        return sent
+    try:
+        default = inspect.signature(func).parameters["page_size"].default
+    except (KeyError, TypeError, ValueError):
+        return None
+    return default if isinstance(default, int) and default > 0 else None
+
+
+def _reset_page_cap(func: Any) -> None:
+    owner = getattr(func, "__self__", None)
+    if owner is not None and hasattr(owner, "last_page_cap"):
+        owner.last_page_cap = None
+
+
+def _cap_words(shown: int, size: int, start: int) -> str:
+    first = f"rows {start + 1}-{start + shown}" if start else f"the first {shown}"
+    return f"Showing {first}: the query stopped at its page size of {size}; more may exist."
+
+
+def page_cap_notes(func: Any, call_params: Dict[str, Any], result: Any) -> List[str]:
+    """Fix-now F8: a find result that filled its page says so, never a bare N. Egeria's paging
+    contract means a full page may or may not be the last, so the words are "more may exist".
+
+    The client records whether the answer filled the page size it sent (`last_page_cap`), which
+    covers a find method that renders text itself; a plain list result is checked against the page
+    size sent (or the find function's own default) as well."""
+    owner = getattr(func, "__self__", None)
+    cap = getattr(owner, "last_page_cap", None)
+    if cap:
+        shown, size, start = cap
+        return [_cap_words(shown, size, start)]
+    size = _effective_page_size(func, call_params)
+    if isinstance(result, list) and size and len(result) >= size:
+        return [_cap_words(len(result), size, call_params.get("start_from") or 0)]
+    return []
+
+
+_PAGING_PARAMS = ("page_size", "start_from")
+
+
+def coerce_paging_params(params: Dict[str, Any]) -> Dict[str, Any]:
+    """page_size/start_from as whole numbers (fix-now F8): a numeric string is converted, anything else
+    is refused in words rather than sent to Egeria (where it failed as an HTTP 500)."""
+    for name in _PAGING_PARAMS:
+        value = params.get(name)
+        if value in (None, ""):
+            continue
+        if isinstance(value, bool):
+            raise ValueError(f"{name} must be a whole number of 0 or more, not {value!r}")
+        try:
+            number = int(str(value).strip()) if not isinstance(value, int) else value
+        except ValueError:
+            raise ValueError(f"{name} must be a whole number of 0 or more, not {value!r}") from None
+        if number < 0:
+            raise ValueError(f"{name} must be a whole number of 0 or more, not {value!r}")
+        params[name] = number
+    return params
 
 
 def _spec_display_name(format_set_name: Any) -> str:
@@ -1381,7 +1452,7 @@ def _exec_report_spec_impl(
     not read `supply`: it builds its client class from the arguments above, as before.
     """
     output_format = (output_format or "DICT").upper()
-    params = _normalize_report_params(dict(params or {}), action_mode="find")
+    params = coerce_paging_params(_normalize_report_params(dict(params or {}), action_mode="find"))
 
     # SERIES/BAR/PIE are not Format-row output types like TABLE/DICT/REPORT --
     # they don't need per-column formatting at all, just the analytic
@@ -1538,14 +1609,16 @@ def _exec_report_spec_impl(
         call_params = _bind_search_parameter(func, call_params)
         _warn_dropped_params(format_set_name, params, call_params,
                              [*required_params, *optional_params, *spec_params])
+        _reset_page_cap(func)
         result = func(**call_params)
 
         if not result or result == NO_ELEMENTS_FOUND:
             return {"kind": "empty"}
+        cap_notes = page_cap_notes(func, call_params, result)
 
         if output_format in {"DICT", "JSON", "ALL", "TABLE"}:
             # Return raw data (list/dict/any) — do not stringify here
-            return {"kind": "json", "data": result}
+            return {"kind": "json", "data": result, **({"notes": cap_notes} if cap_notes else {})}
 
         # For narrative formats, try to use generate_output if the result is structured
         if output_format in {"REPORT", "REPORT-GRAPH", "MD", "FORM", "LIST", "HTML", "MERMAID", "GRAPH"}:
@@ -1571,7 +1644,11 @@ def _exec_report_spec_impl(
                 content = preamble + content
 
             mime = "text/html" if output_format in ["HTML", "GRAPH"] else "text/markdown"
-            return {"kind": "text", "mime": mime, "content": content}
+            if cap_notes:  # fix-now F8: a capped result says so in the text too
+                content = content.rstrip("\n") + "\n\n" + "\n".join(
+                    (f"<p><em>{n}</em></p>" if mime == "text/html" else f"_{n}_") for n in cap_notes) + "\n"
+            return {"kind": "text", "mime": mime, "content": content,
+                    **({"notes": cap_notes} if cap_notes else {})}
 
         return {"kind": "unknown", "raw": result}
 

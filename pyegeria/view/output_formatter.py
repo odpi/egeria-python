@@ -748,6 +748,47 @@ def materialize_egeria_summary(summary: dict, columns_struct: Optional[dict] = N
 
     return res
 
+#: Spec column keys whose Egeria element field has another name (fix-now F7). Used only when the
+#: element has no field of the column's own name. `members`: Egeria returns a collection's (and so a
+#: digital product's) members as `collectionMembers` (CollectionMembership, 0021).
+RELATIONSHIP_KEY_ALIASES = {"members": "collectionMembers"}
+
+#: What FORM/MD say in place of a diagram they do not draw (fix-now F3).
+DIAGRAM_OMITTED = "_Diagram omitted in this format; see REPORT or MERMAID._"
+
+
+def markdown_cell(value: Any) -> str:
+    """A value made safe for one markdown table cell (fix-now F9): `|` escaped, newlines as `<br>`
+    (GFM), markdown emphasis kept."""
+    text = "" if value is None else str(value)
+    return text.replace("\r\n", "\n").replace("|", "\\|").replace("\n", "<br>")
+
+
+def list_item_name(item: dict) -> str:
+    """The name a LIST cell shows for an object in a list value: its name, else its first string
+    value, else "(unnamed <type>)". An item is never dropped (fix-now F6)."""
+    nm = item.get('name') or item.get('displayName') or item.get('qualifiedName')
+    if not nm and isinstance(item.get('type'), str):
+        nm = item.get('type')
+    if nm:
+        return str(nm)
+    first = next((v for v in item.values() if isinstance(v, str) and v.strip()), None)
+    if first:
+        return first
+    t = item.get('type')
+    t = (t.get('typeName') if isinstance(t, dict) else t) or item.get('typeName') or "item"
+    return f"(unnamed {t})"
+
+
+def markdown_bullets(value: Any) -> Any:
+    """`format='bulleted-list'` in REPORT/MD (fix-now F10): a list becomes a markdown list, one item
+    per line; anything else is returned unchanged."""
+    if isinstance(value, list):
+        items = [get_item_display_name(i) for i in value if i not in (None, "")]
+        return "\n".join(f"- {i}" for i in items) if items else ""
+    return value
+
+
 def render_rich_value(value: Any, output_format: str) -> str:
     """Visually format rich nested values for text-based reports.
     - LIST: summarized string (handled elsewhere)
@@ -768,7 +809,8 @@ def render_rich_value(value: Any, output_format: str) -> str:
             "| :--- | :--- |"
         ]
         for k, v in d.items():
-            table_lines.append(f"| {camel_to_title_case(k) if isinstance(k, str) else k} | {v} |")
+            label = camel_to_title_case(k) if isinstance(k, str) else k
+            table_lines.append(f"| {markdown_cell(label)} | {markdown_cell(v)} |")
         return "\n".join(table_lines)
 
     if isinstance(value, dict) and is_flat_dict(value):
@@ -857,8 +899,13 @@ def make_md_attribute(attribute_name: str, attribute_value: str|list|dict, outpu
             return "\n"
 
     if output_type in ["FORM", "MD"]:
-        if attribute_name.lower() in [ "mermaid", "solutionBlueprintMermaidGraph", "links", "implemented by", "sub_components"]:
-            return '\n'
+        # A diagram is not drawn in FORM/MD (fix-now F3): say so, never drop it silently. An empty one
+        # has nothing to omit. (`links`, `implemented by` and `sub_components` render like any value.)
+        if _is_mermaid_attribute(attribute_name, attribute_key) or \
+                (attribute_name or "").lower() in ("mermaid", "solutionblueprintmermaidgraph"):
+            if attribute_value in (None, ""):
+                return "\n"
+            return f"### {attribute_title}\n{DIAGRAM_OMITTED}\n\n"
 
         output = f"### {attribute_title}\n{attribute_value}\n\n"
 
@@ -870,14 +917,15 @@ def make_md_attribute(attribute_name: str, attribute_value: str|list|dict, outpu
                 attribute_value = _normalize_escaped_mermaid_newlines(attribute_value)
                 norm_mermaid = _normalize_mermaid_graph(attribute_value)
                 output = f"### {attribute_title}\n\n```mermaid\n{norm_mermaid}\n```\n"
-        elif attribute_value:
+        elif attribute_value is not None and attribute_value != "":  # False and 0 are values (fix-now F2)
             output = f"### {attribute_title}\n{attribute_value}\n\n"
     return output
 
 
 def format_for_markdown_table(text: str, guid: str = None, format_type: str = None) -> str:
     """
-    Format text for markdown tables by joining list items with commas, replacing newlines with spaces, and escaping pipe characters.
+    Format text for markdown tables by joining list items with commas, turning newlines into <br> and escaping
+    pipe characters (fix-now F9; markdown emphasis is kept).
     No truncation is applied to allow full-length text display regardless of console width.
 
     Args:
@@ -898,7 +946,7 @@ def format_for_markdown_table(text: str, guid: str = None, format_type: str = No
     if not isinstance(text, str):
         text = str(text)
 
-    t = text.replace("\n", " ").replace("|", "\\|")
+    t = markdown_cell(text)
     if '::' in t and guid:
         t = f" [{t}](#{guid}) "
     return t
@@ -1273,9 +1321,11 @@ def generate_entity_md(elements: List[Dict],
 
                 if value in (None, "") and key in additional_props:
                     value = additional_props[key]
-                if column.get('format'):
+                if column.get('format') == "bulleted-list" and output_format in ('REPORT', 'MD'):
+                    value = markdown_bullets(value)  # fix-now F10: honoured outside LIST
+                elif column.get('format'):
                     value = format_for_markdown_table(value, guid)
-                
+
                 elements_md += make_md_attribute(name, value, output_format, attribute_key=key)
                 if companions and key in _CONTEXT_GRAPH_KEYS:
                     for companion in companions:
@@ -1320,7 +1370,9 @@ def generate_entity_md(elements: List[Dict],
                     value = props[key]
                 elif key in additional_props:
                     value = additional_props[key]
-                if column.get('format'):
+                if column.get('format') == "bulleted-list" and output_format in ('REPORT', 'MD'):
+                    value = markdown_bullets(value)  # fix-now F10
+                elif column.get('format'):
                     value = format_for_markdown_table(value, guid or props.get('GUID'))
                 elements_md += make_md_attribute(name, value, output_format, attribute_key=key)
                 if companions and key in _CONTEXT_GRAPH_KEYS:
@@ -1458,8 +1510,7 @@ def generate_entity_md_table(elements: List[Dict],
                     names = []
                     for item in value:
                         if isinstance(item, dict):
-                            nm = item.get('name') or item.get('displayName') or item.get('qualifiedName') or item.get('type')
-                            if nm: names.append(nm)
+                            names.append(list_item_name(item))  # never dropped (fix-now F6)
                         elif item is not None:
                             names.append(str(item))
                     cell_value = ", ".join(names)
@@ -1493,7 +1544,7 @@ def generate_entity_md_table(elements: List[Dict],
                     else:
                         cell_value = format_for_markdown_table(cell_value, guid)
                 elif isinstance(cell_value, str):
-                    cell_value = cell_value.replace("\n", " ").replace("|", "\\|")
+                    cell_value = markdown_cell(cell_value)
 
                 row += f"{cell_value} | "
         else:
@@ -1517,7 +1568,7 @@ def generate_entity_md_table(elements: List[Dict],
                     else:
                         value = format_for_markdown_table(value, guid or props.get('GUID'))
                 elif isinstance(value, str):
-                    value = value.replace("\n", " ").replace("|", "\\|")
+                    value = markdown_cell(value)
 
                 row += f"{value} | "
 
@@ -1882,6 +1933,8 @@ def populate_common_columns(
                 if not key_snake:
                     continue
                 key_camel = to_camel_case(key_snake)
+                if key_camel not in element and RELATIONSHIP_KEY_ALIASES.get(key_snake) in element:
+                    key_camel = RELATIONSHIP_KEY_ALIASES[key_snake]  # fix-now F7
                 if key_camel in element:
                     top_val = element.get(key_camel)
                     derived_value = ""
@@ -1964,7 +2017,7 @@ def populate_common_columns(
                             names.append(str(item))
                     else:
                         names.append(str(item))
-                column['value'] = "\n, ".join(names)
+                column['value'] = ", ".join(names)  # fix-now F1: no stray newline
             elif isinstance(h_val, dict):
                 # Generic fallback for dicts in header
                 column['value'] = h_val.get('name') or h_val.get('displayName') or h_val.get('qualifiedName') or str(h_val)
@@ -2058,18 +2111,18 @@ def _extract_name_from_relationship_item(item: Any) -> Optional[str]:
             related = item.get('relatedElement') or item.get('related_element')
             if isinstance(related, dict):
                 props = related.get('properties') or {}
-                name = (
-                    props.get('qualifiedName')
-                    or props.get('displayName')
+                name = (  # fix-now F7: the display name, not the qualifiedName (e.g. Product Manager)
+                    props.get('displayName')
                     or props.get('name')
+                    or props.get('qualifiedName')
                 )
                 if name:
                     return name
             # Sometimes the properties may be at the top level of the item
             name = (
-                item.get('qualifiedName')
-                or item.get('displayName')
+                item.get('displayName')
                 or item.get('name')
+                or item.get('qualifiedName')
             )
             if name:
                 return name

@@ -21,7 +21,7 @@ import json
 import os
 import sys
 import time
-from typing import Any, Dict, List, Mapping, Sequence
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
 import click
 from rich import box
@@ -202,12 +202,13 @@ def list_generic(
                     force_terminal=not jupyter,
                 )
                 caption = table_caption or f"View Server '{view_server}' @ Platform - {view_url}"
-                _render_table(console, heading, caption, data, use_pager=use_pager)
+                _render_table(console, heading, caption, data, use_pager=use_pager, notes=result.get("notes"))
                 rendered = True
             return {
                 "kind": "table",
                 "heading": heading,
                 "data": data,
+                "notes": list(result.get("notes") or []),
                 "required": required_params,
                 "optional": optional_params,
                 "rendered": rendered,
@@ -257,60 +258,70 @@ def list_generic(
     }
 
 
+#: How many scalar list items a CLI cell shows before "+N more" (fix-now F4), and the width a joined
+#: cell may reach before items are cut at an item boundary.
+CELL_ITEMS = 3
+CELL_CHARS = 120
+
+
+def _object_name(x: Mapping[str, Any]) -> str:
+    name = x.get("name") or x.get("displayName") or x.get("qualifiedName") or x.get("guid")
+    if name:
+        return str(name)
+    str_vals = [v for v in x.values() if isinstance(v, str) and v.strip()]
+    return str_vals[0] if str_vals else f"(unnamed {x.get('type') or 'item'})"
+
+
+def _join_capped(items: List[str], *, max_items: Optional[int] = None, max_chars: int = CELL_CHARS) -> str:
+    """Items joined with ", ", cut at an item boundary when there are more than `max_items` or the
+    cell would pass `max_chars`, always with "+N more" (fix-now F4: never only a count)."""
+    shown: List[str] = []
+    for item in items:
+        if max_items is not None and len(shown) >= max_items:
+            break
+        if shown and len(", ".join(shown + [item])) > max_chars:
+            break
+        shown.append(item)
+    if not shown and items:
+        shown = [items[0]]
+    rest = len(items) - len(shown)
+    return ", ".join(shown) + (f" (+{rest} more)" if rest else "")
+
+
+def _cell(value: Any) -> str:
+    """One CLI table cell for a nested value (fix-now F4)."""
+    if isinstance(value, Mapping):  # a map is one "k: v; ..." cell, never exploded into columns
+        return "; ".join(f"{k}: {_cell(v)}" for k, v in value.items())
+    if isinstance(value, (list, tuple)):
+        if not value:
+            return ""
+        if all(isinstance(x, Mapping) for x in value):
+            return _join_capped([_object_name(x) for x in value])
+        items = [str(x) for x in value]
+        if len(", ".join(items)) <= CELL_CHARS // 2:  # the whole list fits: show all of it
+            return ", ".join(items)
+        return _join_capped(items, max_items=CELL_ITEMS)
+    return "" if value is None else str(value)
+
+
 def _flatten(item: Any, parent_key: str = "", sep: str = ".") -> Dict[str, Any]:
-    """Flatten nested dict-like objects into a single level using dot-notation keys.
-    For nested collections of entities (master-detail), try to summarize by name.
-    """
-    flat: Dict[str, Any] = {}
+    """One table row from a result row: each top-level key is a column; a nested map is one
+    "k: v; ..." cell and a list is a joined cell with "+N more" (fix-now F4), so nested values never
+    explode into dotted columns that push the author's columns out."""
     if isinstance(item, Mapping):
-        for k, v in item.items():
-            new_key = f"{parent_key}{sep}{k}" if parent_key else str(k)
-            flat.update(_flatten(v, new_key, sep))
-    elif isinstance(item, (list, tuple)):
-        if not item:
-            flat[parent_key or "list"] = ""
-        elif all(isinstance(x, Mapping) for x in item):
-            # Master-detail or nested entities: try to summarize by name
-            names = []
-            for x in item:
-                # Prefer friendlier names often added by materializers
-                name = (
-                    x.get("name")
-                    or x.get("displayName")
-                    or x.get("qualifiedName")
-                    or x.get("guid")
-                )
-                if name:
-                    names.append(str(name))
-                else:
-                    # Fallback: find first string value in the dict
-                    str_vals = [v for v in x.values() if isinstance(v, str)]
-                    names.append(str_vals[0] if str_vals else str(x))
-
-            summary = ", ".join(names)
-            # If still very long, truncate for table display
-            if len(summary) > 120:
-                summary = summary[:117] + "..."
-            flat[parent_key or "list"] = summary
-        elif len(item) <= 3:
-            flat[parent_key or "list"] = ", ".join([str(x) for x in item])
-        else:
-            flat[parent_key or "list"] = f"{len(item)} items"
-    else:
-        flat[parent_key or "value"] = item
-    return flat
+        return {(f"{parent_key}{sep}{k}" if parent_key else str(k)): _cell(v) for k, v in item.items()}
+    return {parent_key or "value": _cell(item)}
 
 
-def _collect_columns(rows: Sequence[Mapping[str, Any]], max_cols: int = 12) -> List[str]:
-    """Collect a union of keys across rows, up to max_cols, keeping a stable ordering."""
+def _collect_columns(rows: Sequence[Mapping[str, Any]], max_cols: int = 12) -> Tuple[List[str], List[str]]:
+    """The columns to show, in the author's order (first appearance across rows), and the ones dropped
+    from the end past `max_cols` (fix-now F5: the caller names them in a footer, never a silent cut)."""
     seen: List[str] = []
     for row in rows:
         for k in row.keys():
             if k not in seen:
                 seen.append(k)
-            if len(seen) >= max_cols:
-                return seen
-    return seen
+    return seen[:max_cols], seen[max_cols:]
 
 
 def _ensure_rows(data: Any) -> List[Mapping[str, Any]]:
@@ -323,7 +334,7 @@ def _ensure_rows(data: Any) -> List[Mapping[str, Any]]:
             if isinstance(item, Mapping):
                 rows.append(_flatten(item))
             else:
-                rows.append({"value": item})
+                rows.append({"value": _cell(item)})
         return rows
     if isinstance(data, Mapping):
         # If a single object contains a list-like 'elements' or similar, prefer that
@@ -335,13 +346,19 @@ def _ensure_rows(data: Any) -> List[Mapping[str, Any]]:
     return [{"value": data}]
 
 
-def _render_table(console: Console, title: str, caption: str, data: Any, use_pager: bool = True) -> None:
+def hidden_columns_footer(dropped: Sequence[str]) -> str:
+    """The footer naming columns the table could not show (fix-now F5, the Portal #832 pattern)."""
+    return f"+{len(dropped)} more column{'s' if len(dropped) != 1 else ''}: {', '.join(dropped)}" if dropped else ""
+
+
+def _render_table(console: Console, title: str, caption: str, data: Any, use_pager: bool = True,
+                  notes: Optional[Sequence[str]] = None, max_cols: int = 12) -> None:
     rows = _ensure_rows(data)
     if not rows:
         console.print("No results found.")
         return
 
-    columns = _collect_columns(rows)
+    columns, dropped = _collect_columns(rows, max_cols=max_cols)
 
     table = Table(
         title=title,
@@ -360,12 +377,20 @@ def _render_table(console: Console, title: str, caption: str, data: Any, use_pag
     for row in rows:
         table.add_row(*[str(row.get(col, "")) for col in columns])
 
+    footer = [hidden_columns_footer(dropped)] if dropped else []
+    footer += list(notes or [])  # fix-now F8: e.g. "the first 100 ...; more may exist"
+
+    def _print():
+        console.print(table)
+        for line in footer:
+            console.print(line)
+
     # Page the table if it's large
     if use_pager:
         with console.pager():
-            console.print(table)
+            _print()
     else:
-        console.print(table)
+        _print()
 
 
 def write_output_file(content: str, report_spec: str, suffix: str) -> str:
@@ -509,7 +534,7 @@ def main(argv: Sequence[str] | None = None):
         if output_format in {"TABLE", "DICT"}:
             heading = result.get("heading") or (get_report_spec_heading(report_spec) or f"Report: {report_spec}")
             caption = f"View Server '{args.server}' @ Platform - {args.url}"
-            _render_table(console, heading, caption, result.get("data"))
+            _render_table(console, heading, caption, result.get("data"), notes=result.get("notes"))
             return
 
         # For narrative formats, either a file was written or content is returned
