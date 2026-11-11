@@ -53,6 +53,8 @@ __all__ = [
     "refresh_consumer_index",
     "read_consumer_index",
     "build_consumer_index",
+    "list_visible_restricted_specs",
+    "RESTRICTED_FORMAT",
     "CONSUMER_PREFIX",
     "DEFAULT_ROOT",
     "DEPTH_CAP",
@@ -1014,6 +1016,117 @@ def build_consumer_index(client, *, root: Optional[str] = None, depth_cap: int =
     out["index"] = {k: sorted(v) for k, v in sorted(index.items())}
     if unread:
         out.update(status="partial", reason="not fully read: " + ", ".join(unread))
+    return out
+
+
+RESTRICTED_FORMAT = "pyegeria-restricted-specs/1"
+
+
+def list_visible_restricted_specs(client_as_user, folders: Optional[Iterable[str]] = None, *,
+                                  recursive: Optional[bool] = None, depth_cap: int = DEPTH_CAP) -> Dict[str, Any]:
+    """The zone-restricted ReportSpecs one signed-in user can see in the configured folders (B6).
+
+    A shared cache never holds a zoned spec (§9, `ZONED_REASON`), so a tool that shows restricted
+    specs reads them per user with this function, **as that user's token**: Egeria enforces the
+    zones, so what comes back is exactly what this user may see. Nothing is written to any cache.
+    **The caller caches the result per credential identity (the token), never by bare user id**: two
+    sessions of one user id can hold different zone grants, and a cache keyed on the id would show
+    one session's restricted specs to the other.
+
+    - `folders`: CollectionFolder qualified names; default `configured_folders()`. Consumer folders
+      are walked recursively (as `sync_report_specs` does), any other folder reads its direct members,
+      unless `recursive` says otherwise.
+    - Only ACTIVE ReportSpecs that carry at least one zone are returned: public ones are the shared
+      cache's business. The zones come from the full element when the member listing carries none.
+
+    Returns `{"format", "identity", "status", "reason", "specs", "folders", "notes"}`:
+    - `specs`: `[{"label", "qualified_name", "guid", "version", "zones", "folders"}]`, sorted by label.
+    - `folders`: one `{"folder", "result", "detail", "count"}` per folder, `result` in
+      ok | not_found | unreadable | partial. A folder that is not found, or not visible to this user,
+      says so; it is never an empty list.
+    - `status`: "read" (every folder read), "partial" (some read), or "not read" (none, with `reason`).
+      An empty `specs` with status "read" means the folders were read and hold no restricted spec this
+      user can see; `reason` then says so in words.
+    """
+    identity = _client_identity(client_as_user)
+    folder_qns = list(folders) if folders is not None else configured_folders()
+    out: Dict[str, Any] = {"format": RESTRICTED_FORMAT, "identity": identity, "status": "read", "reason": None,
+                           "specs": [], "folders": [], "notes": []}
+    if not folder_qns:
+        out.update(status="not read", reason=f"no report spec folders are configured (set {FOLDERS_ENV} or "
+                                             f"config.json's \"Pyegeria Report Spec Folders\")")
+        return out
+    found: Dict[str, Dict[str, Any]] = {}       # guid -> spec row
+    by_label: Dict[str, set] = {}
+    for qn in folder_qns:
+        row = {"folder": qn, "result": "ok", "detail": None, "count": 0}
+        out["folders"].append(row)
+        try:
+            folder = _find_folder(client_as_user, qn)
+        except Exception as exc:  # noqa: BLE001 -- one folder's failure is stated, never hides the others
+            row.update(result="unreadable", detail=f"the folder could not be read: {exc}")
+            continue
+        if folder is None:
+            row.update(result="not_found", detail=f"folder not found, or not visible to {identity}")
+            continue
+        walk_recursive = _is_consumer_qn(qn) if recursive is None else bool(recursive)
+        try:
+            walk = _walk_folder(client_as_user, folder, recursive=walk_recursive, depth_cap=depth_cap,
+                                stop_qns=folder_qns)
+        except Exception as exc:  # noqa: BLE001
+            row.update(result="unreadable", detail=f"the folder's members could not be read: {exc}")
+            continue
+        partial = [f"{p}: depth cap reached ({depth_cap} levels)" for p in walk.capped]
+        partial += [f"{p}: could not be read: {why}" for p, why in walk.errors]
+        if partial:
+            row.update(result="partial", detail="; ".join(partial))
+        out["notes"].extend(f"{p}: not visible to {identity}, or not found" for p, _why in walk.gone)
+        for m in walk.members:
+            g = _guid(m)
+            try:
+                label, mqn = _identify(m)
+            except _Skip:
+                continue  # not a ReportSpec: nothing restricted to show
+            if g in found:
+                if qn not in found[g]["folders"]:
+                    found[g]["folders"].append(qn)
+                    row["count"] += 1
+                continue
+            el, zones = m, _zones(m)
+            if not zones:
+                try:
+                    el = _get_full(client_as_user, g) or m
+                except Exception as exc:  # noqa: BLE001
+                    out["notes"].append(f"{label}: its zones could not be read, so it is not listed: {exc}")
+                    continue
+                zones = _zones(el)
+            if not zones:
+                continue  # public: the shared cache holds it
+            status = _status(el, [])
+            if status != _ACTIVE:
+                out["notes"].append(f"{label}: contentStatus {status}, not listed")
+                continue
+            found[g] = {"label": label, "qualified_name": mqn, "guid": g, "version": _version(el),
+                        "zones": zones, "folders": [qn]}
+            by_label.setdefault(label, set()).add(g)
+            row["count"] += 1
+    for label, guids in by_label.items():
+        if len(guids) > 1:
+            out["notes"].append(f"{label}: one label held by {len(guids)} elements ({', '.join(sorted(guids))}); "
+                                f"neither is listed")
+            for g in guids:
+                found.pop(g, None)
+    out["specs"] = sorted(found.values(), key=lambda r: r["label"])
+    read = [r for r in out["folders"] if r["result"] in ("ok", "partial")]
+    if not read:
+        out.update(status="not read", reason="no folder could be read: " +
+                   "; ".join(f"{r['folder']}: {r['detail']}" for r in out["folders"]))
+    elif len(read) < len(out["folders"]) or any(r["result"] == "partial" for r in read):
+        out.update(status="partial", reason="not fully read: " + "; ".join(
+            f"{r['folder']}: {r['detail']}" for r in out["folders"] if r["result"] != "ok"))
+    elif not out["specs"]:
+        out["reason"] = (f"the folders were read as {identity} and hold no zone-restricted report spec "
+                         f"visible to {identity}")
     return out
 
 
