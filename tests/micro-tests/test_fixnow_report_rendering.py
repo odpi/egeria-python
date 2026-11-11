@@ -144,12 +144,17 @@ def test_f6_list_cell_keeps_every_item():
 
 # ── F7: relationship columns read Egeria's field names and show display names ──
 
-def test_f7_members_and_product_manager(monkeypatch):
+def test_f7_members_read_collection_members(monkeypatch):
     rows = ReportReplay(monkeypatch, "digital_products").run("DICT")["data"]
     assert all(r["Members"] for r in rows)                          # collectionMembers, on all 100
+
+
+def test_f7_relationship_names_stay_qualified_names_by_default(monkeypatch):
+    """The global display-name flip is held (F7 read-back): My Egeria splits qualifiedNames and the "::"
+    link wrap needs them. A display-name label is a per-column choice (Column.label, R2)."""
+    rows = ReportReplay(monkeypatch, "digital_products").run("DICT")["data"]
     pm = [r["Product Manager"] for r in rows if r["Product Manager"]]
-    assert pm and all("_productManager" not in v and v.startswith("Product Manager for") for v in pm)
-    assert not any("LicenseType::" in (r["License"] or "") for r in rows)
+    assert pm and all(v.endswith("_productManager") for v in pm)
 
 
 def test_f7_absent_relationships_are_genuinely_none(monkeypatch):

@@ -2111,18 +2111,19 @@ def _extract_name_from_relationship_item(item: Any) -> Optional[str]:
             related = item.get('relatedElement') or item.get('related_element')
             if isinstance(related, dict):
                 props = related.get('properties') or {}
-                name = (  # fix-now F7: the display name, not the qualifiedName (e.g. Product Manager)
-                    props.get('displayName')
+                name = (  # qualifiedName first (My Egeria splits it; the "::" link wrap needs it). A
+                    # display-name label is per column (Column.label, R2), never a global flip (F7 read-back).
+                    props.get('qualifiedName')
+                    or props.get('displayName')
                     or props.get('name')
-                    or props.get('qualifiedName')
                 )
                 if name:
                     return name
             # Sometimes the properties may be at the top level of the item
             name = (
-                item.get('displayName')
+                item.get('qualifiedName')
+                or item.get('displayName')
                 or item.get('name')
-                or item.get('qualifiedName')
             )
             if name:
                 return name
