@@ -61,6 +61,7 @@ def list_generic(
     render_table: bool = False,
     table_caption: str | None = None,
     use_pager: bool = True,
+    table_shape: str = "rows",
 ) -> Dict[str, Any]:
     """
     Execute a report spec and return results, usable both as a library function and CLI.
@@ -149,6 +150,22 @@ def list_generic(
                 params[p] = val
         else:
             raise ValueError(f"Missing required parameter(s): {', '.join(missing)}")
+
+    if ofmt == "TABLE" and table_shape == "structured":
+        # R3: the structured table, drawn natively (run_report's own CLI asks for it; the library default
+        # stays "rows", which the Textual TUI and hey_egeria commands read).
+        result = exec_report_spec(report_spec, output_format="TABLE", table_shape="structured", params=params,
+                                  view_server=view_server, view_url=view_url, user=user, user_pass=user_pass)
+        heading = get_report_spec_heading(report_spec) or f"Report: {report_spec}"
+        rendered = False
+        if render_table and result.get("kind") == "table":
+            console = Console(width=width, force_terminal=not jupyter)
+            render_structured_table(console, result, heading,
+                                    table_caption or f"View Server '{view_server}' @ Platform - {view_url}",
+                                    use_pager=use_pager)
+            rendered = True
+        return {"kind": result.get("kind"), "heading": heading, "structured": result,
+                "notes": list(result.get("notes") or []), "rendered": rendered}
 
     # Map only TABLE to DICT for data retrieval; pass through other formats
     mapped_format = "DICT" if ofmt == "TABLE" else ofmt
@@ -393,6 +410,142 @@ def _render_table(console: Console, title: str, caption: str, data: Any, use_pag
         _print()
 
 
+# ── R3: the structured TABLE (kind "table") drawn natively with Rich ──
+
+#: Narrowest a main-table column may get before columns are dropped from the end (author's order).
+MIN_COLUMN_WIDTH = 14
+
+
+def _row_name(row: Mapping[str, Any], columns: Sequence[Mapping[str, Any]]) -> str:
+    for key in ("display_name", "displayName", "title", "qualified_name", "name"):
+        if row.get(key):
+            return str(row[key])
+    first = next((row.get(c["key"]) for c in columns if isinstance(row.get(c["key"]), (str, int, float))), None)
+    return str(first) if first not in (None, "") else "row"
+
+
+def _names(value: Any, label: Optional[str]) -> List[str]:
+    from pyegeria.view.output_formatter import _legacy_name
+    items = value if isinstance(value, list) else [value]
+    out = []
+    for item in items:
+        if isinstance(item, Mapping):
+            out.append(_legacy_name(dict(item), label) or _object_name(item))
+        elif item not in (None, ""):
+            out.append(str(item))
+    return out
+
+
+def _clamp(text: str, max_lines: int, width: int) -> str:
+    """Long text cut at max_lines lines of the column's width, with "…" (R3)."""
+    lines: List[str] = []
+    for para in str(text).splitlines() or [""]:
+        while len(para) > width and len(lines) < max_lines:
+            lines.append(para[:width])
+            para = para[width:]
+        if len(lines) >= max_lines:
+            break
+        lines.append(para)
+    cut = "\n".join(lines[:max_lines])
+    return cut + "…" if len(cut.replace("\n", "")) < len(str(text).replace("\n", "")) else cut
+
+
+def _rich_cell(value: Any, column: Mapping[str, Any], width: int) -> Any:
+    from rich.table import Table as _Table
+    from pyegeria.view.structured_table import DEFAULT_MAX_ITEMS, DEFAULT_MAX_LINES
+    if value in (None, "", [], {}):
+        return ""
+    render = column.get("render") or "text"
+    limit = column.get("max_items") or DEFAULT_MAX_ITEMS
+    if render == "subtable":
+        n = len(value) if isinstance(value, list) else 1
+        return f"{n} item{'s' if n != 1 else ''} · see below"
+    if render == "count":
+        return str(len(value)) if isinstance(value, (list, dict)) else str(value)
+    if render == "kv" and isinstance(value, Mapping):
+        grid = _Table.grid(padding=(0, 1))
+        grid.add_column(style="bold")
+        grid.add_column()
+        for k, v in value.items():
+            grid.add_row(str(k), _cell(v))
+        return grid
+    if isinstance(value, (list, Mapping)):
+        names = _names(value, column.get("label"))
+        shown, rest = names[:limit], len(names) - min(len(names), limit)
+        if render == "bullets":
+            return "\n".join(f"• {n}" for n in shown) + (f"\n+{rest} more" if rest else "")
+        return ", ".join(shown) + (f" (+{rest} more)" if rest else "")
+    if column.get("type") == "text":  # long text only: a short value is never cut
+        return _clamp(str(value), column.get("max_lines") or DEFAULT_MAX_LINES, max(width, 8))
+    return str(value)
+
+
+def render_structured_table(console: Console, result: Mapping[str, Any], title: str, caption: str = "",
+                            use_pager: bool = False) -> None:
+    """Draw a structured TABLE (kind "table", R1) with Rich (R3): bullets one per line, kv as a nested
+    table, long text cut at max_lines with "…", each subtable as a separate table after the main one
+    titled "<row name> · <column>" (owner §7.3), and columns that do not fit the terminal dropped from
+    the end of the author's order with a footer naming them. Notes (caps, reductions) follow."""
+    columns = list(result.get("columns") or [])
+    rows = list(result.get("rows") or [])
+    if not rows:
+        console.print("No results found.")
+        for note in result.get("notes") or []:
+            console.print(note)
+        return
+    fit = max(1, (console.width or 80) // MIN_COLUMN_WIDTH)
+    shown_cols, dropped = columns[:fit], columns[fit:]
+    width = max(MIN_COLUMN_WIDTH, (console.width or 80) // max(1, len(shown_cols)) - 3)
+
+    table = Table(title=title, caption=caption or None, show_lines=True, box=box.ROUNDED, expand=True)
+    for col in shown_cols:
+        table.add_column(str(col.get("name") or col.get("key")), overflow="fold")
+    subtables = []
+    for row in rows:
+        table.add_row(*[_rich_cell(row.get(c["key"]), c, width) for c in shown_cols])
+        for c in shown_cols:
+            if c.get("render") == "subtable" and isinstance(row.get(c["key"]), list) and row.get(c["key"]):
+                subtables.append((f"{_row_name(row, columns)} · {c.get('name')}", row[c["key"]]))
+
+    footer = []
+    if dropped:
+        footer.append(hidden_columns_footer([str(c.get("name") or c.get("key")) for c in dropped]))
+    if result.get("total") is None and result.get("shown"):
+        footer.append(f"{result['shown']} rows shown; the total was not counted.")
+    footer += list(result.get("notes") or [])
+
+    def _print():
+        console.print(table)
+        for sub_title, sub_rows in subtables:
+            sub = Table(title=sub_title, show_lines=True, box=box.SIMPLE_HEAD, expand=True)
+            keys: List[str] = []
+            for r in sub_rows:
+                for k in (r.keys() if isinstance(r, Mapping) else ["value"]):
+                    if k not in keys:
+                        keys.append(k)
+            for k in keys:
+                sub.add_column(str(k), overflow="fold")
+            for r in sub_rows:
+                r = r if isinstance(r, Mapping) else {"value": r}
+                sub.add_row(*[_sub_cell(r.get(k)) for k in keys])
+            console.print(sub)
+        for line in footer:
+            console.print(line)
+
+    if use_pager:
+        with console.pager():
+            _print()
+    else:
+        _print()
+
+
+def _sub_cell(value: Any) -> str:
+    """A subtable cell: two levels only, so a reduced third level shows as "N: names"."""
+    if isinstance(value, Mapping) and "count" in value and "names" in value:
+        return f"{value['count']}: {', '.join(value['names'])}"
+    return _cell(value)
+
+
 def write_output_file(content: str, report_spec: str, suffix: str) -> str:
     # Base directory is outbox/report_spec specific folder
     file_path = os.path.join(app_config.pyegeria_root, app_config.dr_egeria_outbox, f"{report_spec}")
@@ -525,7 +678,8 @@ def main(argv: Sequence[str] | None = None):
         write_file = output_format in TEXT_FILE_FORMATS
         result = list_generic(report_spec, output_format=output_format, params=params, view_server=args.server,
                               view_url=args.url, user=args.user, user_pass=args.password, jupyter=app_config.egeria_jupyter,
-                              width=settings.Environment.egeria_width, prompt_missing=True, write_file=write_file)
+                              width=settings.Environment.egeria_width, prompt_missing=True, write_file=write_file,
+                              table_shape="structured" if output_format == "TABLE" else "rows")  # R3
 
         if result.get("kind") == "empty":
             console.print("No results found.")
@@ -534,7 +688,10 @@ def main(argv: Sequence[str] | None = None):
         if output_format in {"TABLE", "DICT"}:
             heading = result.get("heading") or (get_report_spec_heading(report_spec) or f"Report: {report_spec}")
             caption = f"View Server '{args.server}' @ Platform - {args.url}"
-            _render_table(console, heading, caption, result.get("data"), notes=result.get("notes"))
+            if result.get("structured") is not None:
+                render_structured_table(console, result["structured"], heading, caption)
+            else:
+                _render_table(console, heading, caption, result.get("data"), notes=result.get("notes"))
             return
 
         # For narrative formats, either a file was written or content is returned

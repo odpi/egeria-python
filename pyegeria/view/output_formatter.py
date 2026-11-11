@@ -897,6 +897,57 @@ def list_item_name(item: dict) -> str:
     return f"(unnamed {t})"
 
 
+def _render_intent(column: Any, native: Any) -> str:
+    """The column's render (R2), else the default for its value's type (R1/R2)."""
+    from pyegeria.view.structured_table import DEFAULT_MAX_ITEMS, DEFAULT_RENDER, value_type
+    render = _get_column_attribute(column, 'render')
+    if render:
+        return render
+    vtype = value_type(native) or "scalar"
+    render = DEFAULT_RENDER[vtype]
+    limit = _get_column_attribute(column, 'max_items') or DEFAULT_MAX_ITEMS
+    if vtype == "elements" and isinstance(native, list) and len(native) > limit:
+        render = "count"
+    return render
+
+
+def markdown_cell_from_native(native: Any, render: str, *, max_items: Optional[int] = None,
+                              label: Optional[str] = None) -> str:
+    """One markdown table cell drawn from a native value by its render intent (R3):
+
+    - bullets: one item per line (`a<br>b`), "+N more" past max_items;
+    - join: "a, b (+N more: c, d)";
+    - kv: `k: v<br>...`;
+    - count: the number of items;
+    - text and anything else: the value's text.
+
+    Every piece is escaped for a cell (`|` escaped, newlines as `<br>`). A markdown document does not
+    clamp long text (REPORT and LIST are documents, not tiles)."""
+    from pyegeria.view.structured_table import DEFAULT_MAX_ITEMS
+    limit = max_items or DEFAULT_MAX_ITEMS
+    if isinstance(native, dict) and render != "kv" and (native.get("guid") or native.get("qualifiedName")):
+        native = [native]  # one related element
+    if render == "count":
+        return str(len(native)) if isinstance(native, (list, dict)) else markdown_cell(native)
+    if render == "kv" and isinstance(native, dict):
+        return "<br>".join(f"{markdown_cell(k)}: {markdown_cell(_legacy_text(v, label))}" for k, v in native.items())
+    if isinstance(native, list):
+        names = []
+        for item in native:
+            if isinstance(item, dict):
+                names.append(_legacy_name(item, label) or list_item_name(item))
+            elif item not in (None, ""):
+                names.append(str(item))
+        names = [markdown_cell(n) for n in names]
+        shown, rest = names[:limit], names[limit:]
+        if render == "bullets":
+            return "<br>".join(shown) + (f"<br>+{len(rest)} more" if rest else "")
+        return ", ".join(shown) + (f" (+{len(rest)} more: {', '.join(rest)})" if rest else "")
+    if isinstance(native, dict):
+        return "<br>".join(f"{markdown_cell(k)}: {markdown_cell(v)}" for k, v in native.items())
+    return markdown_cell(native)
+
+
 def markdown_bullets(value: Any) -> Any:
     """`format='bulleted-list'` in REPORT/MD (fix-now F10): a list becomes a markdown list, one item
     per line; anything else is returned unchanged."""
@@ -1623,7 +1674,16 @@ def generate_entity_md_table(elements: List[Dict],
                 # Summarize for LIST
                 col_format = _get_column_attribute(column, 'format')
                 cell_value = value
-                if isinstance(value, list) and not isinstance(col_format, str):
+                native = _get_column_attribute(column, 'native', value)
+                cell_ready = False  # R3: a cell drawn from its native value is already escaped
+                if (not col_format and not _get_column_attribute(column, 'detail_spec')
+                        and isinstance(native, (list, dict)) and native not in ([], {})):
+                    cell_value = markdown_cell_from_native(
+                        native, _render_intent(column, native),
+                        max_items=_get_column_attribute(column, 'max_items'),
+                        label=_get_column_attribute(column, 'label'))
+                    cell_ready = True
+                elif isinstance(value, list) and not isinstance(col_format, str):
                     names = []
                     for item in value:
                         if isinstance(item, dict):
@@ -1660,7 +1720,7 @@ def generate_entity_md_table(elements: List[Dict],
                         cell_value = format_for_markdown_table(cell_value, guid, format_type=col_format)
                     else:
                         cell_value = format_for_markdown_table(cell_value, guid)
-                elif isinstance(cell_value, str):
+                elif isinstance(cell_value, str) and not cell_ready:
                     cell_value = markdown_cell(cell_value)
 
                 row += f"{cell_value} | "

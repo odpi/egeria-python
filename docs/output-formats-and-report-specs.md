@@ -420,6 +420,19 @@ flags expose them; neither is a spec field, and the defaults return today's shap
     there is no global switch, because consumers split qualifiedNames.
   These fields travel in Egeria-held specs (microflow column items; `label` travels as `related_label`,
   since an item's own `label` is the column's title).
+- Renderers draw from native values (R3):
+  - **LIST (markdown table cells):** a list of scalars is bullets, one item per line (`a<br>b`), with
+    "+N more" past `max_items`; related elements are joined, "a, b (+N more: c, d)", in the column's
+    `label`; a map is `k: v<br>...`; a `count` column shows the number. `|` is escaped and newlines
+    become `<br>`. A `format=True` or `detail_spec` column keeps its own rendering. REPORT and LIST are
+    documents, not tiles, so long text is not clamped.
+  - **REPORT:** lists are markdown lists, and `detail_spec` columns are sub-reports after the row.
+  - **CLI (`run_report --output-format TABLE`):** asks for the structured table and draws it with Rich:
+    bullets one per line, a map as a nested table, long text cut at `max_lines` with "…", a sub-table as
+    a separate table after the main one titled "<row name> · <column>", and columns that do not fit the
+    terminal dropped from the end of the author's order with a footer naming them. The library function
+    `list_generic` keeps the flat rows unless asked (`table_shape="structured"`); the Textual report TUI
+    stays on flat rows.
 - Both apply to find-method specs; DOCUMENT, chart and analytic results ignore them. Any other value is
   refused with a sentence. `_async_run_report` takes the same flags.
 

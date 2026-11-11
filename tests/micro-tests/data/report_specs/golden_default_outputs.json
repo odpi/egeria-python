@@ -32,8 +32,8 @@
   "sha256": "5c423d8bcb9b76c9e25f3b3c42157c82edc527ad7656e85a4d4bcbd249db655c"
  },
  "governance_metrics/LIST": {
-  "bytes": 84044,
-  "sha256": "b615f7c3b9063134d16041b69c66c6bb3e08eac3badc17594f3426a5990bcd75"
+  "bytes": 84712,
+  "sha256": "acbf51856849705d85d83392ebb74598a7234ecdf3a681c6ad6238664bced947"
  },
  "governance_metrics/MD": {
   "bytes": 106293,
@@ -84,8 +84,8 @@
   "sha256": "f549cc573b37d790594fe27ccb68587b4d9a1685af865d0fed2661946cad9c67"
  },
  "ninety_day_plan/LIST": {
-  "bytes": 12430,
-  "sha256": "283f46f3c29d0eff2799b3def77f2ac83513e5a216a2e07cda16a08c73b7bdba"
+  "bytes": 12456,
+  "sha256": "ac60b2eb1cf2f5dc0c19b9958f02da7a3f75ea1bdaf3c7495de60e1cf20572f9"
  },
  "ninety_day_plan/MD": {
   "bytes": 22632,
@@ -108,8 +108,8 @@
   "sha256": "905aa52b7a1d3a3a9627f21c505173b82230dc50a9a73fc00f5e445250939114"
  },
  "risk_register/LIST": {
-  "bytes": 14913,
-  "sha256": "69026418e7cab2c63b99ae99ff90b73e5758aeba1d8f7e96c5eeaa0b0cfde171"
+  "bytes": 14983,
+  "sha256": "3c7bb07b2e1447f7a25f25e767e9e10db6713622652cf8391116888afe08e679"
  },
  "risk_register/MD": {
   "bytes": 19394,
