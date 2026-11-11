@@ -376,6 +376,174 @@ Notes
 
 ---
 
+### Structured tables and native rows
+
+Report specs render complex values (lists, maps, related elements) from **native values**. Two caller
+flags expose them; neither is a spec field, and the defaults return today's shapes unchanged.
+
+- `exec_report_spec(name, output_format="TABLE", table_shape="structured")` returns:
+
+  ```
+  {"kind": "table",
+   "columns": [{"key", "name", "type", "render", "detail_spec", "valid_values", "max_items", "max_lines"}],
+   "rows": [{key: native value}],
+   "total": int | None, "shown": int, "notes": [str]}
+  ```
+
+  `type` is inferred from the column's values: `scalar` (a short value), `text` (long or multi-line),
+  `list` (of scalars), `map`, `elements` (related elements) or `table` (sub-rows, e.g. a `detail_spec`
+  column). A column that mixes kinds takes the widest and the notes say so. `render` is the column's own,
+  else the default for its type (`text`, `bullets`, `kv`, `join`, `subtable`). Related elements are
+  `{guid, qualifiedName, displayName, type}`. A table shows two levels: an object inside a sub-row is
+  reduced to `{count, names, guid?}` with a note. `total` is the row count when the query did not fill
+  its page; when it did, `total` is `None` and the notes say "more may exist" (Egeria's paging contract).
+  `total_basis` says what `total` rests on: `"one page"` (the one page the query returned; a short page
+  is not promised to be the last).
+  An empty relationship cell says what it means: when the request asked for that relationship (graph
+  depth 1 or more, not filtered out) it is an explicit empty list and the notes say "none"; when it did
+  not, the cell is `null` and the notes say "not read". Egeria omits a relationship an element does not
+  have, so this is the only way to tell the two apart. The flat DICT and text outputs stay blank.
+- `exec_report_spec(name, output_format="DICT", dict_shape="native")` (and `generate_output(...,
+  dict_shape="native")`) returns DICT rows with native values: lists stay lists, related elements are
+  objects with both names, classifications and zones are lists, and `format=True` columns are not
+  stringified. The default `"flat"` is unchanged. `dict_shape` does not change TABLE (its structured form
+  is `table_shape`).
+- A column can say how it renders (R2), all optional:
+  - `render`: `text`, `join`, `bullets`, `kv`, `subtable`, `count` or `link`. Unset, it follows the
+    value's type (above); a column of related elements with more than `max_items` in a cell defaults to
+    `count`. `subtable` without a `detail_spec` uses the objects' own scalar keys.
+  - `max_items` (default 10): list items shown before "+N more".
+  - `max_lines` (default 3): lines of long text shown in web-oriented outputs. Markdown documents
+    (REPORT, LIST) do not clamp.
+  - `label`: `qualified_name` (the default) or `display_name`, the name a related element shows in text
+    outputs. Set it per column (Digital-Products sets `display_name` on Product Manager and License);
+    there is no global switch, because consumers split qualifiedNames.
+  These fields travel in Egeria-held specs (microflow column items; `label` travels as `related_label`,
+  since an item's own `label` is the column's title).
+- Renderers draw from native values (R3):
+  - **LIST (markdown table cells):** a list of scalars is bullets, one item per line (`a<br>b`), with
+    "+N more" past `max_items`; related elements are joined, "a, b (+N more: c, d)", in the column's
+    `label`; a map is `k: v<br>...`; a `count` column shows the number. `|` is escaped and newlines
+    become `<br>`. A `format=True` or `detail_spec` column keeps its own rendering. REPORT and LIST are
+    documents, not tiles, so long text is not clamped.
+  - **REPORT:** lists are markdown lists, and `detail_spec` columns are sub-reports after the row.
+  - **CLI (`run_report --output-format TABLE`):** asks for the structured table and draws it with Rich:
+    bullets one per line, a map as a nested table, long text cut at `max_lines` with "…", a sub-table as
+    a separate table after the main one titled "<row name> · <column>", and columns that do not fit the
+    terminal dropped from the end of the author's order with a footer naming them. The library function
+    `list_generic` keeps the flat rows unless asked (`table_shape="structured"`); the Textual report TUI
+    stays on flat rows.
+- Both apply to find-method specs; DOCUMENT, chart and analytic results ignore them. Any other value is
+  refused with a sentence. `_async_run_report` takes the same flags.
+
+### Document outputs
+
+A **DOCUMENT** spec produces one document in a published standard (for example DCAT-AP 3 as
+JSON-LD), not a rendering of columns. The document is built by an **exporter**: a function
+registered as an analytic function (`register_analytic_functions`) and named as the spec's
+`action.analytic_function`. A DOCUMENT spec has exactly one format, of type `DOCUMENT`, and it
+carries a `document` block:
+
+```python
+FormatSet(
+    heading="Toy Catalog", description="A toy document",
+    action=ActionParameter(analytic_function="toy_export"),
+    formats=[Format(types=["DOCUMENT"], document={
+        "standard": "toy-1",
+        "media_type": "application/json",
+        "file_name": "{scope}-toy.json",          # filled from the run's parameters
+        "validator": "json-schema",               # optional, a registered validator name
+        "validator_options": {"schema": "package:my_exporters/schemas/toy.schema.json"},
+    })])
+```
+
+Load rules (each refusal is a sentence):
+
+- `DOCUMENT` needs `action.analytic_function`. A DOCUMENT spec with a `function` (a find) and no
+  analytic function is refused: a find returns elements, not a document.
+- `DOCUMENT` stands alone in its format row, needs its `document` block, and the spec has no
+  other formats. Only a DOCUMENT format carries a `document` block.
+- `file_name` is a single file name: no path separators, no `..`, not hidden. Parameter values
+  filled into it are made file-name safe (`Folder::Sales/EU` becomes `Folder_Sales_EU`) and the
+  result is checked again. A parameter the run did not supply is refused.
+
+Run it with `exec_report_spec(name, output_format="DOCUMENT", params={...})`. Any other output
+format asked of a DOCUMENT spec is refused with a sentence naming DOCUMENT, and DOCUMENT asked of
+any other spec is refused. The exporter returns `{"text": str, "notes": [str, ...]}` (or a plain
+string). The result is:
+
+```
+{"kind": "document",
+ "standard": "toy-1", "media_type": "application/json", "file_name": "Sales-toy.json",
+ "text": "...",
+ "validation": {"state": "valid" | "invalid" | "not_validated",
+                "validator": "json-schema" | None,
+                "findings": ["/age: -1 is less than the minimum of 0", ...],
+                "reason": None | "why it was not validated"},
+ "notes": ["what the exporter left out, and why", ...]}
+```
+
+`validation` is **always present**; an unvalidated document says so and why, and is never
+presented as conforming:
+
+- no validator declared: `not_validated`, "no validator is declared for this standard";
+- a validator name not registered: `not_validated`, "the validator <name> is not registered";
+- a validator that raises: `not_validated`, "the validator <name> failed: <error type>[ at line L,
+  column C]". A crash says nothing about the document, so it is never a finding and never
+  `invalid`. The parser's own text is never put in `reason`: it can quote the input.
+- a spec's `schema`/`shapes` option that is not a `package:` reference: `not_validated`, "was not
+  run" (and refused when the spec loads as a model).
+
+`notes` is always present too: every field the exporter omitted or left empty is named there
+with the reason.
+
+**Validators** are registered by name with
+`pyegeria.view.document_validators.register_document_validators({name: fn})`, where
+`fn(text, media_type, **validator_options) -> (valid: bool, findings: list[str])`; a name already
+registered raises `DocumentValidatorCollision`. Two are built in:
+
+- `json-schema` (jsonschema): option `schema`, for JSON or YAML text;
+- `shacl` (pySHACL over rdflib): option `shapes` (Turtle), for JSON-LD, Turtle, RDF/XML,
+  N-Triples… by media type. Findings read "<severity> <focus node> <path>: <message>".
+
+A validator **never fetches over the network**. In a report spec, `schema`/`shapes` must be
+package data (`package:<dotted.package>/<resource path>`): specs can be held in Egeria and written
+by any user, so a spec may not make pyegeria read a local file or a URL. Code may pass a local path
+or `file://` URL to the validator functions directly, and `make_shacl_validator(shapes)` binds the
+`shacl` built-in to one shapes graph, for registering a validator per standard. An `http(s)`
+reference is refused; a JSON Schema `$ref` that is not in the schema is `Unresolvable`, never
+fetched; JSON-LD whose `@context` names another document is refused (inline the context). rdflib, pySHACL and jsonschema are plain pyegeria dependencies, so
+`not_validated` never means "an extra is missing".
+
+**CLI.** `run_report --report <spec> --output-format DOCUMENT --output <dir> --param scope=...`
+writes the document to `<dir>/<file_name>` and prints the validation line and any notes. It
+refuses to overwrite an existing file unless `--force` is given.
+
+#### DCAT Catalog (DCAT-AP 3)
+
+The built-in specs **DCAT Catalog** (JSON-LD) and **DCAT Catalog (Turtle)** export the Assets in
+a collection or folder as a DCAT-AP 3 catalog. The exporter is the analytic function
+`export_dcat` (`pyegeria/view/export_dcat.py`); the validator is `dcat-ap-3-shacl`, pySHACL over
+the DCAT-AP 3.0.1 shapes vendored in `pyegeria/view/data/dcat-ap-3/` (CC BY 4.0; source, commit
+and hashes in the README there).
+
+```bash
+run_report --report "DCAT Catalog" --output-format DOCUMENT --output ./out --param scope=DashboardFolder::Consumer::Portal
+```
+
+- `scope` is a collection qualifiedName or GUID; `export_dcat` also takes `search_string` (assets
+  in the asset domain), `format` (`jsonld` or `turtle`) and `page_size`.
+- A `dcat:Dataset` is an **Asset**. DigitalProducts and Agreements are Bitol's: each is named in
+  the notes ("<qn>: a DigitalProduct, not a DCAT dataset (Bitol)"), never exported.
+- It reads as the caller. A zoned Asset the caller can read is `dct:accessRights NON_PUBLIC`. A
+  member Egeria refuses with a 403 is noted as "not visible to <user>", never as absent.
+- Identity is the qualifiedName (`dct:identifier`); the GUID is `adms:identifier`. Nodes are
+  `urn:egeria:guid:<guid>` IRIs and the output is sorted, so the same metadata gives the same bytes.
+- Every property left out says why in the notes, grouped by reason with the datasets it applies
+  to (no Ownership, no License, no access path, no keywords...).
+
+---
+
 ### Vega-Lite Graphs and Automated Extraction
 
 PyEgeria supports dynamic Vega-Lite visualization for categorical data. Instead of manually extracting charting attributes for each API payload, the `materialize_egeria_summary` engine automatically scans Egeria API responses for numeric dictionaries (e.g. `typeMembership: {"Asset": 5, "GlossaryTerm": 10}`). When found, it automatically generates two attributes at the root level of the materialized object:

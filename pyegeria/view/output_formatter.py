@@ -22,6 +22,9 @@ import re
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from pyegeria.core._globals import MERMAID_GRAPH_TITLES, MERMAID_GRAPHS
+from contextlib import contextmanager
+from contextvars import ContextVar
+
 from pyegeria.core.utils import (camel_to_title_case, get_item_display_name)
 from pyegeria.core.config import settings
 from markdown_it import MarkdownIt
@@ -333,6 +336,120 @@ def _get_mermaid_graph_value(element: dict, key: str | None) -> Any:
         if isinstance(element_key, str) and element_key.lower() == key_lower:
             return value
     return None
+
+
+#: How DICT rows are shaped (R1): "flat" (default, today's stringified values) or "native" (lists stay
+#: lists; related elements are {guid, qualifiedName, displayName, type}; classifications and zones are
+#: lists; no format=True stringification). Set for one call by generate_output(dict_shape=...) or the
+#: executor, so find methods that render through their own generator pick it up without a new argument.
+DICT_SHAPES = ("flat", "native")
+_DICT_SHAPE: ContextVar[str] = ContextVar("pyegeria_dict_shape", default="flat")
+
+
+def check_dict_shape(dict_shape: Optional[str]) -> str:
+    """The dict shape asked for, or a refusal in words."""
+    shape = (dict_shape or "flat")
+    if shape not in DICT_SHAPES:
+        raise ValueError(f"dict_shape must be one of {', '.join(DICT_SHAPES)}, not {dict_shape!r}")
+    return shape
+
+
+@contextmanager
+def dict_shape_for_call(dict_shape: Optional[str]):
+    """Use `dict_shape` for DICT rows built inside this block."""
+    token = _DICT_SHAPE.set(check_dict_shape(dict_shape))
+    try:
+        yield
+    finally:
+        _DICT_SHAPE.reset(token)
+
+
+def current_dict_shape() -> str:
+    return _DICT_SHAPE.get()
+
+
+def related_ref(item: Any) -> Any:
+    """A related element as R1's native object {guid, qualifiedName, displayName, name, type} (only the
+    keys it has). Reads `relatedElement` (the Egeria 6 relationship shape) or the item itself; a string
+    stays a string."""
+    if not isinstance(item, dict):
+        return item
+    related = item.get('relatedElement') or item.get('related_element')
+    node = related if isinstance(related, dict) else item
+    props = (node.get('properties') or {}) if isinstance(related, dict) else {}
+    header = node.get('elementHeader') or {}
+    type_ = header.get('type')
+    ref = {"guid": header.get('guid') or node.get('guid'),
+           "qualifiedName": props.get('qualifiedName') or item.get('qualifiedName'),
+           "displayName": props.get('displayName') or item.get('displayName'),
+           "name": props.get('name') or item.get('name'),
+           "type": type_.get('typeName') if isinstance(type_, dict) else None}
+    return {k: v for k, v in ref.items() if v not in (None, "")}
+
+
+def _legacy_name(value: Any, label: Optional[str] = None) -> Optional[str]:
+    if isinstance(value, dict):
+        if label == "display_name":  # Column.label (R2): the display name, opted in per column
+            return value.get('displayName') or value.get('name') or value.get('qualifiedName')
+        return value.get('qualifiedName') or value.get('displayName') or value.get('name')
+    if value in (None, ""):
+        return None
+    return str(value)
+
+
+def _legacy_text(value: Any, label: Optional[str] = None) -> str:
+    """The flat text a native value has always rendered as (R1: every legacy string comes from here).
+    A list joins its items' names with ", " (an unnamed related element is left out, as before); a
+    related element or classification gives its name, qualifiedName first unless the column's
+    `label` is "display_name" (R2); a scalar its str."""
+    if isinstance(value, list):
+        return ", ".join(n for n in (_legacy_name(v, label) for v in value) if n)
+    return _legacy_name(value, label) or ""
+
+
+_LINK_WRAP = re.compile(r"^\s*\[(.*)\]\(#[^)]*\)\s*$", re.S)
+
+
+def value_names(value: Any) -> list:
+    """The names a DICT cell holds, whether the row is native or flat (R4): a native list gives each
+    item's qualifiedName (else displayName, name or its text); a flat string is split on commas, after
+    unwrapping format_for_markdown_table's "[text](#guid)" link. Never iterates a string by character."""
+    if value in (None, ""):
+        return []
+    if isinstance(value, dict):
+        value = [value]
+    if isinstance(value, (list, tuple)):
+        out = []
+        for item in value:
+            name = (item.get("qualifiedName") or item.get("displayName") or item.get("name")
+                    if isinstance(item, dict) else item)
+            if name not in (None, ""):
+                out.append(str(name).strip())
+        return out
+    text = str(value)
+    m = _LINK_WRAP.match(text)
+    if m:
+        text = m.group(1)
+    return [part.strip() for part in text.split(",") if part.strip()]
+
+
+def _zone_list(header: Any) -> list:
+    """The zones an element is in, as a list (R1's native value)."""
+    if not isinstance(header, dict):
+        return []
+    candidates = [header.get("zoneMembership")]
+    for item in header.get("classifications") or []:
+        if isinstance(item, dict) and item.get("classificationName") == "ZoneMembership":
+            candidates.append(item)
+    for cls in candidates:
+        if not isinstance(cls, dict):
+            continue
+        zones = (cls.get("classificationProperties") or {}).get("zoneMembership")
+        if isinstance(zones, str):
+            zones = [zones]
+        if isinstance(zones, (list, tuple)):
+            return [str(z) for z in zones if z not in (None, "")]
+    return []
 
 
 def _zone_membership_text(header: Any) -> str:
@@ -748,6 +865,98 @@ def materialize_egeria_summary(summary: dict, columns_struct: Optional[dict] = N
 
     return res
 
+#: Spec column keys whose Egeria element field has another name (fix-now F7). Used only when the
+#: element has no field of the column's own name. `members`: Egeria returns a collection's (and so a
+#: digital product's) members as `collectionMembers` (CollectionMembership, 0021).
+RELATIONSHIP_KEY_ALIASES = {"members": "collectionMembers"}
+
+#: What FORM/MD say in place of a diagram they do not draw (fix-now F3).
+DIAGRAM_OMITTED = "_Diagram omitted in this format; see REPORT or MERMAID._"
+
+
+def markdown_cell(value: Any) -> str:
+    """A value made safe for one markdown table cell (fix-now F9): `|` escaped, newlines as `<br>`
+    (GFM), markdown emphasis kept."""
+    text = "" if value is None else str(value)
+    return text.replace("\r\n", "\n").replace("|", "\\|").replace("\n", "<br>")
+
+
+def list_item_name(item: dict) -> str:
+    """The name a LIST cell shows for an object in a list value: its name, else its first string
+    value, else "(unnamed <type>)". An item is never dropped (fix-now F6)."""
+    nm = item.get('name') or item.get('displayName') or item.get('qualifiedName')
+    if not nm and isinstance(item.get('type'), str):
+        nm = item.get('type')
+    if nm:
+        return str(nm)
+    first = next((v for v in item.values() if isinstance(v, str) and v.strip()), None)
+    if first:
+        return first
+    t = item.get('type')
+    t = (t.get('typeName') if isinstance(t, dict) else t) or item.get('typeName') or "item"
+    return f"(unnamed {t})"
+
+
+def _render_intent(column: Any, native: Any) -> str:
+    """The column's render (R2), else the default for its value's type (R1/R2)."""
+    from pyegeria.view.structured_table import DEFAULT_MAX_ITEMS, DEFAULT_RENDER, value_type
+    render = _get_column_attribute(column, 'render')
+    if render:
+        return render
+    vtype = value_type(native) or "scalar"
+    render = DEFAULT_RENDER[vtype]
+    limit = _get_column_attribute(column, 'max_items') or DEFAULT_MAX_ITEMS
+    if vtype == "elements" and isinstance(native, list) and len(native) > limit:
+        render = "count"
+    return render
+
+
+def markdown_cell_from_native(native: Any, render: str, *, max_items: Optional[int] = None,
+                              label: Optional[str] = None) -> str:
+    """One markdown table cell drawn from a native value by its render intent (R3):
+
+    - bullets: one item per line (`a<br>b`), "+N more" past max_items;
+    - join: "a, b (+N more: c, d)";
+    - kv: `k: v<br>...`;
+    - count: the number of items;
+    - text and anything else: the value's text.
+
+    Every piece is escaped for a cell (`|` escaped, newlines as `<br>`). A markdown document does not
+    clamp long text (REPORT and LIST are documents, not tiles)."""
+    from pyegeria.view.structured_table import DEFAULT_MAX_ITEMS
+    limit = max_items or DEFAULT_MAX_ITEMS
+    if isinstance(native, dict) and render != "kv" and (native.get("guid") or native.get("qualifiedName")):
+        native = [native]  # one related element
+    if render == "count":
+        return str(len(native)) if isinstance(native, (list, dict)) else markdown_cell(native)
+    if render == "kv" and isinstance(native, dict):
+        return "<br>".join(f"{markdown_cell(k)}: {markdown_cell(_legacy_text(v, label))}" for k, v in native.items())
+    if isinstance(native, list):
+        names = []
+        for item in native:
+            if isinstance(item, dict):
+                names.append(_legacy_name(item, label) or list_item_name(item))
+            elif item not in (None, ""):
+                names.append(str(item))
+        names = [markdown_cell(n) for n in names]
+        shown, rest = names[:limit], names[limit:]
+        if render == "bullets":
+            return "<br>".join(shown) + (f"<br>+{len(rest)} more" if rest else "")
+        return ", ".join(shown) + (f" (+{len(rest)} more: {', '.join(rest)})" if rest else "")
+    if isinstance(native, dict):
+        return "<br>".join(f"{markdown_cell(k)}: {markdown_cell(v)}" for k, v in native.items())
+    return markdown_cell(native)
+
+
+def markdown_bullets(value: Any) -> Any:
+    """`format='bulleted-list'` in REPORT/MD (fix-now F10): a list becomes a markdown list, one item
+    per line; anything else is returned unchanged."""
+    if isinstance(value, list):
+        items = [get_item_display_name(i) for i in value if i not in (None, "")]
+        return "\n".join(f"- {i}" for i in items) if items else ""
+    return value
+
+
 def render_rich_value(value: Any, output_format: str) -> str:
     """Visually format rich nested values for text-based reports.
     - LIST: summarized string (handled elsewhere)
@@ -768,7 +977,8 @@ def render_rich_value(value: Any, output_format: str) -> str:
             "| :--- | :--- |"
         ]
         for k, v in d.items():
-            table_lines.append(f"| {camel_to_title_case(k) if isinstance(k, str) else k} | {v} |")
+            label = camel_to_title_case(k) if isinstance(k, str) else k
+            table_lines.append(f"| {markdown_cell(label)} | {markdown_cell(v)} |")
         return "\n".join(table_lines)
 
     if isinstance(value, dict) and is_flat_dict(value):
@@ -857,8 +1067,13 @@ def make_md_attribute(attribute_name: str, attribute_value: str|list|dict, outpu
             return "\n"
 
     if output_type in ["FORM", "MD"]:
-        if attribute_name.lower() in [ "mermaid", "solutionBlueprintMermaidGraph", "links", "implemented by", "sub_components"]:
-            return '\n'
+        # A diagram is not drawn in FORM/MD (fix-now F3): say so, never drop it silently. An empty one
+        # has nothing to omit. (`links`, `implemented by` and `sub_components` render like any value.)
+        if _is_mermaid_attribute(attribute_name, attribute_key) or \
+                (attribute_name or "").lower() in ("mermaid", "solutionblueprintmermaidgraph"):
+            if attribute_value in (None, ""):
+                return "\n"
+            return f"### {attribute_title}\n{DIAGRAM_OMITTED}\n\n"
 
         output = f"### {attribute_title}\n{attribute_value}\n\n"
 
@@ -870,14 +1085,15 @@ def make_md_attribute(attribute_name: str, attribute_value: str|list|dict, outpu
                 attribute_value = _normalize_escaped_mermaid_newlines(attribute_value)
                 norm_mermaid = _normalize_mermaid_graph(attribute_value)
                 output = f"### {attribute_title}\n\n```mermaid\n{norm_mermaid}\n```\n"
-        elif attribute_value:
+        elif attribute_value is not None and attribute_value != "":  # False and 0 are values (fix-now F2)
             output = f"### {attribute_title}\n{attribute_value}\n\n"
     return output
 
 
 def format_for_markdown_table(text: str, guid: str = None, format_type: str = None) -> str:
     """
-    Format text for markdown tables by joining list items with commas, replacing newlines with spaces, and escaping pipe characters.
+    Format text for markdown tables by joining list items with commas, turning newlines into <br> and escaping
+    pipe characters (fix-now F9; markdown emphasis is kept).
     No truncation is applied to allow full-length text display regardless of console width.
 
     Args:
@@ -898,7 +1114,7 @@ def format_for_markdown_table(text: str, guid: str = None, format_type: str = No
     if not isinstance(text, str):
         text = str(text)
 
-    t = text.replace("\n", " ").replace("|", "\\|")
+    t = markdown_cell(text)
     if '::' in t and guid:
         t = f" [{t}](#{guid}) "
     return t
@@ -1273,9 +1489,11 @@ def generate_entity_md(elements: List[Dict],
 
                 if value in (None, "") and key in additional_props:
                     value = additional_props[key]
-                if column.get('format'):
+                if column.get('format') == "bulleted-list" and output_format in ('REPORT', 'MD'):
+                    value = markdown_bullets(value)  # fix-now F10: honoured outside LIST
+                elif column.get('format'):
                     value = format_for_markdown_table(value, guid)
-                
+
                 elements_md += make_md_attribute(name, value, output_format, attribute_key=key)
                 if companions and key in _CONTEXT_GRAPH_KEYS:
                     for companion in companions:
@@ -1320,7 +1538,9 @@ def generate_entity_md(elements: List[Dict],
                     value = props[key]
                 elif key in additional_props:
                     value = additional_props[key]
-                if column.get('format'):
+                if column.get('format') == "bulleted-list" and output_format in ('REPORT', 'MD'):
+                    value = markdown_bullets(value)  # fix-now F10
+                elif column.get('format'):
                     value = format_for_markdown_table(value, guid or props.get('GUID'))
                 elements_md += make_md_attribute(name, value, output_format, attribute_key=key)
                 if companions and key in _CONTEXT_GRAPH_KEYS:
@@ -1454,12 +1674,20 @@ def generate_entity_md_table(elements: List[Dict],
                 # Summarize for LIST
                 col_format = _get_column_attribute(column, 'format')
                 cell_value = value
-                if isinstance(value, list) and not isinstance(col_format, str):
+                native = _get_column_attribute(column, 'native', value)
+                cell_ready = False  # R3: a cell drawn from its native value is already escaped
+                if (not col_format and not _get_column_attribute(column, 'detail_spec')
+                        and isinstance(native, (list, dict)) and native not in ([], {})):
+                    cell_value = markdown_cell_from_native(
+                        native, _render_intent(column, native),
+                        max_items=_get_column_attribute(column, 'max_items'),
+                        label=_get_column_attribute(column, 'label'))
+                    cell_ready = True
+                elif isinstance(value, list) and not isinstance(col_format, str):
                     names = []
                     for item in value:
                         if isinstance(item, dict):
-                            nm = item.get('name') or item.get('displayName') or item.get('qualifiedName') or item.get('type')
-                            if nm: names.append(nm)
+                            names.append(list_item_name(item))  # never dropped (fix-now F6)
                         elif item is not None:
                             names.append(str(item))
                     cell_value = ", ".join(names)
@@ -1492,8 +1720,8 @@ def generate_entity_md_table(elements: List[Dict],
                         cell_value = format_for_markdown_table(cell_value, guid, format_type=col_format)
                     else:
                         cell_value = format_for_markdown_table(cell_value, guid)
-                elif isinstance(cell_value, str):
-                    cell_value = cell_value.replace("\n", " ").replace("|", "\\|")
+                elif isinstance(cell_value, str) and not cell_ready:
+                    cell_value = markdown_cell(cell_value)
 
                 row += f"{cell_value} | "
         else:
@@ -1517,7 +1745,7 @@ def generate_entity_md_table(elements: List[Dict],
                     else:
                         value = format_for_markdown_table(value, guid or props.get('GUID'))
                 elif isinstance(value, str):
-                    value = value.replace("\n", " ").replace("|", "\\|")
+                    value = markdown_cell(value)
 
                 row += f"{value} | "
 
@@ -1600,6 +1828,8 @@ def generate_entity_dict(elements: List[Dict],
     """
     result = []
     row_context_keys = []
+    # DICT under dict_shape="native"; TABLE only under the executor's structured request (R1)
+    native_shape = output_format in ('DICT', 'TABLE') and current_dict_shape() == "native"
 
     #####
     # Add attributes based on column spec if available, otherwise, add all
@@ -1651,10 +1881,13 @@ def generate_entity_dict(elements: List[Dict],
                 name = column.get('name')
                 value = column.get('value')
                 detail_spec = column.get('detail_spec')
-                
+
                 if (value in (None, "")) and key in additional_props:
                     value = additional_props[key]
-                if column.get('format'):
+                if native_shape:
+                    if 'native' in column:
+                        value = column['native']  # R1: lists, related elements as objects
+                elif column.get('format'):
                     value = format_for_markdown_table(value, guid)
 
                 # Master-Detail support for DICT format
@@ -1871,6 +2104,7 @@ def populate_common_columns(
     
     # Pre-compute relationship values for efficiency
     relationship_values = {}
+    relationship_natives = {}  # R1: the same values, native (related elements as objects)
     if include_relationships:
         formats = columns_struct.get('formats') or {}
         columns = formats.get('attributes') if isinstance(formats, dict) else None
@@ -1882,29 +2116,23 @@ def populate_common_columns(
                 if not key_snake:
                     continue
                 key_camel = to_camel_case(key_snake)
+                if key_camel not in element and RELATIONSHIP_KEY_ALIASES.get(key_snake) in element:
+                    key_camel = RELATIONSHIP_KEY_ALIASES[key_snake]  # fix-now F7
                 if key_camel in element:
                     top_val = element.get(key_camel)
-                    derived_value = ""
+                    if isinstance(top_val, (list, dict)) and col.get('detail_spec'):
+                        relationship_values[key_snake] = top_val  # raw, for master-detail
+                        continue
                     if isinstance(top_val, list):
-                        if col.get('detail_spec'):
-                            relationship_values[key_snake] = top_val
-                            continue
-                        names = []
-                        for item in top_val:
-                            nm = _extract_name_from_relationship_item(item)
-                            if nm:
-                                names.append(nm)
-                        derived_value = ", ".join(names)
+                        native = [related_ref(item) for item in top_val]
                     elif isinstance(top_val, dict):
-                        if col.get('detail_spec'):
-                            relationship_values[key_snake] = top_val  # Preserve raw dict for master-detail
-                            continue
-                        nm = _extract_name_from_relationship_item(top_val)
-                        derived_value = nm or ""
+                        native = related_ref(top_val)
                     else:
-                        derived_value = str(top_val) if top_val is not None else ""
+                        native = top_val
+                    derived_value = _legacy_text(native, col.get('label'))
                     if derived_value:
                         relationship_values[key_snake] = derived_value
+                        relationship_natives[key_snake] = native
     
     # Single pass through columns - consolidate all operations
     col_data = columns_struct
@@ -1922,6 +2150,7 @@ def populate_common_columns(
         # Skip if already has a value
         if column.get('value') not in (None, ""):
             continue
+        column.pop('native', None)
         
         # 0) Dot notation path resolution
         if "." in key:
@@ -1938,7 +2167,9 @@ def populate_common_columns(
         # 0a) Zone Membership: v6 keeps it as an ElementClassification in the header;
         # show the zones as one string, never the classification object.
         if key == 'zone_membership' and not props.get('zoneMembership'):
-            column['value'] = _zone_membership_text(header)
+            zones = _zone_list(header)
+            column['native'] = zones
+            column['value'] = _legacy_text(zones)
             continue
 
         # 1) Try properties (camelCase conversion)
@@ -1951,20 +2182,23 @@ def populate_common_columns(
         if key_camel in header:
             h_val = header.get(key_camel)
             if isinstance(h_val, list):
-                # Summarize list of objects (like projectRoles)
-                names = []
+                # A list of classifications (like projectKinds): native {name, properties?}; the
+                # legacy text joins the names with ", " (fix-now F1).
+                native = []
                 for item in h_val:
                     if isinstance(item, dict):
-                        # Try to find a name generically
                         nm = item.get('classificationName') or item.get('name') or item.get('displayName') or item.get('qualifiedName')
                         if nm:
-                            names.append(nm)
+                            entry = {"name": nm}
+                            if item.get('classificationProperties'):
+                                entry["properties"] = item['classificationProperties']
+                            native.append(entry)
                         else:
-                            # If no name found, maybe it's a simple dict we can stringify or just skip
-                            names.append(str(item))
+                            native.append(str(item))  # nameless: its text, as before
                     else:
-                        names.append(str(item))
-                column['value'] = "\n, ".join(names)
+                        native.append(str(item))
+                column['native'] = native
+                column['value'] = _legacy_text(native)
             elif isinstance(h_val, dict):
                 # Generic fallback for dicts in header
                 column['value'] = h_val.get('name') or h_val.get('displayName') or h_val.get('qualifiedName') or str(h_val)
@@ -1984,6 +2218,8 @@ def populate_common_columns(
         # 3) Try relationship values
         if include_relationships and key in relationship_values:
             column['value'] = relationship_values[key]
+            if key in relationship_natives:
+                column['native'] = relationship_natives[key]
             continue
         
         # 4) Try subject area
@@ -2058,7 +2294,8 @@ def _extract_name_from_relationship_item(item: Any) -> Optional[str]:
             related = item.get('relatedElement') or item.get('related_element')
             if isinstance(related, dict):
                 props = related.get('properties') or {}
-                name = (
+                name = (  # qualifiedName first (My Egeria splits it; the "::" link wrap needs it). A
+                    # display-name label is per column (Column.label, R2), never a global flip (F7 read-back).
                     props.get('qualifiedName')
                     or props.get('displayName')
                     or props.get('name')
@@ -2400,6 +2637,7 @@ def generate_output(elements: Union[Dict, List[Dict]],
                get_additional_props_func: Optional[Callable] = None,
                columns_struct: dict = None,
                include_preamble: bool = True,
+               dict_shape: Optional[str] = None,
                **kwargs) -> Union[str, list[dict]]:
     """
     Generate output in the specified format for the given elements.
@@ -2466,6 +2704,10 @@ def generate_output(elements: Union[Dict, List[Dict]],
         return markdown_to_html(report_output)
 
     if output_format in ('DICT', 'TABLE'):
+        if dict_shape is not None:  # R1: an explicit shape for this call; otherwise the caller's context
+            with dict_shape_for_call(dict_shape):
+                return generate_entity_dict(elements, extract_properties_func, get_additional_props_func,
+                                            columns_struct=columns_struct, output_format=output_format)
         return generate_entity_dict(elements, extract_properties_func, get_additional_props_func, columns_struct=columns_struct, output_format=output_format)
     elif output_format == 'LIST':
         return generate_entity_md_table(elements, search_string, entity_type, extract_properties_func, columns_struct, get_additional_props_func, output_format=output_format)

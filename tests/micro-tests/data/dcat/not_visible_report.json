@@ -1,0 +1,44 @@
+{
+ "calls": [
+  {
+   "args": [
+    "eccbf12f-d1df-48db-b2b6-dcfb2e30504b"
+   ],
+   "error": {
+    "additional_info": {
+     "actionDescription": "getMetadataElementByGUID",
+     "class": "OpenMetadataRootElementResponse",
+     "exceptionClassName": "org.odpi.openmetadata.frameworks.openmetadata.ffdc.UserNotAuthorizedException",
+     "exceptionErrorMessage": "OPEN-METADATA-SECURITY-403-020 User erinoverview is not authorized to issue an operation Read on Report element eccbf12f-d1df-48db-b2b6-dcfb2e30504b",
+     "exceptionErrorMessageId": "OPEN-METADATA-SECURITY-403-020",
+     "exceptionErrorMessageParameters": [
+      "erinoverview",
+      "Read",
+      "Report",
+      "eccbf12f-d1df-48db-b2b6-dcfb2e30504b"
+     ],
+     "exceptionProperties": {
+      "userId": "erinoverview"
+     },
+     "exceptionSubclassName": "org.odpi.openmetadata.frameworks.openmetadata.ffdc.UserNotAuthorizedException",
+     "exceptionSystemAction": "The security service detected an unauthorized access to a glossary.",
+     "exceptionURL": "https://egeria-project.org/features/metadata-security/overview/",
+     "exceptionUserAction": "Review the security policies and settings to determine if this access to the element should be allowed or not.  Take action to either change the security sessions or determine the reason for the unauthorized request.",
+     "relatedHTTPCode": 403,
+     "requestId": "036fdd5b-5634-4d4e-b326-37c0af0c85a4",
+     "userid": "erinoverview"
+    },
+    "class": "PyegeriaUnauthorizedException",
+    "message": "HTTP Code: 403 OPEN-METADATA-SECURITY-403-020 User erinoverview is not authorized to issue an operation Read on Report element eccbf12f-d1df-48db-b2b6-dcfb2e30504b (user `erinoverview`)",
+    "related_http_code": 403
+   },
+   "kwargs": {
+    "output_format": "JSON"
+   },
+   "method": "get_element_by_guid"
+  }
+ ],
+ "captured": "2026-11-11T16:05:25Z",
+ "server": "laz qs-view-server",
+ "user": "erinoverview"
+}

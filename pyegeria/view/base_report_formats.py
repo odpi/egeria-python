@@ -2676,8 +2676,8 @@ formats=[
                     Column(name='Members', key='members', format=True),
                     Column(name='Uses Products', key='uses_digital_products'),
                     Column(name='Used by Products', key='used_by_digital_products'),
-                    Column(name='Product Manager', key='assigned_actors'),
-                    Column(name='License', key='governed_by'),
+                    Column(name='Product Manager', key='assigned_actors', label='display_name'),
+                    Column(name='License', key='governed_by', label='display_name'),
                     Column(name='Solution Blueprint', key='solution_designs'),
                 ]),
             Format(
@@ -2693,8 +2693,8 @@ formats=[
                     Column(name='Members', key='members', format=True),
                     Column(name='Uses Products', key='uses_digital_products'),
                     Column(name='Used by Products', key='used_by_digital_products'),
-                    Column(name='Product Manager', key='assigned_actors'),
-                    Column(name='License', key='governed_by'),
+                    Column(name='Product Manager', key='assigned_actors', label='display_name'),
+                    Column(name='License', key='governed_by', label='display_name'),
                     Column(name='Solution Blueprint', key='solution_designs'),
                     Column(name="Mermaid", key="mermaid")
                 ],
@@ -4713,6 +4713,32 @@ _QUESTION_SPEC_FORMATS = FormatSetDict({
             required_params=["search_string"],
             spec_params={"_type": "FolderCollection"},
         ),
+    ),
+    # SD-2: standard documents. A DOCUMENT spec produces one document (SD-1); its exporter is the
+    # analytic function export_dcat. Run with output_format "DOCUMENT" and a `scope` parameter.
+    "DCAT Catalog": FormatSet(
+        heading="DCAT Catalog",
+        description="A DCAT-AP 3 catalog (JSON-LD) of the Assets in a collection or folder, read as you. Give "
+                    "`scope`: the collection's qualifiedName or GUID. DigitalProducts and Agreements are Bitol's "
+                    "and are named in the notes, not exported; validated against the vendored DCAT-AP 3.0.1 "
+                    "SHACL shapes. Run with output_format DOCUMENT.",
+        family="Standard Documents",
+        target_type="Collection",
+        formats=[Format(types=["DOCUMENT"], document={
+            "standard": "dcat-ap-3", "media_type": "application/ld+json",
+            "file_name": "{scope}-dcat.jsonld", "validator": "dcat-ap-3-shacl"})],
+        action=ActionParameter(analytic_function="export_dcat", analytic_spec_params={"format": "jsonld"}),
+    ),
+    "DCAT Catalog (Turtle)": FormatSet(
+        heading="DCAT Catalog (Turtle)",
+        description="The DCAT Catalog document as Turtle: a DCAT-AP 3 catalog of the Assets in a collection or "
+                    "folder, read as you. Give `scope`. Run with output_format DOCUMENT.",
+        family="Standard Documents",
+        target_type="Collection",
+        formats=[Format(types=["DOCUMENT"], document={
+            "standard": "dcat-ap-3", "media_type": "text/turtle",
+            "file_name": "{scope}-dcat.ttl", "validator": "dcat-ap-3-shacl"})],
+        action=ActionParameter(analytic_function="export_dcat", analytic_spec_params={"format": "turtle"}),
     ),
 })
 

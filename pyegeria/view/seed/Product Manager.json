@@ -199,8 +199,8 @@
        {"field": "members", "label": "Members", "format": true},
        {"field": "uses_digital_products", "label": "Uses Products"},
        {"field": "used_by_digital_products", "label": "Used by Products"},
-       {"field": "assigned_actors", "label": "Product Manager"},
-       {"field": "governed_by", "label": "License"},
+       {"field": "assigned_actors", "label": "Product Manager", "related_label": "display_name"},
+       {"field": "governed_by", "label": "License", "related_label": "display_name"},
        {"field": "solution_designs", "label": "Solution Blueprint"}
       ]
      },
@@ -225,8 +225,8 @@
        {"field": "members", "label": "Members", "format": true},
        {"field": "uses_digital_products", "label": "Uses Products"},
        {"field": "used_by_digital_products", "label": "Used by Products"},
-       {"field": "assigned_actors", "label": "Product Manager"},
-       {"field": "governed_by", "label": "License"},
+       {"field": "assigned_actors", "label": "Product Manager", "related_label": "display_name"},
+       {"field": "governed_by", "label": "License", "related_label": "display_name"},
        {"field": "solution_designs", "label": "Solution Blueprint"},
        {"field": "mermaid", "label": "Mermaid"}
       ]

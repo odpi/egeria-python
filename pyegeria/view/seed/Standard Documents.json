@@ -1,0 +1,60 @@
+{
+ "format": "pyegeria-seed/1",
+ "family": "Standard Documents",
+ "specs": [
+  {
+   "label": "DCAT Catalog",
+   "envelope": {
+    "heading": "DCAT Catalog",
+    "description": "A DCAT-AP 3 catalog (JSON-LD) of the Assets in a collection or folder, read as you. Give `scope`: the collection's qualifiedName or GUID. DigitalProducts and Agreements are Bitol's and are named in the notes, not exported; validated against the vendored DCAT-AP 3.0.1 SHACL shapes. Run with output_format DOCUMENT.",
+    "family": "Standard Documents",
+    "target_type_name": "Collection",
+    "aliases": []
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [
+     {
+      "stage": "producer/analytic",
+      "function": "export_dcat",
+      "params": {"format": "jsonld"}
+     }
+    ],
+    "formatters": {
+     "DOCUMENT": {
+      "columns": [],
+      "document": {"standard": "dcat-ap-3", "media_type": "application/ld+json", "file_name": "{scope}-dcat.jsonld", "validator": "dcat-ap-3-shacl"}
+     }
+    }
+   }
+  },
+  {
+   "label": "DCAT Catalog (Turtle)",
+   "envelope": {
+    "heading": "DCAT Catalog (Turtle)",
+    "description": "The DCAT Catalog document as Turtle: a DCAT-AP 3 catalog of the Assets in a collection or folder, read as you. Give `scope`. Run with output_format DOCUMENT.",
+    "family": "Standard Documents",
+    "target_type_name": "Collection",
+    "aliases": []
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [
+     {
+      "stage": "producer/analytic",
+      "function": "export_dcat",
+      "params": {"format": "turtle"}
+     }
+    ],
+    "formatters": {
+     "DOCUMENT": {
+      "columns": [],
+      "document": {"standard": "dcat-ap-3", "media_type": "text/turtle", "file_name": "{scope}-dcat.ttl", "validator": "dcat-ap-3-shacl"}
+     }
+    }
+   }
+  }
+ ]
+}

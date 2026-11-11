@@ -1,0 +1,2145 @@
+{
+ "calls": [
+  {
+   "args": [
+    "DashboardFolder::Consumer::Portal"
+   ],
+   "kwargs": {
+    "graph_query_depth": 0,
+    "output_format": "JSON"
+   },
+   "method": "get_collections_by_name",
+   "result": [
+    {
+     "class": "OpenMetadataRootElement",
+     "elementHeader": {
+      "anchor": {
+       "class": "ElementClassification",
+       "classificationName": "Anchors",
+       "classificationOrigin": "ASSIGNED",
+       "classificationProperties": {
+        "anchorDomainName": "AuthoredReferenceable",
+        "anchorTypeName": "CollectionFolder",
+        "class": "AnchorsProperties",
+        "typeName": "Anchors"
+       },
+       "headerVersion": 0,
+       "origin": {
+        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+        "homeMetadataCollectionName": "qs-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "sourceServer": "qs-metadata-store"
+       },
+       "status": "ACTIVE",
+       "type": {
+        "typeCategory": "CLASSIFICATION_DEF",
+        "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+        "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+        "typeName": "Anchors",
+        "typeVersion": 1
+       },
+       "versions": {
+        "createTime": "2026-11-11T11:01:59.943+00:00",
+        "createdBy": "erinoverview",
+        "lastRequestId": "36642336-03f0-4412-a175-59f5886d8438",
+        "maintainedBy": [
+         "erinoverview"
+        ],
+        "updateTime": "2026-11-11T11:01:59.943+00:00",
+        "updatedBy": "erinoverview",
+        "version": 1
+       }
+      },
+      "class": "ElementHeader",
+      "guid": "6e0a053f-3def-4618-8020-562b8f63b531",
+      "headerVersion": 0,
+      "memberPopularityProfile": {
+       "class": "ElementClassification",
+       "classificationName": "MemberPopularityProfile",
+       "classificationOrigin": "ASSIGNED",
+       "classificationProperties": {
+        "class": "MemberPopularityProfileProperties",
+        "deleteAttachmentCountTotal": 0,
+        "deleteFeedbackCountTotal": 0,
+        "explicitGetCountProfile": {
+         "05d9cbb7-a9ff-49d9-ae51-9fff4448b4f8": 53,
+         "24dafe68-cde6-4628-8432-8233fd6503e9": 168,
+         "44906da6-1e48-40c7-8cb4-330d36b2bd3d": 65,
+         "6405eb9f-53b8-49e5-b8e7-53c5b8b68ebc": 53,
+         "7eb091c4-20ec-4753-88d1-8d98384df243": 57
+        },
+        "explicitGetCountTotal": 396,
+        "findCountProfile": {
+         "05d9cbb7-a9ff-49d9-ae51-9fff4448b4f8": 178,
+         "24dafe68-cde6-4628-8432-8233fd6503e9": 406,
+         "44906da6-1e48-40c7-8cb4-330d36b2bd3d": 229,
+         "6405eb9f-53b8-49e5-b8e7-53c5b8b68ebc": 180,
+         "7eb091c4-20ec-4753-88d1-8d98384df243": 188
+        },
+        "findCountTotal": 1181,
+        "typeName": "MemberPopularityProfile",
+        "updateAttachmentCountProfile": {
+         "05d9cbb7-a9ff-49d9-ae51-9fff4448b4f8": 23,
+         "24dafe68-cde6-4628-8432-8233fd6503e9": 34,
+         "44906da6-1e48-40c7-8cb4-330d36b2bd3d": 26,
+         "6405eb9f-53b8-49e5-b8e7-53c5b8b68ebc": 23,
+         "7eb091c4-20ec-4753-88d1-8d98384df243": 29
+        },
+        "updateAttachmentCountTotal": 135,
+        "updateFeedbackCountTotal": 0,
+        "updatePropertyCountTotal": 0
+       },
+       "headerVersion": 0,
+       "origin": {
+        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+        "homeMetadataCollectionName": "qs-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "sourceServer": "qs-metadata-store"
+       },
+       "status": "ACTIVE",
+       "type": {
+        "typeCategory": "CLASSIFICATION_DEF",
+        "typeDescription": "Summarizes the usage activity around the members of an element, both in total and member by member, for each kind of activity.",
+        "typeId": "e1abafb4-5b4b-4038-8c36-a3a62cd22750",
+        "typeName": "MemberPopularityProfile",
+        "typeVersion": 1
+       },
+       "versions": {
+        "createTime": "2026-11-11T11:05:57.793+00:00",
+        "createdBy": "egeriagovernanceengine",
+        "lastRequestId": "e99072ae-fa0b-4252-862e-3e3016d0c3c3",
+        "maintainedBy": [
+         "egeriagovernanceengine"
+        ],
+        "updateTime": "2026-11-11T16:03:24.107+00:00",
+        "updatedBy": "egeriagovernanceengine",
+        "version": 5
+       }
+      },
+      "origin": {
+       "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+       "homeMetadataCollectionName": "qs-metadata-store",
+       "originCategory": "LOCAL_COHORT",
+       "sourceServer": "qs-metadata-store"
+      },
+      "status": "ACTIVE",
+      "type": {
+       "superTypeNames": [
+        "Collection",
+        "AuthoredReferenceable",
+        "Referenceable",
+        "OpenMetadataRoot"
+       ],
+       "typeCategory": "ENTITY_DEF",
+       "typeDescription": "Defines that a collection should be treated like a folder.",
+       "typeId": "fecc7c33-274a-4413-9f32-d3d9e255c157",
+       "typeName": "CollectionFolder",
+       "typeVersion": 1
+      },
+      "versions": {
+       "createTime": "2026-11-11T11:01:59.988+00:00",
+       "createdBy": "erinoverview",
+       "lastRequestId": "36642336-03f0-4412-a175-59f5886d8438",
+       "maintainedBy": [
+        "erinoverview"
+       ],
+       "updateTime": "2026-11-11T11:01:59.988+00:00",
+       "updatedBy": "erinoverview",
+       "version": 1
+      }
+     },
+     "properties": {
+      "class": "CollectionFolderProperties",
+      "contentStatus": "ACTIVE",
+      "description": "Dashboard Sheets published to the Egeria Portal. The Portal lists the sheets in this folder (PYEGERIA_DASHBOARD_FOLDERS).",
+      "displayName": "Portal",
+      "purpose": "Consumer folder: Egeria Portal",
+      "qualifiedName": "DashboardFolder::Consumer::Portal",
+      "typeName": "CollectionFolder",
+      "versionIdentifier": "1.0"
+     }
+    }
+   ]
+  },
+  {
+   "args": [],
+   "kwargs": {
+    "collection_guid": "6e0a053f-3def-4618-8020-562b8f63b531",
+    "graph_query_depth": 0,
+    "output_format": "JSON",
+    "page_size": 50,
+    "start_from": 0
+   },
+   "method": "get_collection_members",
+   "result": [
+    {
+     "class": "OpenMetadataRootElement",
+     "elementHeader": {
+      "anchor": {
+       "class": "ElementClassification",
+       "classificationName": "Anchors",
+       "classificationOrigin": "ASSIGNED",
+       "classificationProperties": {
+        "anchorDomainName": "Asset",
+        "anchorTypeName": "Dashboard",
+        "class": "AnchorsProperties",
+        "typeName": "Anchors"
+       },
+       "headerVersion": 0,
+       "origin": {
+        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+        "homeMetadataCollectionName": "qs-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "sourceServer": "qs-metadata-store"
+       },
+       "status": "ACTIVE",
+       "type": {
+        "typeCategory": "CLASSIFICATION_DEF",
+        "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+        "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+        "typeName": "Anchors",
+        "typeVersion": 1
+       },
+       "versions": {
+        "createTime": "2026-11-11T11:03:31.221+00:00",
+        "createdBy": "erinoverview",
+        "lastRequestId": "9fd41e8a-954a-4b33-84f0-995469d67db7",
+        "maintainedBy": [
+         "erinoverview"
+        ],
+        "updateTime": "2026-11-11T11:03:31.221+00:00",
+        "updatedBy": "erinoverview",
+        "version": 1
+       }
+      },
+      "class": "ElementHeader",
+      "guid": "05d9cbb7-a9ff-49d9-ae51-9fff4448b4f8",
+      "headerVersion": 0,
+      "origin": {
+       "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+       "homeMetadataCollectionName": "qs-metadata-store",
+       "originCategory": "LOCAL_COHORT",
+       "sourceServer": "qs-metadata-store"
+      },
+      "ownership": {
+       "class": "ElementClassification",
+       "classificationName": "Ownership",
+       "classificationOrigin": "ASSIGNED",
+       "classificationProperties": {
+        "class": "OwnershipProperties",
+        "owner": "erinoverview",
+        "ownerPropertyName": "userId",
+        "ownerTypeName": "UserIdentity",
+        "typeName": "Ownership"
+       },
+       "headerVersion": 0,
+       "origin": {
+        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+        "homeMetadataCollectionName": "qs-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "sourceServer": "qs-metadata-store"
+       },
+       "status": "ACTIVE",
+       "type": {
+        "typeCategory": "CLASSIFICATION_DEF",
+        "typeDescription": "Who is responsible for making decisions on the management and governance of this element.",
+        "typeId": "8139a911-a4bd-432b-a9f4-f6d11c511abe",
+        "typeName": "Ownership",
+        "typeVersion": 2
+       },
+       "versions": {
+        "createTime": "2026-11-11T11:03:32.052+00:00",
+        "createdBy": "erinoverview",
+        "lastRequestId": "a7c6d015-b008-4864-8d70-754458067749",
+        "maintainedBy": [
+         "erinoverview"
+        ],
+        "updateTime": "2026-11-11T11:03:32.052+00:00",
+        "updatedBy": "erinoverview",
+        "version": 1
+       }
+      },
+      "status": "ACTIVE",
+      "type": {
+       "superTypeNames": [
+        "DataSet",
+        "DataAsset",
+        "Asset",
+        "Referenceable",
+        "OpenMetadataRoot"
+       ],
+       "typeCategory": "ENTITY_DEF",
+       "typeDescription": "A collection of reports with the layout information needed to display them together.",
+       "typeId": "2cfdc8f6-4ca6-4609-a4f9-af78012b71c4",
+       "typeName": "Dashboard",
+       "typeVersion": 1
+      },
+      "usageActivity": {
+       "class": "ElementClassification",
+       "classificationName": "UsageActivity",
+       "classificationOrigin": "ASSIGNED",
+       "classificationProperties": {
+        "class": "UsageActivityProperties",
+        "deleteAttachmentCount": 0,
+        "deleteFeedbackCount": 0,
+        "explicitGetCount": 53,
+        "findCount": 178,
+        "typeName": "UsageActivity",
+        "updateAttachmentCount": 23,
+        "updateFeedbackCount": 0,
+        "updatePropertyCount": 0
+       },
+       "headerVersion": 0,
+       "origin": {
+        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+        "homeMetadataCollectionName": "qs-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "sourceServer": "qs-metadata-store"
+       },
+       "status": "ACTIVE",
+       "type": {
+        "typeCategory": "CLASSIFICATION_DEF",
+        "typeDescription": "Describes the usage activity around an anchor element and its anchored elements: how often it is explicitly retrieved, found through searches, has its properties updated, and has its attachments and feedback updated or deleted.",
+        "typeId": "cfae23a1-8020-431f-a603-1f1bb0e01cb3",
+        "typeName": "UsageActivity",
+        "typeVersion": 1
+       },
+       "versions": {
+        "createTime": "2026-11-11T13:58:27.140+00:00",
+        "createdBy": "pepysnpa",
+        "lastRequestId": "6c9fcf4f-3483-4cfa-9dbe-7a3ed871e817",
+        "maintainedBy": [
+         "pepysnpa"
+        ],
+        "updateTime": "2026-11-11T15:29:17.216+00:00",
+        "updatedBy": "pepysnpa",
+        "version": 3
+       }
+      },
+      "versions": {
+       "createTime": "2026-11-11T11:03:31.225+00:00",
+       "createdBy": "erinoverview",
+       "lastRequestId": "9fd41e8a-954a-4b33-84f0-995469d67db7",
+       "maintainedBy": [
+        "erinoverview"
+       ],
+       "updateTime": "2026-11-11T11:03:31.225+00:00",
+       "updatedBy": "erinoverview",
+       "version": 1
+      }
+     },
+     "properties": {
+      "additionalProperties": {
+       "family": "Community"
+      },
+      "class": "DashboardProperties",
+      "description": "Who is contributing, and how people are reacting to the catalog.",
+      "displayName": "Community & Feedback",
+      "qualifiedName": "Dashboard::community-and-feedback",
+      "typeName": "Dashboard"
+     },
+     "relatedBy": {
+      "relationshipHeader": {
+       "class": "ElementHeader",
+       "guid": "1556322f-29e8-4723-b171-d4b63557725a",
+       "headerVersion": 0,
+       "origin": {
+        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+        "homeMetadataCollectionName": "qs-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "sourceServer": "qs-metadata-store"
+       },
+       "status": "ACTIVE",
+       "type": {
+        "typeCategory": "RELATIONSHIP_DEF",
+        "typeDescription": "Identifies a member of a collection.",
+        "typeId": "5cabb76a-e25b-4bb5-8b93-768bbac005af",
+        "typeName": "CollectionMembership",
+        "typeVersion": 1
+       },
+       "versions": {
+        "createTime": "2026-11-11T11:04:39.235+00:00",
+        "createdBy": "erinoverview",
+        "lastRequestId": "ae12e453-3f15-4aec-ad0b-f1d31e57d568",
+        "maintainedBy": [
+         "erinoverview"
+        ],
+        "updateTime": "2026-11-11T11:04:39.235+00:00",
+        "updatedBy": "erinoverview",
+        "version": 1
+       }
+      },
+      "relationshipProperties": {
+       "class": "CollectionMembershipProperties",
+       "membershipRationale": "Seeded sheet shown in the Egeria Portal.",
+       "membershipStatus": "VALIDATED",
+       "typeName": "CollectionMembership"
+      }
+     }
+    },
+    {
+     "class": "OpenMetadataRootElement",
+     "elementHeader": {
+      "anchor": {
+       "class": "ElementClassification",
+       "classificationName": "Anchors",
+       "classificationOrigin": "ASSIGNED",
+       "classificationProperties": {
+        "anchorDomainName": "Asset",
+        "anchorTypeName": "Dashboard",
+        "class": "AnchorsProperties",
+        "typeName": "Anchors"
+       },
+       "headerVersion": 0,
+       "origin": {
+        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+        "homeMetadataCollectionName": "qs-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "sourceServer": "qs-metadata-store"
+       },
+       "status": "ACTIVE",
+       "type": {
+        "typeCategory": "CLASSIFICATION_DEF",
+        "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+        "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+        "typeName": "Anchors",
+        "typeVersion": 1
+       },
+       "versions": {
+        "createTime": "2026-11-11T11:03:18.036+00:00",
+        "createdBy": "erinoverview",
+        "lastRequestId": "b7ea7718-3644-4b33-8f02-3dc5fe09c169",
+        "maintainedBy": [
+         "erinoverview"
+        ],
+        "updateTime": "2026-11-11T11:03:18.036+00:00",
+        "updatedBy": "erinoverview",
+        "version": 1
+       }
+      },
+      "class": "ElementHeader",
+      "guid": "6405eb9f-53b8-49e5-b8e7-53c5b8b68ebc",
+      "headerVersion": 0,
+      "origin": {
+       "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+       "homeMetadataCollectionName": "qs-metadata-store",
+       "originCategory": "LOCAL_COHORT",
+       "sourceServer": "qs-metadata-store"
+      },
+      "ownership": {
+       "class": "ElementClassification",
+       "classificationName": "Ownership",
+       "classificationOrigin": "ASSIGNED",
+       "classificationProperties": {
+        "class": "OwnershipProperties",
+        "owner": "erinoverview",
+        "ownerPropertyName": "userId",
+        "ownerTypeName": "UserIdentity",
+        "typeName": "Ownership"
+       },
+       "headerVersion": 0,
+       "origin": {
+        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+        "homeMetadataCollectionName": "qs-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "sourceServer": "qs-metadata-store"
+       },
+       "status": "ACTIVE",
+       "type": {
+        "typeCategory": "CLASSIFICATION_DEF",
+        "typeDescription": "Who is responsible for making decisions on the management and governance of this element.",
+        "typeId": "8139a911-a4bd-432b-a9f4-f6d11c511abe",
+        "typeName": "Ownership",
+        "typeVersion": 2
+       },
+       "versions": {
+        "createTime": "2026-11-11T11:03:19.319+00:00",
+        "createdBy": "erinoverview",
+        "lastRequestId": "4defc5da-fc56-49f8-81f4-a880567cf6f5",
+        "maintainedBy": [
+         "erinoverview"
+        ],
+        "updateTime": "2026-11-11T11:03:19.319+00:00",
+        "updatedBy": "erinoverview",
+        "version": 1
+       }
+      },
+      "status": "ACTIVE",
+      "type": {
+       "superTypeNames": [
+        "DataSet",
+        "DataAsset",
+        "Asset",
+        "Referenceable",
+        "OpenMetadataRoot"
+       ],
+       "typeCategory": "ENTITY_DEF",
+       "typeDescription": "A collection of reports with the layout information needed to display them together.",
+       "typeId": "2cfdc8f6-4ca6-4609-a4f9-af78012b71c4",
+       "typeName": "Dashboard",
+       "typeVersion": 1
+      },
+      "usageActivity": {
+       "class": "ElementClassification",
+       "classificationName": "UsageActivity",
+       "classificationOrigin": "ASSIGNED",
+       "classificationProperties": {
+        "class": "UsageActivityProperties",
+        "deleteAttachmentCount": 0,
+        "deleteFeedbackCount": 0,
+        "explicitGetCount": 53,
+        "findCount": 180,
+        "typeName": "UsageActivity",
+        "updateAttachmentCount": 23,
+        "updateFeedbackCount": 0,
+        "updatePropertyCount": 0
+       },
+       "headerVersion": 0,
+       "origin": {
+        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+        "homeMetadataCollectionName": "qs-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "sourceServer": "qs-metadata-store"
+       },
+       "status": "ACTIVE",
+       "type": {
+        "typeCategory": "CLASSIFICATION_DEF",
+        "typeDescription": "Describes the usage activity around an anchor element and its anchored elements: how often it is explicitly retrieved, found through searches, has its properties updated, and has its attachments and feedback updated or deleted.",
+        "typeId": "cfae23a1-8020-431f-a603-1f1bb0e01cb3",
+        "typeName": "UsageActivity",
+        "typeVersion": 1
+       },
+       "versions": {
+        "createTime": "2026-11-11T13:58:09.501+00:00",
+        "createdBy": "pepysnpa",
+        "lastRequestId": "6c9fcf4f-3483-4cfa-9dbe-7a3ed871e817",
+        "maintainedBy": [
+         "pepysnpa"
+        ],
+        "updateTime": "2026-11-11T15:28:51.036+00:00",
+        "updatedBy": "pepysnpa",
+        "version": 3
+       }
+      },
+      "versions": {
+       "createTime": "2026-11-11T11:03:18.045+00:00",
+       "createdBy": "erinoverview",
+       "lastRequestId": "b7ea7718-3644-4b33-8f02-3dc5fe09c169",
+       "maintainedBy": [
+        "erinoverview"
+       ],
+       "updateTime": "2026-11-11T11:03:18.045+00:00",
+       "updatedBy": "erinoverview",
+       "version": 1
+      }
+     },
+     "properties": {
+      "additionalProperties": {
+       "family": "Governance"
+      },
+      "class": "DashboardProperties",
+      "description": "How much of the catalog is under governance, and what is certified or excepted.",
+      "displayName": "Governance & Compliance",
+      "qualifiedName": "Dashboard::governance-and-compliance",
+      "typeName": "Dashboard"
+     },
+     "relatedBy": {
+      "relationshipHeader": {
+       "class": "ElementHeader",
+       "guid": "bb21b37a-7086-4fc1-8f3d-13da694b78ee",
+       "headerVersion": 0,
+       "origin": {
+        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+        "homeMetadataCollectionName": "qs-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "sourceServer": "qs-metadata-store"
+       },
+       "status": "ACTIVE",
+       "type": {
+        "typeCategory": "RELATIONSHIP_DEF",
+        "typeDescription": "Identifies a member of a collection.",
+        "typeId": "5cabb76a-e25b-4bb5-8b93-768bbac005af",
+        "typeName": "CollectionMembership",
+        "typeVersion": 1
+       },
+       "versions": {
+        "createTime": "2026-11-11T11:04:38.524+00:00",
+        "createdBy": "erinoverview",
+        "lastRequestId": "b6b7e559-0ca4-4780-8fb8-56740d14b1cc",
+        "maintainedBy": [
+         "erinoverview"
+        ],
+        "updateTime": "2026-11-11T11:04:38.524+00:00",
+        "updatedBy": "erinoverview",
+        "version": 1
+       }
+      },
+      "relationshipProperties": {
+       "class": "CollectionMembershipProperties",
+       "membershipRationale": "Seeded sheet shown in the Egeria Portal.",
+       "membershipStatus": "VALIDATED",
+       "typeName": "CollectionMembership"
+      }
+     }
+    },
+    {
+     "class": "OpenMetadataRootElement",
+     "elementHeader": {
+      "anchor": {
+       "class": "ElementClassification",
+       "classificationName": "Anchors",
+       "classificationOrigin": "ASSIGNED",
+       "classificationProperties": {
+        "anchorDomainName": "Asset",
+        "anchorTypeName": "Dashboard",
+        "class": "AnchorsProperties",
+        "typeName": "Anchors"
+       },
+       "headerVersion": 0,
+       "origin": {
+        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+        "homeMetadataCollectionName": "qs-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "sourceServer": "qs-metadata-store"
+       },
+       "status": "ACTIVE",
+       "type": {
+        "typeCategory": "CLASSIFICATION_DEF",
+        "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+        "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+        "typeName": "Anchors",
+        "typeVersion": 1
+       },
+       "versions": {
+        "createTime": "2026-11-11T11:02:52.728+00:00",
+        "createdBy": "erinoverview",
+        "lastRequestId": "d0a36fe3-efb8-4ff4-8276-bbf4a267163e",
+        "maintainedBy": [
+         "erinoverview"
+        ],
+        "updateTime": "2026-11-11T11:02:52.728+00:00",
+        "updatedBy": "erinoverview",
+        "version": 1
+       }
+      },
+      "class": "ElementHeader",
+      "guid": "7eb091c4-20ec-4753-88d1-8d98384df243",
+      "headerVersion": 0,
+      "origin": {
+       "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+       "homeMetadataCollectionName": "qs-metadata-store",
+       "originCategory": "LOCAL_COHORT",
+       "sourceServer": "qs-metadata-store"
+      },
+      "ownership": {
+       "class": "ElementClassification",
+       "classificationName": "Ownership",
+       "classificationOrigin": "ASSIGNED",
+       "classificationProperties": {
+        "class": "OwnershipProperties",
+        "owner": "erinoverview",
+        "ownerPropertyName": "userId",
+        "ownerTypeName": "UserIdentity",
+        "typeName": "Ownership"
+       },
+       "headerVersion": 0,
+       "origin": {
+        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+        "homeMetadataCollectionName": "qs-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "sourceServer": "qs-metadata-store"
+       },
+       "status": "ACTIVE",
+       "type": {
+        "typeCategory": "CLASSIFICATION_DEF",
+        "typeDescription": "Who is responsible for making decisions on the management and governance of this element.",
+        "typeId": "8139a911-a4bd-432b-a9f4-f6d11c511abe",
+        "typeName": "Ownership",
+        "typeVersion": 2
+       },
+       "versions": {
+        "createTime": "2026-11-11T11:02:53.324+00:00",
+        "createdBy": "erinoverview",
+        "lastRequestId": "6bef1b4e-8067-4c6a-a294-b371dbf30c5b",
+        "maintainedBy": [
+         "erinoverview"
+        ],
+        "updateTime": "2026-11-11T11:02:53.324+00:00",
+        "updatedBy": "erinoverview",
+        "version": 1
+       }
+      },
+      "status": "ACTIVE",
+      "type": {
+       "superTypeNames": [
+        "DataSet",
+        "DataAsset",
+        "Asset",
+        "Referenceable",
+        "OpenMetadataRoot"
+       ],
+       "typeCategory": "ENTITY_DEF",
+       "typeDescription": "A collection of reports with the layout information needed to display them together.",
+       "typeId": "2cfdc8f6-4ca6-4609-a4f9-af78012b71c4",
+       "typeName": "Dashboard",
+       "typeVersion": 1
+      },
+      "usageActivity": {
+       "class": "ElementClassification",
+       "classificationName": "UsageActivity",
+       "classificationOrigin": "ASSIGNED",
+       "classificationProperties": {
+        "class": "UsageActivityProperties",
+        "deleteAttachmentCount": 0,
+        "deleteFeedbackCount": 0,
+        "explicitGetCount": 57,
+        "findCount": 188,
+        "typeName": "UsageActivity",
+        "updateAttachmentCount": 29,
+        "updateFeedbackCount": 0,
+        "updatePropertyCount": 0
+       },
+       "headerVersion": 0,
+       "origin": {
+        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+        "homeMetadataCollectionName": "qs-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "sourceServer": "qs-metadata-store"
+       },
+       "status": "ACTIVE",
+       "type": {
+        "typeCategory": "CLASSIFICATION_DEF",
+        "typeDescription": "Describes the usage activity around an anchor element and its anchored elements: how often it is explicitly retrieved, found through searches, has its properties updated, and has its attachments and feedback updated or deleted.",
+        "typeId": "cfae23a1-8020-431f-a603-1f1bb0e01cb3",
+        "typeName": "UsageActivity",
+        "typeVersion": 1
+       },
+       "versions": {
+        "createTime": "2026-11-11T13:57:28.059+00:00",
+        "createdBy": "pepysnpa",
+        "lastRequestId": "6c9fcf4f-3483-4cfa-9dbe-7a3ed871e817",
+        "maintainedBy": [
+         "pepysnpa"
+        ],
+        "updateTime": "2026-11-11T15:27:03.667+00:00",
+        "updatedBy": "pepysnpa",
+        "version": 3
+       }
+      },
+      "versions": {
+       "createTime": "2026-11-11T11:02:52.740+00:00",
+       "createdBy": "erinoverview",
+       "lastRequestId": "d0a36fe3-efb8-4ff4-8276-bbf4a267163e",
+       "maintainedBy": [
+        "erinoverview"
+       ],
+       "updateTime": "2026-11-11T11:02:52.740+00:00",
+       "updatedBy": "erinoverview",
+       "version": 1
+      }
+     },
+     "properties": {
+      "additionalProperties": {
+       "family": "Glossary"
+      },
+      "class": "DashboardProperties",
+      "description": "How well the glossary is defined and used.",
+      "displayName": "Glossary & Meaning",
+      "qualifiedName": "Dashboard::glossary-and-meaning",
+      "typeName": "Dashboard"
+     },
+     "relatedBy": {
+      "relationshipHeader": {
+       "class": "ElementHeader",
+       "guid": "2440af6f-4428-464e-acd0-08855adc8fe2",
+       "headerVersion": 0,
+       "origin": {
+        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+        "homeMetadataCollectionName": "qs-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "sourceServer": "qs-metadata-store"
+       },
+       "status": "ACTIVE",
+       "type": {
+        "typeCategory": "RELATIONSHIP_DEF",
+        "typeDescription": "Identifies a member of a collection.",
+        "typeId": "5cabb76a-e25b-4bb5-8b93-768bbac005af",
+        "typeName": "CollectionMembership",
+        "typeVersion": 1
+       },
+       "versions": {
+        "createTime": "2026-11-11T11:04:37.491+00:00",
+        "createdBy": "erinoverview",
+        "lastRequestId": "e49ed4fb-c2f5-4160-bc35-e8ca208ac0ec",
+        "maintainedBy": [
+         "erinoverview"
+        ],
+        "updateTime": "2026-11-11T11:04:37.491+00:00",
+        "updatedBy": "erinoverview",
+        "version": 1
+       }
+      },
+      "relationshipProperties": {
+       "class": "CollectionMembershipProperties",
+       "membershipRationale": "Seeded sheet shown in the Egeria Portal.",
+       "membershipStatus": "VALIDATED",
+       "typeName": "CollectionMembership"
+      }
+     }
+    },
+    {
+     "class": "OpenMetadataRootElement",
+     "elementHeader": {
+      "anchor": {
+       "class": "ElementClassification",
+       "classificationName": "Anchors",
+       "classificationOrigin": "ASSIGNED",
+       "classificationProperties": {
+        "anchorDomainName": "Asset",
+        "anchorTypeName": "Dashboard",
+        "class": "AnchorsProperties",
+        "typeName": "Anchors"
+       },
+       "headerVersion": 0,
+       "origin": {
+        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+        "homeMetadataCollectionName": "qs-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "sourceServer": "qs-metadata-store"
+       },
+       "status": "ACTIVE",
+       "type": {
+        "typeCategory": "CLASSIFICATION_DEF",
+        "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+        "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+        "typeName": "Anchors",
+        "typeVersion": 1
+       },
+       "versions": {
+        "createTime": "2026-11-11T11:02:25.010+00:00",
+        "createdBy": "erinoverview",
+        "lastRequestId": "ed69dd51-f004-486c-b087-b8877a1cfafc",
+        "maintainedBy": [
+         "erinoverview"
+        ],
+        "updateTime": "2026-11-11T11:02:25.010+00:00",
+        "updatedBy": "erinoverview",
+        "version": 1
+       }
+      },
+      "class": "ElementHeader",
+      "guid": "44906da6-1e48-40c7-8cb4-330d36b2bd3d",
+      "headerVersion": 0,
+      "origin": {
+       "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+       "homeMetadataCollectionName": "qs-metadata-store",
+       "originCategory": "LOCAL_COHORT",
+       "sourceServer": "qs-metadata-store"
+      },
+      "ownership": {
+       "class": "ElementClassification",
+       "classificationName": "Ownership",
+       "classificationOrigin": "ASSIGNED",
+       "classificationProperties": {
+        "class": "OwnershipProperties",
+        "owner": "erinoverview",
+        "ownerPropertyName": "userId",
+        "ownerTypeName": "UserIdentity",
+        "typeName": "Ownership"
+       },
+       "headerVersion": 0,
+       "origin": {
+        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+        "homeMetadataCollectionName": "qs-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "sourceServer": "qs-metadata-store"
+       },
+       "status": "ACTIVE",
+       "type": {
+        "typeCategory": "CLASSIFICATION_DEF",
+        "typeDescription": "Who is responsible for making decisions on the management and governance of this element.",
+        "typeId": "8139a911-a4bd-432b-a9f4-f6d11c511abe",
+        "typeName": "Ownership",
+        "typeVersion": 2
+       },
+       "versions": {
+        "createTime": "2026-11-11T11:02:28.313+00:00",
+        "createdBy": "erinoverview",
+        "lastRequestId": "912598c9-c09d-4637-b73f-880cbffc36aa",
+        "maintainedBy": [
+         "erinoverview"
+        ],
+        "updateTime": "2026-11-11T11:02:28.313+00:00",
+        "updatedBy": "erinoverview",
+        "version": 1
+       }
+      },
+      "status": "ACTIVE",
+      "type": {
+       "superTypeNames": [
+        "DataSet",
+        "DataAsset",
+        "Asset",
+        "Referenceable",
+        "OpenMetadataRoot"
+       ],
+       "typeCategory": "ENTITY_DEF",
+       "typeDescription": "A collection of reports with the layout information needed to display them together.",
+       "typeId": "2cfdc8f6-4ca6-4609-a4f9-af78012b71c4",
+       "typeName": "Dashboard",
+       "typeVersion": 1
+      },
+      "usageActivity": {
+       "class": "ElementClassification",
+       "classificationName": "UsageActivity",
+       "classificationOrigin": "ASSIGNED",
+       "classificationProperties": {
+        "class": "UsageActivityProperties",
+        "deleteAttachmentCount": 0,
+        "deleteFeedbackCount": 0,
+        "explicitGetCount": 65,
+        "findCount": 229,
+        "typeName": "UsageActivity",
+        "updateAttachmentCount": 26,
+        "updateFeedbackCount": 0,
+        "updatePropertyCount": 0
+       },
+       "headerVersion": 0,
+       "origin": {
+        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+        "homeMetadataCollectionName": "qs-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "sourceServer": "qs-metadata-store"
+       },
+       "status": "ACTIVE",
+       "type": {
+        "typeCategory": "CLASSIFICATION_DEF",
+        "typeDescription": "Describes the usage activity around an anchor element and its anchored elements: how often it is explicitly retrieved, found through searches, has its properties updated, and has its attachments and feedback updated or deleted.",
+        "typeId": "cfae23a1-8020-431f-a603-1f1bb0e01cb3",
+        "typeName": "UsageActivity",
+        "typeVersion": 1
+       },
+       "versions": {
+        "createTime": "2026-11-11T13:57:58.096+00:00",
+        "createdBy": "pepysnpa",
+        "lastRequestId": "6c9fcf4f-3483-4cfa-9dbe-7a3ed871e817",
+        "maintainedBy": [
+         "pepysnpa"
+        ],
+        "updateTime": "2026-11-11T15:28:36.929+00:00",
+        "updatedBy": "pepysnpa",
+        "version": 3
+       }
+      },
+      "versions": {
+       "createTime": "2026-11-11T11:02:25.027+00:00",
+       "createdBy": "erinoverview",
+       "lastRequestId": "ed69dd51-f004-486c-b087-b8877a1cfafc",
+       "maintainedBy": [
+        "erinoverview"
+       ],
+       "updateTime": "2026-11-11T11:02:25.027+00:00",
+       "updatedBy": "erinoverview",
+       "version": 1
+      }
+     },
+     "properties": {
+      "additionalProperties": {
+       "family": "Overview"
+      },
+      "class": "DashboardProperties",
+      "description": "How complete and how current the catalog is: readiness for AI use, ownership, staleness and what the assets are.",
+      "displayName": "Catalog Health",
+      "qualifiedName": "Dashboard::catalog-health",
+      "typeName": "Dashboard"
+     },
+     "relatedBy": {
+      "relationshipHeader": {
+       "class": "ElementHeader",
+       "guid": "a444fa24-d4d5-4b06-b847-3e314c2a17d5",
+       "headerVersion": 0,
+       "origin": {
+        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+        "homeMetadataCollectionName": "qs-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "sourceServer": "qs-metadata-store"
+       },
+       "status": "ACTIVE",
+       "type": {
+        "typeCategory": "RELATIONSHIP_DEF",
+        "typeDescription": "Identifies a member of a collection.",
+        "typeId": "5cabb76a-e25b-4bb5-8b93-768bbac005af",
+        "typeName": "CollectionMembership",
+        "typeVersion": 1
+       },
+       "versions": {
+        "createTime": "2026-11-11T11:04:36.676+00:00",
+        "createdBy": "erinoverview",
+        "lastRequestId": "e98192b8-e2f2-4406-b162-01c4ca8852c1",
+        "maintainedBy": [
+         "erinoverview"
+        ],
+        "updateTime": "2026-11-11T11:04:36.676+00:00",
+        "updatedBy": "erinoverview",
+        "version": 1
+       }
+      },
+      "relationshipProperties": {
+       "class": "CollectionMembershipProperties",
+       "membershipRationale": "Seeded sheet shown in the Egeria Portal.",
+       "membershipStatus": "VALIDATED",
+       "typeName": "CollectionMembership"
+      }
+     }
+    },
+    {
+     "class": "OpenMetadataRootElement",
+     "elementHeader": {
+      "anchor": {
+       "class": "ElementClassification",
+       "classificationName": "Anchors",
+       "classificationOrigin": "ASSIGNED",
+       "classificationProperties": {
+        "anchorDomainName": "Asset",
+        "anchorTypeName": "Dashboard",
+        "class": "AnchorsProperties",
+        "typeName": "Anchors"
+       },
+       "headerVersion": 0,
+       "origin": {
+        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+        "homeMetadataCollectionName": "qs-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "sourceServer": "qs-metadata-store"
+       },
+       "status": "ACTIVE",
+       "type": {
+        "typeCategory": "CLASSIFICATION_DEF",
+        "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+        "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+        "typeName": "Anchors",
+        "typeVersion": 1
+       },
+       "versions": {
+        "createTime": "2026-11-10T10:10:44.942+00:00",
+        "createdBy": "erinoverview",
+        "lastRequestId": "41493c49-4460-4e02-9bc1-5469ddd47774",
+        "maintainedBy": [
+         "erinoverview"
+        ],
+        "updateTime": "2026-11-10T10:10:44.942+00:00",
+        "updatedBy": "erinoverview",
+        "version": 1
+       }
+      },
+      "class": "ElementHeader",
+      "guid": "24dafe68-cde6-4628-8432-8233fd6503e9",
+      "headerVersion": 0,
+      "origin": {
+       "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+       "homeMetadataCollectionName": "qs-metadata-store",
+       "originCategory": "LOCAL_COHORT",
+       "sourceServer": "qs-metadata-store"
+      },
+      "ownership": {
+       "class": "ElementClassification",
+       "classificationName": "Ownership",
+       "classificationOrigin": "ASSIGNED",
+       "classificationProperties": {
+        "class": "OwnershipProperties",
+        "owner": "erinoverview",
+        "ownerPropertyName": "userId",
+        "ownerTypeName": "UserIdentity",
+        "typeName": "Ownership"
+       },
+       "headerVersion": 0,
+       "origin": {
+        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+        "homeMetadataCollectionName": "qs-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "sourceServer": "qs-metadata-store"
+       },
+       "status": "ACTIVE",
+       "type": {
+        "typeCategory": "CLASSIFICATION_DEF",
+        "typeDescription": "Who is responsible for making decisions on the management and governance of this element.",
+        "typeId": "8139a911-a4bd-432b-a9f4-f6d11c511abe",
+        "typeName": "Ownership",
+        "typeVersion": 2
+       },
+       "versions": {
+        "createTime": "2026-11-10T10:11:20.887+00:00",
+        "createdBy": "erinoverview",
+        "lastRequestId": "851c0273-dfe2-4063-8365-7e4a7d4a8bc5",
+        "maintainedBy": [
+         "erinoverview"
+        ],
+        "updateTime": "2026-11-10T10:11:20.887+00:00",
+        "updatedBy": "erinoverview",
+        "version": 1
+       }
+      },
+      "status": "ACTIVE",
+      "type": {
+       "superTypeNames": [
+        "DataSet",
+        "DataAsset",
+        "Asset",
+        "Referenceable",
+        "OpenMetadataRoot"
+       ],
+       "typeCategory": "ENTITY_DEF",
+       "typeDescription": "A collection of reports with the layout information needed to display them together.",
+       "typeId": "2cfdc8f6-4ca6-4609-a4f9-af78012b71c4",
+       "typeName": "Dashboard",
+       "typeVersion": 1
+      },
+      "usageActivity": {
+       "class": "ElementClassification",
+       "classificationName": "UsageActivity",
+       "classificationOrigin": "ASSIGNED",
+       "classificationProperties": {
+        "class": "UsageActivityProperties",
+        "deleteAttachmentCount": 0,
+        "deleteFeedbackCount": 0,
+        "explicitGetCount": 168,
+        "findCount": 406,
+        "typeName": "UsageActivity",
+        "updateAttachmentCount": 34,
+        "updateFeedbackCount": 0,
+        "updatePropertyCount": 0
+       },
+       "headerVersion": 0,
+       "origin": {
+        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+        "homeMetadataCollectionName": "qs-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "sourceServer": "qs-metadata-store"
+       },
+       "status": "ACTIVE",
+       "type": {
+        "typeCategory": "CLASSIFICATION_DEF",
+        "typeDescription": "Describes the usage activity around an anchor element and its anchored elements: how often it is explicitly retrieved, found through searches, has its properties updated, and has its attachments and feedback updated or deleted.",
+        "typeId": "cfae23a1-8020-431f-a603-1f1bb0e01cb3",
+        "typeName": "UsageActivity",
+        "typeVersion": 1
+       },
+       "versions": {
+        "createTime": "2026-11-10T10:23:37.376+00:00",
+        "createdBy": "pepysnpa",
+        "lastRequestId": "6c9fcf4f-3483-4cfa-9dbe-7a3ed871e817",
+        "maintainedBy": [
+         "pepysnpa"
+        ],
+        "updateTime": "2026-11-11T15:27:46.214+00:00",
+        "updatedBy": "pepysnpa",
+        "version": 21
+       }
+      },
+      "versions": {
+       "createTime": "2026-11-10T10:10:44.965+00:00",
+       "createdBy": "erinoverview",
+       "lastRequestId": "41493c49-4460-4e02-9bc1-5469ddd47774",
+       "maintainedBy": [
+        "erinoverview"
+       ],
+       "updateTime": "2026-11-10T10:10:44.965+00:00",
+       "updatedBy": "erinoverview",
+       "version": 1
+      }
+     },
+     "properties": {
+      "class": "DashboardProperties",
+      "description": "The open punch list for the Local Dashboards / Egeria Overview feature, tracked as a real Egeria Work Item List and browsable right here as a Dashboard Sheet.",
+      "displayName": "Local Dashboards \u2014 Next Steps",
+      "qualifiedName": "Dashboard::local-dashboards-next-steps",
+      "typeName": "Dashboard"
+     },
+     "relatedBy": {
+      "relationshipHeader": {
+       "class": "ElementHeader",
+       "guid": "d25d5bcf-1800-46c8-9cf4-91ff1c0a76a5",
+       "headerVersion": 0,
+       "origin": {
+        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+        "homeMetadataCollectionName": "qs-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "sourceServer": "qs-metadata-store"
+       },
+       "status": "ACTIVE",
+       "type": {
+        "typeCategory": "RELATIONSHIP_DEF",
+        "typeDescription": "Identifies a member of a collection.",
+        "typeId": "5cabb76a-e25b-4bb5-8b93-768bbac005af",
+        "typeName": "CollectionMembership",
+        "typeVersion": 1
+       },
+       "versions": {
+        "createTime": "2026-11-11T11:02:00.805+00:00",
+        "createdBy": "erinoverview",
+        "lastRequestId": "d0e786e7-7379-42bb-9c72-2313a12b43b4",
+        "maintainedBy": [
+         "erinoverview"
+        ],
+        "updateTime": "2026-11-11T11:02:00.805+00:00",
+        "updatedBy": "erinoverview",
+        "version": 1
+       }
+      },
+      "relationshipProperties": {
+       "class": "CollectionMembershipProperties",
+       "membershipRationale": "Seeded sheet shown in the Egeria Portal.",
+       "membershipStatus": "VALIDATED",
+       "typeName": "CollectionMembership"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "args": [],
+   "kwargs": {
+    "collection_guid": "6e0a053f-3def-4618-8020-562b8f63b531",
+    "graph_query_depth": 0,
+    "output_format": "JSON",
+    "page_size": 50,
+    "start_from": 50
+   },
+   "method": "get_collection_members",
+   "result": "No elements found"
+  },
+  {
+   "args": [
+    "05d9cbb7-a9ff-49d9-ae51-9fff4448b4f8"
+   ],
+   "kwargs": {
+    "include_only_relationships": [
+     "ResourceConnection",
+     "ConnectToEndpoint",
+     "License",
+     "SearchKeywordLink",
+     "SemanticAssignment",
+     "ExternalReferenceLink",
+     "APIEndpoint",
+     "ServerEndpoint"
+    ],
+    "output_format": "JSON"
+   },
+   "method": "get_element_by_guid",
+   "result": {
+    "class": "OpenMetadataRootElement",
+    "elementHeader": {
+     "anchor": {
+      "class": "ElementClassification",
+      "classificationName": "Anchors",
+      "classificationOrigin": "ASSIGNED",
+      "classificationProperties": {
+       "anchorDomainName": "Asset",
+       "anchorTypeName": "Dashboard",
+       "class": "AnchorsProperties",
+       "typeName": "Anchors"
+      },
+      "headerVersion": 0,
+      "origin": {
+       "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+       "homeMetadataCollectionName": "qs-metadata-store",
+       "originCategory": "LOCAL_COHORT",
+       "sourceServer": "qs-metadata-store"
+      },
+      "status": "ACTIVE",
+      "type": {
+       "typeCategory": "CLASSIFICATION_DEF",
+       "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+       "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+       "typeName": "Anchors",
+       "typeVersion": 1
+      },
+      "versions": {
+       "createTime": "2026-11-11T11:03:31.221+00:00",
+       "createdBy": "erinoverview",
+       "lastRequestId": "9fd41e8a-954a-4b33-84f0-995469d67db7",
+       "maintainedBy": [
+        "erinoverview"
+       ],
+       "updateTime": "2026-11-11T11:03:31.221+00:00",
+       "updatedBy": "erinoverview",
+       "version": 1
+      }
+     },
+     "class": "ElementHeader",
+     "guid": "05d9cbb7-a9ff-49d9-ae51-9fff4448b4f8",
+     "headerVersion": 0,
+     "origin": {
+      "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+      "homeMetadataCollectionName": "qs-metadata-store",
+      "originCategory": "LOCAL_COHORT",
+      "sourceServer": "qs-metadata-store"
+     },
+     "ownership": {
+      "class": "ElementClassification",
+      "classificationName": "Ownership",
+      "classificationOrigin": "ASSIGNED",
+      "classificationProperties": {
+       "class": "OwnershipProperties",
+       "owner": "erinoverview",
+       "ownerPropertyName": "userId",
+       "ownerTypeName": "UserIdentity",
+       "typeName": "Ownership"
+      },
+      "headerVersion": 0,
+      "origin": {
+       "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+       "homeMetadataCollectionName": "qs-metadata-store",
+       "originCategory": "LOCAL_COHORT",
+       "sourceServer": "qs-metadata-store"
+      },
+      "status": "ACTIVE",
+      "type": {
+       "typeCategory": "CLASSIFICATION_DEF",
+       "typeDescription": "Who is responsible for making decisions on the management and governance of this element.",
+       "typeId": "8139a911-a4bd-432b-a9f4-f6d11c511abe",
+       "typeName": "Ownership",
+       "typeVersion": 2
+      },
+      "versions": {
+       "createTime": "2026-11-11T11:03:32.052+00:00",
+       "createdBy": "erinoverview",
+       "lastRequestId": "a7c6d015-b008-4864-8d70-754458067749",
+       "maintainedBy": [
+        "erinoverview"
+       ],
+       "updateTime": "2026-11-11T11:03:32.052+00:00",
+       "updatedBy": "erinoverview",
+       "version": 1
+      }
+     },
+     "status": "ACTIVE",
+     "type": {
+      "superTypeNames": [
+       "DataSet",
+       "DataAsset",
+       "Asset",
+       "Referenceable",
+       "OpenMetadataRoot"
+      ],
+      "typeCategory": "ENTITY_DEF",
+      "typeDescription": "A collection of reports with the layout information needed to display them together.",
+      "typeId": "2cfdc8f6-4ca6-4609-a4f9-af78012b71c4",
+      "typeName": "Dashboard",
+      "typeVersion": 1
+     },
+     "usageActivity": {
+      "class": "ElementClassification",
+      "classificationName": "UsageActivity",
+      "classificationOrigin": "ASSIGNED",
+      "classificationProperties": {
+       "class": "UsageActivityProperties",
+       "deleteAttachmentCount": 0,
+       "deleteFeedbackCount": 0,
+       "explicitGetCount": 53,
+       "findCount": 178,
+       "typeName": "UsageActivity",
+       "updateAttachmentCount": 23,
+       "updateFeedbackCount": 0,
+       "updatePropertyCount": 0
+      },
+      "headerVersion": 0,
+      "origin": {
+       "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+       "homeMetadataCollectionName": "qs-metadata-store",
+       "originCategory": "LOCAL_COHORT",
+       "sourceServer": "qs-metadata-store"
+      },
+      "status": "ACTIVE",
+      "type": {
+       "typeCategory": "CLASSIFICATION_DEF",
+       "typeDescription": "Describes the usage activity around an anchor element and its anchored elements: how often it is explicitly retrieved, found through searches, has its properties updated, and has its attachments and feedback updated or deleted.",
+       "typeId": "cfae23a1-8020-431f-a603-1f1bb0e01cb3",
+       "typeName": "UsageActivity",
+       "typeVersion": 1
+      },
+      "versions": {
+       "createTime": "2026-11-11T13:58:27.140+00:00",
+       "createdBy": "pepysnpa",
+       "lastRequestId": "6c9fcf4f-3483-4cfa-9dbe-7a3ed871e817",
+       "maintainedBy": [
+        "pepysnpa"
+       ],
+       "updateTime": "2026-11-11T15:29:17.216+00:00",
+       "updatedBy": "pepysnpa",
+       "version": 3
+      }
+     },
+     "versions": {
+      "createTime": "2026-11-11T11:03:31.225+00:00",
+      "createdBy": "erinoverview",
+      "lastRequestId": "9fd41e8a-954a-4b33-84f0-995469d67db7",
+      "maintainedBy": [
+       "erinoverview"
+      ],
+      "updateTime": "2026-11-11T11:03:31.225+00:00",
+      "updatedBy": "erinoverview",
+      "version": 1
+     }
+    },
+    "properties": {
+     "additionalProperties": {
+      "family": "Community"
+     },
+     "class": "DashboardProperties",
+     "description": "Who is contributing, and how people are reacting to the catalog.",
+     "displayName": "Community & Feedback",
+     "qualifiedName": "Dashboard::community-and-feedback",
+     "typeName": "Dashboard"
+    }
+   }
+  },
+  {
+   "args": [
+    "24dafe68-cde6-4628-8432-8233fd6503e9"
+   ],
+   "kwargs": {
+    "include_only_relationships": [
+     "ResourceConnection",
+     "ConnectToEndpoint",
+     "License",
+     "SearchKeywordLink",
+     "SemanticAssignment",
+     "ExternalReferenceLink",
+     "APIEndpoint",
+     "ServerEndpoint"
+    ],
+    "output_format": "JSON"
+   },
+   "method": "get_element_by_guid",
+   "result": {
+    "class": "OpenMetadataRootElement",
+    "elementHeader": {
+     "anchor": {
+      "class": "ElementClassification",
+      "classificationName": "Anchors",
+      "classificationOrigin": "ASSIGNED",
+      "classificationProperties": {
+       "anchorDomainName": "Asset",
+       "anchorTypeName": "Dashboard",
+       "class": "AnchorsProperties",
+       "typeName": "Anchors"
+      },
+      "headerVersion": 0,
+      "origin": {
+       "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+       "homeMetadataCollectionName": "qs-metadata-store",
+       "originCategory": "LOCAL_COHORT",
+       "sourceServer": "qs-metadata-store"
+      },
+      "status": "ACTIVE",
+      "type": {
+       "typeCategory": "CLASSIFICATION_DEF",
+       "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+       "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+       "typeName": "Anchors",
+       "typeVersion": 1
+      },
+      "versions": {
+       "createTime": "2026-11-10T10:10:44.942+00:00",
+       "createdBy": "erinoverview",
+       "lastRequestId": "41493c49-4460-4e02-9bc1-5469ddd47774",
+       "maintainedBy": [
+        "erinoverview"
+       ],
+       "updateTime": "2026-11-10T10:10:44.942+00:00",
+       "updatedBy": "erinoverview",
+       "version": 1
+      }
+     },
+     "class": "ElementHeader",
+     "guid": "24dafe68-cde6-4628-8432-8233fd6503e9",
+     "headerVersion": 0,
+     "origin": {
+      "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+      "homeMetadataCollectionName": "qs-metadata-store",
+      "originCategory": "LOCAL_COHORT",
+      "sourceServer": "qs-metadata-store"
+     },
+     "ownership": {
+      "class": "ElementClassification",
+      "classificationName": "Ownership",
+      "classificationOrigin": "ASSIGNED",
+      "classificationProperties": {
+       "class": "OwnershipProperties",
+       "owner": "erinoverview",
+       "ownerPropertyName": "userId",
+       "ownerTypeName": "UserIdentity",
+       "typeName": "Ownership"
+      },
+      "headerVersion": 0,
+      "origin": {
+       "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+       "homeMetadataCollectionName": "qs-metadata-store",
+       "originCategory": "LOCAL_COHORT",
+       "sourceServer": "qs-metadata-store"
+      },
+      "status": "ACTIVE",
+      "type": {
+       "typeCategory": "CLASSIFICATION_DEF",
+       "typeDescription": "Who is responsible for making decisions on the management and governance of this element.",
+       "typeId": "8139a911-a4bd-432b-a9f4-f6d11c511abe",
+       "typeName": "Ownership",
+       "typeVersion": 2
+      },
+      "versions": {
+       "createTime": "2026-11-10T10:11:20.887+00:00",
+       "createdBy": "erinoverview",
+       "lastRequestId": "851c0273-dfe2-4063-8365-7e4a7d4a8bc5",
+       "maintainedBy": [
+        "erinoverview"
+       ],
+       "updateTime": "2026-11-10T10:11:20.887+00:00",
+       "updatedBy": "erinoverview",
+       "version": 1
+      }
+     },
+     "status": "ACTIVE",
+     "type": {
+      "superTypeNames": [
+       "DataSet",
+       "DataAsset",
+       "Asset",
+       "Referenceable",
+       "OpenMetadataRoot"
+      ],
+      "typeCategory": "ENTITY_DEF",
+      "typeDescription": "A collection of reports with the layout information needed to display them together.",
+      "typeId": "2cfdc8f6-4ca6-4609-a4f9-af78012b71c4",
+      "typeName": "Dashboard",
+      "typeVersion": 1
+     },
+     "usageActivity": {
+      "class": "ElementClassification",
+      "classificationName": "UsageActivity",
+      "classificationOrigin": "ASSIGNED",
+      "classificationProperties": {
+       "class": "UsageActivityProperties",
+       "deleteAttachmentCount": 0,
+       "deleteFeedbackCount": 0,
+       "explicitGetCount": 168,
+       "findCount": 406,
+       "typeName": "UsageActivity",
+       "updateAttachmentCount": 34,
+       "updateFeedbackCount": 0,
+       "updatePropertyCount": 0
+      },
+      "headerVersion": 0,
+      "origin": {
+       "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+       "homeMetadataCollectionName": "qs-metadata-store",
+       "originCategory": "LOCAL_COHORT",
+       "sourceServer": "qs-metadata-store"
+      },
+      "status": "ACTIVE",
+      "type": {
+       "typeCategory": "CLASSIFICATION_DEF",
+       "typeDescription": "Describes the usage activity around an anchor element and its anchored elements: how often it is explicitly retrieved, found through searches, has its properties updated, and has its attachments and feedback updated or deleted.",
+       "typeId": "cfae23a1-8020-431f-a603-1f1bb0e01cb3",
+       "typeName": "UsageActivity",
+       "typeVersion": 1
+      },
+      "versions": {
+       "createTime": "2026-11-10T10:23:37.376+00:00",
+       "createdBy": "pepysnpa",
+       "lastRequestId": "6c9fcf4f-3483-4cfa-9dbe-7a3ed871e817",
+       "maintainedBy": [
+        "pepysnpa"
+       ],
+       "updateTime": "2026-11-11T15:27:46.214+00:00",
+       "updatedBy": "pepysnpa",
+       "version": 21
+      }
+     },
+     "versions": {
+      "createTime": "2026-11-10T10:10:44.965+00:00",
+      "createdBy": "erinoverview",
+      "lastRequestId": "41493c49-4460-4e02-9bc1-5469ddd47774",
+      "maintainedBy": [
+       "erinoverview"
+      ],
+      "updateTime": "2026-11-10T10:10:44.965+00:00",
+      "updatedBy": "erinoverview",
+      "version": 1
+     }
+    },
+    "properties": {
+     "class": "DashboardProperties",
+     "description": "The open punch list for the Local Dashboards / Egeria Overview feature, tracked as a real Egeria Work Item List and browsable right here as a Dashboard Sheet.",
+     "displayName": "Local Dashboards \u2014 Next Steps",
+     "qualifiedName": "Dashboard::local-dashboards-next-steps",
+     "typeName": "Dashboard"
+    }
+   }
+  },
+  {
+   "args": [
+    "44906da6-1e48-40c7-8cb4-330d36b2bd3d"
+   ],
+   "kwargs": {
+    "include_only_relationships": [
+     "ResourceConnection",
+     "ConnectToEndpoint",
+     "License",
+     "SearchKeywordLink",
+     "SemanticAssignment",
+     "ExternalReferenceLink",
+     "APIEndpoint",
+     "ServerEndpoint"
+    ],
+    "output_format": "JSON"
+   },
+   "method": "get_element_by_guid",
+   "result": {
+    "class": "OpenMetadataRootElement",
+    "elementHeader": {
+     "anchor": {
+      "class": "ElementClassification",
+      "classificationName": "Anchors",
+      "classificationOrigin": "ASSIGNED",
+      "classificationProperties": {
+       "anchorDomainName": "Asset",
+       "anchorTypeName": "Dashboard",
+       "class": "AnchorsProperties",
+       "typeName": "Anchors"
+      },
+      "headerVersion": 0,
+      "origin": {
+       "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+       "homeMetadataCollectionName": "qs-metadata-store",
+       "originCategory": "LOCAL_COHORT",
+       "sourceServer": "qs-metadata-store"
+      },
+      "status": "ACTIVE",
+      "type": {
+       "typeCategory": "CLASSIFICATION_DEF",
+       "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+       "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+       "typeName": "Anchors",
+       "typeVersion": 1
+      },
+      "versions": {
+       "createTime": "2026-11-11T11:02:25.010+00:00",
+       "createdBy": "erinoverview",
+       "lastRequestId": "ed69dd51-f004-486c-b087-b8877a1cfafc",
+       "maintainedBy": [
+        "erinoverview"
+       ],
+       "updateTime": "2026-11-11T11:02:25.010+00:00",
+       "updatedBy": "erinoverview",
+       "version": 1
+      }
+     },
+     "class": "ElementHeader",
+     "guid": "44906da6-1e48-40c7-8cb4-330d36b2bd3d",
+     "headerVersion": 0,
+     "origin": {
+      "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+      "homeMetadataCollectionName": "qs-metadata-store",
+      "originCategory": "LOCAL_COHORT",
+      "sourceServer": "qs-metadata-store"
+     },
+     "ownership": {
+      "class": "ElementClassification",
+      "classificationName": "Ownership",
+      "classificationOrigin": "ASSIGNED",
+      "classificationProperties": {
+       "class": "OwnershipProperties",
+       "owner": "erinoverview",
+       "ownerPropertyName": "userId",
+       "ownerTypeName": "UserIdentity",
+       "typeName": "Ownership"
+      },
+      "headerVersion": 0,
+      "origin": {
+       "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+       "homeMetadataCollectionName": "qs-metadata-store",
+       "originCategory": "LOCAL_COHORT",
+       "sourceServer": "qs-metadata-store"
+      },
+      "status": "ACTIVE",
+      "type": {
+       "typeCategory": "CLASSIFICATION_DEF",
+       "typeDescription": "Who is responsible for making decisions on the management and governance of this element.",
+       "typeId": "8139a911-a4bd-432b-a9f4-f6d11c511abe",
+       "typeName": "Ownership",
+       "typeVersion": 2
+      },
+      "versions": {
+       "createTime": "2026-11-11T11:02:28.313+00:00",
+       "createdBy": "erinoverview",
+       "lastRequestId": "912598c9-c09d-4637-b73f-880cbffc36aa",
+       "maintainedBy": [
+        "erinoverview"
+       ],
+       "updateTime": "2026-11-11T11:02:28.313+00:00",
+       "updatedBy": "erinoverview",
+       "version": 1
+      }
+     },
+     "status": "ACTIVE",
+     "type": {
+      "superTypeNames": [
+       "DataSet",
+       "DataAsset",
+       "Asset",
+       "Referenceable",
+       "OpenMetadataRoot"
+      ],
+      "typeCategory": "ENTITY_DEF",
+      "typeDescription": "A collection of reports with the layout information needed to display them together.",
+      "typeId": "2cfdc8f6-4ca6-4609-a4f9-af78012b71c4",
+      "typeName": "Dashboard",
+      "typeVersion": 1
+     },
+     "usageActivity": {
+      "class": "ElementClassification",
+      "classificationName": "UsageActivity",
+      "classificationOrigin": "ASSIGNED",
+      "classificationProperties": {
+       "class": "UsageActivityProperties",
+       "deleteAttachmentCount": 0,
+       "deleteFeedbackCount": 0,
+       "explicitGetCount": 65,
+       "findCount": 229,
+       "typeName": "UsageActivity",
+       "updateAttachmentCount": 26,
+       "updateFeedbackCount": 0,
+       "updatePropertyCount": 0
+      },
+      "headerVersion": 0,
+      "origin": {
+       "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+       "homeMetadataCollectionName": "qs-metadata-store",
+       "originCategory": "LOCAL_COHORT",
+       "sourceServer": "qs-metadata-store"
+      },
+      "status": "ACTIVE",
+      "type": {
+       "typeCategory": "CLASSIFICATION_DEF",
+       "typeDescription": "Describes the usage activity around an anchor element and its anchored elements: how often it is explicitly retrieved, found through searches, has its properties updated, and has its attachments and feedback updated or deleted.",
+       "typeId": "cfae23a1-8020-431f-a603-1f1bb0e01cb3",
+       "typeName": "UsageActivity",
+       "typeVersion": 1
+      },
+      "versions": {
+       "createTime": "2026-11-11T13:57:58.096+00:00",
+       "createdBy": "pepysnpa",
+       "lastRequestId": "6c9fcf4f-3483-4cfa-9dbe-7a3ed871e817",
+       "maintainedBy": [
+        "pepysnpa"
+       ],
+       "updateTime": "2026-11-11T15:28:36.929+00:00",
+       "updatedBy": "pepysnpa",
+       "version": 3
+      }
+     },
+     "versions": {
+      "createTime": "2026-11-11T11:02:25.027+00:00",
+      "createdBy": "erinoverview",
+      "lastRequestId": "ed69dd51-f004-486c-b087-b8877a1cfafc",
+      "maintainedBy": [
+       "erinoverview"
+      ],
+      "updateTime": "2026-11-11T11:02:25.027+00:00",
+      "updatedBy": "erinoverview",
+      "version": 1
+     }
+    },
+    "properties": {
+     "additionalProperties": {
+      "family": "Overview"
+     },
+     "class": "DashboardProperties",
+     "description": "How complete and how current the catalog is: readiness for AI use, ownership, staleness and what the assets are.",
+     "displayName": "Catalog Health",
+     "qualifiedName": "Dashboard::catalog-health",
+     "typeName": "Dashboard"
+    }
+   }
+  },
+  {
+   "args": [
+    "6405eb9f-53b8-49e5-b8e7-53c5b8b68ebc"
+   ],
+   "kwargs": {
+    "include_only_relationships": [
+     "ResourceConnection",
+     "ConnectToEndpoint",
+     "License",
+     "SearchKeywordLink",
+     "SemanticAssignment",
+     "ExternalReferenceLink",
+     "APIEndpoint",
+     "ServerEndpoint"
+    ],
+    "output_format": "JSON"
+   },
+   "method": "get_element_by_guid",
+   "result": {
+    "class": "OpenMetadataRootElement",
+    "elementHeader": {
+     "anchor": {
+      "class": "ElementClassification",
+      "classificationName": "Anchors",
+      "classificationOrigin": "ASSIGNED",
+      "classificationProperties": {
+       "anchorDomainName": "Asset",
+       "anchorTypeName": "Dashboard",
+       "class": "AnchorsProperties",
+       "typeName": "Anchors"
+      },
+      "headerVersion": 0,
+      "origin": {
+       "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+       "homeMetadataCollectionName": "qs-metadata-store",
+       "originCategory": "LOCAL_COHORT",
+       "sourceServer": "qs-metadata-store"
+      },
+      "status": "ACTIVE",
+      "type": {
+       "typeCategory": "CLASSIFICATION_DEF",
+       "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+       "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+       "typeName": "Anchors",
+       "typeVersion": 1
+      },
+      "versions": {
+       "createTime": "2026-11-11T11:03:18.036+00:00",
+       "createdBy": "erinoverview",
+       "lastRequestId": "b7ea7718-3644-4b33-8f02-3dc5fe09c169",
+       "maintainedBy": [
+        "erinoverview"
+       ],
+       "updateTime": "2026-11-11T11:03:18.036+00:00",
+       "updatedBy": "erinoverview",
+       "version": 1
+      }
+     },
+     "class": "ElementHeader",
+     "guid": "6405eb9f-53b8-49e5-b8e7-53c5b8b68ebc",
+     "headerVersion": 0,
+     "origin": {
+      "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+      "homeMetadataCollectionName": "qs-metadata-store",
+      "originCategory": "LOCAL_COHORT",
+      "sourceServer": "qs-metadata-store"
+     },
+     "ownership": {
+      "class": "ElementClassification",
+      "classificationName": "Ownership",
+      "classificationOrigin": "ASSIGNED",
+      "classificationProperties": {
+       "class": "OwnershipProperties",
+       "owner": "erinoverview",
+       "ownerPropertyName": "userId",
+       "ownerTypeName": "UserIdentity",
+       "typeName": "Ownership"
+      },
+      "headerVersion": 0,
+      "origin": {
+       "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+       "homeMetadataCollectionName": "qs-metadata-store",
+       "originCategory": "LOCAL_COHORT",
+       "sourceServer": "qs-metadata-store"
+      },
+      "status": "ACTIVE",
+      "type": {
+       "typeCategory": "CLASSIFICATION_DEF",
+       "typeDescription": "Who is responsible for making decisions on the management and governance of this element.",
+       "typeId": "8139a911-a4bd-432b-a9f4-f6d11c511abe",
+       "typeName": "Ownership",
+       "typeVersion": 2
+      },
+      "versions": {
+       "createTime": "2026-11-11T11:03:19.319+00:00",
+       "createdBy": "erinoverview",
+       "lastRequestId": "4defc5da-fc56-49f8-81f4-a880567cf6f5",
+       "maintainedBy": [
+        "erinoverview"
+       ],
+       "updateTime": "2026-11-11T11:03:19.319+00:00",
+       "updatedBy": "erinoverview",
+       "version": 1
+      }
+     },
+     "status": "ACTIVE",
+     "type": {
+      "superTypeNames": [
+       "DataSet",
+       "DataAsset",
+       "Asset",
+       "Referenceable",
+       "OpenMetadataRoot"
+      ],
+      "typeCategory": "ENTITY_DEF",
+      "typeDescription": "A collection of reports with the layout information needed to display them together.",
+      "typeId": "2cfdc8f6-4ca6-4609-a4f9-af78012b71c4",
+      "typeName": "Dashboard",
+      "typeVersion": 1
+     },
+     "usageActivity": {
+      "class": "ElementClassification",
+      "classificationName": "UsageActivity",
+      "classificationOrigin": "ASSIGNED",
+      "classificationProperties": {
+       "class": "UsageActivityProperties",
+       "deleteAttachmentCount": 0,
+       "deleteFeedbackCount": 0,
+       "explicitGetCount": 53,
+       "findCount": 180,
+       "typeName": "UsageActivity",
+       "updateAttachmentCount": 23,
+       "updateFeedbackCount": 0,
+       "updatePropertyCount": 0
+      },
+      "headerVersion": 0,
+      "origin": {
+       "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+       "homeMetadataCollectionName": "qs-metadata-store",
+       "originCategory": "LOCAL_COHORT",
+       "sourceServer": "qs-metadata-store"
+      },
+      "status": "ACTIVE",
+      "type": {
+       "typeCategory": "CLASSIFICATION_DEF",
+       "typeDescription": "Describes the usage activity around an anchor element and its anchored elements: how often it is explicitly retrieved, found through searches, has its properties updated, and has its attachments and feedback updated or deleted.",
+       "typeId": "cfae23a1-8020-431f-a603-1f1bb0e01cb3",
+       "typeName": "UsageActivity",
+       "typeVersion": 1
+      },
+      "versions": {
+       "createTime": "2026-11-11T13:58:09.501+00:00",
+       "createdBy": "pepysnpa",
+       "lastRequestId": "6c9fcf4f-3483-4cfa-9dbe-7a3ed871e817",
+       "maintainedBy": [
+        "pepysnpa"
+       ],
+       "updateTime": "2026-11-11T15:28:51.036+00:00",
+       "updatedBy": "pepysnpa",
+       "version": 3
+      }
+     },
+     "versions": {
+      "createTime": "2026-11-11T11:03:18.045+00:00",
+      "createdBy": "erinoverview",
+      "lastRequestId": "b7ea7718-3644-4b33-8f02-3dc5fe09c169",
+      "maintainedBy": [
+       "erinoverview"
+      ],
+      "updateTime": "2026-11-11T11:03:18.045+00:00",
+      "updatedBy": "erinoverview",
+      "version": 1
+     }
+    },
+    "properties": {
+     "additionalProperties": {
+      "family": "Governance"
+     },
+     "class": "DashboardProperties",
+     "description": "How much of the catalog is under governance, and what is certified or excepted.",
+     "displayName": "Governance & Compliance",
+     "qualifiedName": "Dashboard::governance-and-compliance",
+     "typeName": "Dashboard"
+    }
+   }
+  },
+  {
+   "args": [
+    "7eb091c4-20ec-4753-88d1-8d98384df243"
+   ],
+   "kwargs": {
+    "include_only_relationships": [
+     "ResourceConnection",
+     "ConnectToEndpoint",
+     "License",
+     "SearchKeywordLink",
+     "SemanticAssignment",
+     "ExternalReferenceLink",
+     "APIEndpoint",
+     "ServerEndpoint"
+    ],
+    "output_format": "JSON"
+   },
+   "method": "get_element_by_guid",
+   "result": {
+    "class": "OpenMetadataRootElement",
+    "elementHeader": {
+     "anchor": {
+      "class": "ElementClassification",
+      "classificationName": "Anchors",
+      "classificationOrigin": "ASSIGNED",
+      "classificationProperties": {
+       "anchorDomainName": "Asset",
+       "anchorTypeName": "Dashboard",
+       "class": "AnchorsProperties",
+       "typeName": "Anchors"
+      },
+      "headerVersion": 0,
+      "origin": {
+       "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+       "homeMetadataCollectionName": "qs-metadata-store",
+       "originCategory": "LOCAL_COHORT",
+       "sourceServer": "qs-metadata-store"
+      },
+      "status": "ACTIVE",
+      "type": {
+       "typeCategory": "CLASSIFICATION_DEF",
+       "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+       "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+       "typeName": "Anchors",
+       "typeVersion": 1
+      },
+      "versions": {
+       "createTime": "2026-11-11T11:02:52.728+00:00",
+       "createdBy": "erinoverview",
+       "lastRequestId": "d0a36fe3-efb8-4ff4-8276-bbf4a267163e",
+       "maintainedBy": [
+        "erinoverview"
+       ],
+       "updateTime": "2026-11-11T11:02:52.728+00:00",
+       "updatedBy": "erinoverview",
+       "version": 1
+      }
+     },
+     "class": "ElementHeader",
+     "guid": "7eb091c4-20ec-4753-88d1-8d98384df243",
+     "headerVersion": 0,
+     "origin": {
+      "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+      "homeMetadataCollectionName": "qs-metadata-store",
+      "originCategory": "LOCAL_COHORT",
+      "sourceServer": "qs-metadata-store"
+     },
+     "ownership": {
+      "class": "ElementClassification",
+      "classificationName": "Ownership",
+      "classificationOrigin": "ASSIGNED",
+      "classificationProperties": {
+       "class": "OwnershipProperties",
+       "owner": "erinoverview",
+       "ownerPropertyName": "userId",
+       "ownerTypeName": "UserIdentity",
+       "typeName": "Ownership"
+      },
+      "headerVersion": 0,
+      "origin": {
+       "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+       "homeMetadataCollectionName": "qs-metadata-store",
+       "originCategory": "LOCAL_COHORT",
+       "sourceServer": "qs-metadata-store"
+      },
+      "status": "ACTIVE",
+      "type": {
+       "typeCategory": "CLASSIFICATION_DEF",
+       "typeDescription": "Who is responsible for making decisions on the management and governance of this element.",
+       "typeId": "8139a911-a4bd-432b-a9f4-f6d11c511abe",
+       "typeName": "Ownership",
+       "typeVersion": 2
+      },
+      "versions": {
+       "createTime": "2026-11-11T11:02:53.324+00:00",
+       "createdBy": "erinoverview",
+       "lastRequestId": "6bef1b4e-8067-4c6a-a294-b371dbf30c5b",
+       "maintainedBy": [
+        "erinoverview"
+       ],
+       "updateTime": "2026-11-11T11:02:53.324+00:00",
+       "updatedBy": "erinoverview",
+       "version": 1
+      }
+     },
+     "status": "ACTIVE",
+     "type": {
+      "superTypeNames": [
+       "DataSet",
+       "DataAsset",
+       "Asset",
+       "Referenceable",
+       "OpenMetadataRoot"
+      ],
+      "typeCategory": "ENTITY_DEF",
+      "typeDescription": "A collection of reports with the layout information needed to display them together.",
+      "typeId": "2cfdc8f6-4ca6-4609-a4f9-af78012b71c4",
+      "typeName": "Dashboard",
+      "typeVersion": 1
+     },
+     "usageActivity": {
+      "class": "ElementClassification",
+      "classificationName": "UsageActivity",
+      "classificationOrigin": "ASSIGNED",
+      "classificationProperties": {
+       "class": "UsageActivityProperties",
+       "deleteAttachmentCount": 0,
+       "deleteFeedbackCount": 0,
+       "explicitGetCount": 57,
+       "findCount": 188,
+       "typeName": "UsageActivity",
+       "updateAttachmentCount": 29,
+       "updateFeedbackCount": 0,
+       "updatePropertyCount": 0
+      },
+      "headerVersion": 0,
+      "origin": {
+       "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
+       "homeMetadataCollectionName": "qs-metadata-store",
+       "originCategory": "LOCAL_COHORT",
+       "sourceServer": "qs-metadata-store"
+      },
+      "status": "ACTIVE",
+      "type": {
+       "typeCategory": "CLASSIFICATION_DEF",
+       "typeDescription": "Describes the usage activity around an anchor element and its anchored elements: how often it is explicitly retrieved, found through searches, has its properties updated, and has its attachments and feedback updated or deleted.",
+       "typeId": "cfae23a1-8020-431f-a603-1f1bb0e01cb3",
+       "typeName": "UsageActivity",
+       "typeVersion": 1
+      },
+      "versions": {
+       "createTime": "2026-11-11T13:57:28.059+00:00",
+       "createdBy": "pepysnpa",
+       "lastRequestId": "6c9fcf4f-3483-4cfa-9dbe-7a3ed871e817",
+       "maintainedBy": [
+        "pepysnpa"
+       ],
+       "updateTime": "2026-11-11T15:27:03.667+00:00",
+       "updatedBy": "pepysnpa",
+       "version": 3
+      }
+     },
+     "versions": {
+      "createTime": "2026-11-11T11:02:52.740+00:00",
+      "createdBy": "erinoverview",
+      "lastRequestId": "d0a36fe3-efb8-4ff4-8276-bbf4a267163e",
+      "maintainedBy": [
+       "erinoverview"
+      ],
+      "updateTime": "2026-11-11T11:02:52.740+00:00",
+      "updatedBy": "erinoverview",
+      "version": 1
+     }
+    },
+    "properties": {
+     "additionalProperties": {
+      "family": "Glossary"
+     },
+     "class": "DashboardProperties",
+     "description": "How well the glossary is defined and used.",
+     "displayName": "Glossary & Meaning",
+     "qualifiedName": "Dashboard::glossary-and-meaning",
+     "typeName": "Dashboard"
+    }
+   }
+  }
+ ],
+ "captured": "2026-11-11T16:05:25Z",
+ "params": {
+  "scope": "DashboardFolder::Consumer::Portal"
+ },
+ "server": "laz qs-view-server",
+ "user": "erinoverview"
+}

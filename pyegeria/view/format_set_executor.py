@@ -17,6 +17,8 @@ import asyncio
 import inspect
 import json
 import os
+import re
+import string
 import sys
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
@@ -39,6 +41,11 @@ from pyegeria.view.analytic_registry import get_analytic_registry as get_analyti
 from pyegeria.egeria_tech_client import EgeriaTech
 from pyegeria.view.role_supply import PlainSupply, RoleRefused, RoleSupply, supply_inputs
 from pyegeria.view.overview_metrics import recording_unmeasured
+from pyegeria.view._output_format_models import DOCUMENT_OUTPUT_TYPE, check_document_file_name
+from pyegeria.view.document_validators import run_document_validator
+from pyegeria.core._server_client import recording_list_requests
+from pyegeria.view.output_formatter import check_dict_shape, dict_shape_for_call
+from pyegeria.view.structured_table import build_structured_table, check_table_shape, mark_relationship_absence
 
 _CLIENT_CLASS_MAP = {
     "CollectionManager": "pyegeria.omvs.collection_manager.CollectionManager",
@@ -762,6 +769,9 @@ async def _async_run_report(
     output_format: str = "DICT",
     params: Optional[Dict[str, Any]] = None,
     refresh_spec: bool = False,
+    *,
+    table_shape: Optional[str] = None,
+    dict_shape: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Run a report spec with an async EgeriaTech client (see `_async_run_report_impl`).
 
@@ -771,7 +781,8 @@ async def _async_run_report(
     if refresh_spec:
         from pyegeria.view.egeria_spec_cache import async_fetch_spec_for_call
         report_name = await async_fetch_spec_for_call(egeria_client, report_name)
-    result = await _async_run_report_impl(report_name, egeria_client, output_format=output_format, params=params)
+    result = await _async_run_report_impl(report_name, egeria_client, output_format=output_format, params=params,
+                                          table_shape=table_shape, dict_shape=dict_shape)
     return _with_spec_source(result, report_name, output_format)
 
 
@@ -780,6 +791,9 @@ async def _async_run_report_impl(
     egeria_client: EgeriaTech,
     output_format: str = "DICT",
     params: Optional[Dict[str, Any]] = None,
+    *,
+    table_shape: Optional[str] = None,
+    dict_shape: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
         Execute the action for a given format set and return a normalized result structure.
@@ -790,9 +804,17 @@ async def _async_run_report_impl(
         - {"kind":"text","mime": "text/markdown"|"text/html","content": str}
         - {"kind":"unknown","raw": any}
         """
-    params = dict(params or {})
+    params = coerce_paging_params(dict(params or {}))
+    row_shape = _row_shape(str(output_format or "DICT").upper(), table_shape, dict_shape)
     user_name = egeria_client.user_id
     user_pwd = egeria_client.user_pwd
+
+    # SD-1: DOCUMENT specs run through exec_report_spec (the analytic/role-supply path), which
+    # this find-only async path does not have. Refuse in words rather than fail inside it.
+    if str(output_format).upper() == DOCUMENT_OUTPUT_TYPE or _document_spec_struct(report_name) is not None:
+        raise ValueError(
+            f"Report spec '{report_name}' ({output_format}): DOCUMENT output runs through exec_report_spec "
+            f"(output_format='DOCUMENT'), not the async find path")
 
     # Resolve the format set and action
     effective_format = "REPORT" if output_format in ["HTML", "MARKDOWN"] else output_format
@@ -923,14 +945,23 @@ async def _async_run_report_impl(
         except Exception as auth_err:
             # Do not fail the entire call if token refresh fails; downstream call may still work
             logger.debug(f"Token creation/lookup issue: {auth_err}")
-        result = await func(**call_params)
+        with recording_list_requests() as list_record, dict_shape_for_call(row_shape):
+            result = await func(**call_params)
 
         if not result or result == NO_ELEMENTS_FOUND:
             return {"kind": "empty"}
+        cap_notes = page_cap_notes(func, call_params, result, list_record)
 
+        if output_format == "TABLE" and table_shape == "structured":
+            return build_structured_table(result, (fmt.get("formats") or {}).get("attributes") or [],
+                                          notes=cap_notes, capped=bool(cap_notes), record=list_record)
+        if output_format == "DICT" and row_shape == "native" and isinstance(result, list):
+            cap_notes = cap_notes + mark_relationship_absence(  # "none" / "not read" (R1 follow-up)
+                result, [c if isinstance(c, dict) else c.model_dump()
+                         for c in (fmt.get("formats") or {}).get("attributes") or []], list_record, keyed_by="name")
         if output_format in {"DICT", "JSON", "ALL", "TABLE"}:
             # Return raw data (list/dict/any) — do not stringify here; include TABLE to enable Rich rendering upstream
-            return {"kind": "json", "data": result}
+            return {"kind": "json", "data": result, **({"notes": cap_notes} if cap_notes else {})}
 
         # For narrative formats, try to use generate_output if the result is structured
         if output_format in {"REPORT", "REPORT-GRAPH", "MD", "FORM", "LIST", "HTML", "MERMAID", "GRAPH"}:
@@ -956,7 +987,11 @@ async def _async_run_report_impl(
                 content = preamble + content
 
             mime = "text/html" if output_format in ["HTML", "GRAPH"] else "text/markdown"
-            return {"kind": "text", "mime": mime, "content": content}
+            if cap_notes:  # fix-now F8: a capped result says so in the text too
+                content = content.rstrip("\n") + "\n\n" + "\n".join(
+                    (f"<p><em>{n}</em></p>" if mime == "text/html" else f"_{n}_") for n in cap_notes) + "\n"
+            return {"kind": "text", "mime": mime, "content": content,
+                    **({"notes": cap_notes} if cap_notes else {})}
 
         return {"kind": "unknown", "raw": result}
 
@@ -1161,6 +1196,185 @@ def _as_category_value_dict(result: Any) -> Optional[Dict[str, Union[int, float]
     return None
 
 
+def _effective_page_size(func: Any, call_params: Dict[str, Any]) -> Optional[int]:
+    """The page size a find call ran with: the one sent, else the find function's own default
+    (e.g. find_digital_products' page_size=100). None when neither is a positive whole number (the
+    server then chose, and pyegeria cannot know its cap)."""
+    sent = call_params.get("page_size")
+    if isinstance(sent, int) and sent > 0:
+        return sent
+    try:
+        default = inspect.signature(func).parameters["page_size"].default
+    except (KeyError, TypeError, ValueError):
+        return None
+    return default if isinstance(default, int) and default > 0 else None
+
+
+def _cap_words(shown: int, size: int, start: int) -> str:
+    first = f"rows {start + 1}-{start + shown}" if start else f"the first {shown}"
+    return f"Showing {first}: the query stopped at its page size of {size}; more may exist."
+
+
+def page_cap_notes(func: Any, call_params: Dict[str, Any], result: Any,
+                   record: Optional[Dict[str, Any]] = None) -> List[str]:
+    """Fix-now F8: a find result that filled its page says so, never a bare N. Egeria's paging
+    contract means a full page may or may not be the last, so the words are "more may exist".
+
+    `record` is this call's own list-request record (`recording_list_requests`), which covers a find
+    method that renders text itself; a plain list result is checked against the page size sent (or the
+    find function's own default) as well. No state is read from the client (read-back C1)."""
+    cap = (record or {}).get("cap")
+    if cap:
+        shown, size, start = cap
+        return [_cap_words(shown, size, start)]
+    size = _effective_page_size(func, call_params)
+    if isinstance(result, list) and size and len(result) >= size:
+        return [_cap_words(len(result), size, call_params.get("start_from") or 0)]
+    return []
+
+
+_PAGING_PARAMS = ("page_size", "start_from")
+
+
+def coerce_paging_params(params: Dict[str, Any]) -> Dict[str, Any]:
+    """page_size/start_from as whole numbers (fix-now F8): a numeric string is converted, anything else
+    is refused in words rather than sent to Egeria (where it failed as an HTTP 500)."""
+    for name in _PAGING_PARAMS:
+        value = params.get(name)
+        if value in (None, ""):
+            continue
+        if isinstance(value, bool):
+            raise ValueError(f"{name} must be a whole number of 0 or more, not {value!r}")
+        try:
+            number = int(str(value).strip()) if not isinstance(value, int) else value
+        except ValueError:
+            raise ValueError(f"{name} must be a whole number of 0 or more, not {value!r}") from None
+        if number < 0:
+            raise ValueError(f"{name} must be a whole number of 0 or more, not {value!r}")
+        params[name] = number
+    return params
+
+
+def _row_shape(output_format: str, table_shape: Optional[str], dict_shape: Optional[str]) -> str:
+    """The DICT row shape a find call runs with (R1): "native" for DICT + dict_shape="native" and for
+    TABLE + table_shape="structured", else "flat" (TABLE stays flat under dict_shape: its structured
+    form is table_shape). Unknown values are refused with a sentence."""
+    table_shape = check_table_shape(table_shape)
+    dict_shape = check_dict_shape(dict_shape)
+    if output_format == "DICT" and dict_shape == "native":
+        return "native"
+    if output_format == "TABLE" and table_shape == "structured":
+        return "native"
+    return "flat"
+
+
+def _spec_display_name(format_set_name: Any) -> str:
+    if isinstance(format_set_name, dict):
+        return str(format_set_name.get("_report_spec_name") or format_set_name.get("heading") or "?")
+    return str(format_set_name)
+
+
+def _document_spec_struct(format_set_name: Any) -> Optional[Dict[str, Any]]:
+    """The selected-spec struct (as `select_report_spec` returns it) when this spec is a DOCUMENT
+    spec, else None. A spec passed as a dict is read as given (a FormatSet dict or a selected
+    struct); by name it is looked up across tiers and aliases."""
+    if isinstance(format_set_name, dict):
+        formats = format_set_name.get("formats")
+        rows = formats if isinstance(formats, list) else [formats] if formats else []
+        for row in rows:
+            row = row.dict() if hasattr(row, "dict") and not isinstance(row, dict) else row
+            if isinstance(row, dict) and row.get("document"):
+                struct = dict(format_set_name)
+                struct["formats"] = row
+                action = struct.get("action")
+                if action is not None and not isinstance(action, dict):
+                    struct["action"] = action.model_dump()
+                return struct
+        return None
+    try:
+        struct = select_report_spec(format_set_name, DOCUMENT_OUTPUT_TYPE)
+    except Exception:  # noqa: BLE001 -- an unknown name is reported by the normal path below
+        return None
+    if struct and isinstance(struct.get("formats"), dict) and struct["formats"].get("document"):
+        return struct
+    return None
+
+
+_FILE_NAME_UNSAFE = re.compile(r"[^A-Za-z0-9._+-]+")
+
+
+def fill_document_file_name(template: str, params: Dict[str, Any]) -> str:
+    """Fill a DOCUMENT file-name template from the run's parameters.
+
+    Only plain `{name}` fields are allowed (no attribute or index access). Each value is made
+    file-name safe (anything but letters, digits and `._+-` becomes `_`, and `..` is broken up),
+    so a qualifiedName such as `Folder::Sales/EU` cannot become a path. The result is checked
+    again; a template that still names a path, or a parameter the run did not supply, is refused
+    with a sentence."""
+    values: Dict[str, str] = {}
+    for _literal, field, spec, conversion in string.Formatter().parse(template):
+        if field is None:
+            continue
+        if not field.isidentifier():
+            raise ValueError(f"DOCUMENT file_name template '{template}' has field '{{{field}}}'; only plain "
+                             f"parameter names are allowed")
+        if spec or conversion:
+            raise ValueError(f"DOCUMENT file_name template '{template}' formats field '{field}'; only plain "
+                             f"parameter names are allowed")
+        raw = params.get(field)
+        if raw in (None, ""):
+            raise ValueError(f"DOCUMENT file_name template '{template}' needs parameter '{field}', which this "
+                             f"run did not supply")
+        safe = _FILE_NAME_UNSAFE.sub("_", str(raw)).replace("..", "_").strip("._") or "_"
+        values[field] = safe
+    file_name = template.format(**values)
+    reason = check_document_file_name(file_name)
+    if reason:
+        raise ValueError(f"DOCUMENT file_name refused: {reason}")
+    return file_name
+
+
+def _exec_document(
+    name: str, struct: Dict[str, Any], *, params: Dict[str, Any],
+    view_server: str, view_url: str, user: str, user_pass: str,
+    token: Optional[str] = None, supply: Optional[RoleSupply] = None,
+) -> Dict[str, Any]:
+    """Run a DOCUMENT spec (SD-1): call its exporter, validate what it returns, and return
+
+    {"kind": "document", "standard", "media_type", "file_name", "text",
+     "validation": {"state", "validator", "findings", "reason"}, "notes": [...]}
+
+    The exporter is the action's analytic function; it returns `{"text": str, "notes"?: [str]}`
+    (or a plain string, read as text with no notes). `validation` and `notes` are always present:
+    an empty `notes` means the exporter had nothing to say about the document's content. A
+    validator that raises leaves the document `not_validated` with its error, never `invalid`.
+    """
+    action = struct.get("action") or {}
+    if not action.get("analytic_function"):
+        raise ValueError(f"Report spec '{name}' has a DOCUMENT format but no analytic_function (exporter)")
+    doc = struct["formats"]["document"]
+    fill_from = {**(action.get("analytic_spec_params") or {}),
+                 **{k: v for k, v in params.items() if v not in (None, "")}}
+    file_name = fill_document_file_name(doc["file_name"], fill_from)
+
+    result = _run_analytic_function(action, params=params, view_server=view_server, view_url=view_url,
+                                    user=user, user_pass=user_pass, token=token, supply=supply)
+    if isinstance(result, str):
+        text, notes = result, []
+    elif isinstance(result, dict) and isinstance(result.get("text"), str):
+        text = result["text"]
+        raw_notes = result.get("notes") or []
+        notes = [str(n) for n in (raw_notes if isinstance(raw_notes, list) else [raw_notes])]
+    else:
+        raise ValueError(
+            f"Report spec '{name}': exporter '{action['analytic_function']}' returned "
+            f"{type(result).__name__}, not a document ({{'text': str, 'notes'?: [str]}})")
+    validation = run_document_validator(text, doc["media_type"], doc.get("validator"),
+                                        doc.get("validator_options") or {})
+    return {"kind": "document", "standard": doc["standard"], "media_type": doc["media_type"],
+            "file_name": file_name, "text": text, "validation": validation, "notes": notes}
+
+
 def exec_report_spec(
     format_set_name: str | dict,
     *,
@@ -1173,10 +1387,18 @@ def exec_report_spec(
     token: Optional[str] = None,
     supply: Optional[RoleSupply] = None,
     refresh_spec: bool = False,
+    table_shape: Optional[str] = None,
+    dict_shape: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Execute the action for a given report spec (see `_exec_report_spec_impl` for the result
     shapes).
+
+    R1: `table_shape="structured"` with output_format TABLE returns the structured table
+    (`pyegeria.view.structured_table`, `kind: "table"`); `dict_shape="native"` with DICT returns rows
+    with native values. Both are caller flags; the defaults ("rows", "flat") return today's shapes, and
+    any other value is refused with a sentence. They apply to a find-method spec only: DOCUMENT, chart
+    and analytic results ignore them.
 
     RS-EGERIA-TIER: the name may be tier-addressed (`egeria:<label>`, `builtin:<label>`,
     `seed:<label>`). The result carries `spec_source` (`{"tier", "label", "version", "guid"?,
@@ -1190,7 +1412,7 @@ def exec_report_spec(
                                           user=user, user_pass=user_pass, token=token)
     result = _exec_report_spec_impl(format_set_name, output_format=output_format, params=params,
                                     view_server=view_server, view_url=view_url, user=user, user_pass=user_pass,
-                                    token=token, supply=supply)
+                                    token=token, supply=supply, table_shape=table_shape, dict_shape=dict_shape)
     return _with_spec_source(result, format_set_name, (output_format or "DICT").upper())
 
 
@@ -1223,6 +1445,8 @@ def _exec_report_spec_impl(
     user_pass: str = settings.User_Profile.user_pwd,
     token: Optional[str] = None,
     supply: Optional[RoleSupply] = None,
+    table_shape: Optional[str] = None,
+    dict_shape: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Execute the action for a given format set and return a normalized result structure.
@@ -1263,7 +1487,8 @@ def _exec_report_spec_impl(
     not read `supply`: it builds its client class from the arguments above, as before.
     """
     output_format = (output_format or "DICT").upper()
-    params = _normalize_report_params(dict(params or {}), action_mode="find")
+    params = coerce_paging_params(_normalize_report_params(dict(params or {}), action_mode="find"))
+    row_shape = _row_shape(output_format, table_shape, dict_shape)
 
     # SERIES/BAR/PIE are not Format-row output types like TABLE/DICT/REPORT --
     # they don't need per-column formatting at all, just the analytic
@@ -1271,6 +1496,24 @@ def _exec_report_spec_impl(
     # Vega-Lite chart. Dispatch before the normal Format-row lookup (which
     # would reject them as unsupported, since no FormatSet declares a
     # "SERIES"/"BAR"/"PIE" Format row).
+    # DOCUMENT (SD-1): a document spec answers only DOCUMENT, and DOCUMENT is answered only by a
+    # document spec. Checked before the chart dispatch so SERIES/BAR/PIE are refused too.
+    doc_struct = _document_spec_struct(format_set_name)
+    if doc_struct is not None or output_format == DOCUMENT_OUTPUT_TYPE:
+        name = _spec_display_name(format_set_name)
+        if doc_struct is None:
+            raise ValueError(
+                f"Report spec '{name}' does not produce a document: DOCUMENT output is only for a spec "
+                f"with a DOCUMENT format (an exporter). Run 'list_reports' to see available reports.")
+        if output_format != DOCUMENT_OUTPUT_TYPE:
+            doc = doc_struct["formats"]["document"]
+            raise ValueError(
+                f"Report spec '{name}' is a DOCUMENT spec: it produces one {doc['standard']} document "
+                f"({doc['media_type']}), not {output_format}. Ask for output_format DOCUMENT.")
+        return _exec_document(
+            name, doc_struct, params=params, view_server=view_server, view_url=view_url, user=user,
+            user_pass=user_pass, token=token, supply=supply)
+
     _CHART_KINDS = {"SERIES": "line", "BAR": "bar", "PIE": "pie"}
     if output_format in _CHART_KINDS:
         return _exec_analytic_chart(
@@ -1402,14 +1645,23 @@ def _exec_report_spec_impl(
         call_params = _bind_search_parameter(func, call_params)
         _warn_dropped_params(format_set_name, params, call_params,
                              [*required_params, *optional_params, *spec_params])
-        result = func(**call_params)
+        with recording_list_requests() as list_record, dict_shape_for_call(row_shape):
+            result = func(**call_params)
 
         if not result or result == NO_ELEMENTS_FOUND:
             return {"kind": "empty"}
+        cap_notes = page_cap_notes(func, call_params, result, list_record)
 
+        if output_format == "TABLE" and table_shape == "structured":
+            return build_structured_table(result, (fmt.get("formats") or {}).get("attributes") or [],
+                                          notes=cap_notes, capped=bool(cap_notes), record=list_record)
+        if output_format == "DICT" and row_shape == "native" and isinstance(result, list):
+            cap_notes = cap_notes + mark_relationship_absence(  # "none" / "not read" (R1 follow-up)
+                result, [c if isinstance(c, dict) else c.model_dump()
+                         for c in (fmt.get("formats") or {}).get("attributes") or []], list_record, keyed_by="name")
         if output_format in {"DICT", "JSON", "ALL", "TABLE"}:
             # Return raw data (list/dict/any) — do not stringify here
-            return {"kind": "json", "data": result}
+            return {"kind": "json", "data": result, **({"notes": cap_notes} if cap_notes else {})}
 
         # For narrative formats, try to use generate_output if the result is structured
         if output_format in {"REPORT", "REPORT-GRAPH", "MD", "FORM", "LIST", "HTML", "MERMAID", "GRAPH"}:
@@ -1435,7 +1687,11 @@ def _exec_report_spec_impl(
                 content = preamble + content
 
             mime = "text/html" if output_format in ["HTML", "GRAPH"] else "text/markdown"
-            return {"kind": "text", "mime": mime, "content": content}
+            if cap_notes:  # fix-now F8: a capped result says so in the text too
+                content = content.rstrip("\n") + "\n\n" + "\n".join(
+                    (f"<p><em>{n}</em></p>" if mime == "text/html" else f"_{n}_") for n in cap_notes) + "\n"
+            return {"kind": "text", "mime": mime, "content": content,
+                    **({"notes": cap_notes} if cap_notes else {})}
 
         return {"kind": "unknown", "raw": result}
 
