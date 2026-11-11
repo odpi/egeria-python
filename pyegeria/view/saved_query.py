@@ -33,7 +33,7 @@ from urllib.parse import urlsplit
 
 from loguru import logger
 
-__all__ = ["saved_query", "SavedQueryRefused", "ALLOWED_QUERY_ENDPOINTS", "SAVED_QUERY_PAGE_SIZE",
+__all__ = ["saved_query", "delete_saved_query", "SavedQueryRefused", "ALLOWED_QUERY_ENDPOINTS", "SAVED_QUERY_PAGE_SIZE",
            "SAVED_QUERY_MAX_PAGES"]
 
 # Allow-listed view-server query endpoints (path below /servers/<view server>), each with the pyegeria
@@ -604,3 +604,40 @@ def _answer(name, mode, output, elements, capped, as_of):
         return _result(name, mode, output, state="nothing_found", absence="nothing_found", count=0,
                        elements=listed, as_of=as_of, reason="the saved query's answer is empty")
     return _result(name, mode, output, state="measured", count=n, elements=listed, capped=capped, as_of=as_of)
+
+
+# ── deleting a saved query (6.2.35) ──
+
+def delete_saved_query(client, saved_query_guid: str) -> Dict[str, Any]:
+    """Delete a SavedQuery, detaching its SmartQuery links first, so no Results Set is left linked to a query
+    that no longer exists.
+
+    Egeria deletes only what the deleted element anchors; a SmartQuery link to an independently anchored Results
+    Set is left behind, and blocks the delete (OMAG-GENERIC-HANDLERS-403-005). So every Results Set linked to the
+    SavedQuery by SmartQuery (found from Egeria's relationships, not from the Portal's additionalProperties) is
+    detached through the dedicated endpoint, and then the SavedQuery is deleted.
+
+    The Results Sets themselves are kept: deleting one also means unlinking its members and, for a Smart
+    Collection, its catalog target, which is the owner's call. They are named in the result.
+
+    Returns {"deleted": guid, "detached": [results set guids], "results_sets_kept": [...]}. A link that cannot be
+    detached stops the delete, raising RuntimeError with the reason, so nothing is half done silently.
+    """
+    if not saved_query_guid:
+        raise ValueError("delete_saved_query: the SavedQuery's GUID is required")
+    linked = _elements(client.get_related_elements(saved_query_guid, "SmartQuery", start_at_end=2, start_from=0,
+                                                   page_size=50, output_format="JSON"))
+    detached: List[str] = []
+    for rs in linked:
+        rs_guid = _guid(rs)
+        if not rs_guid:
+            continue
+        try:
+            client.detach_smart_query(rs_guid, saved_query_guid)
+        except Exception as exc:  # said, and the delete does not go ahead
+            raise RuntimeError(f"delete_saved_query: the SmartQuery link from Results Set {rs_guid} could not be "
+                               f"detached ({type(exc).__name__}: {exc}); the saved query was not deleted") from exc
+        detached.append(rs_guid)
+    client.delete_asset(saved_query_guid)
+    logger.info(f"Deleted saved query {saved_query_guid}; detached {len(detached)} SmartQuery link(s)")
+    return {"deleted": saved_query_guid, "detached": detached, "results_sets_kept": list(detached)}
