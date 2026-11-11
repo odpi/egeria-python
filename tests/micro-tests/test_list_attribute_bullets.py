@@ -63,7 +63,8 @@ def test_egeria_holds_the_split_value_today():
     ("- one, with a comma", ["one, with a comma"]),               # one bullet stays one item
     ("- a, b\n- c", ["a, b", "c"]),
     ("* a, b\n+ c", ["a, b", "c"]),
-    ("first line, with comma\nsecond", ["first line, with comma", "second"]),  # multi-line: a line is an item
+    ("First line, with comma\nSecond", ["First line, with comma", "Second"]),  # a line list: a line is an item
+    ("first line, with comma\nsecond", ["first line, with comma second"]),     # wrapped prose: one item
     ("\n- a\n\n- b\n", ["a", "b"]),
     ("", []),
     (None, None),
@@ -77,3 +78,43 @@ def test_split_list_value(text, expected):
 
 def test_spec_metadata_splitting_is_unchanged():
     assert split_tb_string("Display Name; Name, Title") == ["Display Name", "Name", "Title"]
+
+
+# ── n1: mixed blocks and wrapped prose (real blocks from egeria-workspaces, copied verbatim) ──
+# glossary_usage.txt        <- coco-workbooks/1. coco-data-hub/data-field-naming/glossary.md:32-34 (Usage)
+# samples_examples.txt      <- exchange-quickstart/loading-bay/dr-egeria-samples/dr_egeria_intro_part1.md (Examples)
+# samples_mixed_examples.txt <- exchange-quickstart/loading-bay/dr-egeria-samples/dr_egeria_intro_part3.md:83-89
+
+def _block(name):
+    return (DATA / "dr_egeria" / name).read_text()
+
+
+def test_wrapped_prose_is_one_item():
+    items = split_list_value(_block("glossary_usage.txt"))
+    assert len(items) == 1
+    assert items[0].startswith("This glossary is used by data architects") and "by combining a prime word" in items[0]
+    assert items[0].endswith("Common Class Words folder).") and "\n" not in items[0]
+
+
+def test_a_plain_line_list_is_one_item_per_line():
+    assert split_list_value(_block("samples_examples.txt")) == [
+        "Create Glossary or", "Update Glossary or", "Create Term or", "Update Term"]
+
+
+def test_a_mixed_block_keeps_intro_bullets_and_closing_line_apart():
+    items = split_list_value(_block("samples_mixed_examples.txt"))
+    assert items[0] == "Default values for key environment variables in the **Egeria Workspaces** environment:"
+    assert items[1:5] == ["EGERIA_ROOT_PATH=/home/jovyan", "EGERIA_INBOX_PATH=loading-bay/dr-egeria-inbox",
+                          "EGERIA_OUTBOX_PATH=distribution-hub/dr-egeria-outbox", "EGERIA_LOCAL_QUALIFIER=EGERIA"]
+    assert items[5].startswith("So place input files") and len(items) == 6   # a closing sentence stands alone
+
+
+@pytest.mark.parametrize("text, expected", [
+    ("- a bullet that wraps onto\n  an indented next line\n- second", ["a bullet that wraps onto an indented next line", "second"]),
+    ("- a bullet that wraps and\ncontinues in lower case\n- second", ["a bullet that wraps and continues in lower case", "second"]),
+    ("- a finished bullet.\nlower case after a full stop\n- b", ["a finished bullet.", "lower case after a full stop", "b"]),
+    ("Intro line\n- a, b\n- c", ["Intro line", "a, b", "c"]),
+    ("Short one\nShort two", ["Short one", "Short two"]),
+])
+def test_continuation_rules(text, expected):
+    assert split_list_value(text) == expected

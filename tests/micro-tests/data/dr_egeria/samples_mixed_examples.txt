@@ -1,0 +1,7 @@
+Default values for key environment variables in the **Egeria Workspaces** environment:
+* EGERIA_ROOT_PATH=/home/jovyan
+* EGERIA_INBOX_PATH=loading-bay/dr-egeria-inbox
+* EGERIA_OUTBOX_PATH=distribution-hub/dr-egeria-outbox
+* EGERIA_LOCAL_QUALIFIER=EGERIA
+
+So place input files in the `loading-bay/dr-egeria-inbox` folder and look for output files in `distribution-hub/dr-egeria-outbox`.

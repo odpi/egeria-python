@@ -86,7 +86,8 @@ def split_list_value(text: Any) -> list | None:
 
     - A bulleted or multi-line value: each bullet (or line) is one item, verbatim -- a comma inside a
       bullet is part of the item ("- agreed with the depending domain, not set by IT alone" is one
-      item). A leading markdown bullet (`- `, `* `, `+ `) is stripped.
+      item). A leading markdown bullet (`- `, `* `, `+ `) is stripped. Wrapped continuations and
+      wrapped prose are handled by `_split_multiline`.
     - A single-line value is split on commas and semicolons ("a, b" is two items), including an inline
       bulleted list on one line ("- a; - b, c" is three); a single bullet on its own line is one item.
 
@@ -101,12 +102,53 @@ def split_list_value(text: Any) -> list | None:
     if not lines:
         return []
     if len(lines) > 1:
-        items = [_LIST_BULLET.sub('', line).strip() for line in lines]
-        return [item for item in items if item]
+        return _split_multiline(lines)
     line = lines[0]
     if _LIST_BULLET.match(line) and not _INLINE_BULLETS.search(line):
         return [_LIST_BULLET.sub('', line).strip()]  # one bullet: one item, commas and all
     items = [_LIST_BULLET.sub('', item).strip() for item in re.split(r'[;,]+', line)]
+    return [item for item in items if item]
+
+
+_SENTENCE_END = re.compile(r'[.!?;:]["\')\]]*$')
+#: A wrapped line is at least this long; a shorter line that ends without punctuation stands alone.
+_WRAP_WIDTH = 60
+
+
+def _continues(previous: str, line: str) -> bool:
+    """Whether a non-bullet `line` after a bullet is that bullet's wrapped continuation: indented, or
+    starting in lower case after a bullet that did not end its sentence. Anything else stands alone."""
+    if line[:1].isspace():
+        return True
+    return line.lstrip()[:1].islower() and not _SENTENCE_END.search(previous.rstrip())
+
+
+def _split_multiline(lines: list) -> list:
+    """Items of a multi-line list value (6.2.39):
+
+    - **With bullets:** each bullet is an item. A non-bullet line after a bullet joins it when it is a
+      wrapped continuation (indented, or starting in lower case); otherwise -- a closing sentence, say
+      -- it is its own item. Lines before the first bullet (an intro) are their own items.
+    - **Without bullets:** clearly wrapped prose -- every line break falls inside a sentence (the line
+      before it does not end in . ! ? ; : and is long, or the next line starts in lower case) -- is one
+      item, its lines joined with spaces. Otherwise each line is an item (a line list).
+    Commas are never split inside a multi-line value."""
+    if not any(_LIST_BULLET.match(line) for line in lines):
+        if all(not _SENTENCE_END.search(a.rstrip()) and (b.lstrip()[:1].islower() or len(a.rstrip()) >= _WRAP_WIDTH)
+               for a, b in zip(lines, lines[1:])):
+            return [" ".join(line.strip() for line in lines)]
+        return [line.strip() for line in lines if line.strip()]
+    items: list = []
+    in_bullet = False
+    for line in lines:
+        if _LIST_BULLET.match(line):
+            items.append(_LIST_BULLET.sub('', line).strip())
+            in_bullet = True
+        elif in_bullet and _continues(items[-1], line):
+            items[-1] = f"{items[-1]} {line.strip()}"
+        else:
+            items.append(line.strip())
+            in_bullet = False
     return [item for item in items if item]
 
 
