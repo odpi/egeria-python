@@ -150,6 +150,10 @@ class EnvironmentConfig(BaseModel):
     # RS-EGERIA-TIER stage 1). PYEGERIA_REPORT_SPEC_FOLDERS (comma-separated) overrides it.
     # Empty by default: a sync never takes "every ReportSpec visible".
     pyegeria_report_spec_folders: List[str] = Field(default_factory=list, alias="Pyegeria Report Spec Folders")
+    # Dashboard folders (LD-1): CollectionFolder qualified names whose Dashboard sheets a listing
+    # shows, e.g. "DashboardFolder::Consumer::Portal". PYEGERIA_DASHBOARD_FOLDERS (comma-separated)
+    # overrides it. Empty means every Dashboard:: sheet, and the listing says so.
+    pyegeria_dashboard_folders: List[str] = Field(default_factory=list, alias="Pyegeria Dashboard Folders")
 
     model_config = ConfigDict(populate_by_name=True, extra='allow')
 
