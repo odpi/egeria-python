@@ -21,8 +21,12 @@ from profile_utils import set_screen_heading
 class SplashScreen(ModalScreen):
     """ SplashScreen for my_egeria """
 
-    # Escape must dismiss (not pop) the screen, so that MyProfileApp.mainline still runs
-    BINDINGS = [("escape", "continue_to_app", "Continue")]
+    # Escape, Enter, or Space dismisses the splash screen to continue to the main app
+    BINDINGS = [
+        ("escape", "continue_to_app", "Continue"),
+        ("enter", "continue_to_app", "Continue"),
+        ("space", "continue_to_app", "Continue"),
+    ]
 
     CSS_PATH = "my_profile.tcss"
 
