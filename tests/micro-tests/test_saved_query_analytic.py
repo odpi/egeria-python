@@ -93,12 +93,21 @@ class _Viewer:
     """The viewer's own client. Records every call; it is the only way anything is reached."""
     platform_url, view_server = PLATFORM, VIEW
 
-    def __init__(self, stored=None, answer=0, members=0, lookup_error=None, run_error=None, smart=False):
+    def __init__(self, stored=None, answer=0, members=0, lookup_error=None, run_error=None, smart=False,
+                 completion=None):
         self.stored = [_saved_query()] if stored is None else stored
         self.answer, self.members = answer, members
         self.lookup_error, self.run_error = lookup_error, run_error
         self.smart = smart        # True: Egeria records this SavedQuery as a Smart Collection (see _smart_shapes)
+        self.completion = completion   # the Results Set's completionTime, stamped by Egeria on each refresh
         self.calls = []
+
+    def get_collection_by_guid(self, guid, output_format="JSON", **kw):
+        self.calls.append(("results_set", guid))
+        props = {"class": "ResultsSetProperties", "typeName": "ResultsSet", "qualifiedName": f"ResultsSet::{guid}"}
+        if self.completion is not None:
+            props["completionTime"] = self.completion
+        return {"elementHeader": {"guid": guid, "type": {"typeName": "ResultsSet"}}, "properties": props}
 
     def get_related_elements(self, guid, relationship_type=None, start_at_end=1, **kw):
         self.calls.append(("related", guid, relationship_type, start_at_end))
@@ -524,10 +533,26 @@ def test_a_registered_answer_ignores_a_refresh_record_naming_other_values():
     assert out["value"] is None and "kept current by Egeria" in out["state_reason"]
 
 
-def test_a_registered_answer_needs_no_portal_refresh_time():
-    out = saved_query(_Viewer(stored=[_shared(lastRefreshedTime="", lastRefreshParams=None)], members=3, smart=True), FQN)
-    assert out["value"] == 3 and out["asOf"] is None
-    assert out["subtitle"].startswith("kept current by Egeria \u00b7 no refresh time recorded, for ")
+def test_a_registered_answer_is_as_of_egerias_refresh_when_the_portal_recorded_none():
+    q = _shared(lastRefreshedTime="", lastRefreshParams=None)
+    out = saved_query(_Viewer(stored=[q], members=3, smart=True, completion="2026-11-11T09:30:00.000+00:00"), FQN)
+    assert out["value"] == 3 and out["asOf"] == "2026-11-11T09:30:00.000+00:00"
+    assert out["subtitle"].startswith("kept current by Egeria \u00b7 as of 2026-11-11T09:30:00.000+00:00, for ")
+
+
+def test_a_registered_query_egeria_has_not_refreshed_yet_is_not_an_empty_answer():
+    # The LD-2 read-back: the Results Set exists but no refresh has run, so it is empty; that is "not refreshed
+    # yet", never 0, and its (empty) members are not read as an answer.
+    viewer = _Viewer(stored=[_shared(lastRefreshedTime="", lastRefreshParams=None)], members=0, smart=True)
+    out = saved_query(viewer, FQN)
+    assert out["value"] is None and out["state"] == "not_established"
+    assert "not refreshed yet" in out["state_reason"] and "not an empty answer" in out["state_reason"]
+    assert not [c for c in viewer.calls if c[0] == "members"]
+
+
+def test_egerias_refresh_time_wins_for_a_registered_query():
+    out = saved_query(_Viewer(stored=[_shared()], members=7, smart=True, completion=1762853400000), FQN)
+    assert out["asOf"] == "2025-11-11T09:30:00+00:00"   # epoch ms from Egeria, not the Portal's 2026-11-10 time
 
 
 def test_a_registered_query_with_no_parameters_is_served_and_labelled():
@@ -679,6 +704,7 @@ def test_a_lookup_that_fails_is_not_a_registration():
             raise RuntimeError("HTTP 500 from the view server")
     out = saved_query(Failing(stored=[_unregistered()], members=7), FQN, params=REFRESHED_WITH)
     assert "keptCurrentBy" not in out and out["value"] == 7     # the ordinary cached path, for its recorded values
+    assert "could not be read (RuntimeError)" in out["note"] and "answered as one that is not" in out["note"]
 
 
 def test_live_mode_never_looks_up_registration():
