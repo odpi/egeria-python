@@ -42,6 +42,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 from typing import Any, Callable, Dict, List, Literal, Optional, Tuple
 
 from loguru import logger
@@ -250,13 +251,37 @@ def _all_resolutions() -> Dict[str, Any]:
         return {}
 
 
+_CAMEL_RUN = re.compile(r"(.)([A-Z][a-z]+)")
+_CAMEL_END = re.compile(r"([a-z0-9])([A-Z])")
+
+
+def _snake(key: str) -> str:
+    """`collectionQname` -> `collection_qname`, `collectionGUID` -> `collection_guid`; snake_case is unchanged."""
+    return _CAMEL_END.sub(r"\1_\2", _CAMEL_RUN.sub(r"\1_\2", key)).lower()
+
+
+def _snake_params(params: Dict[str, Any]) -> Dict[str, Any]:
+    """A Report's stored params in the spec's own (snake_case) names. The Report element stores them camelCase in
+    additionalProperties (searchString, pageSize, collectionQname, ...), and exec_report_spec keeps only the names
+    the spec declares, so a camelCase key was dropped and a collection-scoped tile failed for want of its
+    collection (the Architect's LD-2 read-back, 2026-11-11). A key already snake_case wins over a converted one."""
+    out: Dict[str, Any] = {}
+    for k, v in params.items():
+        if isinstance(k, str) and _snake(k) != k:
+            out.setdefault(_snake(k), v)
+    for k, v in params.items():
+        if not (isinstance(k, str) and _snake(k) != k):
+            out[k] = v
+    return out
+
+
 def _run_report(client: Any, placement: ResolvedPlacement) -> Dict[str, Any]:
     """exec_report_spec as the viewer: the client's own token, server and platform."""
     from pyegeria.view.format_set_executor import exec_report_spec
     report = placement.report
     action = getattr(placement.format_set, "action", None)
     analytic = bool(getattr(action, "analytic_function", None)) if action is not None else False
-    params = dict(report.analytic_params if analytic else report.params)
+    params = _snake_params(dict(report.analytic_params if analytic else report.params))
     return exec_report_spec(
         placement.fetched_as or placement.spec, output_format=report.output_format or "DICT", params=params,
         view_server=getattr(client, "server_name", None) or getattr(client, "view_server", None),
