@@ -266,6 +266,15 @@ def _run_report(client: Any, placement: ResolvedPlacement) -> Dict[str, Any]:
 
 # ---------------------------------------------------------------------------- the data step
 
+def _fetched_not_synced(source: Optional[Dict[str, Any]]) -> bool:
+    """An EGERIA-tier spec that is in the cache only because a call fetched it: no synced folder holds it."""
+    if not source or source.get("tier") != "egeria" or not source.get("label"):
+        return False
+    from pyegeria.view.egeria_spec_cache import egeria_tier_info
+    info = egeria_tier_info(source["label"])
+    return bool(info) and not info.get("folders")
+
+
 async def _fetch_as_viewer(client: Any, label: str) -> Tuple[Any, Optional[Dict[str, Any]], Optional[str], Optional[str]]:
     """Fetch a spec no tier holds from Egeria, as the viewer `client` (Egeria's zone check on this read is
     the authority). `(FormatSet, spec_source, internal name, None)`, or `(None, None, None, why)` with
@@ -326,6 +335,10 @@ async def _resolve_report_placement(client: Any, base: Dict[str, Any], p: Any, r
         out.error = f"report spec '{report.report_spec}' was not found in any tier"
         return out
     out.format_set, out.spec_source = fs, source
+    if out.fetched_as is None and _fetched_not_synced(source):
+        # Fetched as a viewer on an earlier view and written through to a per-user cache: it is in a tier now,
+        # but still in none of this tool's folders, so it still says so (Architect, LD-1 read-back).
+        out.note = f"{out.note}; {SPEC_NOT_IN_FOLDER}" if out.note else SPEC_NOT_IN_FOLDER
     spec_guid = (source or {}).get("guid") if (source or {}).get("tier") == "egeria" else None
     if check_spec_visibility and spec_guid:
         # The EGERIA tier may be filled by another user (the app's service user, into a shared cache);

@@ -105,3 +105,17 @@ async def test_fetching_can_be_turned_off(tier):
     sheet = await dr.async_resolve_dashboard_sheet(fake, "shared", spec_lookup=_no_tier_holds_it,
                                                    fetch_missing=False)
     assert sheet.placements[0].error == f"report spec '{LABEL}' was not found in any tier"
+
+
+async def test_the_note_stays_once_the_fetched_spec_is_in_the_viewers_cache(tier):
+    """A per-user cache keeps the fetched copy, so the next view finds it in the EGERIA tier; it is still in
+    none of this tool's folders, so the note stays (the Architect's LD-1 read-back)."""
+    from pyegeria.view.dashboard_resolver import _default_spec_lookup
+
+    fake = await _sheet_naming_the_spec()
+    first = (await dr.async_resolve_dashboard_sheet(fake, "shared")).placements[0]
+    assert first.fetched_as and first.note == dr.SPEC_NOT_IN_FOLDER
+    second = (await dr.async_resolve_dashboard_sheet(fake, "shared")).placements[0]
+    assert second.fetched_as is None and second.spec_source["tier"] == "egeria"   # from the cache this time
+    assert second.note == dr.SPEC_NOT_IN_FOLDER
+    assert _default_spec_lookup(LABEL)[0] is not None
