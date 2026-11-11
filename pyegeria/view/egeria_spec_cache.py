@@ -48,7 +48,15 @@ __all__ = [
     "SpecFetchError",
     "cache_dir",
     "configured_folders",
+    "configured_root",
     "sync_report_specs",
+    "refresh_consumer_index",
+    "read_consumer_index",
+    "build_consumer_index",
+    "CONSUMER_PREFIX",
+    "DEFAULT_ROOT",
+    "DEPTH_CAP",
+    "ROOT_ENV",
     "fetch_spec_for_call",
     "async_fetch_spec_for_call",
     "egeria_tier",
@@ -70,6 +78,15 @@ _QN_MARKERS = ("ReportSpec::", "ReportType::")
 _ACTIVE = "ACTIVE"
 _DRAFT_STATUSES = ("DRAFT", "PROPOSED")
 _RELOAD_INTERVAL_S = 1.0
+# Consumer folders (report-spec consumer folders, phases 1-2): a RootCollection whose members are
+# one CollectionFolder per consuming tool. A tool syncs its own consumer folder; sub-folders inside
+# it are followed (cycle-safe, depth-capped); the root and sibling consumers are never walked into.
+ROOT_ENV = "PYEGERIA_REPORT_SPEC_ROOT"
+DEFAULT_ROOT = "RootCollection::ReportSpecs"
+CONSUMER_PREFIX = "ReportSpecFolder::Consumer::"
+DEPTH_CAP = 5
+CONSUMERS = "consumers.json"
+CONSUMERS_FORMAT = "pyegeria-report-spec-consumers/1"
 
 #: Tier prefixes accepted wherever a spec name is (§7a "Resolution order"). `seed:` is stage 2's
 #: name for `builtin:`; both are accepted now.
@@ -170,6 +187,22 @@ def configured_folders() -> List[str]:
     return list(getattr(env, "pyegeria_report_spec_folders", None) or []) if env else []
 
 
+def configured_root() -> str:
+    """The root of the consumer-folder tree: `PYEGERIA_REPORT_SPEC_ROOT`, else
+    `RootCollection::ReportSpecs`."""
+    return (os.getenv(ROOT_ENV) or "").strip() or DEFAULT_ROOT
+
+
+def _is_consumer_qn(qn: str) -> bool:
+    """A consumer folder or a folder inside one (its qualified name starts with the prefix)."""
+    return bool(qn) and qn.startswith(CONSUMER_PREFIX) and len(qn) > len(CONSUMER_PREFIX)
+
+
+def _is_top_consumer_qn(qn: str) -> bool:
+    """A consumer folder itself (`ReportSpecFolder::Consumer::<Name>`), not a sub-folder."""
+    return _is_consumer_qn(qn) and "::" not in qn[len(CONSUMER_PREFIX):]
+
+
 # ── Files ──
 
 def _atomic_write_json(path: Path, obj: Any) -> None:
@@ -211,7 +244,7 @@ def _read_manifest(directory: Path) -> Dict[str, Any]:
 
 
 def _prune_unnamed(directory: Path, manifest: Dict[str, Any]) -> None:
-    keep = {MANIFEST}
+    keep = {MANIFEST, CONSUMERS}
     for entry in manifest.get("entries", {}).values():
         keep.add(entry.get("file", ""))
         keep.add(entry.get("provenance", ""))
@@ -291,6 +324,29 @@ def _type_names(el: Dict[str, Any]) -> List[str]:
 
 def _props(el: Dict[str, Any]) -> Dict[str, Any]:
     return el.get("properties") or {}
+
+
+def _zones(el: Dict[str, Any]) -> List[str]:
+    """The governance zones on an element. In Egeria 6.2 ZoneMembership is its own header key
+    (`elementHeader.zoneMembership.classificationProperties.zoneMembership`), not an entry of
+    `elementHeader.classifications`; both places are read, so a list-only check never reports
+    "no zones" for a zoned element."""
+    header = _header(el)
+    found: List[str] = []
+    candidates = [header.get("zoneMembership")] + [c for c in (header.get("classifications") or [])
+                                                   if isinstance(c, dict)
+                                                   and c.get("classificationName") == "ZoneMembership"]
+    for c in candidates:
+        if not isinstance(c, dict):
+            continue
+        z = (c.get("classificationProperties") or {}).get("zoneMembership")
+        if isinstance(z, str):
+            z = [z]
+        found.extend(str(v) for v in (z or []) if v)
+    return sorted(set(found))
+
+
+ZONED_REASON = "zoned: not synced into a shared cache (until B6's public-only read)"
 
 
 def _elements(result: Any) -> List[Dict[str, Any]]:
@@ -468,10 +524,17 @@ class SyncReport:
     skipped: List[Tuple[str, str]] = field(default_factory=list)
     notes: List[str] = field(default_factory=list)
     drafts: Optional["SyncReport"] = None
+    # Every folder whose members were read, sub-folders as "Top / Sub" paths (recursive sync).
+    folders_read: List[str] = field(default_factory=list)
+    # Sub-folders not read because the depth cap stopped the walk ("depth cap reached").
+    depth_cap_reached: List[str] = field(default_factory=list)
+    # The consumer index refreshed by this sync: {"status", "reason", "consumers", "labels"}, or
+    # None when this sync did not refresh it (a --spec sync, or index_consumers=False).
+    consumers: Optional[Dict[str, Any]] = None
 
     def to_dict(self) -> Dict[str, Any]:
         out = {k: getattr(self, k) for k in ("cache_dir", "folders", "added", "updated", "unchanged", "pruned",
-                                             "notes")}
+                                             "notes", "folders_read", "depth_cap_reached", "consumers")}
         out["skipped"] = [list(s) for s in self.skipped]
         if self.drafts is not None:
             out["drafts"] = self.drafts.to_dict()
@@ -480,12 +543,24 @@ class SyncReport:
     def render(self) -> str:
         lines = [f"Report spec cache: {self.cache_dir}"]
         lines.append(f"Folders: {', '.join(self.folders) if self.folders else '(none)'}")
+        if self.folders_read and self.folders_read != self.folders:
+            lines.append(f"Folders read ({len(self.folders_read)}): {', '.join(self.folders_read)}")
+        if self.depth_cap_reached:
+            lines.append(f"Depth cap reached, not read: {', '.join(self.depth_cap_reached)}")
         for name in ("added", "updated", "unchanged", "pruned"):
             vals = getattr(self, name)
             lines.append(f"{name.capitalize()} ({len(vals)}): {', '.join(vals) if vals else '-'}")
         lines.append(f"Skipped ({len(self.skipped)}):" + ("" if self.skipped else " -"))
         lines.extend(f"  - {who}: {why}" for who, why in self.skipped)
         lines.extend(f"Note: {n}" for n in self.notes)
+        if self.consumers is not None:
+            c = self.consumers
+            if c.get("status") == "not read":
+                lines.append(f"Consumers: not read ({c.get('reason')})")
+            else:
+                extra = f"; {c.get('reason')}" if c.get("reason") else ""
+                lines.append(f"Consumers: {c.get('status')} ({c.get('consumers')} consumer folders, "
+                             f"{c.get('labels')} specs{extra})")
         if self.drafts is not None:
             lines.append("Drafts cache:")
             lines.extend("  " + ln for ln in self.drafts.render().splitlines())
@@ -530,9 +605,94 @@ def _client_identity(client) -> str:
     return str(getattr(client, "user_id", "") or "?")
 
 
+def _is_folder(el: Dict[str, Any]) -> bool:
+    return "CollectionFolder" in _type_names(el)
+
+
+@dataclass
+class _Walk:
+    """What a walk of one folder (and, when recursive, the folders inside it) found."""
+    members: List[Dict[str, Any]] = field(default_factory=list)  # every non-folder member, once per GUID
+    read: List[str] = field(default_factory=list)              # folders read, "Top / Sub" paths
+    capped: List[str] = field(default_factory=list)            # sub-folders the depth cap stopped
+    not_followed: List[Tuple[str, str]] = field(default_factory=list)
+    errors: List[Tuple[str, str]] = field(default_factory=list)  # sub-folders whose members could not be read
+    gone: List[Tuple[str, str]] = field(default_factory=list)    # sub-folders not visible or not found
+
+
+def _is_gone_error(exc: BaseException) -> bool:
+    """A read refused because the element is not visible to the caller, or not found: the folder is
+    gone for this reader. Anything else (timeout, 5xx, refused connection) is a genuine error."""
+    try:
+        from pyegeria.view.dashboard_resolver import _is_not_found_error, is_not_visible_error
+        return bool(is_not_visible_error(exc) or _is_not_found_error(exc))
+    except Exception:  # noqa: BLE001 -- if the classifiers cannot load, keep the cache (the safe side)
+        return False
+
+
+def _walk_folder(client, folder: Dict[str, Any], *, recursive: bool, depth_cap: int = DEPTH_CAP,
+                 stop_qns: Iterable[str] = ()) -> _Walk:
+    """Read `folder`'s members; when `recursive`, follow CollectionFolder members downwards.
+
+    Only CollectionFolder members are followed. A GUID is read at most once (the cycle guard); a
+    folder deeper than `depth_cap` below `folder` is not read and is named in `capped`. A member
+    that is a RootCollection, a consumer folder other than this one, or a qualified name in
+    `stop_qns` is never followed: the walk goes down inside one consumer, never up to the root or
+    across into a sibling. The top folder's members are read without a guard, so an error there
+    raises to the caller; an error in a sub-folder is recorded in `errors`."""
+    top_qn = _props(folder).get("qualifiedName") or _guid(folder)
+    stops = set(stop_qns) - {top_qn}
+    w = _Walk()
+    seen = {_guid(folder)}
+    member_guids: set = set()
+    queue: List[Tuple[Dict[str, Any], int, str]] = [(folder, 0, top_qn)]
+    while queue:
+        current, depth, path = queue.pop(0)
+        if depth == 0:
+            listed = _call(client.get_collection_members, collection_guid=_guid(current), output_format="JSON")
+        else:
+            try:
+                listed = _call(client.get_collection_members, collection_guid=_guid(current),
+                               output_format="JSON")
+            except Exception as exc:  # noqa: BLE001
+                if _is_gone_error(exc):
+                    # Not visible (zoned away from the reader) or deleted: its specs are no longer
+                    # published through this folder, so they are pruned, never kept as "unread".
+                    w.gone.append((path, str(exc)))
+                else:  # a genuine error (timeout, 5xx): an outage must not unpublish the consumer
+                    w.errors.append((path, str(exc)))
+                continue
+        w.read.append(path)
+        for m in listed:
+            g = _guid(m)
+            if not g:
+                continue
+            is_root = "RootCollection" in _type_names(m)
+            if not (recursive and (_is_folder(m) or is_root)):
+                if g not in member_guids:
+                    member_guids.add(g)
+                    w.members.append(m)
+                continue
+            qn = _props(m).get("qualifiedName") or g
+            sub_path = f"{path} / {qn}"
+            if is_root:
+                w.not_followed.append((sub_path, "a RootCollection; the walk never goes up to the root"))
+            elif g in seen:
+                w.not_followed.append((sub_path, "already read (a cycle, or a second path to the same folder)"))
+            elif qn in stops or (_is_top_consumer_qn(qn) and qn != top_qn):
+                w.not_followed.append((sub_path, "another consumer folder; the walk never goes across"))
+            elif depth + 1 > depth_cap:
+                w.capped.append(sub_path)
+            else:
+                seen.add(g)
+                queue.append((m, depth + 1, sub_path))
+    return w
+
+
 def sync_report_specs(client, *, folders: Optional[Iterable[str]] = None, specs: Optional[Iterable[str]] = None,
                       include_drafts: bool = False, cache_dir: Optional[str] = None,
-                      shared: Optional[bool] = None) -> SyncReport:
+                      shared: Optional[bool] = None, recursive: Optional[bool] = None,
+                      depth_cap: int = DEPTH_CAP, index_consumers: bool = True) -> SyncReport:
     """Sync report specs held in Egeria into the local cache (§7a "Sync").
 
     - `folders`: CollectionFolder qualified names. Default: `configured_folders()` (O-H5); never
@@ -543,7 +703,17 @@ def sync_report_specs(client, *, folders: Optional[Iterable[str]] = None, specs:
       synced folder, or gone from Egeria, are pruned and named.
     - `include_drafts`: DRAFT and PROPOSED specs go to the separate `drafts/` cache.
     - `shared`: mark the cache shared (a fetch-on-call never writes a shared cache). Default:
-      keep what the manifest says (False for a new cache).
+      keep what the manifest says (False for a new cache). A shared cache never takes a spec that
+      carries a governance zone (report-spec consumer folders §9, until B6's public-only read): it
+      is skipped as "zoned: not synced into a shared cache", and a cached copy is pruned.
+    - `recursive`: follow CollectionFolder members of each folder (cycle-safe, at most `depth_cap`
+      levels below it; never up to the root nor across into a sibling consumer folder). Default
+      (None): on for consumer folders (`ReportSpecFolder::Consumer::...`), off for any other folder.
+      A spec found in a sub-folder is recorded against the folder that was named. The report lists
+      `folders_read`, and `depth_cap_reached` names any sub-folder the cap stopped.
+    - `index_consumers`: after a folder sync, refresh the consumer index (`refresh_consumer_index`)
+      in the same cache directory; `report.consumers` says whether the root was read. Its failure
+      never fails the sync.
     - One bad spec never fails the sync; it is skipped with its reason. A second sync of the same
       cache while one runs raises `SyncAlreadyRunning` at once.
     """
@@ -571,19 +741,34 @@ def sync_report_specs(client, *, folders: Optional[Iterable[str]] = None, specs:
             if folder is None:
                 report.skipped.append((qn, f"folder not found, or not visible to {identity}"))
                 continue
+            walk_recursive = _is_consumer_qn(qn) if recursive is None else bool(recursive)
             try:
-                listed = _call(client.get_collection_members, collection_guid=_guid(folder), output_format="JSON")
+                walk = _walk_folder(client, folder, recursive=walk_recursive, depth_cap=depth_cap,
+                                    stop_qns=folder_qns)
             except Exception as exc:  # noqa: BLE001
                 report.skipped.append((qn, f"the folder's members could not be read, so its specs are kept as "
                                            f"cached: {exc}"))
                 unread_folders.add(qn)
                 continue
-            for m in listed:
+            report.folders_read.extend(walk.read)
+            report.depth_cap_reached.extend(walk.capped)
+            if walk.capped:
+                # Not read is not "no longer a member": keep what the folder held, prune nothing.
+                unread_folders.add(qn)
+                report.notes.append(f"{qn}: depth cap reached ({depth_cap} levels below it); not read, so its "
+                                    f"cached specs are kept: " + ", ".join(walk.capped))
+            report.notes.extend(f"{path}: not followed, {why}" for path, why in walk.not_followed)
+            report.notes.extend(f"{path}: not visible or not found, so its specs are no longer published through "
+                                f"{qn}: {why}" for path, why in walk.gone)
+            if walk.errors:
+                unread_folders.add(qn)
+                report.skipped.extend((path, f"the sub-folder's members could not be read, so {qn}'s specs are "
+                                             f"kept as cached: {why}") for path, why in walk.errors)
+            for m in walk.members:
                 g = _guid(m)
-                if not g:
-                    continue
                 if g in members:
-                    members[g][1].append(qn)
+                    if qn not in members[g][1]:
+                        members[g][1].append(qn)
                 else:
                     members[g] = (m, [qn])
         pinned_lookups: Dict[str, List[Dict[str, Any]]] = {}
@@ -600,6 +785,7 @@ def sync_report_specs(client, *, folders: Optional[Iterable[str]] = None, specs:
         main_dir, drafts_dir = directory, directory / DRAFTS_DIR
         main_old, drafts_old = _read_manifest(main_dir), _read_manifest(drafts_dir)
         main_new = _new_manifest(main_old, identity, shared)
+        shared_cache = bool(main_new.get("shared"))  # §9: a shared cache never holds a zoned spec
         drafts_new = _new_manifest(drafts_old, identity, shared)
         drafts_report = SyncReport(cache_dir=str(drafts_dir), folders=folder_qns) if include_drafts else None
 
@@ -635,6 +821,9 @@ def sync_report_specs(client, *, folders: Optional[Iterable[str]] = None, specs:
 
         registry_names = _known_names() | set(candidates)
         for label, [(g, m, fl, pinned)] in candidates.items():
+            if shared_cache and _zones(m):
+                report.skipped.append((label, f"{ZONED_REASON}; zones {', '.join(_zones(m))}"))
+                continue
             status_notes: List[str] = []
             status = _status(m, status_notes)
             if status == _ACTIVE:
@@ -659,6 +848,9 @@ def sync_report_specs(client, *, folders: Optional[Iterable[str]] = None, specs:
                 continue
             try:
                 full = _get_full(client, g) or m
+                if shared_cache and _zones(full):  # the member listing may not carry the header's zones
+                    rep.skipped.append((label, f"{ZONED_REASON}; zones {', '.join(_zones(full))}"))
+                    continue
                 built = _build(full, folders=folders_now, identity=identity, registry_names=registry_names)
             except _Skip as s:
                 rep.skipped.append((s.who, s.reason))
@@ -712,6 +904,13 @@ def sync_report_specs(client, *, folders: Optional[Iterable[str]] = None, specs:
         main_dir.mkdir(parents=True, exist_ok=True)
         _write_manifest(main_dir, main_new)
         _prune_unnamed(main_dir, main_new)
+        if index_consumers and folder_qns:
+            try:
+                idx = refresh_consumer_index(client, cache_dir=str(main_dir), depth_cap=depth_cap)
+            except Exception as exc:  # noqa: BLE001 -- the index never fails the sync
+                idx = {"status": "not read", "reason": f"{type(exc).__name__}: {exc}", "consumers": [], "index": {}}
+            report.consumers = {"status": idx.get("status"), "reason": idx.get("reason"),
+                                "consumers": len(idx.get("consumers") or []), "labels": len(idx.get("index") or {})}
     _invalidate_tier()
     logger.info(f"Report spec sync into {directory}: {len(report.added)} added, {len(report.updated)} updated, "
                 f"{len(report.unchanged)} unchanged, {len(report.pruned)} pruned, {len(report.skipped)} skipped")
@@ -728,6 +927,132 @@ def _resolve_cache_dir(client, override: Optional[str]) -> Path:
     url = getattr(client, "platform_url", None) if client is not None else None
     server = getattr(client, "view_server", None) if client is not None else None
     return cache_dir(url, server, override)
+
+
+# ── The consumer index: which tools each Egeria-held spec is published to ──
+
+_CONSUMERS_MEMO: Dict[str, Any] = {}
+
+
+def _consumer_name(el: Dict[str, Any]) -> str:
+    props = _props(el)
+    qn = props.get("qualifiedName") or ""
+    tail = qn[len(CONSUMER_PREFIX):] if _is_consumer_qn(qn) else qn
+    return props.get("displayName") or tail or _guid(el)
+
+
+def _not_read(out: Dict[str, Any], reason: str) -> Dict[str, Any]:
+    out.update(status="not read", reason=reason, consumers=[], index={})
+    return out
+
+
+def build_consumer_index(client, *, root: Optional[str] = None, depth_cap: int = DEPTH_CAP) -> Dict[str, Any]:
+    """Read the consumer-folder tree once and return `{label: [consumer, ...]}` with how it was read.
+
+    Names and labels only: no spec is fetched in full. The root (`configured_root()`) is a
+    RootCollection; each CollectionFolder member is one consumer, named by its displayName. Each
+    consumer folder is walked like a recursive sync (cycle-safe, `depth_cap`, never into a sibling).
+
+    `status` is "read"; "partial" (some consumer folders were not fully read: `reason` and each
+    consumer's own `status` say which); or "not read" (the root itself could not be read: `index`
+    is empty and must never be shown as "used by none"). `consumers` lists every consumer folder,
+    read or not, so a reader can claim "used by none" only against a fully read tree."""
+    root_qn = root or configured_root()
+    identity = _client_identity(client)
+    out: Dict[str, Any] = {"format": CONSUMERS_FORMAT, "root": root_qn, "read_at": _now(), "read_as": identity,
+                           "status": "read", "reason": None, "consumers": [], "index": {}, "notes": []}
+    try:
+        found = _call(client.get_collections_by_name, root_qn, metadata_element_type="RootCollection",
+                      output_format="JSON")
+    except Exception as exc:  # noqa: BLE001
+        return _not_read(out, f"the root {root_qn} could not be read: {exc}")
+    roots = [e for e in found if _props(e).get("qualifiedName") == root_qn]
+    if not roots:
+        return _not_read(out, f"the root {root_qn} was not found, or is not visible to {identity}")
+    try:
+        listed = _call(client.get_collection_members, collection_guid=_guid(roots[0]), output_format="JSON")
+    except Exception as exc:  # noqa: BLE001
+        return _not_read(out, f"the members of the root {root_qn} could not be read: {exc}")
+    folders = [m for m in listed if _is_folder(m)]
+    out["notes"].extend(f"{_props(m).get('qualifiedName') or _guid(m)}: a member of the root that is not a "
+                        f"CollectionFolder, so not a consumer" for m in listed if not _is_folder(m))
+    stop = [_props(f).get("qualifiedName") or "" for f in folders] + [root_qn]
+    index: Dict[str, List[str]] = {}
+    unread: List[str] = []
+    for f in sorted(folders, key=_consumer_name):
+        name = _consumer_name(f)
+        entry = {"name": name, "qualifiedName": _props(f).get("qualifiedName"), "guid": _guid(f),
+                 "status": "read", "reason": None, "specs": 0}
+        out["consumers"].append(entry)
+        try:
+            walk = _walk_folder(client, f, recursive=True, depth_cap=depth_cap, stop_qns=stop)
+        except Exception as exc:  # noqa: BLE001
+            entry.update(status="not read", reason=str(exc))
+            unread.append(name)
+            continue
+        problems = [f"{p}: {e}" for p, e in walk.errors]
+        out["notes"].extend(f"{name}: {p} not visible or not found" for p, _e in walk.gone)
+        if walk.capped:
+            problems.append(f"depth cap reached ({depth_cap} levels); not read: " + ", ".join(walk.capped))
+        if problems:
+            entry.update(status="partial", reason="; ".join(problems))
+            unread.append(name)
+        labels = set()
+        for m in walk.members:
+            try:
+                label, _qn = _identify(m)
+            except _Skip:
+                continue  # not a well-formed spec: the sync reports those; the facet ignores them
+            if _zones(m):
+                # The index is a shared file shown to every viewer: a zoned spec's label stays out (§9).
+                out["notes"].append(f"{name}: {label}: {ZONED_REASON}")
+                continue
+            labels.add(label)
+        for label in labels:
+            index.setdefault(label, []).append(name)
+        entry["specs"] = len(labels)
+    out["index"] = {k: sorted(v) for k, v in sorted(index.items())}
+    if unread:
+        out.update(status="partial", reason="not fully read: " + ", ".join(unread))
+    return out
+
+
+def refresh_consumer_index(client, *, cache_dir: Optional[str] = None, root: Optional[str] = None,
+                           depth_cap: int = DEPTH_CAP) -> Dict[str, Any]:
+    """Build the consumer index and write it to `consumers.json` in the spec cache directory.
+    A "not read" result is written too, with its reason, so a reader never mistakes a failed read
+    for an empty tree. Returns what was written."""
+    directory = _resolve_cache_dir(client, cache_dir)
+    idx = build_consumer_index(client, root=root, depth_cap=depth_cap)
+    directory.mkdir(parents=True, exist_ok=True)
+    _atomic_write_json(directory / CONSUMERS, idx)
+    _CONSUMERS_MEMO.pop(str(directory), None)
+    return idx
+
+
+def read_consumer_index(*, cache_dir: Optional[str] = None, client=None) -> Dict[str, Any]:
+    """The consumer index the last sync wrote (`consumers.json`), read offline and memoised on the
+    file's mtime. With no index yet, or an unreadable file, the result has `status` "not read" and a
+    reason: absence is never returned as an empty index."""
+    try:
+        directory = _resolve_cache_dir(client, cache_dir)
+    except ValueError as exc:
+        return {"format": CONSUMERS_FORMAT, "status": "not read", "reason": str(exc), "consumers": [], "index": {}}
+    path = directory / CONSUMERS
+    try:
+        mtime = path.stat().st_mtime
+    except OSError:
+        return {"format": CONSUMERS_FORMAT, "status": "not read", "consumers": [], "index": {},
+                "reason": f"no consumer index in {directory} yet; a report-spec sync writes it"}
+    memo = _CONSUMERS_MEMO.get(str(directory))
+    if memo and memo[0] == mtime:
+        return memo[1]
+    data = _read_json(path)
+    if not isinstance(data, dict) or data.get("format") != CONSUMERS_FORMAT:
+        return {"format": CONSUMERS_FORMAT, "status": "not read", "consumers": [], "index": {},
+                "reason": f"{path} is not a consumer index this pyegeria can read"}
+    _CONSUMERS_MEMO[str(directory)] = (mtime, data)
+    return data
 
 
 # ── The EGERIA tier: what the registry reads ──

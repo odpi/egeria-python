@@ -22,7 +22,7 @@ into MD/LIST/DICT/REPORT/MERMAID/chart output.
 | `mermaid_utilities.py` | Mermaid diagram generation helpers. |
 | `vega_utilities.py` | Vega-Lite chart JSON generation helpers. |
 | `dashboard_sheet_registry.py` | Registry of dashboard sheet definitions. |
-| `dr_egeria_reports.py` | Large generated/legacy report-rendering module. |
+| `dr_egeria_reports.py` | The generated Dr.Egeria report specs as Python code (`FormatSetDict`), written by `refresh_specs` from the compact command specs; the same sets as `md_processing/data/generated_format_sets.json`. Not imported by pyegeria itself. |
 | `md_processing_utils.py` | Small formatting helpers shared with `md_processing/`. |
 
 Generated report specs follow `{Type}-DrE-{Basic|Advanced}` naming; see

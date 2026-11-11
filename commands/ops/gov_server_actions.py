@@ -3,9 +3,12 @@ SPDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 
 
+Click commands for Egeria server and catalog-target operations, used by `hey_egeria_ops tell` and
+`hey_egeria tell`:
 
-This script restarts an integration daemon.
-
+- `add-target`, `remove-target`, `update-target`: manage an integration connector's catalog targets.
+- `refresh`: ask the engine host to reload its governance engine configuration.
+- `start` / `stop`: activate an OMAG server from its stored configuration / shut it down.
 """
 
 import click
@@ -102,21 +105,25 @@ def update_catalog_target(ctx, relationship_guid: str, catalog_target_name: str)
         print_exception_response(e)
 
 
-#
-#   This method will be updated based on forthcoming changes on the Egeria server side
-#
 @click.command("refresh")
-@click.option("-engine-host-guid", help="GUID of engine host to refresh.")
+@click.option("--engine-host-guid", default=None, help="GUID of the engine host to refresh (default: the configured engine host, by name).")
+@click.option("--engine", "gov_engine_name", default=None, help="Refresh only this governance engine (default: all).")
+@click.option("--organization-name", default=settings.Environment.organization_name,
+              help="Organization name prefix of the engine host's resource name")
 @click.pass_context
-def refresh_gov_eng_config(ctx, engine_host_guid: str):
-    """Start or restart an engine-host from its known configuration"""
+def refresh_gov_eng_config(ctx, engine_host_guid: str, gov_engine_name: str, organization_name: str):
+    """Ask the engine host to reload its governance engine configuration"""
     c = ctx.obj
     p_client = EgeriaTech(c.view_server, c.view_server_url, c.userid, c.password)
     token = p_client.create_egeria_bearer_token()
     try:
-        p_client.refresh_gov_eng_config(None, None, c.engine_host)
-
-        click.echo(f"Refreshed server {c.engine_host}")
+        p_client.refresh_gov_eng_config(
+            gov_engine_name=gov_engine_name,
+            server_guid=engine_host_guid,
+            display_name=None if engine_host_guid else c.engine_host,
+            organization_name=organization_name,
+        )
+        click.echo(f"Refreshed the governance engine configuration of {engine_host_guid or c.engine_host}")
 
     except (PyegeriaInvalidParameterException, PyegeriaAPIException) as e:
         print_exception_response(e)
@@ -126,17 +133,17 @@ def refresh_gov_eng_config(ctx, engine_host_guid: str):
 
 @click.command("start")
 @click.pass_context
-@click.option("--server", default="qs-metadata-store", help="OMAG Server to start")
-@click.option("--organization-name", default=settings.Environment.organization_name, help="Organization name prefix for resource names")
+@click.option("--server", required=True, help="OMAG server to start, e.g. qs-metadata-store")
+@click.option("--organization-name", default=settings.Environment.organization_name,
+              help="Organization name prefix of the server's resource name")
 def start_server(ctx, server, organization_name):
-    """Start or restart an engine-host from its known configuration"""
+    """Activate an OMAG server from its stored configuration"""
     c = ctx.obj
 
     p_client = EgeriaTech(c.view_server, c.view_server_url, c.userid, c.password)
     token = p_client.create_egeria_bearer_token()
     try:
-        server_guid = p_client.get_element_guid_by_unique_name(server, "name")
-        p_client.activate_server_with_stored_config(None, server_guid, organization_name=organization_name)
+        p_client.activate_server_with_stored_config(display_name=server, organization_name=organization_name)
 
         click.echo(f"Started server {server}")
 
@@ -147,28 +154,17 @@ def start_server(ctx, server, organization_name):
 
 
 @click.command("stop")
-@click.option("--server", help="OMAG Server to stop")
-# @click.option(
-#     "--view-server", default=EGERIA_VIEW_SERVER, help="View Server to communicate with"
-# )
-# @click.option(
-#     "--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to"
-# )
-# @click.option("--userid", default="garygeeke", envvar="EGERIA_USER", help="Egeria user")
-# @click.option(
-#     "--password",
-#     default="secret",
-#     envvar="EGERIA_PASSWORD",
-#     help="Egeria user password",
-# )
+@click.option("--server", required=True, help="OMAG server to stop, e.g. qs-engine-host")
+@click.option("--organization-name", default=settings.Environment.organization_name,
+              help="Organization name prefix of the server's resource name")
 @click.pass_context
-def stop_server(ctx, server):
-    """Stop an engine-host daemon"""
+def stop_server(ctx, server, organization_name):
+    """Shut down an OMAG server (it can be started again later)"""
     c = ctx.obj
     p_client = EgeriaTech(c.view_server, c.view_server_url, c.userid, c.password)
     token = p_client.create_egeria_bearer_token()
     try:
-        p_client.shutdown_server(None, server)
+        p_client.shutdown_server(display_name=server, organization_name=organization_name)
         click.echo(f"Stopped server {server}")
     except (PyegeriaInvalidParameterException, PyegeriaAPIException) as e:
         print_exception_response(e)

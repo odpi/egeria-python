@@ -105,6 +105,11 @@ def main():
     # generated section just written. Until stage 4 the constants stay the source.
     run_command([python_exec, "-m", "pyegeria.view.seed", "build"], "Report Spec Seed Build")
 
+    # 3c. The generated report specs as Python code, kept current so it never drifts stale
+    # (6.2.32: pyegeria/view/dr_egeria_reports.py had gone out of date; two orphan copies were removed).
+    run_command([python_exec, "-m", "commands.tech.gen_report_specs", "md_processing/data/compact_commands",
+                 "pyegeria/view/dr_egeria_reports.py", "--emit", "code"], "Report Specs as Python Code")
+
     # 4. Resolve every report spec (RS-W2-2 PR-B, note §2c) and say which cannot run, and why.
     # Imported here, after the generation subprocess, so the freshly written specs are the ones read.
     from pyegeria.view.spec_resolver import log_resolution_summary

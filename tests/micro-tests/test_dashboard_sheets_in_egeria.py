@@ -139,8 +139,11 @@ async def test_full_document_writes_the_10_6_chain(egeria):
     assert text["markdownContent"].startswith("**Coverage**")
     assert (kpi["placementKind"], kpi["span"], kpi["presentationStyle"]) == ("report", "1", "kpi")
     assert kpi.get("markdownContent") is None
+    report_guid = egeria.by_qn("DeployedReport::Coco Terms Total") or next(
+        g for g in egeria.of_type("Report") if egeria.entities[g]["props"]["displayName"] == "Coco Terms Total")
+    # reportGUID (B4): lets the resolver tell a Report in a zone the viewer can't see from one that is gone
     assert kpi["additionalProperties"] == {"placementName": "Coco Terms Total", "perspectives": "Steward,owner",
-                                           "detailSpec": "Glossary-Term-Counts"}
+                                           "detailSpec": "Glossary-Term-Counts", "reportGUID": report_guid}
     # not the Report's own displayName: Dr.Egeria's untyped `Report Name` lookup must stay unambiguous
     assert kpi["displayName"] == "glossary-health / Coco Terms Total"
 
