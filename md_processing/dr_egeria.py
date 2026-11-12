@@ -56,6 +56,10 @@ from md_processing.v2 import (
     SubscriptionTypeProcessor, BitolDocumentProcessor,
     SchemaElementProcessor, SchemaTemplateProcessor, SchemaLinkProcessor, SchemaClassificationProcessor,
 )
+from md_processing.v2.metadata_expert import (
+    TypeDefProcessor, EnumDefProcessor, CountMetadataElementsProcessor, PublishMetadataElementProcessor,
+    InstanceProcessor, InstanceRelationshipProcessor, InstanceClassificationProcessor,
+)
 
 from pyegeria import settings, EgeriaTech, PyegeriaException, print_basic_exception, print_validation_error
 from pyegeria.core.config import settings, resolve_egeria_credentials
@@ -431,6 +435,21 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
     reg("Initiate Survey", InitiateSurveyProcessor)
     reg("Initiate Subscription", InitiateSubscriptionProcessor)
     reg("Cancel Subscription", CancelSubscriptionProcessor)
+
+    # MetadataExpert (Advanced): type system maintenance + raw element count/publish (metadata_expert.py)
+    for _verb in ("Create", "Update", "Delete"):
+        reg(f"{_verb} Type Def", TypeDefProcessor)
+    for _verb in ("Create", "Delete"):
+        reg(f"{_verb} Enum Def", EnumDefProcessor)
+    reg("Count Metadata Elements", CountMetadataElementsProcessor)
+    reg("Publish Metadata Element", PublishMetadataElementProcessor)
+    for _verb in ("Create", "Update", "Delete"):
+        reg(f"{_verb} Instance", InstanceProcessor)
+    reg("Link Instances", InstanceRelationshipProcessor)
+    reg("Unlink Instances", InstanceRelationshipProcessor)
+    reg("Update Relationship", InstanceRelationshipProcessor)
+    for _verb in ("Classify", "Reclassify", "Declassify"):
+        reg(f"{_verb} Instance", InstanceClassificationProcessor)
 
     # Digital Products: subscription types and ODCS/ODPS Bitol documents (product_manager.py)
     reg("Create Subscription Type", SubscriptionTypeProcessor)
