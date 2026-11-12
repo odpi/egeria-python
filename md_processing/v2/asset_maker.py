@@ -156,7 +156,7 @@ class AssetMakerProcessor(AsyncBaseCommandProcessor):
             )
             display_name = _v(attributes, "Folder Name")
 
-        elif command_key == "Unity Catalog Server Element":
+        elif command_key in ("UC Server Element", "Unity Catalog Server Element"):  # the spec key is "UC ..."
             guid = await client._async_create_uc_server_element_from_template(
                 server_name=_v(attributes, "UC Server Name"),
                 host_url=_v(attributes, "Host URL"),
@@ -175,7 +175,7 @@ class AssetMakerProcessor(AsyncBaseCommandProcessor):
             )
             display_name = _v(attributes, "UC Catalog Name")
 
-        elif command_key == "Unity Catalog Schema Element":
+        elif command_key in ("UC Schema Element", "Unity Catalog Schema Element"):  # the spec key is "UC ..."
             guid = await client._async_create_uc_schema_element_from_template(
                 uc_catalog=_v(attributes, "UC Catalog Name"),
                 uc_schema=_v(attributes, "UC Schema Name"),
@@ -185,7 +185,7 @@ class AssetMakerProcessor(AsyncBaseCommandProcessor):
             )
             display_name = _v(attributes, "UC Schema Name")
 
-        elif command_key == "Unity Catalog Table Element":
+        elif command_key in ("UC Table Element", "Unity Catalog Table Element"):  # the spec key is "UC ..."
             guid = await client._async_create_uc_table_element_from_template(
                 uc_catalog=_v(attributes, "UC Catalog Name"),
                 uc_schema=_v(attributes, "UC Schema Name"),
@@ -224,8 +224,8 @@ class AssetMakerProcessor(AsyncBaseCommandProcessor):
             display_name = _v(attributes, "UC Volume Name")
 
         else:
-            raise ValueError(f"AssetMakerProcessor: unrecognized command "
-                              f"(object_type={command_key!r}, OM_TYPE={om_type!r})")
+            raise ValueError(f"Create {command_key} is not supported yet by Dr.Egeria's Asset Maker "
+                             f"(OM_TYPE {om_type!r} has no create-from-template mapping)")
 
         guid = self.extract_guid_or_raise(guid, f"Create {command_key}")
         self.parsed_output["guid"] = guid
