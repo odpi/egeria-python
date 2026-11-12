@@ -365,6 +365,13 @@ class AsyncBaseCommandProcessor(ABC):
         "Policy Management Point": "PolicyManagementPoint",
     }
 
+    def _drop_spec_defaults(self) -> None:
+        """Remove the attributes whose value came only from the spec's default (parsed_attributes "is_default"),
+        keeping everything the document wrote."""
+        attrs = self.parsed_output.get("attributes") or {}
+        for name in [n for n, entry in attrs.items() if isinstance(entry, dict) and entry.get("is_default")]:
+            del attrs[name]
+
     def _report_unapplied(self) -> None:
         """Every attribute a body builder couldn't send says so, success or not (F-A 1, F-B).
 
@@ -1218,6 +1225,11 @@ class AsyncBaseCommandProcessor(ABC):
                 "errors": errors,
             }
         
+        # A Create that found its element is an update (upsert): spec defaults the parser filled in for a
+        # create must not overwrite stored values the document never mentioned (Architect read-back of F-B).
+        if self.as_is_element and self.command.verb in ("Create", "Define", "Register", "Add", "Upsert"):
+            self._drop_spec_defaults()
+
         # Check for blockers before applying changes
         if self.parsed_output.get("errors"):
             guid = self.parsed_output.get("guid")
