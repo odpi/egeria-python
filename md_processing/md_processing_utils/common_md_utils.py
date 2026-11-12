@@ -519,7 +519,25 @@ BUNDLE_PROPERTIES = {
 
 #: Attributes several types share under the same key but with other meanings elsewhere (e.g. Project Scope):
 #: filled when the type declares the key, never reported when it doesn't.
-BUNDLE_OPTIONAL = {"Scope": "scope", "Usage": "usage", "Purpose": "purpose"}
+BUNDLE_OPTIONAL = {
+    "Scope": "scope", "Usage": "usage", "Purpose": "purpose",
+    # one-offs a processor left out (F-B group 6), under the key Egeria's class declares
+    "Headcount": "headCount", "Disposition": "disposition", "Implementation Description": "implementationDescription",
+    "Product Name": "productName", "Maturity": "maturity", "Service Life": "serviceLife",
+    "Introduction Date": "introductionDate", "Withdrawal Date": "withdrawDate", "Next Version Date": "nextVersionDate",
+    "Member Ordinal": "ordinal",
+}
+
+#: One-off attributes with no property on most of the types that offer them: filled where the class declares
+#: the key, reported where it doesn't (F-B group 6).
+ONE_OFF_REPORTED = {
+    "Current Version": "currentVersion", "Coverage Category": "coverageCategory",
+    "Minimum Cardinality": "minCardinality", "Maximum Cardinality": "maxCardinality", "Position": "position",
+    "Is Default Member": "isDefaultMember", "Default Member": "defaultMember",
+}
+
+#: Keys some processors send under a name the Java class doesn't declare, and the name it does.
+KEY_RENAMES = {"withdrawalDate": "withdrawDate", "nextVersion": "nextVersionDate", "headcount": "headCount"}
 
 
 def complete_bundle_properties(props: dict, attributes: dict) -> dict:
@@ -543,6 +561,20 @@ def complete_bundle_properties(props: dict, attributes: dict) -> dict:
         if value in (None, "", [], {}) or props.get(key) not in (None, "", [], {}):
             continue
         props[key] = value
+    if fields is not None:
+        for wrong, right in KEY_RENAMES.items():
+            if wrong in props and wrong not in fields and right in fields:
+                value = props.pop(wrong)
+                if props.get(right) in (None, "", [], {}):
+                    props[right] = value
+    for attribute, key in ONE_OFF_REPORTED.items():
+        value = (attributes.get(attribute) or {}).get("value")
+        if value in (None, "", [], {}) or props.get(key) not in (None, "", [], {}):
+            continue
+        if fields is not None and key not in fields:
+            record_not_applied(attributes, attribute, [f"not applied: {attribute}: {cls} has no {key} property"])
+        else:
+            props[key] = value
     for attribute, key in BUNDLE_OPTIONAL.items():  # filled where the type declares them; never reported
         value = (attributes.get(attribute) or {}).get("value")
         if fields is not None and key in fields and value not in (None, "", [], {}) \
@@ -666,7 +698,7 @@ def set_collection_manager_body(object_type: str, qualified_name: str, attribute
             "businessImplementationType": attributes.get('Business Implementation Type', {}).get('value', None),
         })
 
-    return prop_bod
+    return complete_bundle_properties(prop_bod, attributes)  # keys added after the common builder (F-B 6)
 
 
 def set_actor_manager_prop_body(object_type: str, qualified_name: str, attributes: dict) -> dict:
@@ -708,7 +740,7 @@ def set_actor_manager_prop_body(object_type: str, qualified_name: str, attribute
             except (ValueError, TypeError):
                 prop_bod["headCount"] = None
 
-    return prop_bod
+    return complete_bundle_properties(prop_bod, attributes)  # keys added after the common builder (F-B 6)
 
 
 def set_solution_architect_body(object_type: str, qualified_name: str, attributes: dict) -> dict:
@@ -744,7 +776,7 @@ def set_solution_architect_body(object_type: str, qualified_name: str, attribute
                 record_not_applied(attributes, attribute,
                                    [f"not applied: {attribute}: SolutionActorRoleProperties has no {key} property"])
 
-    return prop_bod
+    return complete_bundle_properties(prop_bod, attributes)  # keys added after the common builder (F-B 6)
 
 
 def set_product_body(object_type: str, qualified_name: str, attributes: dict) -> dict:
@@ -756,7 +788,7 @@ def set_product_body(object_type: str, qualified_name: str, attributes: dict) ->
     prop_bod["introductionDate"] = attributes.get('Introduction Date', {}).get('value', [])
     prop_bod["withdrawalDate"] = attributes.get('Withdrawal Date', {}).get('value', [])
     prop_bod["nextVersion"] = attributes.get('Next Version Date', {}).get('value', [])
-    return prop_bod
+    return complete_bundle_properties(prop_bod, attributes)  # keys added after the common builder (F-B 6)
 
 def set_data_field_body(object_type: str, qualified_name: str, attributes: dict)->dict:
     prop_bod = set_element_prop_body(object_type, qualified_name, attributes)
@@ -775,7 +807,7 @@ def set_data_field_body(object_type: str, qualified_name: str, attributes: dict)
     prop_bod["sortOrder"] = attributes.get('Sort Order', {}).get('value', None)
     prop_bod["isPartitionKey"] = attributes.get('Is Partition Key', {}).get('value', None)
     prop_bod["partitionKeyPosition"] = attributes.get('Partition Key Position', {}).get('value', None)
-    return prop_bod
+    return complete_bundle_properties(prop_bod, attributes)  # keys added after the common builder (F-B 6)
 
 def set_update_status_body(object_type: str, attributes: dict)->dict:
     return {
@@ -819,7 +851,7 @@ def set_gov_prop_body(object_type: str, qualified_name: str, attributes: dict)->
 
 
     body = update_gov_body_for_type(object_type, prop_bod, attributes)
-    return body
+    return complete_bundle_properties(body, attributes)  # keys added after the common builder (F-B 6)
     
 
 def update_gov_body_for_type(object_type: str, body: dict, attributes: dict) -> dict:
