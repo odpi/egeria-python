@@ -212,7 +212,9 @@ class ComponentProcessor(AsyncBaseCommandProcessor):
         supply_chain_guids = set(attributes.get('In Information Supply Chain', {}).get('guid_list', []))
         parent_comp_guids = set(attributes.get('In Solution Components', {}).get('guid_list', []))
         sub_comp_guids = set(attributes.get('Solution SubComponents', {}).get('guid_list', []))
-        keywords = set(attributes.get('Search Keywords', {}).get('value', []))
+        # Search Keywords are attached by the base processor's post-create sync (_sync_search_keywords), as for
+        # every other command; this processor's own sync passed the keyword string where a request body goes.
+        keywords: Set[str] = set()
 
         if verb == "Update":
             guid = self.parsed_output.get("guid") or (self.as_is_element['elementHeader']['guid'] if self.as_is_element else None)

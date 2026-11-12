@@ -363,6 +363,40 @@ class AsyncBaseCommandProcessor(ABC):
         "Policy Management Point": "PolicyManagementPoint",
     }
 
+    async def _sync_search_keywords(self, guid: str, attributes: Dict[str, Any]) -> None:
+        """Attach a SearchKeyword per `Search Keywords` entry (the Referenceable bundle carries it on nearly
+        every command; no processor applied it, round-trip probe 2026-11-12). Idempotent: a keyword the element
+        already has (from the as-is element, on an update) isn't added again. Additive: keywords not listed
+        are left in place.
+
+        The keyword text is SearchKeywordProperties.displayName (the Java bean has no `keyword` field); it is
+        attached with ClassificationExplorer._async_add_search_keyword_to_element
+        (`elements/{guid}/search-keywords`).
+        """
+        raw = (attributes.get("Search Keywords") or {}).get("value")
+        if not raw:
+            return
+        items = raw if isinstance(raw, list) else str(raw).split(",")
+        wanted = list(dict.fromkeys(str(k).strip() for k in items if str(k).strip()))
+        existing = set()
+        as_is = getattr(self, "as_is_element", None)
+        if isinstance(as_is, dict):
+            for item in as_is.get("searchKeywords") or []:
+                props = ((item or {}).get("relatedElement") or {}).get("properties") or {}
+                if props.get("displayName"):
+                    existing.add(props["displayName"])
+        for keyword in wanted:
+            if keyword in existing:
+                continue
+            body = {"class": "NewAttachmentRequestBody",
+                    "properties": {"class": "SearchKeywordProperties", "displayName": keyword}}
+            try:
+                await self.client.classification_manager._async_add_search_keyword_to_element(guid, body)
+                self.add_related_result("Search Keyword", message=f"Added {keyword!r}")
+            except PyegeriaException as e:
+                self.add_related_result("Search Keyword", status="failure",
+                                        message=f"{keyword!r}: {describe_exception(e)}")
+
     async def _sync_referenceable_classifications(self, guid: str, attributes: Dict[str, Any]) -> None:
         """
         Apply the Security Tags / Policy Management Point classifications when
@@ -1307,6 +1341,7 @@ class AsyncBaseCommandProcessor(ABC):
                     await self._sync_parent_relationship(guid, attributes)
                     await self._sync_governance_classifications(guid, attributes)
                     await self._sync_referenceable_classifications(guid, attributes)
+                    await self._sync_search_keywords(guid, attributes)
 
         deferred = bool(self.parsed_output.get("deferred")) and not self.context.get("final_round")
 
