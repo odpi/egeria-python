@@ -76,6 +76,82 @@ def split_tb_string(input: str)-> [Any]:
             results.append(item)
     return results
 
+_LIST_BULLET = re.compile(r'^\s*[\-\*\+]\s+')
+#: A separator followed by another bullet marker: an inline list on one line ("- a; - b, c").
+_INLINE_BULLETS = re.compile(r'[;,]\s*[\-\*\+]\s+')
+
+
+def split_list_value(text: Any) -> list | None:
+    """The items of a list attribute's VALUE (Simple List, List, NameList, Reference Name List).
+
+    - A bulleted or multi-line value: each bullet (or line) is one item, verbatim -- a comma inside a
+      bullet is part of the item ("- agreed with the depending domain, not set by IT alone" is one
+      item). A leading markdown bullet (`- `, `* `, `+ `) is stripped. Wrapped continuations and
+      wrapped prose are handled by `_split_multiline`.
+    - A single-line value is split on commas and semicolons ("a, b" is two items), including an inline
+      bulleted list on one line ("- a; - b, c" is three); a single bullet on its own line is one item.
+
+    Until 6.2.39 every value was split on commas, semicolons and newlines, so a bullet with a comma
+    became two items. Spec metadata (labels, valid values) still uses `split_tb_string`.
+    """
+    if text is None:
+        return None
+    if isinstance(text, (list, tuple)):
+        return [str(i).strip() for i in text if str(i).strip()]
+    lines = [line for line in str(text).splitlines() if line.strip()]
+    if not lines:
+        return []
+    if len(lines) > 1:
+        return _split_multiline(lines)
+    line = lines[0]
+    if _LIST_BULLET.match(line) and not _INLINE_BULLETS.search(line):
+        return [_LIST_BULLET.sub('', line).strip()]  # one bullet: one item, commas and all
+    items = [_LIST_BULLET.sub('', item).strip() for item in re.split(r'[;,]+', line)]
+    return [item for item in items if item]
+
+
+_SENTENCE_END = re.compile(r'[.!?;:]["\')\]]*$')
+#: A wrapped line is at least this long; a shorter line that ends without punctuation stands alone.
+_WRAP_WIDTH = 60
+
+
+def _continues(previous: str, line: str) -> bool:
+    """Whether a non-bullet `line` after a bullet is that bullet's wrapped continuation: indented, or
+    starting in lower case after a bullet that did not end its sentence. Anything else stands alone."""
+    if line[:1].isspace():
+        return True
+    return line.lstrip()[:1].islower() and not _SENTENCE_END.search(previous.rstrip())
+
+
+def _split_multiline(lines: list) -> list:
+    """Items of a multi-line list value (6.2.39):
+
+    - **With bullets:** each bullet is an item. A non-bullet line after a bullet joins it when it is a
+      wrapped continuation (indented, or starting in lower case); otherwise -- a closing sentence, say
+      -- it is its own item. Lines before the first bullet (an intro) are their own items.
+    - **Without bullets:** clearly wrapped prose -- every line but the last is at least 60 characters
+      long and does not end a sentence (. ! ? ; :) -- is one item, its lines joined with spaces. Otherwise
+      each line is an item (a line list): a short line, even in lower case ("crm", "erp", "data
+      quality"), stands alone.
+    Commas are never split inside a multi-line value."""
+    if not any(_LIST_BULLET.match(line) for line in lines):
+        if all(not _SENTENCE_END.search(a.rstrip()) and len(a.rstrip()) >= _WRAP_WIDTH for a in lines[:-1]):
+            return [" ".join(line.strip() for line in lines)]
+        return [line.strip() for line in lines if line.strip()]
+    items: list = []
+    in_bullet = False
+    for line in lines:
+        if _LIST_BULLET.match(line):
+            items.append(_LIST_BULLET.sub('', line).strip())
+            in_bullet = True
+        elif in_bullet and _continues(items[-1], line):
+            items[-1] = f"{items[-1]} {line.strip()}"
+        else:
+            items.append(line.strip())
+            in_bullet = False
+    return [item for item in items if item]
+
+
 def str_to_bool(value: str) -> bool:
     """Converts a string to a boolean value."""
     return value.lower() in ("yes", "true", "t", "1")
