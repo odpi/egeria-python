@@ -17,6 +17,10 @@ from pyegeria.view.output_formatter import generate_output, format_for_markdown_
 
 from md_processing.v2.extraction import DrECommand
 from md_processing.v2.parsing import AttributeFirstParser
+from md_processing.v2.additional_properties import (
+    AdditionalPropertiesUnreadable, merge_additional_properties, replace_note, stored_additional_properties,
+    unreadable_message,
+)
 from md_processing.md_processing_utils.typed_properties import (_as_dict, classification_map,
                                                                   new_element_properties, not_applied_notes,
                                                                   parent_relationship_properties,
@@ -1356,6 +1360,7 @@ class AsyncBaseCommandProcessor(ABC):
                     f" | GUID={self.parsed_output.get('guid', 'new')} ══\033[0m"
                 )
             try:
+                await self._prepare_additional_properties()
                 output = await self.apply_changes()
             finally:
                 self._report_unapplied()
@@ -2191,6 +2196,73 @@ class AsyncBaseCommandProcessor(ABC):
 
     # Control flags rather than element properties: keep their defaults on an update.
     _KEEP_DEFAULTS_ON_UPDATE = {"Merge Update"}
+
+    #: True for a processor that writes additionalProperties keys of its own beside the document's
+    #: "Additional Properties" (ReportProcessor's report parameters), so an update always sends the map.
+    WRITES_ADDITIONAL_PROPERTIES = False
+
+    def _is_merge_update(self) -> bool:
+        value = ((self.parsed_output.get("attributes") or {}).get("Merge Update") or {}).get("value", True)
+        return not (value is False or (isinstance(value, str) and value.strip().lower() == "false"))
+
+    async def _prepare_additional_properties(self) -> None:
+        """Keep the stored additionalProperties keys the document doesn't write (md_processing/v2/additional_properties.py).
+
+        Runs once, just before apply_changes(), for an update of an existing element (a Create that found
+        its element, or an Update). When the update sends additionalProperties -- the document gives
+        "Additional Properties", or the processor writes keys of its own -- the element's stored map is
+        read and the document's keys are laid over it, and the merged map becomes the "Additional
+        Properties" value every body builder reads. A replace update (Merge Update false) replaces, and
+        a warning names the stored keys it removes. A merge update whose stored map can't be read is
+        refused (AdditionalPropertiesUnreadable), never sent as a replacement.
+        """
+        if not self.supports_target_element_lookup():
+            return
+        is_update = bool(self.as_is_element) or (
+            self.command.verb in ("Update", "Modify", "Upsert")
+            and bool(self.parsed_output.get("exists") or self.parsed_output.get("guid")))
+        if not is_update:
+            return
+        attributes = self.parsed_output.get("attributes")
+        if attributes is None:
+            return
+        entry = attributes.get("Additional Properties")
+        document = entry.get("value") if isinstance(entry, dict) else None
+        if document in (None, "", {}):
+            document = None
+        elif not isinstance(document, dict):
+            return  # not a parsed Dictionary: leave it to the processor
+        if document is None and not self.WRITES_ADDITIONAL_PROPERTIES:
+            return  # nothing sent: Egeria keeps the stored map
+
+        stored = stored_additional_properties(self.as_is_element)
+        if stored is None and self.as_is_element:
+            guid = (self.as_is_element.get("elementHeader") or {}).get("guid")
+            if guid:
+                try:
+                    stored = stored_additional_properties(await self.fetch_element(guid))
+                except Exception as e:  # reported below as unreadable
+                    logger.debug(f"_prepare_additional_properties: re-read of {guid} failed: {e}")
+
+        if not self._is_merge_update():
+            note = replace_note(stored, (document or {}).keys())
+            if note:
+                self._add_warning(note)
+            return
+        if stored is None:
+            what = self.parsed_output.get("qualified_name") or self.parsed_output.get("guid") or "this element"
+            raise AdditionalPropertiesUnreadable(unreadable_message(f"'{what}'"))
+
+        merged = merge_additional_properties(stored, document)
+        kept = sorted(set(stored) - set(document or {}))
+        if isinstance(entry, dict):
+            entry["document_value"] = document
+            entry["value"] = merged
+        else:
+            attributes["Additional Properties"] = {"value": merged, "style": "Dictionary",
+                                                   "document_value": None, "kept_from_element": True}
+        if kept:
+            logger.info(f"Merge update keeps stored additionalProperties keys: {', '.join(kept)}")
 
     def _drop_create_defaults(self) -> None:
         """Remove spec defaults the parser filled in for a Create that has become an Update.
