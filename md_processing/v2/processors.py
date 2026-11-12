@@ -365,6 +365,20 @@ class AsyncBaseCommandProcessor(ABC):
         "Policy Management Point": "PolicyManagementPoint",
     }
 
+    def _report_unapplied(self) -> None:
+        """Every attribute a body builder couldn't send says so, success or not (F-A 1, F-B).
+
+        Parent Relationship Attributes only mean something with a Parent ID: when there is none and no builder
+        said anything, say why they weren't sent (F-B group 8)."""
+        attrs = self.parsed_output.get("attributes", {})
+        for name in ("Parent Relationship Attributes", "Parent Relationship Properties"):
+            entry = attrs.get(name) or {}
+            if entry.get("value") not in (None, "", {}) and not entry.get("not_applied") \
+                    and not (attrs.get("Parent ID") or {}).get("guid"):
+                record_not_applied(attrs, name, [f"not applied: {name}: there is no Parent ID to attach them to"])
+        for note in not_applied_notes(attrs):
+            self._add_warning(note)
+
     async def _sync_search_keywords(self, guid: str, attributes: Dict[str, Any]) -> None:
         """Attach a SearchKeyword per `Search Keywords` entry (the Referenceable bundle carries it on nearly
         every command; no processor applied it, round-trip probe 2026-11-12). Idempotent: a keyword the element
@@ -1344,9 +1358,7 @@ class AsyncBaseCommandProcessor(ABC):
             try:
                 output = await self.apply_changes()
             finally:
-                # Every attribute a body builder couldn't send says so, success or not.
-                for note in not_applied_notes(self.parsed_output.get("attributes", {})):
-                    self._add_warning(note)
+                self._report_unapplied()
         except PyegeriaException as e:
             logger.error(f"Command String: {self.command.raw_block}")
             if self.last_body:
