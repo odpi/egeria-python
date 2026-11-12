@@ -91,8 +91,10 @@ class FeedbackProcessor(AsyncBaseCommandProcessor):
                 self.parsed_output["guid"] = guid
                 update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
                 logger.success(f"Created {object_type} '{display_name}' with GUID {guid}")
-                return await self.client._async_get_note_by_guid(
-                    guid, output_format='MD', report_spec="Journal-Entry-DrE")
+                # Not _async_get_note_by_guid: it asks for type Note, and Egeria refuses a JournalEntry /
+                # ActivityEntry / BlogEntry for that (OMAG-REPOSITORY-HANDLER-404-001 "... of type BlogEntry
+                # rather than type Note"), so a create that worked was reported as failed.
+                return await self.render_result_markdown(guid)
 
         elif "Note" in object_type:
             # Egeria added a real "Note" entity type (subtype of Notification, PR #9191,
