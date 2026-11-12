@@ -7,12 +7,13 @@ from loguru import logger
 from pyegeria import EgeriaTech, PyegeriaException
 from md_processing.v2.processors import AsyncBaseCommandProcessor
 from md_processing.v2.utils import parse_key_value
+from md_processing.md_processing_utils.typed_properties import long_value, record_not_applied
 from md_processing.md_processing_utils.md_processing_constants import get_command_spec
 from md_processing.md_processing_utils.common_md_utils import (
     set_element_prop_body, set_create_body, set_update_body,
     set_rel_request_body, set_rel_prop_body, set_data_field_body,
     set_delete_rel_request_body,
-    update_element_dictionary, async_add_note_in_dr_e
+    update_element_dictionary, async_add_note_in_dr_e, complete_bundle_properties
 )
 from pyegeria.core.utils import body_slimmer
 
@@ -31,6 +32,31 @@ _DATA_VALUE_SPEC_CREATE_DEFAULTS = {
     "dataPatterns": [],
     "additionalProperties": {},
 }
+
+
+def _data_spec_fields(props: dict, attributes: dict) -> dict:
+    """The fields every DataValueSpecification subtype (Data Class, Data Grain, Measurement Specification)
+    reads (DataValueSpecificationProperties.java, odpi/egeria origin/main 0b7ee0fb), filled where the processor
+    left them out, then the Referenceable/Authored bundle (F-B group 5). Integer/Long fields are coerced or
+    refused with a sentence (matchThreshold Integer; absolute/relativeUncertainty Long)."""
+    simple = {"Data Type": "dataType", "Units": "units", "Match Property Names": "matchPropertyNames",
+              "Specification": "specification", "Specification Details": "specificationDetails",
+              "Namespace Path": "namespacePath"}
+    for attribute, key in simple.items():
+        value = (attributes.get(attribute) or {}).get("value")
+        if value not in (None, "", [], {}) and props.get(key) in (None, "", [], {}):
+            props[key] = value
+    for attribute, key in (("Match Threshold", "matchThreshold"), ("Absolute Uncertainty", "absoluteUncertainty"),
+                           ("Relative Uncertainty", "relativeUncertainty")):
+        if props.get(key) is None:
+            value, notes = long_value(attributes, attribute)
+            record_not_applied(attributes, attribute, notes)
+            if value is not None:
+                props[key] = value
+    if (attributes.get("Name Patterns") or {}).get("value") not in (None, "", []):
+        record_not_applied(attributes, "Name Patterns", [
+            f"not applied: Name Patterns: {props.get('class')} has no namePatterns property"])
+    return complete_bundle_properties(props, attributes)
 
 
 def _with_create_defaults(props: dict) -> dict:
@@ -59,6 +85,14 @@ class DataValueSpecificationProcessor(AsyncBaseCommandProcessor):
         spec = self.get_command_spec()
         om_type = spec.get("OM_TYPE") if spec else None
 
+        # Egeria stores both uncertainties as a Java Long (DataValueSpecificationProperties.java:42-43,
+        # odpi/egeria origin/main 0b7ee0fb); the spec's Simple Float style sent "7.5" as a string, a 400
+        # that lost the create. Integral input goes out as an int; anything else is refused, not sent.
+        uncertainty = {}
+        for attr, key in (("Absolute Uncertainty", "absoluteUncertainty"), ("Relative Uncertainty", "relativeUncertainty")):
+            uncertainty[key], notes = long_value(attributes, attr)
+            record_not_applied(attributes, attr, notes)
+
         # Build properties dict
         props = {
             "class": f"{om_type or 'DataValueSpecification'}Properties",
@@ -72,8 +106,8 @@ class DataValueSpecificationProcessor(AsyncBaseCommandProcessor):
             "specificationDetails": attributes.get('Specification Details', {}).get('value'),
             "dataType": attributes.get('Data Type', {}).get('value'),
             "units": attributes.get('Units', {}).get('value'),
-            "absoluteUncertainty": attributes.get('Absolute Uncertainty', {}).get('value'),
-            "relativeUncertainty": attributes.get('Relative Uncertainty', {}).get('value'),
+            "absoluteUncertainty": uncertainty["absoluteUncertainty"],
+            "relativeUncertainty": uncertainty["relativeUncertainty"],
             "allowsDuplicateValues": attributes.get('Allow Duplicates', {}).get('value'),
             "isNullable": attributes.get('Is Nullable', {}).get('value'),
             "defaultValue": attributes.get('Default Value', {}).get('value'),
@@ -94,6 +128,7 @@ class DataValueSpecificationProcessor(AsyncBaseCommandProcessor):
                 "uncertaintyForm": attributes.get('Uncertainty Form', {}).get('value'),
                 "absenceSentences": attributes.get('Absence Sentences', {}).get('value'),
             })
+        _data_spec_fields(props, attributes)
 
         # "In Data Value Specification"/"Specializes Data Value Specification"
         # both describe the same DataValueHierarchy parent -- near-synonym
@@ -589,6 +624,9 @@ class DataClassProcessor(AsyncBaseCommandProcessor):
             "dataPatterns": attributes.get('Data Patterns', {}).get('value'),
             "additionalProperties": attributes.get('Additional Properties', {}).get('value')
         }
+        if props["namespacePath"] is None:
+            props.pop("namespacePath")  # the spec's attribute is "Namespace Path"; filled below
+        _data_spec_fields(props, attributes)
 
         # 2. Relationships
         containing_dc_guids = set(attributes.get('Containing Data Class', {}).get('guid_list', []))
@@ -739,6 +777,7 @@ class DataGrainProcessor(AsyncBaseCommandProcessor):
         props_body["grainStatement"] = attributes.get('Grain Statement', {}).get('value')
         props_body["granularityBasis"] = attributes.get('Granularity Basis', {}).get('value')
         props_body["interval"] = attributes.get('Interval', {}).get('value')
+        _data_spec_fields(props_body, attributes)
 
         # "In Data Value Specification"/"Specializes Data Value Specification"
         # both describe the same DataValueHierarchy parent -- near-synonym

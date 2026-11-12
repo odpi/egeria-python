@@ -4,6 +4,7 @@ Collection Manager Processors for Dr.Egeria v2.
 from typing import Dict, Any, Optional
 from loguru import logger
 
+from md_processing.md_processing_utils.common_md_utils import report_unsent_bundle
 from md_processing.v2.processors import AsyncBaseCommandProcessor
 from md_processing.md_processing_utils.common_md_utils import (
     set_create_body, set_update_body,
@@ -241,9 +242,14 @@ class CSVElementProcessor(AsyncBaseCommandProcessor):
         qualified_name = self.parsed_output["qualified_name"]
         display_name = attributes.get('Display Name', {}).get('value', qualified_name)
         
+        report_unsent_bundle(attributes, {"Description", "Version Identifier"},
+                             f"Create {self.command.object_type} is made from the CSV Data File template, which "
+                             "takes only the template's placeholder values")
+        # `Create CSV File` (Digital Product Manager) has no File Name / File Type of its own: the file is
+        # named by its Display Name, and the type is the CSV data file the template creates.
         raw_guid = await self.client._async_get_create_csv_data_file_element_from_template(
-            attributes.get('File Name', {}).get('value'),
-            attributes.get('File Type', {}).get('value'),
+            attributes.get('File Name', {}).get('value') or display_name,
+            attributes.get('File Type', {}).get('value') or "CSV Data File",
             attributes.get('File Path', {}).get('value'),
             attributes.get('Version Identifier', {}).get('value'),
             attributes.get('File Encoding', {}).get('value', 'UTF-8'),
@@ -251,13 +257,13 @@ class CSVElementProcessor(AsyncBaseCommandProcessor):
             attributes.get('File System Name', {}).get('value'),
             attributes.get('Description', {}).get('value')
         )
-        guid = self.extract_guid_or_raise(raw_guid, "Create CSV Element")
+        guid = self.extract_guid_or_raise(raw_guid, f"Create {self.command.object_type}")
 
         if guid:
             self.parsed_output["guid"] = guid
             update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
-            logger.success(f"Created CSV Element '{display_name}' with GUID {guid}")
-            return f"## Created CSV Element\n\nGUID: {guid}\nQualified Name: {qualified_name}"
+            logger.success(f"Created {self.command.object_type} '{display_name}' with GUID {guid}")
+            return f"## Created {self.command.object_type}\n\nGUID: {guid}\nQualified Name: {qualified_name}"
 
         return self.command.raw_block
 

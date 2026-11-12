@@ -7,6 +7,8 @@ import json
 
 from pyegeria import EgeriaTech, PyegeriaException, COMMENT_TYPES
 from pyegeria.core._exceptions import PyegeriaInvalidParameterException
+from md_processing.md_processing_utils.common_md_utils import (complete_bundle_properties, person_action_extras,
+                                                               report_unsent_bundle)
 from md_processing.v2.processors import AsyncBaseCommandProcessor
 from md_processing.v2.multilink import async_link_or_update, update_body
 from md_processing.md_processing_utils.common_md_utils import (
@@ -85,14 +87,28 @@ class FeedbackProcessor(AsyncBaseCommandProcessor):
                 "Activity Entry": self.client.my_profile._async_log_my_activity,
                 "Blog Entry": self.client.my_profile._async_blog_my_activity,
             }
-            guid = await method_by_type[object_type](text=text, display_name=display_name)
+            # A full typed body, so situation, priority, effective dates and the rest of the bundle the entry's
+            # type declares are sent (F-B group 5/6), not just the text and name.
+            entry_type = object_type.replace(" ", "")
+            entry_props = complete_bundle_properties({
+                "class": f"{entry_type}Properties", "typeName": entry_type, "qualifiedName": qualified_name,
+                "displayName": display_name, "description": text,
+                "situation": attributes.get('Situation', {}).get('value'),
+                "priority": attributes.get('Priority', {}).get('value'),
+            }, attributes)
+            guid = await method_by_type[object_type](
+                text=text, display_name=display_name, qualified_name=qualified_name,
+                body={"class": "NewAttachmentRequestBody",
+                      "properties": {k: v for k, v in entry_props.items() if v not in (None, "", [], {})}})
             guid = self.extract_guid_or_raise(guid, f"Create {object_type}")
             if guid:
                 self.parsed_output["guid"] = guid
                 update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
                 logger.success(f"Created {object_type} '{display_name}' with GUID {guid}")
-                return await self.client._async_get_note_by_guid(
-                    guid, output_format='MD', report_spec="Journal-Entry-DrE")
+                # Not _async_get_note_by_guid: it asks for type Note, and Egeria refuses a JournalEntry /
+                # ActivityEntry / BlogEntry for that (OMAG-REPOSITORY-HANDLER-404-001 "... of type BlogEntry
+                # rather than type Note"), so a create that worked was reported as failed.
+                return await self.render_result_markdown(guid)
 
         elif "Note" in object_type:
             # Egeria added a real "Note" entity type (subtype of Notification, PR #9191,
@@ -152,6 +168,7 @@ class FeedbackProcessor(AsyncBaseCommandProcessor):
                 description=attributes.get('Description', {}).get('value'),
                 situation=attributes.get('Situation', {}).get('value'),
                 priority=attributes.get('Priority', {}).get('value', 0),
+                extra_properties=person_action_extras(attributes, "ReviewProperties"),
                 # See actor_manager.py's Create ToDo branch for why this
                 # matters - without it, the real stored qualifiedName never
                 # matches what Dr.Egeria reports having created.
@@ -187,6 +204,8 @@ class TagProcessor(AsyncBaseCommandProcessor):
             return await self.client._async_get_tag_by_guid(guid, output_format='MD')
 
         elif verb == "Create":
+            report_unsent_bundle(attributes, {"Description"},
+                                 "the informal-tag call takes only a name and a description")
             response = await self.client._async_create_informal_tag(display_name, description, qualified_name)
             guid = self.extract_guid_or_raise(response, "Create Informal Tag")
             if guid:
