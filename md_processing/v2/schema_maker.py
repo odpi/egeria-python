@@ -92,8 +92,14 @@ class SchemaElementProcessor(AsyncBaseCommandProcessor):
                 "maxCardinality": _v(attributes, "Max Cardinality"),
                 "allowsDuplicateValues": _v(attributes, "Allows Duplicate Values"),
                 "isOrderedValues": _v(attributes, "Is Ordered Values"),
-                "defaultValueOverride": _v(attributes, "Default Value Override"),
             })
+            # Egeria's SchemaAttributeProperties declares defaultValueOverride (SchemaAttributeProperties.java:52)
+            # and its builder writes it (OpenMetadataElementBuilder.java:2225), but the repository's TypeDef
+            # (757a5df0) doesn't have it: sending it fails the whole create with OMRS-REPOSITORY-400-028
+            # (Egeria issue addendum section 4). Not sent until Egeria declares it.
+            if _v(attributes, "Default Value Override") not in (None, ""):
+                record_not_applied(attributes, "Default Value Override",
+                                   ["not applied: Default Value Override: not in this Egeria's type system"])
             if is_display:
                 # Egeria 6.3 placement attributes (odpi/egeria#9432): a leaf placement is a
                 # DisplayDataField, a sheet or nested sheet a DisplayDataContainer.
