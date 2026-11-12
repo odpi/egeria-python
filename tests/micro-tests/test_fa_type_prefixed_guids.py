@@ -34,6 +34,10 @@ def test_is_guid_is_opaque(value, expected):
 @pytest.mark.parametrize("value, expected", [
     (PREFIXED, True), (PLAIN, True), ("RTP::Diag::Glossary1", False), ("opaque-guid-7", False),
     ("Glossary-", False), ("No elements found", False),
+    # names that merely end in a UUID stay names (Architect read-back of 22bdad74)
+    ("Run-Extract-5d2a1857-27fb-4615-aaae-e90e362f09b5", False),
+    ("My_Report_5d2a1857-27fb-4615-aaae-e90e362f09b5", False),
+    ("glossary-5d2a1857-27fb-4615-aaae-e90e362f09b5", True),
 ])
 def test_is_guid_reference_tells_a_guid_from_a_name(value, expected):
     assert is_guid_reference(value) is expected
@@ -69,3 +73,20 @@ async def test_resolve_element_guid_returns_a_prefixed_guid_as_is():
 def test_governance_normalize_guid_accepts_prefixed():
     assert GovernanceLinkProcessor._normalize_guid(PREFIXED) == PREFIXED
     assert GovernanceLinkProcessor._normalize_guid("RTP::Not::A::Guid") is None
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("name", ["Run-Extract-5d2a1857-27fb-4615-aaae-e90e362f09b5",
+                                  "My_Report_5d2a1857-27fb-4615-aaae-e90e362f09b5"])
+async def test_resolve_element_guid_treats_uuid_suffixed_names_as_names(name, monkeypatch):
+    p = _processor()
+    import md_processing.v2.processors as processors
+    monkeypatch.setattr(processors, "find_key_with_value", lambda value: None)
+
+    async def no_lookup(*args, **kwargs):
+        return None
+    for attr in ("_lookup_guid_by_name", "_async_get_guid_by_name"):
+        if hasattr(p, attr):
+            monkeypatch.setattr(p, attr, no_lookup)
+    result = await p.resolve_element_guid(name)
+    assert result != name  # not passed through as if it were a GUID

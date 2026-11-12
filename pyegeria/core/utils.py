@@ -549,10 +549,13 @@ def is_guid(value) -> bool:
             and text.lower() not in _NOT_GUIDS)
 
 
-_UUID_AT_END = re.compile(r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
+# The whole value: a UUID, optionally after ONE CamelCase type name and a hyphen ("Glossary-<uuid>").
+# A name that merely ends in a UUID ("Run-Extract-<uuid>", "My_Report_<uuid>") is still a name.
+_GUID_REFERENCE = re.compile(r"^(?:[A-Za-z][A-Za-z0-9]*-)?[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-"
+                             r"[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
 
 
 def is_guid_reference(value) -> bool:
     """Where a value may be either a GUID or an element name (a qualified name has no spaces either), a
-    GUID is an is_guid() value ending in a UUID: plain, or after a type prefix ("Glossary-<uuid>")."""
-    return is_guid(value) and bool(_UUID_AT_END.search(value.strip()))
+    GUID is the whole value: a UUID, plain or after one type-name prefix ("Glossary-<uuid>")."""
+    return isinstance(value, str) and bool(_GUID_REFERENCE.match(value.strip()))
