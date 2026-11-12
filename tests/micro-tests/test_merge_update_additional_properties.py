@@ -67,8 +67,10 @@ class _Client(_Recorder):
         self.classification_manager = _Recorder()
         self.data_designer = _Recorder()
         self._fetched = fetched
+        self.reads = []
 
     async def _async_get_element_by_guid_(self, guid):
+        self.reads.append(guid)
         return self._fetched
 
     def updates(self):
@@ -233,6 +235,27 @@ async def test_update_with_no_as_is_element_is_refused():
     p, _ = _processor(SavedQueryProcessor, "Saved Query", attributes, None)
     with pytest.raises(AdditionalPropertiesUnreadable):
         await p._prepare_additional_properties()
+
+
+# ------------------------------------------------------------------ first Create: nothing to merge
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("cls, object_type, attributes, expected", [
+    (SavedQueryProcessor, "Saved Query", {"Additional Properties": {"owner": "erinoverview"}},
+     {"owner": "erinoverview"}),
+    (ReportProcessor, "Report", {**CDO_DOCUMENT_KEYS, "Additional Properties": {"owner": "erinoverview"}},
+     {"owner": "erinoverview", "reportSpec": "Project-DrE-Basic", "outputFormat": "TABLE",
+      "searchString": "JulesKeeper::"}),
+])
+async def test_first_create_sends_the_document_map_and_never_reads(cls, object_type, attributes, expected):
+    p, client = _processor(cls, object_type, _a(**attributes), None, verb="Create")
+    p.parsed_output.update({"exists": False, "guid": None})
+    await _run(p)
+    assert client.reads == []  # no stored element to read: not refused, not merged
+    assert client.updates() == []
+    (types, body), = [args for name, args, _ in client.calls if name == "_async_create_asset"]
+    assert body["properties"]["additionalProperties"] == expected
+    assert p.parsed_output["attributes"]["Additional Properties"].get("document_value") is None  # untouched
 
 
 # ------------------------------------------------------------------ Dashboard asset upsert
