@@ -12,7 +12,7 @@ from loguru import logger
 
 from md_processing.v2.processors import AsyncBaseCommandProcessor
 from md_processing.md_processing_utils.common_md_utils import complete_bundle_properties, update_element_dictionary
-from md_processing.md_processing_utils.typed_properties import (classification_map, entity_properties,
+from md_processing.md_processing_utils.typed_properties import (classification_map, entity_properties, long_value,
                                                                   parent_relationship_properties,
                                                                   record_not_applied)
 
@@ -25,11 +25,45 @@ def _guid(attributes: dict, name: str):
     return attributes.get(name, {}).get("guid")
 
 
-def _outer_body(attributes: dict, properties: dict) -> dict:
+#: Schema-attribute attributes that are properties of its link to the parent schema type / attribute in
+#: Egeria 6 (AttributeForSchema, NestedSchemaAttribute; types archive ~8386/8436, written by
+#: OpenMetadataRelationshipBuilder), not of the SchemaAttribute entity.
+_LINK_PROPERTIES = {"Element Position": "position", "Min Cardinality": "minCardinality",
+                    "Max Cardinality": "maxCardinality"}
+_SCHEMA_LINKS = ("AttributeForSchema", "NestedSchemaAttribute")
+
+
+def _schema_link_properties(attributes: dict, creating: bool) -> dict:
+    """{key: int} for the link properties given; each reported "not applied" when there is no link to put it on
+    (no Parent ID with an AttributeForSchema / NestedSchemaAttribute Parent Relationship Type Name, or an
+    update, which doesn't change the link)."""
+    values = {}
+    for attribute, key in _LINK_PROPERTIES.items():
+        value, notes = long_value(attributes, attribute)
+        record_not_applied(attributes, attribute, notes)
+        if value is not None:
+            values[attribute] = (key, value)
+    if not values:
+        return {}
+    rel_type = _v(attributes, "Parent Relationship Type Name")
+    if creating and _guid(attributes, "Parent ID") and rel_type in _SCHEMA_LINKS:
+        return {key: value for key, value in values.values()}
+    reason = ("an update doesn't change the attribute's link to its parent" if not creating else
+              "it is a property of the attribute's AttributeForSchema / NestedSchemaAttribute link, and no Parent ID "
+              "with one of those Parent Relationship Type Names is given")
+    for attribute in values:
+        record_not_applied(attributes, attribute, [f"not applied: {attribute}: {reason}"])
+    return {}
+
+
+def _outer_body(attributes: dict, properties: dict, link_properties: dict | None = None) -> dict:
     """Build the NewElementRequestBody wrapper shared by Create Schema Type
     and Create Schema Attribute."""
     parent_props, notes = parent_relationship_properties(attributes)
     record_not_applied(attributes, "Parent Relationship Attributes", notes)
+    if link_properties:
+        rel_type = _v(attributes, "Parent Relationship Type Name")
+        parent_props = {**(parent_props or {"class": f"{rel_type}Properties"}), **link_properties}
     classifications, notes = classification_map(_v(attributes, "Initial Classifications"), "Initial Classifications")
     record_not_applied(attributes, "Initial Classifications", notes)
     return {
@@ -87,12 +121,12 @@ class SchemaElementProcessor(AsyncBaseCommandProcessor):
             "effectiveTo": _v(attributes, "Effective To"),
         }
         if is_attribute:
+            # SchemaAttributeProperties' key is orderedValues (odpi/egeria origin/main 0b7ee0fb); position and
+            # the cardinalities are properties of the link to the parent (AttributeForSchemaProperties /
+            # NestedSchemaAttributeProperties), not of the attribute entity: see _schema_link_properties.
             props.update({
-                "elementPosition": _v(attributes, "Element Position"),
-                "minCardinality": _v(attributes, "Min Cardinality"),
-                "maxCardinality": _v(attributes, "Max Cardinality"),
                 "allowsDuplicateValues": _v(attributes, "Allows Duplicate Values"),
-                "isOrderedValues": _v(attributes, "Is Ordered Values"),
+                "orderedValues": _v(attributes, "Is Ordered Values"),
             })
             # Egeria's SchemaAttributeProperties declares defaultValueOverride (SchemaAttributeProperties.java:52)
             # and its builder writes it (OpenMetadataElementBuilder.java:2225), but the repository's TypeDef
@@ -131,6 +165,8 @@ class SchemaElementProcessor(AsyncBaseCommandProcessor):
 
         if self.as_is_element:
             guid = self.as_is_element["elementHeader"]["guid"]
+            if is_attribute:
+                _schema_link_properties(attributes, creating=False)
             update_body = {
                 "class": "UpdateElementRequestBody",
                 "properties": self.filter_update_properties(props, _v(attributes, "Merge Update", True)),
@@ -142,7 +178,8 @@ class SchemaElementProcessor(AsyncBaseCommandProcessor):
                 await client._async_update_schema_type(guid, update_body)
             verb_word = "Updated"
         else:
-            create_body = _outer_body(attributes, props)
+            create_body = _outer_body(attributes, props,
+                                      _schema_link_properties(attributes, creating=True) if is_attribute else None)
             if is_attribute:
                 guid = await client._async_create_schema_attribute(create_body)
             else:
