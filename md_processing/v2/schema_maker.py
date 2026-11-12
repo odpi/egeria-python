@@ -12,6 +12,8 @@ from loguru import logger
 
 from md_processing.v2.processors import AsyncBaseCommandProcessor
 from md_processing.md_processing_utils.common_md_utils import update_element_dictionary
+from md_processing.md_processing_utils.typed_properties import (parent_relationship_properties,
+                                                                  record_not_applied)
 
 
 def _v(attributes: dict, name: str, default=None):
@@ -25,6 +27,8 @@ def _guid(attributes: dict, name: str):
 def _outer_body(attributes: dict, properties: dict) -> dict:
     """Build the NewElementRequestBody wrapper shared by Create Schema Type
     and Create Schema Attribute."""
+    parent_props, notes = parent_relationship_properties(attributes)
+    record_not_applied(attributes, "Parent Relationship Attributes", notes)
     return {
         "class": "NewElementRequestBody",
         "anchorGUID": _guid(attributes, "Anchor ID"),
@@ -33,7 +37,7 @@ def _outer_body(attributes: dict, properties: dict) -> dict:
         "initialClassifications": _v(attributes, "Initial Classifications"),
         "parentGUID": _guid(attributes, "Parent ID"),
         "parentRelationshipTypeName": _v(attributes, "Parent Relationship Type Name"),
-        "parentRelationshipProperties": _v(attributes, "Parent Relationship Attributes"),
+        "parentRelationshipProperties": parent_props,
         "parentAtEnd1": _v(attributes, "Parent at End1", True),
         "properties": properties,
     }

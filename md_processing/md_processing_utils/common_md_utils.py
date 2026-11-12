@@ -16,6 +16,8 @@ from pyegeria.core.utils import (camel_to_title_case)
 from pyegeria.core._globals import DEBUG_LEVEL, GovernanceDomains, resolve_enum
 from md_processing.md_processing_utils.message_constants import message_types
 from md_processing.md_processing_utils.element_status import element_status_properties
+from md_processing.md_processing_utils.typed_properties import (parent_relationship_properties,
+                                                                  record_not_applied)
 
 # Constants
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
@@ -365,6 +367,12 @@ def set_create_body(object_type: str, attributes: dict)->dict:
     Callers should build the inner body separately with the appropriate helper and then assign it to body["properties"].
     """
     prop_name = object_type.replace(" ", "")
+    # RelationshipProperties is polymorphic: a raw dictionary (no "class") is a 400 that loses the whole
+    # create. Typed by the parent relationship type; keys it doesn't read are reported, not sent.
+    parent_props, notes = parent_relationship_properties(attributes)
+    record_not_applied(attributes, "Parent Relationship Attributes"
+                       if attributes.get("Parent Relationship Attributes", {}).get("value")
+                       else "Parent Relationship Properties", notes)
     body = {
         "class": "NewElementRequestBody",
         "externalSourceGUID": attributes.get('External Source GUID', {}).get('guid', None),
@@ -376,7 +384,7 @@ def set_create_body(object_type: str, attributes: dict)->dict:
         "isOwnAnchor": attributes.get('Is Own Anchor', {}).get('value', True),
         "parentGUID": attributes.get('Parent ID', {}).get('guid', None),
         "parentRelationshipTypeName": attributes.get('Parent Relationship Type Name', {}).get('value', None) or attributes.get('Parent Relationship Type', {}).get('value', None),
-        "parentRelationshipProperties": attributes.get('Parent Relationship Attributes', {}).get('value', None) or attributes.get('Parent Relationship Properties', {}).get('value', None),
+        "parentRelationshipProperties": parent_props,
         "parentAtEnd1": attributes.get('Parent at End1', {}).get('value', True),
         # Egeria reads a list, anchorScopeGUIDs; the singular key was dropped (ISSUE-164)
         "anchorScopeGUIDs": ([attributes['Anchor Scope ID']['guid']]

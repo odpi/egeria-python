@@ -16,6 +16,8 @@ from pyegeria.view.output_formatter import generate_output, format_for_markdown_
 
 from md_processing.v2.extraction import DrECommand
 from md_processing.v2.parsing import AttributeFirstParser
+from md_processing.md_processing_utils.typed_properties import (new_element_properties, not_applied_notes,
+                                                                  parent_relationship_properties)
 from md_processing.md_processing_utils.md_processing_constants import get_command_spec, resolve_command_spec, VIEW_VERBS
 from md_processing.md_processing_utils.common_md_utils import (
     update_element_dictionary, get_element_dictionary, is_present, find_key_with_value
@@ -505,10 +507,11 @@ class AsyncBaseCommandProcessor(ABC):
         if not rel_type:
             return
 
-        rel_props = (
-            attributes.get("Parent Relationship Attributes", {}).get("value")
-            or attributes.get("Parent Relationship Properties", {}).get("value")
-        )
+        # Typed (RelationshipProperties is polymorphic: a raw dict is a 400); keys the relationship
+        # doesn't read are reported, not sent.
+        rel_props, notes = parent_relationship_properties(attributes)
+        for note in notes:
+            self._add_warning(note)
         parent_at_end1 = attributes.get("Parent at End1", {}).get("value", True)
         end_1_guid, end_2_guid = (parent_guid, guid) if parent_at_end1 else (guid, parent_guid)
 
@@ -531,8 +534,9 @@ class AsyncBaseCommandProcessor(ABC):
                 "metadata_element_1_guid": end_1_guid,
                 "metadata_element_2_guid": end_2_guid,
             }
-            if isinstance(rel_props, dict):
-                body["properties"] = rel_props
+            if rel_props:
+                # this endpoint reads a NewElementProperties property-value map
+                body["properties"] = new_element_properties(rel_props)
             await self.client.metadata_expert._async_create_related_elements(body)
             message = f"Linked via {rel_type}"
             if other_parents:
@@ -1204,7 +1208,12 @@ class AsyncBaseCommandProcessor(ABC):
                     f" | display_name={self.parsed_output.get('display_name', '')!r}"
                     f" | GUID={self.parsed_output.get('guid', 'new')} ══\033[0m"
                 )
-            output = await self.apply_changes()
+            try:
+                output = await self.apply_changes()
+            finally:
+                # Every attribute a body builder couldn't send says so, success or not.
+                for note in not_applied_notes(self.parsed_output.get("attributes", {})):
+                    self._add_warning(note)
         except PyegeriaException as e:
             logger.error(f"Command String: {self.command.raw_block}")
             if self.last_body:
@@ -1222,6 +1231,7 @@ class AsyncBaseCommandProcessor(ABC):
                 "display_name": self.parsed_output.get("display_name"),
                 "qualified_name": self.parsed_output.get("qualified_name"),
                 "found": self.parsed_output.get("exists", False),
+                "warnings": self.parsed_output.get("warnings", []),
                 "errors": [str(e)]
             }
         except Exception as e:
@@ -1240,6 +1250,7 @@ class AsyncBaseCommandProcessor(ABC):
                 "display_name": self.parsed_output.get("display_name"),
                 "qualified_name": self.parsed_output.get("qualified_name"),
                 "found": self.parsed_output.get("exists", False),
+                "warnings": self.parsed_output.get("warnings", []),
                 "errors": [str(e)]
             }
         

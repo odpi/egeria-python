@@ -17,6 +17,7 @@ from loguru import logger
 
 from md_processing.v2.processors import AsyncBaseCommandProcessor
 from md_processing.md_processing_utils.common_md_utils import update_element_dictionary
+from md_processing.md_processing_utils.typed_properties import parent_relationship_properties
 
 
 def _v(attributes: dict, name: str, default=None):
@@ -54,6 +55,9 @@ class AssetMakerProcessor(AsyncBaseCommandProcessor):
             if status.get("value") and not status.get("is_default"):
                 logger.warning("'Initial Status' ignored: Egeria no longer accepts it. Set contentStatus "
                                "(or the type's own status) in Template Properties instead.")
+            parent_props, notes = parent_relationship_properties(attributes)
+            for note in notes:
+                self._add_warning(note)
             body = {
                 "class": "TemplateRequestBody",
                 "typeName": _v(attributes, "Element Type Name"),
@@ -68,7 +72,7 @@ class AssetMakerProcessor(AsyncBaseCommandProcessor):
                 "effectiveTo": _v(attributes, "Effective To"),
                 "parentGUID": _guid(attributes, "Parent ID"),
                 "parentRelationshipTypeName": _v(attributes, "Parent Relationship Type Name"),
-                "parentRelationshipProperties": _v(attributes, "Parent Relationship Attributes"),
+                "parentRelationshipProperties": parent_props,
                 "parentAtEnd1": _v(attributes, "Parent at End1", True),
                 "deepCopy": _v(attributes, "Deep Copy"),
             }
