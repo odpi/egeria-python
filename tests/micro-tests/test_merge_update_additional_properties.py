@@ -32,20 +32,22 @@ SAVED_QUERY_REFRESH_KEYS = {
     "lastRefreshParams": '{"page_size": 100, "type_name": "Asset"}',
 }
 
-# A CDO Report: the three keys its document writes, and seven search keys only the stored element has.
-CDO_DOCUMENT_KEYS = {"Report Spec": "Risk-DrE-Basic", "Output Format": "TABLE", "Search String": "CocoPharma::Risk::"}
+# A CDO Report: the stored map of CocoPharma::Report::CDODashboard::MyNinetyDayPlanProgress as read on laz
+# on 2026-11-12 (version 1, LIST). Every value is a string, "['ACTIVE']" included.
 CDO_STORED = {
-    "reportSpec": "Risk-DrE-Basic",
-    "outputFormat": "TABLE",
-    "searchString": "CocoPharma::Risk::",
-    "startsWith": "true",
-    "endsWith": "false",
-    "ignoreCase": "true",
-    "metadataElementTypeName": "GovernanceRisk",
-    "limitResultByStatus": "ACTIVE",
+    "reportSpec": "Project-DrE-Basic",
+    "searchString": "JulesKeeper::",
     "graphQueryDepth": "1",
-    "pageSize": "200",
+    "startFrom": "0",
+    "ignoreCase": "False",
+    "endsWith": "False",
+    "pageSize": "0",
+    "limitResultByStatus": "['ACTIVE']",
+    "outputFormat": "LIST",
+    "startsWith": "True",
 }
+# The Create Report block: it writes only these three keys.
+CDO_DOCUMENT_KEYS = {"Report Spec": "Project-DrE-Basic", "Output Format": "TABLE", "Search String": "JulesKeeper::"}
 
 
 class _Recorder:
@@ -158,16 +160,18 @@ async def test_report_create_to_update_keeps_the_cdo_search_keys():
     await _run(p)
     (guid, body), = client.updates()
     sent = body["properties"]["additionalProperties"]
-    assert sent == CDO_STORED  # all 10 keys, not just the 3 the document writes
+    # all 10 stored keys, with only outputFormat changed (what had to be done by hand on laz, 2026-11-12)
+    assert sent == {**CDO_STORED, "outputFormat": "TABLE"}
+    assert len(sent) == 10 and sent["limitResultByStatus"] == "['ACTIVE']"
 
 
 @pytest.mark.asyncio
 async def test_report_document_values_win_over_stored():
-    p, client = _processor(ReportProcessor, "Report", _a(**{**CDO_DOCUMENT_KEYS, "Output Format": "LIST"}),
+    p, client = _processor(ReportProcessor, "Report", _a(**{**CDO_DOCUMENT_KEYS, "Search String": "JulesKeeper::Plans::"}),
                            _element(dict(CDO_STORED)))
     await _run(p)
     sent = client.updates()[0][1]["properties"]["additionalProperties"]
-    assert sent == {**CDO_STORED, "outputFormat": "LIST"}
+    assert sent == {**CDO_STORED, "outputFormat": "TABLE", "searchString": "JulesKeeper::Plans::"}
 
 
 # ------------------------------------------------------------------ replace update
@@ -190,7 +194,7 @@ async def test_report_replace_update_sends_only_the_document_keys():
     p, client = _processor(ReportProcessor, "Report", _a(merge=False, **CDO_DOCUMENT_KEYS), _element(dict(CDO_STORED)))
     await _run(p)
     sent = client.updates()[0][1]["properties"]["additionalProperties"]
-    assert sent == {"reportSpec": "Risk-DrE-Basic", "outputFormat": "TABLE", "searchString": "CocoPharma::Risk::"}
+    assert sent == {"reportSpec": "Project-DrE-Basic", "outputFormat": "TABLE", "searchString": "JulesKeeper::"}
 
 
 # ------------------------------------------------------------------ unreadable as-is element
