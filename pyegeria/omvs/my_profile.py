@@ -1301,6 +1301,20 @@ class MyProfile(AssetMaker):
     # Lifecycle
     #
 
+    async def _async_require_my_profile_guid(self, what: str) -> str:
+        """The caller's personal profile GUID, or a ValueError that says so in a sentence.
+
+        get_my_profile() returns the string "No elements found" for a user with no personal profile;
+        indexing it as a dict was the "string indices must be integers, not 'str'" failure of Dr.Egeria's
+        Create ToDo / Meeting / Review (round-trip probe 2026-11-12).
+        """
+        if not self.my_profile_guid:
+            await self._async_get_my_profile()
+        if not self.my_profile_guid:
+            raise ValueError(f"User {self.user_id} has no personal profile in Egeria, so it can't {what}; "
+                             "create the user's profile first")
+        return self.my_profile_guid
+
     async def _async_create_my_todo(self, todo_name: str, activity_status: str = "REQUESTED",
                                     description:Optional[str]=None, situation: Optional[str]=None,priority:Optional[int]=0,
                                     qualified_name: Optional[str] = None) -> str:
@@ -1355,9 +1369,7 @@ class MyProfile(AssetMaker):
         """
         if qualified_name is None:
             qualified_name = self.__create_qualified_name__("Todo", todo_name)+f"-{int(time.time())}"
-        if not self.my_profile_guid:
-            me = self.get_my_profile()
-            self.my_profile_guid = me['elementHeader']["guid"]
+        await self._async_require_my_profile_guid("create a to-do")
 
         body = {
             "class": "ActionRequestBody",
@@ -1471,9 +1483,7 @@ class MyProfile(AssetMaker):
         """
         if qualified_name is None:
             qualified_name = self.__create_qualified_name__("Meeting", meeting_name)+f"-{int(time.time())}"
-        if not self.my_profile_guid:
-            me = self.get_my_profile()
-            self.my_profile_guid = me['elementHeader']["guid"]
+        await self._async_require_my_profile_guid("create a meeting")
 
         body = {
             "class": "ActionRequestBody",
@@ -1562,9 +1572,7 @@ class MyProfile(AssetMaker):
         """
         if qualified_name is None:
             qualified_name = self.__create_qualified_name__("Review", review_name)+f"-{int(time.time())}"
-        if not self.my_profile_guid:
-            me = self.get_my_profile()
-            self.my_profile_guid = me['elementHeader']["guid"]
+        await self._async_require_my_profile_guid("create a review")
 
         body = {
             "class": "ActionRequestBody",
