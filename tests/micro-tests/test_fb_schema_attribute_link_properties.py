@@ -71,4 +71,8 @@ async def test_without_a_schema_link_they_are_reported():
     body, attributes = await _create({"Element Position": {"value": 7}, "Min Cardinality": {"value": 0}})
     assert body["parentRelationshipProperties"] is None
     notes = not_applied_notes(attributes)
-    assert len(notes) == 2 and all("AttributeForSchema / NestedSchemaAttribute link" in n for n in notes)
+    assert notes == [
+        "not applied: Element Position: belongs on the link to the parent; give a Parent ID (Parent Relationship "
+        "Type Name AttributeForSchema or NestedSchemaAttribute)",
+        "not applied: Min Cardinality: belongs on the link to the parent; give a Parent ID (Parent Relationship "
+        "Type Name AttributeForSchema or NestedSchemaAttribute)"]

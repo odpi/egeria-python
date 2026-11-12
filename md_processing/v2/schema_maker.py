@@ -48,9 +48,9 @@ def _schema_link_properties(attributes: dict, creating: bool) -> dict:
     rel_type = _v(attributes, "Parent Relationship Type Name")
     if creating and _guid(attributes, "Parent ID") and rel_type in _SCHEMA_LINKS:
         return {key: value for key, value in values.values()}
-    reason = ("an update doesn't change the attribute's link to its parent" if not creating else
-              "it is a property of the attribute's AttributeForSchema / NestedSchemaAttribute link, and no Parent ID "
-              "with one of those Parent Relationship Type Names is given")
+    reason = ("belongs on the link to the parent, which an update doesn't change" if not creating else
+              "belongs on the link to the parent; give a Parent ID (Parent Relationship Type Name "
+              "AttributeForSchema or NestedSchemaAttribute)")
     for attribute in values:
         record_not_applied(attributes, attribute, [f"not applied: {attribute}: {reason}"])
     return {}
