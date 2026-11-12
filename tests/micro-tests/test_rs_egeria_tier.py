@@ -92,8 +92,10 @@ class FakeEgeria:
                 if name in (e["properties"]["qualifiedName"], e["properties"]["displayName"])]
         return hits or "No elements found"
 
-    def get_collection_members(self, collection_guid=None, output_format="JSON", **_):
-        return copy.deepcopy(self.members.get(collection_guid)) or "No elements found"
+    def get_collection_members(self, collection_guid=None, output_format="JSON", start_from=0, page_size=0, **_):
+        items = list(self.members.get(collection_guid) or [])
+        items = items[start_from:start_from + page_size] if page_size else items[start_from:]
+        return copy.deepcopy(items) or "No elements found"
 
     def get_collection_by_guid(self, guid, output_format="JSON", **_):
         self.full_fetches.append(guid)
@@ -528,7 +530,8 @@ def test_incremental_sync_fetches_only_new_or_higher_versions_and_prunes_by_memb
     assert pruned.pruned == ["E-Collections"]
     assert any("no longer a member" in n for n in pruned.notes)
     assert json.loads((tier["cache"] / esc.MANIFEST).read_text())["entries"] == {}
-    assert sorted(p.name for p in tier["cache"].glob("*.json")) == [esc.MANIFEST]
+    # No spec file is left behind; the consumer index (written by every folder sync) stays.
+    assert sorted(p.name for p in tier["cache"].glob("*.json")) == [esc.CONSUMERS, esc.MANIFEST]
 
 
 def test_spec_in_two_folders_is_cached_once_listing_both(tier):

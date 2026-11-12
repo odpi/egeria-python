@@ -55,6 +55,7 @@ __all__ = [
     "log_resolution_summary",
     "OUTPUT_FORMATS",
     "CHART_FORMATS",
+    "DOCUMENT_FORMATS",
     "FUNCTION_VALUED_PARAMS",
     "declared_inputs",
     "routine_entry",
@@ -65,6 +66,8 @@ OUTPUT_FORMATS = ("ALL", "DICT", "JSON", "TABLE", "LIST", "REPORT", "REPORT-GRAP
                   "MERMAID", "GRAPH")
 #: Chart formats: dispatched before any Format row, and only for an analytic routine.
 CHART_FORMATS = ("SERIES", "BAR", "PIE")
+#: Document formats (SD-1): one standard document built by an exporter (an analytic routine).
+DOCUMENT_FORMATS = ("DOCUMENT",)
 #: Routine parameters whose value names another routine (by registered name only, ISSUE-173).
 FUNCTION_VALUED_PARAMS = ("metric_path",)
 
@@ -379,13 +382,15 @@ def _check_formats(data: Dict[str, Any], has_analytic: bool, decl: Any, fail, no
         for t in types:
             if t not in seen:
                 seen.append(t)
-        unknown = [t for t in types if t not in OUTPUT_FORMATS + CHART_FORMATS]
+        unknown = [t for t in types if t not in OUTPUT_FORMATS + CHART_FORMATS + DOCUMENT_FORMATS]
         if unknown:
             fail(4, f"its output format{'s' if len(unknown) > 1 else ''} {', '.join(unknown)} "
                     f"{'is' if len(unknown) == 1 else 'are'} not one the executor renders")
         charts = [t for t in types if t in CHART_FORMATS]
         if charts and not has_analytic:
             fail(4, f"it offers {', '.join(charts)}, a chart, and has no analytic routine to chart")
+        if "DOCUMENT" in types and not has_analytic:
+            fail(4, "it offers DOCUMENT and has no analytic routine (exporter) to build the document")
         for col in fmt.get("attributes") or []:
             key = str(col.get("key") or "")
             detail = col.get("detail_spec")

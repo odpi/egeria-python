@@ -1,0 +1,3 @@
+This glossary is used by data architects and data stewards when naming new data fields. Build a field name by
+combining a prime word (from the relevant subject area), zero or more modifiers (from the subject area or the
+Common Modifiers folder), and a class word (from the subject area or the Common Class Words folder).

@@ -1987,8 +1987,8 @@ def integrations_status(ctx, connector_list, list, sorted):
 
 @integrations.command("targets")
 @click.pass_context
-@click.argument("--connector", nargs=1)
-def integrations_status(ctx, connector):
+@click.argument("connector", nargs=1)
+def integrations_targets(ctx, connector):
     """Display Catalog Targets for a connector"""
     c = ctx.obj
     display_catalog_targets(connector, c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width)

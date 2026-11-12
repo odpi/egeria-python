@@ -69,6 +69,7 @@ __all__ = [
     "stale_assets",
     "growth_series",
     "metric_trend",
+    "TrendNotExact",
     "term_definition_completeness",
     "active_contributors",
     "asset_subtype_tree",
@@ -540,6 +541,29 @@ def _not_measured(what: str, reason: str, at_least: Optional[int] = None) -> Non
         notes.append({"count": what, "reason": reason, "at_least": at_least})
 
 
+# How each element count was answered, per context, for `metric_trend`'s per-point truth:
+# "native" (Egeria's count), "find" (a short find page: every element seen), "find-capped" (the
+# find stopped at DEFAULT_CAP: a lower bound, not measured) or "not-measured" (no number at all).
+_COUNT_HOW: "contextvars.ContextVar[Optional[List[str]]]" = contextvars.ContextVar(
+    "pyegeria_count_how", default=None)
+
+
+@contextlib.contextmanager
+def _recording_how():
+    hows: List[str] = []
+    token = _COUNT_HOW.set(hows)
+    try:
+        yield hows
+    finally:
+        _COUNT_HOW.reset(token)
+
+
+def _how(how: str) -> None:
+    hows = _COUNT_HOW.get()
+    if hows is not None:
+        hows.append(how)
+
+
 def _native_failure_words(exc: Optional[BaseException], tried: bool) -> str:
     """What happened to the native count, in words, for a not-measured reason."""
     if not tried:
@@ -601,6 +625,7 @@ def _element_count(mgr, body: dict, as_of: Optional[str] = None, strict: bool = 
         try:
             c = _as_count(getattr(mgr, name)(b, **kw))
             if c is not None:
+                _how("native")
                 return c
         except Exception as exc:  # noqa: BLE001 -- old server: mark unsupported, fall back
             native_exc = exc
@@ -610,14 +635,18 @@ def _element_count(mgr, body: dict, as_of: Optional[str] = None, strict: bool = 
         # Strict or not: a repository count has no fallback, and 0 here would read as an empty catalog.
         _not_measured(what, f"{native_words}, and a repository-population count has no fallback "
                             f"(the find fallback only sees what the viewer may see)")
+        _how("not-measured")
         return None
     found = _find_or_none(mgr, b)
     if found is None:  # strict or not: a failed query is not "none of them" (6.2.28)
         _not_measured(what, f"{native_words}, and the find fallback failed")
+        _how("not-measured")
         return None
     if len(found) >= DEFAULT_CAP:  # a full page is a lower bound, never a total (strict or not)
         _not_measured(what, _capped_reason(native_words, len(found)), at_least=len(found))
+        _how("find-capped")
         return None
+    _how("find")
     return len(found)
 
 
@@ -2143,6 +2172,7 @@ def metric_trend(
     window: str = "6mo",
     points: Optional[int] = None,
     metric_params: Optional[Dict[str, Any]] = None,
+    strict: bool = False,
 ) -> List[Dict[str, Any]]:
     """
     Turn any single-snapshot function in this module into a time series, by
@@ -2177,6 +2207,27 @@ def metric_trend(
     dict (matching growth_series's flat-per-point shape), else stored under
     "value". A snapshot that raises logs at debug and stores None instead of
     aborting the whole series.
+
+    Every point also carries the truth about its own number (W2, 6.2.34):
+    `measurement = {"exact", "capped", "at_least", "how", "reasons"}`.
+    - `exact`: the snapshot was measured, with no count left unmeasured.
+    - `capped`: a count stopped at the find page cap, so `at_least` is a lower
+      bound, never a total. The point's value stays None (as the count
+      returns it), and `display` reads "≥<at_least>".
+    - `how`: "native", "find", "find-capped", "not-measured" or "error" (a
+      snapshot that raised), "mixed" when one snapshot made several kinds of
+      count, or "measured" when the target made no element count.
+    - `reasons`: the not-measured notes for that point (also recorded for an
+      enclosing `recording_unmeasured()`, as before).
+    A scalar point also gets `display`: the number as text, "≥N" for a lower
+    bound, or "not measured".
+
+    Egeria's native count honours `asOfTime` (checked 2026-11-10, in source
+    and live), so past points are native counts, exact like today's.
+
+    `strict=True` is passed to a target that takes `strict`. A series with
+    any point that isn't exact then raises `TrendNotExact`, naming how many
+    points and why, instead of returning numbers.
     """
     from datetime import datetime, timezone
     from pyegeria.view.format_set_executor import resolve_report_spec_function  # lazy: keeps the design boundary
@@ -2204,6 +2255,10 @@ def metric_trend(
     step = span_s / (n - 1)
     date_fmt = "%d %b %Y %H:%M" if span_s <= 2 * 86400 else "%d %b %Y"
 
+    kwargs = dict(metric_params or {})
+    if strict and "strict" in inspect.signature(func).parameters:
+        kwargs["strict"] = True
+    outer_notes = _UNMEASURED.get()
     series = []
     for i in range(n - 1, -1, -1):
         if i == 0:
@@ -2212,17 +2267,69 @@ def metric_trend(
             d = datetime.fromtimestamp(now.timestamp() - i * step, tz=timezone.utc)
             as_of = d.isoformat()
         point = {"label": growth_label(d, span_s), "date": d.strftime(date_fmt)}
-        try:
-            result = func(*bound_args, as_of=as_of, **(metric_params or {}))
-            if isinstance(result, dict):
-                point.update(result)
-            else:
-                point["value"] = result
-        except Exception as exc:  # noqa: BLE001
-            logger.debug(f"overview_metrics metric_trend: snapshot {i} of {metric_path} failed: {exc}")
-            point["value"] = None
+        failed = None
+        with recording_unmeasured() as notes, _recording_how() as hows:
+            try:
+                result = func(*bound_args, as_of=as_of, **kwargs)
+            except Exception as exc:  # noqa: BLE001
+                logger.debug(f"overview_metrics metric_trend: snapshot {i} of {metric_path} failed: {exc}")
+                result, failed = None, exc
+        if outer_notes is not None:  # the enclosing recorder still hears every note, as before
+            outer_notes.extend(notes)
+        if isinstance(result, dict):
+            point.update(result)
+        else:
+            point["value"] = result
+        point["measurement"] = _point_measurement(notes, hows, failed)
+        if not isinstance(result, dict):
+            point["display"] = _point_display(result, point["measurement"])
         series.append(point)
+    if strict:
+        inexact = [p for p in series if not p["measurement"]["exact"]]
+        if inexact:
+            raise TrendNotExact(metric_path, inexact, len(series))
     return series
+
+
+class TrendNotExact(ValueError):
+    """`metric_trend(strict=True)`: one or more points are not exact (a lower bound, not measured,
+    or a snapshot that failed). `points` holds those points, measurement included."""
+
+    def __init__(self, metric_path: str, points: List[Dict[str, Any]], total: int):
+        self.metric_path, self.points, self.total = metric_path, points, total
+        bounds = sum(1 for p in points if p["measurement"]["capped"])
+        words = [f"{p['date']}: {p.get('display') or p['measurement']['how']}" for p in points]
+        super().__init__(f"metric_trend({metric_path}): {len(points)} of {total} points are not exact "
+                         f"({bounds} lower bounds); " + "; ".join(words))
+
+
+def _point_measurement(notes: List[Dict[str, Any]], hows: List[str],
+                       failed: Optional[BaseException]) -> Dict[str, Any]:
+    """The truth about one trend point's number, from the counts made while it was taken."""
+    bounds = [n["at_least"] for n in notes if n.get("at_least") is not None]
+    if failed is not None:
+        how = "error"
+    elif not hows:
+        how = "not-measured" if notes else "measured"
+    elif len(set(hows)) == 1:
+        how = hows[0]
+    else:
+        how = "mixed"
+    reasons = [dict(n) for n in notes]
+    if failed is not None:
+        reasons.append({"count": "snapshot", "reason": f"the snapshot failed ({type(failed).__name__})",
+                        "at_least": None})
+    return {"exact": failed is None and not notes, "capped": bool(bounds),
+            "at_least": max(bounds) if bounds else None, "how": how, "reasons": reasons}
+
+
+def _point_display(value: Any, measurement: Dict[str, Any]) -> str:
+    """A scalar point as text: never a bare number for a lower bound."""
+    if measurement["exact"] and value is not None:
+        return str(value)
+    if measurement["capped"]:
+        return f"\u2265{measurement['at_least']}"
+    return "not measured"
 
 
 def term_definition_completeness(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:

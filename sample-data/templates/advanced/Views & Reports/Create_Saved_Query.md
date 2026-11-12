@@ -409,6 +409,22 @@ ___
 >	**Description**: The source of the information.
 
 
+### Formula
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: The logic implemented by this process, expressed in the language of the business rather than any one implementation language.
+
+
+### Formula Type
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: The specification language used to express the Formula (e.g. SQL, Python, natural language).
+
+
 ### User Defined Status
 >	**Input Required**: False
 

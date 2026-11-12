@@ -16,6 +16,7 @@ if str(root_path) not in sys.path:
     sys.path.append(str(root_path))
 
 from textual.css.query import NoMatches
+from pyegeria.view.output_formatter import value_names
 from textual.screen import ModalScreen
 from textual import on
 from textual.app import App, ComposeResult
@@ -448,7 +449,7 @@ class DataProducts(App):
                     if  entry.get("Containing Members") is not None:
                         member = entry.get("Containing Members")
                         self.log(f"member variable: {member}, type: {type(member)}")
-                        split_members = member.split(",")
+                        split_members = value_names(member)  # R4: a list (native DICT) or a string
                         self.log(f"split_members: {split_members}, type: {type(split_members)}")
                         self.member_list.extend(split_members)
                         self.log(f"member_list: {self.member_list}, type: {type(self.member_list)}")
@@ -464,7 +465,7 @@ class DataProducts(App):
                                 if isinstance(member.get("Containing Members"), list):
                                     member_ext = member.get("Containing Members")
                                     self.log(f"member variable: {member_ext}, type: {type(member_ext)}")
-                                    split_members = member_ext.split(",")
+                                    split_members = value_names(member_ext)  # R4
                                     self.log(f"split_members: {split_members}, type: {type(split_members)}")
                                     self.member_list.extend(split_members)
                                     self.log(f"member_list: {self.member_list}, type: {type(self.member_list)}")
@@ -473,7 +474,7 @@ class DataProducts(App):
                                     if isinstance(member.get("Containing Members"), str):
                                         item_string = member.get("Containing Members")
                                         self.log(f"member variable: {item_string}, type: {type(item_string)}")
-                                        split_members = item_string.split(",")
+                                        split_members = value_names(item_string)  # R4
                                         self.log(f"split_members: {split_members}, type: {type(split_members)}")
                                         self.member_list.extend(split_members)
                                         self.log(f"member_list: {self.member_list}, type: {type(self.member_list)}")

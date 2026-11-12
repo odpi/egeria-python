@@ -280,7 +280,18 @@ CALLS = {
     "stale_assets": lambda m, c: om.stale_assets(m, AS_OF),
     "control_implementation_summary": lambda m, c: om.control_implementation_summary(m, "soa"),
     "asset_composition": lambda m, c: om.asset_composition(m, _NoSubtypes(), depth=0),
+    "saved_query": lambda m, c: __import__("pyegeria.view.saved_query", fromlist=["saved_query"]).saved_query(
+        m, "SavedQuery::not-there"),
+    # SD-2: a document exporter, run over a real laz capture replayed (its fake clients cannot list members)
+    "export_dcat": lambda m, c: _dcat_over_fixture(),
 }
+
+
+def _dcat_over_fixture():
+    import importlib
+    sd2 = importlib.import_module(f"{__name__.rpartition('.')[0]}.test_sd2_export_dcat".lstrip("."))
+    fx = sd2._fixture("portal_dashboards")
+    return __import__("pyegeria.view.export_dcat", fromlist=["export_dcat"]).export_dcat(sd2.Replay(fx), **fx["params"])
 
 _MISSING = object()
 

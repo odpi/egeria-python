@@ -189,3 +189,6 @@ dmypy.json
 # Accidental pip install output files (from `pip install pkg =version` typos)
 /=*
 /logs/
+
+# Generated recording and voiceover output (videos, audio, captures): host outside the repo
+my_egeria/my_egeria/recording/output/

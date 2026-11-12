@@ -35,6 +35,7 @@ from pyegeria import (
     settings,
 )
 from textual.widgets import DataTable, Tree
+from pyegeria.view.output_formatter import value_names
 from ShopForDataScreen import ShopForDataScreen
 from SearchForTermScreen import SearchForTermScreen
 from SelectionOverviewScreen import SelectionOverviewScreen
@@ -142,6 +143,7 @@ class ShopForDataMixin():
             result = exec_report_spec(
                 format_set_name=report_spec,
                 output_format="DICT",
+                dict_shape="native",  # R4: related elements as lists, read with value_names()
                 params={"search_string": qualified_name, "graph_query_depth": graph_query_depth},
                 view_server=self.view_server,
                 view_url=self.platform_url,
@@ -598,6 +600,7 @@ class ShopForDataMixin():
             self.domain_details = exec_report_spec(
                 format_set_name="BusinessCapabilities",
                 output_format="DICT",
+                dict_shape="native",  # R4
                 params={"search_string": self.domain_qualified_name,
                         "filter_string": self.domain_qualified_name,
                         "graph_query_depth": 1
@@ -639,8 +642,9 @@ class ShopForDataMixin():
                 term_qualified_name = term.get("Qualified Name") or ""
                 term_type = term.get("Type Name") or ""
                 term_GUID = term.get("GUID") or ""
-                term_members = term.get("Containing Members")
-                term_memberof = term.get("Member Of")
+                # R4: lists (native) or strings (flat); never iterated character by character
+                term_members = value_names(term.get("Containing Members")) or None
+                term_memberof = value_names(term.get("Member Of")) or None
                 build_structure[term_qualified_name] = {
                     "term_type": term_type,
                     "term_GUID": term_GUID,
@@ -678,6 +682,7 @@ class ShopForDataMixin():
             self.catalog_details = exec_report_spec(
                 format_set_name="Digital-Product-Catalog",
                 output_format="DICT",
+                dict_shape="native",  # R4
                 params={"search_string": self.catalog_qualified_name,
                         "filter_string": self.catalog_qualified_name,
                         "graph_query_depth": 1},
@@ -743,7 +748,7 @@ class ShopForDataMixin():
             for product in self.catalog_details_data:
                 collection_memberships = product.get("Member Of")
                 if collection_memberships:
-                    collection_membership_list = collection_memberships.split(",")
+                    collection_membership_list = value_names(collection_memberships)  # R4
                     self.app.log(f"Membership List for product {product.get('Display Name')}: {collection_membership_list}")
                     for membership_qname in collection_membership_list:
                         self.app.log(f"Processing collection membership: {membership_qname}")
@@ -808,7 +813,7 @@ class ShopForDataMixin():
                     glossary_tree.root.expand()
                     glossary_tree.auto_expand = True
 
-                    folder_entries = [f.strip() for f in self.glossary_folders.split(",")]
+                    folder_entries = value_names(self.glossary_folders)  # R4: a list or the ", " string
                     nodes = {(): glossary_tree.root}
                     prefixes = ["GlossaryCategory", "GlossaryTerm", "CollectionFolder"]
 
@@ -873,10 +878,10 @@ class ShopForDataMixin():
         collection = self._fetch_one("BasicCollections", target_qualified_name) or {}
         self.app.log(f"collection: {collection}")
         if target_qualified_name == collection.get("Qualified Name"):
-            root_collection_contains: str = collection.get("Containing Members") or ""
+            root_collection_contains = collection.get("Containing Members") or ""
             self.app.log(f"root_collection_contains: {root_collection_contains}")
             if root_collection_contains:
-                folders = str.split(root_collection_contains, ", ")
+                folders = value_names(root_collection_contains)  # R4: a list, or a (link-wrapped) string
                 for folder in folders:
                     collection_branch.add_leaf(folder)
 

@@ -1878,6 +1878,10 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
             AnalyticParam(name="metric_params", type="dict",
                           description="Extra keyword arguments forwarded to the target function at "
                                        "every snapshot (e.g. classifications for count_elements)."),
+            AnalyticParam(name="strict", type="bool", default=False,
+                          description="Raise TrendNotExact when any point is not exact (a lower bound, "
+                                      "not measured or failed), instead of returning it; passed to a "
+                                      "target that takes strict."),
         ],
         declaration=AnalyticDeclaration(
             result_kind="series",
@@ -1894,6 +1898,59 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                 _field("label", "Snapshot", "string"),
                 _field("date", "Date", "string"),
                 _field("value", "Value", "float"),
+                _field("display", "Shown as", "string"),
+                _field("measurement", "Measurement", "map<string,string>"),
+            ],
+        ),
+    ),
+    "saved_query": AnalyticFunctionSpec(
+        name="saved_query",
+        function="pyegeria.view.saved_query.saved_query",
+        inputs=["egeria_client:EgeriaTech"],
+        description="The answer of a SavedQuery, named by qualifiedName and found as the viewer (zones "
+                    "apply): a count for a KPI tile, or a list. mode=cached reads its Results Set (the last "
+                    "refresh, shown 'as of' its time); mode=live runs the stored request now with the "
+                    "viewer's token, only through an allow-listed view-server query endpoint on this "
+                    "platform (a stored URL never chooses where the token goes). A read stopped at its "
+                    "bound is a lower bound ('\u2265N'), never a total. "
+                    "Cost: one lookup plus one call per page of the answer (500 per page, 20 pages at most).",
+        returns="dict (value, display, capped, atLeast, asOf, elements for a list)",
+        generic=True,
+        params=[
+            AnalyticParam(name="name", type="str", required=True,
+                          description="The SavedQuery's qualifiedName."),
+            AnalyticParam(name="mode", type="str", default="cached",
+                          description="cached (its Results Set, as of the last refresh) or live (run it now)."),
+            AnalyticParam(name="output", type="str", default="count",
+                          description="count (a KPI) or list (the elements)."),
+            AnalyticParam(name="params", type="dict",
+                          description="Values for the SavedQuery's declared parameters (the Portal's model: "
+                                      "searchPath for its search, requestPath for live; typed, values only, "
+                                      "never the URL). A cached answer is returned only for the values its "
+                                      "refresh recorded."),
+            AnalyticParam(name="page_size", type="int", default=500,
+                          description="Elements per page read (at most 1000)."),
+            AnalyticParam(name="max_pages", type="int", default=20,
+                          description="Pages read at most; a read stopped here is a lower bound."),
+        ],
+        declaration=AnalyticDeclaration(
+            result_kind="measure",
+            measures=[_measure("value", "elements", "value", population="viewer", as_of="asOf")],
+            absence=_absence(
+                not_measured="The saved query's answer was not read: it was never refreshed, it records no "
+                             "Results Set, no saved query by that name is visible to you, or the read failed.",
+                not_permitted="The saved query, its Results Set or its request is not visible to you.",
+                not_applicable="The saved query's stored request is not one a Report may run: its Query URL "
+                               "names another host or a path outside the allow-listed query endpoints.",
+                nothing_found="Read: the saved query's answer is empty.",
+            ),
+            out=[
+                _field("value", "Elements", "int", unit="elements"),
+                _field("display", "Shown as", "string"),
+                _field("capped", "Lower bound", "bool"),
+                _field("atLeast", "At least", "int", unit="elements"),
+                _field("asOf", "As of", "string"),
+                _field("elements", "Elements", "list<string>"),
             ],
         ),
     ),
@@ -1995,6 +2052,41 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                 ("NOT_STARTED", "Not started"), ("PLANNED", "Planned"),
                 ("PARTIALLY_IMPLEMENTED", "Partially implemented"), ("IMPLEMENTED", "Implemented"),
                 ("OTHER", "Other"))],
+        ),
+    ),
+    "export_dcat": AnalyticFunctionSpec(
+        name="export_dcat",
+        function="pyegeria.view.export_dcat.export_dcat",
+        inputs=["egeria_client:EgeriaTech"],
+        description="A DCAT-AP 3 catalog (JSON-LD or Turtle) of the Assets in a collection, or of the assets "
+                    "matching a search, read as the caller (SD-2). DigitalProducts and Agreements are Bitol's "
+                    "and are named in the notes, never exported; zoned Assets the caller can read are marked "
+                    "NON_PUBLIC; every property left out is named in the notes. Returns a document "
+                    "({text, notes}) for a DOCUMENT report spec such as 'DCAT Catalog'. Cost: one member "
+                    "listing (paged to an empty page) plus one element read per Asset.",
+        returns="document (dict: text, notes)",
+        generic=True,
+        family="Standard Documents",
+        params=[
+            AnalyticParam(name="scope", type="str",
+                          description="The catalog: a collection or folder qualifiedName, or its GUID."),
+            AnalyticParam(name="search_string", type="str",
+                          description="Instead of scope: assets in the asset domain matching this string."),
+            AnalyticParam(name="format", type="str", default="jsonld",
+                          description="jsonld (default) or turtle."),
+            AnalyticParam(name="page_size", type="int", default=50,
+                          description="Members (or search results) read per page; reading stops at an empty page."),
+        ],
+        declaration=AnalyticDeclaration(
+            result_kind="finding",
+            absence=_absence(
+                not_measured="The catalog was not exported: reading the scope from Egeria failed.",
+                not_permitted="You are not permitted to read this collection.",
+                not_applicable="A DCAT catalog does not apply: the scope names no collection you can read.",
+                nothing_found="Exported: no Asset in scope is visible to you, so the catalog lists no "
+                              "dataset; the notes say what was left out and why.",
+            ),
+            out=[_field("text", "Document", "string"), _field("notes", "Notes", "list<string>")],
         ),
     ),
 }

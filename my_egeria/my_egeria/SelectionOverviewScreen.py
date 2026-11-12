@@ -20,6 +20,25 @@ from StatusScreen import StatusScreen
 from profile_utils import set_screen_heading
 
 
+
+def node_identifier(data, label=None):
+    """The GUID or qualified name a selected tree node stands for (6.2.38, F-ME1).
+
+    Shop for Data's trees store it three ways: the domain tree stores `[type name, GUID]` (passing the
+    whole list as the GUID read "No business domain data returned for GUID: ['BusinessCapability', ...]"),
+    other leaves store the GUID or qualified name itself, and some leaves (domain members, glossary folder
+    terms, root-collection folders) store nothing and are named by their qualified name. A list gives its
+    last non-empty string; nothing gives the label's text."""
+    if isinstance(data, (list, tuple)):
+        strings = [d for d in data if isinstance(d, str) and d.strip()]
+        return strings[-1] if strings else None
+    if isinstance(data, str) and data.strip():
+        return data
+    if label is None:
+        return None
+    text = getattr(label, "plain", label)
+    return str(text) if str(text).strip() else None
+
 class SelectionOverviewScreen(ModalScreen):
     """Screen to display the selection of the user's data sources."""
     BINDINGS = [("escape", "back", "Back"),
@@ -110,9 +129,8 @@ class SelectionOverviewScreen(ModalScreen):
         # self.log(f"Node selected: {self.node_selected}")
         self.node_label = self.node_selected.label
         self.node_data = self.node_selected.data
-        # the provided id can be either a GUID or a qualified name!
-        # the variable is labeled guid but it could contain a qualified name, both guid and qualified name are strings.
-        self.node_GUID = self.node_selected.data
+        # the provided id can be either a GUID or a qualified name (both strings); see node_identifier.
+        self.node_GUID = node_identifier(self.node_selected.data, self.node_label)
         # self.log(f"Node label: {self.node_label}, GUID: {self.node_GUID}")
         if self.category == "glossary":
             self.display_selected_term_details(self.node_GUID)

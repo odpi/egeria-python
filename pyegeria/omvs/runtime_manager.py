@@ -16,6 +16,7 @@ from pyegeria.core.request_filters import GetFilters, ListFilters
 from pyegeria.core.utils import body_slimmer, dynamic_catch
 from pyegeria.core._server_client import ServerClient
 from pyegeria.core._globals import max_paging_size, default_timeout, NO_ELEMENTS_FOUND
+from pyegeria.core._exceptions import PyegeriaInvalidParameterException
 from typing import Any, Optional
 from pyegeria.view.base_report_formats import get_report_spec_match
 from pyegeria.view.base_report_formats import select_report_spec
@@ -905,6 +906,21 @@ class RuntimeManager(ServerClient):
         )
         return
 
+    def _resolved_server_guid(self, server_guid: Optional[str], display_name: Optional[str],
+                              qualified_name: Optional[str], organization_name: Optional[str]) -> str:
+        """The GUID of the server to act on: `server_guid` as given, else its `qualified_name`, else its
+        `display_name` as the server's resourceName (`<organization_name>.<display_name>`, the organization
+        defaulting to the client's). Raises PyegeriaInvalidParameterException when nothing matches, so a
+        server command never goes to Egeria with "No elements found" in place of a GUID."""
+        guid = self.__get_guid__(server_guid, display_name, "resourceName", qualified_name,
+                                 organization_name=organization_name)
+        if not guid or guid == NO_ELEMENTS_FOUND:
+            raise PyegeriaInvalidParameterException(additional_info={
+                "reason": f"No server found for display_name={display_name!r}, qualified_name={qualified_name!r} "
+                          f"(looked up as resourceName "
+                          f"'{organization_name or self.organization_name}.{display_name}')."})
+        return guid
+
     async def _async_refresh_gov_eng_config(
         self,
         gov_engine_name: Optional[str] = None,
@@ -912,6 +928,7 @@ class RuntimeManager(ServerClient):
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
         body: Optional[dict | FilterRequestBody] = None,
+        organization_name: Optional[str] = None,
         **kwargs,
     ) -> None:
         """Request that the governance engine refresh its configuration by calling the metadata server. This request is
@@ -948,13 +965,7 @@ class RuntimeManager(ServerClient):
         PyegeriaUnauthorizedException
 
         """
-        server_guid = self.__get_guid__(
-            server_guid,
-            display_name,
-            "qualifiedName",
-            qualified_name,
-            "Engine Host",
-        )
+        server_guid = self._resolved_server_guid(server_guid, display_name, qualified_name, organization_name)
 
         if gov_engine_name is None:
             url = (
@@ -977,6 +988,7 @@ class RuntimeManager(ServerClient):
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
         body: Optional[dict] = None,
+        organization_name: Optional[str] = None,
         **kwargs,
     ) -> None:
         """Request that the governance engine refresh its configuration by calling the metadata access server.
@@ -1013,7 +1025,8 @@ class RuntimeManager(ServerClient):
         """
         run_sync(
             self._async_refresh_gov_eng_config(
-                gov_engine_name, server_guid, display_name, qualified_name, body, **kwargs
+                gov_engine_name, server_guid, display_name, qualified_name, body,
+                organization_name=organization_name, **kwargs
             )
         )
         return
@@ -1902,10 +1915,7 @@ class RuntimeManager(ServerClient):
         PyegeriaUnauthorizedException
 
         """
-        server_guid = self.__get_guid__(
-            server_guid, display_name, "resourceName", qualified_name,
-            organization_name=organization_name
-        )
+        server_guid = self._resolved_server_guid(server_guid, display_name, qualified_name, organization_name)
 
         url = f"{self.runtime_command_root}/omag-servers/{server_guid}/instance"
 
@@ -1956,7 +1966,8 @@ class RuntimeManager(ServerClient):
         return
 
     async def _async_shutdown_server(
-        self, server_guid: Optional[str] = None, qualified_name: str = None, body: Optional[dict | FilterRequestBody] = None
+        self, server_guid: Optional[str] = None, qualified_name: str = None, body: Optional[dict | FilterRequestBody] = None,
+        display_name: Optional[str] = None, organization_name: Optional[str] = None,
     ) -> None:
         """Temporarily shutdown the named OMAG server. This server can be restarted as a later time.  Async version.
 
@@ -1965,7 +1976,12 @@ class RuntimeManager(ServerClient):
         server_guid : str, default = None
             Identity of the server to act on. If not specified, qualified_name must be.
         qualified_name: str, default = None
-            Qualified name of server to act on. If not specified, server_guid must be.
+            Qualified name of server to act on.
+        display_name: str, default = None
+            The server's name (e.g. "qs-engine-host"), found as its resourceName
+            "<organization_name>.<display_name>". One of server_guid, qualified_name or display_name is needed.
+        organization_name: str, default = None
+            The organization prefix of the resourceName; defaults to the client's organization name.
 
         body : dict | FilterRequestBody, optional
             Request body to pass directly to the API.
@@ -1982,9 +1998,7 @@ class RuntimeManager(ServerClient):
         PyegeriaUnauthorizedException
 
         """
-        server_guid = self.__get_guid__(
-            server_guid, None, "qualifiedName", qualified_name
-        )
+        server_guid = self._resolved_server_guid(server_guid, display_name, qualified_name, organization_name)
         url = f"{self.runtime_command_root}/omag-servers/{server_guid}/instance"
 
         await self._async_make_request("DELETE", url, payload=body)
@@ -1992,7 +2006,8 @@ class RuntimeManager(ServerClient):
         return
 
     def shutdown_server(
-        self, server_guid: Optional[str] = None, qualified_name: str = None, body: Optional[dict | FilterRequestBody] = None
+        self, server_guid: Optional[str] = None, qualified_name: str = None, body: Optional[dict | FilterRequestBody] = None,
+        display_name: Optional[str] = None, organization_name: Optional[str] = None,
     ) -> None:
         """Temporarily shutdown the named OMAG server. This server can be restarted as a later time.
 
@@ -2001,7 +2016,12 @@ class RuntimeManager(ServerClient):
         server_guid : str, default = None
             Identity of the server to act on. If not specified, qualified_name must be.
         qualified_name: str, default = None
-            Qualified name of server to act on. If not specified, server_guid must be.
+            Qualified name of server to act on.
+        display_name: str, default = None
+            The server's name (e.g. "qs-engine-host"), found as its resourceName
+            "<organization_name>.<display_name>". One of server_guid, qualified_name or display_name is needed.
+        organization_name: str, default = None
+            The organization prefix of the resourceName; defaults to the client's organization name.
 
         body : dict | FilterRequestBody, optional
             Request body to pass directly to the API.
@@ -2019,7 +2039,8 @@ class RuntimeManager(ServerClient):
 
         """
         run_sync(
-            self._async_shutdown_server(server_guid, qualified_name, body)
+            self._async_shutdown_server(server_guid, qualified_name, body, display_name=display_name,
+                                        organization_name=organization_name)
         )
         return
 

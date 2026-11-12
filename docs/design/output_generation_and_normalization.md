@@ -70,13 +70,42 @@ Report specifications (`FormatSet`) can now define columns with a `detail_spec` 
 - **REPORT (Markdown)**: Renders a vertical section for each detail column, recursively calling the formatter.
 - **LIST (Markdown Table)**: Displays a compact summary in the main table row and appends a linked detail section below the table.
 - **DICT**: Includes nested lists of formatted dictionaries, matching the detail specification.
-- **TABLE (CLI)**: Summarizes nested collections by joining names/display names of child elements.
+- **TABLE (CLI)**: Draws the structured table: nested collections by the column's render intent, sub-tables as
+  separate tables after the main one.
 
 ### 3. Recursive Formatting Control: `include_preamble`
 To prevent redundant report headers when the formatter calls itself recursively, `generate_output` now accepts an `include_preamble` boolean (default `True`). This flag is automatically disabled for recursive detail calls.
 
 ### 4. Smart Summarization
-When rendering nested collections in horizontal formats (`LIST` and CLI `TABLE`), the system now attempts to join the `name` or `displayName` of child elements instead of just providing a count (e.g., "Team A, Team B" instead of "2 items").
+When rendering nested collections in horizontal formats (`LIST` and CLI `TABLE`), the system draws them by the column's render intent (names joined, bullets, key–values) instead of just providing a count (e.g., "Team A, Team B" instead of "2 items"); past `max_items` it says "+N more".
+
+### 5. Native values, rendered at the edge (6.2.37)
+
+Values used to be stringified while an element was read (`populate_common_columns` joined relationships into
+"a, b", classifications into "A, B" and zones into "a, b"), so every output type, DICT included, started from
+strings. Since 6.2.37 extraction keeps a **native layer** beside each column's text:
+
+- related elements as `{guid, qualifiedName, displayName, type}` (`related_ref`);
+- classifications as `{name, properties?}`, zones as a list;
+- property values as they come (lists stay lists).
+
+Each column dict carries the native value under `native` and the text under `value`. The text is derived from the
+native value by one function, `_legacy_text` (qualifiedName first, or the display name when the column sets
+`label: display_name`), so the default outputs are byte-identical to what they were.
+
+Renderers choose which to read:
+
+- the default DICT/TABLE rows and the text outputs read `value` (the flat text);
+- `dict_shape="native"` DICT rows and the structured TABLE (`table_shape="structured"`,
+  `pyegeria/view/structured_table.py`) read `native`;
+- LIST cells and the CLI's Rich table draw lists, maps and related elements from `native` by the column's render
+  intent (`markdown_cell_from_native`, `run_report.render_structured_table`).
+
+The shape is carried into a find method's own generator by a context variable (`dict_shape_for_call`), so no OMVS
+signature changed. What each list request sent (page size, graph depth, relationship filters) is recorded per call
+in another context variable (`recording_list_requests`), never on the shared client: the executor reads it to say
+"more may exist" when a page was full, and to tell an empty relationship that was read ("none") from one that was
+not requested ("not read"). See "Complex values" in `docs/output-formats-and-report-specs.md`.
 
 ## Unified Execution Pipeline
 

@@ -233917,6 +233917,22 @@
             "valid_values": []
           },
           {
+            "name": "Formula",
+            "key": "formula",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Formula Type",
+            "key": "formula_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
             "name": "Classifications",
             "key": "classifications",
             "value": null,
@@ -234214,6 +234230,22 @@
           {
             "name": "Query Request Body",
             "key": "query_request_body",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Formula",
+            "key": "formula",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Formula Type",
+            "key": "formula_type",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -234560,6 +234592,22 @@
             "valid_values": []
           },
           {
+            "name": "Formula",
+            "key": "formula",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Formula Type",
+            "key": "formula_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
             "name": "User Defined Status",
             "key": "user_defined_status",
             "value": null,
@@ -234865,6 +234913,22 @@
           {
             "name": "Query Request Body",
             "key": "query_request_body",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Formula",
+            "key": "formula",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Formula Type",
+            "key": "formula_type",
             "value": null,
             "format": false,
             "detail_spec": null,

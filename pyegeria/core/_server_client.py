@@ -8,6 +8,9 @@ different client capabilities. It also provides the common methods used to make 
 """
 
 import asyncio
+import json
+from contextlib import contextmanager
+from contextvars import ContextVar
 import os
 import re
 import time
@@ -119,6 +122,41 @@ __all__ = [
 
     # Exceptions
 
+
+
+def _with_paging(body: dict, start_from: int, page_size: int) -> dict:
+    """A caller's body, with the call's own paging when the body sets none (6.2.36). Paging given as arguments was
+    dropped whenever a body was passed, so a loop that pages with start_from/page_size and a body re-read page 1."""
+    if not (start_from or page_size):
+        return body
+    out = dict(body)
+    if start_from and not ({"startFrom", "start_from"} & body.keys()):
+        out["startFrom"] = start_from
+    if page_size and not ({"pageSize", "page_size"} & body.keys()):
+        out["pageSize"] = page_size
+    return out
+
+
+#: The record of the list requests made in the current call, when a caller asked for one
+#: (`recording_list_requests`): a per-call dict, so concurrent runs never share it (read-back C1).
+LIST_REQUEST_RECORD: "ContextVar[Optional[dict]]" = ContextVar("pyegeria_list_request_record", default=None)
+
+
+@contextmanager
+def recording_list_requests():
+    """Record, for the calls made inside this block, what the last list request sent and got back:
+    yields the caller's own dict (keys `cap`, `graph_query_depth`, `include_only_relationships`,
+    `skip_relationships`). A coroutine run inside the block (sync wrappers run it in a task that copies
+    this context) writes into the same dict, which the caller reads after the call.
+
+    The record keeps the LAST list request of the call: a find method that made a second list request
+    internally would report that request's depth and cap. Today's report-spec finds make one."""
+    record: dict = {}
+    token = LIST_REQUEST_RECORD.set(record)
+    try:
+        yield record
+    finally:
+        LIST_REQUEST_RECORD.reset(token)
 
 class ServerClient(BaseServerClient):
     """
@@ -657,7 +695,7 @@ class ServerClient(BaseServerClient):
             "POST", url, validated_body.model_dump_json(exclude_none=True), timeout=timeout
         )
 
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        elements = self._elements_noting_page_cap(response, NO_ELEMENTS_FOUND)
         if type(elements) is list:
             if len(elements) == 0:
                 elements = NO_ELEMENTS_FOUND
@@ -960,7 +998,7 @@ class ServerClient(BaseServerClient):
         response: Response = await self._async_make_request(
             "POST", url, body_slimmer(body), timeout=timeout
         )
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        elements = self._elements_noting_page_cap(response, NO_ELEMENTS_FOUND)
         if type(elements) is list:
             if len(elements) == 0:
                 return NO_ELEMENTS_FOUND
@@ -6481,6 +6519,32 @@ class ServerClient(BaseServerClient):
             validated_body = None
         return validated_body
 
+    def _elements_noting_page_cap(self, response, default):
+        """The `elements` of a list answer. When a caller is recording (`recording_list_requests`), the
+        answer's facts go into the caller's own record, read back from the request that was sent, so
+        every list helper is covered: `cap` = (shown, page_size, start_from) when the answer filled the
+        page size, plus the graph depth and relationship filters sent. Nothing is kept on the client: a
+        client shared by concurrent runs (dashboard tiles) never mixes one run's cap with another's
+        (fix-now F8, read-back C1)."""
+        elements = response.json().get("elements", default)
+        record = LIST_REQUEST_RECORD.get()
+        if record is None:
+            return elements
+        try:
+            sent = json.loads(response.request.content or b"{}")
+        except Exception:  # noqa: BLE001 -- no request body (a GET) or not JSON: nothing to record
+            return elements
+        if not isinstance(sent, dict):
+            return elements
+        page_size = sent.get("pageSize")
+        record["cap"] = ((len(elements), page_size, sent.get("startFrom") or 0)
+                         if isinstance(elements, list) and isinstance(page_size, int) and page_size > 0
+                         and len(elements) >= page_size else None)
+        record["graph_query_depth"] = sent.get("graphQueryDepth")
+        record["include_only_relationships"] = sent.get("includeOnlyRelationships")
+        record["skip_relationships"] = sent.get("skipRelationships")
+        return elements
+
     @dynamic_catch
     async def _async_find_request(self, url: str, _type: str, _gen_output: Callable[..., Any], search_string: str = "*",
                                   starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
@@ -6586,7 +6650,7 @@ class ServerClient(BaseServerClient):
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True, by_alias=True)
 
         response = await self._async_make_request("POST", url, json_body, timeout = 90)
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        elements = self._elements_noting_page_cap(response, NO_ELEMENTS_FOUND)
         if type(elements) is str:
             logger.info(NO_ELEMENTS_FOUND)
             return NO_ELEMENTS_FOUND
@@ -6620,7 +6684,8 @@ class ServerClient(BaseServerClient):
         if isinstance(body, FilterRequestBody):
             validated_body = body
         elif isinstance(body, dict):
-            validated_body = self._validate_body(self._filter_request_adapter.validate_python, body)
+            validated_body = self._validate_body(self._filter_request_adapter.validate_python,
+                                                 _with_paging(body, start_from, page_size))
         else:
             filter_string = None if filter_string == "*" else filter_string
             classification_names = None if classification_names == [] else classification_names
@@ -6646,7 +6711,7 @@ class ServerClient(BaseServerClient):
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
 
         response = await self._async_make_request("POST", url, json_body)
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        elements = self._elements_noting_page_cap(response, NO_ELEMENTS_FOUND)
         if type(elements) is str or len(elements) == 0:
             logger.info(NO_ELEMENTS_FOUND)
             return NO_ELEMENTS_FOUND
@@ -6764,7 +6829,7 @@ class ServerClient(BaseServerClient):
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
 
         response = await self._async_make_request("POST", url, json_body)
-        elements = response.json().get("elements", None)
+        elements = self._elements_noting_page_cap(response, None)
         if elements is None:
             elements = response.json().get("element", NO_ELEMENTS_FOUND)
 
@@ -6851,7 +6916,7 @@ class ServerClient(BaseServerClient):
 
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
         response = await self._async_make_request("POST", url, json_body, timeout=90)
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        elements = self._elements_noting_page_cap(response, NO_ELEMENTS_FOUND)
         if type(elements) is str:
             logger.info(NO_ELEMENTS_FOUND)
             return NO_ELEMENTS_FOUND
@@ -6895,7 +6960,7 @@ class ServerClient(BaseServerClient):
 
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
         response = await self._async_make_request("POST", url, json_body)
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        elements = self._elements_noting_page_cap(response, NO_ELEMENTS_FOUND)
         if type(elements) is str or len(elements) == 0:
             logger.info(NO_ELEMENTS_FOUND)
             return NO_ELEMENTS_FOUND
@@ -6942,7 +7007,7 @@ class ServerClient(BaseServerClient):
 
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
         response = await self._async_make_request("POST", url, json_body)
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        elements = self._elements_noting_page_cap(response, NO_ELEMENTS_FOUND)
         if type(elements) is str:
             logger.info(NO_ELEMENTS_FOUND)
             return NO_ELEMENTS_FOUND
@@ -7026,7 +7091,7 @@ class ServerClient(BaseServerClient):
 
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
         response = await self._async_make_request("POST", url, json_body, timeout=90)
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        elements = self._elements_noting_page_cap(response, NO_ELEMENTS_FOUND)
         if type(elements) is str:
             logger.info(NO_ELEMENTS_FOUND)
             return NO_ELEMENTS_FOUND
@@ -7070,7 +7135,7 @@ class ServerClient(BaseServerClient):
 
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
         response = await self._async_make_request("POST", url, json_body)
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        elements = self._elements_noting_page_cap(response, NO_ELEMENTS_FOUND)
         if type(elements) is str or len(elements) == 0:
             logger.info(NO_ELEMENTS_FOUND)
             return NO_ELEMENTS_FOUND
@@ -7154,7 +7219,7 @@ class ServerClient(BaseServerClient):
 
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
         response = await self._async_make_request("POST", url, json_body, timeout=90)
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        elements = self._elements_noting_page_cap(response, NO_ELEMENTS_FOUND)
         if type(elements) is str:
             logger.info(NO_ELEMENTS_FOUND)
             return NO_ELEMENTS_FOUND
@@ -7198,7 +7263,7 @@ class ServerClient(BaseServerClient):
 
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
         response = await self._async_make_request("POST", url, json_body)
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        elements = self._elements_noting_page_cap(response, NO_ELEMENTS_FOUND)
         if type(elements) is str or len(elements) == 0:
             logger.info(NO_ELEMENTS_FOUND)
             return NO_ELEMENTS_FOUND
@@ -7232,7 +7297,8 @@ class ServerClient(BaseServerClient):
         if isinstance(body, ResultsRequestBody):
             validated_body = body
         elif isinstance(body, dict):
-            validated_body = self._validate_body(self._results_request_adapter.validate_python, body)
+            validated_body = self._validate_body(self._results_request_adapter.validate_python,
+                                                 _with_paging(body, start_from, page_size))
         else:
             body = {
                 "class": "ResultsRequestBody",
@@ -7248,7 +7314,7 @@ class ServerClient(BaseServerClient):
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
 
         response = await self._async_make_request("POST", url, json_body)
-        elements = response.json().get("elements", None)
+        elements = self._elements_noting_page_cap(response, None)
         if elements is None:
             elements = response.json().get("element", NO_ELEMENTS_FOUND)
 
@@ -7278,7 +7344,7 @@ class ServerClient(BaseServerClient):
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
 
         response = await self._async_make_request("POST", url, json_body)
-        elements = response.json().get("elements", None)
+        elements = self._elements_noting_page_cap(response, None)
         if elements is None:
             elements = response.json().get("element", NO_ELEMENTS_FOUND)
 

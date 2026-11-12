@@ -6,3 +6,5 @@
    recursive-include tests *.py *.ini *.ipynb *.md *.txt
    recursive-include pyegeria/view/schemas *.json
    recursive-include pyegeria/view/seed *.json
+recursive-include sample-data/templates/basic *.md
+recursive-include sample-data/templates/advanced *.md

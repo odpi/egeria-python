@@ -1047,6 +1047,44 @@
       "max_cardinality": 1,
       "level": "Advanced",
       "Journal Entry": "2026-11-10: added -- Create Dashboard Sheet sets Ownership the way `pyegeria.view.dashboards migrate --owner` does (DB-3)."
+    },
+    "Formula": {
+      "variable_name": "formula",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "The logic implemented by this process, expressed in the language of the business rather than any one implementation language.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Advanced",
+      "Journal Entry": ""
+    },
+    "Formula Type": {
+      "variable_name": "formula_type",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "The specification language used to express the Formula (e.g. SQL, Python, natural language).",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Advanced",
+      "Journal Entry": ""
     }
   },
   "bundles": {
@@ -1241,7 +1279,9 @@
       "inherits": "Asset",
       "own_attributes": [
         "Query URL",
-        "Query Request Body"
+        "Query Request Body",
+        "Formula",
+        "Formula Type"
       ]
     },
     "Report Spec Base": {

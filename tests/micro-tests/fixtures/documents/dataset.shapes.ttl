@@ -1,0 +1,7 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix dcat: <http://www.w3.org/ns/dcat#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+
+<urn:test:DatasetShape> a sh:NodeShape ;
+    sh:targetClass dcat:Dataset ;
+    sh:property [ sh:path dct:title ; sh:minCount 1 ; sh:message "missing dct:title" ] .

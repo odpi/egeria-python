@@ -305,7 +305,9 @@
    "microflow": {
     "format": "microflow/1",
     "params": {
-     "collection_guid": {"type": "string", "required": true},
+     "collection_guid": {"type": "string", "required": false},
+     "collection_qname": {"type": "string", "required": false},
+     "collection_name": {"type": "string", "required": false},
      "sequencing_order": {"type": "string", "required": false},
      "sequencing_property": {"type": "string", "required": false},
      "page_size": {"type": "string", "required": false},
@@ -319,7 +321,7 @@
       "stage": "producer/find",
       "type": "Collection",
       "function": "CollectionManager.get_collection_members",
-      "params": {"collection_guid": "$collection_guid", "output_format": "DICT"}
+      "params": {"output_format": "DICT"}
      }
     ],
     "formatters": {

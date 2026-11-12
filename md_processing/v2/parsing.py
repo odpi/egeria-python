@@ -11,7 +11,7 @@ from loguru import logger
 import pyegeria.core._globals as pyeg_globals
 from md_processing.md_processing_utils.md_processing_constants import get_command_spec, load_commands
 import md_processing.md_processing_utils.md_processing_constants as md_constants
-from md_processing.md_processing_utils.common_md_utils import normalize_value
+from md_processing.md_processing_utils.common_md_utils import normalize_value, split_list_value
 from .extraction import DrECommand
 from .utils import parse_key_value, parse_line_list, parse_table
 
@@ -416,15 +416,9 @@ class AttributeFirstParser:
             return v
             
         elif style in {"List", "NameList", "Simple List", "Reference Name List"}:
-            items = re.split(r'[;,\n]+', value)
-            results = []
-            for item in items:
-                item = item.strip()
-                if item:
-                    # Strip leading markdown bullet if present
-                    item = re.sub(r'^[\-\*\+]\s*', '', item)
-                    results.append(item)
-            return results
+            # 6.2.39: a bulleted or multi-line value is one item per bullet, verbatim (a comma inside a
+            # bullet stays in it); only a single-line value is split on commas and semicolons.
+            return split_list_value(value)
             
         return value
 
