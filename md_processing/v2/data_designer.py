@@ -7,6 +7,7 @@ from loguru import logger
 from pyegeria import EgeriaTech, PyegeriaException
 from md_processing.v2.processors import AsyncBaseCommandProcessor
 from md_processing.v2.utils import parse_key_value
+from md_processing.md_processing_utils.typed_properties import long_value, record_not_applied
 from md_processing.md_processing_utils.md_processing_constants import get_command_spec
 from md_processing.md_processing_utils.common_md_utils import (
     set_element_prop_body, set_create_body, set_update_body,
@@ -59,6 +60,14 @@ class DataValueSpecificationProcessor(AsyncBaseCommandProcessor):
         spec = self.get_command_spec()
         om_type = spec.get("OM_TYPE") if spec else None
 
+        # Egeria stores both uncertainties as a Java Long (DataValueSpecificationProperties.java:42-43,
+        # odpi/egeria origin/main 0b7ee0fb); the spec's Simple Float style sent "7.5" as a string, a 400
+        # that lost the create. Integral input goes out as an int; anything else is refused, not sent.
+        uncertainty = {}
+        for attr, key in (("Absolute Uncertainty", "absoluteUncertainty"), ("Relative Uncertainty", "relativeUncertainty")):
+            uncertainty[key], notes = long_value(attributes, attr)
+            record_not_applied(attributes, attr, notes)
+
         # Build properties dict
         props = {
             "class": f"{om_type or 'DataValueSpecification'}Properties",
@@ -72,8 +81,8 @@ class DataValueSpecificationProcessor(AsyncBaseCommandProcessor):
             "specificationDetails": attributes.get('Specification Details', {}).get('value'),
             "dataType": attributes.get('Data Type', {}).get('value'),
             "units": attributes.get('Units', {}).get('value'),
-            "absoluteUncertainty": attributes.get('Absolute Uncertainty', {}).get('value'),
-            "relativeUncertainty": attributes.get('Relative Uncertainty', {}).get('value'),
+            "absoluteUncertainty": uncertainty["absoluteUncertainty"],
+            "relativeUncertainty": uncertainty["relativeUncertainty"],
             "allowsDuplicateValues": attributes.get('Allow Duplicates', {}).get('value'),
             "isNullable": attributes.get('Is Nullable', {}).get('value'),
             "defaultValue": attributes.get('Default Value', {}).get('value'),
