@@ -7,7 +7,8 @@ import json
 
 from pyegeria import EgeriaTech, PyegeriaException, COMMENT_TYPES
 from pyegeria.core._exceptions import PyegeriaInvalidParameterException
-from md_processing.md_processing_utils.common_md_utils import complete_bundle_properties, person_action_extras
+from md_processing.md_processing_utils.common_md_utils import (complete_bundle_properties, person_action_extras,
+                                                               report_unsent_bundle)
 from md_processing.v2.processors import AsyncBaseCommandProcessor
 from md_processing.v2.multilink import async_link_or_update, update_body
 from md_processing.md_processing_utils.common_md_utils import (
@@ -203,6 +204,8 @@ class TagProcessor(AsyncBaseCommandProcessor):
             return await self.client._async_get_tag_by_guid(guid, output_format='MD')
 
         elif verb == "Create":
+            report_unsent_bundle(attributes, {"Description"},
+                                 "the informal-tag call takes only a name and a description")
             response = await self.client._async_create_informal_tag(display_name, description, qualified_name)
             guid = self.extract_guid_or_raise(response, "Create Informal Tag")
             if guid:

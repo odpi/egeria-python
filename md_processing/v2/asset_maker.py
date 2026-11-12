@@ -15,6 +15,7 @@ from typing import Any, Dict, Optional
 
 from loguru import logger
 
+from md_processing.md_processing_utils.common_md_utils import report_unsent_bundle
 from md_processing.v2.processors import AsyncBaseCommandProcessor
 from md_processing.md_processing_utils.common_md_utils import update_element_dictionary
 from md_processing.md_processing_utils.typed_properties import (classification_map, entity_properties,
@@ -47,6 +48,13 @@ class AssetMakerProcessor(AsyncBaseCommandProcessor):
         client = self.client.automated_curation
         om_type = self.get_command_spec().get("OM_TYPE")
         command_key = self.command.object_type
+
+        if not (command_key == "Element" and not om_type):
+            # A technology-type create fills its template's placeholders only (name, host, description,
+            # version, ...): the bundle attributes the command also offers can't be sent (F-B group 5).
+            report_unsent_bundle(attributes, {"Description", "Version Identifier"},
+                                 f"Create {command_key} is made from its technology type's template, which "
+                                 "takes only the template's placeholder values")
 
         if command_key == "Element" and not om_type:
             # Generic 'Create Element' -- the raw TemplateRequestBody surface.

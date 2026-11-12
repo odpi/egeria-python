@@ -99,8 +99,12 @@ class ProjectProcessor(AsyncBaseCommandProcessor):
         # PROJECT-ATTRIBUTES-MAPPING-2026-11-12 + the owner's decisions (F-B group 7). ProjectProperties
         # (odpi/egeria origin/main 0b7ee0fb) has no projectIdentifier / purposes / projectType / projectScope /
         # project{Approach,ManagementStyle,ResultsUsage}: those keys were sent and silently ignored.
-        if attributes.get('Project Identifier', {}).get('value') and not prop_body.get("identifier"):
-            prop_body["identifier"] = attributes['Project Identifier']['value']   # ReferenceableProperties
+        if attributes.get('Project Identifier', {}).get('value'):
+            if not prop_body.get("identifier"):
+                prop_body["identifier"] = attributes['Project Identifier']['value']   # ReferenceableProperties
+            elif prop_body["identifier"] != attributes['Project Identifier']['value']:
+                record_not_applied(attributes, "Project Identifier", [
+                    "not applied: Project Identifier: Identifier is also given, and both are Egeria's identifier"])
         if attributes.get('Purposes', {}).get('value'):
             record_not_applied(attributes, "Purposes", [
                 "not applied: Purposes: Project Purposes was removed (owner's decision, 2026-11-12)"])

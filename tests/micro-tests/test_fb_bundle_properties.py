@@ -111,3 +111,22 @@ async def test_blog_entry_sends_a_full_typed_body():
     assert props["class"] == "BlogEntryProperties" and props["situation"] == "RTP situation"
     assert props["effectiveFrom"] == "2020-01-02" and props["identifier"] == "RTP id"
     assert props["qualifiedName"] == "RTP::Blog"
+
+
+def test_an_optional_key_the_class_lacks_is_stripped_and_reported():
+    a = _attrs(Usage="RTP usage")
+    props = complete_bundle_properties({"class": "SchemaAttributeProperties", "usage": "RTP usage"}, a)
+    if "usage" not in __import__("md_processing.md_processing_utils.properties_class_fields",
+                                 fromlist=["x"]).PROPERTIES_CLASS_FIELDS["SchemaAttributeProperties"][1]:
+        assert "usage" not in props
+        assert not_applied_notes(a) == ["not applied: Usage: SchemaAttributeProperties has no usage property"]
+
+
+def test_template_and_tag_creates_report_the_bundle_they_cant_send():
+    from md_processing.md_processing_utils.common_md_utils import report_unsent_bundle
+    a = _attrs(Description="d", Category="c", Identifier="i")
+    a["Content Status"] = {"value": "ACTIVE", "is_default": True}
+    report_unsent_bundle(a, {"Description"}, "the informal-tag call takes only a name and a description")
+    assert not_applied_notes(a) == [
+        "not applied: Category: the informal-tag call takes only a name and a description",
+        "not applied: Identifier: the informal-tag call takes only a name and a description"]

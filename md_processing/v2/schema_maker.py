@@ -79,7 +79,8 @@ class SchemaElementProcessor(AsyncBaseCommandProcessor):
             "versionIdentifier": _v(attributes, "Version Identifier"),
             "url": _v(attributes, "URL"),
             "usage": _v(attributes, "Usage"),
-            "contentStatus": _v(attributes, "Content Status"),
+            # contentStatus comes from complete_bundle_properties (element_status_properties): a written Status
+            # or Content Status, not the parser's default for Content Status overriding a written Status.
             "authors": _v(attributes, "Authors"),
             "additionalProperties": _v(attributes, "Additional Properties"),
             "effectiveFrom": _v(attributes, "Effective From"),

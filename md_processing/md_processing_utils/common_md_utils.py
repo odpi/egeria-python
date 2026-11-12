@@ -575,16 +575,29 @@ def complete_bundle_properties(props: dict, attributes: dict) -> dict:
             record_not_applied(attributes, attribute, [f"not applied: {attribute}: {cls} has no {key} property"])
         else:
             props[key] = value
-    for attribute, key in BUNDLE_OPTIONAL.items():  # filled where the type declares them; never reported
+    for attribute, key in BUNDLE_OPTIONAL.items():  # filled where the type declares them
         value = (attributes.get(attribute) or {}).get("value")
-        if fields is not None and key in fields and value not in (None, "", [], {}) \
-                and props.get(key) in (None, "", [], {}):
+        if fields is not None and key not in fields:
+            # a processor put it in a body whose class doesn't declare it: Egeria would ignore it
+            if props.pop(key, None) not in (None, "", [], {}):
+                record_not_applied(attributes, attribute, [f"not applied: {attribute}: {cls} has no {key} property"])
+            continue
+        if value not in (None, "", [], {}) and props.get(key) in (None, "", [], {}):
             props[key] = value
     for key, value in element_status_properties(cls, attributes).items():
         if props.get(key) in (None, ""):
             props[key] = value
     report_status_not_applied(cls, attributes)
     return props
+
+
+def report_unsent_bundle(attributes: dict, sent: set, reason: str) -> None:
+    """For a create whose client call takes only some arguments (an informal tag, a create-from-template):
+    every bundle or status attribute given that isn't in `sent` is reported "not applied: <attribute>: <reason>"."""
+    for attribute in [*BUNDLE_PROPERTIES, "Status", "Content Status", "Activity Status", "Deployment Status"]:
+        entry = attributes.get(attribute) or {}
+        if attribute not in sent and entry.get("value") not in (None, "", [], {}) and not entry.get("is_default"):
+            record_not_applied(attributes, attribute, [f"not applied: {attribute}: {reason}"])
 
 
 def person_action_extras(attributes: dict, properties_class: str) -> dict:

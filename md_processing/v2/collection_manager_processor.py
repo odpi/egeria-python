@@ -4,6 +4,7 @@ Collection Manager Processors for Dr.Egeria v2.
 from typing import Dict, Any, Optional
 from loguru import logger
 
+from md_processing.md_processing_utils.common_md_utils import report_unsent_bundle
 from md_processing.v2.processors import AsyncBaseCommandProcessor
 from md_processing.md_processing_utils.common_md_utils import (
     set_create_body, set_update_body,
@@ -241,6 +242,9 @@ class CSVElementProcessor(AsyncBaseCommandProcessor):
         qualified_name = self.parsed_output["qualified_name"]
         display_name = attributes.get('Display Name', {}).get('value', qualified_name)
         
+        report_unsent_bundle(attributes, {"Description", "Version Identifier"},
+                             f"Create {self.command.object_type} is made from the CSV Data File template, which "
+                             "takes only the template's placeholder values")
         # `Create CSV File` (Digital Product Manager) has no File Name / File Type of its own: the file is
         # named by its Display Name, and the type is the CSV data file the template creates.
         raw_guid = await self.client._async_get_create_csv_data_file_element_from_template(

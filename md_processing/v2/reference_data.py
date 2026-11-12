@@ -19,7 +19,7 @@ from md_processing.md_processing_utils.common_md_utils import (
     async_add_note_in_dr_e,
     set_create_body,
     set_delete_rel_request_body,
-    set_element_prop_body,
+    set_element_prop_body, complete_bundle_properties,
     set_rel_request_body,
     set_update_body,
     update_element_dictionary,
@@ -304,6 +304,7 @@ class ReferenceDataElementProcessor(AsyncBaseCommandProcessor):
 
         props = set_element_prop_body(object_type, qualified_name, attributes)
         props.update(_valid_value_props(attributes))
+        complete_bundle_properties(props, attributes)   # Member Ordinal -> ordinal, ... (F-B group 6)
 
         if verb == "Update":
             guid = self.parsed_output.get("guid") or (

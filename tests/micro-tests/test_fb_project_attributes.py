@@ -78,3 +78,12 @@ async def test_unknown_project_type_is_reported():
     assert "Moonshot" not in body.get("initialClassifications", {})
     assert not_applied_notes(attributes) == [
         "not applied: Project Type: Moonshot isn't an Egeria project classification"]
+
+
+@pytest.mark.asyncio
+async def test_identifier_and_project_identifier_both_given():
+    body, attributes = await _create(_attrs(Display_Name="RTP Project", Identifier="RTP-id",
+                                            Project_Identifier="RTP-P-1"))
+    assert body["properties"]["identifier"] == "RTP-id"
+    assert not_applied_notes(attributes) == [
+        "not applied: Project Identifier: Identifier is also given, and both are Egeria's identifier"]
