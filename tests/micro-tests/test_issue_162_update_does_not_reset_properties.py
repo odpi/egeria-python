@@ -56,6 +56,8 @@ async def test_term_update_without_flags_sends_none_of_them():
 
 
 async def test_term_update_sends_a_flag_the_document_sets():
+    # F-B group 1: the flags are classifications in Egeria 6 (ContextDefinition, ...), not term properties;
+    # a flag the document sets is classified, one it doesn't mention isn't sent at all (ISSUE-162 intent).
     client = AsyncMock()
     client._async_get_related_elements.return_value = []
     proc = _processor(TermProcessor, "Update", "Glossary Term", _term_attrs(**{"Is Context": {"value": True}}),
@@ -63,20 +65,24 @@ async def test_term_update_sends_a_flag_the_document_sets():
     await proc.apply_changes()
 
     props = client._async_update_glossary_term.call_args.args[1]["properties"]
-    assert props["isContext"] is True
-    assert "isAbstractConcept" not in props
+    for flag in TERM_FLAGS:
+        assert flag not in props
+    classified = [c.args[1] for c in client.metadata_expert._async_classify_metadata_element.call_args_list]
+    assert classified == ["ContextDefinition"]
 
 
-async def test_term_create_still_defaults_flags_to_false():
+async def test_term_create_sends_no_flag_properties_and_no_unset_classification():
     client = AsyncMock()
     client._async_create_glossary_term.return_value = GUID
     proc = _processor(TermProcessor, "Create", "Glossary Term", _term_attrs(), client)
     await proc.apply_changes()
 
     call = client._async_create_glossary_term.call_args
-    props = (call.kwargs.get("body") or call.args[0])["properties"]
+    body = call.kwargs.get("body") or call.args[0]
     for flag in TERM_FLAGS:
-        assert props[flag] is False, flag
+        assert flag not in body["properties"], flag
+    assert not set(body.get("initialClassifications") or {}) & {"AbstractConcept", "ActivityDescription",
+                                                                "ContextDefinition", "DataValueMeaning"}
 
 
 def _dv_attrs():
