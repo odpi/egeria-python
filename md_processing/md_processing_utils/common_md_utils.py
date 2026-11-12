@@ -502,7 +502,88 @@ def set_element_prop_body(object_type: str, qualified_name: str, attributes: dic
         }
     # contentStatus / activityStatus / deploymentStatus, whichever this type has (ISSUE-113).
     body.update(element_status_properties(body["class"], attributes))
-    return body
+    # The rest of the bundle the type declares (namespacePath, source, resourceName, ... for assets); a given
+    # bundle attribute the type has no property for is reported (F-B group 5).
+    return complete_bundle_properties(body, attributes)
+
+#: The Referenceable / Authored / Asset bundle attributes and the Egeria property each fills.
+BUNDLE_PROPERTIES = {
+    "Description": "description", "Category": "category", "Identifier": "identifier", "URL": "url",
+    "Legal": "legal", "Version Identifier": "versionIdentifier", "Authors": "authors",
+    "User Defined Content Status": "userDefinedContentStatus", "Effective From": "effectiveFrom",
+    "Effective To": "effectiveTo", "Additional Properties": "additionalProperties",
+    "Namespace Path": "namespacePath", "Source": "source", "Resource Name": "resourceName",
+    "Deployed Implementation Type": "deployedImplementationType",
+}
+
+
+#: Attributes several types share under the same key but with other meanings elsewhere (e.g. Project Scope):
+#: filled when the type declares the key, never reported when it doesn't.
+BUNDLE_OPTIONAL = {"Scope": "scope", "Usage": "usage", "Purpose": "purpose"}
+
+
+def complete_bundle_properties(props: dict, attributes: dict) -> dict:
+    """Fill in the bundle attributes a processor that builds its own properties left out (F-B group 5).
+
+    For each BUNDLE_PROPERTIES attribute the document gives and `props` doesn't already set: sent when the
+    properties class (properties_class_fields, from Egeria's Java) declares the key, otherwise reported as
+    "not applied: <attribute>: <class> has no <key> property". The type's status field is filled the same
+    way (element_status_properties). Values a processor set itself always win.
+    """
+    from md_processing.md_processing_utils.properties_class_fields import PROPERTIES_CLASS_FIELDS
+    cls = props.get("class") or ""
+    fields = (PROPERTIES_CLASS_FIELDS.get(cls) or ("", None))[1]
+    for attribute, key in BUNDLE_PROPERTIES.items():
+        value = (attributes.get(attribute) or {}).get("value")
+        if fields is not None and key not in fields:
+            # Egeria ignores a key its class doesn't declare: don't send it, and say so if it was given
+            if props.pop(key, None) not in (None, "", [], {}) or value not in (None, "", [], {}):
+                record_not_applied(attributes, attribute, [f"not applied: {attribute}: {cls} has no {key} property"])
+            continue
+        if value in (None, "", [], {}) or props.get(key) not in (None, "", [], {}):
+            continue
+        props[key] = value
+    for attribute, key in BUNDLE_OPTIONAL.items():  # filled where the type declares them; never reported
+        value = (attributes.get(attribute) or {}).get("value")
+        if fields is not None and key in fields and value not in (None, "", [], {}) \
+                and props.get(key) in (None, "", [], {}):
+            props[key] = value
+    for key, value in element_status_properties(cls, attributes).items():
+        if props.get(key) in (None, ""):
+            props[key] = value
+    report_status_not_applied(cls, attributes)
+    return props
+
+
+def person_action_extras(attributes: dict, properties_class: str) -> dict:
+    """The properties a my-profile create (To-Do, Meeting, Review) doesn't take as arguments: effective dates.
+    Objective is reported where the type has none (only MeetingProperties does). F-B group 5/6."""
+    from md_processing.md_processing_utils.properties_class_fields import PROPERTIES_CLASS_FIELDS
+    fields = (PROPERTIES_CLASS_FIELDS.get(properties_class) or ("", ()))[1]
+    if (attributes.get("Objective") or {}).get("value") not in (None, "") and "objective" not in fields:
+        record_not_applied(attributes, "Objective", [f"not applied: Objective: {properties_class} has no objective property"])
+    return {"effectiveFrom": (attributes.get("Effective From") or {}).get("value"),
+            "effectiveTo": (attributes.get("Effective To") or {}).get("value")}
+
+
+def report_status_not_applied(properties_class: str, attributes: dict) -> None:
+    """A written status attribute the type has no field for is reported, not just logged (F-B group 6):
+    Content/Activity/Deployment Status by its own field, the generic Status when the type has none at all.
+    The header element status can't be set on create."""
+    from md_processing.md_processing_utils.element_status import EXPLICIT_STATUS_ATTRIBUTES
+    from md_processing.md_processing_utils.element_status_fields import STATUS_FIELDS_BY_PROPERTIES_CLASS
+    if properties_class not in STATUS_FIELDS_BY_PROPERTIES_CLASS:
+        return
+    supported = STATUS_FIELDS_BY_PROPERTIES_CLASS[properties_class]
+    for attribute, field in EXPLICIT_STATUS_ATTRIBUTES.items():
+        entry = attributes.get(attribute) or {}
+        if entry.get("value") not in (None, "") and not entry.get("is_default") and field not in supported:
+            record_not_applied(attributes, attribute,
+                               [f"not applied: {attribute}: {properties_class} has no {field} property"])
+    entry = attributes.get("Status") or {}
+    if entry.get("value") not in (None, "") and not entry.get("is_default") and not supported:
+        record_not_applied(attributes, "Status", [f"not applied: Status: {properties_class} has no status property"])
+
 
 def report_spec_microflow(attributes: dict) -> str | None:
     """The Report Spec's `Microflow` attribute as canonical microflow/1 text, or None if not given.
@@ -656,9 +737,12 @@ def set_solution_architect_body(object_type: str, qualified_name: str, attribute
         })
 
     if object_type in ("Solution Role", "SolutionRole", "SolutionActorRole"):
-        role_domain_id = attributes.get('Role Domain Identifier', {}).get('value')
-        resolved_domain = resolve_enum(GovernanceDomains, role_domain_id)
-        prop_bod["domainIdentifier"] = resolved_domain if resolved_domain is not None else role_domain_id
+        # SolutionActorRoleProperties (odpi/egeria origin/main 0b7ee0fb) has scope and actorRoleGroups but no
+        # domainIdentifier or title: those were sent and silently ignored (round-trip probe).
+        for attribute, key in (("Role Domain Identifier", "domainIdentifier"), ("Title", "title")):
+            if attributes.get(attribute, {}).get('value') not in (None, ""):
+                record_not_applied(attributes, attribute,
+                                   [f"not applied: {attribute}: SolutionActorRoleProperties has no {key} property"])
 
     return prop_bod
 

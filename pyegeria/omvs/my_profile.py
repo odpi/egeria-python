@@ -1317,7 +1317,8 @@ class MyProfile(AssetMaker):
 
     async def _async_create_my_todo(self, todo_name: str, activity_status: str = "REQUESTED",
                                     description:Optional[str]=None, situation: Optional[str]=None,priority:Optional[int]=0,
-                                    qualified_name: Optional[str] = None) -> str:
+                                    qualified_name: Optional[str] = None,
+                                    extra_properties: Optional[dict] = None) -> str:
         """Create a person action (Meeting, ToDo, Notification, Review). Async version.
 
         Parameters
@@ -1394,6 +1395,9 @@ class MyProfile(AssetMaker):
             "originatorGUID": self.my_profile_guid,
             "assignToActorGUID": self.my_profile_guid,
         }
+        # Further properties of the action (e.g. effectiveFrom/effectiveTo) the arguments don't cover.
+        if extra_properties:
+            body["properties"].update({k: v for k, v in extra_properties.items() if v is not None})
         response = await super()._async_create_action(body)
         return response
 
@@ -1448,7 +1452,8 @@ class MyProfile(AssetMaker):
 
     async def _async_create_meeting(self, meeting_name: str, activity_status: str = "REQUESTED",
                                     description:Optional[str]=None, situation: Optional[str]=None,priority:Optional[int]=0,
-                                    qualified_name: Optional[str] = None, objective: Optional[str] = None) -> str:
+                                    qualified_name: Optional[str] = None, objective: Optional[str] = None,
+                                    extra_properties: Optional[dict] = None) -> str:
         """Create a Meeting person action. Async version.
 
         Parameters
@@ -1503,6 +1508,9 @@ class MyProfile(AssetMaker):
             "originatorGUID": self.my_profile_guid,
             "assignToActorGUID": self.my_profile_guid,
         }
+        # Further properties of the action (e.g. effectiveFrom/effectiveTo) the arguments don't cover.
+        if extra_properties:
+            body["properties"].update({k: v for k, v in extra_properties.items() if v is not None})
         response = await super()._async_create_action(body)
         return response
 
@@ -1541,7 +1549,8 @@ class MyProfile(AssetMaker):
 
     async def _async_create_review(self, review_name: str, activity_status: str = "REQUESTED",
                                     description:Optional[str]=None, situation: Optional[str]=None,priority:Optional[int]=0,
-                                    qualified_name: Optional[str] = None) -> str:
+                                    qualified_name: Optional[str] = None,
+                                    extra_properties: Optional[dict] = None) -> str:
         """Create a Review person action. Async version.
 
         Parameters
@@ -1591,6 +1600,9 @@ class MyProfile(AssetMaker):
             "originatorGUID": self.my_profile_guid,
             "assignToActorGUID": self.my_profile_guid,
         }
+        # Further properties of the action (e.g. effectiveFrom/effectiveTo) the arguments don't cover.
+        if extra_properties:
+            body["properties"].update({k: v for k, v in extra_properties.items() if v is not None})
         response = await super()._async_create_action(body)
         return response
 

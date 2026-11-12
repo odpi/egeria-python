@@ -5,6 +5,7 @@ from typing import Dict, Any, Optional, List, Set
 from loguru import logger
 
 from pyegeria import EgeriaTech, PyegeriaException
+from md_processing.md_processing_utils.common_md_utils import person_action_extras
 from md_processing.v2.processors import AsyncBaseCommandProcessor
 from md_processing.md_processing_utils.md_processing_constants import get_command_spec
 from md_processing.md_processing_utils.common_md_utils import (
@@ -56,6 +57,7 @@ class ProjectProcessor(AsyncBaseCommandProcessor):
                 description=attributes.get('Description', {}).get('value'),
                 situation=attributes.get('Situation', {}).get('value'),
                 priority=attributes.get('Priority', {}).get('value', 0),
+                extra_properties=person_action_extras(attributes, "MeetingProperties"),
                 # See actor_manager.py's Create ToDo branch for why this
                 # matters - without it, the real stored qualifiedName never
                 # matches what Dr.Egeria reports having created.

@@ -11,7 +11,7 @@ from typing import Any, Dict, Optional
 from loguru import logger
 
 from md_processing.v2.processors import AsyncBaseCommandProcessor
-from md_processing.md_processing_utils.common_md_utils import update_element_dictionary
+from md_processing.md_processing_utils.common_md_utils import complete_bundle_properties, update_element_dictionary
 from md_processing.md_processing_utils.typed_properties import (classification_map, entity_properties,
                                                                   parent_relationship_properties,
                                                                   record_not_applied)
@@ -114,12 +114,19 @@ class SchemaElementProcessor(AsyncBaseCommandProcessor):
                 else:
                     props["inputField"] = _v(attributes, "Input Field")
         else:
-            props.update({
-                "isDeprecated": _v(attributes, "Is Deprecated"),
-                "author": _v(attributes, "Author"),
-                "encodingStandard": _v(attributes, "Encoding Standard"),
-                "namespace": _v(attributes, "Namespace"),
-            })
+            # SchemaTypeProperties (odpi/egeria origin/main 0b7ee0fb) has encodingStandard, namespacePath and
+            # authors (a list) -- no "namespace", "author" or "isDeprecated": those keys were sent and silently
+            # ignored (round-trip probe: Namespace / Author / Is Deprecated DROPPED, Egeria-side in shape only).
+            props["encodingStandard"] = _v(attributes, "Encoding Standard")
+            if _v(attributes, "Namespace") not in (None, ""):
+                props["namespacePath"] = _v(attributes, "Namespace")
+            author = _v(attributes, "Author")
+            if author not in (None, "", []) and not props.get("authors"):
+                props["authors"] = author if isinstance(author, list) else [author]
+            if _v(attributes, "Is Deprecated") not in (None, ""):
+                record_not_applied(attributes, "Is Deprecated", [
+                    "not applied: Is Deprecated: SchemaTypeProperties has no isDeprecated property"])
+        complete_bundle_properties(props, attributes)
 
         if self.as_is_element:
             guid = self.as_is_element["elementHeader"]["guid"]

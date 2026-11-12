@@ -7,6 +7,7 @@ import json
 
 from pyegeria import EgeriaTech, PyegeriaException, COMMENT_TYPES
 from pyegeria.core._exceptions import PyegeriaInvalidParameterException
+from md_processing.md_processing_utils.common_md_utils import complete_bundle_properties, person_action_extras
 from md_processing.v2.processors import AsyncBaseCommandProcessor
 from md_processing.v2.multilink import async_link_or_update, update_body
 from md_processing.md_processing_utils.common_md_utils import (
@@ -85,7 +86,19 @@ class FeedbackProcessor(AsyncBaseCommandProcessor):
                 "Activity Entry": self.client.my_profile._async_log_my_activity,
                 "Blog Entry": self.client.my_profile._async_blog_my_activity,
             }
-            guid = await method_by_type[object_type](text=text, display_name=display_name)
+            # A full typed body, so situation, priority, effective dates and the rest of the bundle the entry's
+            # type declares are sent (F-B group 5/6), not just the text and name.
+            entry_type = object_type.replace(" ", "")
+            entry_props = complete_bundle_properties({
+                "class": f"{entry_type}Properties", "typeName": entry_type, "qualifiedName": qualified_name,
+                "displayName": display_name, "description": text,
+                "situation": attributes.get('Situation', {}).get('value'),
+                "priority": attributes.get('Priority', {}).get('value'),
+            }, attributes)
+            guid = await method_by_type[object_type](
+                text=text, display_name=display_name, qualified_name=qualified_name,
+                body={"class": "NewAttachmentRequestBody",
+                      "properties": {k: v for k, v in entry_props.items() if v not in (None, "", [], {})}})
             guid = self.extract_guid_or_raise(guid, f"Create {object_type}")
             if guid:
                 self.parsed_output["guid"] = guid
@@ -154,6 +167,7 @@ class FeedbackProcessor(AsyncBaseCommandProcessor):
                 description=attributes.get('Description', {}).get('value'),
                 situation=attributes.get('Situation', {}).get('value'),
                 priority=attributes.get('Priority', {}).get('value', 0),
+                extra_properties=person_action_extras(attributes, "ReviewProperties"),
                 # See actor_manager.py's Create ToDo branch for why this
                 # matters - without it, the real stored qualifiedName never
                 # matches what Dr.Egeria reports having created.
