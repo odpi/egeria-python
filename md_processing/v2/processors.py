@@ -41,6 +41,41 @@ def _is_egeria_multiple_entities_error(exc: BaseException) -> bool:
     return "404-002" in text or "entities where found" in text
 
 
+def describe_exception(e: BaseException) -> str:
+    """One line for a failed command: the exception type and its message, plus Egeria's message id when
+    there is one.
+
+    `str(PyegeriaException)` is a multi-line report that starts with a newline, so a summary row built
+    from it read just "Execution failed:" (round-trip probe 2026-11-12: Schema Maker, Blog/Journal/
+    Activity Entry and the Asset Maker technology-type creates). Egeria's own message, when the response
+    carries one, is preferred over pyegeria's generic text.
+    """
+    kind = type(e).__name__
+    text, msg_id = "", ""
+    if isinstance(e, PyegeriaException):
+        body = {}
+        response = getattr(e, "response", None)
+        if response is not None:
+            try:
+                body = response.json() or {}
+            except Exception:  # noqa: BLE001 - not JSON
+                body = {}
+        if not isinstance(body, dict):
+            body = {}
+        info = getattr(e, "additional_info", None) or {}
+        text = (body.get("exceptionErrorMessage") or info.get("exceptionErrorMessage")
+                or getattr(e, "response_egeria_msg", "") or getattr(e, "message", ""))
+        msg_id = (body.get("exceptionErrorMessageId") or info.get("exceptionErrorMessageId")
+                  or getattr(e, "egeria_message_id", "") or getattr(e, "response_egeria_msg_id", ""))
+    if not text:
+        text = str(e).strip() or repr(e)
+    text = " ".join(str(text).split())
+    out = f"{kind}: {text}"
+    if msg_id and msg_id not in text:
+        out += f" [{msg_id}]"
+    return out
+
+
 class _ParentLinksIncomplete(Exception):
     """The parent-end links could not all be read within the page bound (ISSUE-181)."""
 
@@ -1224,7 +1259,7 @@ class AsyncBaseCommandProcessor(ABC):
                 "output": self.command.raw_block,
                 "analysis": analysis,
                 "status": "failure",
-                "message": f"Execution failed: {str(e)}",
+                "message": f"Execution failed: {describe_exception(e)}",
                 "verb": self.command.verb,
                 "object_type": self.canonical_object_type,
                 "markdown_object_type": self.markdown_object_type,
@@ -1232,7 +1267,7 @@ class AsyncBaseCommandProcessor(ABC):
                 "qualified_name": self.parsed_output.get("qualified_name"),
                 "found": self.parsed_output.get("exists", False),
                 "warnings": self.parsed_output.get("warnings", []),
-                "errors": [str(e)]
+                "errors": [describe_exception(e)]
             }
         except Exception as e:
             logger.error(f"Command String: {self.command.raw_block}")
@@ -1243,7 +1278,7 @@ class AsyncBaseCommandProcessor(ABC):
                 "output": self.command.raw_block,
                 "analysis": analysis,
                 "status": "failure",
-                "message": f"Execution failed: {str(e)}",
+                "message": f"Execution failed: {describe_exception(e)}",
                 "verb": self.command.verb,
                 "object_type": self.canonical_object_type,
                 "markdown_object_type": self.markdown_object_type,
@@ -1251,7 +1286,7 @@ class AsyncBaseCommandProcessor(ABC):
                 "qualified_name": self.parsed_output.get("qualified_name"),
                 "found": self.parsed_output.get("exists", False),
                 "warnings": self.parsed_output.get("warnings", []),
-                "errors": [str(e)]
+                "errors": [describe_exception(e)]
             }
         
         # 10. Post-execution: Update the cache on success

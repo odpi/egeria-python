@@ -9,7 +9,7 @@ from loguru import logger
 from pyegeria import EgeriaTech, NO_ELEMENTS_FOUND
 from pyegeria.view.format_set_executor import _async_run_report
 from pyegeria.view.base_report_formats import select_report_spec
-from md_processing.v2.processors import AsyncBaseCommandProcessor
+from md_processing.v2.processors import AsyncBaseCommandProcessor, describe_exception
 from md_processing.v2.extraction import DrECommand
 
 class ViewProcessor(AsyncBaseCommandProcessor):
@@ -51,7 +51,7 @@ class ViewProcessor(AsyncBaseCommandProcessor):
                             "found": result.get("found", False)
                         }
                     except Exception as e:
-                        result["message"] = f"Execution failed: {str(e)}"
+                        result["message"] = f"Execution failed: {describe_exception(e)}"
                         result["errors"] = [str(e)]
         
         return result
