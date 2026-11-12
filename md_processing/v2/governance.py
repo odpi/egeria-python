@@ -2,10 +2,11 @@
 Governance Officer Processors for Dr.Egeria v2.
 """
 from typing import Dict, Any, Optional
-import uuid
+
 from loguru import logger
 import json
 
+from pyegeria.core.utils import is_guid_reference
 from pyegeria import EgeriaTech, PyegeriaException
 from md_processing.v2.processors import AsyncBaseCommandProcessor
 from md_processing.v2.multilink import async_link_or_update, update_body
@@ -306,11 +307,7 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
         candidate = value.strip()
         if not candidate:
             return None
-        try:
-            uuid.UUID(candidate)
-            return candidate
-        except (ValueError, TypeError):
-            return None
+        return candidate if is_guid_reference(candidate) else None  # a GUID (plain or type-prefixed), not a name
 
     @staticmethod
     def _resolve_endpoint_guid(attributes: Dict[str, Any], keys: Any) -> Optional[str]:

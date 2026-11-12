@@ -212,7 +212,9 @@ class ComponentProcessor(AsyncBaseCommandProcessor):
         supply_chain_guids = set(attributes.get('In Information Supply Chain', {}).get('guid_list', []))
         parent_comp_guids = set(attributes.get('In Solution Components', {}).get('guid_list', []))
         sub_comp_guids = set(attributes.get('Solution SubComponents', {}).get('guid_list', []))
-        keywords = set(attributes.get('Search Keywords', {}).get('value', []))
+        # Search Keywords are attached by the base processor's post-create sync (_sync_search_keywords), as for
+        # every other command; this processor's own sync passed the keyword string where a request body goes.
+        keywords: Set[str] = set()
 
         if verb == "Update":
             guid = self.parsed_output.get("guid") or (self.as_is_element['elementHeader']['guid'] if self.as_is_element else None)
@@ -422,8 +424,14 @@ class SupplyChainProcessor(AsyncBaseCommandProcessor):
         # were silently never persisted). Note the real wire property is "dataProcessingPurposes",
         # not "purposes" -- the compact spec's "Purposes" attribute has no property_name override,
         # so this can't be picked up generically; must be set explicitly here.
-        prop_body["dataProcessingPurposes"] = attributes.get('Purposes', {}).get('value')
+        # F-C renames the attribute "Data Processing Purposes" (keeping "Purposes" as an alternate): read either.
+        prop_body["dataProcessingPurposes"] = (attributes.get('Data Processing Purposes', {}).get('value')
+                                               or attributes.get('Purposes', {}).get('value'))
         prop_body["scope"] = attributes.get('Scope', {}).get('value')
+        # InformationSupplyChainProperties also declares integrationStyle and estimatedVolumetrics
+        # (odpi/egeria origin/main 0b7ee0fb); they were never read (round-trip probe: DROPPED).
+        prop_body["integrationStyle"] = attributes.get('Integration Style', {}).get('value')
+        prop_body["estimatedVolumetrics"] = attributes.get('Estimated Volumetrics', {}).get('value')
 
         in_sc_guids = set(attributes.get('In Information Supply Chain', {}).get('guid_list', []))
         nested_sc_guids = set(attributes.get('Nested Information Supply Chains', {}).get('guid_list', []))
