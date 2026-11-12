@@ -1317,6 +1317,9 @@ class AsyncBaseCommandProcessor(ABC):
             message = f"Deferred {self.command.verb} {self.command.object_type}: waiting on forward reference(s) to resolve"
         else:
             message = f"Executed {self.command.verb} {self.command.object_type}" + (f" (GUID: {guid})" if guid else "")
+            if not guid and self.command.verb == "Create" and not self.parsed_output.get("local_only"):
+                # A summary row must never claim a create it can't name (F-A 7).
+                message += " | no element GUID was returned, so the created element can't be named"
             if deferred:
                 message += " | Pending: reference(s) still awaiting later resolution"
 
