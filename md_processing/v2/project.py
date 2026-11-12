@@ -5,8 +5,9 @@ from typing import Dict, Any, Optional, List, Set
 from loguru import logger
 
 from pyegeria import EgeriaTech, PyegeriaException
+from md_processing.md_processing_utils.typed_properties import properties_class, record_not_applied
 from md_processing.md_processing_utils.common_md_utils import person_action_extras
-from md_processing.v2.processors import AsyncBaseCommandProcessor
+from md_processing.v2.processors import AsyncBaseCommandProcessor, describe_exception
 from md_processing.md_processing_utils.md_processing_constants import get_command_spec
 from md_processing.md_processing_utils.common_md_utils import (
     set_element_prop_body, set_create_body, set_update_body, 
@@ -92,16 +93,32 @@ class ProjectProcessor(AsyncBaseCommandProcessor):
             "actualStartDate": attributes.get('Actual Start Date', {}).get('value'),
             "actualCompletionDate": attributes.get('Actual Completion Date', {}).get('value'),
             "mission": attributes.get('Mission', {}).get('value'),
-            "purposes": attributes.get('Purposes', {}).get('value', []),
             "priority": attributes.get('Priority', {}).get('value'),
             "successCriteria": attributes.get('Success Criteria', {}).get('value'),
-            "projectIdentifier": attributes.get('Project Identifier', {}).get('value'),
-            "projectType": attributes.get('Project Type', {}).get('value'),
-            "projectScope": attributes.get('Project Scope', {}).get('value'),
-            "projectApproach": attributes.get('Project Approach', {}).get('value'),
-            "projectManagementStyle": attributes.get('Project Management Style', {}).get('value'),
-            "projectResultsUsage": attributes.get('Project Results Usage', {}).get('value'),
         })
+        # PROJECT-ATTRIBUTES-MAPPING-2026-11-12 + the owner's decisions (F-B group 7). ProjectProperties
+        # (odpi/egeria origin/main 0b7ee0fb) has no projectIdentifier / purposes / projectType / projectScope /
+        # project{Approach,ManagementStyle,ResultsUsage}: those keys were sent and silently ignored.
+        if attributes.get('Project Identifier', {}).get('value') and not prop_body.get("identifier"):
+            prop_body["identifier"] = attributes['Project Identifier']['value']   # ReferenceableProperties
+        if attributes.get('Purposes', {}).get('value'):
+            record_not_applied(attributes, "Purposes", [
+                "not applied: Purposes: Project Purposes was removed (owner's decision, 2026-11-12)"])
+        if attributes.get('Project Scope', {}).get('value'):
+            record_not_applied(attributes, "Project Scope", [
+                "not applied: Project Scope: Project has no scope property in Egeria (owner's decision, 2026-11-12: "
+                "use relationships such as governedBy or assignedTo)"])
+        project_classification = {k: attributes.get(a, {}).get('value') for a, k in (
+            ("Project Approach", "approach"), ("Project Management Style", "managementStyle"),
+            ("Project Results Usage", "resultsUsage"))}
+        project_classification = {k: v for k, v in project_classification.items() if v not in (None, "")}
+        type_classification = None
+        project_type = attributes.get('Project Type', {}).get('value')
+        if project_type and project_type != "Project":
+            type_classification = properties_class("classification", project_type)
+            if type_classification is None:
+                record_not_applied(attributes, "Project Type", [
+                    f"not applied: Project Type: {project_type} isn't an Egeria project classification"])
 
         if verb == "Update":
             guid = self.parsed_output.get("guid") or (self.as_is_element['elementHeader']['guid'] if self.as_is_element else None)
@@ -112,6 +129,7 @@ class ProjectProcessor(AsyncBaseCommandProcessor):
             self.last_body = body = set_update_body(base_type, attributes)
             body['properties'] = self.filter_update_properties(prop_body, body.get('mergeUpdate', True))
             await self.client._async_update_project(project_guid=guid, body=body)
+            await self._apply_project_classifications(guid, project_classification, project_type, type_classification)
 
             sync_res = await self._sync_sub_projects(guid, sub_project_guids, not merge_update)
             if sync_res.get("added") or sync_res.get("removed"):
@@ -135,6 +153,11 @@ class ProjectProcessor(AsyncBaseCommandProcessor):
             self.last_body = body = set_create_body(base_type, attributes)
             # Apply classifications based on the actual object_type (e.g., Campaign)
             body["initialClassifications"] = set_object_classifications(object_type, attributes, project_types)
+            if project_classification:   # approach / managementStyle / resultsUsage live on ProjectClassification
+                body["initialClassifications"]["ProjectClassification"] = {
+                    "class": "ProjectClassificationProperties", **project_classification}
+            if type_classification:      # Project Type names a classification (Campaign, Task, ...)
+                body["initialClassifications"].setdefault(project_type, {"class": type_classification})
             body["properties"] = prop_body
             
             raw_guid = await self.client._async_create_project(body=body_slimmer(body))
@@ -163,6 +186,29 @@ class ProjectProcessor(AsyncBaseCommandProcessor):
                 return await self.render_result_markdown(guid)
 
         return self.command.raw_block
+
+    async def _apply_project_classifications(self, guid: str, project_classification: dict,
+                                             project_type: Optional[str], type_classification: Optional[str]) -> None:
+        """On an update: ProjectClassification through ProjectManager._async_add_project_classification, and the
+        Project Type's named classification through the generic metadata-expert classify call."""
+        if project_classification:
+            try:
+                await self.client._async_add_project_classification(guid, {
+                    "class": "NewClassificationRequestBody",
+                    "properties": {"class": "ProjectClassificationProperties", **project_classification}})
+                self.add_related_result("Project Classification", guid=guid, message="Set")
+            except PyegeriaException as e:
+                self.add_related_result("Project Classification", guid=guid, status="failure",
+                                        message=describe_exception(e))
+        if type_classification:
+            try:
+                await self.client.metadata_expert._async_classify_metadata_element(
+                    guid, project_type, {"class": "NewClassificationRequestBody",
+                                         "properties": {"class": type_classification}})
+                self.add_related_result(f"Classification {project_type}", guid=guid, message="Classified")
+            except PyegeriaException as e:
+                self.add_related_result(f"Classification {project_type}", guid=guid, status="failure",
+                                        message=describe_exception(e))
 
     async def _sync_sub_projects(self, guid: str, to_be_guids: Set[str], replace_all: bool, known_new: bool = False) -> Dict[str, Any]:
         """
