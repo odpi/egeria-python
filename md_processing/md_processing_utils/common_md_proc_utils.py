@@ -18,6 +18,7 @@ from pyegeria.core.config import settings
 from md_processing.md_processing_utils.common_md_utils import (
     get_current_datetime_string,
     split_tb_string,
+    split_list_value,
     str_to_bool,
     normalize_value,
     print_msg,
@@ -422,7 +423,7 @@ def parse_upsert_command(egeria_client: EgeriaTech, object_type: str, object_act
                         )
                     name_list = parsed_attributes[key]['value']
                     # attribute = re.split(r'[;,\n]+', name_list) if name_list is not None else None
-                    attribute = split_tb_string(name_list)
+                    attribute = split_list_value(name_list)  # 6.2.39: a bullet is one item
                     parsed_attributes[key]['value'] = attribute
                     parsed_attributes[key]['name_list'] = name_list
                 elif style == 'Parent':
@@ -729,7 +730,7 @@ def parse_view_command(egeria_client: EgeriaTech, object_type: str, object_actio
                     )
                 name_list = parsed_attributes[key]['value']
                 # attribute = re.split(r'[;,\n]+', name_list) if name_list is not None else None
-                attribute = split_tb_string(name_list)
+                attribute = split_list_value(name_list)  # 6.2.39: a bullet is one item
                 parsed_attributes[key]['value'] = attribute
                 parsed_attributes[key]['name_list'] = name_list
             elif style == 'Parent':
@@ -1342,7 +1343,7 @@ def proc_name_list(egeria_client: EgeriaTech, element_type: str, txt: str, eleme
         return {"status": if_missing, "reason": msg, "value": None, "valid": False, "exists": False, }
     else:
         # element_list = re.split(r'[;,\n]+', elements_txt)
-        element_list = split_tb_string(elements_txt)
+        element_list = split_list_value(elements_txt)  # 6.2.39: a bullet is one name
         element_details = {}
         for element in element_list:
             # Get the element using the generalized function
