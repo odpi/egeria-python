@@ -1,0 +1,426 @@
+{
+ "_about": "Captured from trellis 82340b58:packages/egeria-advisor/advisor/egeria_spec_publish.py (EA, brief B6) with this branch's pyegeria. pyegeria.view.report_spec_publish must produce the same documents, digests, steps and refusal words for the same inputs.",
+ "specs": {
+  "simple": {
+   "target_type": "Project",
+   "heading": "Team projects",
+   "description": "Projects of a team.",
+   "formats": [
+    {
+     "types": [
+      "TABLE",
+      "DICT"
+     ],
+     "attributes": [
+      {
+       "name": "Display Name",
+       "key": "display_name"
+      },
+      {
+       "name": "Status",
+       "key": "project_status"
+      }
+     ]
+    }
+   ],
+   "action": {
+    "function": "ProjectManager.find_projects",
+    "required_params": [
+     "search_string"
+    ]
+   }
+  },
+  "rich": {
+   "target_type": "GovernanceMetric",
+   "heading": "Metric register",
+   "description": "A register of metrics.\nIt has two lines and a Unicode break, plus é accents.",
+   "aliases": [
+    "Metric Register",
+    "Metrics"
+   ],
+   "formats": [
+    {
+     "types": [
+      "LIST",
+      "TABLE"
+     ],
+     "attributes": [
+      {
+       "name": "Metric",
+       "key": "display_name"
+      },
+      {
+       "name": "Implications",
+       "key": "implications",
+       "render": "bullets",
+       "max_items": 5
+      },
+      {
+       "name": "Authors — people",
+       "key": "authors",
+       "render": "join"
+      }
+     ]
+    },
+    {
+     "types": [
+      "REPORT"
+     ],
+     "attributes": [
+      {
+       "name": "Metric",
+       "key": "display_name"
+      }
+     ]
+    }
+   ],
+   "action": {
+    "function": "GovernanceOfficer.find_governance_definitions",
+    "required_params": [
+     "search_string"
+    ],
+    "spec_params": {
+     "metadata_element_type": "GovernanceMetric"
+    }
+   }
+  }
+ },
+ "publish": [
+  {
+   "id": "public-create-advisor",
+   "label": "Team Projects",
+   "spec": "simple",
+   "kw": {},
+   "expect": {
+    "label": "Team Projects",
+    "qualified_name": "ReportSpec::Team Projects",
+    "verb": "Create",
+    "visibility": "public",
+    "zones": [],
+    "folders": [
+     "ReportSpecFolder::Consumer::EgeriaAdvisor"
+    ],
+    "markdown": "# Publish report spec Team Projects\n\n## Create Report Spec\n### Display Name\nTeam Projects\n### Qualified Name\nReportSpec::Team Projects\n### Description\nProjects of a team.\n### Content Status\nACTIVE\n### Target Type Name\nProject\n### Output Types\nTABLE, DICT\n### Microflow\n{\"format\":\"microflow/1\",\"params\":{\"search_string\":{\"type\":\"string\",\"required\":true}},\"stages\":[{\"stage\":\"producer/find\",\"type\":\"Project\",\"function\":\"ProjectManager.find_projects\",\"params\":{\"search_string\":\"$search_string\"}}],\"formatters\":{\"TABLE\":{\"columns\":[{\"field\":\"display_name\",\"label\":\"Display Name\"},{\"field\":\"project_status\",\"label\":\"Status\"}]},\"DICT\":{\"same_as\":\"TABLE\"}}}\n\n___\n\n## Add Member to Collection\n### Element Id\nReportSpec::Team Projects\n### Collection Id\nReportSpecFolder::Consumer::EgeriaAdvisor\n\n___\n",
+    "digest": "fe11edb56533de04",
+    "steps": [
+     "Create the ReportSpec ReportSpec::Team Projects, public",
+     "add it to ReportSpecFolder::Consumer::EgeriaAdvisor"
+    ]
+   }
+  },
+  {
+   "id": "public-create-both",
+   "label": "Team Projects",
+   "spec": "simple",
+   "kw": {
+    "also_portal": true
+   },
+   "expect": {
+    "label": "Team Projects",
+    "qualified_name": "ReportSpec::Team Projects",
+    "verb": "Create",
+    "visibility": "public",
+    "zones": [],
+    "folders": [
+     "ReportSpecFolder::Consumer::EgeriaAdvisor",
+     "ReportSpecFolder::Consumer::Portal"
+    ],
+    "markdown": "# Publish report spec Team Projects\n\n## Create Report Spec\n### Display Name\nTeam Projects\n### Qualified Name\nReportSpec::Team Projects\n### Description\nProjects of a team.\n### Content Status\nACTIVE\n### Target Type Name\nProject\n### Output Types\nTABLE, DICT\n### Microflow\n{\"format\":\"microflow/1\",\"params\":{\"search_string\":{\"type\":\"string\",\"required\":true}},\"stages\":[{\"stage\":\"producer/find\",\"type\":\"Project\",\"function\":\"ProjectManager.find_projects\",\"params\":{\"search_string\":\"$search_string\"}}],\"formatters\":{\"TABLE\":{\"columns\":[{\"field\":\"display_name\",\"label\":\"Display Name\"},{\"field\":\"project_status\",\"label\":\"Status\"}]},\"DICT\":{\"same_as\":\"TABLE\"}}}\n\n___\n\n## Add Member to Collection\n### Element Id\nReportSpec::Team Projects\n### Collection Id\nReportSpecFolder::Consumer::EgeriaAdvisor\n\n___\n\n## Add Member to Collection\n### Element Id\nReportSpec::Team Projects\n### Collection Id\nReportSpecFolder::Consumer::Portal\n\n___\n",
+    "digest": "4038bfd84f0acf1d",
+    "steps": [
+     "Create the ReportSpec ReportSpec::Team Projects, public",
+     "add it to ReportSpecFolder::Consumer::EgeriaAdvisor",
+     "add it to ReportSpecFolder::Consumer::Portal"
+    ]
+   }
+  },
+  {
+   "id": "public-update-both",
+   "label": "Metric Register EA",
+   "spec": "rich",
+   "kw": {
+    "also_portal": true,
+    "held": {
+     "held": true,
+     "zones": []
+    }
+   },
+   "expect": {
+    "label": "Metric Register EA",
+    "qualified_name": "ReportSpec::Metric Register EA",
+    "verb": "Update",
+    "visibility": "public",
+    "zones": [],
+    "folders": [
+     "ReportSpecFolder::Consumer::EgeriaAdvisor",
+     "ReportSpecFolder::Consumer::Portal"
+    ],
+    "markdown": "# Publish report spec Metric Register EA\n\n## Update Report Spec\n### Display Name\nMetric Register EA\n### Qualified Name\nReportSpec::Metric Register EA\n### Description\nA register of metrics. It has two lines and a Unicode break, plus é accents.\n### Content Status\nACTIVE\n### Aliases\nMetric Register, Metrics\n### Target Type Name\nGovernanceMetric\n### Output Types\nLIST, TABLE, REPORT\n### Microflow\n{\"format\":\"microflow/1\",\"params\":{\"search_string\":{\"type\":\"string\",\"required\":true}},\"stages\":[{\"stage\":\"producer/find\",\"type\":\"GovernanceMetric\",\"function\":\"GovernanceOfficer.find_governance_definitions\",\"params\":{\"search_string\":\"$search_string\",\"metadata_element_type\":\"GovernanceMetric\"}}],\"formatters\":{\"LIST\":{\"columns\":[{\"field\":\"display_name\",\"label\":\"Metric\"},{\"field\":\"implications\",\"label\":\"Implications\",\"render\":\"bullets\",\"max_items\":5},{\"field\":\"authors\",\"label\":\"Authors \\u2014 people\",\"render\":\"join\"}]},\"TABLE\":{\"same_as\":\"LIST\"},\"REPORT\":{\"columns\":[{\"field\":\"display_name\",\"label\":\"Metric\"}]}}}\n\n___\n\n## Add Member to Collection\n### Element Id\nReportSpec::Metric Register EA\n### Collection Id\nReportSpecFolder::Consumer::EgeriaAdvisor\n\n___\n\n## Add Member to Collection\n### Element Id\nReportSpec::Metric Register EA\n### Collection Id\nReportSpecFolder::Consumer::Portal\n\n___\n",
+    "digest": "6c19645b97384de7",
+    "steps": [
+     "Update the ReportSpec ReportSpec::Metric Register EA, public",
+     "add it to ReportSpecFolder::Consumer::EgeriaAdvisor",
+     "add it to ReportSpecFolder::Consumer::Portal"
+    ]
+   }
+  },
+  {
+   "id": "restricted-create",
+   "label": "Metric Register EA",
+   "spec": "rich",
+   "proven": true,
+   "kw": {
+    "visibility": "restricted",
+    "zones": [
+     "finance",
+     " hr-team ",
+     "finance"
+    ]
+   },
+   "expect": {
+    "label": "Metric Register EA",
+    "qualified_name": "ReportSpec::Metric Register EA",
+    "verb": "Create",
+    "visibility": "restricted",
+    "zones": [
+     "finance",
+     "hr-team"
+    ],
+    "folders": [
+     "ReportSpecFolder::Consumer::EgeriaAdvisor"
+    ],
+    "markdown": "# Publish report spec Metric Register EA\n\n## Create Report Spec\n### Display Name\nMetric Register EA\n### Qualified Name\nReportSpec::Metric Register EA\n### Description\nA register of metrics. It has two lines and a Unicode break, plus é accents.\n### Content Status\nACTIVE\n### Aliases\nMetric Register, Metrics\n### Target Type Name\nGovernanceMetric\n### Output Types\nLIST, TABLE, REPORT\n### Microflow\n{\"format\":\"microflow/1\",\"params\":{\"search_string\":{\"type\":\"string\",\"required\":true}},\"stages\":[{\"stage\":\"producer/find\",\"type\":\"GovernanceMetric\",\"function\":\"GovernanceOfficer.find_governance_definitions\",\"params\":{\"search_string\":\"$search_string\",\"metadata_element_type\":\"GovernanceMetric\"}}],\"formatters\":{\"LIST\":{\"columns\":[{\"field\":\"display_name\",\"label\":\"Metric\"},{\"field\":\"implications\",\"label\":\"Implications\",\"render\":\"bullets\",\"max_items\":5},{\"field\":\"authors\",\"label\":\"Authors \\u2014 people\",\"render\":\"join\"}]},\"TABLE\":{\"same_as\":\"LIST\"},\"REPORT\":{\"columns\":[{\"field\":\"display_name\",\"label\":\"Metric\"}]}}}\n### Zone Membership\nfinance, hr-team\n\n___\n\n## Add Member to Collection\n### Element Id\nReportSpec::Metric Register EA\n### Collection Id\nReportSpecFolder::Consumer::EgeriaAdvisor\n\n___\n",
+    "digest": "2916fa8d908104f0",
+    "steps": [
+     "Create the ReportSpec ReportSpec::Metric Register EA, restricted to zones finance, hr-team",
+     "add it to ReportSpecFolder::Consumer::EgeriaAdvisor"
+    ]
+   }
+  },
+  {
+   "id": "declassify",
+   "label": "Metric Register EA",
+   "spec": "rich",
+   "kw": {
+    "held": {
+     "held": true,
+     "zones": [
+      "finance"
+     ]
+    }
+   },
+   "expect": {
+    "label": "Metric Register EA",
+    "qualified_name": "ReportSpec::Metric Register EA",
+    "verb": "Update",
+    "visibility": "public",
+    "zones": [],
+    "folders": [
+     "ReportSpecFolder::Consumer::EgeriaAdvisor"
+    ],
+    "markdown": "# Publish report spec Metric Register EA\n\n## Update Report Spec\n### Display Name\nMetric Register EA\n### Qualified Name\nReportSpec::Metric Register EA\n### Description\nA register of metrics. It has two lines and a Unicode break, plus é accents.\n### Content Status\nACTIVE\n### Aliases\nMetric Register, Metrics\n### Target Type Name\nGovernanceMetric\n### Output Types\nLIST, TABLE, REPORT\n### Microflow\n{\"format\":\"microflow/1\",\"params\":{\"search_string\":{\"type\":\"string\",\"required\":true}},\"stages\":[{\"stage\":\"producer/find\",\"type\":\"GovernanceMetric\",\"function\":\"GovernanceOfficer.find_governance_definitions\",\"params\":{\"search_string\":\"$search_string\",\"metadata_element_type\":\"GovernanceMetric\"}}],\"formatters\":{\"LIST\":{\"columns\":[{\"field\":\"display_name\",\"label\":\"Metric\"},{\"field\":\"implications\",\"label\":\"Implications\",\"render\":\"bullets\",\"max_items\":5},{\"field\":\"authors\",\"label\":\"Authors \\u2014 people\",\"render\":\"join\"}]},\"TABLE\":{\"same_as\":\"LIST\"},\"REPORT\":{\"columns\":[{\"field\":\"display_name\",\"label\":\"Metric\"}]}}}\n\n___\n\n## Declassify Zone Membership\n### Target Element\nReportSpec::Metric Register EA\n\n___\n\n## Add Member to Collection\n### Element Id\nReportSpec::Metric Register EA\n### Collection Id\nReportSpecFolder::Consumer::EgeriaAdvisor\n\n___\n",
+    "digest": "5b6f2597cb9cf5f4",
+    "steps": [
+     "Update the ReportSpec ReportSpec::Metric Register EA, public",
+     "remove its zones (finance): it was restricted, it becomes public",
+     "add it to ReportSpecFolder::Consumer::EgeriaAdvisor"
+    ]
+   }
+  },
+  {
+   "id": "restricted-update",
+   "label": "Team Projects",
+   "spec": "simple",
+   "proven": true,
+   "kw": {
+    "visibility": "restricted",
+    "zones": [
+     "ops:1"
+    ],
+    "also_portal": true,
+    "held": {
+     "held": true,
+     "zones": [
+      "ops:1"
+     ]
+    }
+   },
+   "expect": {
+    "label": "Team Projects",
+    "qualified_name": "ReportSpec::Team Projects",
+    "verb": "Update",
+    "visibility": "restricted",
+    "zones": [
+     "ops:1"
+    ],
+    "folders": [
+     "ReportSpecFolder::Consumer::EgeriaAdvisor",
+     "ReportSpecFolder::Consumer::Portal"
+    ],
+    "markdown": "# Publish report spec Team Projects\n\n## Update Report Spec\n### Display Name\nTeam Projects\n### Qualified Name\nReportSpec::Team Projects\n### Description\nProjects of a team.\n### Content Status\nACTIVE\n### Target Type Name\nProject\n### Output Types\nTABLE, DICT\n### Microflow\n{\"format\":\"microflow/1\",\"params\":{\"search_string\":{\"type\":\"string\",\"required\":true}},\"stages\":[{\"stage\":\"producer/find\",\"type\":\"Project\",\"function\":\"ProjectManager.find_projects\",\"params\":{\"search_string\":\"$search_string\"}}],\"formatters\":{\"TABLE\":{\"columns\":[{\"field\":\"display_name\",\"label\":\"Display Name\"},{\"field\":\"project_status\",\"label\":\"Status\"}]},\"DICT\":{\"same_as\":\"TABLE\"}}}\n### Zone Membership\nops:1\n\n___\n\n## Add Member to Collection\n### Element Id\nReportSpec::Team Projects\n### Collection Id\nReportSpecFolder::Consumer::EgeriaAdvisor\n\n___\n\n## Add Member to Collection\n### Element Id\nReportSpec::Team Projects\n### Collection Id\nReportSpecFolder::Consumer::Portal\n\n___\n",
+    "digest": "9a2bc18f619bb8ba",
+    "steps": [
+     "Update the ReportSpec ReportSpec::Team Projects, restricted to zones ops:1",
+     "add it to ReportSpecFolder::Consumer::EgeriaAdvisor",
+     "add it to ReportSpecFolder::Consumer::Portal"
+    ]
+   }
+  }
+ ],
+ "refusals": [
+  {
+   "id": "label-multiline",
+   "label": "A\nB",
+   "spec": "simple",
+   "kw": {},
+   "words": "The report spec name must be a single line of text (line breaks of any kind are refused)."
+  },
+  {
+   "id": "label-u2028",
+   "label": "A ## Create Report Spec",
+   "spec": "simple",
+   "kw": {},
+   "words": "The report spec name must be a single line of text (line breaks of any kind are refused)."
+  },
+  {
+   "id": "label-rule",
+   "label": "---",
+   "spec": "simple",
+   "kw": {},
+   "words": "The report spec name cannot be a rule ('---') or start with '>' or '#': '---'."
+  },
+  {
+   "id": "label-heading",
+   "label": "# x",
+   "spec": "simple",
+   "kw": {},
+   "words": "The report spec name cannot be a rule ('---') or start with '>' or '#': '# x'."
+  },
+  {
+   "id": "label-empty",
+   "label": "  ",
+   "spec": "simple",
+   "kw": {},
+   "words": "A report spec name is needed."
+  },
+  {
+   "id": "public-with-zones",
+   "label": "X",
+   "spec": "simple",
+   "kw": {
+    "zones": [
+     "finance"
+    ]
+   },
+   "words": "A public spec carries no zones; choose 'Restricted to zones' to set them."
+  },
+  {
+   "id": "restricted-no-zones",
+   "label": "X",
+   "spec": "simple",
+   "proven": true,
+   "kw": {
+    "visibility": "restricted"
+   },
+   "words": "Restricted needs at least one zone."
+  },
+  {
+   "id": "restricted-not-proven",
+   "label": "X",
+   "spec": "simple",
+   "kw": {
+    "visibility": "restricted",
+    "zones": [
+     "finance"
+    ]
+   },
+   "words": "Restricted publish is not yet proven on this platform: Egeria's zone check on report specs has not been shown live here, so a 'restricted' spec might be visible to everyone. Publish it as public, or wait for the zone proof."
+  },
+  {
+   "id": "bad-zone",
+   "label": "X",
+   "spec": "simple",
+   "proven": true,
+   "kw": {
+    "visibility": "restricted",
+    "zones": [
+     "a,b",
+     "c\nd",
+     3
+    ]
+   },
+   "words": "Not a zone name (letters, digits, space, _ . : - only, one line): 'a,b', 'c\\nd', 3."
+  },
+  {
+   "id": "bad-visibility",
+   "label": "X",
+   "spec": "simple",
+   "kw": {
+    "visibility": "secret"
+   },
+   "words": "Visibility must be 'public' or 'restricted', not 'secret'."
+  },
+  {
+   "id": "alias-comma",
+   "label": "X",
+   "spec": "simple",
+   "alias": [
+    "a, b"
+   ],
+   "kw": {},
+   "words": "An alias cannot contain a comma (it would become two entries): 'a, b'."
+  }
+ ],
+ "withdraw": [
+  {
+   "id": "withdraw-advisor",
+   "label": "Team Projects",
+   "folders": null,
+   "expect": {
+    "label": "Team Projects",
+    "qualified_name": "ReportSpec::Team Projects",
+    "folders": [
+     "ReportSpecFolder::Consumer::EgeriaAdvisor"
+    ],
+    "markdown": "# Withdraw report spec Team Projects\n\n## Remove Member from Collection\n### Element Id\nReportSpec::Team Projects\n### Collection Id\nReportSpecFolder::Consumer::EgeriaAdvisor\n\n___\n",
+    "digest": "0f6a89f3ae2fa5b5",
+    "steps": [
+     "remove ReportSpec::Team Projects from ReportSpecFolder::Consumer::EgeriaAdvisor (the spec element itself stays in Egeria)"
+    ]
+   }
+  },
+  {
+   "id": "withdraw-both",
+   "label": "Team Projects",
+   "folders": [
+    "ReportSpecFolder::Consumer::EgeriaAdvisor",
+    "ReportSpecFolder::Consumer::Portal"
+   ],
+   "expect": {
+    "label": "Team Projects",
+    "qualified_name": "ReportSpec::Team Projects",
+    "folders": [
+     "ReportSpecFolder::Consumer::EgeriaAdvisor",
+     "ReportSpecFolder::Consumer::Portal"
+    ],
+    "markdown": "# Withdraw report spec Team Projects\n\n## Remove Member from Collection\n### Element Id\nReportSpec::Team Projects\n### Collection Id\nReportSpecFolder::Consumer::EgeriaAdvisor\n\n___\n\n## Remove Member from Collection\n### Element Id\nReportSpec::Team Projects\n### Collection Id\nReportSpecFolder::Consumer::Portal\n\n___\n",
+    "digest": "383789f5b1d697eb",
+    "steps": [
+     "remove ReportSpec::Team Projects from ReportSpecFolder::Consumer::EgeriaAdvisor (the spec element itself stays in Egeria)",
+     "remove ReportSpec::Team Projects from ReportSpecFolder::Consumer::Portal (the spec element itself stays in Egeria)"
+    ]
+   }
+  }
+ ],
+ "withdraw_refusal": {
+  "folders": [
+   "Collection::Other"
+  ],
+  "words": "Withdraw works on EA's and the Portal's consumer folders only, not Collection::Other."
+ },
+ "not_proven": {
+  "enabled": false,
+  "message": "Restricted publish is not yet proven on this platform: Egeria's zone check on report specs has not been shown live here, so a 'restricted' spec might be visible to everyone. Publish it as public, or wait for the zone proof.",
+  "proof": null
+ }
+}
