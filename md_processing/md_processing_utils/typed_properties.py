@@ -38,17 +38,28 @@ def properties_class(kind: str, type_name: str | None) -> str | None:
     return None
 
 
-def _as_dict(value: Any) -> dict | None:
+def _as_dict(value: Any, names_ok: bool = False) -> dict | None:
+    """A Dr.Egeria dictionary value: a dict, JSON text, or "key: value" lines (a Named DICT arrives as raw
+    text from the v2 parser). With names_ok, bare names ("- Taxonomy") become {name: {}}."""
     if value in (None, "", {}):
         return None
     if isinstance(value, dict):
         return value
+    if isinstance(value, list) and names_ok:
+        return {str(v).strip(): {} for v in value if str(v).strip()} or None
     if isinstance(value, str):
         try:
             parsed = json.loads(value)
+            return parsed if isinstance(parsed, dict) else None
         except ValueError:
-            return None
-        return parsed if isinstance(parsed, dict) else None
+            pass
+        from md_processing.v2.utils import parse_key_value
+        parsed = parse_key_value(value)
+        if parsed:
+            return parsed
+        if names_ok:
+            names = [line.strip().lstrip("-*").strip() for line in value.splitlines()]
+            return {n: {} for n in names if n} or None
     return None
 
 
@@ -103,7 +114,7 @@ def classification_map(raw: Any, attribute: str) -> tuple[dict | None, list[str]
     empty for a classification with no properties)."""
     if raw in (None, "", {}):
         return None, []
-    values = _as_dict(raw)
+    values = _as_dict(raw, names_ok=True)
     if values is None:
         return None, [f"not applied: {attribute}: expected a dictionary of classification name -> properties, "
                       f"got {raw!r}"]

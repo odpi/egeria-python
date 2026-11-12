@@ -17,8 +17,10 @@ from pyegeria.view.output_formatter import generate_output, format_for_markdown_
 
 from md_processing.v2.extraction import DrECommand
 from md_processing.v2.parsing import AttributeFirstParser
-from md_processing.md_processing_utils.typed_properties import (new_element_properties, not_applied_notes,
-                                                                  parent_relationship_properties)
+from md_processing.md_processing_utils.typed_properties import (_as_dict, classification_map,
+                                                                  new_element_properties, not_applied_notes,
+                                                                  parent_relationship_properties,
+                                                                  record_not_applied, typed_properties)
 from md_processing.md_processing_utils.md_processing_constants import get_command_spec, resolve_command_spec, VIEW_VERBS
 from md_processing.md_processing_utils.common_md_utils import (
     update_element_dictionary, get_element_dictionary, is_present, find_key_with_value
@@ -396,6 +398,68 @@ class AsyncBaseCommandProcessor(ABC):
             except PyegeriaException as e:
                 self.add_related_result("Search Keyword", status="failure",
                                         message=f"{keyword!r}: {describe_exception(e)}")
+
+    async def _sync_referenceable_extras(self, guid: str, attributes: Dict[str, Any]) -> None:
+        """The other Referenceable-bundle attributes no processor applied (88 rows each on the round-trip
+        probe's PostgreSQL baseline). Each is applied where Egeria has a home, or reported not applied:
+
+        - Classifications (Named DICT: classification name -> its properties): each typed
+          "<Name>Properties" (typed_properties.classification_map) and attached with the generic
+          metadata-expert classify call; names Egeria doesn't know, or keys a classification doesn't read,
+          are reported.
+        - Translation Details (Named DICT: TranslationDetailProperties fields -- language, languageCode,
+          locale, displayName, description, additionalTranslations): set with the multi-language service
+          (ClassificationExplorer._async_set_translation).
+        - User Defined Status: no Egeria property on an element (only the CollectionMembership relationship
+          has userDefinedStatus; an authored element's equivalent is User Defined Content Status): reported.
+        - Supplementary Properties: Egeria keeps them on a separate glossary term linked by the
+          SupplementaryProperties relationship (ClassificationExplorer._async_add_supplementary_properties_to_element);
+          Dr.Egeria doesn't create that term yet: reported.
+        Processors that apply one of these themselves record its name in parsed_output["applied_attributes"].
+        """
+        applied = set(self.parsed_output.get("applied_attributes") or ())
+
+        def given(name):
+            value = (attributes.get(name) or {}).get("value")
+            return value if name not in applied and value not in (None, "", {}, []) else None
+
+        raw = given("Classifications")
+        if raw is not None:
+            typed, notes = classification_map(raw, "Classifications")
+            record_not_applied(attributes, "Classifications", notes)
+            for name, props in (typed or {}).items():
+                try:
+                    await self.client.metadata_expert._async_classify_metadata_element(
+                        guid, name, {"class": "NewClassificationRequestBody", "properties": props})
+                    self.add_related_result(f"Classification {name}", guid=guid, message="Classified")
+                except PyegeriaException as e:
+                    self.add_related_result(f"Classification {name}", guid=guid, status="failure",
+                                            message=describe_exception(e))
+
+        raw = given("Translation Details")
+        if raw is not None:
+            typed, notes = typed_properties("entity", "TranslationDetail", _as_dict(raw) or {}, "Translation Details") \
+                if _as_dict(raw) is not None else (None, [f"not applied: Translation Details: expected a "
+                                                           f"dictionary of translation properties, got {raw!r}"])
+            record_not_applied(attributes, "Translation Details", notes)
+            if typed and len(typed) > 1:
+                try:
+                    await self.client.classification_manager._async_set_translation(
+                        guid, {"class": "NewElementRequestBody", "properties": typed})
+                    self.add_related_result("Translation", guid=guid, message="Set")
+                except PyegeriaException as e:
+                    self.add_related_result("Translation", guid=guid, status="failure", message=describe_exception(e))
+
+        if given("User Defined Status") is not None:
+            record_not_applied(attributes, "User Defined Status", [
+                "not applied: User Defined Status: no Egeria property on this element (only CollectionMembership "
+                "links have one); for authored elements use User Defined Content Status with Content Status OTHER"])
+        if given("Supplementary Properties") is not None:
+            record_not_applied(attributes, "Supplementary Properties", [
+                "not applied: Supplementary Properties: Egeria keeps them on a separate glossary term linked by "
+                "SupplementaryProperties, which Dr.Egeria doesn't create yet"])
+        for note in not_applied_notes(attributes):
+            self._add_warning(note)
 
     async def _sync_referenceable_classifications(self, guid: str, attributes: Dict[str, Any]) -> None:
         """
@@ -1342,6 +1406,7 @@ class AsyncBaseCommandProcessor(ABC):
                     await self._sync_governance_classifications(guid, attributes)
                     await self._sync_referenceable_classifications(guid, attributes)
                     await self._sync_search_keywords(guid, attributes)
+                    await self._sync_referenceable_extras(guid, attributes)
 
         deferred = bool(self.parsed_output.get("deferred")) and not self.context.get("final_round")
 
