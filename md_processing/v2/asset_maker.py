@@ -17,7 +17,8 @@ from loguru import logger
 
 from md_processing.v2.processors import AsyncBaseCommandProcessor
 from md_processing.md_processing_utils.common_md_utils import update_element_dictionary
-from md_processing.md_processing_utils.typed_properties import parent_relationship_properties
+from md_processing.md_processing_utils.typed_properties import (classification_map, entity_properties,
+                                                                  parent_relationship_properties)
 
 
 def _v(attributes: dict, name: str, default=None):
@@ -56,15 +57,20 @@ class AssetMakerProcessor(AsyncBaseCommandProcessor):
                 logger.warning("'Initial Status' ignored: Egeria no longer accepts it. Set contentStatus "
                                "(or the type's own status) in Template Properties instead.")
             parent_props, notes = parent_relationship_properties(attributes)
-            for note in notes:
+            # EntityProperties / ClassificationProperties are polymorphic too (TemplateRequestBody.java:30-31)
+            replacement, more = entity_properties(_v(attributes, "Element Type Name"),
+                                                  _v(attributes, "Template Properties"), "Template Properties")
+            classifications, most = classification_map(_v(attributes, "Generic Initial Classifications"),
+                                                       "Generic Initial Classifications")
+            for note in notes + more + most:
                 self._add_warning(note)
             body = {
                 "class": "TemplateRequestBody",
                 "typeName": _v(attributes, "Element Type Name"),
                 "templateGUID": _v(attributes, "Template GUID"),
                 "placeholderPropertyValues": _v(attributes, "Placeholder Property Values") or {},
-                "replacementProperties": _v(attributes, "Template Properties"),
-                "initialClassifications": _v(attributes, "Generic Initial Classifications"),
+                "replacementProperties": replacement,
+                "replacementClassifications": classifications,
                 "anchorGUID": _guid(attributes, "Anchor ID"),
                 "isOwnAnchor": _v(attributes, "Is Own Anchor", True),
                 "anchorScopeGUIDs": _v(attributes, "Anchor Scope IDs"),

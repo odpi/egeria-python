@@ -12,7 +12,8 @@ from loguru import logger
 
 from md_processing.v2.processors import AsyncBaseCommandProcessor
 from md_processing.md_processing_utils.common_md_utils import update_element_dictionary
-from md_processing.md_processing_utils.typed_properties import (parent_relationship_properties,
+from md_processing.md_processing_utils.typed_properties import (classification_map, entity_properties,
+                                                                  parent_relationship_properties,
                                                                   record_not_applied)
 
 
@@ -29,12 +30,14 @@ def _outer_body(attributes: dict, properties: dict) -> dict:
     and Create Schema Attribute."""
     parent_props, notes = parent_relationship_properties(attributes)
     record_not_applied(attributes, "Parent Relationship Attributes", notes)
+    classifications, notes = classification_map(_v(attributes, "Initial Classifications"), "Initial Classifications")
+    record_not_applied(attributes, "Initial Classifications", notes)
     return {
         "class": "NewElementRequestBody",
         "anchorGUID": _guid(attributes, "Anchor ID"),
         "isOwnAnchor": _v(attributes, "Is Own Anchor", True),
         "anchorScopeGUIDs": attributes.get("Anchor Scope IDs", {}).get("guid_list"),
-        "initialClassifications": _v(attributes, "Initial Classifications"),
+        "initialClassifications": classifications,
         "parentGUID": _guid(attributes, "Parent ID"),
         "parentRelationshipTypeName": _v(attributes, "Parent Relationship Type Name"),
         "parentRelationshipProperties": parent_props,
@@ -155,11 +158,15 @@ class SchemaTemplateProcessor(AsyncBaseCommandProcessor):
         om_type = self.get_command_spec().get("OM_TYPE")
         client = self.client.schema_maker
 
+        # EntityProperties is polymorphic (TemplateRequestBody.java:30): typed by the command's type
+        replacement, notes = entity_properties(om_type, _v(attributes, "Template Properties"), "Template Properties")
+        for note in notes:
+            self._add_warning(note)
         body = {
             "class": "TemplateRequestBody",
             "templateGUID": _guid(attributes, "Template GUID") or _v(attributes, "Template GUID"),
             "placeholderPropertyValues": _v(attributes, "Placeholder Property Values") or {},
-            "replacementProperties": _v(attributes, "Template Properties"),
+            "replacementProperties": replacement,
         }
         if om_type == "SchemaAttribute":
             guid = await client._async_create_schema_attribute_from_template(body)
