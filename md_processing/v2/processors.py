@@ -9,6 +9,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Awaitable, Callable, Dict, List, Optional, Union
 from loguru import logger
 
+from pyegeria.core.utils import is_guid, is_guid_reference
 from pyegeria import EgeriaTech, PyegeriaException, PyegeriaTimeoutException, NO_ELEMENTS_FOUND, print_basic_exception, lineage_visible
 from pyegeria.core.utils import make_format_set_name_from_type
 from pyegeria.view.base_report_formats import select_report_spec
@@ -137,9 +138,8 @@ class AsyncBaseCommandProcessor(ABC):
         def _find_guid(payload: Any) -> Optional[str]:
             if isinstance(payload, str):
                 candidate = payload.strip()
-                # Egeria GUIDs are typically UUIDs (36 chars) or at least 8+ chars of hex/dashes
-                # We want to avoid returning "GUIDResponse" or other descriptive strings.
-                if re.match(r"^[a-fA-F0-9-]{8,}$", candidate):
+                # Egeria GUIDs are opaque (is_guid): not "GUIDResponse" or other descriptive strings.
+                if is_guid(candidate):
                     return candidate
                 return None
 
@@ -1566,12 +1566,10 @@ class AsyncBaseCommandProcessor(ABC):
                 logger.debug(f"resolve_element_guid: Remapping pseudo-type '{tech_type}' to '{remap[tech_type]}'")
                 tech_type = remap[tech_type]
             
-        # 1. Is it a GUID?
-        try:
-            uuid.UUID(name_or_guid)
+        # 1. Is it a GUID? Only a UUID-shaped value counts here: GUIDs are opaque, and a qualified
+        # name with no spaces would look like one, so anything else goes through name resolution.
+        if is_guid_reference(name_or_guid):
             return name_or_guid
-        except ValueError:
-            pass
             
         # 2. Check local cache (real elements first!)
         key = find_key_with_value(name_or_guid)

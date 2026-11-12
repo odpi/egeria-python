@@ -528,3 +528,31 @@ def discover_element_schema(element: Any, prefix: str = "", exclude_system_prope
 
 if __name__ == "__main__":
     print("Main-Utils")
+
+
+# Egeria GUIDs are opaque strings. Postgres-backed servers return plain UUIDs; the in-memory repository
+# (e.g. a scratch simple-metadata-store) returns "<TypeName>-<uuid>" ("Glossary-5d2a1857-..."). Code that
+# accepted only hex reported nearly every Dr.Egeria Create on such a platform as failed after Egeria had
+# created the element, and skipped every post-create step.
+_NOT_GUIDS = {"no elements found", "guidresponse", "none", "null", "undefined"}
+
+
+def is_guid(value) -> bool:
+    """True for anything Egeria could have returned as a GUID: a non-empty string with no whitespace that
+    isn't one of the descriptive answers pyegeria or Egeria give instead ("No elements found",
+    "GUIDResponse", ...) and isn't a qualified name ("::", Dr.Egeria's separator, e.g. a create that
+    echoed "ThreatDefinition::x" back). GUIDs are opaque: no hex or UUID shape is assumed."""
+    if not isinstance(value, str):
+        return False
+    text = value.strip()
+    return (bool(text) and not any(ch.isspace() for ch in text) and "::" not in text
+            and text.lower() not in _NOT_GUIDS)
+
+
+_UUID_AT_END = re.compile(r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
+
+
+def is_guid_reference(value) -> bool:
+    """Where a value may be either a GUID or an element name (a qualified name has no spaces either), a
+    GUID is an is_guid() value ending in a UUID: plain, or after a type prefix ("Glossary-<uuid>")."""
+    return is_guid(value) and bool(_UUID_AT_END.search(value.strip()))
