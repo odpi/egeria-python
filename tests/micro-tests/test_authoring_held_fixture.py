@@ -5,7 +5,8 @@
 Fixture: tests/micro-tests/data/authoring/catalog_health_scratch.json, every client call load_held made and
 Egeria's answer, captured on the round-trip probe's scratch Egeria (757a5df0, PostgreSQL) after processing the
 Catalog Health section of LOCAL_DASHBOARDS_USEFUL_SHEETS.dr-egeria.md, the document that seeded the sheet on
-laz. Not read from laz. Replayed here offline.
+laz. Not read from laz. Replayed here offline. It has 6 placements: laz's sheet also has the saved-query tile
+(LOCAL_DASHBOARDS_SAVED_QUERY_TILE.dr-egeria.md), covered from laz's real shape in test_authoring_laz_sheet.py.
 """
 import asyncio
 import json

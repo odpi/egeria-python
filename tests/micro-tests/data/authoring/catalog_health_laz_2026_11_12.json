@@ -1,0 +1,287 @@
+{
+ "_about": "The catalog-health sheet as laz's Egeria holds it (7 placements: the 6 from LOCAL_DASHBOARDS_USEFUL_SHEETS.dr-egeria.md plus the saved-query tile from LOCAL_DASHBOARDS_SAVED_QUERY_TILE.dr-egeria.md) and the 6 Report elements its placements link to. Copied, unchanged, from egeria-workspaces PyegeriaWebHandler/tests/fixtures/local_dashboards_real_shape_2026_11_12.json (egeria_sheets['catalog-health'] and the matching elements), which Portal-2 captured read-only from laz on 2026-11-12/13 as the Portal's service user. The sheet is in the shape pyegeria's reader returns (EgeriaDashboardSheet); Report properties are trimmed to the fields report_from_element reads (no versions). Used by tests/micro-tests/test_authoring_laz_sheet.py.",
+ "sheet": {
+  "aliases": [],
+  "breaks": [],
+  "description": "How complete and how current the catalog is: readiness for AI use, ownership, staleness and what the assets are.",
+  "family": "Overview",
+  "folders": [],
+  "guid": "f9d714a2-6678-4622-9919-212d909a88b7",
+  "heading": "Catalog Health",
+  "name": "catalog-health",
+  "placements": [
+   {
+    "content": "**What these tiles measure**\n\nThe readiness funnel counts assets at each step from cataloged to AI-ready. Ownership counts assets with an owner, by the kind of owner. Stale assets have not changed in 180 days. The composition chart shows the asset types the catalog holds.",
+    "detail_spec": null,
+    "emphasis": "panel",
+    "kind": "text",
+    "note": null,
+    "perspectives": [],
+    "ref": "What these tiles measure",
+    "report_guid": null,
+    "source": "egeria",
+    "span": "full"
+   },
+   {
+    "content": null,
+    "detail_spec": null,
+    "emphasis": "panel",
+    "kind": "report",
+    "note": null,
+    "perspectives": [],
+    "ref": "Catalog Health - AI Context Readiness",
+    "report_guid": "216cc161-fee1-4bab-b460-b2a2bd66ed82",
+    "source": "egeria",
+    "span": "2"
+   },
+   {
+    "content": null,
+    "detail_spec": null,
+    "emphasis": "panel",
+    "kind": "report",
+    "note": null,
+    "perspectives": [],
+    "ref": "Catalog Health - Asset Ownership",
+    "report_guid": "ef57f942-8689-445f-bac7-ea03dde1eb95",
+    "source": "egeria",
+    "span": "2"
+   },
+   {
+    "content": null,
+    "detail_spec": null,
+    "emphasis": "kpi",
+    "kind": "report",
+    "note": null,
+    "perspectives": [],
+    "ref": "Catalog Health - Stale Assets",
+    "report_guid": "9417f393-6248-4169-8ccf-34cc86b2fa0b",
+    "source": "egeria",
+    "span": "1"
+   },
+   {
+    "content": null,
+    "detail_spec": null,
+    "emphasis": "panel",
+    "kind": "report",
+    "note": null,
+    "perspectives": [],
+    "ref": "Catalog Health - Asset Composition",
+    "report_guid": "be894a68-9f3c-4692-83a0-2a30e85d5d2b",
+    "source": "egeria",
+    "span": "2"
+   },
+   {
+    "content": null,
+    "detail_spec": null,
+    "emphasis": "panel",
+    "kind": "report",
+    "note": null,
+    "perspectives": [],
+    "ref": "Catalog Health - Catalog Growth, 90 Days",
+    "report_guid": "43d61836-0db9-4bb3-b509-e766dc0ccdff",
+    "source": "egeria",
+    "span": "full"
+   },
+   {
+    "content": null,
+    "detail_spec": null,
+    "emphasis": "panel",
+    "kind": "report",
+    "note": null,
+    "perspectives": [],
+    "ref": "Catalog Health - Assets with No Lineage",
+    "report_guid": "04ec469d-2c75-4264-9356-0dba0566e21c",
+    "source": "egeria",
+    "span": "full"
+   }
+  ],
+  "source": "egeria",
+  "used_by": []
+ },
+ "reports": {
+  "216cc161-fee1-4bab-b460-b2a2bd66ed82": {
+   "class": "OpenMetadataRootElement",
+   "elementHeader": {
+    "class": "ElementHeader",
+    "guid": "216cc161-fee1-4bab-b460-b2a2bd66ed82",
+    "type": {
+     "superTypeNames": [
+      "DataSet",
+      "DataAsset",
+      "Asset",
+      "Referenceable",
+      "OpenMetadataRoot"
+     ],
+     "typeCategory": "ENTITY_DEF",
+     "typeDescription": "A collection of data items that describe a situation.  This is an instance of a report.",
+     "typeId": "e9077f4f-955b-4d7b-b1f7-12ee769ff0c3",
+     "typeName": "Report",
+     "typeVersion": 2
+    }
+   },
+   "properties": {
+    "additionalProperties": {
+     "outputFormat": "DICT",
+     "reportSpec": "Analytic Demo - AI Context Readiness"
+    },
+    "description": "Assets at each step from cataloged to AI-ready.",
+    "displayName": "Catalog Health - AI Context Readiness",
+    "qualifiedName": "Coco Pharmaceuticals::DeployedReport::Catalog-Health---AI-Context-Readiness::1.0"
+   }
+  },
+  "ef57f942-8689-445f-bac7-ea03dde1eb95": {
+   "class": "OpenMetadataRootElement",
+   "elementHeader": {
+    "class": "ElementHeader",
+    "guid": "ef57f942-8689-445f-bac7-ea03dde1eb95",
+    "type": {
+     "superTypeNames": [
+      "DataSet",
+      "DataAsset",
+      "Asset",
+      "Referenceable",
+      "OpenMetadataRoot"
+     ],
+     "typeCategory": "ENTITY_DEF",
+     "typeDescription": "A collection of data items that describe a situation.  This is an instance of a report.",
+     "typeId": "e9077f4f-955b-4d7b-b1f7-12ee769ff0c3",
+     "typeName": "Report",
+     "typeVersion": 2
+    }
+   },
+   "properties": {
+    "additionalProperties": {
+     "outputFormat": "BAR",
+     "reportSpec": "Analytic Demo - Ownership Coverage"
+    },
+    "description": "Assets with an owner, by the kind of owner.",
+    "displayName": "Catalog Health - Asset Ownership",
+    "qualifiedName": "Coco Pharmaceuticals::DeployedReport::Catalog-Health---Asset-Ownership::1.0"
+   }
+  },
+  "9417f393-6248-4169-8ccf-34cc86b2fa0b": {
+   "class": "OpenMetadataRootElement",
+   "elementHeader": {
+    "class": "ElementHeader",
+    "guid": "9417f393-6248-4169-8ccf-34cc86b2fa0b",
+    "type": {
+     "superTypeNames": [
+      "DataSet",
+      "DataAsset",
+      "Asset",
+      "Referenceable",
+      "OpenMetadataRoot"
+     ],
+     "typeCategory": "ENTITY_DEF",
+     "typeDescription": "A collection of data items that describe a situation.  This is an instance of a report.",
+     "typeId": "e9077f4f-955b-4d7b-b1f7-12ee769ff0c3",
+     "typeName": "Report",
+     "typeVersion": 2
+    }
+   },
+   "properties": {
+    "additionalProperties": {
+     "analyticParams": "{\"days\": 180}",
+     "outputFormat": "DICT",
+     "reportSpec": "Analytic Demo - Stale Assets"
+    },
+    "description": "Assets that have not changed in 180 days, out of all assets.",
+    "displayName": "Catalog Health - Stale Assets",
+    "qualifiedName": "Coco Pharmaceuticals::DeployedReport::Catalog-Health---Stale-Assets::1.0"
+   }
+  },
+  "be894a68-9f3c-4692-83a0-2a30e85d5d2b": {
+   "class": "OpenMetadataRootElement",
+   "elementHeader": {
+    "class": "ElementHeader",
+    "guid": "be894a68-9f3c-4692-83a0-2a30e85d5d2b",
+    "type": {
+     "superTypeNames": [
+      "DataSet",
+      "DataAsset",
+      "Asset",
+      "Referenceable",
+      "OpenMetadataRoot"
+     ],
+     "typeCategory": "ENTITY_DEF",
+     "typeDescription": "A collection of data items that describe a situation.  This is an instance of a report.",
+     "typeId": "e9077f4f-955b-4d7b-b1f7-12ee769ff0c3",
+     "typeName": "Report",
+     "typeVersion": 2
+    }
+   },
+   "properties": {
+    "additionalProperties": {
+     "analyticParams": "{\"type_map\": [[\"Data Stores\", \"DataStore\"], [\"Data Sets\", \"DataSet\"], [\"Software Components\", \"DeployedSoftwareComponent\"], [\"Infrastructure\", \"ITInfrastructure\"], [\"APIs\", \"DeployedAPI\"], [\"Processes\", \"Process\"]]}",
+     "outputFormat": "PIE",
+     "reportSpec": "Analytic Demo - Assets by Type Breakdown"
+    },
+    "description": "How many assets of each main kind the catalog holds.",
+    "displayName": "Catalog Health - Asset Composition",
+    "qualifiedName": "Coco Pharmaceuticals::DeployedReport::Catalog-Health---Asset-Composition::1.0"
+   }
+  },
+  "43d61836-0db9-4bb3-b509-e766dc0ccdff": {
+   "class": "OpenMetadataRootElement",
+   "elementHeader": {
+    "class": "ElementHeader",
+    "guid": "43d61836-0db9-4bb3-b509-e766dc0ccdff",
+    "type": {
+     "superTypeNames": [
+      "DataSet",
+      "DataAsset",
+      "Asset",
+      "Referenceable",
+      "OpenMetadataRoot"
+     ],
+     "typeCategory": "ENTITY_DEF",
+     "typeDescription": "A collection of data items that describe a situation.  This is an instance of a report.",
+     "typeId": "e9077f4f-955b-4d7b-b1f7-12ee769ff0c3",
+     "typeName": "Report",
+     "typeVersion": 2
+    }
+   },
+   "properties": {
+    "additionalProperties": {
+     "analyticParams": "{\"window\": \"90d\", \"points\": 6}",
+     "outputFormat": "SERIES",
+     "reportSpec": "Analytic Demo - Catalog Growth Trend"
+    },
+    "description": "Assets, glossary terms, governed elements and digital products at six points over 90 days. Repository counts: they include elements you may not be able to see.",
+    "displayName": "Catalog Health - Catalog Growth, 90 Days",
+    "qualifiedName": "Coco Pharmaceuticals::DeployedReport::Catalog-Health---Catalog-Growth,-90-Days::1.0"
+   }
+  },
+  "04ec469d-2c75-4264-9356-0dba0566e21c": {
+   "class": "OpenMetadataRootElement",
+   "elementHeader": {
+    "class": "ElementHeader",
+    "guid": "04ec469d-2c75-4264-9356-0dba0566e21c",
+    "type": {
+     "superTypeNames": [
+      "DataSet",
+      "DataAsset",
+      "Asset",
+      "Referenceable",
+      "OpenMetadataRoot"
+     ],
+     "typeCategory": "ENTITY_DEF",
+     "typeDescription": "A collection of data items that describe a situation.  This is an instance of a report.",
+     "typeId": "e9077f4f-955b-4d7b-b1f7-12ee769ff0c3",
+     "typeName": "Report",
+     "typeVersion": 2
+    }
+   },
+   "properties": {
+    "additionalProperties": {
+     "analyticParams": "{\"name\": \"SavedQuery::useful-sheets::Assets with no lineage\", \"mode\": \"cached\", \"output\": \"count\"}",
+     "outputFormat": "DICT",
+     "reportSpec": "Saved Query Result"
+    },
+    "description": "How many assets have no DataFlow relationship, as of the last refresh of the saved query \"Assets with no lineage\" (Query tool, Saved Queries tab). The tile does not re-run the query; before the first refresh it says the answer was not read.",
+    "displayName": "Catalog Health - Assets with No Lineage",
+    "qualifiedName": "Coco Pharmaceuticals::DeployedReport::Catalog-Health---Assets-with-No-Lineage::1.0"
+   }
+  }
+ }
+}
