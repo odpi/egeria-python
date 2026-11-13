@@ -275,6 +275,11 @@ async def async_validate(draft: Any, client: Any = None, *, run: Any = None,
     except Exception as exc:  # noqa: BLE001 -- a failed check is reported, never raised
         logger.exception("authoring validate")
         result.error(f"Validation could not finish: {type(exc).__name__}: {' '.join(str(exc).split())[:300]}")
+    if client is not None:
+        from pyegeria.authoring.publication import async_publication_notes
+        notes, unread = await async_publication_notes(client, draft)
+        result.not_applied += notes
+        result.not_checked += unread
     if markdown is None:
         result.not_checked.append("Dr.Egeria validate: the draft didn't serialize")
     elif run is None:

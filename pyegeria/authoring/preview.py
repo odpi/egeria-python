@@ -144,7 +144,9 @@ async def async_preview(draft: Any, *, client: Any, max_rows: int = 25, output_f
     if not isinstance(max_rows, int) or max_rows < 1:
         raise AuthoringRefused("max_rows must be a whole number of at least 1.")
     draft = as_draft(draft)
-    notes: List[str] = []
+    from pyegeria.authoring.publication import async_publication_notes
+    said, unread = await async_publication_notes(client, draft)
+    notes: List[str] = said + unread
     viewer = getattr(client, "user_id", None)
     if isinstance(draft, SpecDraft):
         out = await _run(draft.label, draft.format_set, client, output_format or "TABLE", params or {}, max_rows, notes)

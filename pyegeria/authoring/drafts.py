@@ -19,6 +19,7 @@ import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Protocol, Tuple, Union
 
+from pyegeria.authoring.publication import stamp_of
 from pyegeria.authoring.models import (
     KINDS, AuthoringRefused, ReportDraft, SheetDraft, SheetPlacement, SpecDraft, as_draft, draft_key,
 )
@@ -377,7 +378,8 @@ class EgeriaDraftStore:
                     out.append({"kind": k, "name": name, "qualified_name": props.get("qualifiedName"),
                                 "guid": el["elementHeader"].get("guid"),
                                 "created": versions.get("createTime"), "updated": versions.get("updateTime"),
-                                "zones": self._zones(el), "marked": _is_marked(k, el)})
+                                "zones": self._zones(el), "marked": _is_marked(k, el),
+                                "published_version": stamp_of(el)})
         return out
 
     async def async_delete(self, user_id: str, kind: str, name: str) -> bool:
@@ -386,6 +388,9 @@ class EgeriaDraftStore:
         el = await self._element(kind, name)
         if el is None or zone not in self._zones(el):
             return False
+        if stamp_of(el):
+            raise AuthoringRefused(f"{kind} {name!r} is published (version {stamp_of(el)}): a published element is "
+                                   f"never deleted (D14), so Reports pinned to it keep reading it.")
         guid = el["elementHeader"]["guid"]
         if kind == "sheet":
             from md_processing.v2.dashboard_sheet import DashboardSheetEgeriaWriter
@@ -433,7 +438,9 @@ class EgeriaDraftStore:
             if when >= cutoff:
                 out["kept"].append(key)
                 continue
-            if list(d.get("zones") or []) != [zone]:
+            if d.get("published_version"):
+                reason = f"published (version {d['published_version']}): a published element is never deleted"
+            elif list(d.get("zones") or []) != [zone]:
                 reason = "zoned beyond your private zone (shared)"
             elif d["kind"] == "sheet":
                 reason = await self._sheet_prunable(d)
@@ -455,11 +462,14 @@ class EgeriaDraftStore:
 
     async def async_promotion_plan(self, user_id: str, kind: str, name: str, *, folders: Any = ()) -> Dict[str, Any]:
         """The publish plan for the author's draft: it clears the private zone and files it in `folders`."""
-        from pyegeria.authoring.lifecycle import publish_plan
+        from pyegeria.authoring.lifecycle import async_publish_plan
+        self._author(user_id)
         draft = await self.async_load(user_id, kind, name)
         if draft is None:
             raise AuthoringRefused(f"You have no {kind} draft named {name!r} in your private zone.")
-        return publish_plan(draft, folders=folders, held={"held": True, "zones": [self.zone(user_id)]})
+        # The target is resolved as the author (its private zone comes back in `held`, so the plan stamps the
+        # element, then declassifies it).
+        return await async_publish_plan(draft, self.client, folders=folders)
 
     # ---------------------------------------------------------------- sync forms (DraftStore)
 

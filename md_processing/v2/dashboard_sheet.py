@@ -414,8 +414,11 @@ class DashboardSheetEgeriaWriter:
     # ------------------------------------------------------------ sheet
 
     async def ensure_sheet(self, sheet_name: str, heading: str, description: str = "",
-                           family: Optional[str] = None, aliases: Optional[List[str]] = None) -> SheetChain:
-        """Create or update the Dashboard, its DisplayDataSchemaType and the sheet's DisplayDataContainer."""
+                           family: Optional[str] = None, aliases: Optional[List[str]] = None,
+                           additional: Optional[Dict[str, Any]] = None) -> SheetChain:
+        """Create or update the Dashboard, its DisplayDataSchemaType and the sheet's DisplayDataContainer.
+        `additional`: the document's own Additional Properties for the Dashboard (e.g. pyegeria.authoring's
+        publication stamp), merged with the stored map like every other key; `family` wins its own key."""
         chain = await self.find_chain(sheet_name)
 
         # 1. the Dashboard asset -- through upsert_dashboard_asset, the same code as `Create Dashboard`
@@ -426,7 +429,8 @@ class DashboardSheetEgeriaWriter:
             "displayName": heading or sheet_name,
             "description": description or None,
             "aliases": list(aliases) if aliases else None,
-            "additionalProperties": {"family": family} if family else None,
+            "additionalProperties": ({**{str(k): str(v) for k, v in (additional or {}).items() if v is not None},
+                                      **({"family": family} if family else {})} or None),
         }
         if self.dry_run:
             if chain.dashboard is None:
@@ -828,17 +832,20 @@ class CreateDashboardSheetProcessor(_DashboardSheetProcessorMixin, AsyncBaseComm
         heading = attributes.get("Dashboard Sheet Heading", {}).get("value") or name
         description = attributes.get("Dashboard Sheet Description", {}).get("value") or ""
         family = attributes.get("Dashboard Sheet Family", {}).get("value") or None
+        additional = attributes.get("Additional Properties", {}).get("value")
+        additional = additional if isinstance(additional, dict) else None
         # A sheet keeps its heading, description, family, aliases and owner (locally and on its Dashboard);
         # the bundle attributes the command also offers are reported, not dropped (F-B group 5).
         from md_processing.md_processing_utils.common_md_utils import BUNDLE_PROPERTIES
         from md_processing.md_processing_utils.typed_properties import record_not_applied
-        for attribute in [*BUNDLE_PROPERTIES, "Status", "Content Status", "Purpose", "Parent Relationship Attributes"]:
+        for attribute in [*(a for a in BUNDLE_PROPERTIES if a != "Additional Properties"), "Status", "Content Status",
+                          "Purpose", "Parent Relationship Attributes"]:
             entry = attributes.get(attribute) or {}
             if entry.get("value") not in (None, "", [], {}) and not entry.get("is_default"):
                 if attribute == "Description" and attributes.get("Dashboard Sheet Description", {}).get("value"):
                     note = "the sheet's description is Dashboard Sheet Description"
                 else:
-                    note = "a Dashboard Sheet keeps only its heading, description, family, aliases and owner"
+                    note = "a Dashboard Sheet keeps only its heading, description, family, aliases, owner and Additional Properties"
                 record_not_applied(attributes, attribute, [f"not applied: {attribute}: {note}"])
 
         path = _default_store_path()
@@ -852,7 +859,7 @@ class CreateDashboardSheetProcessor(_DashboardSheetProcessorMixin, AsyncBaseComm
         ownership = {}
 
         async def _work(writer: DashboardSheetEgeriaWriter):
-            chain = await writer.ensure_sheet(name, heading, description, family, aliases)
+            chain = await writer.ensure_sheet(name, heading, description, family, aliases, additional)
             self.parsed_output["guid"] = chain.dashboard_guid
             if owner:
                 ownership["status"] = await writer.ensure_ownership(chain.dashboard_guid, dashboard_qn(name), owner)
