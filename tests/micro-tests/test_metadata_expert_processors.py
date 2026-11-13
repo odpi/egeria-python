@@ -165,17 +165,33 @@ class _FakeExpert:
         return {"relationshipHeader": {"guid": guid, "type": {"typeName": "Uses"}}}
 
 
+TYPE_GUIDS = {"Referenceable": "aaaaaaaa-0000-4000-8000-0000000000f0", "Thing": "aaaaaaaa-0000-4000-8000-0000000000f1",
+              "Recipe": "aaaaaaaa-0000-4000-8000-000000000001", "Uses": "aaaaaaaa-0000-4000-8000-0000000000f2"}
+
+
 class _FakeValidMetadata:
     def __init__(self, lookups):
         self.lookups = lookups
 
     async def _async_get_typedef_by_name(self, name, **kwargs):
         self.lookups.append(("typedef", name))
-        return {"guid": f"td-{name}", "name": name, **TYPEDEFS[name]}
+        return {"guid": TYPE_GUIDS[name], "name": name, **TYPEDEFS[name]}
 
     async def _async_get_attribute_types(self, **kwargs):
         self.lookups.append(("attribute types", kwargs))
-        return [{"name": "Cuisine", "guid": "enum-guid"}]
+        return [{"name": "Cuisine", "guid": "eeeeeeee-0000-4000-8000-000000000001"}, {"name": "Diet", "guid": "eeeeeeee-0000-4000-8000-000000000002"}]
+
+    async def _async_get_all_entity_defs(self, **kwargs):
+        self.lookups.append(("entity defs", kwargs))
+        return [{"name": "Recipe", "guid": "aaaaaaaa-0000-4000-8000-000000000001"}, {"name": "Dish", "guid": "aaaaaaaa-0000-4000-8000-000000000002"}]
+
+    async def _async_get_all_relationship_defs(self, **kwargs):
+        self.lookups.append(("relationship defs", kwargs))
+        return []
+
+    async def _async_get_all_classification_defs(self, **kwargs):
+        self.lookups.append(("classification defs", kwargs))
+        return []
 
 
 class _FakeClient:
@@ -338,9 +354,9 @@ async def test_type_system_change_with_the_echo_makes_exactly_one_call(verb, obj
     assert result["status"] == "success", result
     assert [c[0] for c in calls] == [method]
     if method == "_async_delete_type_def":
-        assert calls[0][1][0] == "td-Recipe"
+        assert calls[0][1][0] == "aaaaaaaa-0000-4000-8000-000000000001"
     if method == "_async_delete_enum_def":
-        assert calls[0][1][0] == "enum-guid"
+        assert calls[0][1][0] == "eeeeeeee-0000-4000-8000-000000000001"
 
 
 @pytest.mark.asyncio
@@ -370,3 +386,66 @@ def test_confirm_attribute_is_in_the_spec_and_the_description_says_platform_wide
 def test_additive_commands_need_no_echo():
     for name in ("Create Type Def", "Create Enum Def"):
         assert not any(a.startswith("Confirm") for a in COMMAND_DEFINITIONS["Command Specifications"][name]["custom_attributes"])
+
+
+# --- a supplied GUID must belong to the type the echo names ------------------------------------------
+BY_GUID = [  # verb, object, attributes, guid attr, confirm attr, method, own guid, another type's guid, its name
+    ("Delete", "Type Def", {"Type Def Name": "Recipe"}, "Type Def GUID", "Confirm Type Def Name",
+     "_async_delete_type_def", "aaaaaaaa-0000-4000-8000-000000000001", "aaaaaaaa-0000-4000-8000-000000000002", "Dish"),
+    ("Update", "Type Def", {"Type Def Name": "Recipe", "Apply To Version": "1", "Type Def Description": "d"},
+     "Type Def GUID", "Confirm Type Def Name", "_async_update_type_def", "aaaaaaaa-0000-4000-8000-000000000001", "aaaaaaaa-0000-4000-8000-000000000002", "Dish"),
+    ("Delete", "Enum Def", {"Enum Def Name": "Cuisine"}, "Enum Def GUID", "Confirm Enum Def Name",
+     "_async_delete_enum_def", "eeeeeeee-0000-4000-8000-000000000001", "eeeeeeee-0000-4000-8000-000000000002", "Diet"),
+]
+
+
+def _with_guid(attributes, guid_attr, confirm_attr, guid):
+    return {**attributes, guid_attr: guid, confirm_attr: next(iter(attributes.values()))}
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("verb, object_type, attributes, guid_attr, confirm_attr, method, own, other, other_name",
+                         BY_GUID, ids=IDS)
+async def test_guid_that_belongs_to_the_echoed_type_makes_one_write(verb, object_type, attributes, guid_attr,
+                                                                    confirm_attr, method, own, other, other_name):
+    result, calls = await _run(verb, object_type, _with_guid(attributes, guid_attr, confirm_attr, own))
+    assert result["status"] == "success", result
+    assert [c[0] for c in calls] == [method]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("verb, object_type, attributes, guid_attr, confirm_attr, method, own, other, other_name",
+                         BY_GUID, ids=IDS)
+async def test_guid_of_another_type_is_refused_with_no_write(verb, object_type, attributes, guid_attr,
+                                                             confirm_attr, method, own, other, other_name):
+    given = _with_guid(attributes, guid_attr, confirm_attr, other)
+    result, calls = await _run(verb, object_type, given)
+    assert result["status"] != "success"
+    text = str(result)
+    assert f"'{other_name}'" in text and f"'{next(iter(attributes.values()))}'" in text, text  # names both
+    assert "nothing was changed" in text
+    assert calls == [], "a wrong GUID with the right echo must never reach a write"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("verb, object_type, attributes, guid_attr, confirm_attr, method, own, other, other_name",
+                         BY_GUID, ids=IDS)
+async def test_unresolvable_guid_is_refused_with_no_write(verb, object_type, attributes, guid_attr, confirm_attr,
+                                                          method, own, other, other_name):
+    result, calls = await _run(verb, object_type, _with_guid(attributes, guid_attr, confirm_attr, "99999999-0000-4000-8000-000000000009"))
+    assert result["status"] != "success"
+    assert "was not found" in str(result) and "nothing was changed" in str(result)
+    assert calls == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("verb, object_type, attributes, guid_attr, confirm_attr, method, own, other, other_name",
+                         BY_GUID, ids=IDS)
+async def test_validate_reports_a_guid_mismatch_and_writes_nothing(verb, object_type, attributes, guid_attr,
+                                                                   confirm_attr, method, own, other, other_name):
+    result, calls = await _run(verb, object_type, _with_guid(attributes, guid_attr, confirm_attr, other),
+                               directive="validate")
+    assert f"belongs to '{other_name}'" in str(result) and calls == []
+    result, calls = await _run(verb, object_type, _with_guid(attributes, guid_attr, confirm_attr, own),
+                               directive="validate")
+    assert "(read-only check)" in str(result) and calls == []

@@ -169,7 +169,15 @@ class MetadataExpertProcessor(AsyncBaseCommandProcessor):
                 state = ("present and matches" if given and given == expected
                          else "missing" if not given else "does NOT match, so the command will be refused")
                 notes.append(f"**Platform-wide change.** {confirm_attr} must repeat {name_attr} exactly; it is {state}. "
-                             f"Nothing is sent to Egeria in validate mode.")
+                             f"Validate mode writes nothing to Egeria.")
+                guid_attr = name_attr.replace("Name", "GUID")
+                supplied = _v(attributes, guid_attr)
+                if supplied and given:
+                    problem = await self.guid_mismatch(supplied, confirm_attr,
+                                                       f"{self.command.verb} {self.command.object_type}",
+                                                       enum=name_attr.startswith("Enum"))
+                    notes.append(f"**{guid_attr} check failed:** {problem}" if problem
+                                 else f"{guid_attr} {supplied} belongs to '{given}' (read-only check).")
         return report + ("\n\n> " + "\n> ".join(notes) + "\n" if notes else "")
 
     async def declared_properties(self, type_name: str) -> Dict[str, Any]:
@@ -207,6 +215,42 @@ class MetadataExpertProcessor(AsyncBaseCommandProcessor):
             raise PyegeriaException(f"Type definition '{name}' was not found.")
         return found
 
+    async def type_name_for_guid(self, guid: str, enum: bool = False) -> Optional[str]:
+        """Name of the type or enum definition with this GUID, or None when it cannot be found.
+
+        Egeria has no read-by-GUID for type definitions, so this lists them (reads only) and matches."""
+        valid = self.client.valid_metadata
+        if enum:
+            sources = [valid._async_get_attribute_types(category="ENUM")]
+        else:
+            sources = [valid._async_get_all_entity_defs(), valid._async_get_all_relationship_defs(),
+                       valid._async_get_all_classification_defs()]
+        for source in sources:
+            found = await source
+            for item in found if isinstance(found, list) else []:
+                if isinstance(item, dict) and item.get("guid") == guid:
+                    return item.get("name")
+        return None
+
+    async def guid_mismatch(self, guid: str, echo_attr: str, what: str, enum: bool = False) -> Optional[str]:
+        """Why a supplied GUID must not be used with this confirmation, or None when it matches.
+
+        A wrong GUID with the right echo would change a different definition platform-wide. Reads only."""
+        echo = str(_v(self.parsed_output["attributes"], echo_attr, "")).strip()
+        actual = await self.type_name_for_guid(guid, enum)
+        if actual is None:
+            return (f"{what}: GUID {guid} was not found among the {'enum' if enum else 'type'} definitions, so it "
+                    f"cannot be checked against {echo_attr} ({echo}); nothing was changed.")
+        if actual != echo:
+            return (f"{what}: GUID {guid} belongs to '{actual}', not '{echo}' ({echo_attr}). This would change a "
+                    f"different definition for every user and app on this platform; nothing was changed.")
+        return None
+
+    async def check_guid_matches_echo(self, guid: str, echo_attr: str, what: str, enum: bool = False) -> None:
+        problem = await self.guid_mismatch(guid, echo_attr, what, enum)
+        if problem:
+            raise PyegeriaException(problem)
+
     async def _enum_guid(self, name: str) -> str:
         found = await self.client.valid_metadata._async_get_attribute_types(category="ENUM")
         for item in found if isinstance(found, list) else []:
@@ -228,7 +272,10 @@ class TypeDefProcessor(MetadataExpertProcessor):
             guid = await self.expert._async_add_type_def(type_def_body(attributes))
             self.parsed_output["guid"] = guid if isinstance(guid, str) else None
             return self._result(f"Added type definition '{name}'", guid if isinstance(guid, str) else "")
-        guid = _v(attributes, "Type Def GUID") or (await self._type_def(name))["guid"]
+        supplied = _v(attributes, "Type Def GUID")
+        if supplied:
+            await self.check_guid_matches_echo(supplied, "Confirm Type Def Name", f"{verb} Type Def")
+        guid = supplied or (await self._type_def(name))["guid"]
         if verb == "Delete":
             await self.expert._async_delete_type_def(guid, name)
             return self._result(f"Deleted type definition '{name}'", guid)
@@ -256,7 +303,10 @@ class EnumDefProcessor(MetadataExpertProcessor):
             return self._result(f"Added enum definition '{name}'", guid if isinstance(guid, str) else "")
         if self.command.verb == "Delete":
             confirm_name(attributes, "Enum Def Name", "Confirm Enum Def Name", "Delete Enum Def")
-            guid = _v(attributes, "Enum Def GUID") or await self._enum_guid(name)
+            supplied = _v(attributes, "Enum Def GUID")
+            if supplied:
+                await self.check_guid_matches_echo(supplied, "Confirm Enum Def Name", "Delete Enum Def", enum=True)
+            guid = supplied or await self._enum_guid(name)
             await self.expert._async_delete_enum_def(guid, name)
             return self._result(f"Deleted enum definition '{name}'", guid)
         raise PyegeriaException(f"Unsupported verb '{self.command.verb}' for Enum Def.")
