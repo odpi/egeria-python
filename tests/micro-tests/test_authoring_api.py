@@ -386,9 +386,15 @@ def test_local_store_keeps_drafts_per_user(tmp_path):
         store.save("../garygeeke", cdo_report())
 
 
-def test_the_egeria_draft_store_needs_its_zone_named():
-    with pytest.raises(AuthoringRefused, match="still being settled"):
-        EgeriaDraftStore(object(), None)
+def test_a_user_id_that_names_a_controlled_zone_is_refused():
+    eg = _DraftEgeria(user="public")
+    with pytest.raises(AuthoringRefused, match="name of a controlled zone"):
+        EgeriaDraftStore(eg, eg.run, controlled_zones=["public"]).save("public", cdo_report())
+    eg = _DraftEgeria(user="governance")
+    eg.governance_zones = ["governance"]
+    with pytest.raises(AuthoringRefused, match="name of a governance zone"):
+        EgeriaDraftStore(eg, eg.run).save("governance", cdo_report())
+    assert eg.ran == []
 
 
 def test_the_api_never_writes_the_local_sheet_store(tmp_path, monkeypatch):
@@ -587,13 +593,17 @@ class _DraftEgeria:
         self.elements: Dict[str, Dict[str, Any]] = {}
         self.ran: List[tuple] = []
         self.deleted: List[str] = []
+        self.governance_zones: List[str] = []
         outer = self
 
         class CM:
             async def _async_get_element_by_unique_name(self, qn):
                 return outer.elements.get(qn) or "No elements found"
 
-            async def _async_get_elements_by_property_value(self, value, names, **kw):
+            async def _async_get_elements_by_property_value(self, value, names, metadata_element_type=None, **kw):
+                if metadata_element_type == "GovernanceZone":
+                    return [{"properties": {"zoneName": z}} for z in outer.governance_zones if z == value] \
+                        or "No elements found"
                 return [e for e in outer.elements.values()
                         if e["properties"].get("displayName") == value] or "No elements found"
 
@@ -609,13 +619,14 @@ class _DraftEgeria:
                 outer.deleted.append(guid)
         self.classification_manager, self.asset_maker = CM(), AM()
 
-    def hold(self, qn, name, type_name, zones, updated):
+    def hold(self, qn, name, type_name, zones, created, marked=True):
         self.elements[qn] = {"elementHeader": {"guid": f"g-{name}", "type": {"typeName": type_name},
-                                               "versions": {"version": 1, "updateTime": updated},
+                                               "versions": {"version": 1, "createTime": created},
                                                "zoneMembership": {"classificationProperties":
                                                                   {"zoneMembership": zones}}},
                              "properties": {"qualifiedName": qn, "displayName": name,
-                                            "additionalProperties": {"reportSpec": "Project-DrE-Basic"}}}
+                                            "additionalProperties": {"reportSpec": "Project-DrE-Basic",
+                                                                     **({"authoringState": "draft"} if marked else {})}}}
 
     def run(self, md, directive):
         self.ran.append((directive, md))
@@ -624,11 +635,13 @@ class _DraftEgeria:
 
 def test_an_egeria_draft_is_saved_as_the_author_in_their_private_zone():
     eg = _DraftEgeria()
-    store = EgeriaDraftStore(eg, eg.run, zone="drafts-{user}")
+    store = EgeriaDraftStore(eg, eg.run)
     qn = store.save("erinoverview", cdo_report())
     assert qn == CDO_QN
     (directive, md), = eg.ran
-    assert directive == "process" and "### Zone Membership\ndrafts-erinoverview" in md
+    assert directive == "process" and "### Zone Membership\nerinoverview" in md
+    assert "### Additional Properties\nauthoringState: draft" in md
+    assert "Add Member to Collection" not in md            # never filed into a consumer folder
     assert not has_parent_id(md)
     with pytest.raises(AuthoringRefused, match="signed in as 'erinoverview', not 'garygeeke'"):
         store.save("garygeeke", cdo_report())
@@ -637,7 +650,7 @@ def test_an_egeria_draft_is_saved_as_the_author_in_their_private_zone():
 def test_an_egeria_draft_never_overwrites_a_published_element():
     eg = _DraftEgeria()
     eg.hold(CDO_QN, "My Ninety Day Plan Progress", "Report", [], "2026-11-12T10:00:00Z")
-    store = EgeriaDraftStore(eg, eg.run, zone="drafts-{user}")
+    store = EgeriaDraftStore(eg, eg.run)
     with pytest.raises(AuthoringRefused, match="would change what others see"):
         store.save("erinoverview", cdo_report())
     assert eg.ran == []
@@ -648,28 +661,30 @@ def test_prune_removes_only_the_authors_old_unpromoted_drafts():
     eg = _DraftEgeria()
     old = (datetime.now(timezone.utc) - timedelta(days=45)).isoformat()
     new = (datetime.now(timezone.utc) - timedelta(days=3)).isoformat()
-    eg.hold("R::old", "Old draft", "Report", ["drafts-erinoverview"], old)
-    eg.hold("R::new", "New draft", "Report", ["drafts-erinoverview"], new)
+    eg.hold("R::old", "Old draft", "Report", ["erinoverview"], old)
+    eg.hold("R::new", "New draft", "Report", ["erinoverview"], new)
     eg.hold("R::public", "Published", "Report", [], old)            # promoted: not in the zone
-    eg.hold("R::gary", "Gary's", "Report", ["drafts-garygeeke"], old)  # another author's
-    store = EgeriaDraftStore(eg, eg.run, zone="drafts-{user}")
+    eg.hold("R::gary", "Gary's", "Report", ["garygeeke"], old)  # another author's
+    eg.hold("R::unmarked", "Unmarked", "Report", ["erinoverview"], old, marked=False)  # zoned, but no marker
+    store = EgeriaDraftStore(eg, eg.run)
     preview_only = store.prune_drafts("erinoverview", dry_run=True)
     assert preview_only["removed"] == ["report:Old draft"] and eg.deleted == []
     out = store.prune_drafts("erinoverview")
     assert out["removed"] == ["report:Old draft"] and out["kept"] == ["report:New draft"]
+    assert out["not_marked"] == ["Unmarked"]
     assert eg.deleted == ["g-Old draft"]
 
 
 def test_promotion_clears_the_private_zone():
     eg = _DraftEgeria()
-    eg.hold("Dashboard::catalog-health", "catalog-health", "Dashboard", ["drafts-erinoverview"], "2026-11-12")
-    store = EgeriaDraftStore(eg, eg.run, zone="drafts-{user}")
+    eg.hold("Dashboard::catalog-health", "catalog-health", "Dashboard", ["erinoverview"], "2026-11-12")
+    store = EgeriaDraftStore(eg, eg.run)
     sheet = catalog_health_sheet()
     plan = publish_plan(sheet, folders=["DashboardFolder::Consumer::Portal"],
                         held={"held": True, "zones": [store.zone("erinoverview")]})
     assert "## Declassify Zone Membership\n### Target Element\nDashboard::catalog-health" in plan["markdown"]
     assert any("becomes public" in s for s in plan["steps"])
-    report_plan = publish_plan(cdo_report(), held={"held": True, "zones": ["drafts-erinoverview"]})
+    report_plan = publish_plan(cdo_report(), held={"held": True, "zones": ["erinoverview"]})
     assert f"## Declassify Zone Membership\n### Target Element\n{CDO_QN}" in report_plan["markdown"]
 
 
@@ -692,3 +707,19 @@ def test_preview_says_an_empty_run_found_nothing(monkeypatch):
     monkeypatch.setattr("pyegeria.view.format_set_executor.exec_report_spec", lambda spec, **kw: {"kind": "empty"})
     out = asyncio.run(async_preview(_spec(), client=_Viewer()))
     assert out["shown"] == 0 and "ran, and found nothing" in out["notes"]
+
+
+def test_a_spec_draft_is_marked_draft_and_promotion_makes_it_active(monkeypatch):
+    monkeypatch.setattr("pyegeria.authoring.lifecycle._is_builtin", lambda label: False)
+    spec = SpecDraft(label="Team Projects", format_set=_gold_fs({"spec": "simple"}))
+    md = serialize(spec, zones=["erinoverview"], as_draft_element=True)
+    assert "### Content Status\nDRAFT" in md and "### Zone Membership\nerinoverview" in md
+    plan = publish_plan(spec, folders=[rsp.PORTAL_FOLDER], held={"held": True, "zones": ["erinoverview"]})
+    assert "### Content Status\nACTIVE" in plan["markdown"]
+    assert "## Declassify Zone Membership" in plan["markdown"] and "### Zone Membership" not in plan["markdown"]
+
+
+def test_a_promoted_report_is_marked_published():
+    plan = publish_plan(cdo_report(), held={"held": True, "zones": ["erinoverview"]})
+    assert "### Additional Properties\nauthoringState: published" in plan["markdown"]
+    assert publish_plan(cdo_report())["markdown"] == serialize(cdo_report())

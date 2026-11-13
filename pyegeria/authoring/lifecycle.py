@@ -287,7 +287,10 @@ def publish_plan(draft: Any, *, folders: Iterable[str] = (), visibility: str = "
                 raise AuthoringRefused(PIN_REFUSED)
             if list(folders or []):
                 raise AuthoringRefused("A Report isn't filed in a consumer folder: publish the sheet that places it.")
-            markdown = serialize(draft)
+            from pyegeria.authoring.serialize import report_rows
+            promoting = bool((held or {}).get("zones"))
+            markdown = f"# Report {draft.display_name}\n\n" + section(
+                "Create Report", report_rows(draft, marker="published" if promoting else None))
             qn = draft.qualified_name or f"(derived from the display name {draft.display_name!r})"
             steps = [f"create or update the Report {draft.display_name!r} running spec {draft.spec!r} "
                      f"({draft.output_format}"

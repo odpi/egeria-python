@@ -97,7 +97,7 @@ def _map_lines(field: str, values: Dict[str, Any]) -> Optional[str]:
 PINNED_VERSION_KEY = "reportSpecVersion"
 
 
-def report_rows(draft: ReportDraft, zones: Optional[List[str]] = None) -> List[tuple]:
+def report_rows(draft: ReportDraft, zones: Optional[List[str]] = None, marker: Optional[str] = None) -> List[tuple]:
     """The Create Report rows, every parameter explicit. A pinned spec version (D14) is written as the
     additionalProperties key `reportSpecVersion`."""
     rows: List[tuple] = [("Display Name", _one_line("The Report name", draft.display_name))]
@@ -118,10 +118,15 @@ def report_rows(draft: ReportDraft, zones: Optional[List[str]] = None) -> List[t
             other[name] = value
     rows.append(("Report Parameters", _map_lines("Report Parameter", other)))
     rows.append(("Analytic Parameters", _map_lines("Analytic Parameter", draft.analytic_params)))
+    extra = []
+    if marker:
+        extra.append(f"authoringState: {marker}")
     if draft.pinned_version is not None:
         if isinstance(draft.pinned_version, bool) or not isinstance(draft.pinned_version, int) or draft.pinned_version < 1:
             raise AuthoringRefused(f"A pinned version is a whole number from 1, not {draft.pinned_version!r}.")
-        rows.append(("Additional Properties", f"{PINNED_VERSION_KEY}: {draft.pinned_version}"))
+        extra.append(f"{PINNED_VERSION_KEY}: {draft.pinned_version}")
+    if extra:
+        rows.append(("Additional Properties", "\n".join(sorted(extra))))
     if zones:
         rows.append(("Zone Membership", [_list_item("A zone", z) for z in zones]))
     return rows
@@ -174,20 +179,25 @@ def sheet_sections(draft: SheetDraft, zones: Optional[List[str]] = None) -> List
 
 
 def serialize(draft: Union[SpecDraft, ReportDraft, SheetDraft, Dict[str, Any]], *,
-              title: Optional[str] = None, zones: Optional[Iterable[str]] = None) -> str:
+              title: Optional[str] = None, zones: Optional[Iterable[str]] = None,
+              as_draft_element: bool = False) -> str:
     """The draft as one deterministic Dr.Egeria document (Create blocks only: Dr.Egeria upserts a Create
     whose element exists, so the same document creates or updates). Raises AuthoringRefused with words for
     a value that can't be written safely (a line break, a rule, a heading). `zones` puts the element in those
-    zones (a draft saved private to its author, D16)."""
+    zones (a draft saved private to its author, D16); `as_draft_element` marks it a draft (a spec's
+    contentStatus DRAFT, a Report's additionalProperties `authoringState: draft`)."""
     draft = as_draft(draft)
     zones = sorted(set(zones or []))
     try:
         if isinstance(draft, SpecDraft):
             head = title or f"# Report spec {draft.label}"
-            body = [section("Create Report Spec", spec_rows(draft.label, draft.format_set, zones))]
+            rows = spec_rows(draft.label, draft.format_set, zones)
+            if as_draft_element:
+                rows = [(n, "DRAFT" if n == "Content Status" else v) for n, v in rows]
+            body = [section("Create Report Spec", rows)]
         elif isinstance(draft, ReportDraft):
             head = title or f"# Report {draft.display_name}"
-            body = [report_section(draft, zones)]
+            body = [section("Create Report", report_rows(draft, zones, marker="draft" if as_draft_element else None))]
         else:
             head = title or f"# Dashboard sheet {draft.name}"
             body = sheet_sections(draft, zones)

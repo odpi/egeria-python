@@ -192,8 +192,8 @@ class LocalDraftStore:
 
 _ELEMENT_TYPE = {"spec": "ReportSpec", "report": "Report", "sheet": "Dashboard"}
 PRUNE_DAYS = 30
-ZONE_PENDING = ("The private draft zone's name is still being settled: pass zone= (e.g. 'drafts-{user}') when "
-                "making an EgeriaDraftStore.")
+#: The draft marker on a Report (additionalProperties); a spec carries contentStatus DRAFT instead.
+DRAFT_MARKER = ("authoringState", "draft")
 
 
 def _parse_time(value: Any):
@@ -210,33 +210,74 @@ def _parse_time(value: Any):
     return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
 
 
+def _is_marked(kind: str, el: Dict[str, Any]) -> bool:
+    """Whether an element carries the draft marker (a sheet has none: its zone alone says it's a draft)."""
+    props = el.get("properties") or {}
+    if kind == "spec":
+        return str(props.get("contentStatus") or "").upper() == "DRAFT"
+    if kind == "report":
+        return (props.get("additionalProperties") or {}).get(DRAFT_MARKER[0]) == DRAFT_MARKER[1]
+    return True
+
+
 class EgeriaDraftStore:
     """Drafts held in Egeria, zoned private to their author (D16, decided "Egeria, private, 30-day prune").
 
     - **The draft is the element itself** (a ReportSpec, a Report, a Dashboard sheet chain) with its real
-      qualified name, in the author's private zone (`zone`, a parameter while its name is settled; "{user}" in
-      it becomes the author's user id). In Egeria a zone with no control is private, so only the author sees
-      the draft.
+      qualified name, zoned `[<author's userId>]` and nothing else (ANSWER-DRAFT-PRIVATE-ZONE-2026-11-13,
+      code-verified on the build laz runs): Egeria's validateZoneAccess grants a zone named for a user to that
+      user only, and the search pushdown leaves other users' drafts out of their searches. No marker zone: a
+      control defined for it later would expose every user's drafts. The anchor is zoned (the Dashboard,
+      ReportSpec or Report); its children inherit through Anchors.
+    - **Marked as a draft on the element:** a spec with contentStatus DRAFT, a Report with additionalProperties
+      `authoringState: draft`. A sheet has no carrier Dr.Egeria writes yet (Create Dashboard Sheet sets the
+      Dashboard's own additionalProperties), so a sheet draft is known by its zone alone.
+    - **A userId that names a governance zone is refused** (that user would read the zone's elements), as is
+      one in `controlled_zones` (zones the app knows carry a security control).
     - **Written as the author:** every write is a Dr.Egeria document run through the caller's runner (`run`),
       and the client must be signed in as the user whose draft it is.
     - **Never over a published element:** saving a draft whose element is already held outside the author's
       private zone is refused (it would change what others see); make a copy with new_from, or promote.
-    - **Promotion clears the zone:** promotion_plan() is the publish plan with Declassify Zone Membership.
-    - **prune_drafts(older_than_days=30)** removes the author's unpromoted drafts last changed more than 30 days
-      ago, as the author. It never sweeps anyone else's drafts.
+    - **Never filed into a consumer folder:** a saved draft is only its element. Promotion files it.
+    - **Promotion clears the zone:** promotion_plan() is the publish plan with Declassify Zone Membership (a
+      blank Zone Membership would keep the zone), marking the element ACTIVE / published. After promoting a
+      sheet, check that another user's search finds its placements, not only the sheet (anchor zones).
+    - **prune_drafts(older_than_days=30)** removes the author's unpromoted drafts created more than 30 days
+      ago, as the author. It can't see, and never sweeps, anyone else's drafts.
     """
 
-    def __init__(self, client: Any, run: Any = None, *, zone: Optional[str] = None):
-        if not zone:
-            raise AuthoringRefused(ZONE_PENDING)
+    def __init__(self, client: Any, run: Any = None, *, controlled_zones: Any = ()):
         self.client = client
         self.run = run
-        self.zone_pattern = zone
+        self.controlled_zones = set(controlled_zones or ())
+        self._zone_checked: Dict[str, bool] = {}
 
     # ---------------------------------------------------------------- helpers
 
-    def zone(self, user_id: str) -> str:
-        return self.zone_pattern.replace("{user}", user_id)
+    @staticmethod
+    def zone(user_id: str) -> str:
+        """The author's private zone: their user id."""
+        return user_id
+
+    async def _check_zone_name(self, user_id: str) -> None:
+        """Refuse a user id that is also a governance zone's name (or one the app says is controlled)."""
+        if self._zone_checked.get(user_id):
+            return
+        if user_id in self.controlled_zones:
+            raise AuthoringRefused(f"User id {user_id!r} is also the name of a controlled zone, so a draft zoned "
+                                   f"[{user_id}] wouldn't be private. Drafts can't be kept in Egeria for this user.")
+        try:
+            found = await self.client.classification_manager._async_get_elements_by_property_value(
+                user_id, ["zoneName", "qualifiedName"], metadata_element_type="GovernanceZone", starts_with=False,
+                ends_with=False, ignore_case=False, page_size=10, graph_query_depth=0)
+        except Exception:  # noqa: BLE001 -- "not found" answers are exceptions on some paths
+            found = []
+        names = {((e.get("properties") or {}).get("zoneName") or "") for e in found
+                 if isinstance(e, dict)} if isinstance(found, list) else set()
+        if user_id in names:
+            raise AuthoringRefused(f"User id {user_id!r} is also the name of a governance zone, so a draft zoned "
+                                   f"[{user_id}] wouldn't be private. Drafts can't be kept in Egeria for this user.")
+        self._zone_checked[user_id] = True
 
     def _author(self, user_id: str) -> str:
         signed_in = getattr(self.client, "user_id", None)
@@ -269,12 +310,13 @@ class EgeriaDraftStore:
         draft = as_draft(draft)
         if self.run is None:
             raise AuthoringRefused("Saving a draft to Egeria runs a document as you: a runner is needed.")
+        await self._check_zone_name(user_id)
         held = await self._element(draft.kind, draft_key(draft))
         if held is not None and zone not in self._zones(held):
             raise AuthoringRefused(f"{draft.kind} {draft_key(draft)!r} is already held in Egeria outside your private "
                                    f"draft zone ({', '.join(self._zones(held)) or 'public'}): saving the draft there "
                                    f"would change what others see. Copy it with new_from, or promote the draft.")
-        env = _call(self.run, serialize(draft, zones=[zone]), "process")
+        env = _call(self.run, serialize(draft, zones=[zone], as_draft_element=True), "process")
         if not env.get("success"):
             words = "; ".join(str(e.get("message", e)) if isinstance(e, dict) else str(e)
                               for e in (env.get("execution_errors") or env.get("validation_errors") or [])[:3])
@@ -316,7 +358,8 @@ class EgeriaDraftStore:
                         name = props["qualifiedName"].split("::", 1)[1]
                     out.append({"kind": k, "name": name, "qualified_name": props.get("qualifiedName"),
                                 "guid": el["elementHeader"].get("guid"),
-                                "updated": versions.get("updateTime") or versions.get("createTime")})
+                                "created": versions.get("createTime"), "updated": versions.get("updateTime"),
+                                "marked": _is_marked(k, el)})
         return out
 
     async def async_delete(self, user_id: str, kind: str, name: str) -> bool:
@@ -337,16 +380,18 @@ class EgeriaDraftStore:
 
     async def async_prune_drafts(self, user_id: str, older_than_days: int = PRUNE_DAYS, *,
                                  dry_run: bool = False) -> Dict[str, Any]:
-        """Remove the author's drafts last changed more than `older_than_days` ago (a promoted draft is no
-        longer in the private zone, so it's never pruned). Run as the author only."""
+        """Remove the author's drafts created more than `older_than_days` ago (a promoted draft is no longer in
+        the private zone, so it's never pruned). Run as the author only."""
         from datetime import datetime, timedelta, timezone
         cutoff = datetime.now(timezone.utc) - timedelta(days=older_than_days)
         drafts = await self.async_list(user_id)
-        out: Dict[str, Any] = {"removed": [], "kept": [], "not_dated": [], "dry_run": dry_run,
+        out: Dict[str, Any] = {"removed": [], "kept": [], "not_dated": [], "not_marked": [], "dry_run": dry_run,
                                "older_than_days": older_than_days}
         for d in drafts:
-            when = _parse_time(d.get("updated"))
-            if when is None:
+            when = _parse_time(d.get("created"))
+            if not d.get("marked", True):
+                out["not_marked"].append(d["name"])   # in the zone without the draft marker: never removed
+            elif when is None:
                 out["not_dated"].append(d["name"])   # never removed on a guess
             elif when < cutoff:
                 if not dry_run:
@@ -390,11 +435,12 @@ class EgeriaDraftStore:
 
 
 def draft_store(backend: str = "egeria", **kwargs: Any) -> DraftStore:
-    """The store for a backend: "egeria" (the default for apps: client=, run=, zone=) or "local" (root=)."""
+    """The store for a backend: "egeria" (the default for apps: client=, run=) or "local" (root=)."""
     if backend == "local":
         if not kwargs.get("root"):
             raise AuthoringRefused("The local draft store needs a directory (root) from the caller.")
         return LocalDraftStore(kwargs["root"])
     if backend == "egeria":
-        return EgeriaDraftStore(kwargs.get("client"), kwargs.get("run"), zone=kwargs.get("zone"))
+        return EgeriaDraftStore(kwargs.get("client"), kwargs.get("run"),
+                                controlled_zones=kwargs.get("controlled_zones", ()))
     raise AuthoringRefused(f"No draft store {backend!r}; there are 'egeria' and 'local'.")
