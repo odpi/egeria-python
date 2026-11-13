@@ -607,8 +607,9 @@ class _SpecHistory:
                 return outer.current if qn == "ReportSpec::Team Projects" else "No elements found"
 
         class ME:
-            async def _async_get_element_history(self, guid, **kw):
-                return [outer.current, outer.v2]
+            async def _async_get_element_history(self, guid, start_from=0, page_size=0, **kw):
+                return [outer.current, outer.v2][start_from:start_from + page_size] if page_size else \
+                    [outer.current, outer.v2]
         self.classification_manager, self.metadata_expert = CM(), ME()
 
 
