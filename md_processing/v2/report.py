@@ -38,6 +38,9 @@ from loguru import logger
 
 from pyegeria.core._exceptions import PyegeriaNotFoundException
 
+from md_processing.v2.additional_properties import (
+    AdditionalPropertiesUnreadable, merge_additional_properties, stored_additional_properties, unreadable_message,
+)
 from md_processing.v2.processors import AsyncBaseCommandProcessor
 from md_processing.md_processing_utils.common_md_utils import (
     set_create_body, set_element_prop_body, update_element_dictionary,
@@ -170,6 +173,11 @@ def _report_additional_properties(attributes: Dict[str, Any]) -> Dict[str, str]:
     user_extra = attributes.get("Additional Properties", {}).get("value")
     if isinstance(user_extra, dict):
         merged.update({str(k): str(v) for k, v in user_extra.items() if v is not None})
+    from pyegeria.authoring.models import camel_copy_env
+    if not camel_copy_env():
+        # D7 switch (PYEGERIA_REPORT_CAMEL_PARAMS=0): the parameters live only in the typed reportParameters
+        # document; additionalProperties keeps the author's own keys.
+        return merged
 
     # Arbitrary report-spec-specific params (e.g. {"collection_guid": "..."}
     # for the "Collection Members" report) that aren't part of the standard
@@ -267,6 +275,12 @@ def _props_differ(desired: Dict[str, Any], current: Dict[str, Any]) -> bool:
     for key, value in desired.items():
         if key in ("class", "typeName") or value is None:
             continue
+        if key == "additionalProperties" and isinstance(value, dict):
+            # merged key by key on update, so only the keys given count (additional_properties.py)
+            stored = current.get(key) or {}
+            if any(stored.get(k) != v for k, v in value.items()):
+                return True
+            continue
         if current.get(key) != value:
             return True
     return False
@@ -288,6 +302,13 @@ async def upsert_dashboard_asset(client: Any, qualified_name: str, props: Dict[s
         if not _props_differ(props, existing.get("properties") or {}):
             return guid, "Unchanged", None
         update_props = filter_update(props, merge_update) if filter_update else props
+        stored = stored_additional_properties(existing)
+        if merge_update and update_props.get("additionalProperties") is not None:
+            # Egeria replaces the map whole: send the stored keys too (md_processing/v2/additional_properties.py).
+            if stored is None:
+                raise AdditionalPropertiesUnreadable(unreadable_message(f"Dashboard '{qualified_name}'"))
+            update_props = {**update_props, "additionalProperties": merge_additional_properties(
+                stored, update_props["additionalProperties"])}
         update_body = {"class": "UpdateElementRequestBody", "properties": update_props,
                        "mergeUpdate": merge_update}
         await client._async_update_asset(guid, update_body)
@@ -334,6 +355,10 @@ class ReportProcessor(AsyncBaseCommandProcessor):
       - `ReportTypeInstance` from the named spec's element, found under `ReportSpec::` or `ReportType::`;
         a spec with no element gets a note saying no link was written, not silence.
     """
+
+    # The report parameters are additionalProperties keys, so every update sends the map: the base
+    # processor merges the stored keys in first (_prepare_additional_properties).
+    WRITES_ADDITIONAL_PROPERTIES = True
 
     async def apply_changes(self) -> str:
         attributes = self.parsed_output["attributes"]

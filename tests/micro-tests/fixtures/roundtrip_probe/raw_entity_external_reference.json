@@ -1,0 +1,315 @@
+{
+ "class": "EntityDetailResponse",
+ "requestId": "a339ab26-bd63-407f-9b19-9e8d89590ef9",
+ "relatedHTTPCode": 200,
+ "entity": {
+  "class": "EntityDetail",
+  "headerVersion": 1,
+  "type": {
+   "class": "InstanceType",
+   "headerVersion": 1,
+   "typeDefCategory": "ENTITY_DEF",
+   "typeDefGUID": "af536f20-062b-48ef-9c31-1ddd05b04c56",
+   "typeDefName": "ExternalReference",
+   "typeDefVersion": 1
+  },
+  "instanceProvenanceType": "LOCAL_COHORT",
+  "metadataCollectionId": "97e128f1-5d47-4881-9270-efda30192283",
+  "metadataCollectionName": "simple-metadata-store",
+  "createdBy": "garygeeke",
+  "updatedBy": "garygeeke",
+  "maintainedBy": [
+   "garygeeke"
+  ],
+  "createTime": "2026-11-12T11:56:11.661+00:00",
+  "updateTime": "2026-11-12T11:56:11.661+00:00",
+  "version": 1,
+  "lastRequestId": "91292f3b-266d-419b-ba47-f514f5ffcaae",
+  "guid": "ExternalReference-6a878abb-8fa7-4569-ae27-ef257af40a22",
+  "classifications": [
+   {
+    "class": "Classification",
+    "headerVersion": 1,
+    "type": {
+     "class": "InstanceType",
+     "headerVersion": 1,
+     "typeDefCategory": "CLASSIFICATION_DEF",
+     "typeDefGUID": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+     "typeDefName": "Anchors",
+     "typeDefVersion": 1
+    },
+    "instanceProvenanceType": "LOCAL_COHORT",
+    "metadataCollectionId": "97e128f1-5d47-4881-9270-efda30192283",
+    "metadataCollectionName": "simple-metadata-store",
+    "createdBy": "garygeeke",
+    "updatedBy": "garygeeke",
+    "maintainedBy": [
+     "garygeeke"
+    ],
+    "createTime": "2026-11-12T11:56:11.660+00:00",
+    "updateTime": "2026-11-12T11:56:11.660+00:00",
+    "version": 1,
+    "lastRequestId": "91292f3b-266d-419b-ba47-f514f5ffcaae",
+    "classificationOrigin": "ASSIGNED",
+    "name": "Anchors",
+    "properties": {
+     "class": "InstanceProperties",
+     "headerVersion": 1,
+     "instanceProperties": {
+      "anchorTypeName": {
+       "class": "PrimitivePropertyValue",
+       "headerVersion": 1,
+       "instancePropertyCategory": "PRIMITIVE",
+       "typeGUID": "b34a64b9-554a-42b1-8f8a-7d5c2339f9c4",
+       "typeName": "string",
+       "primitiveDefCategory": "OM_PRIMITIVE_TYPE_STRING",
+       "primitiveValue": "ExternalReference"
+      },
+      "anchorDomainName": {
+       "class": "PrimitivePropertyValue",
+       "headerVersion": 1,
+       "instancePropertyCategory": "PRIMITIVE",
+       "typeGUID": "b34a64b9-554a-42b1-8f8a-7d5c2339f9c4",
+       "typeName": "string",
+       "primitiveDefCategory": "OM_PRIMITIVE_TYPE_STRING",
+       "primitiveValue": "AuthoredReferenceable"
+      }
+     }
+    },
+    "status": "ACTIVE"
+   }
+  ],
+  "properties": {
+   "class": "InstanceProperties",
+   "headerVersion": 1,
+   "effectiveFromTime": "2020-01-02T00:00:00.000+00:00",
+   "effectiveToTime": "2031-01-02T00:00:00.000+00:00",
+   "instanceProperties": {
+    "identifier": {
+     "class": "PrimitivePropertyValue",
+     "headerVersion": 1,
+     "instancePropertyCategory": "PRIMITIVE",
+     "typeGUID": "b34a64b9-554a-42b1-8f8a-7d5c2339f9c4",
+     "typeName": "string",
+     "primitiveDefCategory": "OM_PRIMITIVE_TYPE_STRING",
+     "primitiveValue": "RTP CreateExternalReference Identifier"
+    },
+    "copyright": {
+     "class": "PrimitivePropertyValue",
+     "headerVersion": 1,
+     "instancePropertyCategory": "PRIMITIVE",
+     "typeGUID": "b34a64b9-554a-42b1-8f8a-7d5c2339f9c4",
+     "typeName": "string",
+     "primitiveDefCategory": "OM_PRIMITIVE_TYPE_STRING",
+     "primitiveValue": "RTP CreateExternalReference Copyright"
+    },
+    "sources": {
+     "class": "MapPropertyValue",
+     "headerVersion": 1,
+     "instancePropertyCategory": "MAP",
+     "typeGUID": "005c7c14-ac84-4136-beed-959401b041f8",
+     "typeName": "map<string,string>",
+     "mapValues": {
+      "class": "InstanceProperties",
+      "headerVersion": 1,
+      "instanceProperties": {
+       "rtpKey": {
+        "class": "PrimitivePropertyValue",
+        "headerVersion": 1,
+        "instancePropertyCategory": "PRIMITIVE",
+        "typeGUID": "b34a64b9-554a-42b1-8f8a-7d5c2339f9c4",
+        "typeName": "string",
+        "primitiveDefCategory": "OM_PRIMITIVE_TYPE_STRING",
+        "primitiveValue": "RTP CreateExternalReference Sources"
+       }
+      }
+     },
+     "mapElementCount": 1
+    },
+    "qualifiedName": {
+     "class": "PrimitivePropertyValue",
+     "headerVersion": 1,
+     "instancePropertyCategory": "PRIMITIVE",
+     "typeGUID": "b34a64b9-554a-42b1-8f8a-7d5c2339f9c4",
+     "typeName": "string",
+     "primitiveDefCategory": "OM_PRIMITIVE_TYPE_STRING",
+     "primitiveValue": "RTP::20261112T115457Z::CreateExternalReference"
+    },
+    "displayName": {
+     "class": "PrimitivePropertyValue",
+     "headerVersion": 1,
+     "instancePropertyCategory": "PRIMITIVE",
+     "typeGUID": "b34a64b9-554a-42b1-8f8a-7d5c2339f9c4",
+     "typeName": "string",
+     "primitiveDefCategory": "OM_PRIMITIVE_TYPE_STRING",
+     "primitiveValue": "RTP CreateExternalReference DisplayName 20261112T115457Z"
+    },
+    "description": {
+     "class": "PrimitivePropertyValue",
+     "headerVersion": 1,
+     "instancePropertyCategory": "PRIMITIVE",
+     "typeGUID": "b34a64b9-554a-42b1-8f8a-7d5c2339f9c4",
+     "typeName": "string",
+     "primitiveDefCategory": "OM_PRIMITIVE_TYPE_STRING",
+     "primitiveValue": "RTP CreateExternalReference Description"
+    },
+    "userDefinedContentStatus": {
+     "class": "PrimitivePropertyValue",
+     "headerVersion": 1,
+     "instancePropertyCategory": "PRIMITIVE",
+     "typeGUID": "b34a64b9-554a-42b1-8f8a-7d5c2339f9c4",
+     "typeName": "string",
+     "primitiveDefCategory": "OM_PRIMITIVE_TYPE_STRING",
+     "primitiveValue": "RTP CreateExternalReference UserDefinedContentStatus"
+    },
+    "referenceTitle": {
+     "class": "PrimitivePropertyValue",
+     "headerVersion": 1,
+     "instancePropertyCategory": "PRIMITIVE",
+     "typeGUID": "b34a64b9-554a-42b1-8f8a-7d5c2339f9c4",
+     "typeName": "string",
+     "primitiveDefCategory": "OM_PRIMITIVE_TYPE_STRING",
+     "primitiveValue": "RTP CreateExternalReference ReferenceTitle"
+    },
+    "url": {
+     "class": "PrimitivePropertyValue",
+     "headerVersion": 1,
+     "instancePropertyCategory": "PRIMITIVE",
+     "typeGUID": "b34a64b9-554a-42b1-8f8a-7d5c2339f9c4",
+     "typeName": "string",
+     "primitiveDefCategory": "OM_PRIMITIVE_TYPE_STRING",
+     "primitiveValue": "RTP CreateExternalReference Url"
+    },
+    "contentStatus": {
+     "class": "EnumPropertyValue",
+     "headerVersion": 1,
+     "instancePropertyCategory": "ENUM",
+     "typeGUID": "49f2808c-b5c8-48a9-8a36-672f9ea9a45f",
+     "typeName": "ContentStatus",
+     "ordinal": 1,
+     "symbolicName": "PREPARED",
+     "description": "The content is ready for review."
+    },
+    "referenceAbstract": {
+     "class": "PrimitivePropertyValue",
+     "headerVersion": 1,
+     "instancePropertyCategory": "PRIMITIVE",
+     "typeGUID": "b34a64b9-554a-42b1-8f8a-7d5c2339f9c4",
+     "typeName": "string",
+     "primitiveDefCategory": "OM_PRIMITIVE_TYPE_STRING",
+     "primitiveValue": "RTP CreateExternalReference ReferenceAbstract"
+    },
+    "license": {
+     "class": "PrimitivePropertyValue",
+     "headerVersion": 1,
+     "instancePropertyCategory": "PRIMITIVE",
+     "typeGUID": "b34a64b9-554a-42b1-8f8a-7d5c2339f9c4",
+     "typeName": "string",
+     "primitiveDefCategory": "OM_PRIMITIVE_TYPE_STRING",
+     "primitiveValue": "RTP CreateExternalReference License"
+    },
+    "versionIdentifier": {
+     "class": "PrimitivePropertyValue",
+     "headerVersion": 1,
+     "instancePropertyCategory": "PRIMITIVE",
+     "typeGUID": "b34a64b9-554a-42b1-8f8a-7d5c2339f9c4",
+     "typeName": "string",
+     "primitiveDefCategory": "OM_PRIMITIVE_TYPE_STRING",
+     "primitiveValue": "RTP CreateExternalReference VersionIdentifier"
+    },
+    "organization": {
+     "class": "PrimitivePropertyValue",
+     "headerVersion": 1,
+     "instancePropertyCategory": "PRIMITIVE",
+     "typeGUID": "b34a64b9-554a-42b1-8f8a-7d5c2339f9c4",
+     "typeName": "string",
+     "primitiveDefCategory": "OM_PRIMITIVE_TYPE_STRING",
+     "primitiveValue": "RTP CreateExternalReference Organization"
+    },
+    "attribution": {
+     "class": "PrimitivePropertyValue",
+     "headerVersion": 1,
+     "instancePropertyCategory": "PRIMITIVE",
+     "typeGUID": "b34a64b9-554a-42b1-8f8a-7d5c2339f9c4",
+     "typeName": "string",
+     "primitiveDefCategory": "OM_PRIMITIVE_TYPE_STRING",
+     "primitiveValue": "RTP CreateExternalReference Attribution"
+    },
+    "legal": {
+     "class": "PrimitivePropertyValue",
+     "headerVersion": 1,
+     "instancePropertyCategory": "PRIMITIVE",
+     "typeGUID": "b34a64b9-554a-42b1-8f8a-7d5c2339f9c4",
+     "typeName": "string",
+     "primitiveDefCategory": "OM_PRIMITIVE_TYPE_STRING",
+     "primitiveValue": "RTP CreateExternalReference Legal"
+    },
+    "additionalProperties": {
+     "class": "MapPropertyValue",
+     "headerVersion": 1,
+     "instancePropertyCategory": "MAP",
+     "typeGUID": "005c7c14-ac84-4136-beed-959401b041f8",
+     "typeName": "map<string,string>",
+     "mapValues": {
+      "class": "InstanceProperties",
+      "headerVersion": 1,
+      "instanceProperties": {
+       "rtpKey": {
+        "class": "PrimitivePropertyValue",
+        "headerVersion": 1,
+        "instancePropertyCategory": "PRIMITIVE",
+        "typeGUID": "b34a64b9-554a-42b1-8f8a-7d5c2339f9c4",
+        "typeName": "string",
+        "primitiveDefCategory": "OM_PRIMITIVE_TYPE_STRING",
+        "primitiveValue": "RTP CreateExternalReference AdditionalProperties"
+       }
+      }
+     },
+     "mapElementCount": 1
+    },
+    "category": {
+     "class": "PrimitivePropertyValue",
+     "headerVersion": 1,
+     "instancePropertyCategory": "PRIMITIVE",
+     "typeGUID": "b34a64b9-554a-42b1-8f8a-7d5c2339f9c4",
+     "typeName": "string",
+     "primitiveDefCategory": "OM_PRIMITIVE_TYPE_STRING",
+     "primitiveValue": "RTP CreateExternalReference Category"
+    },
+    "authors": {
+     "class": "ArrayPropertyValue",
+     "headerVersion": 1,
+     "instancePropertyCategory": "ARRAY",
+     "typeGUID": "0428b5d3-f824-459c-b7f5-f8151de59707",
+     "typeName": "array<string>",
+     "arrayCount": 2,
+     "arrayValues": {
+      "class": "InstanceProperties",
+      "headerVersion": 1,
+      "instanceProperties": {
+       "0": {
+        "class": "PrimitivePropertyValue",
+        "headerVersion": 1,
+        "instancePropertyCategory": "PRIMITIVE",
+        "typeGUID": "b34a64b9-554a-42b1-8f8a-7d5c2339f9c4",
+        "typeName": "string",
+        "primitiveDefCategory": "OM_PRIMITIVE_TYPE_STRING",
+        "primitiveValue": "RTP CreateExternalReference Authors-1"
+       },
+       "1": {
+        "class": "PrimitivePropertyValue",
+        "headerVersion": 1,
+        "instancePropertyCategory": "PRIMITIVE",
+        "typeGUID": "b34a64b9-554a-42b1-8f8a-7d5c2339f9c4",
+        "typeName": "string",
+        "primitiveDefCategory": "OM_PRIMITIVE_TYPE_STRING",
+        "primitiveValue": "RTP CreateExternalReference Authors-2"
+       }
+      }
+     }
+    }
+   }
+  },
+  "status": "ACTIVE"
+ }
+}

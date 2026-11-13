@@ -154,6 +154,11 @@ def placements_for_perspective(placements: List[Any], perspective: Optional[str]
     return [p for p in placements if not (getattr(p, "perspectives", None) or []) or perspective in p.perspectives]
 
 
+def _authoring_keys():
+    from pyegeria.authoring.publication import AUTHORING_KEYS
+    return AUTHORING_KEYS
+
+
 def report_from_element(element: Dict[str, Any], fallback_name: str = "") -> ResolvedReport:
     """A ResolvedReport from a Report element (flat `properties`, as classification-explorer returns it)."""
     props = element.get("properties") or {}
@@ -174,7 +179,9 @@ def report_from_element(element: Dict[str, Any], fallback_name: str = "") -> Res
         description=props.get("description") or "",
         report_spec=extra.get("reportSpec"),
         output_format=extra.get("outputFormat"),
-        params={k: v for k, v in extra.items() if k not in ("reportSpec", "outputFormat", "analyticParams")},
+        # The authoring API's bookkeeping keys (publication stamp, draft marker, pin) aren't parameters.
+        params={k: v for k, v in extra.items()
+                if k not in ("reportSpec", "outputFormat", "analyticParams") and k not in _authoring_keys()},
         analytic_params=analytic,
     )
 
