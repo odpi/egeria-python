@@ -4823,11 +4823,18 @@ class AutomatedCuration(ServerClient):
         Returns
         -------
         str
-            The GUID of the template, or None if not found.
+            The GUID of the template. Raises PyegeriaException, naming the technology type, when the type
+            or its catalog template is missing on the server.
         """
         details = await self._async_get_tech_type_detail(type_name, **kwargs)
         if not isinstance(details, dict):
-            return None
+            # Returning None here sent "templateGUID": null and failed later with no useful message
+            # (round-trip probe 2026-11-12): name what's missing instead.
+            raise PyegeriaException(
+                response=f"No technology type '{type_name}' on this Egeria server, so there is no catalog "
+                         f"template to create from.",
+                context={"type_name": type_name, "reason": "technology type not found"},
+            )
         catalog_templates = details.get("catalogTemplates") or []
         if not catalog_templates:
             # Fallback for YAML File Secrets Collection to Keystore File template
@@ -4853,7 +4860,8 @@ class AutomatedCuration(ServerClient):
         Returns
         -------
         str
-            The GUID of the template, or None if not found.
+            The GUID of the template. Raises PyegeriaException, naming the technology type, when the type
+            or its catalog template is missing on the server.
         """
         response = run_sync(
             self._async_get_template_guid_for_technology_type(type_name, **kwargs)

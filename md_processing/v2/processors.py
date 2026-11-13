@@ -9,6 +9,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Awaitable, Callable, Dict, List, Optional, Union
 from loguru import logger
 
+from pyegeria.core.utils import is_guid, is_guid_reference
 from pyegeria import EgeriaTech, PyegeriaException, PyegeriaTimeoutException, NO_ELEMENTS_FOUND, print_basic_exception, lineage_visible
 from pyegeria.core.utils import make_format_set_name_from_type
 from pyegeria.view.base_report_formats import select_report_spec
@@ -16,6 +17,10 @@ from pyegeria.view.output_formatter import generate_output, format_for_markdown_
 
 from md_processing.v2.extraction import DrECommand
 from md_processing.v2.parsing import AttributeFirstParser
+from md_processing.md_processing_utils.typed_properties import (_as_dict, classification_map,
+                                                                  new_element_properties, not_applied_notes,
+                                                                  parent_relationship_properties,
+                                                                  record_not_applied, typed_properties)
 from md_processing.md_processing_utils.md_processing_constants import get_command_spec, resolve_command_spec, VIEW_VERBS
 from md_processing.md_processing_utils.common_md_utils import (
     update_element_dictionary, get_element_dictionary, is_present, find_key_with_value
@@ -37,6 +42,41 @@ _AMBIGUOUS_SILENT = object()
 def _is_egeria_multiple_entities_error(exc: BaseException) -> bool:
     text = str(exc)
     return "404-002" in text or "entities where found" in text
+
+
+def describe_exception(e: BaseException) -> str:
+    """One line for a failed command: the exception type and its message, plus Egeria's message id when
+    there is one.
+
+    `str(PyegeriaException)` is a multi-line report that starts with a newline, so a summary row built
+    from it read just "Execution failed:" (round-trip probe 2026-11-12: Schema Maker, Blog/Journal/
+    Activity Entry and the Asset Maker technology-type creates). Egeria's own message, when the response
+    carries one, is preferred over pyegeria's generic text.
+    """
+    kind = type(e).__name__
+    text, msg_id = "", ""
+    if isinstance(e, PyegeriaException):
+        body = {}
+        response = getattr(e, "response", None)
+        if response is not None:
+            try:
+                body = response.json() or {}
+            except Exception:  # noqa: BLE001 - not JSON
+                body = {}
+        if not isinstance(body, dict):
+            body = {}
+        info = getattr(e, "additional_info", None) or {}
+        text = (body.get("exceptionErrorMessage") or info.get("exceptionErrorMessage")
+                or getattr(e, "response_egeria_msg", "") or getattr(e, "message", ""))
+        msg_id = (body.get("exceptionErrorMessageId") or info.get("exceptionErrorMessageId")
+                  or getattr(e, "egeria_message_id", "") or getattr(e, "response_egeria_msg_id", ""))
+    if not text:
+        text = str(e).strip() or repr(e)
+    text = " ".join(str(text).split())
+    out = f"{kind}: {text}"
+    if msg_id and msg_id not in text:
+        out += f" [{msg_id}]"
+    return out
 
 
 class _ParentLinksIncomplete(Exception):
@@ -100,9 +140,8 @@ class AsyncBaseCommandProcessor(ABC):
         def _find_guid(payload: Any) -> Optional[str]:
             if isinstance(payload, str):
                 candidate = payload.strip()
-                # Egeria GUIDs are typically UUIDs (36 chars) or at least 8+ chars of hex/dashes
-                # We want to avoid returning "GUIDResponse" or other descriptive strings.
-                if re.match(r"^[a-fA-F0-9-]{8,}$", candidate):
+                # Egeria GUIDs are opaque (is_guid): not "GUIDResponse" or other descriptive strings.
+                if is_guid(candidate):
                     return candidate
                 return None
 
@@ -326,6 +365,116 @@ class AsyncBaseCommandProcessor(ABC):
         "Policy Management Point": "PolicyManagementPoint",
     }
 
+    def _report_unapplied(self) -> None:
+        """Every attribute a body builder couldn't send says so, success or not (F-A 1, F-B).
+
+        Parent Relationship Attributes only mean something with a Parent ID: when there is none and no builder
+        said anything, say why they weren't sent (F-B group 8)."""
+        attrs = self.parsed_output.get("attributes", {})
+        for name in ("Parent Relationship Attributes", "Parent Relationship Properties"):
+            entry = attrs.get(name) or {}
+            if entry.get("value") not in (None, "", {}) and not entry.get("not_applied") \
+                    and not (attrs.get("Parent ID") or {}).get("guid"):
+                record_not_applied(attrs, name, [f"not applied: {name}: there is no Parent ID to attach them to"])
+        for note in not_applied_notes(attrs):
+            self._add_warning(note)
+
+    async def _sync_search_keywords(self, guid: str, attributes: Dict[str, Any]) -> None:
+        """Attach a SearchKeyword per `Search Keywords` entry (the Referenceable bundle carries it on nearly
+        every command; no processor applied it, round-trip probe 2026-11-12). Idempotent: a keyword the element
+        already has (from the as-is element, on an update) isn't added again. Additive: keywords not listed
+        are left in place.
+
+        The keyword text is SearchKeywordProperties.displayName (the Java bean has no `keyword` field); it is
+        attached with ClassificationExplorer._async_add_search_keyword_to_element
+        (`elements/{guid}/search-keywords`).
+        """
+        raw = (attributes.get("Search Keywords") or {}).get("value")
+        if not raw:
+            return
+        items = raw if isinstance(raw, list) else str(raw).split(",")
+        wanted = list(dict.fromkeys(str(k).strip() for k in items if str(k).strip()))
+        existing = set()
+        as_is = getattr(self, "as_is_element", None)
+        if isinstance(as_is, dict):
+            for item in as_is.get("searchKeywords") or []:
+                props = ((item or {}).get("relatedElement") or {}).get("properties") or {}
+                if props.get("displayName"):
+                    existing.add(props["displayName"])
+        for keyword in wanted:
+            if keyword in existing:
+                continue
+            body = {"class": "NewAttachmentRequestBody",
+                    "properties": {"class": "SearchKeywordProperties", "displayName": keyword}}
+            try:
+                await self.client.classification_manager._async_add_search_keyword_to_element(guid, body)
+                self.add_related_result("Search Keyword", message=f"Added {keyword!r}")
+            except PyegeriaException as e:
+                self.add_related_result("Search Keyword", status="failure",
+                                        message=f"{keyword!r}: {describe_exception(e)}")
+
+    async def _sync_referenceable_extras(self, guid: str, attributes: Dict[str, Any]) -> None:
+        """The other Referenceable-bundle attributes no processor applied (88 rows each on the round-trip
+        probe's PostgreSQL baseline). Each is applied where Egeria has a home, or reported not applied:
+
+        - Classifications (Named DICT: classification name -> its properties): each typed
+          "<Name>Properties" (typed_properties.classification_map) and attached with the generic
+          metadata-expert classify call; names Egeria doesn't know, or keys a classification doesn't read,
+          are reported.
+        - Translation Details (Named DICT: TranslationDetailProperties fields -- language, languageCode,
+          locale, displayName, description, additionalTranslations): set with the multi-language service
+          (ClassificationExplorer._async_set_translation).
+        - User Defined Status: no Egeria property on an element (only the CollectionMembership relationship
+          has userDefinedStatus; an authored element's equivalent is User Defined Content Status): reported.
+        - Supplementary Properties: Egeria keeps them on a separate glossary term linked by the
+          SupplementaryProperties relationship (ClassificationExplorer._async_add_supplementary_properties_to_element);
+          Dr.Egeria doesn't create that term yet: reported.
+        Processors that apply one of these themselves record its name in parsed_output["applied_attributes"].
+        """
+        applied = set(self.parsed_output.get("applied_attributes") or ())
+
+        def given(name):
+            value = (attributes.get(name) or {}).get("value")
+            return value if name not in applied and value not in (None, "", {}, []) else None
+
+        raw = given("Classifications")
+        if raw is not None:
+            typed, notes = classification_map(raw, "Classifications")
+            record_not_applied(attributes, "Classifications", notes)
+            for name, props in (typed or {}).items():
+                try:
+                    await self.client.metadata_expert._async_classify_metadata_element(
+                        guid, name, {"class": "NewClassificationRequestBody", "properties": props})
+                    self.add_related_result(f"Classification {name}", guid=guid, message="Classified")
+                except PyegeriaException as e:
+                    self.add_related_result(f"Classification {name}", guid=guid, status="failure",
+                                            message=describe_exception(e))
+
+        raw = given("Translation Details")
+        if raw is not None:
+            typed, notes = typed_properties("entity", "TranslationDetail", _as_dict(raw) or {}, "Translation Details") \
+                if _as_dict(raw) is not None else (None, [f"not applied: Translation Details: expected a "
+                                                           f"dictionary of translation properties, got {raw!r}"])
+            record_not_applied(attributes, "Translation Details", notes)
+            if typed and len(typed) > 1:
+                try:
+                    await self.client.classification_manager._async_set_translation(
+                        guid, {"class": "NewElementRequestBody", "properties": typed})
+                    self.add_related_result("Translation", guid=guid, message="Set")
+                except PyegeriaException as e:
+                    self.add_related_result("Translation", guid=guid, status="failure", message=describe_exception(e))
+
+        if given("User Defined Status") is not None:
+            record_not_applied(attributes, "User Defined Status", [
+                "not applied: User Defined Status: no Egeria property on this element (only CollectionMembership "
+                "links have one); for authored elements use User Defined Content Status with Content Status OTHER"])
+        if given("Supplementary Properties") is not None:
+            record_not_applied(attributes, "Supplementary Properties", [
+                "not applied: Supplementary Properties: Egeria keeps them on a separate glossary term linked by "
+                "SupplementaryProperties, which Dr.Egeria doesn't create yet"])
+        for note in not_applied_notes(attributes):
+            self._add_warning(note)
+
     async def _sync_referenceable_classifications(self, guid: str, attributes: Dict[str, Any]) -> None:
         """
         Apply the Security Tags / Policy Management Point classifications when
@@ -505,10 +654,11 @@ class AsyncBaseCommandProcessor(ABC):
         if not rel_type:
             return
 
-        rel_props = (
-            attributes.get("Parent Relationship Attributes", {}).get("value")
-            or attributes.get("Parent Relationship Properties", {}).get("value")
-        )
+        # Typed (RelationshipProperties is polymorphic: a raw dict is a 400); keys the relationship
+        # doesn't read are reported, not sent.
+        rel_props, notes = parent_relationship_properties(attributes)
+        for note in notes:
+            self._add_warning(note)
         parent_at_end1 = attributes.get("Parent at End1", {}).get("value", True)
         end_1_guid, end_2_guid = (parent_guid, guid) if parent_at_end1 else (guid, parent_guid)
 
@@ -531,8 +681,9 @@ class AsyncBaseCommandProcessor(ABC):
                 "metadata_element_1_guid": end_1_guid,
                 "metadata_element_2_guid": end_2_guid,
             }
-            if isinstance(rel_props, dict):
-                body["properties"] = rel_props
+            if rel_props:
+                # this endpoint reads a NewElementProperties property-value map
+                body["properties"] = new_element_properties(rel_props)
             await self.client.metadata_expert._async_create_related_elements(body)
             message = f"Linked via {rel_type}"
             if other_parents:
@@ -1204,7 +1355,10 @@ class AsyncBaseCommandProcessor(ABC):
                     f" | display_name={self.parsed_output.get('display_name', '')!r}"
                     f" | GUID={self.parsed_output.get('guid', 'new')} ══\033[0m"
                 )
-            output = await self.apply_changes()
+            try:
+                output = await self.apply_changes()
+            finally:
+                self._report_unapplied()
         except PyegeriaException as e:
             logger.error(f"Command String: {self.command.raw_block}")
             if self.last_body:
@@ -1215,14 +1369,15 @@ class AsyncBaseCommandProcessor(ABC):
                 "output": self.command.raw_block,
                 "analysis": analysis,
                 "status": "failure",
-                "message": f"Execution failed: {str(e)}",
+                "message": f"Execution failed: {describe_exception(e)}",
                 "verb": self.command.verb,
                 "object_type": self.canonical_object_type,
                 "markdown_object_type": self.markdown_object_type,
                 "display_name": self.parsed_output.get("display_name"),
                 "qualified_name": self.parsed_output.get("qualified_name"),
                 "found": self.parsed_output.get("exists", False),
-                "errors": [str(e)]
+                "warnings": self.parsed_output.get("warnings", []),
+                "errors": [describe_exception(e)]
             }
         except Exception as e:
             logger.error(f"Command String: {self.command.raw_block}")
@@ -1233,14 +1388,15 @@ class AsyncBaseCommandProcessor(ABC):
                 "output": self.command.raw_block,
                 "analysis": analysis,
                 "status": "failure",
-                "message": f"Execution failed: {str(e)}",
+                "message": f"Execution failed: {describe_exception(e)}",
                 "verb": self.command.verb,
                 "object_type": self.canonical_object_type,
                 "markdown_object_type": self.markdown_object_type,
                 "display_name": self.parsed_output.get("display_name"),
                 "qualified_name": self.parsed_output.get("qualified_name"),
                 "found": self.parsed_output.get("exists", False),
-                "errors": [str(e)]
+                "warnings": self.parsed_output.get("warnings", []),
+                "errors": [describe_exception(e)]
             }
         
         # 10. Post-execution: Update the cache on success
@@ -1261,6 +1417,8 @@ class AsyncBaseCommandProcessor(ABC):
                     await self._sync_parent_relationship(guid, attributes)
                     await self._sync_governance_classifications(guid, attributes)
                     await self._sync_referenceable_classifications(guid, attributes)
+                    await self._sync_search_keywords(guid, attributes)
+                    await self._sync_referenceable_extras(guid, attributes)
 
         deferred = bool(self.parsed_output.get("deferred")) and not self.context.get("final_round")
 
@@ -1271,6 +1429,9 @@ class AsyncBaseCommandProcessor(ABC):
             message = f"Deferred {self.command.verb} {self.command.object_type}: waiting on forward reference(s) to resolve"
         else:
             message = f"Executed {self.command.verb} {self.command.object_type}" + (f" (GUID: {guid})" if guid else "")
+            if not guid and self.command.verb == "Create" and not self.parsed_output.get("local_only"):
+                # A summary row must never claim a create it can't name (F-A 7).
+                message += " | no element GUID was returned, so the created element can't be named"
             if deferred:
                 message += " | Pending: reference(s) still awaiting later resolution"
 
@@ -1517,12 +1678,10 @@ class AsyncBaseCommandProcessor(ABC):
                 logger.debug(f"resolve_element_guid: Remapping pseudo-type '{tech_type}' to '{remap[tech_type]}'")
                 tech_type = remap[tech_type]
             
-        # 1. Is it a GUID?
-        try:
-            uuid.UUID(name_or_guid)
+        # 1. Is it a GUID? Only a UUID-shaped value counts here: GUIDs are opaque, and a qualified
+        # name with no spaces would look like one, so anything else goes through name resolution.
+        if is_guid_reference(name_or_guid):
             return name_or_guid
-        except ValueError:
-            pass
             
         # 2. Check local cache (real elements first!)
         key = find_key_with_value(name_or_guid)

@@ -17,6 +17,7 @@ from loguru import logger
 from md_processing.v2.processors import AsyncBaseCommandProcessor
 from md_processing.v2.multilink import async_link_or_update, update_body
 from md_processing.md_processing_utils.common_md_utils import set_rel_request_body, set_delete_rel_request_body
+from pyegeria.core.utils import is_guid_reference
 from pyegeria.core.utils import body_slimmer
 
 
@@ -43,7 +44,7 @@ class ActionProcessStepLinkProcessor(AsyncBaseCommandProcessor):
                 return value
             # Basic GUID regex check
             import re
-            if re.match(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', value.lower()):
+            if is_guid_reference(value):  # a GUID (plain or type-prefixed), not a name
                 return value
         return None
 

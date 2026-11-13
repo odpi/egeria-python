@@ -8,7 +8,7 @@ from loguru import logger
 
 from pyegeria import EgeriaTech, PyegeriaException, print_basic_exception
 from md_processing.v2.extraction import DrECommand
-from md_processing.v2.processors import AsyncBaseCommandProcessor
+from md_processing.v2.processors import AsyncBaseCommandProcessor, describe_exception
 from md_processing.md_processing_utils.md_processing_constants import COLLECTION_SUBTYPES, PROJECT_SUBTYPES, find_alternate_names
 from md_processing.v2.collection_manager_processor import CollectionManagerProcessor
 from md_processing.v2.project import ProjectProcessor
@@ -157,7 +157,7 @@ class V2Dispatcher:
             return {
                 "output": command.raw_block,
                 "status": "failure",
-                "message": f"Execution failed: {str(e)}",
+                "message": f"Execution failed: {describe_exception(e)}",
                 "verb": command.verb,
                 "object_type": command.object_type,
                 "error": str(e)
@@ -167,7 +167,7 @@ class V2Dispatcher:
             return {
                 "output": command.raw_block,
                 "status": "failure",
-                "message": f"Execution failed: {str(e)}",
+                "message": f"Execution failed: {describe_exception(e)}",
                 "verb": command.verb,
                 "object_type": command.object_type,
                 "error": str(e)

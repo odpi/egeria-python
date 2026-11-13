@@ -5,6 +5,7 @@ from typing import Dict, Any, Optional
 from loguru import logger
 
 from pyegeria import PyegeriaException, NO_ELEMENTS_FOUND
+from md_processing.md_processing_utils.common_md_utils import person_action_extras
 from md_processing.v2.processors import AsyncBaseCommandProcessor
 from md_processing.md_processing_utils.common_md_utils import (
     set_actor_manager_prop_body, set_create_body, set_update_body,
@@ -40,6 +41,7 @@ class ActorManagerProcessor(AsyncBaseCommandProcessor):
                 description=attributes.get('Description', {}).get('value'),
                 situation=attributes.get('Situation', {}).get('value'),
                 priority=attributes.get('Priority', {}).get('value', 0),
+                extra_properties=person_action_extras(attributes, "ToDoProperties"),
                 # Without this, create_my_todo invents its own qualified name
                 # (different casing plus a random timestamp suffix) - the real
                 # stored element then never matches what Dr.Egeria reports

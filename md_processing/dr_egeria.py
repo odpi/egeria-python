@@ -28,6 +28,7 @@ from md_processing import (process_provenance_command, get_current_datetime_stri
 from md_processing.md_processing_utils.common_md_proc_utils import set_parse_summary_mode, set_usage_level
 from md_processing.md_processing_utils.common_md_utils import set_attribute_log_level
 from md_processing.md_processing_utils.md_processing_constants import PROJECT_SUBTYPES, COLLECTION_SUBTYPES
+from md_processing.v2.not_supported import NOT_SUPPORTED_YET, NotSupportedYetProcessor
 from md_processing.v2 import (
     UniversalExtractor, V2Dispatcher, AsyncBaseCommandProcessor,
     TermProcessor, TermRelationshipProcessor, GlossaryClassifyProcessor, QuestionProcessor, TermAsContextProcessor,
@@ -380,6 +381,11 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
         reg(f"Update {coll_type}", CollectionManagerProcessor)
 
     reg("Create CSV Element", CSVElementProcessor)
+    # The Digital Product Manager spec names it "Create CSV File"; nothing was registered for that name.
+    reg("Create CSV File", CSVElementProcessor)
+    # Specs Dr.Egeria offers but can't create as written: say why instead of "No processor registered".
+    for command in NOT_SUPPORTED_YET:
+        reg(command, NotSupportedYetProcessor)
     reg("Add Member to Collection", CollectionLinkProcessor)
     reg("Link Agreement Item", CollectionLinkProcessor)
     reg("Link Agreement Actor", CollectionLinkProcessor)

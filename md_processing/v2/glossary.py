@@ -5,7 +5,7 @@ from typing import Dict, Any, Optional, List
 from loguru import logger
 
 from pyegeria import EgeriaTech, PyegeriaException
-from md_processing.v2.processors import AsyncBaseCommandProcessor
+from md_processing.v2.processors import AsyncBaseCommandProcessor, describe_exception
 from md_processing.md_processing_utils.md_processing_constants import (
     get_command_spec, APPLY_CLASSIFICATION_VERBS, REMOVE_CLASSIFICATION_VERBS,
     UPDATE_CLASSIFICATION_VERBS,
@@ -15,6 +15,44 @@ from md_processing.md_processing_utils.common_md_utils import (
     set_object_classifications, update_element_dictionary,
     async_add_note_in_dr_e
 )
+
+def term_properties_and_classifications(prop_body: dict, attributes: dict) -> dict:
+    """The glossary-term properties and the term-flag classifications (F-B group 1).
+
+    GlossaryTermProperties (odpi/egeria origin/main 0b7ee0fb) has aliases, summary, examples, abbreviation and
+    usage; the flags are classifications in Egeria 6, not term properties (OpenMetadataType.java ~3245-3366):
+      Is Abstract Concept                           -> AbstractConcept
+      Is Activity Description + Term Activity Type  -> ActivityDescription(activityType)
+      Is Context + Context Description / Scope      -> ContextDefinition(description, scope)
+      Is Data Value                                 -> DataValueMeaning
+    Sent as properties they were silently ignored. Returns {classification name: typed properties}.
+    """
+    def value(name):
+        return (attributes.get(name) or {}).get("value")
+
+    for attribute, key in (("Aliases", "aliases"), ("Summary", "summary"), ("Example", "examples"),
+                           ("Abbreviation", "abbreviation"), ("Usage", "usage")):
+        if value(attribute) not in (None, "", []):
+            prop_body[key] = value(attribute)
+    classifications = {}
+    if value("Is Abstract Concept") is True:
+        classifications["AbstractConcept"] = {"class": "AbstractConceptProperties"}
+    if value("Is Activity Description") is True or value("Term Activity Type"):
+        props = {"class": "ActivityDescriptionProperties"}
+        if value("Term Activity Type"):
+            props["activityType"] = value("Term Activity Type")
+        classifications["ActivityDescription"] = props
+    if value("Is Context") is True or value("Context Description") or value("Context Scope"):
+        props = {"class": "ContextDefinitionProperties"}
+        if value("Context Description"):
+            props["description"] = value("Context Description")
+        if value("Context Scope"):
+            props["scope"] = value("Context Scope")
+        classifications["ContextDefinition"] = props
+    if value("Is Data Value") is True:
+        classifications["DataValueMeaning"] = {"class": "DataValueMeaningProperties"}
+    return classifications
+
 
 class GlossaryProcessor(AsyncBaseCommandProcessor):
     """
@@ -120,6 +158,17 @@ class TermProcessor(AsyncBaseCommandProcessor):
             return None
 
 
+    async def _classify_term(self, guid: str, classifications: dict) -> None:
+        """On an update, attach the term-flag classifications with the generic metadata-expert classify call."""
+        for name, props in classifications.items():
+            try:
+                await self.client.metadata_expert._async_classify_metadata_element(
+                    guid, name, {"class": "NewClassificationRequestBody", "properties": props})
+                self.add_related_result(f"Classification {name}", guid=guid, message="Classified")
+            except PyegeriaException as e:
+                self.add_related_result(f"Classification {name}", guid=guid, status="failure",
+                                        message=describe_exception(e))
+
     async def apply_changes(self) -> str:
         verb = self.command.verb
         attributes = self.parsed_output["attributes"]
@@ -134,19 +183,7 @@ class TermProcessor(AsyncBaseCommandProcessor):
 
         # 1. Properties
         prop_body = set_element_prop_body(om_type or "GlossaryTerm", qualified_name, attributes)
-        prop_body["aliases"] = attributes.get('Aliases', {}).get('value', None)
-        prop_body["summary"] = attributes.get('Summary', {}).get('value', None)
-        prop_body["examples"] = attributes.get('Example', {}).get('value', None)
-        prop_body["abbreviation"] = attributes.get('Abbreviation', {}).get('value', None)
-        prop_body["usage"] = attributes.get('Usage', {}).get('value', None)
-        prop_body["user_defined_status"] = attributes.get('UserDefinedStatus', {}).get('value', None)
-        prop_body["contextDescription"] = attributes.get('Context Description', {}).get('value', None)
-        prop_body["contextScope"] = attributes.get('Context Scope', {}).get('value', None)
-        prop_body["isAbstractConcept"] = attributes.get('Is Abstract Concept', {}).get('value')
-        prop_body["isActivityDescription"] = attributes.get('Is Activity Description', {}).get('value')
-        prop_body["isContext"] = attributes.get('Is Context', {}).get('value')
-        prop_body["isDataValue"] = attributes.get('Is Data Value', {}).get('value')
-        prop_body["termActivityType"] = attributes.get('Term Activity Type', {}).get('value', None)
+        term_classifications = term_properties_and_classifications(prop_body, attributes)
         
         # 2. Extract collection GUIDs
         # We may have one or more collections listed (Glossary Name, Folders)
@@ -178,6 +215,7 @@ class TermProcessor(AsyncBaseCommandProcessor):
             # If merge_update is False, we synchronize (replace_all=True)
             await self._sync_term_memberships(guid, to_be_collection_guids, not merge_update)
             await self._sync_term_naming_classifications(guid, attributes)
+            await self._classify_term(guid, term_classifications)
             
             if journal_entry:
                 try:
@@ -193,12 +231,9 @@ class TermProcessor(AsyncBaseCommandProcessor):
 
         elif verb == "Create":
             self.last_body = body = set_create_body(om_type or "GlossaryTerm", attributes)
-            # ISSUE-162: the term flags default to False only on create; on update an unset
-            # flag stays None so filter_update_properties drops it and Egeria keeps the value.
-            for flag in ("isAbstractConcept", "isActivityDescription", "isContext", "isDataValue"):
-                if prop_body.get(flag) is None:
-                    prop_body[flag] = False
             body["properties"] = prop_body
+            if term_classifications:  # the term flags are classifications (term_properties_and_classifications)
+                body["initialClassifications"] = {**(body.get("initialClassifications") or {}), **term_classifications}
             
             # Anchor Scope check
             anchor_scope_guid = attributes.get("Anchor Scope", {}).get('guid', None)
@@ -473,10 +508,10 @@ class QuestionProcessor(AsyncBaseCommandProcessor):
         om_type = spec.get("OM_TYPE", "GlossaryTerm")
 
         prop_body = set_element_prop_body(om_type, qualified_name, attributes)
-        prop_body["examples"] = attributes.get('Example', {}).get('value', None)
+        term_classifications = term_properties_and_classifications(prop_body, attributes)
         body = set_create_body(om_type, attributes)
         body["properties"] = prop_body
-        body["initialClassifications"] = {"Question": {"class": "QuestionProperties"}}
+        body["initialClassifications"] = {"Question": {"class": "QuestionProperties"}, **term_classifications}
 
         raw_guid = await self.client._async_create_question(body=body)
         guid = self.extract_guid_or_raise(raw_guid, "Create Question")

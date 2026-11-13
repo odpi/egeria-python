@@ -15,8 +15,11 @@ from typing import Any, Dict, Optional
 
 from loguru import logger
 
+from md_processing.md_processing_utils.common_md_utils import report_unsent_bundle
 from md_processing.v2.processors import AsyncBaseCommandProcessor
 from md_processing.md_processing_utils.common_md_utils import update_element_dictionary
+from md_processing.md_processing_utils.typed_properties import (classification_map, entity_properties,
+                                                                  parent_relationship_properties)
 
 
 def _v(attributes: dict, name: str, default=None):
@@ -46,6 +49,13 @@ class AssetMakerProcessor(AsyncBaseCommandProcessor):
         om_type = self.get_command_spec().get("OM_TYPE")
         command_key = self.command.object_type
 
+        if not (command_key == "Element" and not om_type):
+            # A technology-type create fills its template's placeholders only (name, host, description,
+            # version, ...): the bundle attributes the command also offers can't be sent (F-B group 5).
+            report_unsent_bundle(attributes, {"Description", "Version Identifier"},
+                                 f"Create {command_key} is made from its technology type's template, which "
+                                 "takes only the template's placeholder values")
+
         if command_key == "Element" and not om_type:
             # Generic 'Create Element' -- the raw TemplateRequestBody surface.
             # Egeria dropped initialStatus (ISSUE-113); the copy keeps the template's
@@ -54,13 +64,21 @@ class AssetMakerProcessor(AsyncBaseCommandProcessor):
             if status.get("value") and not status.get("is_default"):
                 logger.warning("'Initial Status' ignored: Egeria no longer accepts it. Set contentStatus "
                                "(or the type's own status) in Template Properties instead.")
+            parent_props, notes = parent_relationship_properties(attributes)
+            # EntityProperties / ClassificationProperties are polymorphic too (TemplateRequestBody.java:30-31)
+            replacement, more = entity_properties(_v(attributes, "Element Type Name"),
+                                                  _v(attributes, "Template Properties"), "Template Properties")
+            classifications, most = classification_map(_v(attributes, "Generic Initial Classifications"),
+                                                       "Generic Initial Classifications")
+            for note in notes + more + most:
+                self._add_warning(note)
             body = {
                 "class": "TemplateRequestBody",
                 "typeName": _v(attributes, "Element Type Name"),
                 "templateGUID": _v(attributes, "Template GUID"),
                 "placeholderPropertyValues": _v(attributes, "Placeholder Property Values") or {},
-                "replacementProperties": _v(attributes, "Template Properties"),
-                "initialClassifications": _v(attributes, "Generic Initial Classifications"),
+                "replacementProperties": replacement,
+                "replacementClassifications": classifications,
                 "anchorGUID": _guid(attributes, "Anchor ID"),
                 "isOwnAnchor": _v(attributes, "Is Own Anchor", True),
                 "anchorScopeGUIDs": _v(attributes, "Anchor Scope IDs"),
@@ -68,7 +86,7 @@ class AssetMakerProcessor(AsyncBaseCommandProcessor):
                 "effectiveTo": _v(attributes, "Effective To"),
                 "parentGUID": _guid(attributes, "Parent ID"),
                 "parentRelationshipTypeName": _v(attributes, "Parent Relationship Type Name"),
-                "parentRelationshipProperties": _v(attributes, "Parent Relationship Attributes"),
+                "parentRelationshipProperties": parent_props,
                 "parentAtEnd1": _v(attributes, "Parent at End1", True),
                 "deepCopy": _v(attributes, "Deep Copy"),
             }
@@ -146,7 +164,7 @@ class AssetMakerProcessor(AsyncBaseCommandProcessor):
             )
             display_name = _v(attributes, "Folder Name")
 
-        elif command_key == "Unity Catalog Server Element":
+        elif command_key in ("UC Server Element", "Unity Catalog Server Element"):  # the spec key is "UC ..."
             guid = await client._async_create_uc_server_element_from_template(
                 server_name=_v(attributes, "UC Server Name"),
                 host_url=_v(attributes, "Host URL"),
@@ -165,7 +183,7 @@ class AssetMakerProcessor(AsyncBaseCommandProcessor):
             )
             display_name = _v(attributes, "UC Catalog Name")
 
-        elif command_key == "Unity Catalog Schema Element":
+        elif command_key in ("UC Schema Element", "Unity Catalog Schema Element"):  # the spec key is "UC ..."
             guid = await client._async_create_uc_schema_element_from_template(
                 uc_catalog=_v(attributes, "UC Catalog Name"),
                 uc_schema=_v(attributes, "UC Schema Name"),
@@ -175,7 +193,7 @@ class AssetMakerProcessor(AsyncBaseCommandProcessor):
             )
             display_name = _v(attributes, "UC Schema Name")
 
-        elif command_key == "Unity Catalog Table Element":
+        elif command_key in ("UC Table Element", "Unity Catalog Table Element"):  # the spec key is "UC ..."
             guid = await client._async_create_uc_table_element_from_template(
                 uc_catalog=_v(attributes, "UC Catalog Name"),
                 uc_schema=_v(attributes, "UC Schema Name"),
@@ -214,8 +232,8 @@ class AssetMakerProcessor(AsyncBaseCommandProcessor):
             display_name = _v(attributes, "UC Volume Name")
 
         else:
-            raise ValueError(f"AssetMakerProcessor: unrecognized command "
-                              f"(object_type={command_key!r}, OM_TYPE={om_type!r})")
+            raise ValueError(f"Create {command_key} is not supported yet by Dr.Egeria's Asset Maker "
+                             f"(OM_TYPE {om_type!r} has no create-from-template mapping)")
 
         guid = self.extract_guid_or_raise(guid, f"Create {command_key}")
         self.parsed_output["guid"] = guid

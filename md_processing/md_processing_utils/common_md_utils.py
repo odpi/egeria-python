@@ -16,6 +16,8 @@ from pyegeria.core.utils import (camel_to_title_case)
 from pyegeria.core._globals import DEBUG_LEVEL, GovernanceDomains, resolve_enum
 from md_processing.md_processing_utils.message_constants import message_types
 from md_processing.md_processing_utils.element_status import element_status_properties
+from md_processing.md_processing_utils.typed_properties import (parent_relationship_properties,
+                                                                  record_not_applied)
 
 # Constants
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
@@ -365,6 +367,12 @@ def set_create_body(object_type: str, attributes: dict)->dict:
     Callers should build the inner body separately with the appropriate helper and then assign it to body["properties"].
     """
     prop_name = object_type.replace(" ", "")
+    # RelationshipProperties is polymorphic: a raw dictionary (no "class") is a 400 that loses the whole
+    # create. Typed by the parent relationship type; keys it doesn't read are reported, not sent.
+    parent_props, notes = parent_relationship_properties(attributes)
+    record_not_applied(attributes, "Parent Relationship Attributes"
+                       if attributes.get("Parent Relationship Attributes", {}).get("value")
+                       else "Parent Relationship Properties", notes)
     body = {
         "class": "NewElementRequestBody",
         "externalSourceGUID": attributes.get('External Source GUID', {}).get('guid', None),
@@ -376,7 +384,7 @@ def set_create_body(object_type: str, attributes: dict)->dict:
         "isOwnAnchor": attributes.get('Is Own Anchor', {}).get('value', True),
         "parentGUID": attributes.get('Parent ID', {}).get('guid', None),
         "parentRelationshipTypeName": attributes.get('Parent Relationship Type Name', {}).get('value', None) or attributes.get('Parent Relationship Type', {}).get('value', None),
-        "parentRelationshipProperties": attributes.get('Parent Relationship Attributes', {}).get('value', None) or attributes.get('Parent Relationship Properties', {}).get('value', None),
+        "parentRelationshipProperties": parent_props,
         "parentAtEnd1": attributes.get('Parent at End1', {}).get('value', True),
         # Egeria reads a list, anchorScopeGUIDs; the singular key was dropped (ISSUE-164)
         "anchorScopeGUIDs": ([attributes['Anchor Scope ID']['guid']]
@@ -494,7 +502,133 @@ def set_element_prop_body(object_type: str, qualified_name: str, attributes: dic
         }
     # contentStatus / activityStatus / deploymentStatus, whichever this type has (ISSUE-113).
     body.update(element_status_properties(body["class"], attributes))
-    return body
+    # The rest of the bundle the type declares (namespacePath, source, resourceName, ... for assets); a given
+    # bundle attribute the type has no property for is reported (F-B group 5).
+    return complete_bundle_properties(body, attributes)
+
+#: The Referenceable / Authored / Asset bundle attributes and the Egeria property each fills.
+BUNDLE_PROPERTIES = {
+    "Description": "description", "Category": "category", "Identifier": "identifier", "URL": "url",
+    "Legal": "legal", "Version Identifier": "versionIdentifier", "Authors": "authors",
+    "User Defined Content Status": "userDefinedContentStatus", "Effective From": "effectiveFrom",
+    "Effective To": "effectiveTo", "Additional Properties": "additionalProperties",
+    "Namespace Path": "namespacePath", "Source": "source", "Resource Name": "resourceName",
+    "Deployed Implementation Type": "deployedImplementationType",
+}
+
+
+#: Attributes several types share under the same key but with other meanings elsewhere (e.g. Project Scope):
+#: filled when the type declares the key, never reported when it doesn't.
+BUNDLE_OPTIONAL = {
+    "Scope": "scope", "Usage": "usage", "Purpose": "purpose",
+    # one-offs a processor left out (F-B group 6), under the key Egeria's class declares
+    "Headcount": "headCount", "Disposition": "disposition", "Implementation Description": "implementationDescription",
+    "Product Name": "productName", "Maturity": "maturity", "Service Life": "serviceLife",
+    "Introduction Date": "introductionDate", "Withdrawal Date": "withdrawDate", "Next Version Date": "nextVersionDate",
+    "Member Ordinal": "ordinal",
+}
+
+#: One-off attributes with no property on most of the types that offer them: filled where the class declares
+#: the key, reported where it doesn't (F-B group 6).
+ONE_OFF_REPORTED = {
+    "Current Version": "currentVersion", "Coverage Category": "coverageCategory",
+    "Minimum Cardinality": "minCardinality", "Maximum Cardinality": "maxCardinality", "Position": "position",
+    "Is Default Member": "isDefaultMember", "Default Member": "defaultMember",
+}
+
+#: Keys some processors send under a name the Java class doesn't declare, and the name it does.
+KEY_RENAMES = {"withdrawalDate": "withdrawDate", "nextVersion": "nextVersionDate", "headcount": "headCount"}
+
+
+def complete_bundle_properties(props: dict, attributes: dict) -> dict:
+    """Fill in the bundle attributes a processor that builds its own properties left out (F-B group 5).
+
+    For each BUNDLE_PROPERTIES attribute the document gives and `props` doesn't already set: sent when the
+    properties class (properties_class_fields, from Egeria's Java) declares the key, otherwise reported as
+    "not applied: <attribute>: <class> has no <key> property". The type's status field is filled the same
+    way (element_status_properties). Values a processor set itself always win.
+    """
+    from md_processing.md_processing_utils.properties_class_fields import PROPERTIES_CLASS_FIELDS
+    cls = props.get("class") or ""
+    fields = (PROPERTIES_CLASS_FIELDS.get(cls) or ("", None))[1]
+    for attribute, key in BUNDLE_PROPERTIES.items():
+        value = (attributes.get(attribute) or {}).get("value")
+        if fields is not None and key not in fields:
+            # Egeria ignores a key its class doesn't declare: don't send it, and say so if it was given
+            if props.pop(key, None) not in (None, "", [], {}) or value not in (None, "", [], {}):
+                record_not_applied(attributes, attribute, [f"not applied: {attribute}: {cls} has no {key} property"])
+            continue
+        if value in (None, "", [], {}) or props.get(key) not in (None, "", [], {}):
+            continue
+        props[key] = value
+    if fields is not None:
+        for wrong, right in KEY_RENAMES.items():
+            if wrong in props and wrong not in fields and right in fields:
+                value = props.pop(wrong)
+                if props.get(right) in (None, "", [], {}):
+                    props[right] = value
+    for attribute, key in ONE_OFF_REPORTED.items():
+        value = (attributes.get(attribute) or {}).get("value")
+        if value in (None, "", [], {}) or props.get(key) not in (None, "", [], {}):
+            continue
+        if fields is not None and key not in fields:
+            record_not_applied(attributes, attribute, [f"not applied: {attribute}: {cls} has no {key} property"])
+        else:
+            props[key] = value
+    for attribute, key in BUNDLE_OPTIONAL.items():  # filled where the type declares them
+        value = (attributes.get(attribute) or {}).get("value")
+        if fields is not None and key not in fields:
+            # a processor put it in a body whose class doesn't declare it: Egeria would ignore it
+            if props.pop(key, None) not in (None, "", [], {}):
+                record_not_applied(attributes, attribute, [f"not applied: {attribute}: {cls} has no {key} property"])
+            continue
+        if value not in (None, "", [], {}) and props.get(key) in (None, "", [], {}):
+            props[key] = value
+    for key, value in element_status_properties(cls, attributes).items():
+        if props.get(key) in (None, ""):
+            props[key] = value
+    report_status_not_applied(cls, attributes)
+    return props
+
+
+def report_unsent_bundle(attributes: dict, sent: set, reason: str) -> None:
+    """For a create whose client call takes only some arguments (an informal tag, a create-from-template):
+    every bundle or status attribute given that isn't in `sent` is reported "not applied: <attribute>: <reason>"."""
+    for attribute in [*BUNDLE_PROPERTIES, "Status", "Content Status", "Activity Status", "Deployment Status"]:
+        entry = attributes.get(attribute) or {}
+        if attribute not in sent and entry.get("value") not in (None, "", [], {}) and not entry.get("is_default"):
+            record_not_applied(attributes, attribute, [f"not applied: {attribute}: {reason}"])
+
+
+def person_action_extras(attributes: dict, properties_class: str) -> dict:
+    """The properties a my-profile create (To-Do, Meeting, Review) doesn't take as arguments: effective dates.
+    Objective is reported where the type has none (only MeetingProperties does). F-B group 5/6."""
+    from md_processing.md_processing_utils.properties_class_fields import PROPERTIES_CLASS_FIELDS
+    fields = (PROPERTIES_CLASS_FIELDS.get(properties_class) or ("", ()))[1]
+    if (attributes.get("Objective") or {}).get("value") not in (None, "") and "objective" not in fields:
+        record_not_applied(attributes, "Objective", [f"not applied: Objective: {properties_class} has no objective property"])
+    return {"effectiveFrom": (attributes.get("Effective From") or {}).get("value"),
+            "effectiveTo": (attributes.get("Effective To") or {}).get("value")}
+
+
+def report_status_not_applied(properties_class: str, attributes: dict) -> None:
+    """A written status attribute the type has no field for is reported, not just logged (F-B group 6):
+    Content/Activity/Deployment Status by its own field, the generic Status when the type has none at all.
+    The header element status can't be set on create."""
+    from md_processing.md_processing_utils.element_status import EXPLICIT_STATUS_ATTRIBUTES
+    from md_processing.md_processing_utils.element_status_fields import STATUS_FIELDS_BY_PROPERTIES_CLASS
+    if properties_class not in STATUS_FIELDS_BY_PROPERTIES_CLASS:
+        return
+    supported = STATUS_FIELDS_BY_PROPERTIES_CLASS[properties_class]
+    for attribute, field in EXPLICIT_STATUS_ATTRIBUTES.items():
+        entry = attributes.get(attribute) or {}
+        if entry.get("value") not in (None, "") and not entry.get("is_default") and field not in supported:
+            record_not_applied(attributes, attribute,
+                               [f"not applied: {attribute}: {properties_class} has no {field} property"])
+    entry = attributes.get("Status") or {}
+    if entry.get("value") not in (None, "") and not entry.get("is_default") and not supported:
+        record_not_applied(attributes, "Status", [f"not applied: Status: {properties_class} has no status property"])
+
 
 def report_spec_microflow(attributes: dict) -> str | None:
     """The Report Spec's `Microflow` attribute as canonical microflow/1 text, or None if not given.
@@ -577,7 +711,7 @@ def set_collection_manager_body(object_type: str, qualified_name: str, attribute
             "businessImplementationType": attributes.get('Business Implementation Type', {}).get('value', None),
         })
 
-    return prop_bod
+    return complete_bundle_properties(prop_bod, attributes)  # keys added after the common builder (F-B 6)
 
 
 def set_actor_manager_prop_body(object_type: str, qualified_name: str, attributes: dict) -> dict:
@@ -619,7 +753,7 @@ def set_actor_manager_prop_body(object_type: str, qualified_name: str, attribute
             except (ValueError, TypeError):
                 prop_bod["headCount"] = None
 
-    return prop_bod
+    return complete_bundle_properties(prop_bod, attributes)  # keys added after the common builder (F-B 6)
 
 
 def set_solution_architect_body(object_type: str, qualified_name: str, attributes: dict) -> dict:
@@ -648,11 +782,14 @@ def set_solution_architect_body(object_type: str, qualified_name: str, attribute
         })
 
     if object_type in ("Solution Role", "SolutionRole", "SolutionActorRole"):
-        role_domain_id = attributes.get('Role Domain Identifier', {}).get('value')
-        resolved_domain = resolve_enum(GovernanceDomains, role_domain_id)
-        prop_bod["domainIdentifier"] = resolved_domain if resolved_domain is not None else role_domain_id
+        # SolutionActorRoleProperties (odpi/egeria origin/main 0b7ee0fb) has scope and actorRoleGroups but no
+        # domainIdentifier or title: those were sent and silently ignored (round-trip probe).
+        for attribute, key in (("Role Domain Identifier", "domainIdentifier"), ("Title", "title")):
+            if attributes.get(attribute, {}).get('value') not in (None, ""):
+                record_not_applied(attributes, attribute,
+                                   [f"not applied: {attribute}: SolutionActorRoleProperties has no {key} property"])
 
-    return prop_bod
+    return complete_bundle_properties(prop_bod, attributes)  # keys added after the common builder (F-B 6)
 
 
 def set_product_body(object_type: str, qualified_name: str, attributes: dict) -> dict:
@@ -664,7 +801,7 @@ def set_product_body(object_type: str, qualified_name: str, attributes: dict) ->
     prop_bod["introductionDate"] = attributes.get('Introduction Date', {}).get('value', [])
     prop_bod["withdrawalDate"] = attributes.get('Withdrawal Date', {}).get('value', [])
     prop_bod["nextVersion"] = attributes.get('Next Version Date', {}).get('value', [])
-    return prop_bod
+    return complete_bundle_properties(prop_bod, attributes)  # keys added after the common builder (F-B 6)
 
 def set_data_field_body(object_type: str, qualified_name: str, attributes: dict)->dict:
     prop_bod = set_element_prop_body(object_type, qualified_name, attributes)
@@ -683,7 +820,7 @@ def set_data_field_body(object_type: str, qualified_name: str, attributes: dict)
     prop_bod["sortOrder"] = attributes.get('Sort Order', {}).get('value', None)
     prop_bod["isPartitionKey"] = attributes.get('Is Partition Key', {}).get('value', None)
     prop_bod["partitionKeyPosition"] = attributes.get('Partition Key Position', {}).get('value', None)
-    return prop_bod
+    return complete_bundle_properties(prop_bod, attributes)  # keys added after the common builder (F-B 6)
 
 def set_update_status_body(object_type: str, attributes: dict)->dict:
     return {
@@ -727,7 +864,7 @@ def set_gov_prop_body(object_type: str, qualified_name: str, attributes: dict)->
 
 
     body = update_gov_body_for_type(object_type, prop_bod, attributes)
-    return body
+    return complete_bundle_properties(body, attributes)  # keys added after the common builder (F-B 6)
     
 
 def update_gov_body_for_type(object_type: str, body: dict, attributes: dict) -> dict:

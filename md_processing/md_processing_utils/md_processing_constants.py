@@ -90,6 +90,9 @@ COLLECTION_SUBTYPES = [
     "Skill Set", "Reference List", "Report Type", "Report Spec", "Question Spec", "Working Set",
     "Event Set", "Context Event Collection", "IT Subsystem", "Naming Standard Rule Set", "Software Archive",
     "Concept Model", "Business Capability",
+    # SubjectAreaProperties extends CollectionProperties (odpi/egeria origin/main 0b7ee0fb); the compact
+    # spec has had Create Subject Area all along but nothing registered it.
+    "Subject Area",
 ]
 
 SIMPLE_BASE_COLLECTIONS: set = set(COLLECTION_SUBTYPES) | {

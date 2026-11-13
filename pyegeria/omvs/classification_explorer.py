@@ -13242,6 +13242,32 @@ class ClassificationExplorer(ServerClient):
         )
 
 
+    @dynamic_catch
+    async def _async_set_translation(self, element_guid: str, body: dict, timeout: int = default_timeout) -> None:
+        """Set a translation (a TranslationDetail) for an element. Async version.
+
+        Egeria's generic multi-language view service (MultiLanguageResource.java:32, odpi/egeria origin/main
+        0b7ee0fb, `POST .../elements/{elementGUID}/translations` with a NewElementRequestBody), mounted under
+        every view service's URL marker.
+
+        Sample body:
+        {
+          "class": "NewElementRequestBody",
+          "properties": {
+            "class": "TranslationDetailProperties",
+            "language": "French", "languageCode": "fr", "locale": "fr-FR",
+            "displayName": "...", "description": "...", "additionalTranslations": {"key": "value"}
+          }
+        }
+        """
+        url = f"{self.classification_command_root}/elements/{element_guid}/translations"
+        await self._async_make_request("POST", url, body, timeout=timeout)
+
+    @dynamic_catch
+    def set_translation(self, element_guid: str, body: dict, timeout: int = default_timeout) -> None:
+        """Set a translation (a TranslationDetail) for an element."""
+        return run_sync(self._async_set_translation(element_guid, body, timeout))
+
     async def _async_add_supplementary_properties_to_element(
             self,
             element_guid: str,

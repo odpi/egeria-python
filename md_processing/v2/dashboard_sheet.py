@@ -828,6 +828,18 @@ class CreateDashboardSheetProcessor(_DashboardSheetProcessorMixin, AsyncBaseComm
         heading = attributes.get("Dashboard Sheet Heading", {}).get("value") or name
         description = attributes.get("Dashboard Sheet Description", {}).get("value") or ""
         family = attributes.get("Dashboard Sheet Family", {}).get("value") or None
+        # A sheet keeps its heading, description, family, aliases and owner (locally and on its Dashboard);
+        # the bundle attributes the command also offers are reported, not dropped (F-B group 5).
+        from md_processing.md_processing_utils.common_md_utils import BUNDLE_PROPERTIES
+        from md_processing.md_processing_utils.typed_properties import record_not_applied
+        for attribute in [*BUNDLE_PROPERTIES, "Status", "Content Status", "Purpose", "Parent Relationship Attributes"]:
+            entry = attributes.get(attribute) or {}
+            if entry.get("value") not in (None, "", [], {}) and not entry.get("is_default"):
+                if attribute == "Description" and attributes.get("Dashboard Sheet Description", {}).get("value"):
+                    note = "the sheet's description is Dashboard Sheet Description"
+                else:
+                    note = "a Dashboard Sheet keeps only its heading, description, family, aliases and owner"
+                record_not_applied(attributes, attribute, [f"not applied: {attribute}: {note}"])
 
         path = _default_store_path()
         sheets = _load_store(path)
