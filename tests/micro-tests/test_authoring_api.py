@@ -344,6 +344,30 @@ def test_diff_flags_each_breaking_kind():
                                                                  "removed")]
 
 
+def test_a_pin_is_said_not_to_reach_dashboards_yet():
+    """F3 (read-back 2026-11-13): nothing that runs a placed Report reads reportSpecVersion yet."""
+    pinned = cdo_report(pinned_version=3)
+    assert any("dashboards don't read it yet" in n for n in validate(pinned).not_applied)
+    steps = publish_plan(pinned)["steps"]
+    assert "pinned at version 3" in steps[0]
+    assert any("runs the spec's latest version" in s for s in steps)
+    assert not any("dashboards don't read" in s for s in publish_plan(cdo_report())["steps"])
+
+
+def test_sheet_update_limits_are_said_in_the_plan_and_the_diff():
+    """F4: publishing adds and updates placements; it doesn't remove or reorder them on an existing sheet."""
+    s1 = catalog_health_sheet()
+    steps = publish_plan(s1, folders=["DashboardFolder::Consumer::Portal"])["steps"]
+    assert any("a placement no longer in this draft stays on the sheet" in s for s in steps)
+    fewer = SheetDraft(**{**s1.model_dump(), "placements": [p.model_dump() for p in s1.placements[:2]]})
+    removed, = [c for c in diff(s1, fewer).changes if c.change == "removed"]
+    assert "doesn't remove it" in removed.why
+    swapped = SheetDraft(**{**s1.model_dump(),
+                            "placements": [p.model_dump() for p in reversed(s1.placements)]})
+    order, = [c for c in diff(s1, swapped).changes if c.name == "(order)"]
+    assert "doesn't reorder" in order.why and not order.breaking
+
+
 def test_diff_added_things_are_not_breaking():
     d = diff(cdo_report(parameters={}), cdo_report())
     assert d.changes and not d.breaking

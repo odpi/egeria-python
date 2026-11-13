@@ -91,8 +91,9 @@ async def _spec_of(report: ReportDraft, client: Any, notes: List[str]):
     if report.pinned_version is not None:
         from pyegeria.authoring.versions import async_spec_at_version
         fs = await async_spec_at_version(client, report.spec, report.pinned_version)
+        from pyegeria.authoring.lifecycle import PIN_NOT_HONOURED
         notes.append(f"spec {report.spec!r} pinned at version {report.pinned_version}, read from Egeria as you; "
-                     f"not cached")
+                     f"not cached; {PIN_NOT_HONOURED.format(version=report.pinned_version)}")
         return fs
     from pyegeria.view.base_report_formats import lookup_report_spec
     fs = lookup_report_spec(report.spec)[0]

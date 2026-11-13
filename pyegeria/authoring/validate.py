@@ -11,7 +11,8 @@
     allowed, its parameters are ones it accepts, chart formats have a routine, detail specs exist);
   - report: its spec resolves (pyegeria's registry, else Egeria as the caller); the output format is one
     the spec produces; every parameter is one the spec declares (or a common find parameter) and has the
-    right type; a pinned version is refused (D14);
+    right type; a pinned version must exist (refused only when AuthoringGates.allow_pinning is off, D14),
+    and `not_applied` says that dashboards don't honour the pin yet;
   - sheet: every report placement names a Report Egeria holds for this user, and that Report's spec
     resolves; detail specs resolve; placement names are unique.
 - **Dr.Egeria validate** of the serialized document, through the caller's runner, when one is given.
@@ -147,7 +148,9 @@ async def _check_report(draft: ReportDraft, client: Any, result: ValidationResul
         from pyegeria.authoring.lifecycle import PIN_REFUSED
         result.error(PIN_REFUSED)
     if draft.pinned_version is not None and gates.allow_pinning:
+        from pyegeria.authoring.lifecycle import PIN_NOT_HONOURED
         from pyegeria.authoring.versions import async_spec_at_version
+        result.not_applied.append(PIN_NOT_HONOURED.format(version=draft.pinned_version))
         if client is None:
             result.not_checked.append(f"pinned version {draft.pinned_version} of {draft.spec!r}: no client to "
                                       f"read the spec's versions from Egeria")

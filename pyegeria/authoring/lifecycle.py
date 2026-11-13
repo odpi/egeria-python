@@ -27,6 +27,14 @@ from pyegeria.view.report_spec_publish import (
 KNOWN_CONSUMERS = ("EgeriaAdvisor", "Jupyter", "MyEgeria", "Portal", "ResourceExplorer", "pyegeria")
 RESTRICTED_LATER = "Restricted publish comes later, after the zone proof: publish as public for now."
 PIN_REFUSED = "Pinning a spec version is switched off here (AuthoringGates.allow_pinning, D14)."
+#: A pin is recorded (reportSpecVersion) and honoured by authoring validate/preview, but nothing that runs a
+#: placed Report reads it yet (read-back 2026-11-13 F3), so the live sheet runs the latest version.
+PIN_NOT_HONOURED = ("the pin to version {version} is recorded, but dashboards don't read it yet: a placement of "
+                    "this Report runs the spec's latest version until the spec resolver reads reportSpecVersion")
+#: Dr.Egeria's sheet commands add and update placements only (read-back 2026-11-13 F4).
+SHEET_UPDATE_LIMITS = ("if the sheet already exists, placements are added or updated in place: a placement no "
+                       "longer in this draft stays on the sheet, and existing placements keep their positions "
+                       "(removing or reordering placements isn't something publishing can do yet)")
 BUILTIN_REFUSED = ("'{label}' is a built-in spec: it ships with pyegeria and isn't published from here. "
                    "Copy it with new_from(prototype=('spec', '{label}'), new_label=...) and publish the copy.")
 
@@ -292,10 +300,13 @@ def publish_plan(draft: Any, *, folders: Iterable[str] = (), visibility: str = "
             markdown = f"# Report {draft.display_name}\n\n" + section(
                 "Create Report", report_rows(draft, marker="published" if promoting else None))
             qn = draft.qualified_name or f"(derived from the display name {draft.display_name!r})"
+            pinned = draft.pinned_version is not None
             steps = [f"create or update the Report {draft.display_name!r} running spec {draft.spec!r} "
                      f"({draft.output_format}"
-                     + (f", pinned at version {draft.pinned_version}" if draft.pinned_version else ", latest version")
+                     + (f", pinned at version {draft.pinned_version}" if pinned else ", latest version")
                      + f"), with {len(draft.parameters)} parameter(s) written out"]
+            if pinned:
+                steps.append(PIN_NOT_HONOURED.format(version=draft.pinned_version))
             markdown, steps = _declassify(markdown, steps, draft.qualified_name or draft.display_name, held)
             return _plan("report", draft.display_name, qn, markdown, steps)
         if gates.sheet_target != "egeria":
@@ -304,7 +315,8 @@ def publish_plan(draft: Any, *, folders: Iterable[str] = (), visibility: str = "
         qn = f"Dashboard::{draft.name}"
         blocks = [serialize(draft, title=f"# Publish dashboard sheet {draft.name}")]
         blocks += [section("Add Member to Collection", [("Element Id", qn), ("Collection Id", f)]) for f in folders]
-        steps = [f"create or update the sheet {qn} with {len(draft.placements)} placement(s), in order"]
+        steps = [f"create the sheet {qn} with {len(draft.placements)} placement(s), in order, or update it",
+                 SHEET_UPDATE_LIMITS]
         if (held or {}).get("zones"):
             blocks.insert(1, section("Declassify Zone Membership", [("Target Element", qn)]))
             steps.append(f"remove its zones ({', '.join(held['zones'])}): the draft becomes public")

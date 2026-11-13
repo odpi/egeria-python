@@ -11,6 +11,13 @@ credentials are never used for authoring:
 
 **Drafts** live in a local DraftStore (D16) keyed by the caller's user id, under the directory the server
 is configured with (`PYEGERIA_AUTHORING_DRAFTS_DIR`, default `~/.pyegeria/authoring-drafts`).
+
+**The local draft owner is not authenticated** (read-back 2026-11-13). The owner is `as_user["user_id"]`, else
+the plain `user_id` argument, and nothing checks either against a credential before reading or writing the
+local store: anyone who can call this server can read or change another user's local drafts by naming them.
+That's acceptable for a per-user stdio MCP server (one person, their own drafts directory), not for a shared
+one; don't expose these tools on a shared server until the owner comes from an authenticated identity. Writes
+to Egeria (`authoring_apply`) are not affected: Egeria checks the user's own token.
 """
 from __future__ import annotations
 

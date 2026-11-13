@@ -5,12 +5,21 @@
 Areas: field, column, parameter, analytic parameter, placement. **Breaking** (needs confirming before a
 promote, design note §1d): a removed column or placement, a changed parameter type, a changed target type.
 A changed analytic routine is flagged breaking too: everything that reads the spec's columns depends on it.
+
+A removed placement and a placement reorder are reported, but publishing doesn't apply them to a sheet that
+already exists (Dr.Egeria's sheet commands add and update only); their `why` says so.
 """
 from __future__ import annotations
 
 from typing import Any, Dict, List, Tuple
 
 from pyegeria.authoring.models import AuthoringRefused, Change, Diff, ReportDraft, SheetDraft, SpecDraft, as_draft
+
+
+NOT_PUBLISHED_REMOVE = ("publishing an update doesn't remove it: the placement stays on the existing sheet "
+                        "(Dr.Egeria's sheet commands add and update only)")
+NOT_PUBLISHED_ORDER = ("publishing an update doesn't reorder an existing sheet: placements keep their positions "
+                       "(Dr.Egeria's sheet commands add and update only)")
 
 
 def _fields(diff: Diff, a: Any, b: Any, names: List[str], breaking: Tuple[str, ...] = ()) -> None:
@@ -93,8 +102,12 @@ def diff(a: Any, b: Any) -> Diff:
     pa = {p.name: p.model_dump(exclude={"name"}) for p in a.placements}
     pb = {p.name: p.model_dump(exclude={"name"}) for p in b.placements}
     _keyed(d, "placement", pa, pb, removed_breaks=True)
+    for c in d.changes:
+        if c.area == "placement" and c.change == "removed":
+            c.why = f"{c.why}; but {NOT_PUBLISHED_REMOVE}" if c.why else NOT_PUBLISHED_REMOVE
     order_a = [p.name for p in a.placements if p.name in pb]
     order_b = [p.name for p in b.placements if p.name in pa]
     if order_a != order_b:
-        d.changes.append(Change(area="placement", name="(order)", change="changed", before=order_a, after=order_b))
+        d.changes.append(Change(area="placement", name="(order)", change="changed", before=order_a, after=order_b,
+                                why=NOT_PUBLISHED_ORDER))
     return d
