@@ -57,6 +57,25 @@ def catalog_health_sheet() -> SheetDraft:
                       ])
 
 
+
+# ── D14: every publish plan has its target resolved first ────────────────────
+
+NEW = {"resolved": True, "held": False, "guid": None, "qualified_name": None, "zones": [],
+       "published_version": None, "published_versions": [], "edited_since": False, "notes": []}
+
+
+def _publish(draft, *, held=None, **kw):
+    """publish_plan with a resolved target: not held, unless `held` says otherwise (zones, a version)."""
+    target = {**NEW, **({"held": True, "guid": "g-held"} if (held or {}).get("held") else {}), **(held or {})}
+    return publish_plan(draft, held=target, published_by="erinoverview", **kw)
+
+
+def _unstamped(markdown):
+    """The document less its publication stamp row (the Stage 1a golden has none)."""
+    import re as _re
+    return _re.sub(r"### Additional Properties\npublishedAt: [^\n]*\npublishedBy: [^\n]*\npublishedVersion: \d+\n",
+                   "", markdown)
+
 def _gold_fs(case) -> FormatSet:
     d = json.loads(json.dumps(GOLD["specs"][case["spec"]]))
     if case.get("alias"):
@@ -74,10 +93,12 @@ def test_spec_publish_plan_is_byte_identical_to_the_stage_1a_golden(case, monkey
     monkeypatch.setattr("pyegeria.authoring.lifecycle._is_builtin", lambda label: False)
     kw = dict(case["kw"])
     folders = [rsp.ADVISOR_FOLDER] + ([rsp.PORTAL_FOLDER] if kw.pop("also_portal", False) else [])
-    plan = publish_plan(SpecDraft(label=case["label"], format_set=_gold_fs(case)), folders=folders,
+    plan = _publish(SpecDraft(label=case["label"], format_set=_gold_fs(case)), folders=folders,
                         held=kw.get("held"))
-    assert plan["markdown"] == case["expect"]["markdown"]
-    assert plan["digest"] == case["expect"]["digest"]
+    # D14: the same document, plus the publication stamp in the spec's own block
+    assert _unstamped(plan["markdown"]) == case["expect"]["markdown"]
+    assert "### Additional Properties\npublishedAt: (set when published)\npublishedBy: erinoverview\npublishedVersion: 1" \
+        in plan["markdown"]
     # serialize writes the same Create/Update Report Spec block
     block = serialize(SpecDraft(label=case["label"], format_set=_gold_fs(case))).split("\n", 2)[2]
     if not (kw.get("held") or {}).get("held"):
@@ -87,7 +108,7 @@ def test_spec_publish_plan_is_byte_identical_to_the_stage_1a_golden(case, monkey
 def test_restricted_publish_is_refused_in_words():
     draft = SpecDraft(label="Team Projects", format_set=_gold_fs({"spec": "simple"}))
     with pytest.raises(AuthoringRefused, match="Restricted publish comes later, after the zone proof"):
-        publish_plan(draft, folders=[rsp.ADVISOR_FOLDER], visibility="restricted")
+        _publish(draft, folders=[rsp.ADVISOR_FOLDER], visibility="restricted")
 
 
 # ── The CDO Report: every parameter explicit, every key reproduced ───────────
@@ -140,9 +161,9 @@ def test_no_serializer_output_names_a_parent_id(monkeypatch):
     monkeypatch.setattr("pyegeria.authoring.lifecycle._is_builtin", lambda label: False)
     spec = SpecDraft(label="Team Projects", format_set=_gold_fs({"spec": "rich"}))
     docs = [serialize(spec), serialize(cdo_report()), serialize(catalog_health_sheet()),
-            publish_plan(spec, folders=[rsp.ADVISOR_FOLDER])["markdown"],
-            publish_plan(cdo_report())["markdown"],
-            publish_plan(catalog_health_sheet(), folders=["DashboardFolder::Consumer::Portal"])["markdown"],
+            _publish(spec, folders=[rsp.ADVISOR_FOLDER])["markdown"],
+            _publish(cdo_report())["markdown"],
+            _publish(catalog_health_sheet(), folders=["DashboardFolder::Consumer::Portal"])["markdown"],
             withdraw_plan("sheet", "catalog-health", folders=["DashboardFolder::Consumer::Portal"])["markdown"],
             withdraw_plan("spec", "Team Projects", folders=[rsp.ADVISOR_FOLDER])["markdown"]]
     for md in docs:
@@ -271,12 +292,19 @@ def test_validate_never_raises_for_a_bad_draft():
 
 # ── preview: as the caller, capped, no global side effect ────────────────────
 
+class _NothingHeld:
+    """classification-explorer answering "No elements found" (a publish target that isn't held yet)."""
+    async def _async_get_elements_by_property_value(self, *a, **k):
+        return "No elements found"
+
+
 class _Viewer:
     user_id = "erinoverview"
     user_pwd = None
     token = "erin-token"
     server_name = "qs-view-server"
     platform_url = "https://localhost:9443"
+    classification_manager = _NothingHeld()
 
 
 def _state():
@@ -348,16 +376,16 @@ def test_a_pin_is_said_not_to_reach_dashboards_yet():
     """F3 (read-back 2026-11-13): nothing that runs a placed Report reads reportSpecVersion yet."""
     pinned = cdo_report(pinned_version=3)
     assert any("dashboards don't read it yet" in n for n in validate(pinned).not_applied)
-    steps = publish_plan(pinned)["steps"]
-    assert "pinned at version 3" in steps[0]
+    steps = _publish(pinned)["steps"]
+    assert any("pinned at published version 3" in s for s in steps)
     assert any("runs the spec's latest version" in s for s in steps)
-    assert not any("dashboards don't read" in s for s in publish_plan(cdo_report())["steps"])
+    assert not any("dashboards don't read" in s for s in _publish(cdo_report())["steps"])
 
 
 def test_sheet_update_limits_are_said_in_the_plan_and_the_diff():
     """F4: publishing adds and updates placements; it doesn't remove or reorder them on an existing sheet."""
     s1 = catalog_health_sheet()
-    steps = publish_plan(s1, folders=["DashboardFolder::Consumer::Portal"])["steps"]
+    steps = _publish(s1, folders=["DashboardFolder::Consumer::Portal"])["steps"]
     assert any("a placement no longer in this draft stays on the sheet" in s for s in steps)
     fewer = SheetDraft(**{**s1.model_dump(), "placements": [p.model_dump() for p in s1.placements[:2]]})
     removed, = [c for c in diff(s1, fewer).changes if c.change == "removed"]
@@ -392,12 +420,12 @@ def test_built_in_specs_are_not_published():
     d = SpecDraft(label="Project-DrE-Basic", format_set=new_from(prototype=("spec", "Project-DrE-Basic"),
                                                                  new_label="x").format_set)
     with pytest.raises(AuthoringRefused, match="built-in spec"):
-        publish_plan(d, folders=[rsp.PORTAL_FOLDER])
+        _publish(d, folders=[rsp.PORTAL_FOLDER])
 
 
 def test_unknown_folders_are_refused():
     with pytest.raises(AuthoringRefused, match="Unknown consumer folder"):
-        publish_plan(catalog_health_sheet(), folders=["DashboardFolder::Consumer::Nowhere"])
+        _publish(catalog_health_sheet(), folders=["DashboardFolder::Consumer::Nowhere"])
 
 
 def test_local_store_keeps_drafts_per_user(tmp_path):
@@ -426,7 +454,7 @@ def test_the_api_never_writes_the_local_sheet_store(tmp_path, monkeypatch):
     monkeypatch.setenv("PYEGERIA_DASHBOARD_SHEETS_STORE", str(store))
     sheet = catalog_health_sheet()
     serialize(sheet)
-    publish_plan(sheet, folders=["DashboardFolder::Consumer::Portal"])
+    _publish(sheet, folders=["DashboardFolder::Consumer::Portal"])
     validate(sheet)
     assert not store.exists()
 
@@ -434,15 +462,16 @@ def test_the_api_never_writes_the_local_sheet_store(tmp_path, monkeypatch):
 # ── apply and the MCP write tool ─────────────────────────────────────────────
 
 def test_apply_refuses_unconfirmed_and_changed_documents():
-    plan = publish_plan(cdo_report())
+    plan = _publish(cdo_report())
     ran = []
     run = lambda md, d: ran.append(d) or {"success": True}  # noqa: E731
     with pytest.raises(AuthoringRefused, match="Confirm first"):
-        apply(plan, step="process", run=run, digest=plan["digest"])
+        apply(plan, step="process", run=run, client=_Viewer(), digest=plan["digest"])
     with pytest.raises(AuthoringRefused, match="changed since you previewed"):
-        apply(plan, step="process", run=run, confirmed=True, digest="0" * 16)
+        apply(plan, step="process", run=run, client=_Viewer(), confirmed=True, digest="0" * 16)
     assert ran == []
-    assert apply(plan, step="process", run=run, confirmed=True, digest=plan["digest"])["result"]["success"]
+    assert apply(plan, step="process", run=run, client=_Viewer(), confirmed=True,
+                 digest=plan["digest"])["result"]["success"]
 
 
 @pytest.fixture
@@ -480,7 +509,7 @@ def test_mcp_apply_refuses_without_confirmed_and_with_a_mismatched_digest(mcp):
     out = mcp_tools.authoring_apply("process", confirmed=True, digest="0" * 16, draft=draft, as_user=ERIN)
     assert out["ok"] is False and "changed since you previewed" in out["refused"]
     assert ran == []
-    plan = mcp_tools.authoring_publish_plan(draft=draft, user_id="erinoverview")["plan"]
+    plan = mcp_tools.authoring_publish_plan(draft=draft, as_user=ERIN)["plan"]
     out = mcp_tools.authoring_apply("process", confirmed=True, digest=plan["digest"], draft=draft, as_user=ERIN)
     assert out["ok"] is True and ran == ["process"] and made[-1] == ("erinoverview", "erin-token")
 
@@ -489,8 +518,11 @@ def test_mcp_read_tools_keep_drafts_per_user(mcp):
     out = mcp_tools.authoring_new_draft("report", cdo_report().model_dump(exclude={"kind"}), user_id="erinoverview")
     assert out["ok"] and "### Search String" in out["markdown"]
     plan = mcp_tools.authoring_publish_plan(kind="report", name="My Ninety Day Plan Progress", user_id="erinoverview")
+    assert plan["ok"] is False and "finds the exact element it would write" in plan["refused"]   # D14: as you
+    plan = mcp_tools.authoring_publish_plan(kind="report", name="My Ninety Day Plan Progress", as_user=ERIN)
     assert plan["ok"] and plan["plan"]["digest"]
-    other = mcp_tools.authoring_publish_plan(kind="report", name="My Ninety Day Plan Progress", user_id="garygeeke")
+    other = mcp_tools.authoring_publish_plan(kind="report", name="My Ninety Day Plan Progress",
+                                             as_user={"user_id": "garygeeke", "token": "gary-token"})
     assert other["ok"] is False and "no saved report draft" in other["refused"]
     v = asyncio.run(mcp_tools.authoring_validate(kind="report", name="My Ninety Day Plan Progress",
                                                  user_id="erinoverview"))
@@ -565,7 +597,8 @@ class _SpecHistory:
                                       "versions": {"version": version}},
                     "properties": {"qualifiedName": "ReportSpec::Team Projects", "displayName": "Team Projects",
                                    "description": heading, "targetTypeName": "Project",
-                                   "microflow": json.dumps(mf), "contentStatus": "ACTIVE"}}
+                                   "microflow": json.dumps(mf), "contentStatus": "ACTIVE",
+                                   "additionalProperties": {"publishedVersion": str(version)}}}
         self.current, self.v2 = element(3, "now"), element(2, "before")
         outer = self
 
@@ -586,7 +619,7 @@ def test_a_pinned_version_resolves_as_the_user_without_the_fetched_map():
     fs = asyncio.run(async_spec_at_version(_SpecHistory(), "Team Projects", 2))
     assert fs.description == "before"
     assert dict(egeria_spec_cache._FETCHED) == before
-    with pytest.raises(AuthoringRefused, match="has no version 7; Egeria holds 2, 3"):
+    with pytest.raises(AuthoringRefused, match="has no published version 7; its published versions are 2, 3"):
         asyncio.run(async_spec_at_version(_SpecHistory(), "Team Projects", 7))
 
 
@@ -594,7 +627,7 @@ def test_validate_checks_the_pinned_version_exists():
     draft = ReportDraft(display_name="Pinned", spec="Team Projects", output_format="TABLE", pinned_version=7,
                         parameters={"search_string": "*"})
     result = validate(draft, _SpecHistory())
-    assert any("has no version 7" in e for e in result.errors)
+    assert any("has no published version 7" in e for e in result.errors)
     ok = validate(draft.model_copy(update={"pinned_version": 2}), _SpecHistory())
     assert ok.ok, ok.errors
     assert "pinned version 2 exists" in ok.checked
@@ -799,11 +832,11 @@ def test_promotion_clears_the_private_zone():
     eg.hold("Dashboard::catalog-health", "catalog-health", "Dashboard", ["erinoverview"], "2026-11-12")
     store = EgeriaDraftStore(eg, eg.run)
     sheet = catalog_health_sheet()
-    plan = publish_plan(sheet, folders=["DashboardFolder::Consumer::Portal"],
+    plan = _publish(sheet, folders=["DashboardFolder::Consumer::Portal"],
                         held={"held": True, "zones": [store.zone("erinoverview")]})
     assert "## Declassify Zone Membership\n### Target Element\nDashboard::catalog-health" in plan["markdown"]
     assert any("becomes public" in s for s in plan["steps"])
-    report_plan = publish_plan(cdo_report(), held={"held": True, "zones": ["erinoverview"]})
+    report_plan = _publish(cdo_report(), held={"held": True, "zones": ["erinoverview"]})
     assert f"## Declassify Zone Membership\n### Target Element\n{CDO_QN}" in report_plan["markdown"]
 
 
@@ -833,12 +866,13 @@ def test_a_spec_draft_is_marked_draft_and_promotion_makes_it_active(monkeypatch)
     spec = SpecDraft(label="Team Projects", format_set=_gold_fs({"spec": "simple"}))
     md = serialize(spec, zones=["erinoverview"], as_draft_element=True)
     assert "### Content Status\nDRAFT" in md and "### Zone Membership\nerinoverview" in md
-    plan = publish_plan(spec, folders=[rsp.PORTAL_FOLDER], held={"held": True, "zones": ["erinoverview"]})
+    plan = _publish(spec, folders=[rsp.PORTAL_FOLDER], held={"held": True, "zones": ["erinoverview"]})
     assert "### Content Status\nACTIVE" in plan["markdown"]
     assert "## Declassify Zone Membership" in plan["markdown"] and "### Zone Membership" not in plan["markdown"]
 
 
 def test_a_promoted_report_is_marked_published():
-    plan = publish_plan(cdo_report(), held={"held": True, "zones": ["erinoverview"]})
+    plan = _publish(cdo_report(), held={"held": True, "zones": ["erinoverview"]})
     assert "### Additional Properties\nauthoringState: published" in plan["markdown"]
-    assert publish_plan(cdo_report())["markdown"] == serialize(cdo_report())
+    stamp = ["publishedAt: (set when published)", "publishedBy: erinoverview", "publishedVersion: 1"]
+    assert _publish(cdo_report())["markdown"] == serialize(cdo_report(), stamp=stamp)

@@ -6,7 +6,8 @@
 `as_user={"user_id": ..., "token": <the user's Egeria bearer token>}`. The server's own (service)
 credentials are never used for authoring:
 - read-only tools work without a credential where they can (new draft, diff, validate without Egeria
-  checks, publish plan); a tool that must read Egeria (preview, history, a held prototype) needs one;
+  checks, a withdraw plan); a tool that must read Egeria (preview, history, a held prototype, a publish
+  plan, which finds the exact element it would write, D14) needs one;
 - `authoring_apply` needs one, plus `confirmed=True` and the plan's digest, and refuses otherwise, in words.
 
 **Drafts** live in a local DraftStore (D16) keyed by the caller's user id, under the directory the server
@@ -26,7 +27,9 @@ from typing import Any, Callable, Dict, List, Optional
 
 from pyegeria.authoring import diff as _diff
 from pyegeria.authoring.drafts import LocalDraftStore, async_new_from, new_draft
-from pyegeria.authoring.lifecycle import apply, async_history, async_load_held, publish_plan, withdraw_plan
+from pyegeria.authoring.lifecycle import (
+    async_apply, async_history, async_load_held, async_publish_plan, withdraw_plan,
+)
 from pyegeria.authoring.models import AuthoringRefused, as_draft, draft_key
 from pyegeria.authoring.preview import async_preview
 from pyegeria.authoring.runner import inprocess_runner
@@ -204,7 +207,9 @@ def authoring_publish_plan(kind: Optional[str] = None, name: Optional[str] = Non
     if withdraw:
         return _ok(plan=withdraw_plan(kind, name, folders=folders or []))
     d = _draft(owner, kind, name, draft)
-    return _ok(plan=publish_plan(d, folders=folders or [], visibility=visibility))
+    client = user_client(as_user, "A publish plan finds the exact element it would write, so it")
+    from pyegeria.core.async_runner import run_sync
+    return _ok(plan=run_sync(async_publish_plan(d, client, folders=folders or [], visibility=visibility)))
 
 
 # ── The write tool ───────────────────────────────────────────────────────────
@@ -224,11 +229,17 @@ def authoring_apply(step: str, confirmed: bool = False, digest: Optional[str] = 
     if step == "process" and not digest:
         raise AuthoringRefused("Give the digest of the plan you previewed (authoring_publish_plan).")
     owner = _owner(user_id, as_user)
-    if withdraw:
-        plan = withdraw_plan(kind, name, folders=folders or [])
-    else:
-        plan = publish_plan(_draft(owner, kind, name, draft), folders=folders or [], visibility=visibility)
-    return _ok(result=apply(plan, step=step, run=inprocess_runner(client), confirmed=confirmed, digest=digest))
+    from pyegeria.core.async_runner import run_sync
+
+    async def _go():
+        if withdraw:
+            plan = withdraw_plan(kind, name, folders=folders or [])
+        else:
+            plan = await async_publish_plan(_draft(owner, kind, name, draft), client, folders=folders or [],
+                                            visibility=visibility)
+        return await async_apply(plan, step=step, run=inprocess_runner(client), client=client,
+                                 confirmed=confirmed, digest=digest)
+    return _ok(result=run_sync(_go()))
 
 
 READ_ONLY_TOOLS = (authoring_new_draft, authoring_new_from, authoring_validate, authoring_preview, authoring_diff,

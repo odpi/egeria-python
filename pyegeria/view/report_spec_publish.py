@@ -242,9 +242,12 @@ def document_digest(markdown: str) -> str:
     return hashlib.sha256(markdown.encode()).hexdigest()[:16]
 
 
-def spec_rows(label: str, fs, zones: Optional[List[str]] = None) -> List[tuple]:
+def spec_rows(label: str, fs, zones: Optional[List[str]] = None,
+              additional: Optional[List[str]] = None) -> List[tuple]:
     """The `Create/Update Report Spec` attribute rows for `fs` as `label` (never a Parent ID). Shared by
-    build_publish_document and pyegeria.authoring's serializer, so both write the same document."""
+    build_publish_document and pyegeria.authoring's serializer, so both write the same document.
+    `additional`: `key: value` lines for Additional Properties (pyegeria.authoring's publication stamp),
+    written last; without it the rows are unchanged."""
     label = check_label(label)
     target = getattr(fs, "target_type", None)
     rows = [("Display Name", label), ("Qualified Name", spec_qualified_name(label)),
@@ -256,6 +259,8 @@ def spec_rows(label: str, fs, zones: Optional[List[str]] = None) -> List[tuple]:
             ("Microflow", microflow_json(fs))]
     if zones:
         rows.append(("Zone Membership", list(zones)))
+    if additional:
+        rows.append(("Additional Properties", "\n".join(additional)))
     return rows
 
 
@@ -266,7 +271,8 @@ def section(title: str, rows: List[tuple]) -> str:
 
 def build_publish_document(label: str, fs, *, folders: Iterable[str], visibility: str = "public",
                            zones: Optional[Iterable[str]] = None, held: Optional[Dict[str, Any]] = None,
-                           restricted: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+                           restricted: Optional[Dict[str, Any]] = None,
+                           additional: Optional[List[str]] = None) -> Dict[str, Any]:
     """The Dr.Egeria document that publishes `fs` as `label` into `folders`, with a plain summary.
 
     Returns {"label", "qualified_name", "verb", "visibility", "zones", "folders", "markdown", "digest",
@@ -278,7 +284,7 @@ def build_publish_document(label: str, fs, *, folders: Iterable[str], visibility
     verb = "Update" if held.get("held") else "Create"
     qn = spec_qualified_name(label)
     # Never a Parent ID here (Create or Update): membership is the Add Member below.
-    doc = [f"# Publish report spec {label}\n", _section(f"{verb} Report Spec", spec_rows(label, fs, zones))]
+    doc = [f"# Publish report spec {label}\n", _section(f"{verb} Report Spec", spec_rows(label, fs, zones, additional))]
     steps = [f"{verb} the ReportSpec {qn}" + (f", restricted to zones {', '.join(zones)}" if zones else ", public")]
     if visibility == "public" and held.get("zones"):
         doc.append(_section("Declassify Zone Membership", [("Target Element", qn)]))

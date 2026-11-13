@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright Contributors to the ODPi Egeria project.
-"""A report spec at a given version, resolved as the user (D14: follow latest by default, pinning allowed).
+"""A report spec at a given published version, resolved as the user (D14: follow latest by default, pinning
+allowed; a pin names a publication, see pyegeria.authoring.publication).
 
 A Report follows the latest version of its spec unless it pins one (`ReportDraft.pinned_version`, written as
 the Report's `reportSpecVersion`). A pinned version is read from the spec element's own history in Egeria,
@@ -8,8 +9,8 @@ the Report's `reportSpecVersion`). A pinned version is read from the spec elemen
 through the public fetched-name path (`egeria:<label>@vN`, a process-wide map shared across users; the
 Portal-3 hazard), and nothing is cached or registered.
 
-Published versions are treated as immutable in effect: a change is a new version, so version N always
-means the same spec.
+Published versions are immutable (D14): a change is a new published version, so version N always means the
+same spec.
 """
 from __future__ import annotations
 
@@ -24,13 +25,8 @@ def as_element(item: Dict[str, Any]) -> Dict[str, Any]:
     beans (`elementHeader`, flat `properties`); a view bean is returned unchanged."""
     if item.get("elementHeader"):
         return item
-    from pyegeria.view.saved_query import _properties
-    header = {k: item.get(k) for k in ("type", "versions", "origin", "status", "classifications") if k in item}
-    header["guid"] = item.get("elementGUID")
-    for c in item.get("classifications") or []:
-        if isinstance(c, dict) and (c.get("type") or {}).get("typeName") == "ZoneMembership":
-            header["zoneMembership"] = c
-    return {"elementHeader": header, "properties": _properties(item)}
+    from pyegeria.core.element_shape import as_view_element
+    return as_view_element(item)
 
 
 def _version_of(el: Dict[str, Any]) -> Optional[int]:
@@ -59,20 +55,30 @@ async def async_spec_versions(client: Any, label: str) -> Tuple[Dict[str, Any], 
 
 
 async def async_spec_at_version(client: Any, label: str, version: int):
-    """The FormatSet of spec `label` at `version`, read as the user. Refused in words when that version isn't
-    held (the versions that are, are named)."""
+    """The FormatSet of spec `label` at **published version** `version` (D14: a pin names a publication, not
+    an Egeria instance version), read as the user from the element's history. The entry used is the
+    publication itself, the oldest one stamped `publishedVersion: version` (pyegeria.authoring.publication),
+    so a later edit outside publishing never changes what a pin reads. Refused in words when the spec has no
+    published versions, or not that one (the ones it has are named)."""
+    from pyegeria.authoring.publication import ordered_entries, publication_entry, published_versions
     from pyegeria.view.egeria_spec_cache import _Skip, _build
     if client is None:
         raise AuthoringRefused("A pinned spec version is read from Egeria as you: a client is needed.")
     current, history = await async_spec_versions(client, label)
-    candidates = [current] + history
-    found = next((el for el in candidates if _version_of(el) == version), None)
+    entries = ordered_entries(current, history)
+    held = published_versions(entries)
+    if not held:
+        raise AuthoringRefused(f"Spec {label!r} has no published versions yet, so there's nothing to pin; "
+                               f"publish it once through the authoring API (it becomes version 1).")
+    found = publication_entry(entries, version)
     if found is None:
-        held = sorted({v for v in (_version_of(el) for el in candidates) if v is not None})
-        raise AuthoringRefused(f"Spec {label!r} has no version {version}; Egeria holds "
-                               f"{', '.join(str(v) for v in held) or 'no readable versions'}.")
+        raise AuthoringRefused(f"Spec {label!r} has no published version {version}; its published versions are "
+                               f"{', '.join(str(v) for v in held)}.")
     try:
         built = _build(found, folders=[], identity=getattr(client, "user_id", "") or "")
     except _Skip as exc:
-        raise AuthoringRefused(f"Version {version} of spec {label!r} can't be read as a spec: {exc.reason}")
+        raise AuthoringRefused(f"Published version {version} of spec {label!r} can't be read as a spec: {exc.reason}")
     return built.format_set
+
+
+spec_at_published_version = async_spec_at_version

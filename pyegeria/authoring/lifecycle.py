@@ -16,6 +16,7 @@ from loguru import logger
 from pyegeria.authoring.models import (
     AuthoringGates, AuthoringRefused, ReportDraft, SheetDraft, SheetPlacement, SpecDraft, as_draft, default_gates,
 )
+from pyegeria.authoring.publication import AUTHORING_KEYS
 from pyegeria.authoring.serialize import (
     DASHBOARD_FOLDER_PREFIX, FIND_PARAMETERS, PINNED_VERSION_KEY, SPEC_FOLDER_PREFIX, serialize,
 )
@@ -107,6 +108,8 @@ def report_draft_from_element(el: Dict[str, Any]) -> ReportDraft:
         for key, value in extra.items():
             if key in ("reportSpec", "outputFormat", "analyticParams"):
                 continue
+            if key in AUTHORING_KEYS:
+                continue   # the authoring API's own bookkeeping (stamp, marker), never a parameter
             params[_camel_to_snake(key)] = _decode(value) if _camel_to_snake(key) in FIND_PARAMETERS else value
         notes.append("parameters read from the additionalProperties keys (no reportParameters)")
     return ReportDraft(display_name=props.get("displayName") or "", qualified_name=props.get("qualifiedName"),
@@ -266,65 +269,110 @@ def _is_builtin(label: str) -> bool:
 
 
 def _plan(kind: str, label: str, qn: str, markdown: str, steps: List[str], **extra: Any) -> Dict[str, Any]:
+    from pyegeria.authoring.publication import digest_text
     return {"kind": kind, "label": label, "qualified_name": qn, "markdown": markdown,
-            "digest": document_digest(markdown), "steps": steps, **extra}
+            "digest": document_digest(digest_text(markdown)), "steps": steps, **extra}
 
 
 def publish_plan(draft: Any, *, folders: Iterable[str] = (), visibility: str = "public",
-                 held: Optional[Dict[str, Any]] = None, gates: Optional[AuthoringGates] = None) -> Dict[str, Any]:
-    """The document that publishes a draft, its digest, and its steps in words.
+                 held: Optional[Dict[str, Any]] = None, gates: Optional[AuthoringGates] = None,
+                 published_by: Optional[str] = None, published_at: Optional[str] = None) -> Dict[str, Any]:
+    """The document that publishes a draft as a new published version (D14), its digest, and its steps in words.
+
+    `held` is the resolved target (pyegeria.authoring.publication.async_resolve_target, as the user): use
+    `async_publish_plan(draft, client)`, which resolves it. Without a resolved target the plan is refused:
+    publishing must know which element it writes (never a twin). The element's own Create/Update block
+    carries the publication stamp (publishedVersion = the held stamp + 1, publishedAt, publishedBy);
+    publishedAt is set when the plan runs, and the digest leaves it out.
 
     - spec: `report_spec_publish.build_publish_document` into ReportSpecFolder::Consumer::<X> folders;
     - report: its Create Report block (a Report is placed on a sheet, not filed in a folder);
     - sheet: its sheet commands, then Add Member to Collection into DashboardFolder::Consumer::<X>.
-    Refused in words: restricted publish (after the zone proof), built-in specs, unknown folders, a pinned
-    spec version (D14), a sheet target other than Egeria (D4)."""
+    A held element in a zone (a private draft being promoted) gets Declassify Zone Membership after its
+    stamped Create/Update. Refused in words: restricted publish (after the zone proof), built-in specs,
+    unknown folders, a pinned spec version (D14 gate), a sheet target other than Egeria (D4)."""
+    from pyegeria.authoring.publication import (
+        NOT_RESOLVED, edited_note, next_version, stamp_lines, stamp_step, target_of,
+    )
     draft = as_draft(draft)
     gates = gates or default_gates()
     if visibility != "public":
         raise AuthoringRefused(RESTRICTED_LATER)
+    if not (held or {}).get("resolved"):
+        raise AuthoringRefused(NOT_RESOLVED)
+    version = next_version(held)
+    stamp = stamp_lines(version, published_by, published_at)
+    publication = {k: held.get(k) for k in ("resolved", "held", "guid", "qualified_name", "published_version")}
+    extra = {"publication": publication, "target": list(target_of(draft)), "published_version": version}
+    notes = list(held.get("notes") or [])
     try:
         if isinstance(draft, SpecDraft):
             if _is_builtin(draft.label):
                 raise AuthoringRefused(BUILTIN_REFUSED.format(label=draft.label))
             folders = check_folders(folders, SPEC_FOLDER_PREFIX)
-            plan = build_publish_document(draft.label, draft.format_set, folders=folders, held=held)
-            return {**plan, "kind": "spec"}
+            plan = build_publish_document(draft.label, draft.format_set, folders=folders, held=held, additional=stamp)
+            label = f"spec {draft.label!r}"
+            steps = [stamp_step(label, held)] + plan["steps"]
+            if held.get("edited_since"):
+                steps.append("note: " + edited_note(label, held["published_version"]))
+            return {**plan, **extra, "kind": "spec", "steps": steps, "notes": notes,
+                    "digest": _plan("spec", draft.label, plan["qualified_name"], plan["markdown"], [])["digest"]}
         if isinstance(draft, ReportDraft):
             if draft.pinned_version is not None and not gates.allow_pinning:
                 raise AuthoringRefused(PIN_REFUSED)
             if list(folders or []):
                 raise AuthoringRefused("A Report isn't filed in a consumer folder: publish the sheet that places it.")
             from pyegeria.authoring.serialize import report_rows
-            promoting = bool((held or {}).get("zones"))
+            if held.get("held") and not draft.qualified_name and held.get("qualified_name"):
+                # found by its exact display name: write to that element's qualified name, never a new one
+                draft = draft.model_copy(update={"qualified_name": held["qualified_name"]})
+            promoting = bool(held.get("zones"))
             markdown = f"# Report {draft.display_name}\n\n" + section(
-                "Create Report", report_rows(draft, marker="published" if promoting else None))
+                "Create Report", report_rows(draft, marker="published" if promoting else None, stamp=stamp))
             qn = draft.qualified_name or f"(derived from the display name {draft.display_name!r})"
+            label = f"Report {draft.display_name!r}"
             pinned = draft.pinned_version is not None
-            steps = [f"create or update the Report {draft.display_name!r} running spec {draft.spec!r} "
+            steps = [stamp_step(label, held),
+                     f"create or update the Report {draft.display_name!r} running spec {draft.spec!r} "
                      f"({draft.output_format}"
-                     + (f", pinned at version {draft.pinned_version}" if pinned else ", latest version")
+                     + (f", pinned at published version {draft.pinned_version}" if pinned else ", latest version")
                      + f"), with {len(draft.parameters)} parameter(s) written out"]
             if pinned:
                 steps.append(PIN_NOT_HONOURED.format(version=draft.pinned_version))
+            if held.get("edited_since"):
+                steps.append("note: " + edited_note(label, held["published_version"]))
             markdown, steps = _declassify(markdown, steps, draft.qualified_name or draft.display_name, held)
-            return _plan("report", draft.display_name, qn, markdown, steps)
+            return _plan("report", draft.display_name, qn, markdown, steps, notes=notes, **extra)
         if gates.sheet_target != "egeria":
             raise AuthoringRefused("Sheets are written to Egeria only (D4).")
         folders = check_folders(folders, DASHBOARD_FOLDER_PREFIX)
         qn = f"Dashboard::{draft.name}"
-        blocks = [serialize(draft, title=f"# Publish dashboard sheet {draft.name}")]
+        label = f"sheet {qn}"
+        blocks = [serialize(draft, title=f"# Publish dashboard sheet {draft.name}", stamp=stamp)]
         blocks += [section("Add Member to Collection", [("Element Id", qn), ("Collection Id", f)]) for f in folders]
-        steps = [f"create the sheet {qn} with {len(draft.placements)} placement(s), in order, or update it",
+        steps = [stamp_step(label, held),
+                 f"create the sheet {qn} with {len(draft.placements)} placement(s), in order, or update it",
                  SHEET_UPDATE_LIMITS]
-        if (held or {}).get("zones"):
+        if held.get("edited_since"):
+            steps.append("note: " + edited_note(label, held["published_version"]))
+        if held.get("zones"):
             blocks.insert(1, section("Declassify Zone Membership", [("Target Element", qn)]))
             steps.append(f"remove its zones ({', '.join(held['zones'])}): the draft becomes public")
         steps += [f"add it to {f}" for f in folders]
         markdown = "\n".join(blocks)
-        return _plan("sheet", draft.name, qn, markdown, steps, folders=folders)
+        return _plan("sheet", draft.name, qn, markdown, steps, folders=folders, notes=notes, **extra)
     except PublishRefused as exc:
         raise AuthoringRefused(str(exc)) from exc
+
+
+async def async_publish_plan(draft: Any, client: Any, *, folders: Iterable[str] = (), visibility: str = "public",
+                             gates: Optional[AuthoringGates] = None) -> Dict[str, Any]:
+    """publish_plan with its target resolved as the user (exact qualified name, a page of 25; refused when
+    that can't be told) and stamped as published by the client's user."""
+    from pyegeria.authoring.publication import async_resolve_target
+    held = await async_resolve_target(client, draft)
+    return publish_plan(draft, folders=folders, visibility=visibility, held=held, gates=gates,
+                        published_by=getattr(client, "user_id", None))
 
 
 def _declassify(markdown: str, steps: List[str], target: str, held: Optional[Dict[str, Any]]):
@@ -336,7 +384,10 @@ def _declassify(markdown: str, steps: List[str], target: str, held: Optional[Dic
 
 
 def withdraw_plan(kind: str, label: str, *, folders: Iterable[str]) -> Dict[str, Any]:
-    """Remove a published spec or sheet from consumer folders (the element itself stays in Egeria)."""
+    """Remove a published spec or sheet from consumer folders (the element itself stays in Egeria).
+
+    D14 rule: no path in pyegeria.authoring deletes a published element (one with a publication stamp), so a
+    published version a Report pins stays readable. Retiring a published element is phase 2."""
     try:
         if kind == "spec":
             folders = check_folders(folders, SPEC_FOLDER_PREFIX, action="Withdraw")
@@ -357,11 +408,30 @@ def withdraw_plan(kind: str, label: str, *, folders: Iterable[str]) -> Dict[str,
     raise AuthoringRefused(f"Withdraw works on a spec or a sheet, not {kind!r}.")
 
 
-def apply(plan: Dict[str, Any], *, step: str, run: Any = None, confirmed: bool = False,
-          digest: Optional[str] = None) -> Dict[str, Any]:
-    """One step of a plan: preview (nothing runs), validate (Dr.Egeria validate, as the user), or process
-    (refused unless confirmed and the digest is the previewed plan's). report_spec_publish.run_document."""
+async def async_apply(plan: Dict[str, Any], *, step: str, run: Any = None, client: Any = None,
+                      confirmed: bool = False, digest: Optional[str] = None) -> Dict[str, Any]:
+    """One step of a plan: preview (nothing runs), validate (Dr.Egeria validate, as the user), or process.
+
+    Process is refused unless confirmed and the digest is the previewed plan's; then, for a publish plan,
+    the target is re-read as the user (`client`) and the plan is refused if its GUID or published version
+    changed since it was made (no silent overwrite, D14). publishedAt is set to the time it runs."""
+    from pyegeria.authoring.publication import async_check_unchanged_target, now_iso, with_time
+    from pyegeria.view.report_spec_publish import CHANGED, CONFIRM_FIRST
     try:
+        if step == "process" and plan.get("publication"):
+            if not confirmed:
+                raise AuthoringRefused(CONFIRM_FIRST)
+            if digest != plan.get("digest"):
+                raise AuthoringRefused(CHANGED)
+            await async_check_unchanged_target(client, plan)
+            plan = {**plan, "markdown": with_time(plan["markdown"], now_iso())}
         return run_document(plan, step=step, run=run, confirmed=confirmed, digest=digest)
     except PublishRefused as exc:
         raise AuthoringRefused(str(exc)) from exc
+
+
+def apply(plan: Dict[str, Any], *, step: str, run: Any = None, client: Any = None, confirmed: bool = False,
+          digest: Optional[str] = None) -> Dict[str, Any]:
+    """Sync form of async_apply."""
+    from pyegeria.core.async_runner import run_sync
+    return run_sync(async_apply(plan, step=step, run=run, client=client, confirmed=confirmed, digest=digest))

@@ -97,9 +97,10 @@ def _map_lines(field: str, values: Dict[str, Any]) -> Optional[str]:
 PINNED_VERSION_KEY = "reportSpecVersion"
 
 
-def report_rows(draft: ReportDraft, zones: Optional[List[str]] = None, marker: Optional[str] = None) -> List[tuple]:
+def report_rows(draft: ReportDraft, zones: Optional[List[str]] = None, marker: Optional[str] = None,
+                stamp: Optional[List[str]] = None) -> List[tuple]:
     """The Create Report rows, every parameter explicit. A pinned spec version (D14) is written as the
-    additionalProperties key `reportSpecVersion`."""
+    additionalProperties key `reportSpecVersion`; `stamp` is the publication stamp's lines."""
     rows: List[tuple] = [("Display Name", _one_line("The Report name", draft.display_name))]
     if draft.qualified_name:
         rows.append(("Qualified Name", _one_line("The Report qualified name", draft.qualified_name)))
@@ -125,6 +126,7 @@ def report_rows(draft: ReportDraft, zones: Optional[List[str]] = None, marker: O
         if isinstance(draft.pinned_version, bool) or not isinstance(draft.pinned_version, int) or draft.pinned_version < 1:
             raise AuthoringRefused(f"A pinned version is a whole number from 1, not {draft.pinned_version!r}.")
         extra.append(f"{PINNED_VERSION_KEY}: {draft.pinned_version}")
+    extra += list(stamp or [])
     if extra:
         rows.append(("Additional Properties", "\n".join(sorted(extra))))
     if zones:
@@ -154,13 +156,15 @@ def _content(field: str, text: str) -> str:
     return "\n".join(out)
 
 
-def sheet_sections(draft: SheetDraft, zones: Optional[List[str]] = None) -> List[str]:
+def sheet_sections(draft: SheetDraft, zones: Optional[List[str]] = None,
+                   stamp: Optional[List[str]] = None) -> List[str]:
     name = _one_line("The sheet name", draft.name)
     blocks = [section("Create Dashboard Sheet", [
         ("Display Name", name),
         ("Dashboard Sheet Heading", _one_line("The sheet heading", draft.heading)),
         ("Dashboard Sheet Description", _flatten("The sheet description", draft.description)),
         ("Dashboard Sheet Family", _one_line("The sheet family", draft.family) if draft.family else None),
+        ("Additional Properties", "\n".join(stamp) if stamp else None),
         ("Zone Membership", [_list_item("A zone", z) for z in zones or []])])]
     for i, p in enumerate(draft.placements, start=1):
         common = [("Placement Span", p.span), ("Placement Emphasis", p.emphasis),
@@ -180,27 +184,30 @@ def sheet_sections(draft: SheetDraft, zones: Optional[List[str]] = None) -> List
 
 def serialize(draft: Union[SpecDraft, ReportDraft, SheetDraft, Dict[str, Any]], *,
               title: Optional[str] = None, zones: Optional[Iterable[str]] = None,
-              as_draft_element: bool = False) -> str:
+              as_draft_element: bool = False, stamp: Optional[List[str]] = None) -> str:
     """The draft as one deterministic Dr.Egeria document (Create blocks only: Dr.Egeria upserts a Create
     whose element exists, so the same document creates or updates). Raises AuthoringRefused with words for
     a value that can't be written safely (a line break, a rule, a heading). `zones` puts the element in those
     zones (a draft saved private to its author, D16); `as_draft_element` marks it a draft (a spec's
-    contentStatus DRAFT, a Report's additionalProperties `authoringState: draft`)."""
+    contentStatus DRAFT, a Report's additionalProperties `authoringState: draft`). `stamp` is the
+    publication stamp's `key: value` lines (pyegeria.authoring.publication), written in the element's own
+    block so the stamp and the content land in one Egeria version."""
     draft = as_draft(draft)
     zones = sorted(set(zones or []))
     try:
         if isinstance(draft, SpecDraft):
             head = title or f"# Report spec {draft.label}"
-            rows = spec_rows(draft.label, draft.format_set, zones)
+            rows = spec_rows(draft.label, draft.format_set, zones, stamp)
             if as_draft_element:
                 rows = [(n, "DRAFT" if n == "Content Status" else v) for n, v in rows]
             body = [section("Create Report Spec", rows)]
         elif isinstance(draft, ReportDraft):
             head = title or f"# Report {draft.display_name}"
-            body = [section("Create Report", report_rows(draft, zones, marker="draft" if as_draft_element else None))]
+            body = [section("Create Report", report_rows(draft, zones, marker="draft" if as_draft_element else None,
+                                                         stamp=stamp))]
         else:
             head = title or f"# Dashboard sheet {draft.name}"
-            body = sheet_sections(draft, zones)
+            body = sheet_sections(draft, zones, stamp)
     except PublishRefused as exc:
         raise _refuse(exc) from exc
     return "\n".join([f"{head}\n", *body])
