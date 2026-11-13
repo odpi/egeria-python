@@ -1644,7 +1644,12 @@ class AsyncBaseCommandProcessor(ABC):
             # Reordered subclients in EgeriaTech ensure this hits metadata-expert first
             res = await self.client._async_get_metadata_element_by_guid(guid)
             if res and isinstance(res, dict):
-                return res
+                # metadata-expert answers in the raw OpenMetadataElement shape (elementGUID,
+                # elementProperties.propertyValueMap); every caller reads the view-bean shape
+                # (elementHeader, properties), so convert it, or the guid, qualifiedName and
+                # Memento check silently read as absent.
+                from pyegeria.core.element_shape import as_view_element
+                return as_view_element(res)
         except Exception as e:
             logger.debug(f"MetadataExpert/Explorer fetch failed: {e}")
 
