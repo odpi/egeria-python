@@ -173,6 +173,11 @@ def _report_additional_properties(attributes: Dict[str, Any]) -> Dict[str, str]:
     user_extra = attributes.get("Additional Properties", {}).get("value")
     if isinstance(user_extra, dict):
         merged.update({str(k): str(v) for k, v in user_extra.items() if v is not None})
+    from pyegeria.authoring.models import camel_copy_env
+    if not camel_copy_env():
+        # D7 switch (PYEGERIA_REPORT_CAMEL_PARAMS=0): the parameters live only in the typed reportParameters
+        # document; additionalProperties keeps the author's own keys.
+        return merged
 
     # Arbitrary report-spec-specific params (e.g. {"collection_guid": "..."}
     # for the "Collection Members" report) that aren't part of the standard

@@ -75,6 +75,11 @@ def main() -> None:
         raise
 
     srv = MCPServer(name="pyegeria-mcp")
+
+    # The authoring API (pyegeria.authoring, phase 1): read-only tools plus authoring_apply, which acts only
+    # as the user whose credential the MCP client passes, never as this server's service account.
+    from pyegeria.authoring.mcp_tools import register as _register_authoring_tools
+    _register_authoring_tools(srv)
     print("Starting MCP server...", file=sys.stderr)
 
     # list_reports tool (formerly list_format_sets)

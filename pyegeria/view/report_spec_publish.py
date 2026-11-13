@@ -242,6 +242,28 @@ def document_digest(markdown: str) -> str:
     return hashlib.sha256(markdown.encode()).hexdigest()[:16]
 
 
+def spec_rows(label: str, fs, zones: Optional[List[str]] = None) -> List[tuple]:
+    """The `Create/Update Report Spec` attribute rows for `fs` as `label` (never a Parent ID). Shared by
+    build_publish_document and pyegeria.authoring's serializer, so both write the same document."""
+    label = check_label(label)
+    target = getattr(fs, "target_type", None)
+    rows = [("Display Name", label), ("Qualified Name", spec_qualified_name(label)),
+            ("Description", _flatten("The description", getattr(fs, "description", None))),
+            ("Content Status", "ACTIVE"),
+            ("Aliases", [_list_item("An alias", a) for a in (getattr(fs, "aliases", None) or [])]),
+            ("Target Type Name", _one_line("The target type", target) if target else None),
+            ("Output Types", [_list_item("An output type", t) for t in output_types(fs)]),
+            ("Microflow", microflow_json(fs))]
+    if zones:
+        rows.append(("Zone Membership", list(zones)))
+    return rows
+
+
+def section(title: str, rows: List[tuple]) -> str:
+    """One Dr.Egeria command block: `## title`, then `### name` / value per non-empty row, then a rule."""
+    return _section(title, rows)
+
+
 def build_publish_document(label: str, fs, *, folders: Iterable[str], visibility: str = "public",
                            zones: Optional[Iterable[str]] = None, held: Optional[Dict[str, Any]] = None,
                            restricted: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
@@ -255,18 +277,8 @@ def build_publish_document(label: str, fs, *, folders: Iterable[str], visibility
     held = held or {"held": False, "zones": []}
     verb = "Update" if held.get("held") else "Create"
     qn = spec_qualified_name(label)
-    target = getattr(fs, "target_type", None)
-    rows = [("Display Name", label), ("Qualified Name", qn),
-            ("Description", _flatten("The description", getattr(fs, "description", None))),
-            ("Content Status", "ACTIVE"),
-            ("Aliases", [_list_item("An alias", a) for a in (getattr(fs, "aliases", None) or [])]),
-            ("Target Type Name", _one_line("The target type", target) if target else None),
-            ("Output Types", [_list_item("An output type", t) for t in output_types(fs)]),
-            ("Microflow", microflow_json(fs))]
-    if zones:
-        rows.append(("Zone Membership", zones))
     # Never a Parent ID here (Create or Update): membership is the Add Member below.
-    doc = [f"# Publish report spec {label}\n", _section(f"{verb} Report Spec", rows)]
+    doc = [f"# Publish report spec {label}\n", _section(f"{verb} Report Spec", spec_rows(label, fs, zones))]
     steps = [f"{verb} the ReportSpec {qn}" + (f", restricted to zones {', '.join(zones)}" if zones else ", public")]
     if visibility == "public" and held.get("zones"):
         doc.append(_section("Declassify Zone Membership", [("Target Element", qn)]))
@@ -365,6 +377,6 @@ def run_document(plan: Dict[str, Any], *, step: str, run: Optional[Runner] = Non
 
 __all__ = ["ADVISOR_FOLDER", "PORTAL_FOLDER", "CONSUMER_FOLDERS", "STEPS", "NOT_PROVEN", "PublishRefused",
            "restricted_publish_status", "spec_qualified_name", "check_label", "check_zones", "check_folders",
-           "microflow_json", "output_types", "held_in_egeria", "build_publish_document",
+           "microflow_json", "output_types", "held_in_egeria", "spec_rows", "section", "build_publish_document",
            "build_withdraw_document", "document_digest", "check_unchanged", "summarise", "after_publish",
            "run_document"]
