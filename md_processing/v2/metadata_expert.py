@@ -24,6 +24,7 @@ Like the Automation family these are actions, not create-or-update of a named el
 and no Create<->Update rewrite.
 """
 import re
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from loguru import logger
@@ -130,6 +131,45 @@ class MetadataExpertProcessor(AsyncBaseCommandProcessor):
     def expert(self):
         return self.client.metadata_expert
 
+    def spec_flag(self, name: str, default: Any = None) -> Any:
+        """A command-level flag from the compact spec (idempotent, chat_allowed)."""
+        return (self.get_command_spec() or {}).get(name, default)
+
+    async def validate_only(self) -> str:
+        report = await super().validate_only()
+        notes = []
+        if self.spec_flag("idempotent", True) is False:
+            notes.append("This command is **not idempotent**: it acts on Egeria every time it runs, so running the "
+                         "document again repeats it (Create Instance and Link Instances make a new element or "
+                         "relationship each time). Do not put it in a re-run or heal batch.")
+        if self.spec_flag("chat_allowed", True) is False:
+            notes.append("Advanced command, not for chat agents.")
+        return report + ("\n\n> " + "\n> ".join(notes) + "\n" if notes else "")
+
+    async def declared_properties(self, type_name: str) -> Dict[str, Any]:
+        """property name -> (attribute type name, category) for a type and its super types."""
+        declared: Dict[str, Any] = {}
+        seen = set()
+        current: Optional[str] = type_name
+        while current and current not in seen:
+            seen.add(current)
+            definition = await self._type_def(current)
+            for attribute in definition.get("attributeDefinitions") or []:
+                attr_type = attribute.get("attributeType") or {}
+                declared.setdefault(attribute.get("attributeName"), (attr_type.get("name"), attr_type.get("category")))
+            current = (definition.get("superType") or {}).get("name")
+        return declared
+
+    async def type_name_of(self, result: Any, header_key: str, what: str) -> str:
+        """The type name in an element/relationship read back from Egeria."""
+        node = result[0] if isinstance(result, list) and result else result
+        if isinstance(node, dict):
+            for candidate in (node.get(header_key), node):
+                name = ((candidate or {}).get("type") or {}).get("typeName")
+                if name:
+                    return name
+        raise PyegeriaException(f"Could not read the type of {what} to check its properties.")
+
     def _result(self, what: str, detail: str = "") -> str:
         logger.success(f"{self.command.verb} {self.command.object_type}: {what}")
         text = f"\n\n## {self.command.verb} {self.command.object_type}\n\n{what}"
@@ -218,22 +258,84 @@ class PublishMetadataElementProcessor(MetadataExpertProcessor):
 
 # --- instances, relationships and classifications -------------------------------------------------
 
-def _primitive(value: Any) -> Dict[str, Any]:
-    """Infer a PrimitiveTypePropertyValue from an authored string: true/false -> boolean,
-    whole number -> int, anything else -> string."""
+_INTEGER_TYPES = {"int", "long", "short", "byte", "bigint"}
+_DECIMAL_TYPES = {"float", "double", "bigdecimal"}
+
+
+def _primitive(property_name: str, value: Any, type_name: str) -> Dict[str, Any]:
+    """Coerce an authored value to the primitive type the type definition declares for the property.
+
+    The declared type decides, never the text: "007" stays "007" in a string property. Anything that is
+    not a plain scalar is refused in words rather than flattened with str()."""
+    if isinstance(value, (dict, list, tuple, set)):
+        raise PyegeriaException(
+            f"Property '{property_name}' was given a map/list value; only single primitive values are supported here.")
     text = str(value).strip()
-    if text.lower() in ("true", "false"):
-        return {"class": "PrimitiveTypePropertyValue", "typeName": "boolean", "primitiveValue": text.lower() == "true"}
-    if re.fullmatch(r"-?\d+", text):
-        return {"class": "PrimitiveTypePropertyValue", "typeName": "int", "primitiveValue": int(text)}
-    return {"class": "PrimitiveTypePropertyValue", "typeName": "string", "primitiveValue": text}
+    kind = type_name.lower()
+
+    def refuse(expected: str) -> PyegeriaException:
+        return PyegeriaException(f"Property '{property_name}' is declared {kind} but '{text}' is not {expected}.")
+
+    if kind == "string":
+        parsed: Any = str(value)
+    elif kind == "boolean":
+        if text.lower() not in ("true", "false"):
+            raise refuse("true or false")
+        parsed = text.lower() == "true"
+    elif kind in _INTEGER_TYPES:
+        if not re.fullmatch(r"[+-]?\d+", text):
+            raise refuse("a whole number")
+        parsed = int(text)
+    elif kind in _DECIMAL_TYPES:
+        try:
+            parsed = float(text)
+        except ValueError:
+            raise refuse("a number") from None
+    elif kind == "char":
+        if len(text) != 1:
+            raise refuse("a single character")
+        parsed = text
+    elif kind == "date":
+        if re.fullmatch(r"\d+", text):
+            parsed = int(text)  # epoch milliseconds, as Egeria stores dates
+        else:
+            try:
+                parsed = int(datetime.fromisoformat(text).timestamp() * 1000)
+            except ValueError:
+                raise refuse("epoch milliseconds or an ISO-8601 date") from None
+    else:
+        raise PyegeriaException(f"Property '{property_name}' has primitive type '{type_name}', which this family does not support.")
+    return {"class": "PrimitiveTypePropertyValue", "typeName": kind, "primitiveValue": parsed}
 
 
-def element_properties(properties: Optional[Dict[str, Any]], class_name: str) -> Optional[Dict[str, Any]]:
-    """'name: value' Dictionary -> {"class": class_name, "propertyValueMap": {...}}; None when empty."""
+def _declared_type(property_name: str, declared: Dict[str, Any], type_name: str) -> str:
+    """The primitive type name for a property, or a refusal for unknown, enum, map and array properties."""
+    if property_name not in declared:
+        raise PyegeriaException(f"'{property_name}' is not a property of {type_name} (or its super types).")
+    attr_type, category = declared[property_name]
+    category_text = str(category or "").upper()
+    if "ENUM" in category_text:
+        raise PyegeriaException(
+            f"Property '{property_name}' of {type_name} is an enum ({attr_type}); enum properties are not supported by this family yet.")
+    if "COLLECTION" in category_text or str(attr_type).lower().startswith(("map", "array")):
+        raise PyegeriaException(
+            f"Property '{property_name}' of {type_name} is a {attr_type} (map/array); not supported by this family yet.")
+    return str(attr_type)
+
+
+def element_properties(properties: Optional[Dict[str, Any]], class_name: str,
+                       declared: Optional[Dict[str, Any]] = None, type_name: str = "") -> Optional[Dict[str, Any]]:
+    """'name: value' Dictionary -> {"class": class_name, "propertyValueMap": {...}}; None when empty.
+
+    declared maps each property name to (attribute type name, attribute type category), read from the
+    instance type's type definition and its super types. It is required whenever properties are given."""
     if not properties:
         return None
-    return {"class": class_name, "propertyValueMap": {str(k): _primitive(v) for k, v in properties.items()}}
+    if declared is None:
+        raise PyegeriaException(f"Cannot send properties for {type_name or 'this type'} without its type definition.")
+    return {"class": class_name,
+            "propertyValueMap": {str(k): _primitive(str(k), v, _declared_type(str(k), declared, type_name))
+                                 for k, v in properties.items()}}
 
 
 def _require(attributes: Dict[str, Any], name: str) -> Any:
@@ -243,14 +345,26 @@ def _require(attributes: Dict[str, Any], name: str) -> Any:
     return value
 
 
-def _delete_method(attributes: Dict[str, Any]) -> str:
-    return str(_v(attributes, "Delete Method", "SOFT_DELETE")).strip().upper()
+DESTRUCTIVE_DELETE_METHODS = {"PURGE", "HARD_DELETE"}
 
 
-def new_instance_body(attributes: Dict[str, Any]) -> Dict[str, Any]:
-    body: Dict[str, Any] = {"class": "NewOpenMetadataElementRequestBody",
-                            "typeName": _require(attributes, "Instance Type Name")}
-    props = element_properties(_v(attributes, "Instance Properties"), "EntityElementProperties")
+def _delete_method(attributes: Dict[str, Any], guid: Optional[str] = None) -> str:
+    """The delete method (default SOFT_DELETE). PURGE / HARD_DELETE cannot be undone, so they are refused
+    unless Confirm Delete GUID repeats the GUID being deleted."""
+    method = str(_v(attributes, "Delete Method", "SOFT_DELETE")).strip().upper()
+    if method in DESTRUCTIVE_DELETE_METHODS:
+        confirm = str(_v(attributes, "Confirm Delete GUID", "")).strip()
+        if not guid or confirm != str(guid).strip():
+            raise PyegeriaException(
+                f"{method} is permanent. Repeat the GUID being deleted ({guid}) in Confirm Delete GUID to proceed; "
+                f"it only works on an item that was already soft deleted.")
+    return method
+
+
+def new_instance_body(attributes: Dict[str, Any], declared: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    type_name = _require(attributes, "Instance Type Name")
+    body: Dict[str, Any] = {"class": "NewOpenMetadataElementRequestBody", "typeName": type_name}
+    props = element_properties(_v(attributes, "Instance Properties"), "EntityElementProperties", declared, type_name)
     if props:
         body["properties"] = props
     if _v(attributes, "Anchor GUID"):
@@ -268,20 +382,23 @@ def new_instance_body(attributes: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def update_properties_body(properties: Optional[Dict[str, Any]], class_name: str,
-                           attributes: Dict[str, Any]) -> Dict[str, Any]:
-    props = element_properties(properties, class_name)
+                           attributes: Dict[str, Any], declared: Optional[Dict[str, Any]] = None,
+                           type_name: str = "") -> Dict[str, Any]:
+    props = element_properties(properties, class_name, declared, type_name)
     if not props:
         raise PyegeriaException("At least one property is required.")
     return {"class": "UpdatePropertiesRequestBody", "properties": props,
             "replaceProperties": bool(_bool(_v(attributes, "Replace Properties")))}
 
 
-def related_elements_body(attributes: Dict[str, Any]) -> Dict[str, Any]:
+def related_elements_body(attributes: Dict[str, Any], declared: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    type_name = _require(attributes, "Relationship Type Name")
     body: Dict[str, Any] = {"class": "NewRelatedElementsRequestBody",
-                            "typeName": _require(attributes, "Relationship Type Name"),
+                            "typeName": type_name,
                             "metadataElement1GUID": _require(attributes, "Element 1 GUID"),
                             "metadataElement2GUID": _require(attributes, "Element 2 GUID")}
-    props = element_properties(_v(attributes, "Relationship Properties"), "RelationshipElementProperties")
+    props = element_properties(_v(attributes, "Relationship Properties"), "RelationshipElementProperties",
+                               declared, type_name)
     if props:
         body["properties"] = props
     return body
@@ -294,18 +411,24 @@ class InstanceProcessor(MetadataExpertProcessor):
         attributes = self.parsed_output["attributes"]
         verb = self.command.verb
         if verb == "Create":
-            guid = await self.expert._async_create_metadata_element(new_instance_body(attributes))
+            type_name = _require(attributes, "Instance Type Name")
+            declared = await self.declared_properties(type_name) if _v(attributes, "Instance Properties") else None
+            guid = await self.expert._async_create_metadata_element(new_instance_body(attributes, declared))
             self.parsed_output["guid"] = guid if isinstance(guid, str) else None
             return self._result(f"Created {_v(attributes, 'Instance Type Name')} instance", guid if isinstance(guid, str) else "")
         guid = _require(attributes, "Metadata Element GUID")
         self.parsed_output["guid"] = guid
         if verb == "Update":
+            type_name = await self.type_name_of(
+                await self.expert._async_get_metadata_element_by_guid(guid), "elementHeader", f"element {guid}")
+            declared = await self.declared_properties(type_name)
             await self.expert._async_update_metadata_element_properties(
-                guid, update_properties_body(_v(attributes, "Instance Properties"), "EntityElementProperties", attributes))
+                guid, update_properties_body(_v(attributes, "Instance Properties"), "EntityElementProperties",
+                                             attributes, declared, type_name))
             return self._result("Updated instance", guid)
         if verb == "Delete":
             await self.expert._async_delete_metadata_element(
-                guid, {"class": "DeleteElementRequestBody", "deleteMethod": _delete_method(attributes)})
+                guid, {"class": "DeleteElementRequestBody", "deleteMethod": _delete_method(attributes, guid)})
             return self._result("Deleted instance", guid)
         raise PyegeriaException(f"Unsupported verb '{verb}' for Instance.")
 
@@ -317,19 +440,24 @@ class InstanceRelationshipProcessor(MetadataExpertProcessor):
         attributes = self.parsed_output["attributes"]
         verb, object_type = self.command.verb, self.command.object_type
         if verb == "Link":
-            guid = await self.expert._async_create_related_elements(related_elements_body(attributes))
+            type_name = _require(attributes, "Relationship Type Name")
+            declared = await self.declared_properties(type_name) if _v(attributes, "Relationship Properties") else None
+            guid = await self.expert._async_create_related_elements(related_elements_body(attributes, declared))
             self.parsed_output["guid"] = guid if isinstance(guid, str) else None
             return self._result("Created relationship", guid if isinstance(guid, str) else "")
         guid = _require(attributes, "Relationship GUID")
         self.parsed_output["guid"] = guid
         if verb == "Unlink":
             await self.expert._async_delete_related_elements(
-                guid, {"class": "DeleteRelationshipRequestBody", "deleteMethod": _delete_method(attributes)})
+                guid, {"class": "DeleteRelationshipRequestBody", "deleteMethod": _delete_method(attributes, guid)})
             return self._result("Deleted relationship", guid)
         if verb == "Update" and object_type == "Relationship":
+            type_name = await self.type_name_of(
+                await self.expert._async_get_relationship_by_guid(guid), "relationshipHeader", f"relationship {guid}")
+            declared = await self.declared_properties(type_name)
             await self.expert._async_update_related_elements_properties(
                 guid, update_properties_body(_v(attributes, "Relationship Properties"),
-                                             "RelationshipElementProperties", attributes))
+                                             "RelationshipElementProperties", attributes, declared, type_name))
             return self._result("Updated relationship", guid)
         raise PyegeriaException(f"Unsupported command '{verb} {object_type}'.")
 
@@ -346,14 +474,17 @@ class InstanceClassificationProcessor(MetadataExpertProcessor):
         verb = self.command.verb
         if verb == "Classify":
             body: Dict[str, Any] = {"class": "NewClassificationRequestBody"}
-            cls_props = element_properties(props, "ClassificationElementProperties")
+            declared = await self.declared_properties(name) if props else None
+            cls_props = element_properties(props, "ClassificationElementProperties", declared, name)
             if cls_props:
                 body["properties"] = cls_props
             await self.expert._async_classify_metadata_element(guid, name, body)
             return self._result(f"Classified as {name}", guid)
         if verb == "Reclassify":
+            declared = await self.declared_properties(name)
             await self.expert._async_reclassify_metadata_element(
-                guid, name, update_properties_body(props, "ClassificationElementProperties", attributes))
+                guid, name, update_properties_body(props, "ClassificationElementProperties", attributes,
+                                                   declared, name))
             return self._result(f"Reclassified {name}", guid)
         if verb == "Declassify":
             await self.expert._async_declassify_metadata_element(guid, name)

@@ -1,7 +1,7 @@
 ___
 
 ## Create Enum Def
-> Add a new enum definition, usable as an attribute type in type definitions. WARNING: an enum added through the API cannot be removed again (ISSUE-125).
+> Add a new enum definition, usable as an attribute type in type definitions. WARNING: an enum added through the API cannot be removed again (ISSUE-125). Creates a new item each time it runs (not idempotent): never put it in a re-run or heal batch.
 
 ### Enum Def Name
 >	**Input Required**: True

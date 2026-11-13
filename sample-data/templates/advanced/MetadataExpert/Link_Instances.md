@@ -1,7 +1,7 @@
 ___
 
 ## Link Instances
-> Create a relationship between two metadata elements. Not deduplicated: running it twice may create two relationships.
+> Create a relationship between two metadata elements. Not deduplicated: running it twice may create two relationships. Creates a new item each time it runs (not idempotent): never put it in a re-run or heal batch.
 
 ### Relationship Type Name
 >	**Input Required**: True

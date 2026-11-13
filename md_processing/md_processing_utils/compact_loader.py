@@ -27,6 +27,8 @@ def _command_to_spec(name: str, cdef: Dict[str, Any], expanded: Dict[str, Any]) 
         "verb",
         "upsert",
         "attach",
+        "idempotent",     # False: running the command again makes another element/relationship
+        "chat_allowed",   # False: a chat agent must not compose this command
         "ReferenceURL",
         "level",
         "find_method",

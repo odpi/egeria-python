@@ -1,7 +1,7 @@
 ___
 
 ## Create Type Def
-> Add a new open metadata type definition (entity, relationship or classification) to the type system. Not an upsert: types cannot be removed once instances exist.
+> Add a new open metadata type definition (entity, relationship or classification) to the type system. Not an upsert: types cannot be removed once instances exist. Creates a new item each time it runs (not idempotent): never put it in a re-run or heal batch.
 
 ### Type Def Name
 >	**Input Required**: True

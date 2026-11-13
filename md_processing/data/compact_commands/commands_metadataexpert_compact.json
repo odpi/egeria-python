@@ -732,6 +732,26 @@
       "max_cardinality": 1,
       "level": "Advanced",
       "Journal Entry": ""
+    },
+    "Confirm Delete GUID": {
+      "variable_name": "confirm_delete_guid",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Required when Delete Method is PURGE or HARD_DELETE: repeat the GUID being deleted. A purge cannot be undone and must have been soft deleted first.",
+      "generated": false,
+      "style": "GUID",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Advanced",
+      "Journal Entry": "Added 2026-11-13 -- Architect read-back fix 2.",
+      "display_name": "Confirm Delete GUID"
     }
   },
   "bundles": {},
@@ -741,7 +761,7 @@
       "qn_prefix": "",
       "alternate_names": [],
       "family": "MetadataExpert",
-      "description": "Add a new open metadata type definition (entity, relationship or classification) to the type system. Not an upsert: types cannot be removed once instances exist.",
+      "description": "Add a new open metadata type definition (entity, relationship or classification) to the type system. Not an upsert: types cannot be removed once instances exist. Creates a new item each time it runs (not idempotent): never put it in a re-run or heal batch.",
       "verb": "Create",
       "upsert": false,
       "attach": false,
@@ -765,7 +785,9 @@
         "End2 Entity Type",
         "End2 Attribute Name"
       ],
-      "Journal Entry": "Added 2026-11-12 -- MetadataExpert family. "
+      "Journal Entry": "Added 2026-11-12 -- MetadataExpert family. ",
+      "idempotent": false,
+      "chat_allowed": false
     },
     "Update Type Def": {
       "display_name": "type_def",
@@ -790,7 +812,9 @@
         "Type Def Description",
         "Type Def Attributes"
       ],
-      "Journal Entry": "Added 2026-11-12 -- MetadataExpert family. "
+      "Journal Entry": "Added 2026-11-12 -- MetadataExpert family. ",
+      "idempotent": false,
+      "chat_allowed": false
     },
     "Delete Type Def": {
       "display_name": "type_def",
@@ -812,14 +836,16 @@
         "Type Def Name",
         "Type Def GUID"
       ],
-      "Journal Entry": "Added 2026-11-12 -- MetadataExpert family. "
+      "Journal Entry": "Added 2026-11-12 -- MetadataExpert family. ",
+      "idempotent": false,
+      "chat_allowed": false
     },
     "Create Enum Def": {
       "display_name": "enum_def",
       "qn_prefix": "",
       "alternate_names": [],
       "family": "MetadataExpert",
-      "description": "Add a new enum definition, usable as an attribute type in type definitions. WARNING: an enum added through the API cannot be removed again (ISSUE-125).",
+      "description": "Add a new enum definition, usable as an attribute type in type definitions. WARNING: an enum added through the API cannot be removed again (ISSUE-125). Creates a new item each time it runs (not idempotent): never put it in a re-run or heal batch.",
       "verb": "Create",
       "upsert": false,
       "attach": false,
@@ -836,7 +862,9 @@
         "Enum Values",
         "Enum Default Value"
       ],
-      "Journal Entry": "Added 2026-11-12 -- MetadataExpert family. "
+      "Journal Entry": "Added 2026-11-12 -- MetadataExpert family. ",
+      "idempotent": false,
+      "chat_allowed": false
     },
     "Delete Enum Def": {
       "display_name": "enum_def",
@@ -858,7 +886,9 @@
         "Enum Def Name",
         "Enum Def GUID"
       ],
-      "Journal Entry": "Added 2026-11-12 -- MetadataExpert family. "
+      "Journal Entry": "Added 2026-11-12 -- MetadataExpert family. ",
+      "idempotent": false,
+      "chat_allowed": false
     },
     "Count Metadata Elements": {
       "display_name": "metadata_elements",
@@ -881,7 +911,9 @@
         "Count Search String",
         "Count Push Down"
       ],
-      "Journal Entry": "Added 2026-11-12 -- MetadataExpert family. "
+      "Journal Entry": "Added 2026-11-12 -- MetadataExpert family. ",
+      "idempotent": false,
+      "chat_allowed": false
     },
     "Publish Metadata Element": {
       "display_name": "metadata_element",
@@ -902,7 +934,9 @@
       "custom_attributes": [
         "Metadata Element GUID"
       ],
-      "Journal Entry": "Added 2026-11-12 -- MetadataExpert family. "
+      "Journal Entry": "Added 2026-11-12 -- MetadataExpert family. ",
+      "idempotent": false,
+      "chat_allowed": false
     },
     "Update Instance": {
       "display_name": "instance",
@@ -925,14 +959,16 @@
         "Instance Properties",
         "Replace Properties"
       ],
-      "Journal Entry": "Added 2026-11-12 -- MetadataExpert family (instance commands)."
+      "Journal Entry": "Added 2026-11-12 -- MetadataExpert family (instance commands).",
+      "idempotent": false,
+      "chat_allowed": false
     },
     "Delete Instance": {
       "display_name": "instance",
       "qn_prefix": "",
       "alternate_names": [],
       "family": "MetadataExpert",
-      "description": "Delete a metadata element (instance).",
+      "description": "Delete a metadata element (instance). Defaults to SOFT_DELETE. PURGE is permanent and only works on an element already soft deleted; it also requires Confirm Delete GUID to repeat the GUID.",
       "verb": "Delete",
       "upsert": false,
       "attach": false,
@@ -945,16 +981,19 @@
       "bundle": "",
       "custom_attributes": [
         "Metadata Element GUID",
-        "Delete Method"
+        "Delete Method",
+        "Confirm Delete GUID"
       ],
-      "Journal Entry": "Added 2026-11-12 -- MetadataExpert family (instance commands)."
+      "Journal Entry": "Added 2026-11-12 -- MetadataExpert family (instance commands).",
+      "idempotent": false,
+      "chat_allowed": false
     },
     "Link Instances": {
       "display_name": "instances",
       "qn_prefix": "",
       "alternate_names": [],
       "family": "MetadataExpert",
-      "description": "Create a relationship between two metadata elements. Not deduplicated: running it twice may create two relationships.",
+      "description": "Create a relationship between two metadata elements. Not deduplicated: running it twice may create two relationships. Creates a new item each time it runs (not idempotent): never put it in a re-run or heal batch.",
       "verb": "Link",
       "upsert": false,
       "attach": false,
@@ -971,14 +1010,16 @@
         "Element 2 GUID",
         "Relationship Properties"
       ],
-      "Journal Entry": "Added 2026-11-12 -- MetadataExpert family (instance commands)."
+      "Journal Entry": "Added 2026-11-12 -- MetadataExpert family (instance commands).",
+      "idempotent": false,
+      "chat_allowed": false
     },
     "Unlink Instances": {
       "display_name": "instances",
       "qn_prefix": "",
       "alternate_names": [],
       "family": "MetadataExpert",
-      "description": "Delete a relationship between two metadata elements.",
+      "description": "Delete a relationship between two metadata elements. Defaults to SOFT_DELETE. PURGE is permanent and only works on a relationship already soft deleted; it also requires Confirm Delete GUID to repeat the Relationship GUID.",
       "verb": "Unlink",
       "upsert": false,
       "attach": false,
@@ -991,9 +1032,12 @@
       "bundle": "",
       "custom_attributes": [
         "Relationship GUID",
-        "Delete Method"
+        "Delete Method",
+        "Confirm Delete GUID"
       ],
-      "Journal Entry": "Added 2026-11-12 -- MetadataExpert family (instance commands)."
+      "Journal Entry": "Added 2026-11-12 -- MetadataExpert family (instance commands).",
+      "idempotent": false,
+      "chat_allowed": false
     },
     "Update Relationship": {
       "display_name": "relationship",
@@ -1016,7 +1060,9 @@
         "Relationship Properties",
         "Replace Properties"
       ],
-      "Journal Entry": "Added 2026-11-12 -- MetadataExpert family (instance commands)."
+      "Journal Entry": "Added 2026-11-12 -- MetadataExpert family (instance commands).",
+      "idempotent": false,
+      "chat_allowed": false
     },
     "Classify Instance": {
       "display_name": "instance",
@@ -1039,7 +1085,9 @@
         "Classification Name",
         "Classification Properties"
       ],
-      "Journal Entry": "Added 2026-11-12 -- MetadataExpert family (instance commands)."
+      "Journal Entry": "Added 2026-11-12 -- MetadataExpert family (instance commands).",
+      "idempotent": false,
+      "chat_allowed": false
     },
     "Reclassify Instance": {
       "display_name": "instance",
@@ -1063,7 +1111,9 @@
         "Classification Properties",
         "Replace Properties"
       ],
-      "Journal Entry": "Added 2026-11-12 -- MetadataExpert family (instance commands)."
+      "Journal Entry": "Added 2026-11-12 -- MetadataExpert family (instance commands).",
+      "idempotent": false,
+      "chat_allowed": false
     },
     "Declassify Instance": {
       "display_name": "instance",
@@ -1085,14 +1135,16 @@
         "Metadata Element GUID",
         "Classification Name"
       ],
-      "Journal Entry": "Added 2026-11-12 -- MetadataExpert family (instance commands)."
+      "Journal Entry": "Added 2026-11-12 -- MetadataExpert family (instance commands).",
+      "idempotent": false,
+      "chat_allowed": false
     },
     "Create Instance": {
       "display_name": "instance",
       "qn_prefix": "",
       "alternate_names": [],
       "family": "MetadataExpert",
-      "description": "Create a metadata element (instance) of any open metadata type through the raw metadata-expert API. Not an upsert: every run creates a new element.",
+      "description": "Create a metadata element (instance) of any open metadata type through the raw metadata-expert API. Not an upsert: every run creates a new element. Creates a new item each time it runs (not idempotent): never put it in a re-run or heal batch.",
       "verb": "Create",
       "upsert": false,
       "attach": false,
@@ -1112,7 +1164,9 @@
         "Parent Relationship Type Name",
         "Parent at End1"
       ],
-      "Journal Entry": "Added 2026-11-12 -- MetadataExpert family (instance commands)."
+      "Journal Entry": "Added 2026-11-12 -- MetadataExpert family (instance commands).",
+      "idempotent": false,
+      "chat_allowed": false
     }
   }
 }

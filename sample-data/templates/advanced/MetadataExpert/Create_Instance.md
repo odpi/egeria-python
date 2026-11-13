@@ -1,7 +1,7 @@
 ___
 
 ## Create Instance
-> Create a metadata element (instance) of any open metadata type through the raw metadata-expert API. Not an upsert: every run creates a new element.
+> Create a metadata element (instance) of any open metadata type through the raw metadata-expert API. Not an upsert: every run creates a new element. Creates a new item each time it runs (not idempotent): never put it in a re-run or heal batch.
 
 ### Instance Type Name
 >	**Input Required**: True
