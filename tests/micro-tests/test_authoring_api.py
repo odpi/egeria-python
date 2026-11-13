@@ -11,7 +11,7 @@ Real shapes:
 import asyncio
 import json
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import pytest
 
@@ -594,6 +594,10 @@ class _DraftEgeria:
         self.ran: List[tuple] = []
         self.deleted: List[str] = []
         self.governance_zones: List[str] = []
+        self.zone_lookup_error: Optional[Exception] = None
+        self.members: Dict[str, List[str]] = {}       # element guid -> collections it's filed in
+        self.membership_error: Optional[Exception] = None
+        self.deleted_sheets: List[str] = []
         outer = self
 
         class CM:
@@ -602,7 +606,10 @@ class _DraftEgeria:
 
             async def _async_get_elements_by_property_value(self, value, names, metadata_element_type=None, **kw):
                 if metadata_element_type == "GovernanceZone":
-                    return [{"properties": {"zoneName": z}} for z in outer.governance_zones if z == value] \
+                    if outer.zone_lookup_error:
+                        raise outer.zone_lookup_error
+                    same = (lambda z: z.lower() == value.lower()) if kw.get("ignore_case") else (lambda z: z == value)
+                    return [{"properties": {"zoneName": z}} for z in outer.governance_zones if same(z)] \
                         or "No elements found"
                 return [e for e in outer.elements.values()
                         if e["properties"].get("displayName") == value] or "No elements found"
@@ -614,14 +621,21 @@ class _DraftEgeria:
                 return [e for e in outer.elements.values()
                         if e["elementHeader"]["type"]["typeName"] == metadata_element_type]
 
+            async def _async_get_related_elements(self, guid, relationship_type=None, start_at_end=1, **kw):
+                assert relationship_type == "CollectionMembership" and start_at_end == 2
+                if outer.membership_error:
+                    raise outer.membership_error
+                return [{"elementHeader": {"guid": c}} for c in outer.members.get(guid, [])] or "No elements found"
+
         class AM:
             async def _async_delete_asset(self, guid):
                 outer.deleted.append(guid)
         self.classification_manager, self.asset_maker = CM(), AM()
 
-    def hold(self, qn, name, type_name, zones, created, marked=True):
+    def hold(self, qn, name, type_name, zones, created, marked=True, updated=None):
         self.elements[qn] = {"elementHeader": {"guid": f"g-{name}", "type": {"typeName": type_name},
-                                               "versions": {"version": 1, "createTime": created},
+                                               "versions": {"version": 1, "createTime": created,
+                                                            **({"updateTime": updated} if updated else {})},
                                                "zoneMembership": {"classificationProperties":
                                                                   {"zoneMembership": zones}}},
                              "properties": {"qualifiedName": qn, "displayName": name,
@@ -673,6 +687,87 @@ def test_prune_removes_only_the_authors_old_unpromoted_drafts():
     assert out["removed"] == ["report:Old draft"] and out["kept"] == ["report:New draft"]
     assert out["not_marked"] == ["Unmarked"]
     assert eg.deleted == ["g-Old draft"]
+
+
+def _days_ago(n):
+    from datetime import datetime, timedelta, timezone
+    return (datetime.now(timezone.utc) - timedelta(days=n)).isoformat()
+
+
+def test_prune_takes_a_sheet_only_when_it_is_an_unfiled_private_draft(monkeypatch):
+    """F1 (read-back 2026-11-13): a sheet has no draft marker, so prune must prove it is an unfiled private
+    draft before deleting it -- a shared or filed (published, Declassify not run) sheet must survive."""
+    eg = _DraftEgeria()
+
+    async def fake_delete_sheet(self, name):
+        eg.deleted_sheets.append(name)
+        return True
+    monkeypatch.setattr("md_processing.v2.dashboard_sheet.DashboardSheetEgeriaWriter.delete_sheet",
+                        fake_delete_sheet)
+    monkeypatch.setattr("md_processing.v2.dashboard_sheet.DashboardSheetEgeriaWriter.__init__",
+                        lambda self, client: None)
+    eg.hold("Dashboard::scratchpad", "scratchpad", "Dashboard", ["erinoverview"], _days_ago(60))
+    eg.hold("Dashboard::shared", "shared", "Dashboard", ["erinoverview", "team-zone"], _days_ago(60))
+    eg.hold("Dashboard::filed", "filed", "Dashboard", ["erinoverview"], _days_ago(60))
+    eg.members["g-filed"] = ["DashboardFolder::Consumer::Portal"]   # published; its Declassify step failed
+    eg.hold("Dashboard::busy", "busy", "Dashboard", ["erinoverview"], _days_ago(60), updated=_days_ago(2))
+    eg.hold("Legacy sheet", "Legacy sheet", "Dashboard", ["erinoverview"], _days_ago(60))  # no Dashboard:: QN
+    store = EgeriaDraftStore(eg, eg.run)
+    out = store.prune_drafts("erinoverview")
+    assert out["removed"] == ["sheet:scratchpad"] and eg.deleted_sheets == ["scratchpad"]
+    assert out["kept"] == ["sheet:busy"]                       # aged by last update, not creation
+    assert out["kept_reasons"] == {"sheet:shared": "zoned beyond your private zone (shared)",
+                                   "sheet:filed": "filed in a collection (published)",
+                                   "sheet:Legacy sheet": "not a Dashboard:: sheet"}
+
+
+def test_prune_keeps_a_sheet_whose_memberships_cant_be_read(monkeypatch):
+    eg = _DraftEgeria()
+    eg.hold("Dashboard::scratchpad", "scratchpad", "Dashboard", ["erinoverview"], _days_ago(60))
+    eg.membership_error = TimeoutError("slow")
+    out = EgeriaDraftStore(eg, eg.run).prune_drafts("erinoverview")
+    assert out["removed"] == [] and "couldn't be read" in out["kept_reasons"]["sheet:scratchpad"]
+
+
+def test_prune_reports_only_real_deletes(monkeypatch):
+    eg = _DraftEgeria()
+    eg.hold("Dashboard::gone", "gone", "Dashboard", ["erinoverview"], _days_ago(60))
+
+    async def nothing_deleted(self, name):
+        return False
+    monkeypatch.setattr("md_processing.v2.dashboard_sheet.DashboardSheetEgeriaWriter.delete_sheet",
+                        nothing_deleted)
+    monkeypatch.setattr("md_processing.v2.dashboard_sheet.DashboardSheetEgeriaWriter.__init__",
+                        lambda self, client: None)
+    out = EgeriaDraftStore(eg, eg.run).prune_drafts("erinoverview")
+    assert out["removed"] == [] and out["not_deleted"] == ["sheet:gone"]
+
+
+def test_prune_never_takes_a_report_zoned_beyond_the_author():
+    eg = _DraftEgeria()
+    eg.hold("R::shared", "Shared draft", "Report", ["erinoverview", "finance"], _days_ago(60))
+    out = EgeriaDraftStore(eg, eg.run).prune_drafts("erinoverview")
+    assert out["removed"] == [] and eg.deleted == []
+
+
+def test_the_zone_name_check_fails_closed_when_the_lookup_errors():
+    """F2: a lookup error is not "no such zone"; the draft isn't saved."""
+    from pyegeria.core._exceptions import PyegeriaNotFoundException
+    eg = _DraftEgeria()
+    eg.zone_lookup_error = TimeoutError("slow")
+    with pytest.raises(AuthoringRefused, match="Couldn't check whether user id 'erinoverview'"):
+        EgeriaDraftStore(eg, eg.run).save("erinoverview", cdo_report())
+    assert eg.ran == []
+    eg.zone_lookup_error = PyegeriaNotFoundException.__new__(PyegeriaNotFoundException)  # a "not found" answer
+    EgeriaDraftStore(eg, eg.run).save("erinoverview", cdo_report())
+    assert len(eg.ran) == 1
+
+
+def test_the_zone_name_check_ignores_case():
+    eg = _DraftEgeria()
+    eg.governance_zones = ["ErinOverview"]
+    with pytest.raises(AuthoringRefused, match="governance zone"):
+        EgeriaDraftStore(eg, eg.run).save("erinoverview", cdo_report())
 
 
 def test_promotion_clears_the_private_zone():

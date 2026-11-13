@@ -211,13 +211,21 @@ def _parse_time(value: Any):
 
 
 def _is_marked(kind: str, el: Dict[str, Any]) -> bool:
-    """Whether an element carries the draft marker (a sheet has none: its zone alone says it's a draft)."""
+    """Whether an element carries the draft marker. A sheet has no marker Dr.Egeria writes yet, so it is never
+    "marked": prune checks a sheet separately (`EgeriaDraftStore._sheet_prunable`) and keeps it unless it can
+    show the sheet is an unfiled private draft."""
     props = el.get("properties") or {}
     if kind == "spec":
         return str(props.get("contentStatus") or "").upper() == "DRAFT"
     if kind == "report":
         return (props.get("additionalProperties") or {}).get(DRAFT_MARKER[0]) == DRAFT_MARKER[1]
-    return True
+    return False
+
+
+def _is_not_found(exc: BaseException) -> bool:
+    """A lookup that failed because nothing matched (as opposed to a timeout, a permission refusal, ...)."""
+    from pyegeria.core._exceptions import PyegeriaNotFoundException
+    return isinstance(exc, PyegeriaNotFoundException)
 
 
 class EgeriaDraftStore:
@@ -242,8 +250,13 @@ class EgeriaDraftStore:
     - **Promotion clears the zone:** promotion_plan() is the publish plan with Declassify Zone Membership (a
       blank Zone Membership would keep the zone), marking the element ACTIVE / published. After promoting a
       sheet, check that another user's search finds its placements, not only the sheet (anchor zones).
-    - **prune_drafts(older_than_days=30)** removes the author's unpromoted drafts created more than 30 days
-      ago, as the author. It can't see, and never sweeps, anyone else's drafts.
+    - **prune_drafts(older_than_days=30)** removes the author's unpromoted drafts not updated for more than 30
+      days, as the author. It can't see, and never sweeps, anyone else's drafts. It removes only an element
+      whose zones are exactly `[<userId>]` (a zone list that merely includes the userId is shared). A spec or
+      Report must also carry the draft marker. A sheet has no marker, so it must also have a `Dashboard::`
+      qualified name and belong to no collection (a sheet filed in a folder is published, even if its
+      Declassify step didn't run); when its memberships can't be read it is kept. `removed` lists only what
+      was actually deleted.
     """
 
     def __init__(self, client: Any, run: Any = None, *, controlled_zones: Any = ()):
@@ -269,12 +282,17 @@ class EgeriaDraftStore:
         try:
             found = await self.client.classification_manager._async_get_elements_by_property_value(
                 user_id, ["zoneName", "qualifiedName"], metadata_element_type="GovernanceZone", starts_with=False,
-                ends_with=False, ignore_case=False, page_size=10, graph_query_depth=0)
-        except Exception:  # noqa: BLE001 -- "not found" answers are exceptions on some paths
+                ends_with=False, ignore_case=True, page_size=10, graph_query_depth=0)
+        except Exception as exc:  # noqa: BLE001
+            if not _is_not_found(exc):   # a "not found" answer is an exception on some paths; anything else
+                raise AuthoringRefused(  # means the check wasn't done, so the draft isn't saved (fail closed)
+                    f"Couldn't check whether user id {user_id!r} is also a governance zone's name "
+                    f"({type(exc).__name__}), so a draft zoned [{user_id}] can't be shown to be private. "
+                    f"Nothing was saved; try again.") from exc
             found = []
-        names = {((e.get("properties") or {}).get("zoneName") or "") for e in found
+        names = {str((e.get("properties") or {}).get("zoneName") or "").lower() for e in found
                  if isinstance(e, dict)} if isinstance(found, list) else set()
-        if user_id in names:
+        if user_id.lower() in names:
             raise AuthoringRefused(f"User id {user_id!r} is also the name of a governance zone, so a draft zoned "
                                    f"[{user_id}] wouldn't be private. Drafts can't be kept in Egeria for this user.")
         self._zone_checked[user_id] = True
@@ -359,7 +377,7 @@ class EgeriaDraftStore:
                     out.append({"kind": k, "name": name, "qualified_name": props.get("qualifiedName"),
                                 "guid": el["elementHeader"].get("guid"),
                                 "created": versions.get("createTime"), "updated": versions.get("updateTime"),
-                                "marked": _is_marked(k, el)})
+                                "zones": self._zones(el), "marked": _is_marked(k, el)})
         return out
 
     async def async_delete(self, user_id: str, kind: str, name: str) -> bool:
@@ -378,27 +396,61 @@ class EgeriaDraftStore:
             await self.client.metadata_expert._async_delete_metadata_element(guid)
         return True
 
+    async def _sheet_prunable(self, d: Dict[str, Any]) -> Optional[str]:
+        """None when the sheet `d` (from async_list) may be pruned, else the reason it is kept."""
+        if not str(d.get("qualified_name") or "").startswith("Dashboard::"):
+            return "not a Dashboard:: sheet"
+        try:
+            related = await self.client.classification_manager._async_get_related_elements(
+                d["guid"], "CollectionMembership", start_at_end=2, page_size=0, graph_query_depth=0)
+        except Exception as exc:  # noqa: BLE001
+            if not _is_not_found(exc):
+                return f"its folder memberships couldn't be read ({type(exc).__name__})"
+            related = []
+        if isinstance(related, list) and any(isinstance(r, dict) for r in related):
+            return "filed in a collection (published)"
+        if not isinstance(related, (list, str)):
+            return "its folder memberships couldn't be read"
+        return None
+
     async def async_prune_drafts(self, user_id: str, older_than_days: int = PRUNE_DAYS, *,
                                  dry_run: bool = False) -> Dict[str, Any]:
-        """Remove the author's drafts created more than `older_than_days` ago (a promoted draft is no longer in
-        the private zone, so it's never pruned). Run as the author only."""
+        """Remove the author's drafts not updated for more than `older_than_days` (a promoted draft is no longer
+        in the private zone, so it's never pruned). Run as the author only. See the class doc for what counts
+        as a draft; `kept_reasons` says why each in-zone element older than the cutoff was kept."""
         from datetime import datetime, timedelta, timezone
         cutoff = datetime.now(timezone.utc) - timedelta(days=older_than_days)
+        zone = self._author(user_id)
         drafts = await self.async_list(user_id)
-        out: Dict[str, Any] = {"removed": [], "kept": [], "not_dated": [], "not_marked": [], "dry_run": dry_run,
-                               "older_than_days": older_than_days}
+        out: Dict[str, Any] = {"removed": [], "kept": [], "not_dated": [], "not_marked": [], "not_deleted": [],
+                               "kept_reasons": {}, "dry_run": dry_run, "older_than_days": older_than_days}
         for d in drafts:
-            when = _parse_time(d.get("created"))
-            if not d.get("marked", True):
-                out["not_marked"].append(d["name"])   # in the zone without the draft marker: never removed
-            elif when is None:
+            key = f"{d['kind']}:{d['name']}"
+            when = _parse_time(d.get("updated")) or _parse_time(d.get("created"))
+            if when is None:
                 out["not_dated"].append(d["name"])   # never removed on a guess
-            elif when < cutoff:
-                if not dry_run:
-                    await self.async_delete(user_id, d["kind"], d["name"])
-                out["removed"].append(f"{d['kind']}:{d['name']}")
+                continue
+            if when >= cutoff:
+                out["kept"].append(key)
+                continue
+            if list(d.get("zones") or []) != [zone]:
+                reason = "zoned beyond your private zone (shared)"
+            elif d["kind"] == "sheet":
+                reason = await self._sheet_prunable(d)
+            elif not d.get("marked"):
+                out["not_marked"].append(d["name"])   # in the zone without the draft marker: never removed
+                continue
             else:
-                out["kept"].append(f"{d['kind']}:{d['name']}")
+                reason = None
+            if reason:
+                out["kept_reasons"][key] = reason
+                continue
+            if dry_run:
+                out["removed"].append(key)   # would be removed
+            elif await self.async_delete(user_id, d["kind"], d["name"]):
+                out["removed"].append(key)
+            else:
+                out["not_deleted"].append(key)   # the delete found nothing to delete, or refused
         return out
 
     async def async_promotion_plan(self, user_id: str, kind: str, name: str, *, folders: Any = ()) -> Dict[str, Any]:
