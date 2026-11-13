@@ -200035,6 +200035,1824 @@
     "get_additional_props": null,
     "question_spec": null
   },
+  "Type-Def-DrE-Basic": {
+    "target_type": "Type Def",
+    "heading": "Type-Def-DrE-Basic Attributes",
+    "description": "Auto-generated format for Type Def (Create, Basic).",
+    "aliases": [],
+    "annotations": {},
+    "family": "MetadataExpert",
+    "formats": [
+      {
+        "types": [
+          "LIST"
+        ],
+        "attributes": [
+          {
+            "name": "Type Def Name",
+            "key": "type_def_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Type Def Category",
+            "key": "type_def_category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "Entity",
+              "Relationship",
+              "Classification"
+            ]
+          },
+          {
+            "name": "Super Type",
+            "key": "super_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Type Def Description",
+            "key": "type_def_description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Type Def Attributes",
+            "key": "type_def_attributes",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Valid Entity Types",
+            "key": "valid_entity_types",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Propagatable",
+            "key": "propagatable",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "End1 Entity Type",
+            "key": "end1_entity_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "End1 Attribute Name",
+            "key": "end1_attribute_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "End2 Entity Type",
+            "key": "end2_entity_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "End2 Attribute Name",
+            "key": "end2_attribute_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          }
+        ],
+        "columns": [
+          {
+            "name": "Type Def Name",
+            "key": "type_def_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Type Def Category",
+            "key": "type_def_category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "Entity",
+              "Relationship",
+              "Classification"
+            ],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Super Type",
+            "key": "super_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Type Def Description",
+            "key": "type_def_description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Type Def Attributes",
+            "key": "type_def_attributes",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Valid Entity Types",
+            "key": "valid_entity_types",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Propagatable",
+            "key": "propagatable",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "End1 Entity Type",
+            "key": "end1_entity_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "End1 Attribute Name",
+            "key": "end1_attribute_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "End2 Entity Type",
+            "key": "end2_entity_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "End2 Attribute Name",
+            "key": "end2_attribute_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          }
+        ]
+      },
+      {
+        "types": [
+          "ALL"
+        ],
+        "attributes": [
+          {
+            "name": "Type Def Name",
+            "key": "type_def_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Type Def Category",
+            "key": "type_def_category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "Entity",
+              "Relationship",
+              "Classification"
+            ]
+          },
+          {
+            "name": "Super Type",
+            "key": "super_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Type Def Description",
+            "key": "type_def_description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Type Def Attributes",
+            "key": "type_def_attributes",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Valid Entity Types",
+            "key": "valid_entity_types",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Propagatable",
+            "key": "propagatable",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "End1 Entity Type",
+            "key": "end1_entity_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "End1 Attribute Name",
+            "key": "end1_attribute_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "End2 Entity Type",
+            "key": "end2_entity_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "End2 Attribute Name",
+            "key": "end2_attribute_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          }
+        ],
+        "columns": [
+          {
+            "name": "Type Def Name",
+            "key": "type_def_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Type Def Category",
+            "key": "type_def_category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "Entity",
+              "Relationship",
+              "Classification"
+            ],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Super Type",
+            "key": "super_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Type Def Description",
+            "key": "type_def_description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Type Def Attributes",
+            "key": "type_def_attributes",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Valid Entity Types",
+            "key": "valid_entity_types",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Propagatable",
+            "key": "propagatable",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "End1 Entity Type",
+            "key": "end1_entity_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "End1 Attribute Name",
+            "key": "end1_attribute_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "End2 Entity Type",
+            "key": "end2_entity_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "End2 Attribute Name",
+            "key": "end2_attribute_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null,
+    "question_spec": null
+  },
+  "Type-Def-DrE-Advanced": {
+    "target_type": "Type Def",
+    "heading": "Type-Def-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Type Def (Create, Advanced).",
+    "aliases": [],
+    "annotations": {},
+    "family": "MetadataExpert",
+    "formats": [
+      {
+        "types": [
+          "LIST"
+        ],
+        "attributes": [
+          {
+            "name": "Type Def Name",
+            "key": "type_def_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Type Def Category",
+            "key": "type_def_category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "Entity",
+              "Relationship",
+              "Classification"
+            ]
+          },
+          {
+            "name": "Super Type",
+            "key": "super_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Type Def Description",
+            "key": "type_def_description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Type Def Attributes",
+            "key": "type_def_attributes",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Valid Entity Types",
+            "key": "valid_entity_types",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Propagatable",
+            "key": "propagatable",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "End1 Entity Type",
+            "key": "end1_entity_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "End1 Attribute Name",
+            "key": "end1_attribute_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "End2 Entity Type",
+            "key": "end2_entity_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "End2 Attribute Name",
+            "key": "end2_attribute_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          }
+        ],
+        "columns": [
+          {
+            "name": "Type Def Name",
+            "key": "type_def_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Type Def Category",
+            "key": "type_def_category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "Entity",
+              "Relationship",
+              "Classification"
+            ],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Super Type",
+            "key": "super_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Type Def Description",
+            "key": "type_def_description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Type Def Attributes",
+            "key": "type_def_attributes",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Valid Entity Types",
+            "key": "valid_entity_types",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Propagatable",
+            "key": "propagatable",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "End1 Entity Type",
+            "key": "end1_entity_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "End1 Attribute Name",
+            "key": "end1_attribute_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "End2 Entity Type",
+            "key": "end2_entity_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "End2 Attribute Name",
+            "key": "end2_attribute_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          }
+        ]
+      },
+      {
+        "types": [
+          "ALL"
+        ],
+        "attributes": [
+          {
+            "name": "Type Def Name",
+            "key": "type_def_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Type Def Category",
+            "key": "type_def_category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "Entity",
+              "Relationship",
+              "Classification"
+            ]
+          },
+          {
+            "name": "Super Type",
+            "key": "super_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Type Def Description",
+            "key": "type_def_description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Type Def Attributes",
+            "key": "type_def_attributes",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Valid Entity Types",
+            "key": "valid_entity_types",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Propagatable",
+            "key": "propagatable",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "End1 Entity Type",
+            "key": "end1_entity_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "End1 Attribute Name",
+            "key": "end1_attribute_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "End2 Entity Type",
+            "key": "end2_entity_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "End2 Attribute Name",
+            "key": "end2_attribute_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          }
+        ],
+        "columns": [
+          {
+            "name": "Type Def Name",
+            "key": "type_def_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Type Def Category",
+            "key": "type_def_category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "Entity",
+              "Relationship",
+              "Classification"
+            ],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Super Type",
+            "key": "super_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Type Def Description",
+            "key": "type_def_description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Type Def Attributes",
+            "key": "type_def_attributes",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Valid Entity Types",
+            "key": "valid_entity_types",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Propagatable",
+            "key": "propagatable",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "End1 Entity Type",
+            "key": "end1_entity_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "End1 Attribute Name",
+            "key": "end1_attribute_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "End2 Entity Type",
+            "key": "end2_entity_type",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "End2 Attribute Name",
+            "key": "end2_attribute_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null,
+    "question_spec": null
+  },
+  "Enum-Def-DrE-Basic": {
+    "target_type": "Enum Def",
+    "heading": "Enum-Def-DrE-Basic Attributes",
+    "description": "Auto-generated format for Enum Def (Create, Basic).",
+    "aliases": [],
+    "annotations": {},
+    "family": "MetadataExpert",
+    "formats": [
+      {
+        "types": [
+          "LIST"
+        ],
+        "attributes": [
+          {
+            "name": "Enum Def Name",
+            "key": "enum_def_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Enum Def Description",
+            "key": "enum_def_description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Enum Values",
+            "key": "enum_values",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Enum Default Value",
+            "key": "enum_default_value",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          }
+        ],
+        "columns": [
+          {
+            "name": "Enum Def Name",
+            "key": "enum_def_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Enum Def Description",
+            "key": "enum_def_description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Enum Values",
+            "key": "enum_values",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Enum Default Value",
+            "key": "enum_default_value",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          }
+        ]
+      },
+      {
+        "types": [
+          "ALL"
+        ],
+        "attributes": [
+          {
+            "name": "Enum Def Name",
+            "key": "enum_def_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Enum Def Description",
+            "key": "enum_def_description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Enum Values",
+            "key": "enum_values",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Enum Default Value",
+            "key": "enum_default_value",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          }
+        ],
+        "columns": [
+          {
+            "name": "Enum Def Name",
+            "key": "enum_def_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Enum Def Description",
+            "key": "enum_def_description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Enum Values",
+            "key": "enum_values",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Enum Default Value",
+            "key": "enum_default_value",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null,
+    "question_spec": null
+  },
+  "Enum-Def-DrE-Advanced": {
+    "target_type": "Enum Def",
+    "heading": "Enum-Def-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Enum Def (Create, Advanced).",
+    "aliases": [],
+    "annotations": {},
+    "family": "MetadataExpert",
+    "formats": [
+      {
+        "types": [
+          "LIST"
+        ],
+        "attributes": [
+          {
+            "name": "Enum Def Name",
+            "key": "enum_def_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Enum Def Description",
+            "key": "enum_def_description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Enum Values",
+            "key": "enum_values",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Enum Default Value",
+            "key": "enum_default_value",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          }
+        ],
+        "columns": [
+          {
+            "name": "Enum Def Name",
+            "key": "enum_def_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Enum Def Description",
+            "key": "enum_def_description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Enum Values",
+            "key": "enum_values",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Enum Default Value",
+            "key": "enum_default_value",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          }
+        ]
+      },
+      {
+        "types": [
+          "ALL"
+        ],
+        "attributes": [
+          {
+            "name": "Enum Def Name",
+            "key": "enum_def_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Enum Def Description",
+            "key": "enum_def_description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Enum Values",
+            "key": "enum_values",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Enum Default Value",
+            "key": "enum_default_value",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          }
+        ],
+        "columns": [
+          {
+            "name": "Enum Def Name",
+            "key": "enum_def_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Enum Def Description",
+            "key": "enum_def_description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Enum Values",
+            "key": "enum_values",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Enum Default Value",
+            "key": "enum_default_value",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null,
+    "question_spec": null
+  },
+  "Instance-DrE-Basic": {
+    "target_type": "Instance",
+    "heading": "Instance-DrE-Basic Attributes",
+    "description": "Auto-generated format for Instance (Create, Basic).",
+    "aliases": [],
+    "annotations": {},
+    "family": "MetadataExpert",
+    "formats": [
+      {
+        "types": [
+          "LIST"
+        ],
+        "attributes": [
+          {
+            "name": "Instance Type Name",
+            "key": "instance_type_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Instance Properties",
+            "key": "instance_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Anchor GUID",
+            "key": "anchor_guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Own Anchor",
+            "key": "is_own_anchor",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Parent GUID",
+            "key": "parent_guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          }
+        ],
+        "columns": [
+          {
+            "name": "Instance Type Name",
+            "key": "instance_type_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Instance Properties",
+            "key": "instance_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Anchor GUID",
+            "key": "anchor_guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Is Own Anchor",
+            "key": "is_own_anchor",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Parent GUID",
+            "key": "parent_guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          }
+        ]
+      },
+      {
+        "types": [
+          "ALL"
+        ],
+        "attributes": [
+          {
+            "name": "Instance Type Name",
+            "key": "instance_type_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Instance Properties",
+            "key": "instance_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Anchor GUID",
+            "key": "anchor_guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Own Anchor",
+            "key": "is_own_anchor",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Parent GUID",
+            "key": "parent_guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          }
+        ],
+        "columns": [
+          {
+            "name": "Instance Type Name",
+            "key": "instance_type_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Instance Properties",
+            "key": "instance_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Anchor GUID",
+            "key": "anchor_guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Is Own Anchor",
+            "key": "is_own_anchor",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Parent GUID",
+            "key": "parent_guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null,
+    "question_spec": null
+  },
+  "Instance-DrE-Advanced": {
+    "target_type": "Instance",
+    "heading": "Instance-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Instance (Create, Advanced).",
+    "aliases": [],
+    "annotations": {},
+    "family": "MetadataExpert",
+    "formats": [
+      {
+        "types": [
+          "LIST"
+        ],
+        "attributes": [
+          {
+            "name": "Instance Type Name",
+            "key": "instance_type_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Instance Properties",
+            "key": "instance_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Anchor GUID",
+            "key": "anchor_guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Own Anchor",
+            "key": "is_own_anchor",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Parent GUID",
+            "key": "parent_guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          }
+        ],
+        "columns": [
+          {
+            "name": "Instance Type Name",
+            "key": "instance_type_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Instance Properties",
+            "key": "instance_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Anchor GUID",
+            "key": "anchor_guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Is Own Anchor",
+            "key": "is_own_anchor",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Parent GUID",
+            "key": "parent_guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          }
+        ]
+      },
+      {
+        "types": [
+          "ALL"
+        ],
+        "attributes": [
+          {
+            "name": "Instance Type Name",
+            "key": "instance_type_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Instance Properties",
+            "key": "instance_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Anchor GUID",
+            "key": "anchor_guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Is Own Anchor",
+            "key": "is_own_anchor",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          },
+          {
+            "name": "Parent GUID",
+            "key": "parent_guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": []
+          }
+        ],
+        "columns": [
+          {
+            "name": "Instance Type Name",
+            "key": "instance_type_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Instance Properties",
+            "key": "instance_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Anchor GUID",
+            "key": "anchor_guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Is Own Anchor",
+            "key": "is_own_anchor",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          },
+          {
+            "name": "Parent GUID",
+            "key": "parent_guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "render": null,
+            "max_items": null,
+            "max_lines": null,
+            "label": null
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null,
+    "question_spec": null
+  },
   "Study-Project-DrE-Basic": {
     "target_type": "Study Project",
     "heading": "Study-Project-DrE-Basic Attributes",

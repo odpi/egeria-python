@@ -39,6 +39,8 @@ STANDARD_VERBS = {
     # integration daemon). Without these the `## Import ...` / `## Publish ...` headings never match
     # cmd_header_rx and silently fall through as prose -- no error, no summary row.
     "Import", "Publish",
+    # MetadataExpert family: "Count Metadata Elements".
+    "Count",
 }
 
 # Commands that appear as a single word (no separate verb) and map to canonical verb+object
