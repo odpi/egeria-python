@@ -58,6 +58,23 @@ def _bool(value: Any) -> Optional[bool]:
     return True if text in ("true", "yes", "y", "1") else False if text in ("false", "no", "n", "0") else None
 
 
+def confirm_name(attributes: Dict[str, Any], name_attr: str, confirm_attr: str, what: str) -> str:
+    """Platform-wide type system changes are refused unless the confirmation repeats the name exactly
+    (case-sensitive, surrounding spaces ignored). Called before anything is sent to Egeria."""
+    name = str(_v(attributes, name_attr, "")).strip()
+    if not name:
+        raise PyegeriaException(f"{name_attr} is required.")
+    if str(_v(attributes, confirm_attr, "")).strip() != name:
+        raise PyegeriaException(
+            f"{what} changes the type system for every user and app on this platform. Repeat the name ({name}) "
+            f"in {confirm_attr} to proceed; nothing was changed.")
+    return name
+
+
+# (name attribute, confirmation attribute) for the commands that change the type system
+CONFIRMATIONS = (("Type Def Name", "Confirm Type Def Name"), ("Enum Def Name", "Confirm Enum Def Name"))
+
+
 def _link(name: str) -> Dict[str, str]:
     return {"name": name}
 
@@ -144,6 +161,15 @@ class MetadataExpertProcessor(AsyncBaseCommandProcessor):
                          "relationship each time). Do not put it in a re-run or heal batch.")
         if self.spec_flag("chat_allowed", True) is False:
             notes.append("Advanced command, not for chat agents.")
+        attributes = (self.parsed_output or {}).get("attributes", {})
+        for name_attr, confirm_attr in CONFIRMATIONS:
+            if confirm_attr in (self.get_command_spec() or {}).get("custom_attributes", []):
+                given = str(_v(attributes, confirm_attr, "")).strip()
+                expected = str(_v(attributes, name_attr, "")).strip()
+                state = ("present and matches" if given and given == expected
+                         else "missing" if not given else "does NOT match, so the command will be refused")
+                notes.append(f"**Platform-wide change.** {confirm_attr} must repeat {name_attr} exactly; it is {state}. "
+                             f"Nothing is sent to Egeria in validate mode.")
         return report + ("\n\n> " + "\n> ".join(notes) + "\n" if notes else "")
 
     async def declared_properties(self, type_name: str) -> Dict[str, Any]:
@@ -196,6 +222,8 @@ class TypeDefProcessor(MetadataExpertProcessor):
         if not name:
             raise PyegeriaException("Type Def Name is required.")
         verb = self.command.verb
+        if verb in ("Update", "Delete"):
+            confirm_name(attributes, "Type Def Name", "Confirm Type Def Name", f"{verb} Type Def")
         if verb == "Create":
             guid = await self.expert._async_add_type_def(type_def_body(attributes))
             self.parsed_output["guid"] = guid if isinstance(guid, str) else None
@@ -227,6 +255,7 @@ class EnumDefProcessor(MetadataExpertProcessor):
             self.parsed_output["guid"] = guid if isinstance(guid, str) else None
             return self._result(f"Added enum definition '{name}'", guid if isinstance(guid, str) else "")
         if self.command.verb == "Delete":
+            confirm_name(attributes, "Enum Def Name", "Confirm Enum Def Name", "Delete Enum Def")
             guid = _v(attributes, "Enum Def GUID") or await self._enum_guid(name)
             await self.expert._async_delete_enum_def(guid, name)
             return self._result(f"Deleted enum definition '{name}'", guid)

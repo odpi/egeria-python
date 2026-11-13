@@ -1,7 +1,7 @@
 ___
 
 ## Update Type Def
-> Patch a type definition that was added through the API. WARNING: Egeria currently rejects every patch (OMRS-REPOSITORY-400-069, ISSUE-124).
+> Patch a type definition that was added through the API. WARNING: Egeria currently rejects every patch (OMRS-REPOSITORY-400-069, ISSUE-124). PLATFORM-WIDE: this changes the type system for every user and app, so Confirm Type Def Name must repeat the name exactly or nothing is changed.
 
 ### Type Def Name
 >	**Input Required**: True
@@ -119,6 +119,14 @@ ___
 >	| Parameter Name | Parameter Value |
 >	|---|---|
 >	| example_key | example_value |
+
+
+### Confirm Type Def Name
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: Required for Update Type Def and Delete Type Def: repeat Type Def Name exactly (case-sensitive). Changing a type definition affects every user and app on the platform.
 
 
 ### Status

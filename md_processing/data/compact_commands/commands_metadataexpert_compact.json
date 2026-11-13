@@ -752,6 +752,46 @@
       "level": "Advanced",
       "Journal Entry": "Added 2026-11-13 -- Architect read-back fix 2.",
       "display_name": "Confirm Delete GUID"
+    },
+    "Confirm Type Def Name": {
+      "variable_name": "confirm_type_def_name",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Required for Update Type Def and Delete Type Def: repeat Type Def Name exactly (case-sensitive). Changing a type definition affects every user and app on the platform.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Advanced",
+      "Journal Entry": "Added 2026-11-13 -- Architect typedef guard.",
+      "display_name": "Confirm Delete GUID"
+    },
+    "Confirm Enum Def Name": {
+      "variable_name": "confirm_enum_def_name",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Required for Delete Enum Def: repeat Enum Def Name exactly (case-sensitive). Changing an enum definition affects every user and app on the platform.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Advanced",
+      "Journal Entry": "Added 2026-11-13 -- Architect typedef guard.",
+      "display_name": "Confirm Delete GUID"
     }
   },
   "bundles": {},
@@ -794,7 +834,7 @@
       "qn_prefix": "",
       "alternate_names": [],
       "family": "MetadataExpert",
-      "description": "Patch a type definition that was added through the API. WARNING: Egeria currently rejects every patch (OMRS-REPOSITORY-400-069, ISSUE-124).",
+      "description": "Patch a type definition that was added through the API. WARNING: Egeria currently rejects every patch (OMRS-REPOSITORY-400-069, ISSUE-124). PLATFORM-WIDE: this changes the type system for every user and app, so Confirm Type Def Name must repeat the name exactly or nothing is changed.",
       "verb": "Update",
       "upsert": false,
       "attach": false,
@@ -810,7 +850,8 @@
         "Type Def GUID",
         "Apply To Version",
         "Type Def Description",
-        "Type Def Attributes"
+        "Type Def Attributes",
+        "Confirm Type Def Name"
       ],
       "Journal Entry": "Added 2026-11-12 -- MetadataExpert family. ",
       "idempotent": false,
@@ -821,7 +862,7 @@
       "qn_prefix": "",
       "alternate_names": [],
       "family": "MetadataExpert",
-      "description": "Delete a type definition that was added through the API. Fails while instances of the type exist or another type refers to it.",
+      "description": "Delete a type definition that was added through the API. Fails while instances of the type exist or another type refers to it. PLATFORM-WIDE: this changes the type system for every user and app, so Confirm Type Def Name must repeat the name exactly or nothing is changed.",
       "verb": "Delete",
       "upsert": false,
       "attach": false,
@@ -834,7 +875,8 @@
       "bundle": "",
       "custom_attributes": [
         "Type Def Name",
-        "Type Def GUID"
+        "Type Def GUID",
+        "Confirm Type Def Name"
       ],
       "Journal Entry": "Added 2026-11-12 -- MetadataExpert family. ",
       "idempotent": false,
@@ -871,7 +913,7 @@
       "qn_prefix": "",
       "alternate_names": [],
       "family": "MetadataExpert",
-      "description": "Delete an enum definition. WARNING: currently fails on Egeria with a 500 'unknown TypeDef' (ISSUE-125).",
+      "description": "Delete an enum definition. WARNING: currently fails on Egeria with a 500 'unknown TypeDef' (ISSUE-125). PLATFORM-WIDE: this changes the type system for every user and app, so Confirm Enum Def Name must repeat the name exactly or nothing is changed.",
       "verb": "Delete",
       "upsert": false,
       "attach": false,
@@ -884,7 +926,8 @@
       "bundle": "",
       "custom_attributes": [
         "Enum Def Name",
-        "Enum Def GUID"
+        "Enum Def GUID",
+        "Confirm Enum Def Name"
       ],
       "Journal Entry": "Added 2026-11-12 -- MetadataExpert family. ",
       "idempotent": false,

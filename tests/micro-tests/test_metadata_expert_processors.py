@@ -136,6 +136,7 @@ TYPEDEFS = {
         {"attributeName": "versionIdentifier", "attributeType": {"name": "string", "category": "PRIMITIVE"}},
         {"attributeName": "count", "attributeType": {"name": "int", "category": "PRIMITIVE"}},
         {"attributeName": "tags", "attributeType": {"name": "map<string,string>", "category": "COLLECTION"}}]},
+    "Recipe": {"attributeDefinitions": []},
     "Uses": {"attributeDefinitions": [{"attributeName": "label",
                                        "attributeType": {"name": "string", "category": "PRIMITIVE"}}]},
 }
@@ -165,15 +166,24 @@ class _FakeExpert:
 
 
 class _FakeValidMetadata:
+    def __init__(self, lookups):
+        self.lookups = lookups
+
     async def _async_get_typedef_by_name(self, name, **kwargs):
+        self.lookups.append(("typedef", name))
         return {"guid": f"td-{name}", "name": name, **TYPEDEFS[name]}
+
+    async def _async_get_attribute_types(self, **kwargs):
+        self.lookups.append(("attribute types", kwargs))
+        return [{"name": "Cuisine", "guid": "enum-guid"}]
 
 
 class _FakeClient:
     def __init__(self):
         self.calls: List[tuple] = []
         self.metadata_expert = _FakeExpert(self.calls)
-        self.valid_metadata = _FakeValidMetadata()
+        self.lookups: List[tuple] = []
+        self.valid_metadata = _FakeValidMetadata(self.lookups)
 
 
 def _cmd(verb: str, object_type: str, attributes: Dict[str, Any]) -> DrECommand:
@@ -181,11 +191,11 @@ def _cmd(verb: str, object_type: str, attributes: Dict[str, Any]) -> DrECommand:
     return DrECommand(verb=verb, object_type=object_type, attributes=attributes, raw_block=raw)
 
 
-async def _run(verb, object_type, attributes, directive="process"):
+async def _run(verb, object_type, attributes, directive="process", with_client=False):
     client = _FakeClient()
     results = await setup_dispatcher(client).dispatch_batch([_cmd(verb, object_type, attributes)],
                                                             {"directive": directive})
-    return results[0], client.calls
+    return (results[0], client.calls, client) if with_client else (results[0], client.calls)
 
 
 def _writes(calls):
@@ -290,3 +300,73 @@ async def test_validate_says_the_command_is_not_idempotent():
     result, calls = await _run("Create", "Instance", {"Instance Type Name": "Thing"}, directive="validate")
     assert "not idempotent" in str(result), result
     assert _writes(calls) == []
+
+
+# --- platform-wide type system changes need the name repeated ------------------------------------
+GUARDED = [
+    ("Delete", "Type Def", {"Type Def Name": "Recipe"}, "Type Def Name", "Confirm Type Def Name",
+     "_async_delete_type_def"),
+    ("Update", "Type Def", {"Type Def Name": "Recipe", "Apply To Version": "1", "Type Def Description": "d"},
+     "Type Def Name", "Confirm Type Def Name", "_async_update_type_def"),
+    ("Delete", "Enum Def", {"Enum Def Name": "Cuisine"}, "Enum Def Name", "Confirm Enum Def Name",
+     "_async_delete_enum_def"),
+]
+IDS = ["delete-type-def", "update-type-def", "delete-enum-def"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("verb, object_type, attributes, name_attr, confirm_attr, method", GUARDED, ids=IDS)
+@pytest.mark.parametrize("echo", [None, "recipe", "Cuisine ", "Wrong", "RECIPE"])
+async def test_type_system_change_without_a_matching_echo_is_refused(verb, object_type, attributes, name_attr,
+                                                                     confirm_attr, method, echo):
+    name = attributes[name_attr]
+    if echo is not None and echo.strip() == name:
+        pytest.skip("trailing spaces are trimmed, so this one is a match")
+    given = dict(attributes, **({confirm_attr: echo} if echo is not None else {}))
+    result, calls, client = await _run(verb, object_type, given, with_client=True)
+    assert result["status"] != "success"
+    assert "nothing was changed" in str(result)
+    assert calls == [] and client.lookups == [], "no SDK call of any kind before the echo matches"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("verb, object_type, attributes, name_attr, confirm_attr, method", GUARDED, ids=IDS)
+async def test_type_system_change_with_the_echo_makes_exactly_one_call(verb, object_type, attributes, name_attr,
+                                                                       confirm_attr, method):
+    given = dict(attributes, **{confirm_attr: attributes[name_attr]})
+    result, calls = await _run(verb, object_type, given)
+    assert result["status"] == "success", result
+    assert [c[0] for c in calls] == [method]
+    if method == "_async_delete_type_def":
+        assert calls[0][1][0] == "td-Recipe"
+    if method == "_async_delete_enum_def":
+        assert calls[0][1][0] == "enum-guid"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("verb, object_type, attributes, name_attr, confirm_attr, method", GUARDED, ids=IDS)
+@pytest.mark.parametrize("echo, state", [(None, "missing"), ("Wrong", "does NOT match"), ("MATCH", "present and matches")])
+async def test_validate_names_the_requirement_and_calls_nothing(verb, object_type, attributes, name_attr,
+                                                                confirm_attr, method, echo, state):
+    given = dict(attributes)
+    if echo is not None:
+        given[confirm_attr] = attributes[name_attr] if echo == "MATCH" else echo
+    result, calls, client = await _run(verb, object_type, given, directive="validate", with_client=True)
+    text = str(result)
+    assert confirm_attr in text and state in text, text
+    assert calls == [] and client.lookups == []
+
+
+@pytest.mark.parametrize("name, attribute", [("Delete Type Def", "Confirm Type Def Name"),
+                                             ("Update Type Def", "Confirm Type Def Name"),
+                                             ("Delete Enum Def", "Confirm Enum Def Name")])
+def test_confirm_attribute_is_in_the_spec_and_the_description_says_platform_wide(name, attribute):
+    spec = COMMAND_DEFINITIONS["Command Specifications"][name]
+    assert attribute in spec["custom_attributes"]
+    assert "PLATFORM-WIDE" in spec["description"]
+    assert spec["idempotent"] is False and spec["chat_allowed"] is False
+
+
+def test_additive_commands_need_no_echo():
+    for name in ("Create Type Def", "Create Enum Def"):
+        assert not any(a.startswith("Confirm") for a in COMMAND_DEFINITIONS["Command Specifications"][name]["custom_attributes"])
