@@ -38,19 +38,18 @@ def _version_of(el: Dict[str, Any]) -> Optional[int]:
 
 
 async def async_spec_versions(client: Any, label: str) -> Tuple[Dict[str, Any], List[Dict[str, Any]]]:
-    """(the current spec element, every version Egeria returns for it, newest first), read as the user."""
+    """(the current spec element, every version Egeria holds for it), read as the user. Refused in words when
+    the history can't be read whole (a failed read, or more pages than pyegeria reads): a pin is never
+    resolved on part of the history."""
     from md_processing.v2.report import find_report_spec_element
     current = await find_report_spec_element(client, label)
     if not current:
         raise AuthoringRefused(f"Egeria holds no report spec {label!r} that you can see.")
     guid = (current.get("elementHeader") or {}).get("guid")
-    try:
-        raw = await client.metadata_expert._async_get_element_history(guid, oldest_first=False, page_size=0)
-    except Exception as exc:  # noqa: BLE001 -- said in words
-        raise AuthoringRefused(f"The versions of spec {label!r} could not be read: {type(exc).__name__}: "
-                               f"{' '.join(str(exc).split())[:200]}") from exc
-    versions = [as_element(e) for e in raw if isinstance(e, dict) and (e.get("elementHeader") or e.get("elementGUID"))] \
-        if isinstance(raw, list) else []
+    from pyegeria.authoring.publication import async_read_history
+    versions, why = await async_read_history(client, guid)
+    if why:
+        raise AuthoringRefused(f"The published versions of spec {label!r} can't be told: {why}.")
     return current, versions
 
 

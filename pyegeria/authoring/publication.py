@@ -166,15 +166,43 @@ async def _find_exact(client: Any, type_name: str, prop: str, value: str) -> Lis
     return [e for e in rows if (e.get("properties") or {}).get(prop) == value]
 
 
-async def _history(client: Any, guid: str) -> Tuple[List[Dict[str, Any]], Optional[str]]:
+#: Element history is read in pages of this size until an empty page (a short page isn't the last page:
+#: Egeria's paging contract), up to HISTORY_MAX_PAGES pages.
+HISTORY_PAGE = 100
+HISTORY_MAX_PAGES = 50
+HISTORY_CAPPED = ("its history is too long to read whole (more than {n} versions were returned and more may "
+                  "follow), so the entry that is each published version can't be told")
+
+
+async def async_read_history(client: Any, guid: str) -> Tuple[List[Dict[str, Any]], Optional[str]]:
+    """(every history entry of `guid` in view shape, why it isn't whole or None), read as the user.
+
+    Paged (HISTORY_PAGE) until Egeria answers an empty page. The oldest entry stamped N is published version
+    N only if the history is whole: a page cap could hide the publication and leave a later edit as the
+    oldest one returned. So when the pages run out before an empty one (HISTORY_MAX_PAGES), or a read
+    fails, the reason is returned and the caller refuses or says "not checked"; it never resolves on part
+    of the history."""
     from pyegeria.core.element_shape import as_view_element
-    try:
-        raw = await client.metadata_expert._async_get_element_history(guid, oldest_first=False, page_size=0)
-    except Exception as exc:  # noqa: BLE001 -- said, not raised
-        return [], f"its history couldn't be read ({type(exc).__name__})"
-    if not isinstance(raw, list):
-        return [], None   # "No elements found": no earlier versions
-    return [as_view_element(e) for e in raw if isinstance(e, dict)], None
+    entries: List[Dict[str, Any]] = []
+    start = 0
+    for _ in range(HISTORY_MAX_PAGES):
+        try:
+            raw = await client.metadata_expert._async_get_element_history(
+                guid, oldest_first=False, start_from=start, page_size=HISTORY_PAGE)
+        except Exception as exc:  # noqa: BLE001 -- said, not raised
+            if _is_not_found(exc):
+                return entries, None
+            return entries, f"its history couldn't be read ({type(exc).__name__})"
+        page = [e for e in raw if isinstance(e, dict)] if isinstance(raw, list) else []
+        if not page:   # "No elements found" or an empty list: the history is whole
+            return [as_view_element(e) for e in entries], None
+        entries += page
+        start += len(page)
+    return [as_view_element(e) for e in entries], HISTORY_CAPPED.format(n=len(entries))
+
+
+async def _history(client: Any, guid: str) -> Tuple[List[Dict[str, Any]], Optional[str]]:
+    return await async_read_history(client, guid)
 
 
 async def async_resolve_target(client: Any, draft: Any) -> Dict[str, Any]:
@@ -287,6 +315,6 @@ def with_time(markdown: str, at: str) -> str:
 
 
 __all__ = ["PUBLISHED_VERSION_KEY", "PUBLISHED_AT_KEY", "PUBLISHED_BY_KEY", "STAMP_KEYS", "AUTHORING_KEYS",
-           "LOOKUP_PAGE", "NOT_RESOLVED", "stamp_of", "ordered_entries", "published_versions", "publication_entry",
+           "LOOKUP_PAGE", "NOT_RESOLVED", "HISTORY_PAGE", "HISTORY_MAX_PAGES", "async_read_history", "stamp_of", "ordered_entries", "published_versions", "publication_entry",
            "edited_since", "edited_note", "target_of", "async_resolve_target", "async_check_unchanged_target",
            "next_version", "stamp_lines", "stamp_step", "digest_text", "with_time", "now_iso"]

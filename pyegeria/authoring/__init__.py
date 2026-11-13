@@ -14,6 +14,11 @@ client signed in as the user, and a runner that runs documents as the user.
     await async_apply(plan, step="process", run=run, client=client, confirmed=True, digest=plan["digest"])
 
 The undecided gates (D7, D14, D16, D4) are switches: see `AuthoringGates`.
+
+`AUTHORING_KEYS` (stable public path: `from pyegeria.authoring import AUTHORING_KEYS`) are the
+additionalProperties keys this API writes for itself (publication stamp, draft marker, pin). They're
+bookkeeping, never Report parameters: a consumer that passes a Report's additionalProperties to its spec
+must skip them.
 """
 from pyegeria.authoring.diff import diff
 from pyegeria.authoring.drafts import (
@@ -28,12 +33,13 @@ from pyegeria.authoring.models import (
     ValidationResult, as_draft, default_gates,
 )
 from pyegeria.authoring.preview import async_preview, preview
+from pyegeria.authoring.publication import AUTHORING_KEYS, STAMP_KEYS
 from pyegeria.authoring.runner import inprocess_runner
 from pyegeria.authoring.serialize import has_parent_id, report_parameter_maps, serialize
 from pyegeria.authoring.validate import async_validate, validate
 
 __all__ = [
-    "AuthoringGates", "AuthoringRefused", "Change", "Diff", "Draft", "DraftStore", "EgeriaDraftStore",
+    "AUTHORING_KEYS", "STAMP_KEYS", "AuthoringGates", "AuthoringRefused", "Change", "Diff", "Draft", "DraftStore", "EgeriaDraftStore",
     "KNOWN_CONSUMERS", "LocalDraftStore", "ReportDraft", "SheetDraft", "SheetPlacement", "SpecDraft", "TEMPLATES",
     "ValidationResult", "apply", "as_draft", "async_apply", "async_publish_plan", "async_history", "async_load_held", "async_new_from", "async_preview",
     "async_validate", "default_gates", "diff", "draft_store", "has_parent_id", "history", "inprocess_runner",

@@ -83,6 +83,7 @@ class _Egeria:
         self.lookup_error: Optional[Exception] = None
         self.duplicates: int = 1
         self.full_page = False
+        self.history_calls: List[tuple] = []
         outer = self
 
         def current(qn):
@@ -110,10 +111,13 @@ class _Egeria:
                 return current(qn) or "No elements found"
 
         class ME:
-            async def _async_get_element_history(self, guid, oldest_first=False, page_size=0, **kw):
+            async def _async_get_element_history(self, guid, oldest_first=False, start_from=0, page_size=0, **kw):
+                """Egeria's paging: a page from start_from; past the end, "No elements found"."""
+                outer.history_calls.append((start_from, page_size))
                 for h in outer.histories.values():
                     if h[0]["elementGUID"] == guid:
-                        return list(h)
+                        page = list(h)[start_from:start_from + page_size] if page_size else list(h)
+                        return page or "No elements found"
                 return "No elements found"
         self.classification_manager, self.metadata_expert = CM(), ME()
 
@@ -391,3 +395,33 @@ def test_create_dashboard_sheet_writes_the_documents_additional_properties(monke
     asyncio.run(writer.ensure_sheet("team", "Team", family="Overview",
                                     additional={"publishedVersion": "2", "publishedBy": ERIN}))
     assert sent["additionalProperties"] == {"publishedVersion": "2", "publishedBy": ERIN, "family": "Overview"}
+
+
+# ── A history too long to read whole: never resolve a pin on part of it ──────
+
+def test_history_is_read_in_pages_until_an_empty_one(monkeypatch):
+    monkeypatch.setattr("pyegeria.authoring.publication.HISTORY_PAGE", 2)
+    eg = _Egeria()
+    _spec_history(eg, edited_after=True)   # 5 entries
+    assert asyncio.run(async_spec_at_version(eg, "Team Projects", 2)).description == "published two"
+    assert eg.history_calls == [(0, 2), (2, 2), (4, 2), (5, 2)]   # a short page (1) isn't the last page
+
+
+def test_a_capped_history_refuses_the_pin_and_skips_the_edit_check(monkeypatch):
+    """The publication of 2 (Egeria v2) lies past the pages read; v3, an edit still stamped 2, would be the
+    oldest stamped-2 entry returned. Refused, not resolved to the edit (read-back follow-up 1)."""
+    monkeypatch.setattr("pyegeria.authoring.publication.HISTORY_PAGE", 1)
+    monkeypatch.setattr("pyegeria.authoring.publication.HISTORY_MAX_PAGES", 3)
+    eg = _Egeria()
+    _spec_history(eg, edited_after=True)
+    with pytest.raises(AuthoringRefused, match="history is too long to read whole"):
+        asyncio.run(async_spec_at_version(eg, "Team Projects", 2))
+    held = asyncio.run(async_resolve_target(eg, _spec_draft()))
+    assert held["published_version"] == 3 and held["edited_since"] is None
+    assert any("history is too long to read whole" in n for n in held["notes"])
+
+
+def test_authoring_keys_have_a_stable_public_path():
+    from pyegeria.authoring import AUTHORING_KEYS
+    assert AUTHORING_KEYS == {"authoringState", "reportSpecVersion", "publishedVersion", "publishedAt",
+                              "publishedBy"}
