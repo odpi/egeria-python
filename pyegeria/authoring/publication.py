@@ -201,7 +201,7 @@ async def async_read_history(client: Any, guid: str, *,
     ``trace`` (if given) gets how the read ended (method, positions_read, end, end_reason), also logged, so a
     later miss can be traced to the read."""
     from pyegeria.core.element_shape import as_view_element
-    from pyegeria.core.paging import async_page_all, log_end
+    from pyegeria.core.paging import async_page_all, log_end, paging_for
 
     async def fetch(start, size):
         return await client.metadata_expert._async_get_element_history(
@@ -209,7 +209,7 @@ async def async_read_history(client: Any, guid: str, *,
 
     try:
         paged = await async_page_all(fetch, fetch_page_size=HISTORY_PAGE, max_pages=HISTORY_MAX_PAGES,
-                                     end_policy="suspect", key=_history_key)
+                                     key=_history_key, **paging_for("get_element_history"))
     except Exception as exc:  # noqa: BLE001 -- said, not raised
         if _is_not_found(exc):
             return [], None

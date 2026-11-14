@@ -221,7 +221,8 @@ def test_live_runs_the_stored_body_through_pyegeria_paging_to_the_end():
     out = saved_query(viewer, QN, mode="live")
     assert out["atLeast"] == 1200 and out["display"] == "≥1200" and out["capped"] is True
     runs = [c[1] for c in viewer.calls[1:]]
-    assert [b["startFrom"] for b in runs] == [0, 500, 1000, 1500, 2000, 2500, 3000]  # by page size; 3 probes
+    # by page size; find_metadata_elements is NULL_NOT_END, so 6 probes past the null at 1500 (pager step 5)
+    assert [b["startFrom"] for b in runs] == [500 * k for k in range(10)]
     assert all(b["metadataElementTypeName"] == "Asset" and b["limitResultsByStatus"] == ["ACTIVE"] for b in runs)
     assert out["asOf"]  # now
 
@@ -600,7 +601,7 @@ def test_live_sends_the_contracts_effective_values(case):
     # read in pages of page_size, advancing by it (pager step 4), the null probed 3 pages ahead
     last = list(range(0, 45, eff["page_size"]))[-1] + eff["page_size"]
     assert [b["startFrom"] for b in sent] == list(range(0, 45, eff["page_size"])) + [
-        last + k * eff["page_size"] for k in range(4)]
+        last + k * eff["page_size"] for k in range(7)]   # find_metadata_elements: NULL_NOT_END, 6 probes
     assert {b["pageSize"] for b in sent} == {eff["page_size"]}
 
 
