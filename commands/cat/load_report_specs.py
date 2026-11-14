@@ -72,7 +72,7 @@ def _run(
 
     before = set(report_spec_list())
     start = time.perf_counter()
-    updated = load_egeria_report_specs(client, force=force, ttl_seconds=ttl_seconds)
+    load_egeria_report_specs(client, force=force, ttl_seconds=ttl_seconds)   # the status says how it ended
     elapsed = time.perf_counter() - start
 
     client.close_session()
@@ -80,19 +80,35 @@ def _run(
     after = set(report_spec_list())
     new_specs = sorted(after - before)
 
-    if updated:
-        console.print(
-            f"[green]Registry updated[/green] from Egeria in {elapsed:.2f}s. "
-            f"{len(new_specs)} new spec(s) added."
-        )
-        if new_specs:
-            for s in new_specs:
-                console.print(f"  + {s}")
-    else:
-        console.print(
-            f"[yellow]No update performed[/yellow] — Egeria returned no ReportType collections "
-            f"(or registry was already fresh)."
-        )
+    console.print(load_status_words(_brf.report_specs_load_status(), elapsed, new_specs))
+    for s in new_specs:
+        console.print(f"  + {s}")
+
+
+def load_status_words(status: dict, elapsed: float, new_specs: list) -> str:
+    """The CLI's words for how load_egeria_report_specs ended (85f5bc15 read-back R1): one sentence per status,
+    never "no ReportType collections" unless Egeria confirmed the end."""
+    kind, count = status.get("status"), status.get("count") or 0
+    retry_at, error = status.get("retry_at"), status.get("error")
+    if kind == "loaded":
+        if count:
+            return (f"[green]Registry updated[/green] from Egeria in {elapsed:.2f}s: {count} ReportType(s) read, "
+                    f"{len(new_specs)} new spec(s) added.")
+        return f"[green]Loaded[/green] in {elapsed:.2f}s: Egeria holds no ReportType collections."
+    if kind == "registered_unconfirmed":
+        if count:
+            return (f"[yellow]Registered {count} spec(s)[/yellow] in {elapsed:.2f}s; Egeria didn't confirm there "
+                    f"are no more; will re-read after {retry_at}.")
+        return (f"[yellow]No ReportType found in what Egeria returned[/yellow] ({elapsed:.2f}s); Egeria didn't "
+                f"confirm there are no more; will re-read after {retry_at}.")
+    if kind == "retry_window":
+        return (f"[yellow]Not re-read[/yellow]: the last read wasn't confirmed complete; next read after {retry_at} "
+                f"(use --force).")
+    if kind == "fresh":
+        return "[green]Registry is fresh[/green]: the last confirmed load is within its TTL (use --force)."
+    if kind == "failed":
+        return f"[red]Not loaded[/red]: Egeria couldn't be queried ({error}); nothing was marked loaded."
+    return f"[yellow]Load ended without a status[/yellow] ({elapsed:.2f}s)."
 
 
 # ── Click command (for hey_egeria) ────────────────────────────────────────────

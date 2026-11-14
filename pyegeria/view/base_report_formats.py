@@ -3968,6 +3968,30 @@ _EGERIA_SPECS_CACHE_TTL: int = int(os.getenv("PYEGERIA_REPORT_SPECS_CACHE_TTL", 
 #: read stays registered. Only a confirmed end sets _EGERIA_SPECS_LOADED_AT.
 _EGERIA_SPECS_RETRY_SECONDS: int = 300
 _EGERIA_SPECS_RETRY_AT: Optional[datetime] = None
+#: How the last load_egeria_report_specs call ended (85f5bc15 read-back R1), beside its bool return:
+#: {"status": one of REPORT_SPECS_LOAD_STATUSES, "count": ReportTypes read or None, "retry_at": ISO or None,
+#:  "loaded_at": ISO or None, "error": words or None}.
+REPORT_SPECS_LOAD_STATUSES = ("loaded", "registered_unconfirmed", "fresh", "retry_window", "failed")
+_EGERIA_SPECS_LAST_STATUS: Dict[str, Any] = {"status": None}
+
+
+def report_specs_load_status() -> Dict[str, Any]:
+    """How the last ``load_egeria_report_specs`` call ended (a copy), so a caller can word it:
+    - loaded: Egeria confirmed the end; the registry holds every ReportType it read (count may be 0: none);
+    - registered_unconfirmed: what was read is registered, but Egeria didn't confirm there are no more; the
+      next load re-reads after retry_at;
+    - fresh: the cache from a confirmed load is still within its TTL (no read);
+    - retry_window: the last read wasn't confirmed complete and retry_at hasn't passed (no read; force reads);
+    - failed: Egeria couldn't be queried (error says why); nothing was marked loaded."""
+    return dict(_EGERIA_SPECS_LAST_STATUS)
+
+
+def _set_load_status(status: str, *, count: Optional[int] = None, error: Optional[str] = None) -> None:
+    _EGERIA_SPECS_LAST_STATUS.clear()
+    _EGERIA_SPECS_LAST_STATUS.update(
+        status=status, count=count, error=error,
+        retry_at=_EGERIA_SPECS_RETRY_AT.isoformat() if _EGERIA_SPECS_RETRY_AT else None,
+        loaded_at=_EGERIA_SPECS_LOADED_AT.isoformat() if _EGERIA_SPECS_LOADED_AT else None)
 
 
 class ReportFormatCollision(ValueError):
@@ -4810,11 +4834,13 @@ def load_egeria_report_specs(
             logger.debug(
                 f"load_egeria_report_specs: cache is fresh ({age:.0f}s old, TTL={effective_ttl}s) — skipping reload"
             )
+            _set_load_status("fresh")
             return False
 
     if not force and _EGERIA_SPECS_RETRY_AT is not None and datetime.now(timezone.utc) < _EGERIA_SPECS_RETRY_AT:
         logger.debug("load_egeria_report_specs: the last read wasn't confirmed complete; retrying after "
                      f"{_EGERIA_SPECS_RETRY_AT.isoformat()}")
+        _set_load_status("retry_window")
         return False
 
     # Every collection with "ReportType" in its qualified name, through pyegeria's pager (pager step 6): an
@@ -4830,6 +4856,7 @@ def load_egeria_report_specs(
                          fetch_page_size=_page_size, **paging_for("find_collections", client))
     except Exception as e:
         logger.warning(f"load_egeria_report_specs: could not query Egeria -- not loaded, will retry: {e}")
+        _set_load_status("failed", error=f"{type(e).__name__}: {e}")
         return False
     end = log_end("load_egeria_report_specs (find_collections ReportType)", paged)
     # Keep only entries whose qualified name contains "ReportType::"
@@ -4847,6 +4874,7 @@ def load_egeria_report_specs(
             logger.info(f"load_egeria_report_specs: read {len(report_types)} ReportType(s) without Egeria "
                         f"confirming there are no more ({end}); not marked loaded, retrying after "
                         f"{_EGERIA_SPECS_RETRY_AT.isoformat()}")
+        _set_load_status("loaded" if paged.complete else "registered_unconfirmed", count=len(report_types))
 
     if not report_types:
         if paged.complete:

@@ -77,3 +77,38 @@ def test_an_exception_is_not_loaded():
     client = _Client({}, error=ConnectionError("down"))
     assert brf.load_egeria_report_specs(client) is False
     assert brf._EGERIA_SPECS_LOADED_AT is None and brf._EGERIA_SPECS_RETRY_AT is None
+
+
+# ── 85f5bc15 read-back R1: a status beside the bool, and the CLI's words ──
+
+def test_each_status():
+    brf.load_egeria_report_specs(_Client({0: [_rt("A")]}))
+    st = brf.report_specs_load_status()
+    assert st["status"] == "registered_unconfirmed" and st["count"] == 1 and st["retry_at"]
+    brf.load_egeria_report_specs(_Client({0: [_rt("A")]}))
+    assert brf.report_specs_load_status()["status"] == "retry_window"
+    brf.load_egeria_report_specs(_Client({}, error=ConnectionError("down")), force=True)
+    st = brf.report_specs_load_status()
+    assert st["status"] == "failed" and "ConnectionError" in st["error"]
+
+
+def test_loaded_then_fresh(monkeypatch):
+    _trusted(monkeypatch)
+    brf.load_egeria_report_specs(_Client({0: [_rt("A")]}))
+    assert brf.report_specs_load_status()["status"] == "loaded"
+    brf.load_egeria_report_specs(_Client({0: [_rt("A")]}))
+    assert brf.report_specs_load_status()["status"] == "fresh"
+
+
+def test_the_cli_words_an_unconfirmed_load():
+    from commands.cat.load_report_specs import load_status_words
+    brf.load_egeria_report_specs(_Client({0: [_rt("A"), _rt("B")]}))
+    words = load_status_words(brf.report_specs_load_status(), 0.5, [])
+    retry_at = brf.report_specs_load_status()["retry_at"]
+    assert words == (f"[yellow]Registered 2 spec(s)[/yellow] in 0.50s; Egeria didn't confirm there are no more; "
+                     f"will re-read after {retry_at}.")
+    brf.load_egeria_report_specs(_Client({0: [_rt("A")]}))
+    words = load_status_words(brf.report_specs_load_status(), 0.0, [])
+    assert words.startswith("[yellow]Not re-read[/yellow]: the last read wasn't confirmed complete; next read after")
+    assert words.endswith("(use --force).")
+    assert "No update performed" not in words and "no ReportType collections" not in words
