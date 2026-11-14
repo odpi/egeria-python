@@ -184,9 +184,37 @@ def _call_about(reader: Callable[[], Any]) -> Any:
     from concurrent.futures import ThreadPoolExecutor
     pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="pyegeria-about")
     try:
-        return pool.submit(reader).result(timeout=GATE_ABOUT_TIMEOUT_SECONDS)
+        return pool.submit(_read_and_close, reader).result(timeout=GATE_ABOUT_TIMEOUT_SECONDS)
     finally:
         pool.shutdown(wait=False)
+
+
+def _read_and_close(reader: Callable[[], Any]) -> Any:
+    """Run the about-read on this worker thread, then close what the read opened here: the client's
+    thread-local session and this thread's run_sync loop (step 6 gate read-back advisory: one was left unclosed
+    per platform per TTL)."""
+    try:
+        return reader()
+    finally:
+        _close_thread_resources(getattr(reader, "__self__", None))
+
+
+def _close_thread_resources(owner: Any) -> None:
+    from pyegeria.core import async_runner
+    try:
+        local = getattr(owner, "_thread_local", None)
+        session = getattr(local, "session", None) if local is not None else None
+        loop = getattr(async_runner._thread_state, "loop", None)
+        if session is not None and loop is not None and not loop.is_closed():
+            loop.run_until_complete(session.aclose())
+        if local is not None:
+            for name in ("session", "session_loop"):
+                if hasattr(local, name):
+                    delattr(local, name)
+        if loop is not None and not loop.is_closed():
+            loop.close()
+    except Exception:  # noqa: BLE001 -- cleanup only: never turns a read into an error
+        pass
 
 
 def platform_promoted(client: Any) -> bool:

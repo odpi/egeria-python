@@ -200,3 +200,30 @@ def test_a_slow_about_read_times_out_as_not_promoted(monkeypatch):
 
     assert asyncio.run(paging.async_platform_promoted(Slow(None, url="https://slow-a"))) is False
     assert paging.platform_promoted(Slow(None, url="https://slow-b")) is False
+
+
+def test_the_sync_about_read_closes_its_worker_threads_session():
+    """Step 6 gate read-back advisory: the worker thread's thread-local session (and its run_sync loop) is
+    closed after the read, so none is left open per platform per TTL."""
+    import threading
+
+    closed = []
+
+    class Session:
+        async def aclose(self):
+            closed.append(threading.current_thread().name)
+
+    class Client(_Platform):
+        def __init__(self):
+            super().__init__(LAZ_5DEDA38D)
+            self._thread_local = threading.local()
+
+        def get_platform_origin(self):
+            from pyegeria.core.async_runner import _loop_for_this_thread
+            _loop_for_this_thread()                 # the read's run_sync loop on this thread
+            self._thread_local.session = Session()  # what a real read opens on this thread
+            return super().get_platform_origin()
+
+    c = Client()
+    assert paging.platform_promoted(c) is True
+    assert len(closed) == 1 and closed[0].startswith("pyegeria-about")
