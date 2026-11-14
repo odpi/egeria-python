@@ -13,7 +13,6 @@ from pydantic_core import ValidationError
 
 from pyegeria.egeria_tech_client import EgeriaTech
 from pyegeria.core._exceptions import print_validation_error
-from pyegeria.view.base_report_formats import load_egeria_report_specs
 
 GLOBAL_EGERIA_CLIENT: Optional[EgeriaTech] = None
 
@@ -64,8 +63,14 @@ def main() -> None:
         GLOBAL_EGERIA_CLIENT.create_egeria_bearer_token("erinoverview", "secret")
         logger.debug("Egeria Client connected")
 
-        load_egeria_report_specs(GLOBAL_EGERIA_CLIENT)
-        logger.debug("Egeria report specs loaded into registry")
+        # The spec cache's sync (the system of record for Egeria-held report specs) replaces the deprecated
+        # legacy ReportType:: loader, removed in pyegeria 7. A failed sync never stops the server.
+        try:
+            from pyegeria.view.egeria_spec_cache import sync_report_specs
+            report = sync_report_specs(GLOBAL_EGERIA_CLIENT)
+            logger.debug(f"Egeria report specs synced into the spec cache: {report.render()}")
+        except Exception as sync_error:  # noqa: BLE001 -- best effort at startup
+            logger.warning(f"report spec sync at startup failed ({type(sync_error).__name__}): {sync_error}")
 
     except ValidationError as e:
         print_validation_error(e)
