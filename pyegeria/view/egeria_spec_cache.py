@@ -335,6 +335,28 @@ def _zones(el: Dict[str, Any]) -> List[str]:
     return sorted(set(found))
 
 
+def _zone_state(el: Dict[str, Any]) -> Tuple[str, List[str]]:
+    """("public", []), ("zoned", zones) or ("unknown", []) for an element's visibility. Unknown: there is no
+    element header to read, or a ZoneMembership is present whose zones can't be read (neither a list nor a
+    string). No zones means open (Egeria's zone rule)."""
+    header = _header(el)
+    if not isinstance(header, dict) or not header:
+        return "unknown", []
+    candidates = [header.get("zoneMembership")] + [c for c in (header.get("classifications") or [])
+                                                   if isinstance(c, dict)
+                                                   and c.get("classificationName") == "ZoneMembership"]
+    for c in candidates:
+        if c is None:
+            continue
+        if not isinstance(c, dict):
+            return "unknown", []
+        z = (c.get("classificationProperties") or {}).get("zoneMembership")
+        if z is not None and not isinstance(z, (list, str)):
+            return "unknown", []
+    zones = _zones(el)
+    return ("zoned", zones) if zones else ("public", [])
+
+
 ZONED_REASON = "zoned: not synced into a shared cache (until B6's public-only read)"
 
 
@@ -1284,12 +1306,19 @@ def _finish_fetch(directory: Path, el: Dict[str, Any], label: str, identity: str
     manifest = _read_manifest(directory)
     shared = bool(manifest.get("shared"))
     version = built.provenance["header_version"]
+    visibility, zones = _zone_state(el)
     info = {"tier": "egeria", "label": label, "guid": built.guid,
             "version": built.provenance["version_identifier"], "header_version": version,
             "fetched_at": built.provenance["fetched_at"], "fetched": True, "shared": shared,
-            "qualified_name": built.provenance["qualified_name"]}
+            "qualified_name": built.provenance["qualified_name"], "visibility": visibility}
     _FETCHED[(label, version)] = (built.format_set, info)
-    if shared:
+    if visibility != "public":
+        # The spec-cache identity ruling, item 2: a zoned spec (or one whose visibility can't be read) is never
+        # written to ANY disk manifest, shared or private; it lives only in this process, for this fetch.
+        what = f"carries zones {', '.join(zones)}" if visibility == "zoned" else "has a visibility that can't be read"
+        logger.info(f"Report spec '{label}' v{version} fetched from Egeria {what}, so the copy is kept in this "
+                    f"process only; it is never written to the cache {directory}")
+    elif shared:
         logger.info(f"Report spec '{label}' v{version} fetched from Egeria; the cache {directory} is shared, so "
                     f"the copy is kept in this process only")
     else:

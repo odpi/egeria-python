@@ -974,3 +974,52 @@ def test_server_not_available_is_never_element_not_found():
     assert dr.is_server_not_available_error(down) and not dr._is_not_found_error(down) and not is_gone_error(down)
     gone = _api_error("OMAG-COMMON-404-001", "The element is not found")
     assert dr._is_not_found_error(gone) and is_gone_error(gone)
+
+
+# ── Fetch-on-call never writes a zoned (or visibility-unknown) spec to any disk manifest (ruling item 2) ──
+
+ZONED_GUID = "cccccccc-0000-0000-0000-000000000000"
+
+
+def _zoned(label, zone_membership):
+    el = spec_element(label, guid=ZONED_GUID, aliases=[])
+    el["elementHeader"]["zoneMembership"] = zone_membership
+    return el
+
+
+@pytest.mark.parametrize("shared", [False, True], ids=["private", "shared"])
+@pytest.mark.parametrize("zone_membership, visibility", [
+    ({"classificationProperties": {"zoneMembership": ["finance"]}}, "zoned"),
+    ({"classificationProperties": {"zoneMembership": {"not": "a list"}}}, "unknown"),
+    ("garbled", "unknown"),
+], ids=["zoned", "unreadable-zones", "unreadable-classification"])
+def test_a_zoned_or_unknown_fetch_is_never_written_to_disk(tier, shared, zone_membership, visibility):
+    eg = FakeEgeria()
+    eg.put(spec_element())
+    esc.sync_report_specs(eg, folders=[FOLDER_QN], shared=shared)
+    manifest_before = (tier["cache"] / esc.MANIFEST).read_text()
+    files_before = sorted(p.name for p in tier["cache"].iterdir())
+    eg.put(_zoned("Fin-Spec", zone_membership), folder=None)
+    name = esc.fetch_spec_for_call(eg, "Fin-Spec")
+    assert (tier["cache"] / esc.MANIFEST).read_text() == manifest_before   # no manifest entry
+    assert sorted(p.name for p in tier["cache"].iterdir()) == files_before  # no spec file either
+    assert esc._FETCHED[("Fin-Spec", 1)][1]["visibility"] == visibility     # this process only
+    assert brf.select_report_format(name, "DICT") is not None
+
+
+def test_a_public_fetch_still_writes_through_to_a_private_cache(tier):
+    eg = FakeEgeria()
+    eg.put(spec_element())
+    esc.sync_report_specs(eg, folders=[FOLDER_QN])
+    open_el = spec_element("Open-Spec", guid=ZONED_GUID, aliases=[])
+    open_el["elementHeader"]["zoneMembership"] = {"classificationProperties": {"zoneMembership": []}}  # no zones: open
+    eg.put(open_el, folder=None)
+    esc.fetch_spec_for_call(eg, "Open-Spec")
+    entries = json.loads((tier["cache"] / esc.MANIFEST).read_text())["entries"]
+    assert entries["Open-Spec"]["pinned"] is True and esc._FETCHED[("Open-Spec", 1)][1]["visibility"] == "public"
+
+
+def test_zone_state():
+    assert esc._zone_state({}) == ("unknown", [])
+    assert esc._zone_state(spec_element()) == ("public", [])
+    assert esc._zone_state(_zoned("X", {"classificationProperties": {"zoneMembership": "hr"}})) == ("zoned", ["hr"])
