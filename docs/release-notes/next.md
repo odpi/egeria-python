@@ -18,3 +18,11 @@ Notes collected on `release/next` for the next release. The version number is se
   Egeria holds it couldn't be told; never to be read as "none") or `"refused"` (anything else, the default).
   `ANSWER_ABSENT`, `ANSWER_UNKNOWN` and `ANSWER_REFUSED` are exported. Branch on `answer`, not on the words. It's
   backward compatible: `AuthoringRefused` is still a `ValueError`, and its words are unchanged.
+
+- **`pyegeria.authoring.can_edit(kind, ref, client)` / `async_can_edit`** returns `{"answer": "yes"|"no"|"unknown",
+  "why"}`, read as the user. Egeria has no edit-rights API, so:
+  - **yes:** your own private draft, or a held spec, Report or sheet you created (`versions.createdBy`) or own
+    (Ownership names your user id);
+  - **no:** a built-in spec, or nothing in Egeria you can read;
+  - **unknown:** everything else, including a failed read. Callers hide an edit link on unknown, and the authoring
+    API still checks when the artifact is opened and published.

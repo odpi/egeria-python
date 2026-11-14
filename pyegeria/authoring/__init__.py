@@ -32,6 +32,7 @@ from pyegeria.authoring.models import (
     ANSWER_ABSENT, ANSWER_REFUSED, ANSWER_UNKNOWN, ANSWERS, AuthoringGates, AuthoringRefused, Change, Diff, Draft, ReportDraft, SheetDraft, SheetPlacement, SpecDraft,
     ValidationResult, as_draft, default_gates,
 )
+from pyegeria.authoring.permissions import async_can_edit, can_edit
 from pyegeria.authoring.preview import async_preview, preview
 from pyegeria.authoring.publication import AUTHORING_KEYS, STAMP_KEYS
 from pyegeria.authoring.runner import inprocess_runner
@@ -42,7 +43,7 @@ __all__ = [
     "ANSWERS", "ANSWER_ABSENT", "ANSWER_REFUSED", "ANSWER_UNKNOWN", "AUTHORING_KEYS", "STAMP_KEYS", "AuthoringGates", "AuthoringRefused", "Change", "Diff", "Draft", "DraftStore", "EgeriaDraftStore",
     "KNOWN_CONSUMERS", "LocalDraftStore", "ReportDraft", "SheetDraft", "SheetPlacement", "SpecDraft", "TEMPLATES",
     "ValidationResult", "apply", "as_draft", "async_apply", "async_publish_plan", "async_history", "async_load_held", "async_new_from", "async_preview",
-    "async_validate", "default_gates", "diff", "draft_store", "has_parent_id", "history", "inprocess_runner",
+    "async_can_edit", "async_validate", "can_edit", "default_gates", "diff", "draft_store", "has_parent_id", "history", "inprocess_runner",
     "load_held", "new_draft", "new_from", "preview", "publish_plan", "report_parameter_maps", "serialize",
     "validate", "withdraw_plan",
 ]
