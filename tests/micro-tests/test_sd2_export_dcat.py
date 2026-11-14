@@ -72,9 +72,22 @@ class Replay:
         self.overrides = overrides or {}
         self.made = []
 
+    def _unique_name(self, qn):
+        """Egeria's exact unique-name read, answered from the capture: the recorded by-name read of `qn` holds
+        the element (matched on exact qualifiedName equality), or there is none."""
+        for c in self.calls:
+            if c["method"] == "get_collections_by_name" and c["args"][:1] == [qn] and isinstance(c.get("result"), list):
+                for el in c["result"]:
+                    if ((el.get("properties") or {}).get("qualifiedName")) == qn:
+                        return copy.deepcopy(el)
+        return "No elements found"
+
     def __getattr__(self, name):
         def call(*args, **kwargs):
             self.made.append((name, args, kwargs))
+            if name == "get_element_by_unique_name" and (name, args[0] if args else None) not in self.overrides \
+                    and (name, None) not in self.overrides:
+                return self._unique_name(args[0])
             for key in ((name, args[0] if args else None), (name, None)):   # (method, None): every call
                 if key in self.overrides:
                     return self.overrides[key](*args, **kwargs)

@@ -48,10 +48,17 @@ class FolderEgeria(FakeEgeria):
     def put(self, parent_guid, child_guid):
         self.members[parent_guid].append(child_guid)
 
-    def get_collections_by_name(self, name, metadata_element_type=None, output_format="JSON", **_):
+    def get_collections_by_name(self, name, metadata_element_type=None, output_format="JSON", start_from=0, **_):
         hits = [self.element(g) for g, e in self.entities.items() if e["props"].get("qualifiedName") == name
                 and metadata_element_type in (None, e["type"])]
-        return copy.deepcopy(hits) or "No elements found"
+        return (copy.deepcopy(hits) if not start_from else []) or "No elements found"
+
+    def get_element_by_unique_name(self, name, *_, **__):
+        """Egeria's exact unique-name read: the one element with that qualifiedName, or its not-found."""
+        for g, e in self.entities.items():
+            if e["props"].get("qualifiedName") == name:
+                return copy.deepcopy(self.element(g))
+        return "No elements found"
 
     def get_collection_members(self, collection_guid=None, output_format="JSON", start_from=0, page_size=0, **_):
         if collection_guid in self.failing:

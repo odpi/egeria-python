@@ -149,11 +149,14 @@ def is_folder(el: Dict[str, Any]) -> bool:
 # ── Reads ──
 
 def find_folder(client, qn: str) -> Optional[Dict[str, Any]]:
-    """The CollectionFolder whose qualified name is exactly `qn`, or None."""
-    found = _call(client.get_collections_by_name, qn, metadata_element_type="CollectionFolder",
-                  output_format="JSON")
-    exact = [e for e in found if _props(e).get("qualifiedName") == qn]
-    return exact[0] if exact else None
+    """The CollectionFolder whose qualified name is exactly `qn`, or None when Egeria says there is none.
+
+    Egeria's exact unique-name read, not a by-name search: one page of `get_collections_by_name`
+    (findMetadataElements, NULL_NOT_END before #9453) could read a filtered page as "not found", and a sync
+    then treats the folder as gone. Raises UniqueNameUnknown (never None) when Egeria's answer is neither the
+    folder nor its not-found, so callers say "could not be read" and keep what the folder held."""
+    from pyegeria.core.unique_name import element_by_unique_name
+    return element_by_unique_name(client, qn, "CollectionFolder", what="the folder")
 
 
 def is_gone_error(exc: BaseException) -> bool:
@@ -273,14 +276,15 @@ def read_consumer_tree(client, *, root_qn: str, consumer_prefix: str, key: Membe
     identity = client_identity(client)
     out: Dict[str, Any] = {"format": fmt, "root": root_qn, "read_at": _now(), "read_as": identity,
                            "status": "read", "reason": None, "consumers": [], "index": {}, "notes": []}
-    try:
-        found = _call(client.get_collections_by_name, root_qn, metadata_element_type="RootCollection",
-                      output_format="JSON")
-    except Exception as exc:  # noqa: BLE001
-        return _not_read(out, f"the root {root_qn} could not be read: {exc}")
-    roots = [e for e in found if _props(e).get("qualifiedName") == root_qn]
-    if not roots:
+    # The root by Egeria's exact unique-name read (not one page of a by-name search, which could read a
+    # filtered page as "not found"); "can't tell" is "not read", never "not found"
+    from pyegeria.core.unique_name import by_unique_name
+    root = by_unique_name(client, root_qn, "RootCollection")
+    if root.answer == "unknown":
+        return _not_read(out, f"the root {root_qn} could not be read: {root.reason}")
+    if not root.found:
         return _not_read(out, f"the root {root_qn} was not found, or is not visible to {identity}")
+    roots = [root.element]
     unconfirmed: List[str] = []
     try:
         listed = _members(client, _guid(roots[0]), unconfirmed)
