@@ -41,6 +41,8 @@ import json
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
+from loguru import logger
+
 from pyegeria.authoring.models import AuthoringRefused, ReportDraft, SpecDraft, as_draft
 
 PUBLISHED_VERSION_KEY = "publishedVersion"
@@ -149,22 +151,42 @@ def _is_not_found(exc: BaseException) -> bool:
     return isinstance(exc, PyegeriaNotFoundException)
 
 
+def _type_names(el: Dict[str, Any]) -> List[str]:
+    t = (el.get("elementHeader") or {}).get("type") or {}
+    return [t.get("typeName"), *(t.get("superTypeNames") or [])]
+
+
 async def _find_exact(client: Any, type_name: str, prop: str, value: str) -> List[Dict[str, Any]]:
+    """The element publishing writes ([] when Egeria holds none), by Egeria's unique-name read: an exact,
+    server-side lookup by qualifiedName, with no client paging (the exists-lookups ruling, 2026-11-14).
+
+    Publishing never pages a property search to choose create versus update: on a NULL_NOT_END path a
+    filtered page reads as "none", and a create would duplicate the element. So:
+    - found -> that element (update); Egeria's specific not-found -> [] (create);
+    - any other error -> unknown: refused with the words and the read, nothing planned;
+    - a target named by another property (a Report by displayName) -> refused: one match can't be proven the
+      only one, so the qualified name is needed."""
+    if prop != "qualifiedName":
+        raise AuthoringRefused(f"Give the qualified name: Egeria can't confirm there's only one {type_name} with "
+                               f"{prop} {value!r}, so which element publishing would write can't be told. "
+                               f"Nothing was planned.")
     try:
-        found = await client.classification_manager._async_get_elements_by_property_value(
-            value, [prop], metadata_element_type=type_name, starts_with=False, ends_with=False, ignore_case=False,
-            page_size=LOOKUP_PAGE, graph_query_depth=0)
+        result = await client.classification_manager._async_get_element_by_unique_name(value)
     except Exception as exc:  # noqa: BLE001
         if _is_not_found(exc):
             return []
-        raise AuthoringRefused(f"Couldn't find out whether Egeria already holds the {type_name} {value!r} "
-                               f"({type(exc).__name__}). Publishing needs to know which element it writes, so "
-                               f"nothing was planned; try again.") from exc
-    rows = [e for e in found if isinstance(e, dict) and e.get("elementHeader")] if isinstance(found, list) else []
-    if len(rows) >= LOOKUP_PAGE:
-        raise AuthoringRefused(f"Egeria answered a full page ({LOOKUP_PAGE}) for the {type_name} {value!r}, so "
-                               f"which element to write can't be told. Nothing was planned.")
-    return [e for e in rows if (e.get("properties") or {}).get(prop) == value]
+        logger.info(f"publication: unique-name read of {type_name} {value!r} failed: {type(exc).__name__}")
+        raise AuthoringRefused(f"Couldn't find out whether Egeria already holds the {type_name} {value!r} (the "
+                               f"unique-name read of qualifiedName failed: {type(exc).__name__}). Publishing "
+                               f"needs to know which element it writes, so nothing was planned; try again.") from exc
+    el = result if isinstance(result, dict) and result.get("elementHeader") else (
+        result.get("element") if isinstance(result, dict) and isinstance(result.get("element"), dict) else None)
+    if el is None:   # "No elements found": Egeria holds no element with that qualifiedName
+        return []
+    if type_name not in _type_names(el):
+        raise AuthoringRefused(f"Egeria holds a {_type_names(el)[0] or 'different element'} with qualifiedName "
+                               f"{value!r}, not a {type_name}; publishing won't write over it. Nothing was planned.")
+    return [el]
 
 
 #: Element history is read through the pager in pages of this size (pager step 4: >= 100, so the probes after a

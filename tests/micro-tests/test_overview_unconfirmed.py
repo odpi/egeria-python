@@ -1,5 +1,6 @@
 """Pager step 4, the Architect's overview_metrics ruling (ii), 2026-11-14: a scan-based figure, by kind
 (count, percentage, distinct count) x how its scan ended (confirmed, null_then_empty_probes, capped)."""
+import asyncio
 from unittest.mock import MagicMock
 
 import pytest
@@ -128,7 +129,9 @@ def test_orphan_count_is_not_measured_unless_the_scan_is_confirmed():
 
 
 def test_a_null_not_end_method_never_reaches_the_end_and_probes_six_pages():
-    assert paging.NULL_NOT_END_METHODS == {"find_metadata_elements", "get_relationships"}
+    assert paging.NULL_NOT_END_METHODS == {"find_metadata_elements", "get_relationships",
+                                           "get_elements_by_property_value", "find_elements_by_property_value",
+                                           "_async_get_elements_by_property_value"}   # + the exists-lookups ruling
     calls = []
 
     def fetch(start, size):
@@ -163,12 +166,52 @@ def test_no_write_path_reads_from_a_null_not_end_method():
     from md_processing.v2 import dashboard_sheet, processors
     from pyegeria.authoring import drafts, publication
     from pyegeria.view import saved_query
-    write_paths = [publication.async_read_history, processors.AsyncBaseCommandProcessor._parent_links_of_type,
+    # Not listed, by ruling:
+    # - drafts.async_prune_drafts / async_list: prune reads drafts through find_elements_by_property_value
+    #   (NULL_NOT_END), but deletes only drafts it actually read, never on absence or a count (asserted in
+    #   test_prune_decides_only_from_rows_read below);
+    # - dashboard_sheet._resolve_report: a placement link is a reversible relationship; the ruling (a)+(b) lets a
+    #   single display-name match be linked with a note, never a link on a limit, 2+ or 0 (its own tests).
+    write_paths = [publication.async_read_history, publication._find_exact,
+                   processors.AsyncBaseCommandProcessor._parent_links_of_type,
                    saved_query._all_related, saved_query.delete_saved_query,
-                   drafts.EgeriaDraftStore.async_prune_drafts, drafts.EgeriaDraftStore.async_list,
-                   dashboard_sheet.DashboardSheetEgeriaWriter._related,
-                   dashboard_sheet.DashboardSheetEgeriaWriter._resolve_report]
+                   dashboard_sheet.DashboardSheetEgeriaWriter._related]
     for fn in write_paths:
         source = inspect.getsource(fn)
         for method in paging.NULL_NOT_END_METHODS:
             assert method not in source, f"{fn.__qualname__} reads {method}: a null is never the end there"
+
+
+
+def test_prune_decides_only_from_rows_read():
+    """drafts.async_prune_drafts acts only on drafts it read: a draft not in the read is never deleted, an
+    empty (unconfirmed) read deletes nothing, and no decision uses a count or an "absent" answer."""
+    from datetime import datetime, timedelta, timezone
+
+    from pyegeria.authoring.drafts import EgeriaDraftStore
+    zone = "private-erin"
+    old = (datetime.now(timezone.utc) - timedelta(days=400)).isoformat()
+    store = object.__new__(EgeriaDraftStore)
+    store._author = lambda user: zone
+    deleted = []
+
+    async def delete(user, kind, name):
+        deleted.append(name)
+        return True
+    store.async_delete = delete
+
+    def listing(rows):
+        async def async_list(user, kind=None, notes=None):
+            if notes is not None:
+                notes.append("Showing at least ...")
+            return rows
+        return async_list
+
+    row = {"kind": "spec", "name": "Old", "updated": old, "zones": [zone], "marked": True, "published_version": None}
+    store.async_list = listing([row])
+    out = asyncio.run(store.async_prune_drafts("erin"))
+    assert deleted == ["Old"] and out["removed"] == ["spec:Old"] and out["read_notes"]
+    deleted.clear()
+    store.async_list = listing([])   # nothing read (an unconfirmed, empty read): nothing is deleted
+    out = asyncio.run(store.async_prune_drafts("erin"))
+    assert deleted == [] and out["removed"] == []

@@ -84,6 +84,8 @@ class _Egeria:
         self.duplicates: int = 1
         self.full_page = False
         self.history_calls: List[tuple] = []
+        self.unique_reads: List[str] = []
+        self.not_found_error = False
         outer = self
 
         def current(qn):
@@ -108,6 +110,12 @@ class _Egeria:
                 return out or "No elements found"
 
             async def _async_get_element_by_unique_name(self, qn):
+                outer.unique_reads.append(qn)
+                if outer.lookup_error:
+                    raise outer.lookup_error
+                if outer.not_found_error:
+                    from pyegeria.core._exceptions import PyegeriaNotFoundException
+                    raise PyegeriaNotFoundException.__new__(PyegeriaNotFoundException)
                 return current(qn) or "No elements found"
 
         class ME:
@@ -227,21 +235,49 @@ def test_a_pin_to_an_unversioned_spec_is_refused():
 
 # ── Exact target or refuse ───────────────────────────────────────────────────
 
-@pytest.mark.parametrize("how, words", [
-    ("error", "Couldn't find out whether Egeria already holds"),
-    ("twins", "Egeria holds 2 ReportSpec elements"),
-    ("full", "a full page"),
-])
-def test_an_inconclusive_target_refuses_and_plans_nothing(how, words):
+# The exists-lookups ruling (2026-11-14): publishing reads its target by Egeria's unique-name read, never by
+# paging a property search (a NULL_NOT_END path, where a filtered page reads as "none").
+
+def test_the_target_is_found_by_the_unique_name_read():
     eg = _Egeria()
     _spec_history(eg)
-    if how == "error":
-        eg.lookup_error = TimeoutError("slow")
-    elif how == "twins":
-        eg.duplicates = 2
-    else:
-        eg.full_page = True
-    with pytest.raises(AuthoringRefused, match=words):
+    plan = asyncio.run(async_publish_plan(_spec_draft(), eg, folders=["ReportSpecFolder::Consumer::Portal"]))
+    assert plan["publication"]["held"] is True and eg.unique_reads   # found -> update
+
+
+@pytest.mark.parametrize("not_found", ["string", "exception"])
+def test_egerias_not_found_is_absent_and_plans_a_create(not_found):
+    eg = _Egeria()   # holds nothing
+    eg.not_found_error = not_found == "exception"
+    plan = asyncio.run(async_publish_plan(_spec_draft(), eg, folders=["ReportSpecFolder::Consumer::Portal"]))
+    assert plan["publication"]["held"] is False and plan["publication"]["guid"] is None   # absent -> create
+
+
+def test_any_other_error_is_unknown_refuses_and_plans_nothing():
+    eg = _Egeria()
+    _spec_history(eg)
+    eg.lookup_error = TimeoutError("slow")
+    with pytest.raises(AuthoringRefused, match="Couldn't find out whether Egeria already holds .*unique-name "
+                                               "read of qualifiedName failed: TimeoutError"):
+        asyncio.run(async_publish_plan(_spec_draft(), eg, folders=["ReportSpecFolder::Consumer::Portal"]))
+
+
+def test_unknown_creates_nothing(monkeypatch):
+    from pyegeria.authoring import publication
+    eg = _Egeria()
+    eg.lookup_error = ConnectionError("down")
+    with pytest.raises(AuthoringRefused):
+        asyncio.run(publication.async_resolve_target(eg, _spec_draft()))
+    assert eg.history_calls == []   # nothing planned, nothing read past the refusal
+
+
+def test_a_target_of_another_type_under_that_qualified_name_is_refused():
+    eg = _Egeria()
+    _spec_history(eg)
+    qn = next(iter(eg.histories))
+    eg.histories[qn][0]["type"]["typeName"] = "Glossary"
+    eg.histories[qn][0]["type"]["superTypeNames"] = ["Referenceable"]
+    with pytest.raises(AuthoringRefused, match="not a ReportSpec"):
         asyncio.run(async_publish_plan(_spec_draft(), eg, folders=["ReportSpecFolder::Consumer::Portal"]))
 
 
@@ -250,14 +286,16 @@ def test_publish_plan_without_a_resolved_target_is_refused():
         publish_plan(_report(), published_by=ERIN)
 
 
-def test_a_report_found_by_display_name_is_written_to_its_own_qualified_name():
+def test_a_report_named_only_by_display_name_is_refused_for_its_qualified_name():
+    # The exists-lookups ruling: one displayName match can't be proven the only one on a NULL_NOT_END path.
     eg = _Egeria()
     eg.hold("Coco::DeployedReport::Team-Projects::1.0",
             ome("r-guid", "Report", ["DataSet"], 1, {"qualifiedName": "Coco::DeployedReport::Team-Projects::1.0",
                                                     "displayName": "Team Projects Report"}))
-    plan = asyncio.run(async_publish_plan(_report(qualified_name=None), eg))
-    assert "### Qualified Name\nCoco::DeployedReport::Team-Projects::1.0" in plan["markdown"]
-    assert plan["publication"]["guid"] == "r-guid"
+    with pytest.raises(AuthoringRefused, match="Give the qualified name: Egeria can't confirm there's only one "
+                                               "Report with displayName 'Team Projects Report'"):
+        asyncio.run(async_publish_plan(_report(qualified_name=None), eg))
+    assert eg.unique_reads == []   # nothing was looked up by a property search either
 
 
 # ── No silent overwrite ──────────────────────────────────────────────────────
