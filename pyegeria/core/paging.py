@@ -69,9 +69,19 @@ TRUSTED_END_METHODS = {
 #: by-property-value is StewardshipManagementHandler -> OpenMetadataClient.getMetadataElementsByPropertyValue,
 #: which is findMetadataElements(...getSearchPropertiesByName...): the server method the capture caught.
 #: Promotion of any of these is gated on an Egeria build with odpi/egeria #9453 and a post-rebuild capture.
+#: The by-name reads joined on the MyEgeria read-back (R3, 2026-11-14), traced read-only in Egeria 2a27dad5:
+#: CollectionManager / CommunityMatters / FeedbackManager ".../by-name" REST -> CollectionHandler.getCollectionsByName
+#: / CommunityHandler.getCommunitiesByName / NoteLogHandler.getNoteLogsByName -> OpenMetadataHandlerBase
+#: .getRootElementsByName -> openMetadataClient.findMetadataElements(...getSearchPropertiesByName...): the same server
+#: method as find_metadata_elements. (Their search-string twins go findRootElements -> findMetadataElementsWithString
+#: -> OMF findElements -> handler.findEntities, and attached/member reads go getRelatedRootElements ->
+#: getRelatedMetadataElements; those stay plain suspect.)
+BY_NAME_METHODS = frozenset({"get_collections_by_name", "_async_get_collections_by_name",
+                             "get_communities_by_name", "_async_get_communities_by_name",
+                             "get_note_logs_by_name", "_async_get_note_logs_by_name"})
 NULL_NOT_END_METHODS = frozenset({"find_metadata_elements", "get_relationships",
                                   "get_elements_by_property_value", "find_elements_by_property_value",
-                                  "_async_get_elements_by_property_value"})
+                                  "_async_get_elements_by_property_value"}) | BY_NAME_METHODS
 
 #: Probe pages after a null on a NULL_NOT_END method: the capture's longest null run was 3; 6 gives 2x headroom.
 NULL_NOT_END_PROBE_PAGES = 6
@@ -95,7 +105,8 @@ def end_policy_for(method_name: Optional[str]) -> str:
 
 #: Promoted to trusted on a gated platform only.
 GATED_TRUSTED_METHODS = frozenset({"find_metadata_elements", "get_elements_by_property_value",
-                                   "find_elements_by_property_value", "_async_get_elements_by_property_value"})
+                                   "find_elements_by_property_value", "_async_get_elements_by_property_value"}
+                                  ) | BY_NAME_METHODS   # findMetadataElements underneath: fixed by #9453 too
 assert GATED_TRUSTED_METHODS < NULL_NOT_END_METHODS and "get_relationships" not in GATED_TRUSTED_METHODS
 
 GATE_SNAPSHOT_VERSION = "6.3-SNAPSHOT"
