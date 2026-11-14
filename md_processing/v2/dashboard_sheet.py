@@ -321,7 +321,7 @@ class DashboardSheetEgeriaWriter:
         sheet written from it is never silently short. Each read's end is logged."""
         if not guid or self._is_planned(guid):
             return []
-        from pyegeria.core.paging import async_page_all
+        from pyegeria.core.paging import async_page_all, paging_for
 
         async def fetch(start, size):
             try:
@@ -331,7 +331,7 @@ class DashboardSheetEgeriaWriter:
             except PyegeriaNotFoundException:
                 return None   # nothing related: the end
 
-        paged = await async_page_all(fetch, fetch_page_size=PAGE_SIZE, end_policy="suspect",
+        paged = await async_page_all(fetch, fetch_page_size=PAGE_SIZE, **paging_for("get_related_elements"),
                                      key=_element_key)
         return self._read_settled(paged, f"the {relationship} links of {guid}")
 
@@ -525,7 +525,7 @@ class DashboardSheetEgeriaWriter:
         Not Dr.Egeria's `__async_get_guid__`: it tries a unique-name lookup first, which Egeria rejects
         when the name is shared with an element of another type -- seen live 2026-11-09 for 'Term
         Definition Completeness' and 'Governance Classification Coverage', both real Reports."""
-        from pyegeria.core.paging import async_page_all
+        from pyegeria.core.paging import async_page_all, paging_for
 
         async def fetch(start, size):
             try:
@@ -535,7 +535,8 @@ class DashboardSheetEgeriaWriter:
             except PyegeriaNotFoundException:
                 return None   # no Report by that name: the end
 
-        paged = await async_page_all(fetch, fetch_page_size=PAGE_SIZE, end_policy="suspect",
+        paged = await async_page_all(fetch, fetch_page_size=PAGE_SIZE,
+                                     **paging_for("get_elements_by_property_value"),
                                      key=_element_key)
         items = self._read_settled(paged, f"the Reports named {report_name!r}")
         matches = [self._guid(e) for e in items

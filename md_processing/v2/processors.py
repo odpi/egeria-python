@@ -728,7 +728,7 @@ class AsyncBaseCommandProcessor(ABC):
         element.elementGUID), not the relationshipHeader/relatedElement shape of
         the domain get-by-guid calls.
         """
-        from pyegeria.core.paging import async_page_all, log_end
+        from pyegeria.core.paging import async_page_all, log_end, paging_for
         child_end = 2 if parent_at_end1 else 1
 
         async def fetch(start, size):
@@ -740,7 +740,8 @@ class AsyncBaseCommandProcessor(ABC):
         # Pager step 4, ruling (A) 3: a write path acts on a null-then-empty-probes end, logs and keeps the
         # read's trace (method, positions_read, end, end_reason), and stops only on a limit.
         paged = await async_page_all(fetch, fetch_page_size=self._PARENT_LINK_PAGE_SIZE,
-                                     max_pages=self._PARENT_LINK_MAX_PAGES, end_policy="suspect")
+                                     max_pages=self._PARENT_LINK_MAX_PAGES,
+                                     **paging_for("get_all_related_elements"))
         self._parent_link_read = log_end("processors._parent_links_of_type", paged)
         if not paged.reached_end:
             raise _ParentLinksIncomplete(rel_type)

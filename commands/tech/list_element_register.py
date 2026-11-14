@@ -84,10 +84,10 @@ def _fetch_all_elements(c_client: EgeriaTech, om_type: str, page_size: int,
     When the end isn't confirmed, `notes` (if given) gets "Showing at least N elements: ...", so the
     register's counts are never shown as totals.
     """
-    from pyegeria.core.paging import at_least_note, log_end, page_all
+    from pyegeria.core.paging import at_least_note, log_end, page_all, paging_for
     paged = page_all(lambda start, size: c_client.get_elements(om_type, start_from=start, page_size=size,
                                                                output_format="JSON"),
-                     fetch_page_size=page_size, end_policy="suspect")
+                     fetch_page_size=page_size, **paging_for("get_elements"))
     log_end("list_element_register._fetch_all_elements", paged)
     if notes is not None and (words := at_least_note(paged, "elements")):
         notes.append(words)
