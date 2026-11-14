@@ -684,7 +684,7 @@ class CollectionManager(ServerClient):
 
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True, by_alias=True)
         response = await self._async_make_request("POST", url, json_body)
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        elements = self._elements_noting_page_cap(response, NO_ELEMENTS_FOUND)
 
         if type(elements) is str or len(elements) == 0:
             logger.info(NO_ELEMENTS_FOUND)
@@ -811,7 +811,7 @@ class CollectionManager(ServerClient):
 
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True, by_alias=True)
         response = await self._async_make_request("POST", url, json_body)
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        elements = self._elements_noting_page_cap(response, NO_ELEMENTS_FOUND)
 
         if type(elements) is str or len(elements) == 0:
             logger.info(NO_ELEMENTS_FOUND)

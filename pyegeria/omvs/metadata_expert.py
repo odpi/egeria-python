@@ -3757,7 +3757,7 @@ class MetadataExpert(ServerClient):
             "POST", url, body_slimmer(body), timeout=timeout
         )
 
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        elements = self._elements_noting_page_cap(response, NO_ELEMENTS_FOUND)
         if type(elements) is list:
             if len(elements) == 0:
                 return NO_ELEMENTS_FOUND

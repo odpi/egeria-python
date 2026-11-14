@@ -93,7 +93,10 @@ def _no_configured_folders(monkeypatch):
 async def test_no_folders_configured_lists_every_sheet_and_says_so(tree):
     listing = await dash.async_list_dashboard_sheets(tree["fake"])
     assert [s.name for s in listing] == ["Board", "Loose", "Ops"]
-    assert listing.notes == [dash.NO_FOLDERS_NOTE]
+    # pager step 4: the type read is a suspect path, so the listing says "at least", never a total
+    assert listing.notes[0] == dash.NO_FOLDERS_NOTE
+    assert listing.notes[1].startswith("Showing at least 3 dashboard sheets: Egeria reported no more at position")
+    assert len(listing.notes) == 2
     assert all(s.folders == [] and s.used_by == [] for s in listing)
 
 

@@ -608,8 +608,9 @@ class _SpecHistory:
 
         class ME:
             async def _async_get_element_history(self, guid, start_from=0, page_size=0, **kw):
-                return [outer.current, outer.v2][start_from:start_from + page_size] if page_size else \
+                page = [outer.current, outer.v2][start_from:start_from + page_size] if page_size else \
                     [outer.current, outer.v2]
+                return page or "No elements found"   # past the end: null ([] is a filtered page; pager step 4)
         self.classification_manager, self.metadata_expert = CM(), ME()
 
 

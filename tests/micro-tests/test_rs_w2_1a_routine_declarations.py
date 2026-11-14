@@ -240,13 +240,14 @@ def _clients():
     mgr.platform_url, mgr.view_server = "https://localhost:9443", "test-server"
     assets = [_asset("a1", "d", ["Confidentiality", "ZoneMembership"]),
               _asset("a2"), _asset("a3", "d", upd="2025-01-01T00:00:00+00:00")]
-    # Both fakes page like Egeria (rows from startFrom, then an empty page): the scans read to an empty page.
+    # Both fakes page like Egeria (rows from startFrom, then null; [] would be a filtered page, pager step 4).
     mgr.find_metadata_elements.side_effect = lambda body, *a, **k: assets[body.get("startFrom", 0):][:body.get(
-        "pageSize") or len(assets)]
+        "pageSize") or len(assets)] or "No elements found"
     mgr.get_control_implementation_summary.return_value = {"byStatus": {
         "NOT_STARTED": 1, "PLANNED": 0, "PARTIALLY_IMPLEMENTED": 0, "IMPLEMENTED": 2, "OTHER": 0}}
     ce = MagicMock(spec=["get_relationships"])
-    ce.get_relationships.side_effect = lambda *a, body=None, **k: [_REL][(body or {}).get("startFrom", 0):]
+    ce.get_relationships.side_effect = lambda *a, body=None, **k: (
+        [_REL][(body or {}).get("startFrom", 0):] or "No elements found")
     return mgr, ce
 
 

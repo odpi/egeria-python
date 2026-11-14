@@ -143,11 +143,12 @@ class _Viewer:
 def test_cached_count_is_the_results_set_as_of_its_refresh():
     viewer = _Viewer(members=37)
     out = saved_query(viewer, QN)
-    assert out["value"] == 37 and out["display"] == "37" and out["state"] == "measured"
+    assert out["atLeast"] == 37 and out["display"] == "≥37" and out["state"] == "measured"
     assert out["asOf"] == "2026-11-10T18:02:11+00:00"
-    assert out["subtitle"] == "as of 2026-11-10T18:02:11+00:00"
+    # pager step 4: a suspect path, so "at least", with Egeria's null probed 3 pages ahead
+    assert out["subtitle"] == "as of 2026-11-10T18:02:11+00:00 · at least 37: Egeria didn't confirm there are no more"
     reads = [c for c in viewer.calls if c[0] != "related"]   # relationship reads: is it a Smart Collection? (no)
-    assert [c[0] for c in reads] == ["find", "members", "members"]  # paged to the empty page
+    assert [c[0] for c in reads] == ["find"] + ["members"] * 5  # rows, the null, 3 probes
     assert reads[1][1] == "rs-guid"
 
 
@@ -166,9 +167,11 @@ def test_never_refreshed_is_not_an_empty_answer():
     assert [c[0] for c in viewer.calls if c[0] != "related"] == ["find"]
 
 
-def test_an_empty_refreshed_answer_is_nothing_found():
+def test_an_empty_refreshed_answer_is_at_least_0_unless_confirmed():
+    # pager step 4, ruling (A): "nothing found" only on a confirmed end; this path is suspect
     out = saved_query(_Viewer(members=0), QN)
-    assert out["value"] == 0 and out["state"] == "nothing_found"
+    assert out["state"] == "measured" and out["capped"] is True and out["atLeast"] == 0 and out["value"] is None
+    assert "nothing_found" not in (out["state"], out.get("absence"))
 
 
 def test_a_cached_read_stopped_at_its_bound_is_a_lower_bound():
@@ -216,9 +219,9 @@ def test_a_saved_query_in_a_hidden_zone_is_not_permitted():
 def test_live_runs_the_stored_body_through_pyegeria_paging_to_the_end():
     viewer = _Viewer(answer=1200)
     out = saved_query(viewer, QN, mode="live")
-    assert out["value"] == 1200 and out["display"] == "1200" and out["capped"] is False
+    assert out["atLeast"] == 1200 and out["display"] == "≥1200" and out["capped"] is True
     runs = [c[1] for c in viewer.calls[1:]]
-    assert [b["startFrom"] for b in runs] == [0, 500, 1000, 1200]
+    assert [b["startFrom"] for b in runs] == [0, 500, 1000, 1500, 2000, 2500, 3000]  # by page size; 3 probes
     assert all(b["metadataElementTypeName"] == "Asset" and b["limitResultsByStatus"] == ["ACTIVE"] for b in runs)
     assert out["asOf"]  # now
 
@@ -264,18 +267,18 @@ DOCKER_URL = f"https://host.docker.internal:9443/servers/{VIEW}{ENDPOINT}"
 def test_allow_listed_requests_run(url):
     viewer = _Viewer(stored=[_saved_query(query_url=url)], answer=2)
     out = saved_query(viewer, QN, mode="live")
-    assert out["value"] == 2 and "refused" not in out
+    assert out["atLeast"] == 2 and "refused" not in out
 
 
 def test_a_portal_saved_query_runs_from_localhost_and_the_host_is_noted_never_followed():
     viewer = _Viewer(stored=[_saved_query(query_url=DOCKER_URL)], answer=3)
     assert viewer.platform_url == "https://localhost:9443"
     out = saved_query(viewer, QN, mode="live")
-    assert out["value"] == 3
+    assert out["atLeast"] == 3
     assert out["how"] == ("find_metadata_elements on this client's platform; the stored URL names "
                           "https://host.docker.internal:9443; the request went to this client's platform "
                           "(https://localhost:9443), never to the stored host")
-    assert [c[0] for c in viewer.calls] == ["find", "find", "find"]  # only the viewer's own client
+    assert set(c[0] for c in viewer.calls) == {"find"}  # only the viewer's own client
 
 
 def test_the_same_origin_needs_no_note():
@@ -378,7 +381,7 @@ def test_through_the_report_executor_it_runs_on_the_viewers_own_client():
     out = fse._run_analytic_function({"analytic_function": "saved_query"},
                                      params={"name": QN, "mode": "live"}, view_server="vs", view_url="https://x",
                                      user="u", user_pass="p", supply=supply)
-    assert out["value"] == 4
+    assert out["atLeast"] == 4
     assert supply.asked == ["EgeriaTech"]
     assert all(c[0] == "find" for c in viewer.calls)
 
@@ -444,9 +447,9 @@ def _unregistered(**changes):
 
 def test_a_cached_answer_for_the_refreshed_values_is_returned_and_labelled():
     out = saved_query(_Viewer(stored=[_unregistered()], members=7), FQN, params=REFRESHED_WITH)
-    assert out["value"] == 7 and out["params"] == RECORDED and "keptCurrentBy" not in out
+    assert out["atLeast"] == 7 and out["params"] == RECORDED and "keptCurrentBy" not in out
     label = ", ".join(f"{k}={json.dumps(v)}" for k, v in sorted(RECORDED.items()))
-    assert out["subtitle"] == f"as of 2026-11-10T18:00:00+00:00, for {label}"
+    assert out["subtitle"] == f"as of 2026-11-10T18:00:00+00:00, for {label} · at least 7: Egeria didn't confirm there are no more"
 
 
 @pytest.mark.parametrize("case", FIXTURE["cases"], ids=[c["why"][:40] for c in FIXTURE["cases"]])
@@ -454,7 +457,7 @@ def test_each_contract_case_is_served_cached_only_when_it_is_what_was_recorded(c
     viewer = _Viewer(stored=[_unregistered()], members=7)
     out = saved_query(viewer, FQN, params=case["request"])
     if case["effective"] == RECORDED:
-        assert out["value"] == 7 and out["params"] == RECORDED
+        assert out["atLeast"] == 7 and out["params"] == RECORDED
     else:
         assert out["value"] is None and out["state"] == "not_established"
         assert "use mode live" in out["state_reason"] and "the cached answer is for " in out["state_reason"]
@@ -472,7 +475,7 @@ def test_a_cached_answer_for_other_values_is_never_returned():
 def test_an_unregistered_refresh_with_other_values_is_served_for_those_values():
     recorded = {**RECORDED, "min_level": 4}
     q = _unregistered(lastRefreshParams=recorded)
-    assert saved_query(_Viewer(stored=[q], members=5), FQN, params={"min_level": 4})["value"] == 5
+    assert saved_query(_Viewer(stored=[q], members=5), FQN, params={"min_level": 4})["atLeast"] == 5
     assert saved_query(_Viewer(stored=[q], members=5), FQN)["value"] is None
 
 
@@ -489,7 +492,7 @@ def test_never_refreshed_and_not_registered_is_not_an_answer():
 
 def test_search_spec_is_read_when_formula_is_empty_as_the_portal_does():
     q = _unregistered(formula="", searchSpec=SQ["properties"]["formula"])
-    assert saved_query(_Viewer(stored=[q], members=2), FQN, params=REFRESHED_WITH)["value"] == 2
+    assert saved_query(_Viewer(stored=[q], members=2), FQN, params=REFRESHED_WITH)["atLeast"] == 2
 
 
 # cached, registered as a Smart Collection (P-3): Egeria re-runs the STORED request, so the answer stands
@@ -507,10 +510,10 @@ def test_the_portals_flag_alone_does_not_register_it():
 
 def test_a_registered_answer_is_served_for_its_stored_values_and_labelled_kept_current():
     out = saved_query(_Viewer(stored=[_shared()], members=7, smart=True), FQN)
-    assert out["value"] == 7 and out["params"] == STORED
+    assert out["atLeast"] == 7 and out["params"] == STORED
     assert out["keptCurrentBy"].startswith("Egeria (Smart Collection")
     label = ", ".join(f"{k}={json.dumps(v)}" for k, v in sorted(STORED.items()))
-    assert out["subtitle"] == f"kept current by Egeria \u00b7 as of 2026-11-10T18:00:00+00:00, for {label}"
+    assert out["subtitle"] == f"kept current by Egeria \u00b7 as of 2026-11-10T18:00:00+00:00, for {label} · at least 7: Egeria didn't confirm there are no more"
 
 
 @pytest.mark.parametrize("case", FIXTURE["cases"], ids=[c["why"][:40] for c in FIXTURE["cases"]])
@@ -518,7 +521,7 @@ def test_a_registered_answer_is_served_only_for_the_stored_values(case):
     viewer = _Viewer(stored=[_shared()], members=7, smart=True)
     out = saved_query(viewer, FQN, params=case["request"])
     if case["effective"] == STORED:
-        assert out["value"] == 7
+        assert out["atLeast"] == 7
     else:
         assert out["value"] is None and "is a Smart Collection, kept current by Egeria" in out["state_reason"]
         assert "use mode live" in out["state_reason"]
@@ -528,7 +531,7 @@ def test_a_registered_answer_is_served_only_for_the_stored_values(case):
 def test_a_registered_answer_ignores_a_refresh_record_naming_other_values():
     # a Portal refresh with min_level 4 would be overwritten by Egeria within the half hour
     q = _shared(lastRefreshParams={**STORED, "min_level": 4})
-    assert saved_query(_Viewer(stored=[q], members=7, smart=True), FQN)["value"] == 7
+    assert saved_query(_Viewer(stored=[q], members=7, smart=True), FQN)["atLeast"] == 7
     out = saved_query(_Viewer(stored=[q], members=7, smart=True), FQN, params={"min_level": 4})
     assert out["value"] is None and "kept current by Egeria" in out["state_reason"]
 
@@ -536,7 +539,7 @@ def test_a_registered_answer_ignores_a_refresh_record_naming_other_values():
 def test_a_registered_answer_is_as_of_egerias_refresh_when_the_portal_recorded_none():
     q = _shared(lastRefreshedTime="", lastRefreshParams=None)
     out = saved_query(_Viewer(stored=[q], members=3, smart=True, completion="2026-11-11T09:30:00.000+00:00"), FQN)
-    assert out["value"] == 3 and out["asOf"] == "2026-11-11T09:30:00.000+00:00"
+    assert out["atLeast"] == 3 and out["asOf"] == "2026-11-11T09:30:00.000+00:00"
     assert out["subtitle"].startswith("kept current by Egeria \u00b7 as of 2026-11-11T09:30:00.000+00:00, for ")
 
 
@@ -558,14 +561,14 @@ def test_egerias_refresh_time_wins_for_a_registered_query():
 def test_a_registered_query_with_no_parameters_is_served_and_labelled():
     q = _shared(parameters=None, lastRefreshParams=None)
     out = saved_query(_Viewer(stored=[q], members=4, smart=True), FQN)
-    assert out["value"] == 4 and "params" not in out
-    assert out["subtitle"] == "kept current by Egeria \u00b7 as of 2026-11-10T18:00:00+00:00"
+    assert out["atLeast"] == 4 and "params" not in out
+    assert out["subtitle"] == "kept current by Egeria \u00b7 as of 2026-11-10T18:00:00+00:00 · at least 4: Egeria didn't confirm there are no more"
 
 
 def test_live_is_not_limited_by_registration():
     viewer = _Viewer(stored=[_shared(drop=("sort",))], answer=2)
     out = saved_query(viewer, FQN, mode="live", params={"min_level": 5})
-    assert out["value"] == 2 and out["params"]["min_level"] == 5 and "keptCurrentBy" not in out
+    assert out["atLeast"] == 2 and out["params"]["min_level"] == 5 and "keptCurrentBy" not in out
 
 
 # live: effective values (from formula) go to requestPath, typed, as values only
@@ -591,10 +594,13 @@ def test_live_sends_the_contracts_effective_values(case):
     out = saved_query(viewer, FQN, mode="live", params=request_)
     eff = {k: v for k, v in case["effective"].items() if k != "sort"}
     sent = _ran(viewer)
-    assert out["value"] == 45 and out["params"] == eff
+    assert out["atLeast"] == 45 and out["params"] == eff
     assert {b["metadataElementTypeName"] for b in sent} == {eff["asset_type"]}
     assert {sq._get_path(b, MIN_LEVEL_PATH) for b in sent} == {eff["min_level"]}
-    assert [b["startFrom"] for b in sent] == list(range(0, 45, eff["page_size"])) + [45]  # read in pages of page_size
+    # read in pages of page_size, advancing by it (pager step 4), the null probed 3 pages ahead
+    last = list(range(0, 45, eff["page_size"]))[-1] + eff["page_size"]
+    assert [b["startFrom"] for b in sent] == list(range(0, 45, eff["page_size"])) + [
+        last + k * eff["page_size"] for k in range(4)]
     assert {b["pageSize"] for b in sent} == {eff["page_size"]}
 
 
@@ -689,7 +695,7 @@ def test_a_catalog_target_of_another_connector_is_not_a_smart_collection(monkeyp
     monkeypatch.setattr(sys.modules[__name__], "_smart_shapes",
                         lambda: (_smart_shapes()[0], json.loads(json.dumps(CAPTURED["catalogTargetFromTarget"]))))
     out = saved_query(_Viewer(stored=[_unregistered()], members=7, smart=True), FQN, params=REFRESHED_WITH)
-    assert "keptCurrentBy" not in out and out["value"] == 7
+    assert "keptCurrentBy" not in out and out["atLeast"] == 7
 
 
 def test_the_target_must_be_held_by_an_integration_connector(monkeypatch):
@@ -703,7 +709,7 @@ def test_a_lookup_that_fails_is_not_a_registration():
         def get_related_elements(self, *a, **kw):
             raise RuntimeError("HTTP 500 from the view server")
     out = saved_query(Failing(stored=[_unregistered()], members=7), FQN, params=REFRESHED_WITH)
-    assert "keptCurrentBy" not in out and out["value"] == 7     # the ordinary cached path, for its recorded values
+    assert "keptCurrentBy" not in out and out["atLeast"] == 7     # the ordinary cached path, for its recorded values
     assert "could not be read (RuntimeError)" in out["note"] and "answered as one that is not" in out["note"]
 
 

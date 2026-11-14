@@ -32,9 +32,29 @@ class _Replay:
     user_id = "garygeeke"
 
     def __init__(self):
+        self.synthesised = []
         self._answers = {}
         for c in FX["calls"]:
             self._answers.setdefault(_key(c["sub"], c["method"], c["args"], c["kwargs"]), c["result"])
+
+    def _past_recorded_null(self, sub, method, args, kwargs):
+        """Pager step 4: the reader now advances by the page size and probes 3 pages past a null (a suspect
+        path); this fixture was captured before, so it stops at the null. A page past a RECORDED null of the
+        same call (same arguments but start_from) is answered with that null, and listed in `synthesised`. On
+        a suspect path a null only ends a read as not_confirmed, never as a confirmed end. To be replaced by
+        a re-capture that includes the probe pages."""
+        start = kwargs.get("start_from")
+        if not isinstance(start, int):
+            return None
+        rest = {k: v for k, v in kwargs.items() if k != "start_from"}
+        for c in FX["calls"]:
+            ks = c["kwargs"]
+            if ((c["sub"], c["method"], c["args"]) == (sub, method, args) and isinstance(ks.get("start_from"), int)
+                    and ks["start_from"] < start and {k: v for k, v in ks.items() if k != "start_from"} == rest
+                    and isinstance(c["result"], str)):
+                self.synthesised.append((sub, method, start))
+                return c["result"]
+        return None
 
     def __getattr__(self, sub):
         outer = self
@@ -42,8 +62,11 @@ class _Replay:
         class Sub:
             def __getattr__(self, method):
                 async def call(*args, **kwargs):
-                    key = _key(sub, method, json.loads(json.dumps(list(args), default=str)),
-                               json.loads(json.dumps(kwargs, default=str)))
+                    a = json.loads(json.dumps(list(args), default=str))
+                    kw = json.loads(json.dumps(kwargs, default=str))
+                    key = _key(sub, method, a, kw)
+                    if key not in outer._answers and (null := outer._past_recorded_null(sub, method, a, kw)):
+                        return null
                     assert key in outer._answers, f"unrecorded call {sub}.{method}{args}{kwargs}"
                     return outer._answers[key]
                 return call

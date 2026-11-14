@@ -92,25 +92,29 @@ class FolderTooLarge(RuntimeError):
     """A folder has more members than one walk reads; reported as a folder not fully read, never as a short one."""
 
 
-def _members(client, collection_guid: str) -> List[Dict[str, Any]]:
-    """Every member of a collection, each once: paged until Egeria returns an EMPTY page (a short page is not the
-    last), deduplicated by GUID, and stopped when a page brings nothing new (a server that ignores paging returns the
-    same page again; 6.2.36). It used to be one unpaged call, so a folder over the server's default page was
-    silently truncated (Architect, LD-3 note N2). More than MEMBERS_MAX_PAGES pages raises FolderTooLarge."""
-    out: List[Dict[str, Any]] = []
-    seen: set = set()
-    for page_no in range(MEMBERS_MAX_PAGES):
-        page = _call(client.get_collection_members, collection_guid=collection_guid,
-                     start_from=page_no * MEMBERS_PAGE, page_size=MEMBERS_PAGE, output_format="JSON")
-        if not page:
-            return out
-        fresh = [m for m in page if (_guid(m) or id(m)) not in seen]
-        if not fresh:
-            return out
-        for m in fresh:
-            seen.add(_guid(m) or id(m))
-        out.extend(fresh)
-    raise FolderTooLarge(f"more than {MEMBERS_MAX_PAGES * MEMBERS_PAGE} members; not read to the end")
+def _members(client, collection_guid: str, unconfirmed: Optional[List[str]] = None) -> List[Dict[str, Any]]:
+    """Every member of a collection, each once: read through the pager (pager step 4; a suspect path),
+    advancing by the page size, deduplicated by GUID, and stopped when a page brings nothing new (a server
+    that ignores paging returns the same page again; 6.2.36). It used to be one unpaged call, so a folder over
+    the server's default page was silently truncated (Architect, LD-3 note N2). More than MEMBERS_MAX_PAGES
+    pages raises FolderTooLarge: never shown as a short folder. Any read Egeria didn't confirm complete (the
+    usual suspect-path end, a stall, the empty-run cap) returns what was read and appends `collection_guid` to
+    `unconfirmed`, so its count is shown as "at least"."""
+    from pyegeria.core.paging import log_end, page_all
+
+    def fetch(start, size):
+        result = client.get_collection_members(collection_guid=collection_guid, start_from=start, page_size=size,
+                                               output_format="JSON")
+        return _elements(result) if isinstance(result, (list, dict)) else result   # null stays null
+
+    paged = page_all(fetch, fetch_page_size=MEMBERS_PAGE, max_pages=MEMBERS_MAX_PAGES, end_policy="suspect",
+                     key=lambda m: _guid(m) or id(m))
+    log_end("egeria_folders._members", paged)
+    if paged.end_reason == "max_pages":
+        raise FolderTooLarge(f"more than {MEMBERS_MAX_PAGES * MEMBERS_PAGE} members; not read to the end")
+    if not paged.complete and unconfirmed is not None:
+        unconfirmed.append(collection_guid)
+    return list(paged.items)
 
 
 def client_identity(client) -> str:
@@ -175,6 +179,9 @@ class Walk:
     gone: List[Tuple[str, str]] = field(default_factory=list)    # sub-folders not visible or not found
     #: Every non-folder member's folder paths, by GUID: where in the tree each was found.
     paths: Dict[str, List[str]] = field(default_factory=dict)
+    #: Folders whose member read reached the end without Egeria confirming it (pager step 4): their counts are
+    #: "at least", and "used by none" can't be ruled out against them.
+    unconfirmed: List[str] = field(default_factory=list)
 
 
 def walk_folder(client, folder: Dict[str, Any], *, recursive: bool, consumer_prefix: str,
@@ -199,10 +206,10 @@ def walk_folder(client, folder: Dict[str, Any], *, recursive: bool, consumer_pre
     while queue:
         current, depth, path = queue.pop(0)
         if depth == 0:
-            listed = _members(client, _guid(current))
+            listed = _members(client, _guid(current), w.unconfirmed)
         else:
             try:
-                listed = _members(client, _guid(current))
+                listed = _members(client, _guid(current), w.unconfirmed)
             except Exception as exc:  # noqa: BLE001
                 if is_gone_error(exc):
                     # Not visible (zoned away from the reader) or deleted: what it held is no longer
@@ -273,8 +280,9 @@ def read_consumer_tree(client, *, root_qn: str, consumer_prefix: str, key: Membe
     roots = [e for e in found if _props(e).get("qualifiedName") == root_qn]
     if not roots:
         return _not_read(out, f"the root {root_qn} was not found, or is not visible to {identity}")
+    unconfirmed: List[str] = []
     try:
-        listed = _members(client, _guid(roots[0]))
+        listed = _members(client, _guid(roots[0]), unconfirmed)
     except Exception as exc:  # noqa: BLE001
         return _not_read(out, f"the members of the root {root_qn} could not be read: {exc}")
     folders = [m for m in listed if is_folder(m)]
@@ -310,7 +318,14 @@ def read_consumer_tree(client, *, root_qn: str, consumer_prefix: str, key: Membe
         for k in keys:
             index.setdefault(k, []).append(name)
         entry[count_field] = len(keys)
+        if walk.unconfirmed:   # pager step 4: an "at least" count, said in the entry itself
+            entry["end_confirmed"] = False
+            unconfirmed.extend(walk.unconfirmed)
     out["index"] = {k: sorted(v) for k, v in sorted(index.items())}
+    if unconfirmed:
+        out["end_confirmed"] = False
+        out["notes"].append(f"{len(unconfirmed)} folder read(s) ended without Egeria confirming there are no more, so "
+                            f"the counts are at least what was read and 'used by none' can't be ruled out")
     if unread:
         out.update(status="partial", reason="not fully read: " + ", ".join(unread))
     return out

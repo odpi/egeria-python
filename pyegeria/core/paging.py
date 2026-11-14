@@ -1,0 +1,365 @@
+"""One pager for Egeria find/get calls: an empty page is not the end, and on some paths neither is null.
+
+Egeria's paging contract (finding-metadata/overview, "Paging", restated by the Egeria lead on 2026-11-13):
+page with ``startFrom`` += ``pageSize`` until the server returns *null* (the ``elements`` key absent). An
+*empty list* means server-side filtering (security, zones, Memento/lineage) removed every row of that page,
+so the caller carries on. ``startFrom`` is an offset into the repository's rows *before* filtering, so the
+pager always advances by the page size it asked for, never by the number of rows it got back.
+
+On some paths Egeria also sends null for a page that filtering emptied (metadata-expert by-search-conditions:
+raw capture 2026-11-13, ``~/.re-gate/B5-RAW-CAPTURE-2026-11-13.md``; MetadataElementHandler returns null for
+an empty filtered list). There, null is not proof of the end. A call site says which kind of path it pages
+with ``end_policy``:
+
+- ``"trusted"``: null is the end (``end="confirmed"``).
+- ``"suspect"`` (the default): on null, probe the next ``probe_pages`` pages. Rows there mean the null was a
+  filtered page and paging resumes; nothing there ends the read with ``end="not_confirmed"``.
+
+The result says how the read ended, so a caller never shows "nothing" or a total it didn't establish:
+
+- ``confirmed``: the server said there is no more, on a path where that can be trusted.
+- ``not_confirmed``: the read stopped without proof of the end (a suspect null and empty probes, or too
+  many consecutive filtered positions).
+- ``capped``: the caller's limits stopped it (``want`` rows collected, or ``max_pages``); there may be more.
+- ``stalled``: a page brought only rows already read (a server ignoring ``startFrom``); stopped so it
+  can't loop forever.
+- ``first_page``: one page was read and not paged on (a caller's choice, e.g. a report run whose first
+  page had rows). Set by callers, never by ``page_all``.
+
+Anything but ``confirmed`` is "at least N" (``PageResult.count_text``), never a total.
+
+``fetch(start, size)`` returns a list (rows; ``[]`` for a filtered page) or anything else (None, pyegeria's
+"No elements found" string) for null. When ``fetch`` is a pyegeria list method, the pager reads what Egeria
+actually sent from the method's list-request record, so a method that collapses ``[]`` into "No elements
+found" still reads as a filtered page (``_end_signal``). Exceptions from ``fetch`` propagate: the caller decides what a failed
+read means. This module only pages; it changes nothing about what pyegeria's public methods return.
+"""
+from __future__ import annotations
+
+import json
+from contextlib import contextmanager
+from dataclasses import dataclass, field, replace
+from typing import Any, Awaitable, Callable, Hashable, List, Optional, Tuple
+
+DEFAULT_FETCH_PAGE_SIZE = 100   # rows asked for per request; below the server's maximum page size
+DEFAULT_PROBE_PAGES = 3         # extra pages read after a null on a suspect path
+DEFAULT_MAX_EMPTY_ROWS = 2000   # consecutive filtered positions before giving up (rows, not pages)
+DEFAULT_MAX_PAGES = 1000        # requests per read, probes included
+
+END_POLICIES = ("trusted", "suspect")
+ENDS = ("confirmed", "not_confirmed", "capped", "stalled", "first_page")
+#: Why a read ended (PageResult.end_reason). Only the first two may be acted on as the end (reached_end).
+END_REASONS = ("trusted_null", "null_then_empty_probes", "empty_run_cap", "want", "max_pages", "stalled")
+
+#: Methods whose null has been shown to mean the end (a filtered page comes back as []), with the evidence.
+#: Everything else pages as "suspect". Add a method only with a raw capture like the one cited.
+TRUSTED_END_METHODS = {
+    # content-status search: [] for 11 filtered pages, then 79 + 7 rows, then null (Architect, laz, 2026-11-13)
+    "find_authored_elements",
+}
+
+
+#: Methods proven to send null MID-SET (rows follow a null; a filtered-empty page is null, never []), so even a
+#: null followed by empty probes is NOT an end on them: PageResult.reached_end is False, as for a limit, and no
+#: write path may act on a read from them. Evidence: ~/.re-gate/CAPTURE-PAGER-STEP4-FINDINGS-2026-11-14.md
+#: (laz, read-only, 2026-11-14): at pageSize 25, runs of up to 3 nulls mid-set on both, and no [] in 457
+#: requests. Promotion to TRUSTED_END_METHODS is closed for these until Egeria returns [] for a filtered page
+#: (the Architect's ruling after the step 4 capture).
+NULL_NOT_END_METHODS = frozenset({"find_metadata_elements", "get_relationships"})
+
+#: Probe pages after a null on a NULL_NOT_END method: the capture's longest null run was 3; 6 gives 2x headroom.
+NULL_NOT_END_PROBE_PAGES = 6
+
+assert not (TRUSTED_END_METHODS & NULL_NOT_END_METHODS), "a NULL_NOT_END method can't be trusted"
+
+
+def end_policy_for(method_name: Optional[str]) -> str:
+    """"trusted" for a method in TRUSTED_END_METHODS (never one in NULL_NOT_END_METHODS), else "suspect"."""
+    if method_name in NULL_NOT_END_METHODS:
+        return "suspect"
+    return "trusted" if method_name in TRUSTED_END_METHODS else "suspect"
+
+
+def paging_for(method_name: Optional[str]) -> dict:
+    """page_all keyword arguments for a method: its end_policy and, for a NULL_NOT_END method, the longer
+    probe and ``null_not_end`` (so a null-then-empty-probes read is never ``reached_end``)."""
+    if method_name in NULL_NOT_END_METHODS:
+        return {"end_policy": "suspect", "probe_pages": NULL_NOT_END_PROBE_PAGES, "null_not_end": True}
+    return {"end_policy": end_policy_for(method_name)}
+
+
+@dataclass(frozen=True)
+class PageResult:
+    """What a paged read found and how it ended. ``items`` is cut to ``want`` when one was given."""
+    items: List[Any]
+    end: str
+    note: Optional[str] = None
+    pages_read: int = 0
+    positions_read: int = 0   # how far into the server's (pre-filter) rows the read got
+    end_reason: Optional[str] = None   # why it ended: one of END_REASONS (None only for a caller-built result)
+    null_not_end: bool = False         # read from a NULL_NOT_END method: a null is never the end
+
+    @property
+    def complete(self) -> bool:
+        """True only when the server confirmed there is nothing more."""
+        return self.end == "confirmed"
+
+    @property
+    def reached_end(self) -> bool:
+        """True when the read may be acted on as the end (step-4 ruling (A)): a trusted null, or a suspect
+        null whose probes found nothing. ``complete`` is stricter: only it allows a total or "none" to be
+        shown. A limit (capped, stalled, the empty-run cap) is never the end."""
+        if self.end_reason == "null_then_empty_probes" and self.null_not_end:
+            return False   # NULL_NOT_END_METHODS: rows have followed a null on this method
+        return self.end_reason in ("trusted_null", "null_then_empty_probes")
+
+    def trace(self) -> dict:
+        """How the read ended, for a log line or a run result: positions_read, end, end_reason."""
+        return {"positions_read": self.positions_read, "end": self.end, "end_reason": self.end_reason}
+
+    def count_text(self) -> str:
+        """The count as it may be shown: "N" when complete, else "at least N"."""
+        n = len(self.items)
+        return str(n) if self.complete else f"at least {n}"
+
+
+_GUID_FIELDS = ("guid", "elementGUID", "relationshipGUID")
+
+
+def default_key(item: Any) -> Hashable:
+    """A row's GUID, whichever shape it comes in:
+
+    - an Egeria 6 element or relationship: ``elementHeader.guid`` / ``relationshipHeader.guid``;
+    - the metadata-expert shape (``OpenMetadataElement``, ``OpenMetadataRelationship``): ``elementGUID`` /
+      ``relationshipGUID`` on the row itself;
+    - a bare ``guid`` on the row.
+
+    A row with none of these is keyed by its content (equal JSON, equal key), never by object identity:
+    every page is decoded afresh, so the same row read twice is two different objects."""
+    if isinstance(item, dict):
+        for holder in (item.get("elementHeader"), item.get("relationshipHeader"), item):
+            if isinstance(holder, dict):
+                for name in _GUID_FIELDS:
+                    if isinstance(holder.get(name), str) and holder[name]:
+                        return holder[name]
+    try:
+        return "content:" + json.dumps(item, sort_keys=True, default=str)
+    except (TypeError, ValueError):   # a circular or otherwise undumpable row: identity is all there is
+        return id(item)
+
+
+@dataclass
+class _Pager:
+    """The paging state machine, shared by the sync and async drivers. ``request()`` gives the next
+    (start, size) to fetch or None when done; ``feed(page)`` takes what that fetch returned."""
+    want: Optional[int]
+    size: int
+    policy: str
+    probe_pages: int
+    max_empty_rows: int
+    max_pages: int
+    key: Callable[[Any], Hashable]
+    start: int = 0
+    stall_pages: int = 1                # consecutive pages of only rows already read before "stalled"
+    no_new: int = 0
+    last_keys: Optional[list] = None    # the previous page's row keys: the same page again is a stall
+    pages: int = 0
+    empty_rows: int = 0
+    probes_left: Optional[int] = None   # None: not probing
+    null_at: Optional[int] = None       # where the suspect null came back
+    items: List[Any] = field(default_factory=list)
+    seen: set = field(default_factory=set)
+    result: Optional[PageResult] = None
+
+    def request(self) -> Optional[Tuple[int, int]]:
+        if self.result is not None:
+            return None
+        if self.pages >= self.max_pages:
+            self._finish("capped", f"stopped after {self.pages} pages of {self.size}; there may be more",
+                         "max_pages")
+            return None
+        return self.start, self.size
+
+    def feed(self, page: Any) -> None:
+        self.pages += 1
+        at = self.start
+        self.start += self.size
+        if not isinstance(page, list):
+            self._null(at)
+        elif not page:
+            self._empty(at)
+        else:
+            self._rows(page, at)
+
+    # ── one handler per kind of page ──
+
+    def _null(self, at: int) -> None:
+        if self.policy == "trusted":
+            self._finish("confirmed", None, "trusted_null")
+            return
+        if self.probes_left is None:
+            self.probes_left, self.null_at = self.probe_pages, at
+        else:
+            self.probes_left -= 1
+        if self.probes_left <= 0:
+            self._finish("not_confirmed",
+                         f"Egeria reported no more at position {self.null_at}, and the next "
+                         f"{self.probe_pages} pages of {self.size} were empty too; on this path a filtered page "
+                         f"also reads as 'no more', so later matches can't be ruled out", "null_then_empty_probes")
+
+    def _empty(self, at: int) -> None:
+        self.probes_left = None   # an empty page means the server has rows here: not the end
+        self.empty_rows += self.size
+        if self.empty_rows >= self.max_empty_rows:
+            self._finish("not_confirmed",
+                         f"{self.empty_rows} consecutive positions (up to {at + self.size}) were filtered out "
+                         f"for you; there may be more", "empty_run_cap")
+
+    def _rows(self, page: list, at: int) -> None:
+        self.probes_left = None
+        self.empty_rows = 0
+        fresh = []
+        keys = []
+        for item in page:
+            k = self.key(item)
+            keys.append(k)
+            if k not in self.seen:
+                self.seen.add(k)
+                fresh.append(item)
+        same_as_last, self.last_keys = keys == self.last_keys, keys
+        if not fresh:
+            self.no_new += 1
+            # overlapping short pages (export_dcat) are not yet a stall; the very same page again always is
+            if self.no_new < self.stall_pages and not same_as_last:
+                return
+            self._finish("stalled",
+                         f"the read from position {at} returned only rows already read (the server may be "
+                         f"ignoring startFrom), so it stopped at {len(self.items)}", "stalled")
+            return
+        self.no_new = 0
+        self.items.extend(fresh)
+        if self.want is not None and len(self.items) >= self.want:
+            self._finish("capped", f"stopped at the {self.want} rows asked for; there may be more", "want")
+
+    def _finish(self, end: str, note: Optional[str], reason: str) -> None:
+        items = self.items[: self.want] if self.want is not None else self.items
+        self.result = PageResult(items=list(items), end=end, note=note, pages_read=self.pages,
+                                 positions_read=self.start, end_reason=reason)
+
+
+def _pager(want, fetch_page_size, end_policy, probe_pages, max_empty_rows, max_pages, key,
+           start_from=0, stall_pages=1) -> _Pager:
+    if end_policy not in END_POLICIES:
+        raise ValueError(f"end_policy must be one of {END_POLICIES}, not {end_policy!r}")
+    for name, value, low in (("fetch_page_size", fetch_page_size, 1), ("probe_pages", probe_pages, 1),
+                             ("max_empty_rows", max_empty_rows, 1), ("max_pages", max_pages, 1),
+                             ("stall_pages", stall_pages, 1)):
+        if not isinstance(value, int) or isinstance(value, bool) or value < low:
+            raise ValueError(f"{name} must be a whole number of at least {low}, not {value!r}")
+    if want is not None and (not isinstance(want, int) or isinstance(want, bool) or want < 1):
+        raise ValueError(f"want must be None or a whole number of at least 1, not {want!r}")
+    if not isinstance(start_from, int) or isinstance(start_from, bool) or start_from < 0:
+        raise ValueError(f"start_from must be a whole number of at least 0, not {start_from!r}")
+    return _Pager(want=want, size=fetch_page_size, policy=end_policy, probe_pages=probe_pages,
+                  max_empty_rows=max_empty_rows, max_pages=max_pages, key=key or default_key, start=start_from,
+                  stall_pages=stall_pages)
+
+
+@contextmanager
+def _end_signal():
+    """Record what Egeria actually sent for the list request ``fetch`` makes (pager step 2).
+
+    pyegeria's list helpers note it in ``LIST_REQUEST_RECORD["page"]`` ("null", "empty" or "rows") before a
+    method collapses ``[]`` into "No elements found", so the pager can tell a filtered page from the end
+    without any public method changing what it returns. A caller already recording (``exec_report_spec``
+    reads ``cap``) gets this request's facts merged into its own record afterwards, as if this block were
+    not there: the record keeps the last list request, as it always has."""
+    from pyegeria.core._server_client import LIST_REQUEST_RECORD, recording_list_requests
+    outer = LIST_REQUEST_RECORD.get()
+    with recording_list_requests() as record:
+        yield record
+    if outer is not None:
+        outer.update(record)
+
+
+def _signalled(page: Any, record: dict) -> Any:
+    """``page`` as the pager should read it: ``[]`` when Egeria sent an empty list that the method collapsed,
+    None when Egeria sent null. When no list helper recorded anything (a fetch that isn't a pyegeria list
+    call, or a path not yet routed through the record), ``page`` is read as it is."""
+    sent = record.get("page")
+    if sent == "empty" and not (isinstance(page, list) and page):
+        return []
+    if sent == "null" and not isinstance(page, list):
+        return None
+    return page
+
+
+def page_all(fetch: Callable[[int, int], Any], *, want: Optional[int] = None,
+             fetch_page_size: int = DEFAULT_FETCH_PAGE_SIZE, end_policy: str = "suspect",
+             probe_pages: int = DEFAULT_PROBE_PAGES, max_empty_rows: int = DEFAULT_MAX_EMPTY_ROWS,
+             max_pages: int = DEFAULT_MAX_PAGES, key: Optional[Callable[[Any], Hashable]] = None,
+             start_from: int = 0, stall_pages: int = 1, null_not_end: bool = False) -> PageResult:
+    """Read every row ``fetch(start, size)`` gives (or the first ``want``), paging until the end is known
+    or a limit stops it, starting at ``start_from``. See the module docstring for ``end_policy`` and the
+    ``end`` states.
+
+    ``key`` gives each row's identity, for dropping rows read twice and for the stall guard. The default
+    (``default_key``) is the row's GUID in any of Egeria's shapes, else its JSON content. A caller paging
+    rows that have no GUID and can legitimately repeat (aggregates, counts, value lists) must pass its own
+    ``key``: under the content fallback two equal rows are one row, and a page of them reads as a stall.
+
+    Each ``fetch`` runs inside ``_end_signal``, so a pyegeria list method that collapses ``[]`` into
+    "No elements found" is still read as a filtered page, not as the end.
+
+    ``stall_pages`` is how many pages in a row bringing only rows already read end the read as "stalled"
+    (default 1; a path known to return overlapping short pages may allow 2).
+
+    ``null_not_end`` (a NULL_NOT_END method: pass ``**paging_for(method)``) marks the result so that a null
+    followed by empty probes is not ``reached_end``."""
+    pager = _pager(want, fetch_page_size, end_policy, probe_pages, max_empty_rows, max_pages, key, start_from,
+                   stall_pages)
+    while (req := pager.request()) is not None:
+        with _end_signal() as record:
+            page = fetch(*req)
+        pager.feed(_signalled(page, record))
+    return replace(pager.result, null_not_end=True) if null_not_end else pager.result
+
+
+async def async_page_all(fetch: Callable[[int, int], Awaitable[Any]], *, want: Optional[int] = None,
+                         fetch_page_size: int = DEFAULT_FETCH_PAGE_SIZE, end_policy: str = "suspect",
+                         probe_pages: int = DEFAULT_PROBE_PAGES, max_empty_rows: int = DEFAULT_MAX_EMPTY_ROWS,
+                         max_pages: int = DEFAULT_MAX_PAGES,
+                         key: Optional[Callable[[Any], Hashable]] = None, start_from: int = 0,
+                         stall_pages: int = 1, null_not_end: bool = False) -> PageResult:
+    """``page_all`` for an async ``fetch`` (same ``key`` and end-signal rules)."""
+    pager = _pager(want, fetch_page_size, end_policy, probe_pages, max_empty_rows, max_pages, key, start_from,
+                   stall_pages)
+    while (req := pager.request()) is not None:
+        with _end_signal() as record:
+            page = await fetch(*req)
+        pager.feed(_signalled(page, record))
+    return replace(pager.result, null_not_end=True) if null_not_end else pager.result
+
+
+# ── Step 4: what a loop says and logs about how its read ended (ruling (A), 2026-11-13) ──
+
+def at_least_note(paged: PageResult, what: str, count: Optional[int] = None) -> Optional[str]:
+    """The words a loop that shows a count or a list adds when the end isn't confirmed, or None when it is:
+    "Showing at least N <what>: <why>." Never a total, never "none". ``count`` is what the loop shows when it
+    filters the rows it read (default: the rows read)."""
+    if paged.complete:
+        return None
+    n = len(paged.items) if count is None else count
+    return f"Showing at least {n} {what}: {paged.note or 'there may be more'}."
+
+
+def log_end(method: str, paged: PageResult) -> dict:
+    """Log one structured line for a read (method, positions_read, end, end_reason) and return those fields,
+    so a write path can carry them in its own result and a later miss can be traced to the read."""
+    from loguru import logger
+    fields = {"method": method, **paged.trace()}
+    if paged.complete:
+        logger.debug(f"paged read: {fields}")
+    else:
+        logger.info(f"paged read: {fields}")
+    return fields

@@ -404,7 +404,9 @@ def test_history_is_read_in_pages_until_an_empty_one(monkeypatch):
     eg = _Egeria()
     _spec_history(eg, edited_after=True)   # 5 entries
     assert asyncio.run(async_spec_at_version(eg, "Team Projects", 2)).description == "published two"
-    assert eg.history_calls == [(0, 2), (2, 2), (4, 2), (5, 2)]   # a short page (1) isn't the last page
+    # a short page (1) isn't the last page; the read advances by the page size (pager step 4), and on this
+    # suspect path the null at 6 is probed 3 pages ahead before it's acted on as the end
+    assert eg.history_calls == [(0, 2), (2, 2), (4, 2), (6, 2), (8, 2), (10, 2), (12, 2)]
 
 
 def test_a_capped_history_refuses_the_pin_and_skips_the_edit_check(monkeypatch):

@@ -188,7 +188,8 @@ def _exact_qn_body(qn: str) -> Dict[str, Any]:
 
 def _result(name: str, mode: str, output: str, *, state: str, reason: str = "", absence: Optional[str] = None,
             count: Optional[int] = None, elements: Optional[List[Dict[str, Any]]] = None,
-            capped: bool = False, as_of: Optional[str] = None, refused: bool = False) -> Dict[str, Any]:
+            capped: bool = False, as_of: Optional[str] = None, refused: bool = False,
+            capped_why: str = "the read stopped at its bound") -> Dict[str, Any]:
     out: Dict[str, Any] = {"savedQuery": name, "mode": mode, "output": output, "state": state,
                            "state_reason": reason, "value": count, "capped": capped,
                            "atLeast": count if capped else None, "asOf": as_of,
@@ -201,8 +202,7 @@ def _result(name: str, mode: str, output: str, *, state: str, reason: str = "", 
         out["refused"] = True
     out["elements"] = (elements if elements is not None else []) if output == "list" else None
     if as_of and state in ("measured", "nothing_found"):
-        out["subtitle"] = f"as of {as_of}" + (f" · at least {count}: the read stopped at its bound"
-                                              if capped else "")
+        out["subtitle"] = f"as of {as_of}" + (f" · at least {count}: {capped_why}" if capped else "")
     return out
 
 
@@ -218,29 +218,41 @@ def _not_measured(name, mode, output, reason):
 PAGING_STALLED = "paging did not advance"
 
 
-def _read_pages(fetch, page_size: int, max_pages: int) -> Tuple[List[Dict[str, Any]], bool, Optional[str]]:
-    """Every distinct element `fetch(start_from, page_size)` returns, paging until an empty page. Returns
-    (elements, capped, note):
-    - capped: `max_pages` pages each brought new elements and the next was not shown to be empty;
-    - note: set when a page brought nothing new (a server that ignores startFrom returns the same page again):
-      the read stops there, says so, and is NOT capped. Until 6.2.36 such repetition was counted, page after page,
-      and a 3-member Results Set read as "at least 60" (ISSUE-185)."""
-    found: List[Dict[str, Any]] = []
-    seen: set = set()
-    start = 0
-    for _ in range(max_pages):
-        page = _elements(fetch(start, page_size))
-        if not page:
-            return found, False, None
-        fresh = [e for e in page if (_guid(e) or id(e)) not in seen]
-        if not fresh:
-            return found, False, (f"{PAGING_STALLED}: the read from position {start} returned only elements "
-                                  f"already read, so it stopped at the {len(found)} distinct ones")
-        for e in fresh:
-            seen.add(_guid(e) or id(e))
-        found.extend(fresh)
-        start += len(page)
-    return found, True, None
+def _page_of(result: Any) -> Any:
+    """One page as the pager reads it: a list of elements, or the result itself when it isn't a list (null,
+    or "No elements found", which the pager tells from a filtered page by the list-request record). Unlike
+    `_elements`, a string is never turned into [] here: that would read every end as a filtered page."""
+    if isinstance(result, dict):
+        return [result]
+    return [e for e in result if isinstance(e, dict)] if isinstance(result, list) else result
+
+
+def _element_key(element: Dict[str, Any]) -> Any:
+    from pyegeria.core.paging import default_key
+    return _guid(element) or default_key(element)
+
+
+def _read_pages(fetch, page_size: int, max_pages: int,
+                what: str = "saved_query._read_pages") -> Tuple[List[Dict[str, Any]], bool, Optional[str]]:
+    """Every distinct element `fetch(start_from, page_size)` returns, read through the pager (pager step 4,
+    a suspect path). Returns (elements, capped, note):
+    - capped: True unless Egeria confirmed there is no more (ruling (A): a saved query's answer says "at least"
+      and is never "nothing found" unless the end is confirmed), including when `max_pages` stopped it;
+    - note: why the read isn't confirmed whole. A server that ignores startFrom returns the same page again:
+      the read stops there and says so (PAGING_STALLED); repeated rows are never counted (ISSUE-185)."""
+    from pyegeria.core.paging import log_end, page_all
+    paged = page_all(lambda start, size: _page_of(fetch(start, size)), fetch_page_size=page_size,
+                     max_pages=max_pages, end_policy="suspect", key=_element_key)
+    log_end(what, paged)
+    found = list(paged.items)
+    if paged.complete:
+        return found, False, None
+    if paged.end_reason == "max_pages":   # the read's own bound: "at least N", as before
+        return found, True, None
+    if paged.end_reason == "stalled":
+        return found, True, (f"{PAGING_STALLED}: the read from position {paged.positions_read - page_size} "
+                             f"returned only elements already read, so it stopped at the {len(found)} distinct ones")
+    return found, True, paged.note
 
 
 def saved_query(client, name: str, mode: str = "cached", output: str = "count",
@@ -642,7 +654,9 @@ def _cached(client, name, output, additional, page_size, max_pages, kept_current
         when = f" \u00b7 as of {as_of}" if as_of else " \u00b7 no refresh time recorded"
         if out["state"] in ("measured", "nothing_found"):
             out["subtitle"] = "kept current by Egeria" + when + (
-                f" \u00b7 at least {out['atLeast']}: the read stopped at its bound" if out.get("capped") else "")
+                f" \u00b7 at least {out['atLeast']}: "
+                f"{'Egeria didn' + chr(39) + 't confirm there are no more' if out.get('note') else 'the read stopped at its bound'}"
+                if out.get("capped") else "")
     return out
 
 
@@ -678,11 +692,12 @@ def _live(client, name, output, method, body, page_size, max_pages):
 def _answer(name, mode, output, elements, capped, as_of, note=None):
     n = len(elements)
     listed = [_summary(e) for e in elements] if output == "list" else None
-    if n == 0:
+    if n == 0 and not capped:   # only a confirmed end is "nothing found" (pager step 4, ruling (A))
         out = _result(name, mode, output, state="nothing_found", absence="nothing_found", count=0,
                       elements=listed, as_of=as_of, reason="the saved query's answer is empty")
     else:
-        out = _result(name, mode, output, state="measured", count=n, elements=listed, capped=capped, as_of=as_of)
+        out = _result(name, mode, output, state="measured", count=n, elements=listed, capped=capped, as_of=as_of,
+                      **({"capped_why": "Egeria didn't confirm there are no more"} if capped and note else {}))
     if note:
         out["note"] = note
     return out
@@ -694,19 +709,23 @@ DELETE_LINK_PAGE = 50
 DELETE_LINK_MAX_PAGES = 40
 
 
-def _all_related(client, guid: str, relationship: str, end: int) -> List[Dict[str, Any]]:
-    """Every element related to `guid` by `relationship`, read until Egeria returns an EMPTY page (a short page is
-    not the last page). More than DELETE_LINK_MAX_PAGES pages is refused rather than half read."""
-    out: List[Dict[str, Any]] = []
-    for page in range(DELETE_LINK_MAX_PAGES):
-        got = _elements(client.get_related_elements(guid, relationship, start_at_end=end,
-                                                    start_from=page * DELETE_LINK_PAGE,
-                                                    page_size=DELETE_LINK_PAGE, output_format="JSON"))
-        if not got:
-            return out
-        out.extend(got)
-    raise RuntimeError(f"delete_saved_query: {guid} has more than {DELETE_LINK_MAX_PAGES * DELETE_LINK_PAGE} "
-                       f"{relationship} links; refused rather than delete with some left behind")
+def _all_related(client, guid: str, relationship: str, end: int):
+    """(every element related to `guid` by `relationship`, the PageResult), read through the pager (pager
+    step 4, a suspect path). Acted on as the end when the read reached it (a null, then empty probes); a limit
+    (more than DELETE_LINK_MAX_PAGES pages, a stall, the empty-run cap) is refused rather than half read."""
+    from pyegeria.core.paging import log_end, page_all
+    paged = page_all(lambda start, size: _page_of(client.get_related_elements(
+        guid, relationship, start_at_end=end, start_from=start, page_size=size, output_format="JSON")),
+        fetch_page_size=DELETE_LINK_PAGE, max_pages=DELETE_LINK_MAX_PAGES, end_policy="suspect",
+        key=_element_key)
+    log_end("saved_query._all_related", paged)
+    if paged.end_reason == "max_pages":
+        raise RuntimeError(f"delete_saved_query: {guid} has more than {DELETE_LINK_MAX_PAGES * DELETE_LINK_PAGE} "
+                           f"{relationship} links; refused rather than delete with some left behind")
+    if not paged.reached_end:
+        raise RuntimeError(f"delete_saved_query: the {relationship} links of {guid} weren't read whole "
+                           f"({paged.note}); refused rather than delete with some left behind")
+    return list(paged.items), paged
 
 
 def delete_saved_query(client, saved_query_guid: str) -> Dict[str, Any]:
@@ -721,7 +740,8 @@ def delete_saved_query(client, saved_query_guid: str) -> Dict[str, Any]:
     The Results Sets themselves are kept: deleting one also means unlinking its members and, for a Smart
     Collection, its catalog target, which is the owner's call. They are named in the result.
 
-    Returns {"deleted": guid, "detached": [results set guids], "results_sets_kept": [...]}. A link that cannot be
+    Returns {"deleted": guid, "detached": [results set guids], "results_sets_kept": [...], "links_read": how the
+    link read ended, and "note" when Egeria didn't confirm there were no more links}. A link that cannot be
     detached stops the delete, raising RuntimeError with the reason, so nothing is half done silently.
     """
     if not saved_query_guid:
@@ -738,7 +758,7 @@ def delete_saved_query(client, saved_query_guid: str) -> Dict[str, Any]:
         raise RuntimeError(f"delete_saved_query: {saved_query_guid} is "
                            f"{'a ' + kinds[0] if kinds and kinds[0] else 'not found'}, not a SavedQuery; "
                            f"nothing was deleted")
-    linked = _all_related(client, saved_query_guid, "SmartQuery", 2)
+    linked, links_read = _all_related(client, saved_query_guid, "SmartQuery", 2)
     detached: List[str] = []
     for rs in linked:
         rs_guid = _guid(rs)
@@ -752,4 +772,8 @@ def delete_saved_query(client, saved_query_guid: str) -> Dict[str, Any]:
         detached.append(rs_guid)
     client.delete_asset(saved_query_guid)
     logger.info(f"Deleted saved query {saved_query_guid}; detached {len(detached)} SmartQuery link(s)")
-    return {"deleted": saved_query_guid, "detached": detached, "results_sets_kept": list(detached)}
+    out = {"deleted": saved_query_guid, "detached": detached, "results_sets_kept": list(detached),
+           "links_read": links_read.trace()}
+    if not links_read.complete:   # ruling (A) 5: never a total; a link left behind must not be silent
+        out["note"] = (f"removed {len(detached)} SmartQuery link(s); Egeria didn't confirm there were no more")
+    return out

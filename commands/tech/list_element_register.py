@@ -75,23 +75,23 @@ def _display_name(properties: dict, qualified_name: str) -> str:
     return qualified_name or "---"
 
 
-def _fetch_all_elements(c_client: EgeriaTech, om_type: str, page_size: int) -> list[dict]:
-    """Page through get_elements until an empty page comes back.
+def _fetch_all_elements(c_client: EgeriaTech, om_type: str, page_size: int,
+                        notes: list[str] | None = None) -> list[dict]:
+    """Every element of `om_type`, read through pyegeria's pager (pager step 4; a suspect path).
 
-    Per Egeria's own paging contract, a short page does not mean the last
-    page -- only an empty result does -- so this keeps asking until that
-    happens rather than stopping the moment a page comes back under
-    page_size.
+    Per Egeria's paging contract a short page is not the last page and an empty one is a filtered page, not
+    the end: only null ends the read, and on this path even null isn't proof (the pager probes past it).
+    When the end isn't confirmed, `notes` (if given) gets "Showing at least N elements: ...", so the
+    register's counts are never shown as totals.
     """
-    all_elements: list[dict] = []
-    start_from = 0
-    while True:
-        page = c_client.get_elements(om_type, start_from=start_from, page_size=page_size, output_format="JSON")
-        if not isinstance(page, list) or len(page) == 0:
-            break
-        all_elements.extend(page)
-        start_from += page_size
-    return all_elements
+    from pyegeria.core.paging import at_least_note, log_end, page_all
+    paged = page_all(lambda start, size: c_client.get_elements(om_type, start_from=start, page_size=size,
+                                                               output_format="JSON"),
+                     fetch_page_size=page_size, end_policy="suspect")
+    log_end("list_element_register._fetch_all_elements", paged)
+    if notes is not None and (words := at_least_note(paged, "elements")):
+        notes.append(words)
+    return [e for e in paged.items if isinstance(e, dict)]
 
 
 def element_register(
@@ -115,7 +115,9 @@ def element_register(
         sys.exit(1)
 
     try:
-        raw_elements = _fetch_all_elements(c_client, om_type, page_size)
+        read_notes: list[str] = []
+        raw_elements = _fetch_all_elements(c_client, om_type, page_size, read_notes)
+        at_least = "≥" if read_notes else ""   # pager step 4: counts are "at least" unless the end was confirmed
 
         rows = []
         for element in raw_elements:
@@ -154,9 +156,9 @@ def element_register(
 
         stats = Table.grid(padding=(0, 3))
         stats.add_row(
-            Text(str(len(rows)), style="bold white"),
-            Text(str(len(groups)), style="bold white"),
-            Text(str(len(distinct_classifications)), style="bold white"),
+            Text(f"{at_least}{len(rows)}", style="bold white"),
+            Text(f"{at_least}{len(groups)}", style="bold white"),
+            Text(f"{at_least}{len(distinct_classifications)}", style="bold white"),
         )
         stats.add_row(
             Text("ELEMENTS", style="dim"),
@@ -169,7 +171,8 @@ def element_register(
             header_lines.append(f"Search: '{search}'")
         if classification:
             header_lines.append(f"Classification filter: '{classification}'")
-        header_lines.append(f"{len(rows)} of {len(raw_elements)} shown  ·  {time.asctime()}")
+        header_lines.append(f"{len(rows)} of {at_least}{len(raw_elements)} shown  ·  {time.asctime()}")
+        header_lines.extend(read_notes)
 
         panel = Panel(
             Group(stats, Padding(Text("\n".join(header_lines), style="dim"), (1, 0, 0, 0))),

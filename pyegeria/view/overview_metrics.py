@@ -28,6 +28,7 @@ import contextlib
 import contextvars
 import functools
 import inspect
+import itertools
 import time
 import warnings
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -44,6 +45,7 @@ from pyegeria.core._globals import max_paging_size
 
 __all__ = [
     "DEFAULT_CAP",
+    "recording_unconfirmed",
     "recording_unmeasured",
     "GOVERNANCE_CLASSIFICATIONS",
     "count_elements",
@@ -263,9 +265,10 @@ def _find_or_none(mgr, body: dict, page_size: int = DEFAULT_CAP, start_from: int
 # A figure computed from a scan (distinct relationship ends, per-element checks) is only a figure when
 # the scan read everything. Egeria's paging contract: only an EMPTY page means done -- a short page is not
 # the last page, because a server may filter hits out of a page after fetching it. So these helpers page
-# until an empty page, advancing startFrom by the full page size every time, and a scan that would need
-# more than MAX_SCAN_PAGES pages stops and is not measured (None plus a note), never reported from the
-# part it had read. Found live 2026-11-08: one 500-relationship SemanticAssignment page held 8 distinct
+# through pyegeria.core.paging.page_all (pager step 4: an empty page is a filtered one; only null ends it,
+# and on these suspect paths it isn't confirmed), advancing startFrom by the full page size every time, and
+# a scan whose end isn't confirmed is not measured (None plus an "at least" note), never reported from the
+# part it had read as a total. Found live 2026-11-08: one 500-relationship SemanticAssignment page held 8 distinct
 # terms, all 747 held 77, so the orphan-term count read 1,053 instead of 984.
 MAX_SCAN_PAGES = 40
 
@@ -284,47 +287,66 @@ def _repeated_page_reason(kind: str, n: int) -> str:
             f"is not paging and the scan is incomplete ({n} read)")
 
 
+def _scan_limited_reason(kind: str, paged) -> str:
+    return (f"the {kind} scan stopped after {len(paged.items)} without reaching the end ({paged.note}), so it "
+            f"is incomplete")
+
+
+def _settle_scan(paged, what: str, kind: str) -> Optional[list]:
+    """A scan's rows, by how it ended (pager step 4; the Architect's overview_metrics ruling (ii)):
+
+    - confirmed: the rows, unchanged;
+    - null_then_empty_probes (Egeria said no more and the probes found nothing, but on this suspect path that
+      isn't proof): the rows, and the scan is recorded as unconfirmed (`recording_unconfirmed`), so every
+      figure computed from it is marked (`_marks_unconfirmed`): counts "at least N", shares "X% of the N
+      read", distinct counts "N found", each with "Egeria didn't confirm there are no more";
+    - a limit (max_pages, stalled, the empty-run cap): None with a note carrying the lower bound: not measured,
+      never a figure from part of the set."""
+    from pyegeria.core.paging import log_end
+    log_end(f"overview_metrics ({what})", paged)
+    if paged.complete:
+        return list(paged.items)
+    if paged.end_reason == "null_then_empty_probes":
+        _unconfirmed_scan(what, paged)
+        return list(paged.items)
+    if paged.end_reason == "max_pages":
+        reason = _scan_stopped_reason(kind, len(paged.items))
+    elif paged.end_reason == "stalled":
+        reason = _repeated_page_reason(kind, len(paged.items))
+    else:
+        reason = _scan_limited_reason(kind, paged)
+    _not_measured(what, reason, at_least=len(paged.items))
+    return None
+
+
 def _all_relationships(ce, relationship_type: str, as_of: Optional[str] = None) -> Optional[list]:
-    """Every relationship of `relationship_type` (as of `as_of`), paged until Egeria returns an empty page.
+    """Every relationship of `relationship_type` (as of `as_of`), read through the pager (pager step 4; a
+    suspect path: Egeria's relationship finds send null for a filtered page, MetadataElementHandler :1807/:1994).
 
     Distinct by relationship GUID: a page may repeat relationships an earlier page returned. Returns None,
-    with a note for `recording_unmeasured()`, when the scan is incomplete -- it reached MAX_SCAN_PAGES, or a
-    page added nothing new (the server ignored startFrom). Raises when a page query fails, so each caller
-    keeps its own failure path.
+    with a note for `recording_unmeasured()` carrying `at_least`, whenever the end isn't confirmed -- it
+    reached MAX_SCAN_PAGES, a page added nothing new (the server ignored startFrom), or Egeria didn't confirm
+    there are no more. Raises when a page query fails, so each caller keeps its own failure path.
 
     The body always carries startFrom/pageSize: ClassificationExplorer.get_relationships ignores its
     start_from/page_size arguments whenever a body is given."""
-    out: list = []
-    seen: set = set()
-    prev: Optional[list] = None
-    what = f"{relationship_type} relationships"
-    for i in range(MAX_SCAN_PAGES):
-        start = i * DEFAULT_CAP
-        body: Dict[str, Any] = {"class": "ResultsRequestBody", "startFrom": start, "pageSize": DEFAULT_CAP}
+    from pyegeria.core.paging import page_all, paging_for
+
+    def fetch(start, size):
+        body: Dict[str, Any] = {"class": "ResultsRequestBody", "startFrom": start, "pageSize": size}
         if as_of:
             body["asOfTime"] = as_of
-        page = _json_list(ce.get_relationships(relationship_type=relationship_type, output_format="JSON",
-                                               start_from=start, page_size=DEFAULT_CAP, body=body))
-        if not page:
-            return out
-        if page == prev:  # the same page again: startFrom was ignored (a GUID check cannot see it without GUIDs)
-            _not_measured(what, _repeated_page_reason("relationship", len(out)), at_least=len(out))
-            return None
-        prev = page
-        added = 0
-        for r in page:
-            g = (r.get("relationshipHeader") or {}).get("guid") or r.get("guid")
-            if g:
-                if g in seen:
-                    continue
-                seen.add(g)
-            out.append(r)
-            added += 1
-        if added == 0:
-            _not_measured(what, _repeated_page_reason("relationship", len(out)), at_least=len(out))
-            return None
-    _not_measured(what, _scan_stopped_reason("relationship", len(out)), at_least=len(out))
-    return None
+        raw = ce.get_relationships(relationship_type=relationship_type, output_format="JSON",
+                                   start_from=start, page_size=size, body=body)
+        return _json_list(raw) if isinstance(raw, (list, dict)) else raw   # null stays null
+
+    # Distinct by relationship GUID, as before; a row without one is always its own row (never merged).
+    unkeyed = itertools.count()
+    paged = page_all(fetch, fetch_page_size=DEFAULT_CAP, max_pages=MAX_SCAN_PAGES,
+                     **paging_for("get_relationships"),   # NULL_NOT_END: 6 probes, a null is never the end
+                     key=lambda r: (r.get("relationshipHeader") or {}).get("guid") or r.get("guid")
+                     or ("unkeyed", next(unkeyed)))
+    return _settle_scan(paged, f"{relationship_type} relationships", "relationship")
 
 
 def _element_guid(el: dict) -> Optional[str]:
@@ -332,38 +354,37 @@ def _element_guid(el: dict) -> Optional[str]:
 
 
 def _all_elements(mgr, body: dict) -> Optional[list]:
-    """Every element a FindRequestBody matches, paged until Egeria returns an empty page.
+    """Every element a FindRequestBody matches, read through the pager (pager step 4; find_metadata_elements
+    is the B5 path: Egeria sends null for a filtered page, so it is suspect).
 
     Distinct by element GUID. Returns None when a page query fails (no note: the caller's own failure
-    path), and None with a note when the scan is incomplete (MAX_SCAN_PAGES reached, or a page that added
-    nothing new). Never raises."""
-    out: list = []
-    seen: set = set()
-    prev: Optional[list] = None
-    for i in range(MAX_SCAN_PAGES):
-        page = _find_or_none(mgr, body, DEFAULT_CAP, start_from=i * DEFAULT_CAP)
-        if page is None:
-            return None
-        if not page:
-            return out
-        if page == prev:  # the same page again: startFrom was ignored
-            _not_measured(_count_label(body), _repeated_page_reason("find", len(out)), at_least=len(out))
-            return None
-        prev = page
-        added = 0
-        for el in page:
-            g = _element_guid(el)
-            if g:
-                if g in seen:
-                    continue
-                seen.add(g)
-            out.append(el)
-            added += 1
-        if added == 0:
-            _not_measured(_count_label(body), _repeated_page_reason("find", len(out)), at_least=len(out))
-            return None
-    _not_measured(_count_label(body), _scan_stopped_reason("find", len(out)), at_least=len(out))
-    return None
+    path), and None with an "at least" note whenever the end isn't confirmed (MAX_SCAN_PAGES reached, a page
+    that added nothing new, or Egeria not confirming there are no more). Never raises."""
+    from pyegeria.core.paging import page_all, paging_for
+
+    class _Failed(Exception):
+        pass
+
+    def fetch(start, size):
+        try:
+            raw = mgr.find_metadata_elements({**body, "graphQueryDepth": 0, "startFrom": start, "pageSize": size})
+        except Exception as exc:  # noqa: BLE001 -- best-effort, degrade don't fail
+            logger.debug(f"overview_metrics _find failed for {body.get('metadataElementTypeName')!r}: {exc}")
+            raise _Failed from exc
+        if isinstance(raw, list):
+            return [el for el in raw if isinstance(el, dict)]
+        if isinstance(raw, str):
+            return raw   # null (or, by the list-request record, a filtered page)
+        raise _Failed
+
+    try:
+        unkeyed = itertools.count()   # distinct by element GUID; a row without one is always its own row
+        paged = page_all(fetch, fetch_page_size=DEFAULT_CAP, max_pages=MAX_SCAN_PAGES,
+                         **paging_for("find_metadata_elements"),   # B5, NULL_NOT_END: 6 probes, never the end
+                         key=lambda el: _element_guid(el) or ("unkeyed", next(unkeyed)))
+    except _Failed:
+        return None
+    return _settle_scan(paged, _count_label(body), "find")
 
 
 def _one_page_or_none(mgr, body: dict, what: str) -> Optional[list]:
@@ -539,6 +560,127 @@ def _not_measured(what: str, reason: str, at_least: Optional[int] = None) -> Non
     notes = _UNMEASURED.get()
     if notes is not None:
         notes.append({"count": what, "reason": reason, "at_least": at_least})
+
+
+# ── unconfirmed scans (pager step 4; the Architect's overview_metrics ruling (ii), 2026-11-14) ──────
+# A scan that ended at Egeria's null with empty probes after it is acted on as the end, but on these
+# suspect paths (get_relationships; find_metadata_elements, the B5 path) it isn't proof. Each such scan is
+# recorded here, and every figure computed from it carries `unconfirmed: true`, `positions_read` and the
+# reason, in words that fit the figure: never a bare number that reads as a total.
+UNCONFIRMED_REASON = "Egeria didn't confirm there are no more"
+
+_UNCONFIRMED: "contextvars.ContextVar[Optional[List[Dict[str, Any]]]]" = contextvars.ContextVar(
+    "pyegeria_unconfirmed_scans", default=None)
+_SCANS_IN_FIGURE: "contextvars.ContextVar[Optional[List[Dict[str, Any]]]]" = contextvars.ContextVar(
+    "pyegeria_unconfirmed_scans_in_figure", default=None)
+
+
+@contextlib.contextmanager
+def recording_unconfirmed():
+    """Collect {"count", "unconfirmed": True, "positions_read", "read", "reason"} for every scan that ended
+    unconfirmed while the block runs (the report-spec executor puts them on its output)."""
+    notes: List[Dict[str, Any]] = []
+    token = _UNCONFIRMED.set(notes)
+    try:
+        yield notes
+    finally:
+        _UNCONFIRMED.reset(token)
+
+
+def _unconfirmed_scan(what: str, paged) -> None:
+    note = {"count": what, "unconfirmed": True, "positions_read": paged.positions_read,
+            "read": len(paged.items), "reason": UNCONFIRMED_REASON}
+    logger.info(f"overview_metrics: {what!r} read {len(paged.items)} unconfirmed -- {UNCONFIRMED_REASON}")
+    for var in (_UNCONFIRMED, _SCANS_IN_FIGURE):
+        notes = var.get()
+        if notes is not None:
+            notes.append(note)
+
+
+#: How a figure is worded when a scan it depends on ended unconfirmed (ruling (ii) 1):
+#: - "count": "at least N";
+#: - "distinct": "N found; Egeria didn't confirm there are no more";
+#: - "whole_set": a figure that needs the whole set (a total minus a scan's count): not measured, with the
+#:   reason (the Architect's ruling after the step 4 capture: it replaces "at most");
+#: - "counts": a map or list of counts: each is at least what it shows;
+#: - ("percent", denominator key): "X% of the N read; ...", the denominator from the same read;
+#: - "share_of_other" (or ("share_of_other", note key)): a share whose denominator is a separate count, so not
+#:   from one read: not measured, with the reason (in the figure's note too, when it has one).
+def _figure_words(kind: Any, key: str, value: Any, result: Dict[str, Any]) -> Optional[str]:
+    if kind == "count":
+        return f"at least {value}"
+    if kind == "distinct":
+        return f"{value} found; {UNCONFIRMED_REASON}"
+    if kind == "counts":
+        return f"each count is at least what is shown; {UNCONFIRMED_REASON}"
+    if isinstance(kind, tuple) and kind[0] == "percent":
+        return f"{value}% of the {_get_path(result, kind[1])} read; {UNCONFIRMED_REASON}"
+    return None
+
+
+def _get_path(d: Dict[str, Any], path: str) -> Any:
+    for part in path.split("."):
+        d = d.get(part) if isinstance(d, dict) else None
+    return d
+
+
+def _set_path(d: Dict[str, Any], path: str, value: Any) -> None:
+    *head, last = path.split(".")
+    for part in head:
+        d = d.setdefault(part, {})
+    d[last] = value
+
+
+def _marks_unconfirmed(figures: Dict[str, Any]):
+    """Mark a figure function's result when a scan it ran ended unconfirmed: each figure in `figures` (a
+    key, dotted for a nested one, and its kind; see _figure_words) that has a value gets an entry under
+    result["unconfirmed"][key] = {"unconfirmed": True, "positions_read", "reason", "words"}. A
+    "share_of_other" figure is set to None with a not-measured note instead (ruling (ii) 1: a share's
+    numerator and denominator come from the same read, or it isn't stated). Confirmed figures are unchanged."""
+    def decorate(fn):
+        @functools.wraps(fn)
+        def wrapper(*args, **kwargs):
+            outer = _SCANS_IN_FIGURE.get()
+            mine: List[Dict[str, Any]] = []
+            token = _SCANS_IN_FIGURE.set(mine)
+            try:
+                result = fn(*args, **kwargs)
+            finally:
+                _SCANS_IN_FIGURE.reset(token)
+            if outer is not None:
+                outer.extend(mine)
+            if mine and isinstance(result, dict):
+                _mark(result, figures, mine)
+            return result
+        return wrapper
+    return decorate
+
+
+def _mark(result: Dict[str, Any], figures: Dict[str, Any], scans: List[Dict[str, Any]]) -> None:
+    positions = (scans[0]["positions_read"] if len(scans) == 1
+                 else {s["count"]: s["positions_read"] for s in scans})
+    marks: Dict[str, Any] = {}
+    for key, kind in figures.items():
+        value = _get_path(result, key)
+        if value is None or value == {} or value == []:
+            continue
+        if kind == "whole_set":
+            _set_path(result, key, None)
+            _not_measured(key, f"it needs the whole set, and the scan it uses was read without Egeria "
+                               f"confirming there are no more")
+            continue
+        if kind == "share_of_other" or (isinstance(kind, tuple) and kind[0] == "share_of_other"):
+            reason = ("its numerator was read without Egeria confirming there are no more, and its denominator "
+                      "is a separate count, so the share isn't from one read")
+            _set_path(result, key, None)
+            _not_measured(key, reason)
+            if isinstance(kind, tuple):   # ("share_of_other", the figure's own note key): say it there too
+                _set_path(result, kind[1], f"The share was not measured: {reason}.")
+            continue
+        marks[key] = {"unconfirmed": True, "positions_read": positions, "reason": UNCONFIRMED_REASON,
+                      "words": _figure_words(kind, key, value, result)}
+    if marks:
+        result["unconfirmed"] = marks
 
 
 # How each element count was answered, per context, for `metric_trend`'s per-point truth:
@@ -928,6 +1070,8 @@ def _zone_names(el: dict) -> list:
     return []
 
 
+@_marks_unconfirmed({"governedCount": "count", "fullyGoverned": "count", "partialZoneOnly": "count",
+                     "byClassification": "counts", "topZones": "counts"})
 def governed_coverage(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
     """
     Governance-classification-based coverage tally: how many elements carry
@@ -1018,6 +1162,7 @@ def _owner_type_name(el: dict) -> Optional[str]:
     return None
 
 
+@_marks_unconfirmed({"ownershipCount": "count", "byOwnerType": "counts"})
 def ownership_coverage(mgr, as_of: Optional[str] = None) -> Dict[str, Any]:
     """
     Ownership-classification-based coverage tally: how many elements carry an
@@ -1146,6 +1291,8 @@ def _rel_end_date(rel: dict):
     return None
 
 
+@_marks_unconfirmed({"active": "count", "expiring90": "count", "soon": "counts", "licenses": "count",
+                     "exceptions": "count"})
 def certifications_summary(ce, as_of: Optional[str] = None) -> Dict[str, Any]:
     """
     Active certifications, those expiring within 90 days (anchored to `as_of`
@@ -1197,6 +1344,7 @@ def certifications_summary(ce, as_of: Optional[str] = None) -> Dict[str, Any]:
     return out
 
 
+@_marks_unconfirmed({"referencedCount": "distinct", "orphanCount": "whole_set"})
 def orphan_glossary_terms(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Optional[int]]:
     """
     Approved-but-unassigned glossary terms -- the Attention Queue's "Orphan
@@ -1343,6 +1491,8 @@ def _grounded_asset_guid(end: Dict[str, Any]) -> Optional[str]:
     return None
 
 
+@_marks_unconfirmed({"groundedAssets": "distinct", "groundedAssetPct": ("share_of_other", "groundedAssetNote"),
+                     "groundingLinksScanned": "count", "groundingLinksNotOnAsset": "count"})
 def semantic_grounding(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Any]:
     """
     Semantic-grounding tally: how much of the catalog is linked to glossary
@@ -1509,6 +1659,7 @@ def _lineage_guids(ce, as_of: Optional[str], who: str) -> Optional[set]:
             if (g := (r.get(k) or {}).get("guid"))}
 
 
+@_marks_unconfirmed({"aiReadyCount": "count"})
 def ai_ready_assets(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Any]:
     """
     The actual "AI-Ready" claim `context_readiness_funnel`'s own UI already
@@ -1645,6 +1796,7 @@ def asset_modality(el: dict) -> str:
 # `context_readiness_funnel`'s own `aiReady=None` already established.
 
 
+@_marks_unconfirmed({"aiReadyCount": "count", "aiReadyRecentCount": "count"})
 def drl_readiness_gates(mgr, ce, as_of: Optional[str] = None, recency_days: int = 180) -> Dict[str, Any]:
     """
     A recency-narrowed view of `ai_ready_assets`, plus a modality breakdown
@@ -1769,6 +1921,7 @@ _FEEDBACK_RELATIONSHIP_TYPES = (
 )
 
 
+@_marks_unconfirmed({"total": "count", **{f"byType.{k}": "count" for _r, k in _FEEDBACK_RELATIONSHIP_TYPES}})
 @_population_keyword
 def feedback_summary(ce, as_of: Optional[str] = None, scope: Optional[str] = SCOPE_REPOSITORY, expert=None) -> Dict[str, Any]:
     """
@@ -1808,6 +1961,7 @@ def usage_context_counts(mgr, as_of: Optional[str] = None, strict: bool = False,
     }
 
 
+@_marks_unconfirmed({"contextualisedCount": "distinct", "contextualisedPct": "share_of_other"})
 def contextualised_coverage(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Optional[int]]:
     """
     % of Assets that have been given business/solution-design context via a
@@ -1881,6 +2035,7 @@ def contextualised_coverage(mgr, ce, as_of: Optional[str] = None) -> Dict[str, O
     }
 
 
+@_marks_unconfirmed({"solutionComponentsRealised": "distinct"})
 def solution_component_realisation(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Optional[int]]:
     """
     SolutionComponent count and how many of them are "realised" (have at
@@ -2365,6 +2520,7 @@ def term_definition_completeness(mgr, as_of: Optional[str] = None) -> Dict[str, 
     return {"total": total, "defined": defined, "undefinedPct": undefined_pct}
 
 
+@_marks_unconfirmed({"contributors": "distinct", **{f"byType.{k}": "distinct" for _r, k in _FEEDBACK_RELATIONSHIP_TYPES}})
 def active_contributors(ce, as_of: Optional[str] = None) -> Dict[str, Any]:
     """
     Distinct usernames behind at least one feedback relationship (ratings/

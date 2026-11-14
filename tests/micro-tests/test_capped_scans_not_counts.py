@@ -8,8 +8,9 @@ SemanticAssignment page, which held 8 distinct terms, so it reported 1,053 orpha
 relationships hold 77 terms, so the answer is 984. `stale_assets` reported staleCount 0 from a full
 500-Asset page beside a not-measured assetTotal.
 
-Egeria's paging contract: only an EMPTY page means done; a short page is not the last page. So the
-relationship scans page until an empty page, and a scan that cannot finish (MAX_SCAN_PAGES, or a
+Egeria's paging contract: a short page is not the last page, and an empty page is a filtered one; only null
+ends a read (pager step 4). These scans are suspect paths, so a null followed by empty probes is acted on but
+marked unconfirmed (the overview_metrics ruling (ii)), and a scan that cannot finish (MAX_SCAN_PAGES, or a
 server that repeats its page) is None plus an `unmeasured` note, never a figure from the part it read.
 Routines whose population is too large to page (an Asset find) report None plus a note when their
 page is full, never the sample's figure.
@@ -33,18 +34,19 @@ def _clean():
 
 
 def _rel_pages(table):
-    """get_relationships paging like Egeria, keyed by type: rows from the body's startFrom, then []."""
+    """get_relationships paging like Egeria, keyed by type: rows from the body's startFrom, then null ("No
+    elements found"; [] would be a filtered page, pager step 4)."""
     def fake(*a, relationship_type=None, body=None, **kw):
         rows = table.get(relationship_type, [])
         if isinstance(rows, BaseException):
             raise rows
-        return rows[body["startFrom"]:body["startFrom"] + body["pageSize"]]
+        return rows[body["startFrom"]:body["startFrom"] + body["pageSize"]] or "No elements found"
     return fake
 
 
 def _find_pages(rows):
     def fake(body, *a, **kw):
-        return rows[body["startFrom"]:body["startFrom"] + body["pageSize"]]
+        return rows[body["startFrom"]:body["startFrom"] + body["pageSize"]] or "No elements found"
     return fake
 
 
@@ -76,19 +78,26 @@ def test_orphan_terms_read_every_semantic_assignment_page():
     ce.get_relationships.side_effect = _rel_pages({"SemanticAssignment": _semantic_assignments(747, 77)})
     with om.recording_unmeasured() as notes:
         r = om.orphan_glossary_terms(_mgr(), ce)
-    assert r == {"termTotal": 1061, "referencedCount": 77, "orphanCount": 984}   # not 8 / 1,053
-    assert notes == []
-    assert [c.kwargs["body"]["startFrom"] for c in ce.get_relationships.call_args_list] == [0, CAP, 2 * CAP]
+    marks = r.pop("unconfirmed")   # pager step 4: get_relationships is NULL_NOT_END, so marked (ruling (ii))
+    # 77, not 8; orphanCount needs the whole set, so it isn't measured on an unconfirmed read (after-capture
+    # ruling, 3): never 1,053 from part, and never "at most" either
+    assert r == {"termTotal": 1061, "referencedCount": 77, "orphanCount": None}
+    assert marks["referencedCount"]["words"] == "77 found; Egeria didn't confirm there are no more"
+    assert [n["count"] for n in notes] == ["orphanCount"] and "needs the whole set" in notes[0]["reason"]
+    # to Egeria's null at 2*CAP, then 6 probes (NULL_NOT_END_PROBE_PAGES)
+    assert [c.kwargs["body"]["startFrom"] for c in ce.get_relationships.call_args_list] == [
+        k * CAP for k in range(9)]
 
 
 def test_a_short_page_is_not_the_last_page():
     # A server may filter hits out of a page after fetching it: a short page with more behind it.
     rels = _semantic_assignments(747, 77)
-    pages = [rels[:300], rels[CAP:], []]
+    pages = [rels[:300], rels[CAP:]]   # then null (pager step 4: [] would be a filtered page)
     ce = MagicMock()
-    ce.get_relationships.side_effect = lambda *a, body=None, **kw: pages[body["startFrom"] // CAP]
+    ce.get_relationships.side_effect = lambda *a, body=None, **kw: (
+        pages[body["startFrom"] // CAP] if body["startFrom"] // CAP < len(pages) else "No elements found")
     r = om.orphan_glossary_terms(_mgr(), ce)
-    assert r["referencedCount"] == 77 and len(ce.get_relationships.call_args_list) == 3
+    assert r["referencedCount"] == 77 and len(ce.get_relationships.call_args_list) == 2 + 7   # null + 6 probes
 
 
 def test_an_incomplete_semantic_assignment_scan_is_not_an_orphan_count(monkeypatch):
@@ -108,8 +117,9 @@ def test_relationship_scans_carry_paging_and_as_of_in_the_body():
     ce = MagicMock()
     ce.get_relationships.side_effect = _rel_pages({})
     om.orphan_glossary_terms(_mgr(), ce, as_of="2026-11-01T00:00:00Z")
-    assert ce.get_relationships.call_args.kwargs["body"] == {
+    assert ce.get_relationships.call_args_list[0].kwargs["body"] == {
         "class": "ResultsRequestBody", "startFrom": 0, "pageSize": CAP, "asOfTime": "2026-11-01T00:00:00Z"}
+    assert ce.get_relationships.call_args.kwargs["body"]["asOfTime"] == "2026-11-01T00:00:00Z"   # probes too
 
 
 # ── stale_assets ────────────────────────────────────────────────────────────
@@ -144,7 +154,10 @@ def test_lineage_reads_every_dataflow_page():
              for i in range(CAP)] + [{"relationshipHeader": {"guid": "last"}, "end1": {"guid": "a1"}, "end2": {}}]
     ce = MagicMock()
     ce.get_relationships.side_effect = _rel_pages({"DataFlow": flows})
-    assert om.ai_ready_assets(mgr, ce) == {"aiReadyCount": 1, "total": 1, "capped": False}  # a1 is on page 2
+    r = om.ai_ready_assets(mgr, ce)
+    marks = r.pop("unconfirmed")
+    assert r == {"aiReadyCount": 1, "total": 1, "capped": False}  # a1 is on page 2
+    assert marks["aiReadyCount"]["words"] == "at least 1"
 
 
 @pytest.mark.parametrize("routine,field", [(om.governed_coverage, "governedCount"),

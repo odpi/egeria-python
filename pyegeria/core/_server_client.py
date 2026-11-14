@@ -542,7 +542,7 @@ class ServerClient(BaseServerClient):
         response: Response = await self._async_make_request(
             "POST", url, body_slimmer(body), timeout=timeout
         )
-        rels = response.json().get("relationships", NO_ELEMENTS_FOUND)
+        rels = self._elements_noting_page_cap(response, NO_ELEMENTS_FOUND, key="relationships")
         if type(rels) is list:
             if len(rels) == 0:
                 return NO_ELEMENTS_FOUND
@@ -6519,17 +6519,25 @@ class ServerClient(BaseServerClient):
             validated_body = None
         return validated_body
 
-    def _elements_noting_page_cap(self, response, default):
-        """The `elements` of a list answer. When a caller is recording (`recording_list_requests`), the
-        answer's facts go into the caller's own record, read back from the request that was sent, so
-        every list helper is covered: `cap` = (shown, page_size, start_from) when the answer filled the
-        page size, plus the graph depth and relationship filters sent. Nothing is kept on the client: a
-        client shared by concurrent runs (dashboard tiles) never mixes one run's cap with another's
-        (fix-now F8, read-back C1)."""
-        elements = response.json().get("elements", default)
+    def _elements_noting_page_cap(self, response, default, key: str = "elements"):
+        """The `elements` (or `key`, e.g. "relationships") of a list answer. When a caller is recording
+        (`recording_list_requests`), the answer's facts go into the caller's own record, read back from the
+        request that was sent, so every list helper is covered: `cap` = (shown, page_size, start_from) when
+        the answer filled the page size, plus the graph depth and relationship filters sent. Nothing is kept
+        on the client: a client shared by concurrent runs (dashboard tiles) never mixes one run's cap with
+        another's (fix-now F8, read-back C1).
+
+        `page` records what Egeria actually sent, before any method collapses it into "No elements found":
+        "null" (the key absent or null: Egeria's "no more"), "empty" (`[]`: filtering emptied this page, so a
+        pager carries on) or "rows". The return value is unchanged by recording (pager step 2)."""
+        raw = response.json()
+        elements = raw.get(key, default)
         record = LIST_REQUEST_RECORD.get()
         if record is None:
             return elements
+        sent_value = raw.get(key)
+        record["page"] = ("null" if sent_value is None
+                          else "empty" if isinstance(sent_value, list) and not sent_value else "rows")
         try:
             sent = json.loads(response.request.content or b"{}")
         except Exception:  # noqa: BLE001 -- no request body (a GET) or not JSON: nothing to record
