@@ -51,6 +51,11 @@ LOCAL_ONLY_ENV = "PYEGERIA_DASHBOARD_SHEETS_LOCAL_ONLY"
 PLANNED_PREFIX = "planned:"
 PAGE_SIZE = 25
 
+
+def _element_key(element: Any) -> Any:
+    from pyegeria.core.paging import default_key
+    return default_key(element)
+
 # ---------------------------------------------------------------------------- qualified names
 
 DASHBOARD_QN_PREFIX = "Dashboard::"
@@ -310,28 +315,32 @@ class DashboardSheetEgeriaWriter:
         return await find_element_by_qualified_name(self.client, qualified_name)
 
     async def _related(self, guid: Optional[str], relationship: str, start_at_end: int = 1) -> List[Dict[str, Any]]:
-        """Every element related to `guid` by `relationship`, paged at 25. Only an empty page ends the read
-        (a short page is not the last page)."""
+        """Every element related to `guid` by `relationship`, read through the pager (pager step 4; a
+        suspect path) at PAGE_SIZE. A read that reached the end (a null, then empty probes) is acted on;
+        one a limit stopped (capped, stalled, the empty-run cap) returns what was read with a note, so a
+        sheet written from it is never silently short. Each read's end is logged."""
         if not guid or self._is_planned(guid):
             return []
-        out: List[Dict[str, Any]] = []
-        start = 0
-        while True:
+        from pyegeria.core.paging import async_page_all
+
+        async def fetch(start, size):
             try:
-                page = await self.client.classification_manager._async_get_related_elements(
-                    guid, relationship, start_at_end=start_at_end, start_from=start, page_size=PAGE_SIZE,
+                return await self.client.classification_manager._async_get_related_elements(
+                    guid, relationship, start_at_end=start_at_end, start_from=start, page_size=size,
                     graph_query_depth=0)
             except PyegeriaNotFoundException:
-                page = []
-            items = [e for e in page if isinstance(e, dict) and e.get("elementHeader")] if isinstance(page, list) else []
-            if not items:
-                return out
-            known = {self._guid(e) for e in out}
-            if all(self._guid(e) in known for e in items):   # paging did not advance; it would never end (6.2.36)
-                logger.warning(f"dashboard sheet: paging of {relationship} for {guid} did not advance at {start}")
-                return out
-            out.extend(e for e in items if self._guid(e) not in known)
-            start += len(items)
+                return None   # nothing related: the end
+
+        paged = await async_page_all(fetch, fetch_page_size=PAGE_SIZE, end_policy="suspect",
+                                     key=_element_key)
+        return self._read_settled(paged, f"the {relationship} links of {guid}")
+
+    def _read_settled(self, paged, what: str) -> List[Dict[str, Any]]:
+        from pyegeria.core.paging import log_end
+        log_end(f"dashboard_sheet ({what})", paged)
+        if not paged.reached_end:
+            self._note(f"{what} weren't read to the end ({paged.note}); what was read was used")
+        return [e for e in paged.items if isinstance(e, dict) and e.get("elementHeader")]
 
     @staticmethod
     def _guid(element: Dict[str, Any]) -> str:
@@ -516,28 +525,21 @@ class DashboardSheetEgeriaWriter:
         Not Dr.Egeria's `__async_get_guid__`: it tries a unique-name lookup first, which Egeria rejects
         when the name is shared with an element of another type -- seen live 2026-11-09 for 'Term
         Definition Completeness' and 'Governance Classification Coverage', both real Reports."""
-        matches: List[str] = []
-        seen: set = set()
-        start = 0
-        while True:
+        from pyegeria.core.paging import async_page_all
+
+        async def fetch(start, size):
             try:
-                page = await self.client.classification_manager._async_get_elements_by_property_value(
+                return await self.client.classification_manager._async_get_elements_by_property_value(
                     report_name, ["displayName"], metadata_element_type="Report",
-                    start_from=start, page_size=PAGE_SIZE, graph_query_depth=0)
+                    start_from=start, page_size=size, graph_query_depth=0)
             except PyegeriaNotFoundException:
-                page = []
-            items = [e for e in page if isinstance(e, dict) and e.get("elementHeader")] if isinstance(page, list) else []
-            if not items:
-                break
-            if all(self._guid(e) in seen for e in items):   # paging did not advance; it would never end (6.2.36)
-                logger.warning(f"dashboard sheet: paging of Reports named {report_name!r} did not advance at {start}")
-                break
-            items = [e for e in items if self._guid(e) not in seen]
-            seen.update(self._guid(e) for e in items)
-            matches += [self._guid(e) for e in items
-                        if (e.get("properties") or {}).get("displayName") == report_name
-                        and self._type(e) == "Report"]
-            start += len(items)
+                return None   # no Report by that name: the end
+
+        paged = await async_page_all(fetch, fetch_page_size=PAGE_SIZE, end_policy="suspect",
+                                     key=_element_key)
+        items = self._read_settled(paged, f"the Reports named {report_name!r}")
+        matches = [self._guid(e) for e in items
+                   if (e.get("properties") or {}).get("displayName") == report_name and self._type(e) == "Report"]
         if len(matches) == 1:
             return matches[0]
         if len(matches) > 1:

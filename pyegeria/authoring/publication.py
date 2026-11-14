@@ -37,6 +37,7 @@ unstamped private drafts.
 """
 from __future__ import annotations
 
+import json
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -166,43 +167,67 @@ async def _find_exact(client: Any, type_name: str, prop: str, value: str) -> Lis
     return [e for e in rows if (e.get("properties") or {}).get(prop) == value]
 
 
-#: Element history is read in pages of this size until an empty page (a short page isn't the last page:
-#: Egeria's paging contract), up to HISTORY_MAX_PAGES pages.
+#: Element history is read through the pager in pages of this size (pager step 4: >= 100, so the probes after a
+#: null cover >= 300 positions), up to HISTORY_MAX_PAGES requests.
 HISTORY_PAGE = 100
 HISTORY_MAX_PAGES = 50
 HISTORY_CAPPED = ("its history is too long to read whole (more than {n} versions were returned and more may "
                   "follow), so the entry that is each published version can't be told")
 
 
-async def async_read_history(client: Any, guid: str) -> Tuple[List[Dict[str, Any]], Optional[str]]:
+def _history_key(entry: Any) -> Any:
+    """A history entry's identity: every entry of one element carries the same GUID, so the GUID alone (the
+    pager's default key) would read the second version as a repeat. GUID + version + update time."""
+    if isinstance(entry, dict):   # the raw OpenMetadataElement (elementGUID, versions) or an elementHeader
+        header = entry.get("elementHeader") if isinstance(entry.get("elementHeader"), dict) else entry
+        guid = header.get("elementGUID") or header.get("guid")
+        versions = header.get("versions") or {}
+        if guid and (versions.get("version") is not None or versions.get("updateTime")):
+            return (guid, versions.get("version"), versions.get("updateTime"))
+    return "content:" + json.dumps(entry, sort_keys=True, default=str)
+
+
+async def async_read_history(client: Any, guid: str, *,
+                             trace: Optional[Dict[str, Any]] = None) -> Tuple[List[Dict[str, Any]], Optional[str]]:
     """(every history entry of `guid` in view shape, why it isn't whole or None), read as the user.
 
-    Paged (HISTORY_PAGE) until Egeria answers an empty page. The oldest entry stamped N is published version
-    N only if the history is whole: a page cap could hide the publication and leave a later edit as the
-    oldest one returned. So when the pages run out before an empty one (HISTORY_MAX_PAGES), or a read
-    fails, the reason is returned and the caller refuses or says "not checked"; it never resolves on part
-    of the history."""
+    Paged through ``page_all`` (pager step 4, ruling (A)) at HISTORY_PAGE, up to HISTORY_MAX_PAGES requests.
+    The oldest entry stamped N is published version N only if the history is whole: a page cap could hide
+    the publication and leave a later edit as the oldest one returned. The read is acted on as whole when it
+    reached the end (a null, then empty probes on this suspect path); when a limit stopped it (capped,
+    stalled, the empty-run cap), or a read fails, the reason is returned and the caller refuses or says
+    "not checked"; it never resolves on part of the history.
+
+    ``trace`` (if given) gets how the read ended (method, positions_read, end, end_reason), also logged, so a
+    later miss can be traced to the read."""
     from pyegeria.core.element_shape import as_view_element
-    entries: List[Dict[str, Any]] = []
-    start = 0
-    for _ in range(HISTORY_MAX_PAGES):
-        try:
-            raw = await client.metadata_expert._async_get_element_history(
-                guid, oldest_first=False, start_from=start, page_size=HISTORY_PAGE)
-        except Exception as exc:  # noqa: BLE001 -- said, not raised
-            if _is_not_found(exc):
-                return entries, None
-            return entries, f"its history couldn't be read ({type(exc).__name__})"
-        page = [e for e in raw if isinstance(e, dict)] if isinstance(raw, list) else []
-        if not page:   # "No elements found" or an empty list: the history is whole
-            return [as_view_element(e) for e in entries], None
-        entries += page
-        start += len(page)
-    return [as_view_element(e) for e in entries], HISTORY_CAPPED.format(n=len(entries))
+    from pyegeria.core.paging import async_page_all, log_end
+
+    async def fetch(start, size):
+        return await client.metadata_expert._async_get_element_history(
+            guid, oldest_first=False, start_from=start, page_size=size)
+
+    try:
+        paged = await async_page_all(fetch, fetch_page_size=HISTORY_PAGE, max_pages=HISTORY_MAX_PAGES,
+                                     end_policy="suspect", key=_history_key)
+    except Exception as exc:  # noqa: BLE001 -- said, not raised
+        if _is_not_found(exc):
+            return [], None
+        return [], f"its history couldn't be read ({type(exc).__name__})"
+    fields = log_end("publication.async_read_history", paged)
+    if trace is not None:
+        trace.update(fields)
+    entries = [as_view_element(e) for e in paged.items if isinstance(e, dict)]
+    if paged.reached_end:
+        return entries, None
+    if paged.end_reason == "max_pages":
+        return entries, HISTORY_CAPPED.format(n=len(entries))
+    return entries, f"its history wasn't read whole ({paged.note})"
 
 
-async def _history(client: Any, guid: str) -> Tuple[List[Dict[str, Any]], Optional[str]]:
-    return await async_read_history(client, guid)
+async def _history(client: Any, guid: str, trace: Optional[Dict[str, Any]] = None
+                   ) -> Tuple[List[Dict[str, Any]], Optional[str]]:
+    return await async_read_history(client, guid, trace=trace)
 
 
 async def async_resolve_target(client: Any, draft: Any) -> Dict[str, Any]:
@@ -231,14 +256,16 @@ async def _resolve(client: Any, target: Tuple[str, str, str, str]) -> Dict[str, 
     el = matches[0]
     from pyegeria.view.egeria_spec_cache import _zones
     guid = (el.get("elementHeader") or {}).get("guid")
-    history, why = await _history(client, guid) if guid else ([], "it has no GUID")
+    history_read: Dict[str, Any] = {}
+    history, why = await _history(client, guid, history_read) if guid else ([], "it has no GUID")
     entries = ordered_entries(el, history)
     current = stamp_of(el)
     notes = [f"Edited-since check not done: {why}."] if why else []
     edited = None if why else edited_since(entries, current)
     return {"resolved": True, "held": True, "guid": guid, "qualified_name": (el.get("properties") or {}).get("qualifiedName"),
             "zones": list(_zones(el)), "published_version": current,
-            "published_versions": published_versions(entries), "edited_since": edited, "notes": notes}
+            "published_versions": published_versions(entries), "edited_since": edited, "notes": notes,
+            "history_read": history_read}
 
 
 async def async_check_unchanged_target(client: Any, plan: Dict[str, Any]) -> None:

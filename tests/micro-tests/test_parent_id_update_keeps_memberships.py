@@ -41,6 +41,8 @@ class _MetadataExpert:
             entries.append({"relationshipGUID": rel_guid, "type": {"typeName": type_name},
                             "elementAtEnd1": not at_end1,
                             "element": {"elementGUID": end2 if at_end1 else end1}})
+        if start_from >= len(entries) and start_from:   # past the end: Egeria's null (no elementList)
+            return {"startingElement": {"guid": guid}}
         page = entries[start_from:start_from + page_size] if page_size else entries[start_from:]
         return {"startingElement": {"guid": guid}, "elementList": page}
 
@@ -93,7 +95,8 @@ def test_the_parent_on_a_later_page_is_found():
     expert = _MetadataExpert(rels)
     _sync(expert, "folder", "root", page_size=2)
     assert expert.created == [] and expert.deleted == []
-    assert [r[2] for r in expert.reads] == [0, 2, 4]
+    # pager step 4: advances by the page size to Egeria's null (6), then probes 3 pages (a suspect path)
+    assert [r[2] for r in expert.reads] == [0, 2, 4, 6, 8, 10, 12]
 
 
 def test_a_different_parent_is_kept_and_reported():

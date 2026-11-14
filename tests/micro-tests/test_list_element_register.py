@@ -53,7 +53,7 @@ ELEMENTS = [
 
 
 def _make_fake_client(pages):
-    """pages: list of pages (lists) to return in order, then empty.
+    """pages: list of pages (lists) to return in order, then Egeria's null ("No elements found").
 
     `instances`: every constructed fake client, in creation order, so a
     caller can inspect calls made on the one `element_register` built.
@@ -72,7 +72,7 @@ def _make_fake_client(pages):
             self.calls.append((om_type, start_from, page_size))
             if self._pages:
                 return self._pages.pop(0)
-            return []
+            return "No elements found"   # null: [] is a filtered page, not the end (pager step 4)
 
     return _FakeClient
 
@@ -123,9 +123,17 @@ def test_pages_until_empty_result_not_until_short_page(monkeypatch):
     reg.element_register("Thing", "vs", "https://localhost:9443", "u", "p", page_size=3, width=200)
 
     # Keeps asking past the short-but-nonempty second page -- correctly
-    # treating "short" as not proof of "last" -- and only stops once a
-    # third, genuinely empty page confirms it.
-    assert FakeClient.instances[-1].calls == [("Thing", 0, 3), ("Thing", 3, 3), ("Thing", 6, 3)]
+    # treating "short" as not proof of "last" -- and stops at Egeria's null on the third page, after
+    # probing 3 pages past it (a suspect path; pager step 4).
+    assert FakeClient.instances[-1].calls == [("Thing", s, 3) for s in (0, 3, 6, 9, 12, 15)]
+
+
+def test_an_unconfirmed_end_shows_counts_as_at_least(monkeypatch, capsys):
+    # pager step 4, ruling (A) 2: the register shows a count, so an unconfirmed end reads "at least"
+    monkeypatch.setattr(reg, "EgeriaTech", _make_fake_client([ELEMENTS]))
+    reg.element_register("GovernanceDefinition", "vs", "https://localhost:9443", "u", "p", width=300)
+    out = capsys.readouterr().out
+    assert f"≥{len(ELEMENTS)}" in out and "Showing at least" in out
 
 
 def test_display_name_falls_back_to_qualified_name():

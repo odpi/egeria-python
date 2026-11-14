@@ -63,6 +63,7 @@ class Replay:
         self.calls = [c for f in fixtures for c in f["calls"]]
         self.overrides = overrides or {}
         self.made = []
+        self.synthesised = []   # probe pages answered past a recorded null (see _probe_after_recorded_null)
 
     def __getattr__(self, name):
         def call(*args, **kwargs):
@@ -76,8 +77,29 @@ class Replay:
                     if "error" in c:
                         raise _egeria_error(c["error"])
                     return copy.deepcopy(c["result"])
+            if (probe := self._probe_after_recorded_null(name, want)) is not None:
+                return probe
             raise AssertionError(f"no recorded answer for {name}{args} {kwargs}")
         return call
+
+    def _probe_after_recorded_null(self, name, want):
+        """Pager step 4: the pager probes 3 pages past a null on a suspect path, and these fixtures were
+        captured before it did, so they stop at the null. A page past a RECORDED null of the same call (same
+        method and arguments but startFrom) is answered with that null, and listed in `synthesised`. On a
+        suspect path a null can only end a read as not_confirmed, never as a confirmed end. To be replaced by
+        a re-capture that includes the probe pages."""
+        start = want["kwargs"].get("start_from")
+        if not isinstance(start, int):
+            return None
+        rest = {k: v for k, v in want["kwargs"].items() if k != "start_from"}
+        for c in self.calls:
+            ks = c["kwargs"]
+            if (c["method"] == name and c["args"] == want["args"] and isinstance(ks.get("start_from"), int)
+                    and ks["start_from"] < start and {k: v for k, v in ks.items() if k != "start_from"} == rest
+                    and isinstance(c.get("result"), str)):
+                self.synthesised.append((name, start))
+                return c["result"]
+        return None
 
 
 def _export(name, **kw):
@@ -209,16 +231,16 @@ def test_a_403_member_is_noted_as_not_visible_never_absent():
 def test_members_are_read_until_an_empty_page():
     fx = _fixture("portal_dashboards")
     members = next(c["result"] for c in fx["calls"] if c["method"] == "get_collection_members")
-    pages = [members[:2], members[2:3], members[3:], []]          # a short page is not the last
+    pages = [members[:2], members[2:3], members[3:]]              # a short page is not the last
     seen = []
 
     def page(*a, start_from=0, page_size=0, **k):
         seen.append(start_from)
-        return pages[len(seen) - 1]
+        return pages[len(seen) - 1] if len(seen) <= len(pages) else "No elements found"   # then null
 
     client = Replay(fx, overrides={("get_collection_members", None): page})
     out = ed.export_dcat(client, scope=fx["params"]["scope"], page_size=2)
-    assert seen == [0, 2, 4, 6]                                    # startFrom advances by the page size
+    assert seen == [0, 2, 4, 6, 8, 10, 12]   # startFrom advances by the page size; the null, then 3 probes
     assert len(_datasets(_graph(out["text"]))) == 5
 
 
@@ -236,7 +258,8 @@ def test_a_repeated_page_ends_the_reading_with_a_note():
     out = ed.export_dcat(Replay(fx, overrides={("find_in_asset_domain", None): search}),
                          search_string=fx["params"]["search_string"], page_size=2)
     assert calls == [0, 2]
-    assert any(n.startswith("Stopped reading the assets matching") and "exactly the page before" in n
+    assert any(n.startswith("Stopped reading the assets matching") and "at startFrom 2" in n
+               and "exactly the page before" in n
                for n in out["notes"])
     assert len(_datasets(_graph(out["text"]))) == 5
 
@@ -251,7 +274,7 @@ def _paged_members(pages):
     def listing(*a, start_from=0, **k):
         log.append(start_from)
         i = len(log) - 1
-        return copy.deepcopy([members[j] for j in pages[i]]) if i < len(pages) else []
+        return copy.deepcopy([members[j] for j in pages[i]]) if i < len(pages) else "No elements found"
 
     return fx, listing, log
 
@@ -259,10 +282,10 @@ def _paged_members(pages):
 def test_overlapping_short_pages_are_all_read():
     """Like laz's 'Clinical' search: pages are short AND overlap (one element on page 0 and page 5).
     A page with something new keeps the reading going; the shared element is exported once."""
-    fx, listing, log = _paged_members([[0, 1], [1, 2], [2], [3, 4], []])
+    fx, listing, log = _paged_members([[0, 1], [1, 2], [2], [3, 4]])
     out = ed.export_dcat(Replay(fx, overrides={("get_collection_members", None): listing}),
                          scope=fx["params"]["scope"], page_size=2)
-    assert log == [0, 2, 4, 6, 8]                                   # [2] brought nothing new: not a stop
+    assert log == [0, 2, 4, 6, 8, 10, 12, 14]          # [2] brought nothing new: not a stop; null, 3 probes
     assert len(_datasets(_graph(out["text"]))) == 5
     assert not any(n.startswith("Stopped reading") for n in out["notes"])
 
@@ -273,7 +296,7 @@ def test_two_pages_in_a_row_with_nothing_new_end_the_reading_with_a_note():
                          scope=fx["params"]["scope"], page_size=2)
     assert log == [0, 2, 4]
     assert len(_datasets(_graph(out["text"]))) == 2
-    assert any("two pages in a row held only elements already read" in n for n in out["notes"])
+    assert any("two pages in a row with nothing new" in n for n in out["notes"])
 
 
 # ── Why a catalog has no dataset (read-back C2) ──
@@ -284,11 +307,13 @@ def _no_dataset_note(out):
     return note
 
 
-def test_empty_scope_says_it_has_no_members():
+def test_empty_scope_never_says_it_has_no_members_unconfirmed():
     fx = _fixture("portal_dashboards")
     out = ed.export_dcat(Replay(fx, overrides={("get_collection_members", None): lambda *a, **k: []}),
                          **fx["params"])
-    assert _no_dataset_note(out) == "No dataset exported: the scope has no members that erinoverview can see."
+    # pager step 4: [] is a filtered page, so the read ends at the empty-run cap, unconfirmed: never "has no members"
+    assert _no_dataset_note(out) == ("No dataset exported: the scope showed no members that erinoverview can see in "
+                                     "what was read; Egeria didn't confirm there are no more.")
 
 
 def test_a_scope_of_bitol_types_and_non_assets_says_so():
@@ -318,7 +343,9 @@ def test_a_search_that_matches_nothing_says_so():
     fx = _fixture("coco_data_hub")
     out = ed.export_dcat(Replay(fx, overrides={("find_in_asset_domain", None): lambda *a, **k: "No elements found"}),
                          **fx["params"])
-    assert _no_dataset_note(out) == "No dataset exported: the search matched nothing that erinoverview can see."
+    # pager step 4: a suspect null, then empty probes: acted on as the end, but never said as a confirmed "nothing"
+    assert _no_dataset_note(out) == ("No dataset exported: the search matched nothing that erinoverview can see in "
+                                     "what was read; Egeria didn't confirm there are no more.")
 
 
 # ── Output ──

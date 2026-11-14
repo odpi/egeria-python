@@ -355,31 +355,37 @@ class EgeriaDraftStore:
             return None
         return await async_load_held(kind, name, self.client)
 
-    async def async_list(self, user_id: str, kind: Optional[str] = None) -> List[Dict[str, Any]]:
-        """The author's drafts: every ReportSpec, Report and Dashboard in their private zone, read as them."""
+    async def async_list(self, user_id: str, kind: Optional[str] = None, *,
+                         notes: Optional[List[str]] = None) -> List[Dict[str, Any]]:
+        """The author's drafts: every ReportSpec, Report and Dashboard in their private zone, read as them.
+
+        Paged through ``page_all`` (pager step 4; a suspect path, classification-explorer property search).
+        When a kind's read isn't confirmed complete, ``notes`` (if given) gets "Showing at least N ..." for it,
+        so a caller that shows the list never presents it as all of them."""
+        from pyegeria.core.paging import async_page_all, at_least_note, log_end
         zone = self._author(user_id)
         out: List[Dict[str, Any]] = []
         for k in ([kind] if kind else list(KINDS)):
-            start = 0
-            while True:
-                page = await self.client.classification_manager._async_find_elements_by_property_value(
+            async def fetch(start, size, k=k):
+                return await self.client.classification_manager._async_find_elements_by_property_value(
                     ".*", ["qualifiedName"], metadata_element_type=_ELEMENT_TYPE[k], starts_with=False,
-                    governance_zone_filter=[zone], graph_query_depth=0, start_from=start, page_size=50)
-                raw = [e for e in page if isinstance(e, dict) and e.get("elementHeader")] if isinstance(page, list) else []
-                if not raw:   # only an empty page ends the read (a short page isn't the last page)
-                    break
-                start += len(raw)
-                for el in (e for e in raw if zone in self._zones(e)):
-                    props = el.get("properties") or {}
-                    versions = (el.get("elementHeader") or {}).get("versions") or {}
-                    name = props.get("displayName") or props.get("qualifiedName")
-                    if k == "sheet" and str(props.get("qualifiedName", "")).startswith("Dashboard::"):
-                        name = props["qualifiedName"].split("::", 1)[1]
-                    out.append({"kind": k, "name": name, "qualified_name": props.get("qualifiedName"),
-                                "guid": el["elementHeader"].get("guid"),
-                                "created": versions.get("createTime"), "updated": versions.get("updateTime"),
-                                "zones": self._zones(el), "marked": _is_marked(k, el),
-                                "published_version": stamp_of(el)})
+                    governance_zone_filter=[zone], graph_query_depth=0, start_from=start, page_size=size)
+            paged = await async_page_all(fetch, fetch_page_size=50, end_policy="suspect")
+            log_end("drafts.async_list", paged)
+            if notes is not None and (words := at_least_note(paged, f"{k} drafts")):
+                notes.append(words)
+            raw = [e for e in paged.items if isinstance(e, dict) and e.get("elementHeader")]
+            for el in (e for e in raw if zone in self._zones(e)):
+                props = el.get("properties") or {}
+                versions = (el.get("elementHeader") or {}).get("versions") or {}
+                name = props.get("displayName") or props.get("qualifiedName")
+                if k == "sheet" and str(props.get("qualifiedName", "")).startswith("Dashboard::"):
+                    name = props["qualifiedName"].split("::", 1)[1]
+                out.append({"kind": k, "name": name, "qualified_name": props.get("qualifiedName"),
+                            "guid": el["elementHeader"].get("guid"),
+                            "created": versions.get("createTime"), "updated": versions.get("updateTime"),
+                            "zones": self._zones(el), "marked": _is_marked(k, el),
+                            "published_version": stamp_of(el)})
         return out
 
     async def async_delete(self, user_id: str, kind: str, name: str) -> bool:
@@ -426,9 +432,12 @@ class EgeriaDraftStore:
         from datetime import datetime, timedelta, timezone
         cutoff = datetime.now(timezone.utc) - timedelta(days=older_than_days)
         zone = self._author(user_id)
-        drafts = await self.async_list(user_id)
+        read_notes: List[str] = []
+        drafts = await self.async_list(user_id, notes=read_notes)
         out: Dict[str, Any] = {"removed": [], "kept": [], "not_dated": [], "not_marked": [], "not_deleted": [],
                                "kept_reasons": {}, "dry_run": dry_run, "older_than_days": older_than_days}
+        if read_notes:   # pager step 4: the list read wasn't confirmed whole, so some old drafts may be unseen
+            out["read_notes"] = read_notes
         for d in drafts:
             key = f"{d['kind']}:{d['name']}"
             when = _parse_time(d.get("updated")) or _parse_time(d.get("created"))
@@ -483,8 +492,9 @@ class EgeriaDraftStore:
     def load(self, user_id: str, kind: str, name: str) -> Optional[AnyDraft]:
         return self._sync(self.async_load(user_id, kind, name))
 
-    def list(self, user_id: str, kind: Optional[str] = None) -> List[Dict[str, Any]]:
-        return self._sync(self.async_list(user_id, kind))
+    def list(self, user_id: str, kind: Optional[str] = None, *,
+             notes: Optional[List[str]] = None) -> List[Dict[str, Any]]:
+        return self._sync(self.async_list(user_id, kind, notes=notes))
 
     def delete(self, user_id: str, kind: str, name: str) -> bool:
         return self._sync(self.async_delete(user_id, kind, name))

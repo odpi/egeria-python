@@ -87,6 +87,15 @@ class _ParentLinksIncomplete(Exception):
     """The parent-end links could not all be read within the page bound (ISSUE-181)."""
 
 
+def _read_words(read: Optional[dict]) -> str:
+    """A paged read's trace in the run result (pager step 4): positions read, end and why."""
+    if not read:
+        return "not read"
+    return (f"{read.get('positions_read')} positions, end {read.get('end')} "
+            f"({read.get('end_reason')}); Egeria didn't confirm there were no more"
+            if read.get("end") != "confirmed" else f"{read.get('positions_read')} positions, end confirmed")
+
+
 class AsyncBaseCommandProcessor(ABC):
     """
     Base class for all v2 Dr.Egeria command processors.
@@ -676,7 +685,8 @@ class AsyncBaseCommandProcessor(ABC):
             except _ParentLinksIncomplete:
                 # Adding without seeing every link could duplicate the parent link.
                 self.add_related_result("Parent Relationship", guid=parent_guid, status="failure",
-                                        message=f"could not read every {rel_type} link; not added")
+                                        message=f"could not read every {rel_type} link; not added "
+                                                f"(read: {_read_words(self._parent_link_read)})")
                 return
 
             body = {
@@ -690,6 +700,8 @@ class AsyncBaseCommandProcessor(ABC):
                 body["properties"] = new_element_properties(rel_props)
             await self.client.metadata_expert._async_create_related_elements(body)
             message = f"Linked via {rel_type}"
+            if (read := getattr(self, "_parent_link_read", None)) and read.get("end") != "confirmed":
+                message += f" (the existing links were read: {_read_words(read)})"
             if other_parents:
                 message += (f"; existing {rel_type} link(s) to {', '.join(other_parents)} left in place"
                             " (remove them explicitly to move the element)")
@@ -707,7 +719,8 @@ class AsyncBaseCommandProcessor(ABC):
         Only relationships with `guid` at the child end count: end 2 when the
         parent is at end 1, and the other way round. Egeria filters by
         `startingAtEnd`, and each entry's `elementAtEnd1`, when present, is
-        checked as well. Pages until an empty page (a short page is not the last).
+        checked as well. Read through the pager (pager step 4; a suspect path): acted on when the read
+        reached the end; a limit (capped, stalled, the empty-run cap) raises _ParentLinksIncomplete.
 
         `_async_get_all_related_elements` returns a dict - {"startingElement",
         "elementList", "mermaidGraph"} - whose entries are the low-level
@@ -715,28 +728,33 @@ class AsyncBaseCommandProcessor(ABC):
         element.elementGUID), not the relationshipHeader/relatedElement shape of
         the domain get-by-guid calls.
         """
+        from pyegeria.core.paging import async_page_all, log_end
         child_end = 2 if parent_at_end1 else 1
-        start = 0
-        for _ in range(self._PARENT_LINK_MAX_PAGES):
+
+        async def fetch(start, size):
             page = await self.client.metadata_expert._async_get_all_related_elements(
-                guid, starting_at_end=child_end, start_from=start,
-                page_size=self._PARENT_LINK_PAGE_SIZE)
+                guid, starting_at_end=child_end, start_from=start, page_size=size)
             element_list = page.get("elementList") if isinstance(page, dict) else None
-            if not element_list:
-                return
-            for rel in element_list:
-                try:
-                    if rel["type"]["typeName"] != rel_type:
-                        continue
-                    related_guid = rel["element"]["elementGUID"]
-                except (KeyError, TypeError):
+            return element_list if isinstance(element_list, list) else None   # absent: null
+
+        # Pager step 4, ruling (A) 3: a write path acts on a null-then-empty-probes end, logs and keeps the
+        # read's trace (method, positions_read, end, end_reason), and stops only on a limit.
+        paged = await async_page_all(fetch, fetch_page_size=self._PARENT_LINK_PAGE_SIZE,
+                                     max_pages=self._PARENT_LINK_MAX_PAGES, end_policy="suspect")
+        self._parent_link_read = log_end("processors._parent_links_of_type", paged)
+        if not paged.reached_end:
+            raise _ParentLinksIncomplete(rel_type)
+        for rel in paged.items:
+            try:
+                if rel["type"]["typeName"] != rel_type:
                     continue
-                at_end1 = rel.get("elementAtEnd1")
-                if at_end1 is not None and bool(at_end1) != bool(parent_at_end1):
-                    continue  # the related element is at the child end: not a parent link
-                yield related_guid
-            start += len(element_list)
-        raise _ParentLinksIncomplete(rel_type)
+                related_guid = rel["element"]["elementGUID"]
+            except (KeyError, TypeError):
+                continue
+            at_end1 = rel.get("elementAtEnd1")
+            if at_end1 is not None and bool(at_end1) != bool(parent_at_end1):
+                continue  # the related element is at the child end: not a parent link
+            yield related_guid
 
     def effective_for_lineage(self) -> bool:
         """Whether this command's requests are sent with forLineage=true.
