@@ -40,6 +40,13 @@ from pyegeria.core.async_runner import run_sync
 
 
 
+def _is_server_not_available(json_response: dict) -> bool:
+    """Egeria's "the OMAG Server / service is not available" 404 (OMAG-MULTI-TENANT-404-001/-002): a request to a
+    server or service that isn't running there, not a missing element."""
+    message_id = str((json_response or {}).get("exceptionErrorMessageId") or "")
+    return message_id.startswith("OMAG-MULTI-TENANT-404")
+
+
 def _is_authorization_failure(json_response: dict) -> bool:
     """Whether an Egeria-wrapped error is really an authorization failure.
 
@@ -679,6 +686,11 @@ class BaseServerClient:
                     related_http_code = json_response.get("relatedHTTPCode", 0)
                     if related_http_code == 200:
                         return response
+                    elif related_http_code == 404 and _is_server_not_available(json_response):
+                        # OMAG-MULTI-TENANT-404-*: the server (or a service on it) isn't available, e.g. a
+                        # wrong view server name. That is not "the element isn't there": raised as an API
+                        # error so no caller's not-found handling reads it as absent (pager step 6).
+                        raise PyegeriaAPIException(response, context, additional_info=json_response)
                     elif related_http_code == 404:
                         raise PyegeriaNotFoundException(response, context, additional_info=json_response)
                     elif related_http_code in (401, 403) and _is_authorization_failure(json_response):
