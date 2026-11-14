@@ -201,7 +201,8 @@ def _ce(rels, on_read=None):
     def fake(*a, relationship_type=None, body=None, **kw):
         if on_read:
             on_read()
-        return rels[body["startFrom"]:body["startFrom"] + body["pageSize"]]
+        # past the end: Egeria's null ([] would be a filtered page; pager step 4)
+        return rels[body["startFrom"]:body["startFrom"] + body["pageSize"]] or "No elements found"
     ce.get_relationships.side_effect = fake
     return ce
 
@@ -218,7 +219,13 @@ def test_orphan_term_count_runs_while_the_scan_pages():
         return {"count": 1061}
     mgr.count_metadata_elements.side_effect = count
     r = om.orphan_glossary_terms(mgr, _ce(_assignments(747, 77), on_read=scan_started.set))
+    # pager step 4, ruling (ii): the SemanticAssignment scan ended at a null with empty probes (a suspect
+    # path), so its distinct count is "found", and the total minus it is "at most"
+    marks = r.pop("unconfirmed")
     assert r == {"termTotal": 1061, "referencedCount": 77, "orphanCount": 984}
+    assert marks["referencedCount"]["words"] == "77 found; Egeria didn't confirm there are no more"
+    assert marks["orphanCount"]["words"] == "at most 984; Egeria didn't confirm there are no more"
+    assert all(m["unconfirmed"] is True and m["positions_read"] == 3000 for m in marks.values())
     assert seen == {"concurrent": True, "push_down": False}   # the viewer population, as the scan
 
 
@@ -228,6 +235,9 @@ def test_the_term_count_note_from_its_thread_reaches_the_caller():
     mgr.find_metadata_elements.side_effect = RuntimeError("down")
     with om.recording_unmeasured() as notes:
         r = om.orphan_glossary_terms(mgr, _ce(_assignments(10, 3)))
+    marks = r.pop("unconfirmed")
     assert r == {"termTotal": None, "referencedCount": 3, "orphanCount": None}
+    assert list(marks) == ["referencedCount"]   # orphanCount isn't measured, so it carries no mark
+    assert marks["referencedCount"]["words"] == "3 found; Egeria didn't confirm there are no more"
     assert [n["count"] for n in notes] == ["GlossaryTerm"]
     assert notes[0]["reason"] == "the native count timed out, and the find fallback failed"

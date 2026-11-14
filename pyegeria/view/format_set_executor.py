@@ -14,6 +14,7 @@ Notes
 from __future__ import annotations
 
 import asyncio
+import contextvars
 import inspect
 import json
 import os
@@ -40,7 +41,7 @@ from pyegeria.view.analytic_registry import ABSENCE_STATES, AnalyticActionSpec, 
 from pyegeria.view.analytic_registry import get_analytic_registry as get_analytic_registry_functions
 from pyegeria.egeria_tech_client import EgeriaTech
 from pyegeria.view.role_supply import PlainSupply, RoleRefused, RoleSupply, supply_inputs
-from pyegeria.view.overview_metrics import recording_unmeasured
+from pyegeria.view.overview_metrics import UNCONFIRMED_REASON, recording_unconfirmed, recording_unmeasured
 from pyegeria.view._output_format_models import DOCUMENT_OUTPUT_TYPE, check_document_file_name
 from pyegeria.view.document_validators import run_document_validator
 from pyegeria.core._server_client import recording_list_requests
@@ -387,13 +388,34 @@ def _run_recording_unmeasured(action: dict, **kwargs: Any) -> Tuple[Any, List[Di
     """Run the analytic routine and collect a note for every count in it that was not measured
     (a failed or timed-out count, or a find fallback that stopped at its page cap -- a lower
     bound, never a total). See overview_metrics.recording_unmeasured."""
-    with recording_unmeasured() as notes:
+    with recording_unmeasured() as notes, recording_unconfirmed() as unconfirmed:
         result = _run_analytic_function(action, **kwargs)
     unique: List[Dict[str, Any]] = []  # a series repeats the same note once per point
     for note in notes:
         if note not in unique:
             unique.append(note)
+    _LAST_UNCONFIRMED.set(_unique(unconfirmed))
     return result, unique
+
+
+#: The unconfirmed scans of the last analytic run in this context (pager step 4, overview_metrics ruling (ii)):
+#: read by the two analytic output paths, so a result computed from a scan Egeria didn't confirm carries
+#: `unconfirmed` (and a chart says so), never just its numbers.
+_LAST_UNCONFIRMED: "contextvars.ContextVar[List[Dict[str, Any]]]" = contextvars.ContextVar(
+    "pyegeria_last_unconfirmed", default=[])
+
+
+def _unique(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    out: List[Dict[str, Any]] = []
+    for item in items:
+        if item not in out:
+            out.append(item)
+    return out
+
+
+def _unconfirmed_extra() -> Dict[str, Any]:
+    scans = _LAST_UNCONFIRMED.get()
+    return {"unconfirmed": scans} if scans else {}
 
 
 def _unmeasured_envelope(notes: List[Dict[str, Any]]) -> Dict[str, str]:
@@ -1097,11 +1119,14 @@ def _exec_analytic_chart(
 
     def _chart_out(chart):
         if not chart:
-            return _with_envelope({"kind": "json", "data": result}, envelope)
+            return _with_envelope({"kind": "json", "data": result, **_unconfirmed_extra()}, envelope)
         if envelope:  # the state rides on the chart itself (ISSUE-139)
             subtitle = absence["sentence"] if absence and absence["declared"] else envelope["subtitle"]
             chart["title"] = {"text": chart.get("title") or heading, "subtitle": subtitle}
-        out = {"kind": "json", "data": chart, **({"absence": absence} if absence else {})}
+        elif _unconfirmed_extra():   # ruling (ii) 4: an unconfirmed figure never looks like a confirmed one
+            chart["title"] = {"text": chart.get("title") or heading,
+                              "subtitle": f"at least what was read: {UNCONFIRMED_REASON}"}
+        out = {"kind": "json", "data": chart, **({"absence": absence} if absence else {}), **_unconfirmed_extra()}
         return _with_envelope(out, envelope)
 
     if chart_kind == "line" and bounded is not None:
@@ -1728,6 +1753,7 @@ def _exec_report_spec_impl(
         if envelope and envelope["state"] not in CHARTABLE_STATES:
             return _absent_output(result, envelope, absence, notes)  # ISSUE-171
         extra = {"absence": absence} if absence else {}
+        extra.update(_unconfirmed_extra())   # pager step 4: the scans Egeria didn't confirm, if any
         if result is None or result == [] or result == {}:
             return _with_envelope({"kind": "empty", **extra, **unmeasured}, envelope)
         return _with_envelope({"kind": "json", "data": result, **extra, **unmeasured}, envelope)

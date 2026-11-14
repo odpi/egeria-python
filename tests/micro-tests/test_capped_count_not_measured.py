@@ -137,10 +137,11 @@ def test_notes_are_only_kept_inside_a_recording_block():
 
 
 def _rel_pages(rows):
-    """get_relationships paging like Egeria: rows from the body's startFrom, then an empty page."""
+    """get_relationships paging like Egeria: rows from the body's startFrom, then null ([] would be a
+    filtered page; pager step 4)."""
     def fake(*a, body=None, **kw):
         start, size = body["startFrom"], body["pageSize"]
-        return rows[start:start + size]
+        return rows[start:start + size] or "No elements found"
     return fake
 
 
@@ -149,10 +150,13 @@ def test_a_viewer_relationship_count_reads_every_page():
     ce = MagicMock()
     ce.get_relationships.side_effect = _rel_pages([{"relationshipHeader": {"guid": f"r{i}"}}
                                                    for i in range(CAP + 247)])
-    with om.recording_unmeasured() as notes:
+    with om.recording_unmeasured() as notes, om.recording_unconfirmed() as scans:
         assert om.count_relationships(ce, "SemanticAssignment", population="viewer") == CAP + 247
     assert notes == []
-    assert [c.kwargs["body"]["startFrom"] for c in ce.get_relationships.call_args_list] == [0, CAP, 2 * CAP]
+    # a suspect path: the null at 2*CAP, then 3 probes; the count is recorded as unconfirmed ("at least")
+    assert [c.kwargs["body"]["startFrom"] for c in ce.get_relationships.call_args_list] == [
+        k * CAP for k in range(6)]
+    assert scans[0]["read"] == CAP + 247 and scans[0]["unconfirmed"] is True
 
 
 def test_a_relationship_scan_that_cannot_finish_is_not_a_count():
