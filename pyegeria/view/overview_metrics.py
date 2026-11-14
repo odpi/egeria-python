@@ -1820,7 +1820,7 @@ def asset_modality(el: dict) -> str:
 # `context_readiness_funnel`'s own `aiReady=None` already established.
 
 
-@_marks_unconfirmed({"aiReadyCount": "count", "aiReadyRecentCount": "count"})
+@_marks_unconfirmed({"aiReadyCount": "count", "aiReadyRecentCount": "count", "byModality": "counts"})
 def drl_readiness_gates(mgr, ce, as_of: Optional[str] = None, recency_days: int = 180) -> Dict[str, Any]:
     """
     A recency-narrowed view of `ai_ready_assets`, plus a modality breakdown

@@ -276,7 +276,8 @@ async def test_view_report_anchor_scope_id_resolves_when_declared_reference_styl
     # If the command spec marks Anchor Scope ID as a reference-style attribute,
     # unresolved values should fail validation.
     assert result["status"] == "failure"
-    assert "Referenced element" in result.get("analysis", "")
+    # pager step 6: the client here is a bare object, so the lookup errors: "couldn't tell", never "not found"
+    assert "Couldn't tell whether referenced element" in result.get("analysis", "")
 
 
 
