@@ -231,7 +231,9 @@ class TestCommunitiesMixin:
         client.link_assignment_scope.assert_not_called()
 
     def test_create_refuses_an_existing_name(self, client):
-        client.get_communities_by_name.return_value = [DATA_SCI]
+        existing = {**DATA_SCI, "properties": {**DATA_SCI["properties"], "qualifiedName": "Community::Data-Science-SIG"}}
+        client.get_communities_by_name.side_effect = (
+            lambda *a, start_from=0, **k: [existing] if start_from == 0 else "No elements found")
         app = DummyApp()
         assert app.create_community("Data Science SIG", "Again") is None
         assert client.get_communities_by_name.call_args.kwargs["filter_string"] == "Community::Data-Science-SIG"
@@ -272,7 +274,9 @@ class TestCommunitiesMixin:
                                                       _element("other-log", "NoteLog", "Notifications")]
         old = _created(_element("p1", "BlogEntry", "First", "Hello"), "gary", "2026-10-01T09:00:00.000+00:00")
         new = _created(_element("p2", "BlogEntry", "Second", "Again"), "erin", "2026-10-20T13:27:27.750+00:00")
-        client.get_notes_for_note_log.side_effect = [[old], [new]]
+        by_log = {"blog-log": [old], "other-log": [new]}
+        client.get_notes_for_note_log.side_effect = (   # each log's notes on page 0, null after
+            lambda log_guid, start_from=0, **k: by_log[log_guid] if start_from == 0 else "No elements found")
         rows = DummyApp().get_community_blog_posts("ds-guid")
         assert client.get_attached_note_logs.call_args.args == ("ds-guid",)
         # only blog entries are asked for, so notifications in other logs are skipped

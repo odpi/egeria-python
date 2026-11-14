@@ -93,6 +93,7 @@ from team_roles_handler import TeamRolesMixin
 from elements_crud_handler import ElementsCrudMixin
 from feedback_handler import FeedbackMixin, FEEDBACK_LOG_OWNER
 from bookmarks_handler import BookmarksMixin, bookmarks_qualified_name
+from paging_support import paged_rows, read_all, report_empty_cells
 from MyBookMarksScreen import MyBookMarksScreen
 from network_handler import NetworkMixin
 from community_handler import CommunitiesMixin
@@ -471,7 +472,13 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
                              user_id=self.user_name, user_pwd=self.user_password)
             eclient.create_egeria_bearer_token(self.user_name, self.user_password)
             # Depth 0: only header/properties are summarised (~70s at the default depth 3 vs <1s).
-            response = eclient.find_collections(search_string="*", output_format="JSON", graph_query_depth=0)
+            # Every collection is read (paged to Egeria's end), then filtered here by creator: one page of
+            # all collections was shown as the whole list before.
+            def fetch(start: int, size: int):
+                return eclient.find_collections(search_string="*", output_format="JSON", graph_query_depth=0,
+                                                start_from=start, page_size=size)
+
+            read = read_all(fetch, method="find_collections", client=eclient)
         except PyegeriaException as e:
             # self.log(f"Error retrieving My Collections: {e!s}")
             return []
@@ -479,9 +486,10 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
             if eclient:
                 eclient.close_session()
         bookmarks_qn = bookmarks_qualified_name(self.user_name)
-        return [summary for summary in (element_summary(e) for e in (response if isinstance(response, list) else []))
+        mine = [summary for summary in (element_summary(e) for e in read.items)
                 if summary.get("created_by") == self.user_name and summary.get("guid")
                 and summary.get("qualified_name") != bookmarks_qn]
+        return paged_rows(mine, read, "of your collections")
 
     def new_profile_return(self, result: int) -> None:
         """This function handles either the return from the create new profile screen or
@@ -607,6 +615,8 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         for collection in getattr(self, "my_collections", []):
             self.my_collections_table.add_row(
                 collection["name"], collection["description"], collection["guid"])
+        if getattr(getattr(self, "my_collections", None), "note", None):
+            self.notify(self.my_collections.note, timeout=10, severity="warning")
 
         # Populate rows
         if self.projects_table:
@@ -812,10 +822,10 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         # self.log(f"Digital Product Catalog data extracted: {self.digital_product_catalog_data_extract}")
         if not self.digital_product_catalog_data_extract:
             # self.log(f"No digital product catalog data found for user: {self.user_name}")
-            self.digital_product_catalog_table.add_row("No digital product catalogs found",
-                                                       "No data returned from Egeria", "")
+            headline, detail = report_empty_cells("digital product catalogs", self.digital_product_catalog_data)
+            self.digital_product_catalog_table.add_row(headline, detail, "")
             if hasattr(self, "notify"):
-                self.notify(f"No digital product catalogs found for user: {self.user_name}")
+                self.notify(f"{headline} for user: {self.user_name}")
         else:
             for catalog_item in self.digital_product_catalog_data_extract:
                 self.digital_product_catalog_table.add_row(

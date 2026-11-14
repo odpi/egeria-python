@@ -25,11 +25,21 @@ if str(current_dir) not in sys.path:
     sys.path.append(str(current_dir))
 
 from pyegeria import Egeria, PyegeriaException
+from pyegeria.core._exceptions import PyegeriaNotFoundException
+from pyegeria.core._globals import NO_ELEMENTS_FOUND
+from pyegeria.core.paging import Exists
 from MyBookMarksScreen import MyBookMarksScreen
+from paging_support import LookupUnconfirmed, PagedRows, lookup, paged_rows, read_all, refusal
 from profile_utils import element_summary, row_identity
 
 BOOKMARKS_DISPLAY_NAME = "My Bookmarks"
 BOOKMARKS_RESOURCE_USE = "Bookmarks"
+ROW_HAS_NO_IDENTITY = "That row doesn't identify an Egeria element"
+
+
+def guid_of(found: Exists) -> str:
+    """The GUID of the first match of a "found" lookup."""
+    return element_summary(found.matches[0]).get("guid", "") if found.matches else ""
 
 
 def bookmarks_qualified_name(user_name: str) -> str:
@@ -46,15 +56,21 @@ class BookmarksMixin:
         client.create_egeria_bearer_token(self.user_name, self.user_password)
         return client
 
-    def _find_bookmarks_collection(self, client: Egeria) -> str | None:
-        """GUID of the user's bookmarks collection, or None if it doesn't exist yet."""
+    def _find_bookmarks_collection(self, client: Egeria) -> Exists:
+        """Whether the user's bookmarks collection exists: found (its GUID is ``guid_of(found)``), absent
+        (the read reached Egeria's end without it) or unknown. Paged per Egeria's contract: one page without it is not
+        "absent"."""
         qualified_name = bookmarks_qualified_name(self.user_name)
-        response = client.get_collections_by_name(name=qualified_name, output_format="JSON", graph_query_depth=0)
-        for element in response if isinstance(response, list) else []:
+
+        def fetch(start: int, size: int) -> Any:
+            return client.get_collections_by_name(name=qualified_name, output_format="JSON", graph_query_depth=0,
+                                                  start_from=start, page_size=size)
+
+        def match(element: Any) -> bool:
             summary = element_summary(element)
-            if summary.get("qualified_name") == qualified_name and summary.get("guid"):
-                return summary["guid"]
-        return None
+            return summary.get("qualified_name") == qualified_name and bool(summary.get("guid"))
+
+        return lookup(fetch, match, method="get_collections_by_name", client=client)
 
     def _bookmarks_profile_guid(self, client: Egeria) -> str:
         """GUID of the user's profile, which owns the bookmarks collection."""
@@ -70,9 +86,15 @@ class BookmarksMixin:
         return guid
 
     def _get_or_create_bookmarks_collection(self, client: Egeria) -> str:
-        guid = self._find_bookmarks_collection(client)
-        if guid:
-            return guid
+        """The bookmarks collection's GUID, created only when the read reached Egeria's end without it (absent).
+
+        Raises LookupUnconfirmed (nothing created) when Egeria didn't confirm whether it exists: creating then
+        could make a second bookmarks collection."""
+        found = self._find_bookmarks_collection(client)
+        if found.found:
+            return guid_of(found)
+        if found.answer != "absent":
+            raise LookupUnconfirmed(refusal("your bookmarks collection", found))
         profile_guid = self._bookmarks_profile_guid(client)
         body = {
             "class": "NewElementRequestBody",
@@ -98,26 +120,48 @@ class BookmarksMixin:
         # self.log(f"Created bookmarks collection {guid}")
         return guid
 
-    def _bookmark_rows(self, client: Egeria, collection_guid: str) -> list[tuple[str, str, str]]:
+    def _bookmark_rows(self, client: Egeria, collection_guid: str) -> PagedRows:
+        """Every member of the bookmarks collection as (name, type, GUID) rows, paged to Egeria's end;
+        ``complete`` False (and a note) when Egeria didn't confirm there are no more."""
         # Depth 0: rows show name/type/guid only (a 30s timeout at the default depth 3 vs ~0.3s).
-        response = client.get_collection_members(collection_guid=collection_guid, output_format="JSON",
-                                                 graph_query_depth=0)
+        def fetch(start: int, size: int) -> Any:
+            return client.get_collection_members(collection_guid=collection_guid, output_format="JSON",
+                                                 graph_query_depth=0, start_from=start, page_size=size)
+
+        read = read_all(fetch, method="get_collection_members", client=client)
         rows = []
-        for element in response if isinstance(response, list) else []:
+        for element in read.items:
             summary = element_summary(element)
             if summary.get("guid"):
                 rows.append((summary["name"], summary["type"], summary["guid"]))
-        return rows
+        return paged_rows(rows, read, "bookmarks")
+
+    def _is_bookmarked(self, client: Egeria, collection_guid: str, target_guid: str) -> Exists:
+        """Whether target_guid is already a member of the bookmarks collection (found / absent / unknown)."""
+        def fetch(start: int, size: int) -> Any:
+            return client.get_collection_members(collection_guid=collection_guid, output_format="JSON",
+                                                 graph_query_depth=0, start_from=start, page_size=size)
+
+        return lookup(fetch, lambda element: element_summary(element).get("guid") == target_guid,
+                      method="get_collection_members", client=client)
 
     def list_my_bookmarks(self) -> list[tuple[str, str, str]] | None:
-        """The user's bookmarks as (name, type, GUID) rows, or None if Egeria could not be reached."""
+        """The user's bookmarks as (name, type, GUID) rows (PagedRows: ``complete`` says whether Egeria
+        confirmed that's all of them), or None if Egeria could not be reached."""
         client = None
         try:
             client = self._bookmarks_client()
-            collection_guid = self._find_bookmarks_collection(client)
-            if not collection_guid:
-                return []
-            return self._bookmark_rows(client, collection_guid)
+            found = self._find_bookmarks_collection(client)
+            if found.answer == "absent":
+                return PagedRows([], complete=found.read.complete, reached_end=True)
+            if not found.found:
+                self.notify(f"{refusal('your bookmarks collection', found, 'Nothing is shown')}", timeout=10,
+                            severity="warning")
+                return PagedRows([], complete=False, note=found.words("Your bookmarks collection"))
+            rows = self._bookmark_rows(client, guid_of(found))
+            if rows.note:
+                self.notify(rows.note, timeout=10, severity="warning")
+            return rows
         except PyegeriaException as e:
             # self.log(f"Retrieving bookmarks failed: {e}")
             self.notify(f"Could not retrieve your bookmarks: {e}", timeout=10, severity="error")
@@ -144,12 +188,20 @@ class BookmarksMixin:
         try:
             client = self._bookmarks_client()
             collection_guid = self._get_or_create_bookmarks_collection(client)
-            if target_guid in {row[2] for row in self._bookmark_rows(client, collection_guid)}:
+            already = self._is_bookmarked(client, collection_guid, target_guid)
+            if already.found:
                 self.notify("That element is already bookmarked", timeout=10, severity="warning")
+                return False
+            if already.answer != "absent":
+                self.notify(refusal(f"a bookmark for {target_guid}", already, "Nothing was added"),
+                            timeout=10, severity="warning")
                 return False
             client.add_to_collection(collection_guid=collection_guid, element_guid=target_guid)
             self.notify(f"Bookmarked {target_guid}", timeout=10, severity="information")
             return True
+        except LookupUnconfirmed as e:
+            self.notify(str(e), timeout=10, severity="warning")
+            return False
         except (PyegeriaException, ValueError) as e:
             # self.log(f"Adding bookmark {target_guid} failed: {e}")
             self.notify(f"Adding the bookmark failed: {e}", timeout=10, severity="error")
@@ -158,29 +210,44 @@ class BookmarksMixin:
             if client:
                 client.close_session()
 
-    def get_row_guid(self, table: Any, row_key: Any) -> str | None:
-        """GUID of the element shown in a table row, or None if the row doesn't identify one.
+    def _resolve_row(self, table: Any, row_key: Any) -> tuple[str | None, str | None]:
+        """(GUID of the element shown in a table row, None) or (None, why it couldn't be had).
 
-        Read from the row's GUID column; rows with only a Qualified Name column
-        (e.g. Shop for Data's glossaries) are resolved to a GUID through Egeria.
-        """
+        Read from the row's GUID column; rows with only a Qualified Name column (e.g. Shop for Data's
+        glossaries) are resolved through Egeria's exact unique-name read. A failed read is said as such,
+        never as "the row doesn't identify an element"."""
         if table is None or row_key is None:
-            return None
+            return None, ROW_HAS_NO_IDENTITY
         guid, qualified_name = row_identity(table, row_key)
-        if guid or not qualified_name:
-            return guid or None
+        if guid:
+            return guid, None
+        if not qualified_name:
+            return None, ROW_HAS_NO_IDENTITY
         client = None
         try:
             client = self._bookmarks_client()
-            resolved = client.get_guid_for_name(qualified_name)
-            # "No elements found" is returned, rather than an exception, when nothing matches
-            return resolved if isinstance(resolved, str) and resolved and "No " not in resolved else None
+            resolved = client.get_element_guid_by_unique_name(qualified_name)
+        except PyegeriaNotFoundException:
+            return None, f"Egeria holds no element with the qualified name {qualified_name}"
         except PyegeriaException as e:
             # self.log(f"Looking up the GUID for {qualified_name} failed: {e}")
-            return None
+            return None, f"Couldn't look up the element {qualified_name} in Egeria ({type(e).__name__}); try again"
         finally:
             if client:
                 client.close_session()
+        if resolved == NO_ELEMENTS_FOUND:
+            return None, f"Egeria holds no element with the qualified name {qualified_name}"
+        if isinstance(resolved, str) and resolved:
+            return resolved, None
+        return None, f"Couldn't look up the element {qualified_name} in Egeria; try again"
+
+    def get_row_guid(self, table: Any, row_key: Any) -> str | None:
+        """GUID of the element shown in a table row, or None if it couldn't be had (and why is shown when
+        it was a lookup in Egeria, not the row, that failed)."""
+        guid, reason = self._resolve_row(table, row_key)
+        if guid is None and reason and reason != ROW_HAS_NO_IDENTITY:
+            self.notify(reason, timeout=10, severity="warning")
+        return guid
 
     def bookmark_table_row(self, table: Any, row_key: Any) -> bool:
         """Bookmark the element shown in a table row, found by its GUID column.
@@ -188,10 +255,9 @@ class BookmarksMixin:
         Rows with only a Qualified Name column (e.g. Shop for Data's glossaries)
         are resolved to a GUID first. Returns True if the bookmark was added.
         """
-        guid = self.get_row_guid(table, row_key)
+        guid, reason = self._resolve_row(table, row_key)
         if not guid:
-            self.notify("That row doesn't identify an Egeria element, so it can't be bookmarked",
-                        timeout=10, severity="warning")
+            self.notify(f"{reason}, so it can't be bookmarked", timeout=10, severity="warning")
             return False
         return self.add_my_bookmark(guid)
 
@@ -200,10 +266,15 @@ class BookmarksMixin:
         client = None
         try:
             client = self._bookmarks_client()
-            collection_guid = self._find_bookmarks_collection(client)
-            if not collection_guid:
+            found = self._find_bookmarks_collection(client)
+            if found.answer == "absent":
                 self.notify("You have no bookmarks to remove", timeout=10, severity="warning")
                 return False
+            if not found.found:
+                self.notify(refusal("your bookmarks collection", found, "Nothing was removed"), timeout=10,
+                            severity="warning")
+                return False
+            collection_guid = guid_of(found)
             client.remove_from_collection(collection_guid=collection_guid, element_guid=target_guid)
             self.notify(f"Removed bookmark {target_guid}", timeout=10, severity="information")
             return True

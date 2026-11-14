@@ -14,6 +14,7 @@ from textual.screen import ModalScreen
 from textual.widgets import DataTable, Header, Static, Footer, Input, Button, Select, TextArea
 
 from pyegeria import COMMENT_TYPES
+from paging_support import is_complete, none_words
 from profile_utils import set_screen_heading
 
 
@@ -213,6 +214,7 @@ class CommunityScreen(ModalScreen):
             return
         table = self.query_one("#community_posts_table", DataTable)
         table.clear()
+        self.posts_complete = is_complete(posts)
         self.post_text = {}
         for title, author, posted, text, guid in posts:
             table.add_row(title, author, posted, guid, key=guid)
@@ -233,8 +235,10 @@ class CommunityScreen(ModalScreen):
         if table.row_count:
             guid = table.get_row_at(table.cursor_row)[3]
             text = self.post_text.get(guid, "")
-        else:
+        elif getattr(self, "posts_complete", True):
             text = "[dim]No posts yet - be the first to post[/dim]"
+        else:
+            text = f"[dim]{none_words('posts', complete=False)}[/dim]"
         self.query_one("#community_post_text", Static).update(text)
 
     @on(DataTable.RowHighlighted, "#community_posts_table")

@@ -24,6 +24,11 @@ def _element(guid, name, type_name="Asset", qualified_name=None):
             "properties": {"displayName": name, "qualifiedName": qualified_name or f"{type_name}::{name}"}}
 
 
+def one_page(rows):
+    """A side_effect: rows at start_from 0, null ("No elements found") after, as Egeria pages."""
+    return lambda *args, start_from=0, **kwargs: rows if start_from == 0 else "No elements found"
+
+
 BOOKMARKS_COLLECTION = _element("bm-coll-guid", BOOKMARKS_DISPLAY_NAME, "Collection", BOOKMARKS_QN)
 
 
@@ -67,9 +72,11 @@ class TestBookmarksMixin:
             _element("asset-1", "Sales Data", "DataSet"),
             {"relatedElement": _element("asset-2", "Churn Model", "Asset")},
         ]
+        client.get_collection_members.side_effect = one_page(client.get_collection_members.return_value)
         rows = DummyApp().list_my_bookmarks()
-        client.get_collection_members.assert_called_once_with(collection_guid="bm-coll-guid", output_format="JSON",
-                                                               graph_query_depth=0)
+        # paged to Egeria's end: the first request is page 0 at depth 0
+        client.get_collection_members.assert_any_call(collection_guid="bm-coll-guid", output_format="JSON",
+                                                      graph_query_depth=0, start_from=0, page_size=100)
         assert rows == [("Sales Data", "DataSet", "asset-1"), ("Churn Model", "Asset", "asset-2")]
 
     def test_list_ignores_same_name_collection_with_other_qualified_name(self, client):
@@ -84,7 +91,8 @@ class TestBookmarksMixin:
         assert app.notices[-1][1] == "error"
 
     def test_add_creates_collection_first_time(self, client):
-        client.get_collections_by_name.return_value = []
+        # null ("No elements found") is absent; [] would be a filtered page, and creating on it is refused
+        client.get_collections_by_name.return_value = "No elements found"
         client.create_collection.return_value = "new-coll-guid"
         assert DummyApp().add_my_bookmark("asset-1") is True
         body = client.create_collection.call_args.kwargs["body"]
@@ -97,7 +105,7 @@ class TestBookmarksMixin:
         client.add_to_collection.assert_called_once_with(collection_guid="new-coll-guid", element_guid="asset-1")
 
     def test_add_looks_up_profile_guid_when_not_known(self, client):
-        client.get_collections_by_name.return_value = []
+        client.get_collections_by_name.return_value = "No elements found"
         client.get_my_profile.return_value = [{"elementHeader": {"guid": "looked-up-profile"}, "properties": {}}]
         app = DummyApp()
         app.user_GUID = ""
@@ -267,12 +275,13 @@ class TestBookmarkTableRow:
     @pytest.mark.asyncio
     async def test_bookmarks_row_by_qualified_name(self, client):
         client.get_collections_by_name.return_value = [BOOKMARKS_COLLECTION]
-        client.get_guid_for_name.return_value = "gloss-1"
+        client.get_element_guid_by_unique_name.return_value = "gloss-1"
         app = TableHostApp(["Glossary Name", "Description", "Qualified Name"],
                            [("Clinical Terms", "Terms", "Glossary::Clinical-Terms")])
         async with app.run_test():
             assert DummyApp().bookmark_table_row(app.query_one("#t", DataTable), "r0") is True
-            client.get_guid_for_name.assert_called_once_with("Glossary::Clinical-Terms")
+            # Egeria's exact unique-name read, not a paged property search
+            client.get_element_guid_by_unique_name.assert_called_once_with("Glossary::Clinical-Terms")
             client.add_to_collection.assert_called_once_with(collection_guid="bm-coll-guid", element_guid="gloss-1")
 
     @pytest.mark.asyncio
@@ -286,7 +295,7 @@ class TestBookmarkTableRow:
 
     @pytest.mark.asyncio
     async def test_unresolvable_qualified_name_is_refused(self, client):
-        client.get_guid_for_name.return_value = "No elements found"
+        client.get_element_guid_by_unique_name.return_value = "No elements found"
         app = TableHostApp(["Glossary Name", "Qualified Name"], [("Gone", "Glossary::Gone")])
         async with app.run_test():
             assert DummyApp().bookmark_table_row(app.query_one("#t", DataTable), "r0") is False

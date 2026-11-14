@@ -37,6 +37,8 @@ if str(current_dir) not in sys.path:
     sys.path.append(str(current_dir))
 
 from pyegeria import Egeria, PyegeriaException
+from paging_support import (LookupUnconfirmed, PagedRows, combine, element_qn, lookup, paged_rows, read_all,
+                            refusal)
 from CommunitiesScreen import CommunitiesScreen, DIRECT_LINK, JOIN_ASSIGNMENT_TYPES, CREATOR_ASSIGNMENT_TYPES
 from CommunityScreen import comment_type_label
 
@@ -156,8 +158,12 @@ class CommunitiesMixin:
         try:
             client = self._community_client()
             # Depth 0: only the communities' own properties are listed; members are fetched on request
-            found = client.find_communities(search_string=search_string or "*", ignore_case=True,
-                                            output_format="JSON", graph_query_depth=0)
+            def fetch(start: int, size: int):
+                return client.find_communities(search_string=search_string or "*", ignore_case=True,
+                                               output_format="JSON", graph_query_depth=0,
+                                               start_from=start, page_size=size)
+
+            read = read_all(fetch, method="find_communities", client=client)
         except PyegeriaException as e:
             # self.log(f"Searching for communities matching {search_string} failed: {e}")
             self.notify(f"Searching for communities failed: {e}", timeout=10, severity="error")
@@ -167,15 +173,15 @@ class CommunitiesMixin:
                 client.close_session()
         # self.log(f"Communities found for {search_string}: {found}")
         rows = []
-        # "No elements found" is returned, rather than an exception, when nothing matches
-        for community in found if isinstance(found, list) else []:
-            guid = _guid(community)
+        for community in read.items:
+            guid = _guid(community) if isinstance(community, dict) else ""
             if not guid:
                 continue
             properties = community.get("properties") or {}
             rows.append((_name(properties), properties.get("description") or "",
                          properties.get("qualifiedName") or "", guid))
-        return rows
+        # PagedRows: a note ("at least") when the read stopped short of Egeria's end; "none" only if confirmed
+        return paged_rows(rows, read, "communities")
 
     def get_community_members(self, community_guid: str) -> list[tuple[str, str, str, str, str]] | None:
         """The people in a community as (name, assignment type, member through, qualified name, GUID) rows,
@@ -244,12 +250,20 @@ class CommunitiesMixin:
         posts = []
         try:
             client = self._community_client()
-            logs = client.get_attached_note_logs(community_guid, graph_query_depth=0)
-            # "No elements found" is returned, rather than an exception, when there are none
-            for log in logs if isinstance(logs, list) else []:
-                entries = client.get_notes_for_note_log(_guid(log), metadata_element_type_name="BlogEntry",
-                                                        graph_query_depth=0)
-                posts += entries if isinstance(entries, list) else []
+            logs = self._read_note_logs(client, community_guid)
+            reads = [logs]
+            for log in logs.items:
+                log_guid = _guid(log) if isinstance(log, dict) else ""
+                if not log_guid:
+                    continue
+
+                def fetch(start: int, size: int, log_guid=log_guid):
+                    return client.get_notes_for_note_log(log_guid, metadata_element_type_name="BlogEntry",
+                                                         graph_query_depth=0, start_from=start, page_size=size)
+
+                entries = read_all(fetch, method="get_notes_for_note_log", client=client)
+                reads.append(entries)
+                posts += [entry for entry in entries.items if isinstance(entry, dict)]
         except PyegeriaException as e:
             # self.log(f"Retrieving the blog of community {community_guid} failed: {e}")
             self.notify(f"Could not retrieve the community's blog: {e}", timeout=10, severity="error")
@@ -264,15 +278,40 @@ class CommunitiesMixin:
             rows.append((create_time, (_name(properties), author, _posted(create_time),
                                        properties.get("description") or "", _guid(post))))
         rows.sort(key=lambda r: r[0], reverse=True)
-        return [row for _, row in rows[:LATEST_POSTS]]
+        latest = [row for _, row in rows[:LATEST_POSTS]]
+        if combine(*reads):   # every read reached Egeria's end: the newest shown are the newest there are
+            return PagedRows(latest, complete=all(r.complete for r in reads), reached_end=True)
+        # Some posts may not have been read, so the newest shown may not be the newest there is
+        note = (f"Showing the newest of at least {len(rows)} posts read; Egeria didn't confirm there are no more, "
+                f"so newer posts may be missing")
+        self.notify(note, timeout=10, severity="warning")
+        return PagedRows(latest, complete=False, note=note)
+
+    def _read_note_logs(self, client: Egeria, community_guid: str):
+        """Every note log attached to the community, paged to Egeria's end (a PageResult)."""
+        def fetch(start: int, size: int):
+            return client.get_attached_note_logs(community_guid, graph_query_depth=0, start_from=start,
+                                                 page_size=size)
+
+        return read_all(fetch, method="get_attached_note_logs", client=client)
 
     def _community_blog_log(self, client: Egeria, community_guid: str, community_name: str) -> str:
-        """The GUID of the community's blog note log, which is created on first use."""
+        """The GUID of the community's blog note log, which is created on first use: only when the read
+        reached Egeria's end without finding it (absent). Raises LookupUnconfirmed (nothing created) when it can't tell,
+        since creating then could give the community a second blog."""
         qualified_name = BLOG_LOG_QN.format(community_guid=community_guid)
-        logs = client.get_attached_note_logs(community_guid, graph_query_depth=0)
-        for log in logs if isinstance(logs, list) else []:
-            if (log.get("properties") or {}).get("qualifiedName") == qualified_name:
-                return _guid(log)
+
+        def fetch(start: int, size: int):
+            return client.get_attached_note_logs(community_guid, graph_query_depth=0, start_from=start,
+                                                 page_size=size)
+
+        found = lookup(fetch, lambda log: element_qn(log) == qualified_name and bool(_guid(log)),
+                       method="get_attached_note_logs", client=client)
+        if found.found:
+            return _guid(found.matches[0])
+        if found.answer != "absent":
+            raise LookupUnconfirmed(refusal(f"a blog for {community_name}", found,
+                                            "No blog was created and nothing was posted"))
         body = {
             "class": "NewAttachmentRequestBody",
             "properties": {
@@ -305,6 +344,9 @@ class CommunitiesMixin:
             self.notify(f"Your post '{title}' has been added to the {community_name} blog", timeout=10,
                         severity="information")
             return True
+        except LookupUnconfirmed as e:
+            self.notify(str(e), timeout=10, severity="warning")
+            return False
         except PyegeriaException as e:
             # self.log(f"Posting to the blog of community {community_guid} failed: {e}")
             self.notify(f"Posting to the community's blog failed: {e}", timeout=10, severity="error")
@@ -319,7 +361,12 @@ class CommunitiesMixin:
         client = None
         try:
             client = self._community_client()
-            comments = client.get_attached_comments(community_guid, graph_query_depth=0)
+
+            def fetch(start: int, size: int):
+                return client.get_attached_comments(community_guid, graph_query_depth=0, start_from=start,
+                                                    page_size=size)
+
+            read = read_all(fetch, method="get_attached_comments", client=client)
         except PyegeriaException as e:
             # self.log(f"Retrieving the comments on community {community_guid} failed: {e}")
             self.notify(f"Could not retrieve the community's comments: {e}", timeout=10, severity="error")
@@ -328,14 +375,19 @@ class CommunitiesMixin:
             if client:
                 client.close_session()
         rows = []
-        for comment in comments if isinstance(comments, list) else []:
+        for comment in read.items:
+            if not isinstance(comment, dict):
+                continue
             properties = comment.get("properties") or {}
             author, create_time = _created(comment)
             comment_type = comment_type_label(properties.get("commentType") or "")
             rows.append((create_time, (properties.get("description") or "", comment_type, author,
                                        _posted(create_time), _guid(comment))))
         rows.sort(key=lambda r: r[0], reverse=True)
-        return [row for _, row in rows]
+        result = paged_rows([row for _, row in rows], read, "comments")
+        if result.note:
+            self.notify(result.note, timeout=10, severity="warning")
+        return result
 
     def add_community_comment(self, community_guid: str, text: str, comment_type: str) -> bool:
         """Attach a comment to the community. comment_type is one of pyegeria's COMMENT_TYPES.
@@ -372,12 +424,20 @@ class CommunitiesMixin:
         try:
             client = self._community_client()
             qualified_name = client.__create_qualified_name__(COMMUNITY_TYPE, name)
+
             # Egeria rejects a second element with the same qualified name, but only with a server error
-            existing = client.get_communities_by_name(filter_string=qualified_name, graph_query_depth=0,
-                                                      output_format="JSON")
-            if isinstance(existing, list) and existing:
+            def fetch(start: int, size: int):
+                return client.get_communities_by_name(filter_string=qualified_name, graph_query_depth=0,
+                                                      output_format="JSON", start_from=start, page_size=size)
+
+            existing = lookup(fetch, lambda community: element_qn(community) == qualified_name,
+                              method="get_communities_by_name", client=client)
+            if existing.found:
                 self.notify(f"A community called {name} already exists - find it below to join it",
                             timeout=10, severity="warning")
+                return None
+            if existing.answer != "absent":
+                self.notify(refusal(f"a community called {name}", existing), timeout=10, severity="warning")
                 return None
             properties["qualifiedName"] = qualified_name
             community_guid = client.create_community(body={"class": "NewElementRequestBody", "isOwnAnchor": True,
