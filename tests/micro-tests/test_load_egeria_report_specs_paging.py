@@ -15,6 +15,8 @@ NULL = "No elements found"
 def _fresh(monkeypatch):
     monkeypatch.setattr(brf, "_EGERIA_SPECS_LOADED_AT", None)
     monkeypatch.setattr(brf, "_EGERIA_SPECS_RETRY_AT", None)
+    monkeypatch.setattr(brf, "_EGERIA_SPECS_RETRY_DELAY", None)
+    monkeypatch.setattr(brf, "_LEGACY_LOADER_WARNED", True)   # the warning has its own test
 
 
 def _rt(label):
@@ -112,3 +114,38 @@ def test_the_cli_words_an_unconfirmed_load():
     assert words.startswith("[yellow]Not re-read[/yellow]: the last read wasn't confirmed complete; next read after")
     assert words.endswith("(use --force).")
     assert "No update performed" not in words and "no ReportType collections" not in words
+
+
+
+# ── the legacy-loader ruling: deprecated, backed off, empty never implies missing ──
+
+def test_a_one_time_deprecation_warning(monkeypatch):
+    monkeypatch.setattr(brf, "_LEGACY_LOADER_WARNED", False)
+    with pytest.warns(DeprecationWarning, match="egeria_spec_cache"):
+        brf.load_egeria_report_specs(_Client({}))
+    import warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        brf.load_egeria_report_specs(_Client({}), force=True)   # once per process: no second warning
+
+
+def test_the_retry_backs_off_doubling_to_the_ttl_and_a_confirmed_load_resets_it(monkeypatch):
+    delays = []
+    for _ in range(4):
+        brf.load_egeria_report_specs(_Client({0: [_rt("A")]}), force=True, ttl_seconds=2000)
+        delays.append(brf._EGERIA_SPECS_RETRY_DELAY)
+    assert delays == [300, 600, 1200, 2000]                  # doubling, capped at the TTL
+    _trusted(monkeypatch)
+    brf.load_egeria_report_specs(_Client({0: [_rt("A")]}), force=True)
+    assert brf._EGERIA_SPECS_RETRY_DELAY is None and brf._EGERIA_SPECS_RETRY_AT is None
+
+
+@pytest.mark.parametrize("trusted", [True, False], ids=["confirmed", "unconfirmed"])
+def test_an_empty_result_never_implies_specs_are_missing(monkeypatch, trusted):
+    from commands.cat.load_report_specs import NO_LEGACY_WORDS, load_status_words
+    if trusted:
+        _trusted(monkeypatch)
+    brf.load_egeria_report_specs(_Client({}))
+    words = load_status_words(brf.report_specs_load_status(), 0.1, [])
+    assert words == NO_LEGACY_WORDS == ("No legacy ReportType collections found (Egeria-held specs load through "
+                                        "the spec cache).")

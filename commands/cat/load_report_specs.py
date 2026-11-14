@@ -85,22 +85,24 @@ def _run(
         console.print(f"  + {s}")
 
 
+#: An empty result from the legacy ReportType:: loader, confirmed or not (the legacy-loader ruling, 2026-11-14).
+NO_LEGACY_WORDS = "No legacy ReportType collections found (Egeria-held specs load through the spec cache)."
+
+
 def load_status_words(status: dict, elapsed: float, new_specs: list) -> str:
     """The CLI's words for how load_egeria_report_specs ended (85f5bc15 read-back R1): one sentence per status,
     never "no ReportType collections" unless Egeria confirmed the end."""
     kind, count = status.get("status"), status.get("count") or 0
     retry_at, error = status.get("retry_at"), status.get("error")
+    if kind in ("loaded", "registered_unconfirmed") and not count:
+        # the legacy-loader ruling: never imply specs are missing (they load through the spec cache)
+        return NO_LEGACY_WORDS
     if kind == "loaded":
-        if count:
-            return (f"[green]Registry updated[/green] from Egeria in {elapsed:.2f}s: {count} ReportType(s) read, "
-                    f"{len(new_specs)} new spec(s) added.")
-        return f"[green]Loaded[/green] in {elapsed:.2f}s: Egeria holds no ReportType collections."
+        return (f"[green]Registry updated[/green] from Egeria in {elapsed:.2f}s: {count} ReportType(s) read, "
+                f"{len(new_specs)} new spec(s) added.")
     if kind == "registered_unconfirmed":
-        if count:
-            return (f"[yellow]Registered {count} spec(s)[/yellow] in {elapsed:.2f}s; Egeria didn't confirm there "
-                    f"are no more; will re-read after {retry_at}.")
-        return (f"[yellow]No ReportType found in what Egeria returned[/yellow] ({elapsed:.2f}s); Egeria didn't "
-                f"confirm there are no more; will re-read after {retry_at}.")
+        return (f"[yellow]Registered {count} spec(s)[/yellow] in {elapsed:.2f}s; Egeria didn't confirm there "
+                f"are no more; will re-read after {retry_at}.")
     if kind == "retry_window":
         return (f"[yellow]Not re-read[/yellow]: the last read wasn't confirmed complete; next read after {retry_at} "
                 f"(use --force).")

@@ -79,6 +79,7 @@ This module may raise the following exceptions:
 
 import os
 import re as _re
+import warnings
 from datetime import datetime, timedelta, timezone
 from importlib.metadata import entry_points
 from pathlib import Path
@@ -3968,6 +3969,10 @@ _EGERIA_SPECS_CACHE_TTL: int = int(os.getenv("PYEGERIA_REPORT_SPECS_CACHE_TTL", 
 #: read stays registered. Only a confirmed end sets _EGERIA_SPECS_LOADED_AT.
 _EGERIA_SPECS_RETRY_SECONDS: int = 300
 _EGERIA_SPECS_RETRY_AT: Optional[datetime] = None
+#: The current retry delay after an unconfirmed read: 300 s, doubling each time, capped at the cache TTL, reset by a
+#: confirmed load (the legacy-loader ruling, 2026-11-14).
+_EGERIA_SPECS_RETRY_DELAY: Optional[int] = None
+_LEGACY_LOADER_WARNED = False
 #: How the last load_egeria_report_specs call ended (85f5bc15 read-back R1), beside its bool return:
 #: {"status": one of REPORT_SPECS_LOAD_STATUSES, "count": ReportTypes read or None, "retry_at": ISO or None,
 #:  "loaded_at": ISO or None, "error": words or None}.
@@ -4791,7 +4796,13 @@ def load_egeria_report_specs(
     force: bool = False,
     ttl_seconds: Optional[int] = None,
 ) -> bool:
-    """Pull ReportTypes and their QuestionSpec folders from Egeria and merge
+    """DEPRECATED (the legacy May-2026 ``ReportType::`` path): use ``pyegeria.view.egeria_spec_cache``, the system
+    of record for Egeria-held report specs. It reads both the ``ReportSpec::`` and ``ReportType::`` markers and
+    serves the consumer index and the authoring API. This loader reads ``ReportType::`` collections only, so
+    Egeria-held ``ReportSpec::`` specs never load through it; it is kept, unchanged in what it searches, until
+    the owner retires it. A DeprecationWarning is raised once per process.
+
+    Pull ReportTypes and their QuestionSpec folders from Egeria and merge
     question_specs into the corresponding file-based FormatSets in the runtime registry.
 
     Results are cached for `ttl_seconds` (default: ``PYEGERIA_REPORT_SPECS_CACHE_TTL``
@@ -4826,6 +4837,11 @@ def load_egeria_report_specs(
     """
     global _RUNTIME_REPORT_FORMATS, _EGERIA_SPECS_LOADED_AT, _EGERIA_SPECS_RETRY_AT
 
+    global _LEGACY_LOADER_WARNED, _EGERIA_SPECS_RETRY_DELAY
+    if not _LEGACY_LOADER_WARNED:
+        _LEGACY_LOADER_WARNED = True
+        warnings.warn("load_egeria_report_specs is the legacy ReportType:: loader; Egeria-held report specs load "
+                      "through pyegeria.view.egeria_spec_cache", DeprecationWarning, stacklevel=2)
     effective_ttl = ttl_seconds if ttl_seconds is not None else _EGERIA_SPECS_CACHE_TTL
 
     if not force and _EGERIA_SPECS_LOADED_AT is not None:
@@ -4866,11 +4882,16 @@ def load_egeria_report_specs(
     def _settle_load() -> None:
         """Mark the load done only on a confirmed end; otherwise keep what was read and retry soon, so an
         unconfirmed (or filtered-empty) read is never cached for a day as the whole set."""
-        global _EGERIA_SPECS_LOADED_AT, _EGERIA_SPECS_RETRY_AT
+        global _EGERIA_SPECS_LOADED_AT, _EGERIA_SPECS_RETRY_AT, _EGERIA_SPECS_RETRY_DELAY
         if paged.complete:
             _EGERIA_SPECS_LOADED_AT, _EGERIA_SPECS_RETRY_AT = datetime.now(timezone.utc), None
+            _EGERIA_SPECS_RETRY_DELAY = None   # a confirmed load resets the backoff
         else:
-            _EGERIA_SPECS_RETRY_AT = datetime.now(timezone.utc) + timedelta(seconds=_EGERIA_SPECS_RETRY_SECONDS)
+            # back off: 300 s, doubling after each unconfirmed read, capped at the cache TTL
+            _EGERIA_SPECS_RETRY_DELAY = min(
+                (_EGERIA_SPECS_RETRY_DELAY * 2) if _EGERIA_SPECS_RETRY_DELAY else _EGERIA_SPECS_RETRY_SECONDS,
+                max(effective_ttl, _EGERIA_SPECS_RETRY_SECONDS))
+            _EGERIA_SPECS_RETRY_AT = datetime.now(timezone.utc) + timedelta(seconds=_EGERIA_SPECS_RETRY_DELAY)
             logger.info(f"load_egeria_report_specs: read {len(report_types)} ReportType(s) without Egeria "
                         f"confirming there are no more ({end}); not marked loaded, retrying after "
                         f"{_EGERIA_SPECS_RETRY_AT.isoformat()}")
