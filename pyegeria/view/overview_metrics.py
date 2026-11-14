@@ -600,6 +600,7 @@ def _unconfirmed_scan(what: str, paged) -> None:
 
 #: How a figure is worded when a scan it depends on ended unconfirmed (ruling (ii) 1):
 #: - "count": "at least N";
+#: - ("counts_of", label): a map of counts from one scan: as "counts", only when THAT scan was unconfirmed;
 #: - ("count_of", label): a count made by its own scan (a viewer total): "at least N", but only when THAT
 #:   scan (its count label) was unconfirmed, so a confirmed native total beside an unconfirmed scan isn't marked;
 #: - "distinct": "N found; Egeria didn't confirm there are no more";
@@ -614,7 +615,7 @@ def _figure_words(kind: Any, key: str, value: Any, result: Dict[str, Any]) -> Op
         return f"at least {value}"
     if kind == "distinct":
         return f"{value} found; {UNCONFIRMED_REASON}"
-    if kind == "counts":
+    if kind == "counts" or (isinstance(kind, tuple) and kind[0] == "counts_of"):
         return f"each count is at least what is shown; {UNCONFIRMED_REASON}"
     if isinstance(kind, tuple) and kind[0] == "percent":
         return f"{value}% of the {_get_path(result, kind[1])} read; {UNCONFIRMED_REASON}"
@@ -664,7 +665,7 @@ def _mark(result: Dict[str, Any], figures: Dict[str, Any], scans: List[Dict[str,
                  else {s["count"]: s["positions_read"] for s in scans})
     marks: Dict[str, Any] = {}
     for key, kind in figures.items():
-        if isinstance(kind, tuple) and kind[0] == "count_of":
+        if isinstance(kind, tuple) and kind[0] in ("count_of", "counts_of"):
             own = [s for s in scans if s["count"] == kind[1]]
             if not own:
                 continue   # its own count was confirmed (or native): unchanged
@@ -1669,6 +1670,18 @@ def context_readiness_funnel(mgr, ce, as_of: Optional[str] = None) -> Dict[str, 
     }
 
 
+def _all_assets(mgr, body: dict) -> Tuple[Optional[list], bool]:
+    """(every Asset the find matches, or None; whether a limit stopped the read). Through _all_elements, so
+    the scan's end decides what the figures say: confirmed (a #9453 platform) -> totals; null-then-empty-probes
+    -> rows, recorded unconfirmed ("at least"); a limit -> None, with its not-measured note and bound."""
+    with recording_unmeasured() as notes:
+        assets = _all_elements(mgr, body)
+    outer = _UNMEASURED.get()
+    if outer is not None:
+        outer.extend(notes)
+    return assets, assets is None and any(n.get("at_least") is not None for n in notes)
+
+
 def _lineage_guids(ce, as_of: Optional[str], who: str) -> Optional[set]:
     """GUIDs at either end of any DataFlow relationship (every page), or None when the scan failed or was
     incomplete (an incomplete one is noted)."""
@@ -1683,7 +1696,7 @@ def _lineage_guids(ce, as_of: Optional[str], who: str) -> Optional[set]:
             if (g := (r.get(k) or {}).get("guid"))}
 
 
-@_marks_unconfirmed({"aiReadyCount": "count"})
+@_marks_unconfirmed({"aiReadyCount": "count", "total": ("count_of", "Asset")})
 def ai_ready_assets(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Any]:
     """
     The actual "AI-Ready" claim `context_readiness_funnel`'s own UI already
@@ -1730,14 +1743,12 @@ def ai_ready_assets(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Any]:
                              "metadataElementTypeName": "Asset"}
     if as_of:
         body["asOfTime"] = as_of
-    assets = _find_or_none(mgr, body)
+    # Pager step 6 (the sweep): every Asset page, through _all_elements (find_metadata_elements: trusted on a
+    # #9453 platform, else unconfirmed "at least"); a limit is not measured with its bound. It used to read one
+    # page and take a short one as every Asset.
+    assets, limited = _all_assets(mgr, body)
     if assets is None:
-        return {"aiReadyCount": None, "total": None, "capped": None}
-    if len(assets) >= DEFAULT_CAP:
-        # A full page is a sample of the Assets, not all of them: a count from it is not the count.
-        _not_measured("AI-ready Assets", f"the Asset find stopped at its {DEFAULT_CAP}-element page cap, so "
-                                         f"only the first {len(assets)} Assets could be checked", at_least=None)
-        return {"aiReadyCount": None, "total": None, "capped": True}
+        return {"aiReadyCount": None, "total": None, "capped": True if limited else None}
 
     lineage_guids = _lineage_guids(ce, as_of, "ai_ready_assets")
     if lineage_guids is None:
@@ -1820,7 +1831,8 @@ def asset_modality(el: dict) -> str:
 # `context_readiness_funnel`'s own `aiReady=None` already established.
 
 
-@_marks_unconfirmed({"aiReadyCount": "count", "aiReadyRecentCount": "count", "byModality": "counts"})
+@_marks_unconfirmed({"aiReadyCount": "count", "aiReadyRecentCount": "count",
+                     "byModality": ("counts_of", "Asset"), "total": ("count_of", "Asset")})
 def drl_readiness_gates(mgr, ce, as_of: Optional[str] = None, recency_days: int = 180) -> Dict[str, Any]:
     """
     A recency-narrowed view of `ai_ready_assets`, plus a modality breakdown
@@ -1852,14 +1864,11 @@ def drl_readiness_gates(mgr, ce, as_of: Optional[str] = None, recency_days: int 
                              "metadataElementTypeName": "Asset"}
     if as_of:
         body["asOfTime"] = as_of
-    assets = _find_or_none(mgr, body)
-    if assets is None:
+    assets, limited = _all_assets(mgr, body)   # pager step 6 (the sweep): every page, as in ai_ready_assets
+    if assets is None and not limited:
         return {"total": None, "capped": None, "aiReadyCount": None, "aiReadyRecentCount": None,
                 "byModality": None}
-    if len(assets) >= DEFAULT_CAP:
-        # A full page is a sample of the Assets, not all of them: no figure here may describe it as all.
-        _not_measured("DRL readiness gates", f"the Asset find stopped at its {DEFAULT_CAP}-element page cap, "
-                                             f"so only the first {len(assets)} Assets could be checked")
+    if assets is None:
         return {"total": None, "capped": True, "aiReadyCount": None, "aiReadyRecentCount": None,
                 "byModality": None}
 
