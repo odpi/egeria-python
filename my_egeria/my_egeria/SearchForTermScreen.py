@@ -13,6 +13,7 @@ from textual.containers import ScrollableContainer, Horizontal
 from textual.screen import ModalScreen
 from textual.widgets import Header, Footer, Static, Input, Placeholder, Button, Markdown
 from pyegeria import load_app_config, settings, PyegeriaException, exec_report_spec
+from paging_support import none_words, report_empty_words, report_end_complete
 from profile_utils import set_screen_heading
 
 
@@ -110,10 +111,14 @@ class SearchForTermScreen(ModalScreen):
                                               user_pass=self.password, )
             if isinstance(self.search_result, dict):
                 if self.search_result.get("kind") == "text":
-                    if self.search_result.get("mimeType") == "text/markdown":
+                    # the executor's key is "mime" ("mimeType" was never sent, so every found term read as none)
+                    if (self.search_result.get("mime") or self.search_result.get("mimeType")) == "text/markdown":
                         self.search_result = self.search_result.get("content")
                     else:
                         self.search_result = "# No Markdown content found for this glossary term"
+                elif self.search_result.get("kind") == "empty":
+                    # "none" only when Egeria confirmed the end; otherwise the search may have stopped short
+                    self.search_result = f"# {report_empty_words('glossary terms', self.search_result, search_term)}"
                 else:
                     self.search_result = "# No Markdown content found for this glossary term"
             else:

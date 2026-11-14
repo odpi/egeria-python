@@ -42,6 +42,33 @@ from SelectionOverviewScreen import SelectionOverviewScreen
 from CreateSubscriptionRequestScreen import CreateSubscriptionRequestScreen
 from StatusScreen import StatusScreen
 from GenericDataViewScreen import GenericDataViewScreen
+from paging_support import NOT_CONFIRMED, lookup, report_empty_cells, report_empty_words
+
+#: Rows per request when looking for a product's data set. Never 1: on Egeria builds before odpi/egeria #9453
+#: a page of 1 can say "No elements found" though a match exists (the B5 bug), so the old page_size=1 lookup
+#: could report a data set as missing.
+DATA_SET_PAGE = 25
+
+
+def find_data_set(client: Any, search_string: str):
+    """The first tabular data set Egeria returns for search_string (its own starts-with search), as a
+    paging.Exists: found (``matches[0]`` is the DICT row), absent (the read reached Egeria's end) or unknown.
+    Paged per Egeria's contract, so an empty or filtered first page is not read as "none"."""
+    def fetch(start: int, size: int):
+        page = client.find_tabular_data_sets(search_string=search_string, start_from=start, page_size=size,
+                                             graph_query_depth=0,  # only the GUID of the first row is used
+                                             output_format="DICT")
+        return [page] if isinstance(page, dict) else page   # a single match may come back as a dict
+
+    return lookup(fetch, lambda row: isinstance(row, dict) and bool(row.get("GUID")),
+                  method="find_tabular_data_sets", client=client, fetch_page_size=DATA_SET_PAGE)
+
+
+def data_set_absence_words(found: Any, name: str) -> str:
+    """What to say when no data set was found for name: plain "none" only when the read reached the end."""
+    if found.answer == "absent":
+        return f"No metadata found for dataset {name}"
+    return f"No metadata found for dataset {name} in what Egeria returned; {NOT_CONFIRMED}"
 
 class ShopForDataMixin():
     """Mixin class providing Catalogs & Shop For Data functionality for MyProfileApp."""
@@ -239,7 +266,7 @@ class ShopForDataMixin():
                 if glossary_table is not None:
                     if not self.glossary_data_extract:
                         self.app.log(f"No glossary data found for search string: {self.selected_t_node}")
-                        glossary_table.add_row("No glossaries found", "No data returned from Egeria", "")
+                        glossary_table.add_row(*report_empty_cells("glossaries", self.glossary_data), "")
                     else:
                         for g in self.glossary_data_extract:
                             glossary_table.add_row(g.get("Display Name", ""), g.get("Description", ""), g.get("Qualified Name", ""))
@@ -253,8 +280,8 @@ class ShopForDataMixin():
                 if digital_product_catalog_table is not None:
                     if not self.digital_product_catalog_data_extract:
                         self.app.log(f"No digital product catalog data found for user: {self.user_name}")
-                        digital_product_catalog_table.add_row("No digital product catalogs found",
-                                                              "No data returned from Egeria", "", "")
+                        digital_product_catalog_table.add_row(
+                            *report_empty_cells("digital product catalogs", self.digital_product_catalog_data), "", "")
                     else:
                         for catalog_item in self.digital_product_catalog_data_extract:
                             digital_product_catalog_table.add_row(
@@ -273,7 +300,8 @@ class ShopForDataMixin():
                 if data_dictionary_table is not None:
                     if not self.data_dictionary_data_extract:
                         self.app.log(f"No data dictionary details found for user: {self.user_name}")
-                        data_dictionary_table.add_row("No data dictionaries found", "No data returned from Egeria", "", "")
+                        data_dictionary_table.add_row(
+                            *report_empty_cells("data dictionaries", self.data_dictionary_data), "", "")
                     else:
                         self.app.log(
                             f"Found {len(self.data_dictionary_data_extract)} data dictionaries for user {self.user_name}")
@@ -294,7 +322,7 @@ class ShopForDataMixin():
                 if business_domain_table is not None:
                     if not self.business_domain_data_extract:
                         self.app.log(f"No business domains found for user {self.user_name}")
-                        business_domain_table.add_row("No business domains found", "No data returned from Egeria", "")
+                        business_domain_table.add_row(*report_empty_cells("business domains", self.business_domain_data), "")
                     else:
                         self.app.log(
                             f"Found {len(self.business_domain_data_extract)} business domains for user {self.user_name}")
@@ -313,8 +341,7 @@ class ShopForDataMixin():
                 self.app.log(f"Found {len(root_extract)} root collections for user {self.user_name}")
                 if root_collection_table is not None:
                     if not root_extract:
-                        err_msg = str(self.collections) if isinstance(self.collections, str) else "No data returned from Egeria"
-                        root_collection_table.add_row("No root collections found", err_msg, "")
+                        root_collection_table.add_row(*report_empty_cells("root collections", self.collections), "")
                     else:
                         for collection in root_extract:
                             root_collection_table.add_row(
@@ -555,7 +582,7 @@ class ShopForDataMixin():
         elif isinstance(self.dictionary_details, dict) and self.dictionary_details.get("kind") == "empty":
             dictionary_tree: Tree = Tree(label="Empty Dictionary", id="data_dictionary_tree")
             dictionary_tree.root.expand()
-            dictionary_tree.root.content = "No dictionary terms found for this dictionary"
+            dictionary_tree.root.content = report_empty_words("dictionary terms", self.dictionary_details) + " for this dictionary"
         else:
             dictionary_tree = Tree(label=self.dictionary_display_name, id="data_dictionary_tree")
             dictionary_tree.root.expand()
@@ -624,7 +651,7 @@ class ShopForDataMixin():
         elif isinstance(self.domain_details, dict) and self.domain_details.get("kind") == "empty":
             domain_tree: Tree = Tree(label="Empty Business Domain", id="business_domain_tree")
             domain_tree.root.expand()
-            domain_tree.root.content = "No domain details found for this business domain"
+            domain_tree.root.content = report_empty_words("domain details", self.domain_details) + " for this business domain"
         else:
             domain_items = self._extract_report_data(self.domain_details)
             self.domain_details_data = domain_items
@@ -706,7 +733,7 @@ class ShopForDataMixin():
         elif isinstance(self.catalog_details, dict) and self.catalog_details.get("kind") == "empty":
             catalog_tree: Tree = Tree(label="Empty Catalog", id="digital_product_catalog_tree")
             catalog_tree.root.expand()
-            catalog_tree.root.content = "No catalog terms found for this catalog"
+            catalog_tree.root.content = report_empty_words("catalog terms", self.catalog_details) + " for this catalog"
             sample_data: list = []
         else:
             catalog_tree = Tree(label=self.catalog_display_name, id="digital_product_catalog_tree")
@@ -757,16 +784,10 @@ class ShopForDataMixin():
                             try:
                                 dclient = Egeria(self.view_server, self.platform_url, self.user_name, self.user_password)
                                 token = dclient.create_egeria_bearer_token(self.user_name, self.user_password)
-                                data_set_metadata = dclient.find_tabular_data_sets(
-                                    search_string=membership_qname,
-                                    start_from=0,
-                                    page_size=1,
-                                    graph_query_depth=0,  # only the GUID of the first row is used
-                                    output_format="DICT",
-                                )
-                                self.app.log(f"Dataset metadata retrieved: {data_set_metadata}")
-                                if isinstance(data_set_metadata, list) and len(data_set_metadata) > 0 and data_set_metadata != "No elements found":
-                                    data_set_guid = data_set_metadata[0].get("GUID")
+                                data_set = find_data_set(dclient, membership_qname)
+                                self.app.log(f"Dataset lookup for {membership_qname}: {data_set.answer}")
+                                if data_set.found:
+                                    data_set_guid = data_set.matches[0].get("GUID")
                                     if data_set_guid:
                                         data_set_data = dclient.get_tabular_data_set(
                                             tabular_data_set_guid=data_set_guid,
@@ -779,7 +800,7 @@ class ShopForDataMixin():
                                     else:
                                         sample_data.append(f"No GUID found for dataset {membership_qname}")
                                 else:
-                                    sample_data.append(f"No metadata found for dataset {membership_qname}")
+                                    sample_data.append(data_set_absence_words(data_set, membership_qname))
                             except PyegeriaException as e:
                                 self.app.log(f"Error retrieving dataset data: {e}")
                                 print_basic_exception(e)
@@ -1186,23 +1207,15 @@ class ShopForDataMixin():
             try:
                 dclient = Egeria(self.view_server, self.platform_url, self.user_name, self.user_password)
                 dclient.create_egeria_bearer_token(self.user_name, self.user_password)
-                data_set_metadata = dclient.find_tabular_data_sets(
-                    search_string=element_qname,
-                    start_from=0,
-                    page_size=1,
-                    graph_query_depth=0,  # only the GUID of the first row is used
-                    output_format="DICT",
-                )
-                if (not data_set_metadata or data_set_metadata == "No elements found") and element_name:
-                    data_set_metadata = dclient.find_tabular_data_sets(
-                        search_string=element_name,
-                        start_from=0,
-                        page_size=1,
-                        graph_query_depth=0,  # only the GUID of the first row is used
-                        output_format="DICT",
-                    )
-                if isinstance(data_set_metadata, list) and len(data_set_metadata) > 0 and data_set_metadata != "No elements found":
-                    data_set_guid = data_set_metadata[0].get("GUID")
+                data_set = find_data_set(dclient, element_qname)
+                # Fall back to the display name only when the qualified-name read reached the end without a match
+                if data_set.answer == "absent" and element_name:
+                    data_set = find_data_set(dclient, element_name)
+                if not data_set.found:
+                    self.app.notify(data_set_absence_words(data_set, element_name or element_qname),
+                                    title="Shop for Data", severity="warning")
+                if data_set.found:
+                    data_set_guid = data_set.matches[0].get("GUID")
                     if data_set_guid:
                         sample_data = dclient.get_tabular_data_set(
                             tabular_data_set_guid=data_set_guid,
