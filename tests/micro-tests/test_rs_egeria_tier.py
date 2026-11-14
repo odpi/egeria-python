@@ -1003,7 +1003,7 @@ def test_a_zoned_or_unknown_fetch_is_never_written_to_disk(tier, shared, zone_me
     name = esc.fetch_spec_for_call(eg, "Fin-Spec")
     assert (tier["cache"] / esc.MANIFEST).read_text() == manifest_before   # no manifest entry
     assert sorted(p.name for p in tier["cache"].iterdir()) == files_before  # no spec file either
-    assert esc._FETCHED[("Fin-Spec", 1)][1]["visibility"] == visibility     # this process only
+    assert esc.egeria_tier_info("Fin-Spec@v1")["visibility"] == visibility   # this process only
     assert brf.select_report_format(name, "DICT") is not None
 
 
@@ -1016,7 +1016,8 @@ def test_a_public_fetch_still_writes_through_to_a_private_cache(tier):
     eg.put(open_el, folder=None)
     esc.fetch_spec_for_call(eg, "Open-Spec")
     entries = json.loads((tier["cache"] / esc.MANIFEST).read_text())["entries"]
-    assert entries["Open-Spec"]["pinned"] is True and esc._FETCHED[("Open-Spec", 1)][1]["visibility"] == "public"
+    assert entries["Open-Spec"]["pinned"] is True
+    assert esc.egeria_tier_info("Open-Spec@v1")["visibility"] == "public"
 
 
 def test_zone_state():
