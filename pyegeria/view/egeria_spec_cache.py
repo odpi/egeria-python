@@ -1280,8 +1280,9 @@ def egeria_tier(*, force: bool = False):
 def egeria_tier_info(label: str) -> Optional[Dict[str, Any]]:
     """Provenance for a label in the EGERIA tier (or a fetched `label@vN`), else None."""
     m = _FETCHED_SUFFIX.match(label or "")
-    if m and (m.group("label"), int(m.group("version"))) in _FETCHED:
-        return dict(_FETCHED[(m.group("label"), int(m.group("version")))][1])
+    hit = _fetched_hit(m.group("label"), int(m.group("version"))) if m else None
+    if hit:
+        return dict(hit[1])
     egeria_tier()
     info = _TIER.get("meta", {}).get(label)
     return dict(info) if info else None
@@ -1318,17 +1319,47 @@ def spec_footer(info: Optional[Dict[str, Any]]) -> Optional[str]:
 
 # ── Fetch on a call (§7a "Fetch on a call") ──
 
-#: Specs fetched with refresh_spec=True, kept for the life of the process, keyed by (label, header
-#: version). Addressed internally as "egeria:<label>@v<version>".
-_FETCHED: Dict[Tuple[str, int], Tuple[Any, Dict[str, Any]]] = {}
+#: Specs fetched with refresh_spec=True, kept for the life of the process, keyed by (credential identity, label,
+#: header version): served only to the identity that fetched them (spec-cache identity ruling, item 4), never to
+#: another identity, with no fallback to its copy. Addressed internally as "egeria:<label>@v<version>".
+_FETCHED: Dict[Tuple[Optional[str], str, int], Tuple[Any, Dict[str, Any]]] = {}
+NOT_FETCHED_FOR_YOU = "not fetched for you; fetch it as yourself"
+_REFUSAL_LOGGED: set = set()
 
 
-def fetched_spec(name: str):
-    """The FormatSet for an internal "<label>@v<N>" name, or None."""
+def _fetched_hit(label: str, version: int, identity: Optional[str] = None):
+    """The fetched copy for (`identity` or the current spec identity, label, version), or None. Never another
+    identity's copy."""
+    return _FETCHED.get((identity if identity is not None else current_spec_identity(), label, version))
+
+
+def fetched_refusal(name: str, identity: Optional[str] = None) -> Optional[str]:
+    """The words when `name` ("[egeria:]<label>@v<N>") was fetched in this process, but only by other identities:
+    "... not fetched for you; fetch it as yourself". None when it is this identity's, or never fetched."""
+    _tier, rest = split_tier_prefix(name)
+    m = _FETCHED_SUFFIX.match(rest or "") if isinstance(rest, str) else None
+    if not m:
+        return None
+    label, version = m.group("label"), int(m.group("version"))
+    if _fetched_hit(label, version, identity):
+        return None
+    if any(k[1] == label and k[2] == version for k in _FETCHED):
+        return f"Report spec '{label}' v{version}: {NOT_FETCHED_FOR_YOU}"
+    return None
+
+
+def fetched_spec(name: str, identity: Optional[str] = None):
+    """The FormatSet for an internal "<label>@v<N>" name fetched by this identity (`identity`, else the current
+    spec identity), or None. Another identity's copy is never returned (see `fetched_refusal`)."""
     m = _FETCHED_SUFFIX.match(name or "")
     if not m:
         return None
-    hit = _FETCHED.get((m.group("label"), int(m.group("version"))))
+    hit = _fetched_hit(m.group("label"), int(m.group("version")), identity)
+    if hit is None and (words := fetched_refusal(name, identity)):
+        key = (identity if identity is not None else current_spec_identity(), name)
+        if key not in _REFUSAL_LOGGED:
+            _REFUSAL_LOGGED.add(key)
+            logger.warning(f"{words} (asked for as {key[0] or 'no identity'})")
     return hit[0] if hit else None
 
 
@@ -1339,7 +1370,7 @@ def fetched_spec_source(name: str) -> Optional[Dict[str, Any]]:
     m = _FETCHED_SUFFIX.match(rest or "") if isinstance(rest, str) else None
     if not m:
         return None
-    hit = _FETCHED.get((m.group("label"), int(m.group("version"))))
+    hit = _fetched_hit(m.group("label"), int(m.group("version")))
     return dict(hit[1]) if hit else None
 
 
@@ -1370,7 +1401,7 @@ def _finish_fetch(directory: Path, el: Dict[str, Any], label: str, identity: str
             "version": built.provenance["version_identifier"], "header_version": version,
             "fetched_at": built.provenance["fetched_at"], "fetched": True, "shared": shared,
             "qualified_name": built.provenance["qualified_name"]}
-    _FETCHED[(label, version)] = (built.format_set, info)
+    _FETCHED[(bound, label, version)] = (built.format_set, info)   # served only to the identity that fetched it
     owner = manifest.get("bound_identity")
     if shared:
         logger.info(f"Report spec '{label}' v{version} fetched from Egeria; the cache {directory} is shared, so "

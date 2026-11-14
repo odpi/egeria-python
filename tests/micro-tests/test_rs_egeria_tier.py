@@ -821,7 +821,7 @@ def test_fetch_on_call_never_writes_a_shared_cache_and_keeps_the_copy_in_process
     name = esc.fetch_spec_for_call(eg, "E-Collections")
     assert name == "egeria:E-Collections@v2"
     assert (tier["cache"] / esc.MANIFEST).read_text() == manifest_before
-    assert esc._FETCHED[("E-Collections", 2)][1]["shared"] is True
+    assert esc.egeria_tier_info("E-Collections@v2")["shared"] is True
     assert brf.select_report_format(name, "DICT")["formats"]["types"] == ["DICT"]  # the fetched v1.1
     assert brf.select_report_format("E-Collections", "DICT")["formats"]["types"] == ["ALL"]  # cache untouched
     assert eg.full_fetches[-1] == E_GUID  # looked up by the guid the cache knows
@@ -1029,3 +1029,42 @@ def test_identity_is_the_egeria_user_never_the_os_user():
     assert esc.credential_identity("erinoverview", "https://localhost:9443", "qs-view-server") == \
         "erinoverview@localhost_9443/qs-view-server"
     assert esc.credential_identity("", "https://x", "s") is None and esc.credential_identity("?") is None
+
+
+# ── A fetched spec is served only to the identity that fetched it (ruling item 4) ──
+
+def _as(user):
+    return esc.credential_identity(user, "https://localhost:9443", "qs-view-server")
+
+
+def test_a_fetched_spec_is_served_only_to_its_fetcher(tier):
+    eg = FakeEgeria()   # fetches as erinoverview
+    eg.put(spec_element())
+    esc.sync_report_specs(eg, folders=[FOLDER_QN], shared=True)
+    eg.put(spec_element(version=2, microflow=mfm.format_set_to_microflow(builtin()).to_json(),
+                        version_identifier="1.1"))
+    name = esc.fetch_spec_for_call(eg, "E-Collections")
+    internal = name.split(":", 1)[1]
+    with esc.spec_identity(_as("erinoverview")):
+        assert esc.fetched_spec(internal) is not None and esc.fetched_spec_source(name)["header_version"] == 2
+        assert esc.fetched_refusal(name) is None
+        assert brf.select_report_format(name, "DICT")["formats"]["types"] == ["DICT"]
+    with esc.spec_identity(_as("peterprofile")):   # another identity: no copy, no fallback to erin's
+        assert esc.fetched_spec(internal) is None and esc.fetched_spec_source(name) is None
+        assert esc.egeria_tier_info(internal) is None
+        assert esc.fetched_refusal(name) == "Report spec 'E-Collections' v2: not fetched for you; fetch it as yourself"
+        assert brf.select_report_format(name, "DICT") is None
+    assert esc.fetched_spec(internal, identity=_as("erinoverview")) is not None   # an explicit identity
+
+
+def test_each_identity_gets_its_own_fetched_copy(tier):
+    for user in ("erinoverview", "peterprofile"):
+        eg = FakeEgeria()
+        eg.user_id = user
+        eg.put(spec_element())
+        esc.fetch_spec_for_call(eg, "E-Collections")
+    assert {k[0] for k in esc._FETCHED} == {_as("erinoverview"), _as("peterprofile")}
+
+
+def test_a_name_never_fetched_has_no_refusal(tier):
+    assert esc.fetched_refusal("egeria:Nobody@v1") is None
