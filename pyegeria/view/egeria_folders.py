@@ -100,14 +100,15 @@ def _members(client, collection_guid: str, unconfirmed: Optional[List[str]] = No
     pages raises FolderTooLarge: never shown as a short folder. Any read Egeria didn't confirm complete (the
     usual suspect-path end, a stall, the empty-run cap) returns what was read and appends `collection_guid` to
     `unconfirmed`, so its count is shown as "at least"."""
-    from pyegeria.core.paging import log_end, page_all
+    from pyegeria.core.paging import log_end, page_all, paging_for
 
     def fetch(start, size):
         result = client.get_collection_members(collection_guid=collection_guid, start_from=start, page_size=size,
                                                output_format="JSON")
         return _elements(result) if isinstance(result, (list, dict)) else result   # null stays null
 
-    paged = page_all(fetch, fetch_page_size=MEMBERS_PAGE, max_pages=MEMBERS_MAX_PAGES, end_policy="suspect",
+    paged = page_all(fetch, fetch_page_size=MEMBERS_PAGE, max_pages=MEMBERS_MAX_PAGES,
+                     **paging_for("get_collection_members"),
                      key=lambda m: _guid(m) or id(m))
     log_end("egeria_folders._members", paged)
     if paged.end_reason == "max_pages":

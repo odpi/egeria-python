@@ -65,7 +65,13 @@ TRUSTED_END_METHODS = {
 #: (laz, read-only, 2026-11-14): at pageSize 25, runs of up to 3 nulls mid-set on both, and no [] in 457
 #: requests. Promotion to TRUSTED_END_METHODS is closed for these until Egeria returns [] for a filtered page
 #: (the Architect's ruling after the step 4 capture).
-NULL_NOT_END_METHODS = frozenset({"find_metadata_elements", "get_relationships"})
+#: The by-property-value reads joined on the exists-lookups ruling (2026-11-14): classification-explorer
+#: by-property-value is StewardshipManagementHandler -> OpenMetadataClient.getMetadataElementsByPropertyValue,
+#: which is findMetadataElements(...getSearchPropertiesByName...): the server method the capture caught.
+#: Promotion of any of these is gated on an Egeria build with odpi/egeria #9453 and a post-rebuild capture.
+NULL_NOT_END_METHODS = frozenset({"find_metadata_elements", "get_relationships",
+                                  "get_elements_by_property_value", "find_elements_by_property_value",
+                                  "_async_get_elements_by_property_value"})
 
 #: Probe pages after a null on a NULL_NOT_END method: the capture's longest null run was 3; 6 gives 2x headroom.
 NULL_NOT_END_PROBE_PAGES = 6
@@ -363,3 +369,80 @@ def log_end(method: str, paged: PageResult) -> dict:
     else:
         logger.info(f"paged read: {fields}")
     return fields
+
+
+# ── Step 5: "exists?" lookups (the exists-lookups ruling, 2026-11-14) ─────────────────────────────────────────
+# found = a match was read; absent = the read reached the end (never on a NULL_NOT_END method); unknown otherwise.
+# Use only where one "found" decides the outcome, never to prove uniqueness. A write guard treats unknown as
+# "don't create; log it". ("None" as display words still needs a confirmed end: brief condition 4.)
+
+EXISTS_MAX_PAGES = 10
+EXISTS_ANSWERS = ("found", "absent", "unknown")
+
+
+@dataclass(frozen=True)
+class Exists:
+    """A three-way existence answer, with the matches read and how the read ended."""
+    answer: str
+    matches: List[Any]
+    read: PageResult
+
+    @property
+    def found(self) -> bool:
+        return self.answer == "found"
+
+    def words(self, what: str) -> str:
+        if self.answer == "found":
+            return f"{what}: found"
+        if self.answer == "absent":
+            return f"{what}: not found (the read reached the end)"
+        return (f"{what}: can't tell whether it exists ({self.read.positions_read} positions read, end "
+                f"{self.read.end}, {self.read.end_reason}): Egeria didn't confirm there are no more")
+
+
+def _exists_pager(method: Optional[str], fetch_page_size: int, max_pages: int) -> _Pager:
+    if not isinstance(max_pages, int) or isinstance(max_pages, bool) or not 1 <= max_pages <= EXISTS_MAX_PAGES:
+        raise ValueError(f"max_pages must be a whole number from 1 to {EXISTS_MAX_PAGES}, not {max_pages!r}")
+    p = paging_for(method)
+    return _pager(None, fetch_page_size, p["end_policy"], p.get("probe_pages", DEFAULT_PROBE_PAGES),
+                  DEFAULT_MAX_EMPTY_ROWS, max_pages, None)
+
+
+def _exists_answer(pager: _Pager, matches: List[Any], method: Optional[str]) -> Exists:
+    result = pager.result or PageResult(items=list(pager.items), end="capped", note="stopped at the first match",
+                                        pages_read=pager.pages, positions_read=pager.start, end_reason="want")
+    if method in NULL_NOT_END_METHODS:
+        result = replace(result, null_not_end=True)
+    if matches:
+        return Exists("found", matches, result)
+    return Exists("absent" if result.reached_end else "unknown", [], result)
+
+
+def exists(fetch: Callable[[int, int], Any], match: Callable[[Any], bool], *, method: Optional[str],
+           fetch_page_size: int = DEFAULT_FETCH_PAGE_SIZE, max_pages: int = EXISTS_MAX_PAGES) -> Exists:
+    """Page ``fetch`` (with ``**paging_for(method)``) until a row satisfies ``match`` (an exact, client-side
+    test), the end is reached, or ``max_pages`` (at most EXISTS_MAX_PAGES) stops it."""
+    pager = _exists_pager(method, fetch_page_size, max_pages)
+    matches: List[Any] = []
+    while not matches and (req := pager.request()) is not None:
+        with _end_signal() as record:
+            page = fetch(*req)
+        before = len(pager.items)
+        pager.feed(_signalled(page, record))
+        matches = [row for row in pager.items[before:] if match(row)]
+    return _exists_answer(pager, matches, method)
+
+
+async def async_exists(fetch: Callable[[int, int], Awaitable[Any]], match: Callable[[Any], bool], *,
+                       method: Optional[str], fetch_page_size: int = DEFAULT_FETCH_PAGE_SIZE,
+                       max_pages: int = EXISTS_MAX_PAGES) -> Exists:
+    """``exists`` for an async ``fetch``."""
+    pager = _exists_pager(method, fetch_page_size, max_pages)
+    matches: List[Any] = []
+    while not matches and (req := pager.request()) is not None:
+        with _end_signal() as record:
+            page = await fetch(*req)
+        before = len(pager.items)
+        pager.feed(_signalled(page, record))
+        matches = [row for row in pager.items[before:] if match(row)]
+    return _exists_answer(pager, matches, method)

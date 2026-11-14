@@ -91,9 +91,12 @@ def test_count_elements_native_returns_plain_int():
 def test_count_elements_falls_back_when_no_native_method():
     mgr = _mgr()
     mgr.find_metadata_elements.side_effect = _pages([{"a": 1}, {"b": 2}, {"c": 3}])
-    n = om.count_elements(mgr, type_name="Asset", population="viewer")
+    with om.recording_unconfirmed() as scans:
+        n = om.count_elements(mgr, type_name="Asset", population="viewer")
     assert n == 3
-    mgr.find_metadata_elements.assert_called_once()
+    # pager step 5: the fallback pages (one short page is not the total): the null at 500, then 6 probes,
+    # and the count is a lower bound (find_metadata_elements is NULL_NOT_END)
+    assert mgr.find_metadata_elements.call_count == 8 and scans[0]["read"] == 3
 
 
 def test_count_elements_falls_back_when_native_raises():

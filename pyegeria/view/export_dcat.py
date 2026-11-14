@@ -157,7 +157,7 @@ class _Notes:
 
 # ── Reads (as the client's user) ──
 
-def _paged(read, page_size: int, notes: _Notes, what: str) -> List[Dict[str, Any]]:
+def _paged(read, page_size: int, notes: _Notes, what: str, method: Optional[str] = None) -> List[Dict[str, Any]]:
     """Every element ``read(start, size)`` returns, through the pager (pager step 4; a suspect path), advancing
     startFrom by the full page size each time (Egeria's paging contract: an empty page is a filtered one, not
     the end; only null ends it, and on a suspect path only after the probes find nothing too).
@@ -166,9 +166,9 @@ def _paged(read, page_size: int, notes: _Notes, what: str) -> List[Dict[str, Any
     already read is skipped, never counted twice (ISSUE-185), and one page with nothing new does not by itself
     end the reading: two in a row do (``stall_pages=2``). Whenever the end isn't confirmed, a note says the
     catalog shows at least what was read, and why."""
-    from pyegeria.core.paging import at_least_note, log_end, page_all
+    from pyegeria.core.paging import at_least_note, log_end, page_all, paging_for
     paged = page_all(lambda start, size: read(start, size), fetch_page_size=page_size, max_pages=_MAX_PAGES,
-                     end_policy="suspect", stall_pages=2, key=lambda e: _guid(e) or id(e))
+                     stall_pages=2, key=lambda e: _guid(e) or id(e), **paging_for(method))
     log_end(f"export_dcat._paged ({what})", paged)
     notes.read_unconfirmed = notes.read_unconfirmed or not paged.complete
     items = [e for e in paged.items if isinstance(e, dict)]
@@ -468,14 +468,14 @@ def export_dcat(client: Any, scope: Optional[str] = None, search_string: Optiona
         guid = _guid(collection)
         members = _paged(lambda s, n: client.get_collection_members(
             collection_guid=guid, start_from=s, page_size=n, output_format="JSON", graph_query_depth=0), page_size, b.notes,
-            f"the members of {_qn(collection)}")
+            f"the members of {_qn(collection)}", "get_collection_members")
         b.notes.add(f"Read as {viewer}: Egeria leaves members in zones {viewer} cannot see out of the member "
                     f"listing, so this catalog lists only what {viewer} can see.")
     else:
         catalog = b.catalog(None, search_string=search_string)
         members = _paged(lambda s, n: client.find_in_asset_domain(
             search_string=search_string, start_from=s, page_size=n, output_format="JSON", graph_query_depth=0), page_size, b.notes,
-            f"the assets matching '{search_string}'")
+            f"the assets matching '{search_string}'", "find_in_asset_domain")
         b.notes.add(f"Read as {viewer}: Egeria leaves assets in zones {viewer} cannot see out of a search, so this "
                     f"catalog lists only what {viewer} can see.")
 

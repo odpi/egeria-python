@@ -232,17 +232,17 @@ def _element_key(element: Dict[str, Any]) -> Any:
     return _guid(element) or default_key(element)
 
 
-def _read_pages(fetch, page_size: int, max_pages: int,
-                what: str = "saved_query._read_pages") -> Tuple[List[Dict[str, Any]], bool, Optional[str]]:
+def _read_pages(fetch, page_size: int, max_pages: int, what: str = "saved_query._read_pages",
+                method: Optional[str] = None) -> Tuple[List[Dict[str, Any]], bool, Optional[str]]:
     """Every distinct element `fetch(start_from, page_size)` returns, read through the pager (pager step 4,
     a suspect path). Returns (elements, capped, note):
     - capped: True unless Egeria confirmed there is no more (ruling (A): a saved query's answer says "at least"
       and is never "nothing found" unless the end is confirmed), including when `max_pages` stopped it;
     - note: why the read isn't confirmed whole. A server that ignores startFrom returns the same page again:
       the read stops there and says so (PAGING_STALLED); repeated rows are never counted (ISSUE-185)."""
-    from pyegeria.core.paging import log_end, page_all
+    from pyegeria.core.paging import log_end, page_all, paging_for
     paged = page_all(lambda start, size: _page_of(fetch(start, size)), fetch_page_size=page_size,
-                     max_pages=max_pages, end_policy="suspect", key=_element_key)
+                     max_pages=max_pages, key=_element_key, **paging_for(method))   # `method`: what fetch calls
     log_end(what, paged)
     found = list(paged.items)
     if paged.complete:
@@ -642,7 +642,7 @@ def _cached(client, name, output, additional, page_size, max_pages, kept_current
         members, capped, paging_note = _read_pages(
             lambda start, size: client.get_collection_members(collection_guid=results_set, start_from=start,
                                                               page_size=size, output_format="JSON"),
-            page_size, max_pages)
+            page_size, max_pages, method="get_collection_members")
     except Exception as exc:  # noqa: BLE001
         if _is_not_visible(exc):
             return _result(name, "cached", output, state="not_established", absence="not_permitted",
@@ -680,7 +680,7 @@ def _live(client, name, output, method, body, page_size, max_pages):
     try:
         found, capped, paging_note = _read_pages(
             lambda start, size: fn(body={**body, "startFrom": start, "pageSize": size, "graphQueryDepth": 0}),
-            page_size, max_pages)
+            page_size, max_pages, method=method)   # e.g. find_metadata_elements: NULL_NOT_END
     except Exception as exc:  # noqa: BLE001
         if _is_not_visible(exc):
             return _result(name, "live", output, state="not_established", absence="not_permitted",
@@ -713,11 +713,11 @@ def _all_related(client, guid: str, relationship: str, end: int):
     """(every element related to `guid` by `relationship`, the PageResult), read through the pager (pager
     step 4, a suspect path). Acted on as the end when the read reached it (a null, then empty probes); a limit
     (more than DELETE_LINK_MAX_PAGES pages, a stall, the empty-run cap) is refused rather than half read."""
-    from pyegeria.core.paging import log_end, page_all
+    from pyegeria.core.paging import log_end, page_all, paging_for
     paged = page_all(lambda start, size: _page_of(client.get_related_elements(
         guid, relationship, start_at_end=end, start_from=start, page_size=size, output_format="JSON")),
-        fetch_page_size=DELETE_LINK_PAGE, max_pages=DELETE_LINK_MAX_PAGES, end_policy="suspect",
-        key=_element_key)
+        fetch_page_size=DELETE_LINK_PAGE, max_pages=DELETE_LINK_MAX_PAGES, key=_element_key,
+        **paging_for("get_related_elements"))
     log_end("saved_query._all_related", paged)
     if paged.end_reason == "max_pages":
         raise RuntimeError(f"delete_saved_query: {guid} has more than {DELETE_LINK_MAX_PAGES * DELETE_LINK_PAGE} "

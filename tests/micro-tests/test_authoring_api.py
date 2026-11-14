@@ -293,8 +293,12 @@ def test_validate_never_raises_for_a_bad_draft():
 # ── preview: as the caller, capped, no global side effect ────────────────────
 
 class _NothingHeld:
-    """classification-explorer answering "No elements found" (a publish target that isn't held yet)."""
+    """classification-explorer answering "No elements found" (a publish target that isn't held yet). Publishing
+    reads its target by the unique-name read (the exists-lookups ruling, 2026-11-14)."""
     async def _async_get_elements_by_property_value(self, *a, **k):
+        return "No elements found"
+
+    async def _async_get_element_by_unique_name(self, qn):
         return "No elements found"
 
 

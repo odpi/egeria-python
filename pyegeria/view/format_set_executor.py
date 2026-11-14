@@ -45,8 +45,7 @@ from pyegeria.view.overview_metrics import UNCONFIRMED_REASON, recording_unconfi
 from pyegeria.view._output_format_models import DOCUMENT_OUTPUT_TYPE, check_document_file_name
 from pyegeria.view.document_validators import run_document_validator
 from pyegeria.core._server_client import recording_list_requests
-from pyegeria.core.paging import (DEFAULT_FETCH_PAGE_SIZE, PageResult, async_page_all, end_policy_for,
-                                   page_all)
+from pyegeria.core.paging import (DEFAULT_FETCH_PAGE_SIZE, PageResult, async_page_all, end_policy_for, page_all, paging_for)
 from pyegeria.view.output_formatter import check_dict_shape, dict_shape_for_call
 from pyegeria.view.structured_table import build_structured_table, check_table_shape, mark_relationship_absence
 
@@ -1343,7 +1342,9 @@ def _find_plan(func: Any, call_params: Dict[str, Any], output_format: str, metho
     if page_to is not None and (not isinstance(page_to, int) or isinstance(page_to, bool) or page_to < 1):
         raise ValueError(f"page_to must be None or a whole number of at least 1, not {page_to!r}")
     size = _effective_page_size(func, call_params)
-    return {"policy": end_policy_for(method_name), "size": size, "start": call_params.get("start_from") or 0,
+    paging = paging_for(method_name)   # step 5: NULL_NOT_END methods get 6 probes and null_not_end
+    return {"policy": paging["end_policy"], "paging": paging, "size": size,
+            "start": call_params.get("start_from") or 0,
             "list": output_format in LIST_FORMATS and _pageable(func), "page_to": page_to}
 
 
@@ -1357,7 +1358,7 @@ def _after_first_page(plan: Dict[str, Any], record: Dict[str, Any], result: Any)
     # at most AFTER_EMPTY_MAX_PAGES pages, so one empty tile costs at most 1 + 10 requests, not 80 at size 25.
     # When that stops it the end is "capped", which still reads as "nothing in the first N positions".
     return dict(want=plan["size"], fetch_page_size=max(plan["size"], DEFAULT_FETCH_PAGE_SIZE),
-                start_from=plan["start"] + plan["size"], end_policy=plan["policy"], max_pages=AFTER_EMPTY_MAX_PAGES)
+                start_from=plan["start"] + plan["size"], max_pages=AFTER_EMPTY_MAX_PAGES, **plan["paging"])
 
 
 def _full_read(plan: Dict[str, Any]) -> Optional[Dict[str, Any]]:
@@ -1365,7 +1366,7 @@ def _full_read(plan: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     if not plan["page_to"] or not plan["list"]:
         return None
     return dict(want=plan["page_to"], fetch_page_size=DEFAULT_FETCH_PAGE_SIZE, start_from=plan["start"],
-                end_policy=plan["policy"])
+                **plan["paging"])
 
 
 def _settle(plan: Dict[str, Any], record: Dict[str, Any], result: Any, paged: Optional[PageResult]):
@@ -1754,6 +1755,8 @@ def _exec_report_spec_impl(
             return _absent_output(result, envelope, absence, notes)  # ISSUE-171
         extra = {"absence": absence} if absence else {}
         extra.update(_unconfirmed_extra())   # pager step 4: the scans Egeria didn't confirm, if any
+        if extra.get("unconfirmed") and isinstance(result, int) and not isinstance(result, bool):
+            extra["display"] = f"\u2265{result}"   # step 5: a scalar lower bound is never shown bare
         if result is None or result == [] or result == {}:
             return _with_envelope({"kind": "empty", **extra, **unmeasured}, envelope)
         return _with_envelope({"kind": "json", "data": result, **extra, **unmeasured}, envelope)

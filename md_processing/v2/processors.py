@@ -43,6 +43,12 @@ _AMBIGUOUS = object()
 _AMBIGUOUS_SILENT = object()
 
 
+def _is_not_found_error(exc: BaseException) -> bool:
+    """Egeria's specific not-found (pager step 5): an answer ("absent"), unlike any other lookup error."""
+    from pyegeria.core._exceptions import PyegeriaNotFoundException
+    return isinstance(exc, PyegeriaNotFoundException)
+
+
 def _is_egeria_multiple_entities_error(exc: BaseException) -> bool:
     text = str(exc)
     return "404-002" in text or "entities where found" in text
@@ -728,7 +734,7 @@ class AsyncBaseCommandProcessor(ABC):
         element.elementGUID), not the relationshipHeader/relatedElement shape of
         the domain get-by-guid calls.
         """
-        from pyegeria.core.paging import async_page_all, log_end
+        from pyegeria.core.paging import async_page_all, log_end, paging_for
         child_end = 2 if parent_at_end1 else 1
 
         async def fetch(start, size):
@@ -740,7 +746,8 @@ class AsyncBaseCommandProcessor(ABC):
         # Pager step 4, ruling (A) 3: a write path acts on a null-then-empty-probes end, logs and keeps the
         # read's trace (method, positions_read, end, end_reason), and stops only on a limit.
         paged = await async_page_all(fetch, fetch_page_size=self._PARENT_LINK_PAGE_SIZE,
-                                     max_pages=self._PARENT_LINK_MAX_PAGES, end_policy="suspect")
+                                     max_pages=self._PARENT_LINK_MAX_PAGES,
+                                     **paging_for("get_all_related_elements"))
         self._parent_link_read = log_end("processors._parent_links_of_type", paged)
         if not paged.reached_end:
             raise _ParentLinksIncomplete(rel_type)
@@ -1370,6 +1377,27 @@ class AsyncBaseCommandProcessor(ABC):
                 "found": self.parsed_output.get("exists", False)
             }
 
+        # Pager step 5 (the exists-lookups ruling, 6): a lookup that failed with an error other than Egeria's
+        # not-found can't say the target is absent, so a command whose target wasn't found doesn't write: a
+        # transport, auth or timeout error must never make Create-or-Update create a duplicate.
+        unknown = self.__dict__.get("_lookups_unknown") or []
+        if unknown and self.supports_target_element_lookup() and not self.as_is_element:
+            msg = f"{'; '.join(unknown)}, so nothing was created or changed. Try again."
+            logger.error(f"Execution blocked for {self.command.verb} {self.command.object_type}: {msg}")
+            return {
+                "output": f"{self.command.raw_block}\n\n> ❌ **Execution Blocked**\n> - {msg}",
+                "analysis": analysis,
+                "status": "failure",
+                "message": f"Execution blocked: {msg}",
+                "verb": self.command.verb,
+                "object_type": self.canonical_object_type,
+                "markdown_object_type": self.markdown_object_type,
+                "display_name": self.parsed_output.get("display_name"),
+                "qualified_name": self.parsed_output.get("qualified_name"),
+                "found": False,
+                "errors": unknown,
+            }
+
         try:
             if self.context.get("debug"):
                 print(
@@ -1785,11 +1813,13 @@ class AsyncBaseCommandProcessor(ABC):
                 res = cached1
             else:
                 try:
-                    res = await self.client.__async_get_guid__(qualified_name=name_or_guid, display_name=name_or_guid, property_name="displayName", tech_type=tech_type or None)
+                    res = await self.client.__async_get_guid__(qualified_name=name_or_guid, display_name=name_or_guid, property_name="displayName", tech_type=tech_type or None, strict_errors=True)
                     _cache_if_not_found(pass1_key, res)
                 except PyegeriaException as e:
+                    if _is_not_found_error(e):
+                        res = None   # Egeria's not-found: absent
                     # Catch multiple matches error
-                    if "Multiple elements found" in str(e):
+                    elif "Multiple elements found" in str(e):
                         query_cache[pass1_key] = _AMBIGUOUS
                         _report_ambiguous("Pass 1")
                         return None
@@ -1812,7 +1842,9 @@ class AsyncBaseCommandProcessor(ABC):
                         logger.debug(f"SDK strict lookup (Pass 1) failed for '{name_or_guid}': {e}")
                         if self.context.get("directive") == "validate":
                             print_basic_exception(e)
-                        # Not cached -- unexpected error, not a real answer.
+                        # Not cached -- unexpected error, not a real answer. Pager step 5: nor "absent" --
+                        # recorded as unknown, so a Create-or-Update never creates on it.
+                        self._note_lookup_unknown(name_or_guid, e)
 
             # Pass 2: If no result (or if type was invalid), try WITHOUT type constraint
             is_not_found = not res or (isinstance(res, str) and (res.startswith("No ") or " found" in res))
@@ -1831,10 +1863,12 @@ class AsyncBaseCommandProcessor(ABC):
                     res = cached2
                 else:
                     try:
-                        res = await self.client.__async_get_guid__(qualified_name=name_or_guid, display_name=name_or_guid, property_name="displayName")
+                        res = await self.client.__async_get_guid__(qualified_name=name_or_guid, display_name=name_or_guid, property_name="displayName", strict_errors=True)
                         _cache_if_not_found(pass2_key, res)
                     except PyegeriaException as e:
-                        if "Multiple elements found" in str(e):
+                        if _is_not_found_error(e):
+                            res = None   # Egeria's not-found: absent
+                        elif "Multiple elements found" in str(e):
                             query_cache[pass2_key] = _AMBIGUOUS
                             _report_ambiguous("Pass 2")
                             return None
@@ -1842,9 +1876,11 @@ class AsyncBaseCommandProcessor(ABC):
                             query_cache[pass2_key] = _AMBIGUOUS_SILENT
                             logger.debug(f"resolve_element_guid: '{name_or_guid}' is ambiguous (Pass 2): {e}")
                             return None
-                        logger.debug(f"SDK strict lookup (Pass 2) failed for '{name_or_guid}': {e}")
-                        if self.context.get("directive") == "validate":
-                            print_basic_exception(e)
+                        else:
+                            logger.debug(f"SDK strict lookup (Pass 2) failed for '{name_or_guid}': {e}")
+                            if self.context.get("directive") == "validate":
+                                print_basic_exception(e)
+                            self._note_lookup_unknown(name_or_guid, e)   # pager step 5: unknown, never absent
 
             # Ensure it's not a "not found" indicator string
             if res and isinstance(res, str) and not res.startswith("No ") and " found" not in res and not res.startswith("(Planned:"):
@@ -1853,8 +1889,23 @@ class AsyncBaseCommandProcessor(ABC):
 
         except Exception as e:
             logger.debug(f"resolve_element_guid: Unexpected error resolving '{name_or_guid}': {e}")
-            
+            self._note_lookup_unknown(name_or_guid, e)   # pager step 5: unknown, never absent
+
         return None
+
+    def _note_lookup_unknown(self, name: str, exc: BaseException) -> None:
+        """Pager step 5 (the exists-lookups ruling, 6): a lookup that failed with an error that isn't Egeria's
+        not-found can't tell whether `name` exists. It's recorded, and execute() blocks a write whose target
+        wasn't found while any lookup is unknown, so a transport, auth or timeout error never becomes a create."""
+        if _is_not_found_error(exc):
+            return   # Egeria's not-found is an answer: absent
+        if getattr(self, "client", None) is None:
+            return   # no Egeria connection (a local-only store): there is no Egeria lookup to be unknown
+        words = f"couldn't tell whether '{name}' exists in Egeria ({type(exc).__name__})"
+        unknown = self.__dict__.setdefault("_lookups_unknown", [])
+        if words not in unknown:
+            unknown.append(words)
+            logger.warning(f"resolve_element_guid: {words}")
 
     async def _extract_memberships_async(self, async_get_fn, guid: str) -> dict:
         """

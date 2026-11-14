@@ -599,6 +599,8 @@ def _unconfirmed_scan(what: str, paged) -> None:
 
 #: How a figure is worded when a scan it depends on ended unconfirmed (ruling (ii) 1):
 #: - "count": "at least N";
+#: - ("count_of", label): a count made by its own scan (a viewer total): "at least N", but only when THAT
+#:   scan (its count label) was unconfirmed, so a confirmed native total beside an unconfirmed scan isn't marked;
 #: - "distinct": "N found; Egeria didn't confirm there are no more";
 #: - "whole_set": a figure that needs the whole set (a total minus a scan's count): not measured, with the
 #:   reason (the Architect's ruling after the step 4 capture: it replaces "at most");
@@ -607,7 +609,7 @@ def _unconfirmed_scan(what: str, paged) -> None:
 #: - "share_of_other" (or ("share_of_other", note key)): a share whose denominator is a separate count, so not
 #:   from one read: not measured, with the reason (in the figure's note too, when it has one).
 def _figure_words(kind: Any, key: str, value: Any, result: Dict[str, Any]) -> Optional[str]:
-    if kind == "count":
+    if kind == "count" or (isinstance(kind, tuple) and kind[0] == "count_of"):
         return f"at least {value}"
     if kind == "distinct":
         return f"{value} found; {UNCONFIRMED_REASON}"
@@ -661,6 +663,10 @@ def _mark(result: Dict[str, Any], figures: Dict[str, Any], scans: List[Dict[str,
                  else {s["count"]: s["positions_read"] for s in scans})
     marks: Dict[str, Any] = {}
     for key, kind in figures.items():
+        if isinstance(kind, tuple) and kind[0] == "count_of":
+            own = [s for s in scans if s["count"] == kind[1]]
+            if not own:
+                continue   # its own count was confirmed (or native): unchanged
         value = _get_path(result, key)
         if value is None or value == {} or value == []:
             continue
@@ -731,8 +737,17 @@ def _count_label(body: dict) -> str:
 
 
 def _capped_reason(native_words: str, n: int) -> str:
-    return (f"{native_words}, and the find fallback stopped at its {DEFAULT_CAP}-element page cap, "
-            f"so there are at least {n}")
+    return (f"{native_words}, and the find fallback stopped before the end, so there are at least {n}")
+
+
+def _forward_notes(scan_notes: List[Dict[str, Any]], scans: List[Dict[str, Any]]) -> None:
+    """Pass an inner scan's unconfirmed records to the enclosing recorders (and the figure being marked);
+    its not-measured notes are reworded by the caller, so they aren't forwarded."""
+    for scan in scans:
+        for var in (_UNCONFIRMED, _SCANS_IN_FIGURE):
+            notes = var.get()
+            if notes is not None and all(n is not scan for n in notes):
+                notes.append(scan)
 
 
 def _element_count(mgr, body: dict, as_of: Optional[str] = None, strict: bool = False,
@@ -779,16 +794,22 @@ def _element_count(mgr, body: dict, as_of: Optional[str] = None, strict: bool = 
                             f"(the find fallback only sees what the viewer may see)")
         _how("not-measured")
         return None
-    found = _find_or_none(mgr, b)
-    if found is None:  # strict or not: a failed query is not "none of them" (6.2.28)
-        _not_measured(what, f"{native_words}, and the find fallback failed")
-        _how("not-measured")
+    # Pager step 5: the viewer fallback pages through every find page (it used to be one page, so a short
+    # page read as the total). On find_metadata_elements (NULL_NOT_END) the count is a lower bound, recorded
+    # as unconfirmed ("at least N"); a limit is not measured with its bound, as the page cap was.
+    with recording_unmeasured() as scan_notes, recording_unconfirmed() as scans:
+        found = _all_elements(mgr, b)
+    _forward_notes(scan_notes, scans)
+    if found is None:
+        bound = next((n["at_least"] for n in scan_notes if n.get("at_least") is not None), None)
+        if bound is not None:   # a limit stopped the scan (strict or not): a lower bound, never a total
+            _not_measured(what, _capped_reason(native_words, bound), at_least=bound)
+            _how("find-capped")
+        else:                   # strict or not: a failed query is not "none of them" (6.2.28)
+            _not_measured(what, f"{native_words}, and the find fallback failed")
+            _how("not-measured")
         return None
-    if len(found) >= DEFAULT_CAP:  # a full page is a lower bound, never a total (strict or not)
-        _not_measured(what, _capped_reason(native_words, len(found)), at_least=len(found))
-        _how("find-capped")
-        return None
-    _how("find")
+    _how("find-unconfirmed" if scans else "find")
     return len(found)
 
 
@@ -1344,7 +1365,8 @@ def certifications_summary(ce, as_of: Optional[str] = None) -> Dict[str, Any]:
     return out
 
 
-@_marks_unconfirmed({"referencedCount": "distinct", "orphanCount": "whole_set"})
+@_marks_unconfirmed({"referencedCount": "distinct", "orphanCount": "whole_set",
+                     "termTotal": ("count_of", "GlossaryTerm")})
 def orphan_glossary_terms(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Optional[int]]:
     """
     Approved-but-unassigned glossary terms -- the Attention Queue's "Orphan
@@ -1492,7 +1514,8 @@ def _grounded_asset_guid(end: Dict[str, Any]) -> Optional[str]:
 
 
 @_marks_unconfirmed({"groundedAssets": "distinct", "groundedAssetPct": ("share_of_other", "groundedAssetNote"),
-                     "groundingLinksScanned": "count", "groundingLinksNotOnAsset": "count"})
+                     "groundingLinksScanned": "count", "groundingLinksNotOnAsset": "count",
+                     "groundedAssetTotal": ("count_of", "Asset")})
 def semantic_grounding(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Any]:
     """
     Semantic-grounding tally: how much of the catalog is linked to glossary
@@ -1961,7 +1984,8 @@ def usage_context_counts(mgr, as_of: Optional[str] = None, strict: bool = False,
     }
 
 
-@_marks_unconfirmed({"contextualisedCount": "distinct", "contextualisedPct": "share_of_other"})
+@_marks_unconfirmed({"contextualisedCount": "distinct", "contextualisedPct": "share_of_other",
+                     "assetTotal": ("count_of", "Asset")})
 def contextualised_coverage(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Optional[int]]:
     """
     % of Assets that have been given business/solution-design context via a
@@ -2035,7 +2059,8 @@ def contextualised_coverage(mgr, ce, as_of: Optional[str] = None) -> Dict[str, O
     }
 
 
-@_marks_unconfirmed({"solutionComponentsRealised": "distinct"})
+@_marks_unconfirmed({"solutionComponentsRealised": "distinct",
+                     "solutionComponentsTotal": ("count_of", "SolutionComponent")})
 def solution_component_realisation(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Optional[int]]:
     """
     SolutionComponent count and how many of them are "realised" (have at
@@ -2423,7 +2448,7 @@ def metric_trend(
             as_of = d.isoformat()
         point = {"label": growth_label(d, span_s), "date": d.strftime(date_fmt)}
         failed = None
-        with recording_unmeasured() as notes, _recording_how() as hows:
+        with recording_unmeasured() as notes, _recording_how() as hows, recording_unconfirmed() as unconfirmed:
             try:
                 result = func(*bound_args, as_of=as_of, **kwargs)
             except Exception as exc:  # noqa: BLE001
@@ -2431,11 +2456,12 @@ def metric_trend(
                 result, failed = None, exc
         if outer_notes is not None:  # the enclosing recorder still hears every note, as before
             outer_notes.extend(notes)
+        _forward_notes(notes, unconfirmed)   # and every unconfirmed scan
         if isinstance(result, dict):
             point.update(result)
         else:
             point["value"] = result
-        point["measurement"] = _point_measurement(notes, hows, failed)
+        point["measurement"] = _point_measurement(notes, hows, failed, unconfirmed=bool(unconfirmed))
         if not isinstance(result, dict):
             point["display"] = _point_display(result, point["measurement"])
         series.append(point)
@@ -2459,7 +2485,7 @@ class TrendNotExact(ValueError):
 
 
 def _point_measurement(notes: List[Dict[str, Any]], hows: List[str],
-                       failed: Optional[BaseException]) -> Dict[str, Any]:
+                       failed: Optional[BaseException], unconfirmed: bool = False) -> Dict[str, Any]:
     """The truth about one trend point's number, from the counts made while it was taken."""
     bounds = [n["at_least"] for n in notes if n.get("at_least") is not None]
     if failed is not None:
@@ -2474,14 +2500,19 @@ def _point_measurement(notes: List[Dict[str, Any]], hows: List[str],
     if failed is not None:
         reasons.append({"count": "snapshot", "reason": f"the snapshot failed ({type(failed).__name__})",
                         "at_least": None})
-    return {"exact": failed is None and not notes, "capped": bool(bounds),
-            "at_least": max(bounds) if bounds else None, "how": how, "reasons": reasons}
+    out = {"exact": failed is None and not notes and not unconfirmed, "capped": bool(bounds),
+           "at_least": max(bounds) if bounds else None, "how": how, "reasons": reasons}
+    if unconfirmed:   # pager step 5: a count read without Egeria confirming the end is a lower bound
+        out["unconfirmed"] = True
+    return out
 
 
 def _point_display(value: Any, measurement: Dict[str, Any]) -> str:
     """A scalar point as text: never a bare number for a lower bound."""
     if measurement["exact"] and value is not None:
         return str(value)
+    if measurement.get("unconfirmed") and not measurement["reasons"] and isinstance(value, int):
+        return f"\u2265{value}"   # at least what was read: Egeria didn't confirm there are no more
     if measurement["capped"]:
         return f"\u2265{measurement['at_least']}"
     return "not measured"
@@ -2744,9 +2775,11 @@ def _count_cell(mgr, type_name: str, as_of: Optional[str], scope: str, stamp: st
     """One strict count, as a cell. A 0 is nothing_found; None or an exception is not_measured."""
     started = time.monotonic()
     reason = ""
+    scans: List[Dict[str, Any]] = []
     try:
-        with recording_unmeasured() as notes:
+        with recording_unmeasured() as notes, recording_unconfirmed() as scans:
             value = count_elements(mgr, type_name, as_of, strict=True, **_pop(scope))
+        _forward_notes(notes, scans)
         if value is None:
             reason = (f"the {scope} count of {type_name} could not be measured: "
                       + ("; ".join(n["reason"] for n in notes) if notes
@@ -2757,11 +2790,17 @@ def _count_cell(mgr, type_name: str, as_of: Optional[str], scope: str, stamp: st
     elapsed = round(time.monotonic() - started, 3)
     if value is None:
         state = CELL_NOT_MEASURED
+    elif scans:   # pager step 5: a lower bound (the viewer fallback's scan wasn't confirmed): never "nothing found"
+        state = CELL_MEASURED
+        reason = f"at least {value}: {UNCONFIRMED_REASON}"
     else:
         state = CELL_MEASURED if value > 0 else CELL_NOTHING_FOUND
-    return {"value": value, "state": state,
+    cell = {"value": value, "state": state,
             "completeness": _COMPLETENESS[scope] if state in _ESTABLISHED else "unknown",
             "as_of": stamp, POPULATION_WORD: scope, "reason": reason, "elapsed_s": elapsed}
+    if value is not None and scans:
+        cell["unconfirmed"] = True
+    return cell
 
 
 def _derived_cell(value: Optional[int], reason: str, scope: str, stamp: str) -> Dict[str, Any]:
@@ -2781,6 +2820,10 @@ def _other_cell(parent_cell: Optional[Dict[str, Any]], child_cells: List[Dict[st
         return _derived_cell(None, "the parent count is missing", scope, stamp)
     if any(c["state"] not in _ESTABLISHED for c in child_cells):
         return _derived_cell(None, "a child count is missing", scope, stamp)
+    if parent_cell.get("unconfirmed") or any(c.get("unconfirmed") for c in child_cells):
+        # pager step 5: parent minus children needs every count whole (the after-capture ruling, 3)
+        return _derived_cell(None, f"it needs every count whole, and a count was read without Egeria "
+                                   f"confirming there are no more", scope, stamp)
     rest = parent_cell["value"] - sum(c["value"] for c in child_cells)
     if rest < 0:
         return _derived_cell(None, "the children's counts exceed the parent's "
