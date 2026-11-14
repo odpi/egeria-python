@@ -4796,11 +4796,13 @@ def load_egeria_report_specs(
     force: bool = False,
     ttl_seconds: Optional[int] = None,
 ) -> bool:
-    """DEPRECATED (the legacy May-2026 ``ReportType::`` path): use ``pyegeria.view.egeria_spec_cache``, the system
-    of record for Egeria-held report specs. It reads both the ``ReportSpec::`` and ``ReportType::`` markers and
-    serves the consumer index and the authoring API. This loader reads ``ReportType::`` collections only, so
-    Egeria-held ``ReportSpec::`` specs never load through it; it is kept, unchanged in what it searches, until
-    the owner retires it. A DeprecationWarning is raised once per process.
+    """DEPRECATED, to be removed in pyegeria 7 (expected early January 2027). Use
+    ``pyegeria.view.egeria_spec_cache.sync_report_specs`` instead: the spec cache is the system of record for
+    Egeria-held report specs. It reads both the ``ReportSpec::`` and ``ReportType::`` markers and serves the
+    consumer index and the authoring API. This legacy loader (the May-2026 ``ReportType::`` path) reads
+    ``ReportType::`` collections only, so Egeria-held ``ReportSpec::`` specs never load through it. It is kept,
+    unchanged in what it searches, for one more release, so callers have time to move. A DeprecationWarning is
+    raised once per process.
 
     Pull ReportTypes and their QuestionSpec folders from Egeria and merge
     question_specs into the corresponding file-based FormatSets in the runtime registry.
@@ -4840,8 +4842,9 @@ def load_egeria_report_specs(
     global _LEGACY_LOADER_WARNED, _EGERIA_SPECS_RETRY_DELAY
     if not _LEGACY_LOADER_WARNED:
         _LEGACY_LOADER_WARNED = True
-        warnings.warn("load_egeria_report_specs is the legacy ReportType:: loader; Egeria-held report specs load "
-                      "through pyegeria.view.egeria_spec_cache", DeprecationWarning, stacklevel=2)
+        warnings.warn("load_egeria_report_specs is deprecated and will be removed in pyegeria 7 (expected early "
+                      "January 2027): it is the legacy ReportType:: loader. Use "
+                      "pyegeria.view.egeria_spec_cache.sync_report_specs instead.", DeprecationWarning, stacklevel=2)
     effective_ttl = ttl_seconds if ttl_seconds is not None else _EGERIA_SPECS_CACHE_TTL
 
     if not force and _EGERIA_SPECS_LOADED_AT is not None:

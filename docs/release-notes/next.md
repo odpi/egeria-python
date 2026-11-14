@@ -1,0 +1,14 @@
+# pyegeria (next release, unreleased)
+
+Notes collected on `release/next` for the next release. The version number is set when it's cut.
+
+## Deprecations
+
+- **`pyegeria.view.base_report_formats.load_egeria_report_specs` is deprecated and will be removed in pyegeria 7
+  (expected early January 2027).** It is the legacy loader for the May-2026 `ReportType::` collections. Egeria-held
+  report specs are `ReportSpec::` elements, and they load through the spec cache:
+  `pyegeria.view.egeria_spec_cache.sync_report_specs` (the system of record, which reads both markers and serves the
+  consumer index and the authoring API). The legacy loader raises a `DeprecationWarning` once per process. Until it
+  is removed it keeps working, unchanged in what it searches. It now pages through Egeria's results, backs off its
+  retries after a read Egeria didn't confirm complete, and reports an empty result as "No legacy ReportType
+  collections found (Egeria-held specs load through the spec cache)".

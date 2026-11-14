@@ -121,7 +121,7 @@ def test_the_cli_words_an_unconfirmed_load():
 
 def test_a_one_time_deprecation_warning(monkeypatch):
     monkeypatch.setattr(brf, "_LEGACY_LOADER_WARNED", False)
-    with pytest.warns(DeprecationWarning, match="egeria_spec_cache"):
+    with pytest.warns(DeprecationWarning, match="removed in pyegeria 7 .*egeria_spec_cache.sync_report_specs"):
         brf.load_egeria_report_specs(_Client({}))
     import warnings
     with warnings.catch_warnings():
