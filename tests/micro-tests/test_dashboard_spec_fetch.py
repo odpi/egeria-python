@@ -31,10 +31,11 @@ class SpecEgeria(ViewerEgeria):
         super().__init__()
         self.specs = {}
 
-    async def _async_get_collections_by_name(self, name, metadata_element_type=None, output_format="JSON", **_):
+    async def _async_get_collections_by_name(self, name, metadata_element_type=None, output_format="JSON",
+                                             start_from=0, **_):
         hits = [e for g, e in self.specs.items() if g not in self.hidden
                 and e["properties"]["qualifiedName"] in (name, f"ReportSpec::{name}")]
-        return hits or "No elements found"
+        return (hits if not start_from else []) or "No elements found"
 
     async def _async_get_collection_by_guid(self, guid, output_format="JSON", **_):
         if guid in self.hidden:
@@ -79,6 +80,8 @@ async def test_a_fetched_spec_runs_under_its_fetched_name(tier, monkeypatch):
 
 
 async def test_a_spec_the_viewer_cannot_see_stays_absent_with_its_reason(tier):
+    # Before #9453 the by-name search is NULL_NOT_END: a filtered-out spec reads as null, which isn't proof of
+    # the end, so the words say Egeria couldn't confirm, never "not found"
     fake = await _sheet_naming_the_spec()
     fake.hidden.add(SPEC_GUID)
     sheet = await dr.async_resolve_dashboard_sheet(fake, "shared", spec_lookup=_no_tier_holds_it)
@@ -86,6 +89,20 @@ async def test_a_spec_the_viewer_cannot_see_stays_absent_with_its_reason(tier):
     assert trend.format_set is None and trend.fetched_as is None and trend.note is None
     assert trend.error.startswith(f"report spec '{LABEL}' was not found in any tier, and fetching it from Egeria "
                                   f"as viewer failed: ")
+    assert f"couldn't tell whether Egeria holds report spec '{LABEL}'" in trend.error
+    assert "was not found in Egeria" not in trend.error
+
+
+async def test_on_a_gated_platform_a_hidden_spec_is_not_found(tier, monkeypatch):
+    # With #9453 the by-name read is trusted: its null is the end, so "not found" may be said
+    from pyegeria.core import paging
+
+    async def promoted(_client):
+        return True
+    monkeypatch.setattr(paging, "async_platform_promoted", promoted)
+    fake = await _sheet_naming_the_spec()
+    fake.hidden.add(SPEC_GUID)
+    trend = (await dr.async_resolve_dashboard_sheet(fake, "shared", spec_lookup=_no_tier_holds_it)).placements[0]
     assert "was not found in Egeria" in trend.error
 
 
