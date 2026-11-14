@@ -33,6 +33,12 @@ def test_renderer_matches_its_record():
     assert rec["origin_repo"] == "odpi/egeria-workspaces" and len(rec["origin_commit"]) == 40
 
 
+def test_renderer_says_where_it_is_edited():
+    js = egeria_table_js().read_text(encoding="utf-8")
+    head = js[:js.index("egeria-table.js -- one renderer")]
+    assert "pyegeria/view/static/egeria-table.js" in head and "Edit it THERE FIRST" in head
+
+
 def test_renderer_is_standalone_and_carries_its_css():
     js = egeria_table_js().read_text(encoding="utf-8")
     assert "root.EgeriaTable = api" in js and "module.exports = api" in js
@@ -59,6 +65,7 @@ def _build_wheel(out: Path) -> Path:
     return wheels[-1]
 
 
+@pytest.mark.slow
 def test_renderer_is_in_the_wheel(tmp_path):
     wheel = _build_wheel(tmp_path)
     with zipfile.ZipFile(wheel) as z:

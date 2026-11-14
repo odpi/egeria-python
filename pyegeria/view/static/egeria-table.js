@@ -1,6 +1,11 @@
 /* SPDX-License-Identifier: Apache-2.0
  * Copyright Contributors to the ODPi Egeria project.
  *
+ * WHERE THIS FILE IS EDITED (owner decision D3, 2026-11-14): its home is pyegeria's package data,
+ * pyegeria/view/static/egeria-table.js. Edit it THERE FIRST, then copy it out unchanged to the Egeria Portal
+ * (PyegeriaWebHandler/static/egeria-table.js) and to trellis-ui's vendored copy, never the other way round,
+ * until those serve pyegeria's copy themselves (trellis-ui already does when pyegeria ships it).
+ *
  * egeria-table.js -- one renderer for pyegeria's structured TABLE result
  * (exec_report_spec(..., output_format="TABLE", table_shape="structured"),
  * pyegeria >= 6.2.37; DESIGN-REPORT-SPEC-COMPLEX-VALUES-RENDERING-2026-11-11

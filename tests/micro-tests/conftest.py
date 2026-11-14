@@ -18,6 +18,10 @@ os.environ.pop("PYEGERIA_REPORT_SPEC_DRAFTS", None)
 load_commands()
 
 
+def pytest_configure(config):
+    config.addinivalue_line("markers", "slow: builds or runs something heavy (e.g. a wheel); deselect with -m 'not slow'")
+
+
 def pytest_collection_modifyitems(config, items):
     """Mark all tests in this directory as unit tests."""
     for item in items:

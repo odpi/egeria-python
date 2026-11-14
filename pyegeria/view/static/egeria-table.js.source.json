@@ -1,8 +1,9 @@
 {
-  "_about": "egeria-table.js is pyegeria's renderer for its own structured TABLE result (kind \"table\"), shipped as package data so the renderer and the shape it draws travel in one release (owner decision D3, 2026-11-14). Its stylesheet is inside the file (EgeriaTable.CSS, injected once). Copied byte for byte from the Egeria Portal, where it was first written; from this release pyegeria is its home, and the Portal and trellis-ui serve this copy (pyegeria.view.renderers). tests/micro-tests/test_renderer_package_data.py checks the sha256 below and that the file is in the wheel.",
+  "_about": "egeria-table.js is pyegeria's renderer for its own structured TABLE result (kind \"table\"), shipped as package data so the renderer and the shape it draws travel in one release (owner decision D3, 2026-11-14). Its stylesheet is inside the file (EgeriaTable.CSS, injected once). It was first written in the Egeria Portal (origin_* below); pyegeria is now its home: it is edited here FIRST and copied out unchanged to the Portal and trellis-ui (the header comment says so). The only difference from the origin commit is that header paragraph. tests/micro-tests/test_renderer_package_data.py checks the sha256 below and that the file is in the wheel.",
   "origin_repo": "odpi/egeria-workspaces",
   "origin_path": "compose-configs/egeria-quickstart/PyegeriaWebHandler/static/egeria-table.js",
   "origin_commit": "9d3953430dda3ede0f431bf0d53cb79eed032a11",
-  "sha256": "5ad395feb3e7402fd58825a7ceddccc1c9ae1883edf343d56880ebb12ea95069",
-  "lines": 549
+  "sha256": "a644a7563387398892ea43e6cde1c081c87d751d7f617441d7367a320470ff73",
+  "lines": 554,
+  "differs_from_origin": "the 'WHERE THIS FILE IS EDITED' header paragraph only"
 }
