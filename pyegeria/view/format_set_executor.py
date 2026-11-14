@@ -809,12 +809,14 @@ async def _async_run_report(
     `refresh_spec=True` fetches the spec from Egeria for this call (RS-EGERIA-TIER §7a); a failed
     fetch raises with words and never falls back to the cached copy. The result carries
     `spec_source` beside `kind`."""
-    if refresh_spec:
-        from pyegeria.view.egeria_spec_cache import async_fetch_spec_for_call
-        report_name = await async_fetch_spec_for_call(egeria_client, report_name)
-    result = await _async_run_report_impl(report_name, egeria_client, output_format=output_format, params=params,
-                                          table_shape=table_shape, dict_shape=dict_shape, page_to=page_to)
-    return _with_spec_source(result, report_name, output_format)
+    from pyegeria.view.egeria_spec_cache import async_fetch_spec_for_call, client_credential_identity, spec_identity
+    with spec_identity(client_credential_identity(egeria_client)):
+        if refresh_spec:
+            report_name = await async_fetch_spec_for_call(egeria_client, report_name)
+        result = await _async_run_report_impl(report_name, egeria_client, output_format=output_format,
+                                              params=params, table_shape=table_shape, dict_shape=dict_shape,
+                                              page_to=page_to)
+        return _with_spec_source(result, report_name, output_format)
 
 
 async def _async_run_report_impl(
@@ -1568,14 +1570,17 @@ def exec_report_spec(
     this call: written through to a per-user cache, kept in-process for a shared one. A failed
     fetch raises with words; it never falls back to the cached copy.
     """
-    if refresh_spec and isinstance(format_set_name, str):
-        format_set_name = _fetch_for_exec(format_set_name, view_server=view_server, view_url=view_url,
-                                          user=user, user_pass=user_pass, token=token)
-    result = _exec_report_spec_impl(format_set_name, output_format=output_format, params=params,
-                                    view_server=view_server, view_url=view_url, user=user, user_pass=user_pass,
-                                    token=token, supply=supply, table_shape=table_shape, dict_shape=dict_shape,
-                                    page_to=page_to)
-    return _with_spec_source(result, format_set_name, (output_format or "DICT").upper())
+    from pyegeria.view.egeria_spec_cache import credential_identity, spec_identity
+    # the EGERIA tier is read for this caller's credential identity: a private cache bound to another isn't loaded
+    with spec_identity(credential_identity(user, view_url, view_server)):
+        if refresh_spec and isinstance(format_set_name, str):
+            format_set_name = _fetch_for_exec(format_set_name, view_server=view_server, view_url=view_url,
+                                              user=user, user_pass=user_pass, token=token)
+        result = _exec_report_spec_impl(format_set_name, output_format=output_format, params=params,
+                                        view_server=view_server, view_url=view_url, user=user, user_pass=user_pass,
+                                        token=token, supply=supply, table_shape=table_shape, dict_shape=dict_shape,
+                                        page_to=page_to)
+        return _with_spec_source(result, format_set_name, (output_format or "DICT").upper())
 
 
 def _fetch_for_exec(name: str, *, view_server: str, view_url: str, user: str, user_pass: str,
