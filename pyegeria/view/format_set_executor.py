@@ -45,7 +45,7 @@ from pyegeria.view.overview_metrics import UNCONFIRMED_REASON, recording_unconfi
 from pyegeria.view._output_format_models import DOCUMENT_OUTPUT_TYPE, check_document_file_name
 from pyegeria.view.document_validators import run_document_validator
 from pyegeria.core._server_client import recording_list_requests
-from pyegeria.core.paging import (DEFAULT_FETCH_PAGE_SIZE, PageResult, async_page_all, end_policy_for, page_all, paging_for)
+from pyegeria.core.paging import (DEFAULT_FETCH_PAGE_SIZE, PageResult, async_page_all, async_paging_for, end_policy_for, page_all, paging_for)
 from pyegeria.view.output_formatter import check_dict_shape, dict_shape_for_call
 from pyegeria.view.structured_table import build_structured_table, check_table_shape, mark_relationship_absence
 
@@ -977,7 +977,8 @@ async def _async_run_report_impl(
         except Exception as auth_err:
             # Do not fail the entire call if token refresh fails; downstream call may still work
             logger.debug(f"Token creation/lookup issue: {auth_err}")
-        plan = _find_plan(func, call_params, output_format, method_name, page_to)
+        plan = _find_plan(func, call_params, output_format, method_name, page_to,
+                          paging=await async_paging_for(method_name, getattr(func, "__self__", None)))
         paged = result = None
         with recording_list_requests() as list_record, dict_shape_for_call(row_shape):
             if (full := _full_read(plan)) is not None:
@@ -1338,11 +1339,14 @@ def _nothing_result(end: str, positions: Optional[int]) -> Dict[str, Any]:
 
 
 def _find_plan(func: Any, call_params: Dict[str, Any], output_format: str, method_name: Optional[str],
-               page_to: Optional[int]) -> Dict[str, Any]:
+               page_to: Optional[int], paging: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     if page_to is not None and (not isinstance(page_to, int) or isinstance(page_to, bool) or page_to < 1):
         raise ValueError(f"page_to must be None or a whole number of at least 1, not {page_to!r}")
     size = _effective_page_size(func, call_params)
-    paging = paging_for(method_name)   # step 5: NULL_NOT_END methods get 6 probes and null_not_end
+    # step 5: NULL_NOT_END methods get 6 probes and null_not_end; step 6: a gated method on a platform with the
+    # #9453 fix is trusted (the async path passes `paging`, read without blocking the event loop)
+    if paging is None:
+        paging = paging_for(method_name, getattr(func, "__self__", None))
     return {"policy": paging["end_policy"], "paging": paging, "size": size,
             "start": call_params.get("start_from") or 0,
             "list": output_format in LIST_FORMATS and _pageable(func), "page_to": page_to}

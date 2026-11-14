@@ -233,7 +233,7 @@ def _element_key(element: Dict[str, Any]) -> Any:
 
 
 def _read_pages(fetch, page_size: int, max_pages: int, what: str = "saved_query._read_pages",
-                method: Optional[str] = None) -> Tuple[List[Dict[str, Any]], bool, Optional[str]]:
+                method: Optional[str] = None, client: Any = None) -> Tuple[List[Dict[str, Any]], bool, Optional[str]]:
     """Every distinct element `fetch(start_from, page_size)` returns, read through the pager (pager step 4,
     a suspect path). Returns (elements, capped, note):
     - capped: True unless Egeria confirmed there is no more (ruling (A): a saved query's answer says "at least"
@@ -242,7 +242,7 @@ def _read_pages(fetch, page_size: int, max_pages: int, what: str = "saved_query.
       the read stops there and says so (PAGING_STALLED); repeated rows are never counted (ISSUE-185)."""
     from pyegeria.core.paging import log_end, page_all, paging_for
     paged = page_all(lambda start, size: _page_of(fetch(start, size)), fetch_page_size=page_size,
-                     max_pages=max_pages, key=_element_key, **paging_for(method))   # `method`: what fetch calls
+                     max_pages=max_pages, key=_element_key, **paging_for(method, client))   # what fetch calls
     log_end(what, paged)
     found = list(paged.items)
     if paged.complete:
@@ -680,7 +680,7 @@ def _live(client, name, output, method, body, page_size, max_pages):
     try:
         found, capped, paging_note = _read_pages(
             lambda start, size: fn(body={**body, "startFrom": start, "pageSize": size, "graphQueryDepth": 0}),
-            page_size, max_pages, method=method)   # e.g. find_metadata_elements: NULL_NOT_END
+            page_size, max_pages, method=method, client=client)   # find_metadata_elements: gated (step 6)
     except Exception as exc:  # noqa: BLE001
         if _is_not_visible(exc):
             return _result(name, "live", output, state="not_established", absence="not_permitted",

@@ -380,7 +380,8 @@ def _all_elements(mgr, body: dict) -> Optional[list]:
     try:
         unkeyed = itertools.count()   # distinct by element GUID; a row without one is always its own row
         paged = page_all(fetch, fetch_page_size=DEFAULT_CAP, max_pages=MAX_SCAN_PAGES,
-                         **paging_for("find_metadata_elements"),   # B5, NULL_NOT_END: 6 probes, never the end
+                         # B5: NULL_NOT_END, trusted on a platform with the #9453 fix (step 6 gate)
+                         **paging_for("find_metadata_elements", mgr),
                          key=lambda el: _element_guid(el) or ("unkeyed", next(unkeyed)))
     except _Failed:
         return None

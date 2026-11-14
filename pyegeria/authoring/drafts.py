@@ -362,7 +362,7 @@ class EgeriaDraftStore:
         Paged through ``page_all`` (pager step 4; a suspect path, classification-explorer property search).
         When a kind's read isn't confirmed complete, ``notes`` (if given) gets "Showing at least N ..." for it,
         so a caller that shows the list never presents it as all of them."""
-        from pyegeria.core.paging import async_page_all, at_least_note, log_end, paging_for
+        from pyegeria.core.paging import async_page_all, async_paging_for, at_least_note, log_end
         zone = self._author(user_id)
         out: List[Dict[str, Any]] = []
         for k in ([kind] if kind else list(KINDS)):
@@ -371,7 +371,7 @@ class EgeriaDraftStore:
                     ".*", ["qualifiedName"], metadata_element_type=_ELEMENT_TYPE[k], starts_with=False,
                     governance_zone_filter=[zone], graph_query_depth=0, start_from=start, page_size=size)
             paged = await async_page_all(fetch, fetch_page_size=50,
-                                         **paging_for("find_elements_by_property_value"))
+                                         **await async_paging_for("find_elements_by_property_value", self.client))
             log_end("drafts.async_list", paged)
             if notes is not None and (words := at_least_note(paged, f"{k} drafts")):
                 notes.append(words)

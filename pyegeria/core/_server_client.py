@@ -872,7 +872,7 @@ class ServerClient(BaseServerClient):
             return any(props.get(p) == name for p in property_name)
 
         found = await async_exists(fetch, match, method="_async_get_elements_by_property_value",
-                                   max_pages=max_pages)
+                                   max_pages=max_pages, client=self)   # trusted on a #9453 platform (step 6)
         if len(found.matches) > 1:
             raise PyegeriaException(context={"issue": "Multiple elements found for supplied name!"})
         return found
