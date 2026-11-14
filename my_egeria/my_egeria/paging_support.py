@@ -11,14 +11,22 @@
    - ``read_all`` pages a list call through pyegeria's pager and returns ``PagedRows``: a plain list (so
      callers and screens are unchanged) that also says whether the read was complete, and the
      "at least N" words to show when it wasn't.
-   - ``lookup`` / ``async_lookup`` answer "does Egeria already hold X?" three ways (found / absent /
-     unknown) for a write guard: create only on absent; on unknown, refuse (``refusal``) and write nothing.
+   - ``by_unique_name`` / ``async_by_unique_name``: the write guards keyed on a qualified name ask Egeria's
+     exact unique-name read: found / absent (Egeria's specific not-found) / unknown (anything else: refuse
+     with ``unique_refusal`` and write nothing).
+   - ``lookup`` / ``async_lookup`` answer "does Egeria already hold X?" three ways by paging (``exists``)
+     for the guards keyed on a GUID (collection membership, a Peer link): create only on absent; on unknown,
+     refuse (``refusal``) and write nothing.
    - ``none_words`` is the empty-state text: "No X" only after a confirmed end.
 """
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any, Awaitable, Callable, Iterable
+
+from pyegeria.core._exceptions import PyegeriaNotFoundException
+from pyegeria.core._globals import NO_ELEMENTS_FOUND
 
 from pyegeria.core.paging import (PageResult, Exists, async_exists, async_page_all, async_paging_for, at_least_note,
                                   exists, page_all, paging_for)
@@ -34,15 +42,14 @@ class LookupUnconfirmed(ValueError):
 
 
 class PagedRows(list):
-    """The rows a handler shows, plus how the read that produced them ended. Two levels, as pyegeria's
-    PageResult has them:
+    """The rows a handler shows, plus how the read that produced them ended.
 
-    - ``reached_end``: the read got to Egeria's end (a trusted null, or a null then empty probes), so the
-      rows may be shown as the list, with no "at least". Otherwise ``note`` holds the "Showing at least N
-      ..." words to show beside them.
-    - ``complete``: Egeria *confirmed* there are no more (a trusted path). Only then may an empty list say
-      "none" (``none_words``); a reached-but-unconfirmed empty read says "none found in what Egeria
-      returned"."""
+    - ``complete``: Egeria *confirmed* there are no more (a trusted path, or a gated one on a #9453
+      platform). Only then is the list shown plainly: a plain count, and "none" for an empty list.
+      Otherwise ``note`` holds the "Showing at least N ..." words, and an empty list says "none found in
+      what Egeria returned" (``none_words``). This is the display rule (pager ruling (A), condition 2).
+    - ``reached_end``: the read got to Egeria's end (a trusted null, or a null then empty probes). That is
+      the bar for a *write* acting on the end, never for display words; kept for the trace."""
 
     def __init__(self, rows: Iterable[Any] = (), *, complete: bool = True, reached_end: bool | None = None,
                  note: str | None = None):
@@ -58,9 +65,9 @@ def paged_rows(rows: Iterable[Any], read: PageResult | None, what: str) -> Paged
     rows = list(rows)
     if read is None or read.complete:
         return PagedRows(rows, complete=True)
-    if read.reached_end:
-        return PagedRows(rows, complete=False, reached_end=True)
-    return PagedRows(rows, complete=False, reached_end=False, note=at_least_note(read, what, count=len(rows)))
+    # display words key on a confirmed end: "at least" on every other end, null_then_empty_probes included
+    return PagedRows(rows, complete=False, reached_end=read.reached_end,
+                     note=at_least_note(read, what, count=len(rows)))
 
 
 def is_complete(rows: Any) -> bool:
@@ -69,19 +76,14 @@ def is_complete(rows: Any) -> bool:
     return getattr(rows, "complete", True)
 
 
-def reached_end(rows: Any) -> bool:
-    """Whether a handler's rows may be shown as the list (no "at least")."""
-    return getattr(rows, "reached_end", True)
-
-
 def combine(*reads: Any) -> bool:
-    """True only when every read (PageResult or PagedRows) reached Egeria's end."""
-    return all(getattr(r, "reached_end", True) for r in reads)
+    """True only when every read (PageResult or PagedRows) reached a confirmed end."""
+    return all(getattr(r, "complete", True) for r in reads)
 
 
 def count_text(rows: Any) -> str:
-    """The count of a handler's rows as it may be shown: "N", or "at least N" short of Egeria's end."""
-    return str(len(rows)) if reached_end(rows) else f"at least {len(rows)}"
+    """The count of a handler's rows as it may be shown: "N" on a confirmed end, else "at least N"."""
+    return str(len(rows)) if is_complete(rows) else f"at least {len(rows)}"
 
 
 def none_words(what: str, complete: bool, matching: str | None = None) -> str:
@@ -150,6 +152,78 @@ def refusal(what: str, found: Exists, action: str = "Nothing was created") -> st
     read = found.read
     return (f"Couldn't confirm whether Egeria already holds {what}: it didn't confirm there are no more "
             f"({read.positions_read} positions read, {read.end_reason or read.end}). {action}; try again later.")
+
+
+# ── Guards keyed on a qualified name: Egeria's unique-name read (read-back R2) ─────────────────────────────
+# A qualified name is answered by Egeria's own exact, server-side read (getMetadataElementByUniqueName), with
+# no client paging, so no B5 and no filtered page can make it read as "absent" (the publish ruling):
+#   found -> reuse; Egeria's specific not-found (NO_ELEMENTS_FOUND or PyegeriaNotFoundException) -> absent ->
+#   create; any other answer or error -> unknown -> refuse, write nothing.
+
+@dataclass(frozen=True)
+class UniqueName:
+    """Egeria's answer to "which element has this qualified name?": found / absent / unknown."""
+    answer: str
+    qualified_name: str
+    element: dict | None = None
+    reason: str | None = None
+
+    @property
+    def found(self) -> bool:
+        return self.answer == "found"
+
+    @property
+    def guid(self) -> str:
+        return element_guid(self.element)
+
+
+def _type_names(element: dict) -> list[str]:
+    t = (element.get("elementHeader") or {}).get("type") or {}
+    return [n for n in (t.get("typeName"), *(t.get("superTypeNames") or [])) if n]
+
+
+def _unique_answer(result: Any, qualified_name: str, type_name: str | None) -> UniqueName:
+    if result == NO_ELEMENTS_FOUND:
+        return UniqueName("absent", qualified_name)
+    element = result if isinstance(result, dict) and result.get("elementHeader") else (
+        result.get("element") if isinstance(result, dict) and isinstance(result.get("element"), dict) else None)
+    if element is None or not element_guid(element):
+        return UniqueName("unknown", qualified_name, reason="Egeria's answer wasn't an element or 'not found'")
+    if type_name and type_name not in _type_names(element):
+        held = (_type_names(element) or ["different element"])[0]
+        return UniqueName("unknown", qualified_name, element,
+                          reason=f"Egeria holds a {held} with that qualified name, not a {type_name}")
+    return UniqueName("found", qualified_name, element)
+
+
+def _unique_failed(exc: BaseException, qualified_name: str) -> UniqueName:
+    if isinstance(exc, PyegeriaNotFoundException):
+        return UniqueName("absent", qualified_name)
+    return UniqueName("unknown", qualified_name, reason=f"the unique-name read failed: {type(exc).__name__}")
+
+
+def by_unique_name(client: Any, qualified_name: str, type_name: str | None = None) -> UniqueName:
+    """Egeria's exact unique-name read of ``qualified_name`` (optionally checking the element's type)."""
+    try:
+        result = client.get_element_by_unique_name(qualified_name)
+    except Exception as exc:  # noqa: BLE001 -- only Egeria's specific not-found is "absent"
+        return _unique_failed(exc, qualified_name)
+    return _unique_answer(result, qualified_name, type_name)
+
+
+async def async_by_unique_name(client: Any, qualified_name: str, type_name: str | None = None) -> UniqueName:
+    """``by_unique_name`` for async code."""
+    try:
+        result = await client._async_get_element_by_unique_name(qualified_name)
+    except Exception as exc:  # noqa: BLE001 -- only Egeria's specific not-found is "absent"
+        return _unique_failed(exc, qualified_name)
+    return _unique_answer(result, qualified_name, type_name)
+
+
+def unique_refusal(what: str, found: UniqueName, action: str = "Nothing was created") -> str:
+    """The words a QN-keyed write guard shows when Egeria's answer was neither the element nor not-found."""
+    return (f"Couldn't confirm whether Egeria already holds {what} ({found.qualified_name}): "
+            f"{found.reason or 'no clear answer'}. {action}; try again later.")
 
 
 def element_qn(element: Any) -> str:

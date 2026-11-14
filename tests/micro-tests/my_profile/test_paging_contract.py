@@ -6,9 +6,12 @@
 
    A list from Egeria is one page of matches; [] is a page filtered empty (keep paging); only null means no
    more. So:
-   - a write guard (get-or-create, add-if-missing) creates only when Egeria confirmed the item is absent,
-     and on "can't tell" refuses with words and writes nothing;
-   - a display reads every page, and says "none" or a plain count only after a confirmed end.
+   - a write guard keyed on a qualified name asks Egeria's exact unique-name read: found -> reuse; Egeria's
+     specific not-found -> create; anything else -> refuse, nothing written (read-back R2);
+   - a write guard keyed on a GUID (membership, a Peer link) pages with exists: create only on absent,
+     refuse on unknown;
+   - a display reads every page, and shows a plain list, a plain count or "none" only after a CONFIRMED end;
+     any other end, null_then_empty_probes included, says "at least" (read-back R1).
 
    The fakes below page like Egeria: ``paged(p0, p1, ...)`` returns page i for start_from = i * page_size and
    null ("No elements found") past the last; ``FILTERED`` returns [] forever (every page filtered empty, so the
@@ -111,11 +114,11 @@ def test_paged_rows_levels_from_a_read():
     capped = PageResult(items=[1], end="capped", note="there may be more", end_reason="max_pages")
     null_not_end = PageResult(items=[1], end="not_confirmed", end_reason="null_then_empty_probes", null_not_end=True)
     assert paging_support.paged_rows([1], confirmed, "x").complete
-    r = paging_support.paged_rows([1], reached, "x")
-    assert r.reached_end and not r.complete and r.note is None
-    for read in (capped, null_not_end):
+    assert paging_support.paged_rows([1], confirmed, "x").note is None
+    for read in (reached, capped, null_not_end):   # R1: only a confirmed end drops "at least"
         r = paging_support.paged_rows([1], read, "things")
-        assert not r.reached_end and r.note.startswith("Showing at least 1 things")
+        assert not r.complete and r.note.startswith("Showing at least 1 things")
+        assert r.reached_end is (read is reached)   # kept for the trace; write paths only
 
 
 # ── bookmarks: get-or-create the collection, add-if-missing the member ─────────────────────────────────────
@@ -136,25 +139,63 @@ def bm_client():
         yield egeria.return_value
 
 
+def _unique(element=None, error=None):
+    """A fake get_element_by_unique_name: the element, Egeria's NO_ELEMENTS_FOUND, or an exception."""
+    if error is not None:
+        return MagicMock(side_effect=error)
+    return MagicMock(return_value=element if element is not None else NULL)
+
+
+def _not_found():
+    return PyegeriaNotFoundException.__new__(PyegeriaNotFoundException)
+
+
+def _failed():
+    return PyegeriaException.__new__(PyegeriaException)
+
+
+class TestUniqueNameRead:
+    def test_answers(self):
+        coll = _el("c", "Q", type_name="Collection")
+        assert paging_support.by_unique_name(MagicMock(get_element_by_unique_name=_unique(coll)), "Q",
+                                             "Collection").guid == "c"
+        for unique, answer in ((_unique(), "absent"), (_unique(error=_not_found()), "absent"),
+                               (_unique(error=_failed()), "unknown"), (_unique(error=TimeoutError()), "unknown"),
+                               (_unique("garbage"), "unknown"),
+                               (_unique(_el("x", "Q", type_name="Asset")), "unknown")):   # the wrong type
+            assert paging_support.by_unique_name(MagicMock(get_element_by_unique_name=unique), "Q",
+                                                 "Collection").answer == answer
+
+    def test_never_pages(self):
+        client = MagicMock(get_element_by_unique_name=_unique())
+        paging_support.by_unique_name(client, "Q")
+        client.get_element_by_unique_name.assert_called_once_with("Q")
+        client.get_collections_by_name.assert_not_called()
+
+
 class TestBookmarksGuards:
-    def test_collection_on_a_later_page_is_found_not_recreated(self, bm_client):
-        # page 0 filtered empty: the old code read it as "no collection" and created a second one
-        bm_client.get_collections_by_name = paged([], [BM_COLL])
+    def test_found_collection_is_reused(self, bm_client):
+        bm_client.get_element_by_unique_name = _unique(BM_COLL)
         bm_client.get_collection_members = paged([])
         assert BookmarksApp().add_my_bookmark("asset-1") is True
+        bm_client.get_element_by_unique_name.assert_called_once_with(BM_QN)
         bm_client.create_collection.assert_not_called()
         bm_client.add_to_collection.assert_called_once_with(collection_guid="bm-guid", element_guid="asset-1")
 
-    def test_absent_collection_is_created_once(self, bm_client):
-        bm_client.get_collections_by_name = paged()            # null, then empty probes: confirmed absent
+    @pytest.mark.parametrize("unique", [_unique(), _unique(error=_not_found())], ids=["no-elements", "not-found"])
+    def test_not_found_collection_is_created_once(self, bm_client, unique):
+        bm_client.get_element_by_unique_name = unique
         bm_client.create_collection.return_value = "new-bm-guid"
         bm_client.get_collection_members = paged()
         assert BookmarksApp().add_my_bookmark("asset-1") is True
         bm_client.create_collection.assert_called_once()
         bm_client.add_to_collection.assert_called_once_with(collection_guid="new-bm-guid", element_guid="asset-1")
 
-    def test_unknown_collection_refuses_and_writes_nothing(self, bm_client):
-        bm_client.get_collections_by_name = MagicMock(side_effect=FILTERED)
+    @pytest.mark.parametrize("unique", [_unique(error=_failed()), _unique("garbage"),
+                                        _unique(_el("x", BM_QN, type_name="Asset"))],
+                             ids=["error", "not-an-element", "wrong-type"])
+    def test_any_other_answer_refuses_and_writes_nothing(self, bm_client, unique):
+        bm_client.get_element_by_unique_name = unique
         app = BookmarksApp()
         assert app.add_my_bookmark("asset-1") is False
         bm_client.create_collection.assert_not_called()
@@ -163,7 +204,7 @@ class TestBookmarksGuards:
         assert app.said("Nothing was created")
 
     def test_member_on_a_later_page_is_already_bookmarked(self, bm_client):
-        bm_client.get_collections_by_name = paged([BM_COLL])
+        bm_client.get_element_by_unique_name = _unique(BM_COLL)
         bm_client.get_collection_members = paged([_el("other")], [], [_el("asset-1")])
         app = BookmarksApp()
         assert app.add_my_bookmark("asset-1") is False
@@ -171,7 +212,7 @@ class TestBookmarksGuards:
         assert app.said("already bookmarked")
 
     def test_unknown_membership_refuses_and_adds_nothing(self, bm_client):
-        bm_client.get_collections_by_name = paged([BM_COLL])
+        bm_client.get_element_by_unique_name = _unique(BM_COLL)
         bm_client.get_collection_members = MagicMock(side_effect=FILTERED)
         app = BookmarksApp()
         assert app.add_my_bookmark("asset-1") is False
@@ -179,7 +220,7 @@ class TestBookmarksGuards:
         assert app.said("Couldn't confirm whether Egeria already holds a bookmark for asset-1")
 
     def test_delete_on_unknown_collection_removes_nothing(self, bm_client):
-        bm_client.get_collections_by_name = MagicMock(side_effect=FILTERED)
+        bm_client.get_element_by_unique_name = _unique(error=_failed())
         app = BookmarksApp()
         assert app.delete_my_bookmark("asset-1") is False
         bm_client.remove_from_collection.assert_not_called()
@@ -187,34 +228,36 @@ class TestBookmarksGuards:
 
 
 class TestBookmarksDisplay:
-    def test_members_after_a_filtered_page_are_all_listed(self, bm_client):
-        bm_client.get_collections_by_name = paged([BM_COLL])
+    def test_members_after_a_filtered_page_are_all_listed_but_at_least(self, bm_client):
+        # R1: the read reached the end (null, then empty probes) on a suspect path: every row is listed, and
+        # the words still say "at least" because Egeria didn't confirm the end
+        bm_client.get_element_by_unique_name = _unique(BM_COLL)
         bm_client.get_collection_members = paged([_el("a1", name="One")], [], [_el("a2", name="Two")])
-        rows = BookmarksApp().list_my_bookmarks()
-        # reached the end (null, then empty probes): shown as the list; not "confirmed" on this suspect path
-        assert [r[2] for r in rows] == ["a1", "a2"] and rows.reached_end and rows.note is None
-        assert not rows.complete
-
-    def test_unconfirmed_members_say_at_least(self, bm_client):
-        rows_then_filtered = paged([_el("a1")], *([[]] * 30))   # one row, then filtered pages to the run cap
-        bm_client.get_collections_by_name = paged([BM_COLL])
-        bm_client.get_collection_members = rows_then_filtered
         app = BookmarksApp()
         rows = app.list_my_bookmarks()
-        assert rows == [("a1", "Asset", "a1")] and not rows.complete
+        assert [r[2] for r in rows] == ["a1", "a2"] and rows.reached_end and not rows.complete
+        assert rows.note.startswith("Showing at least 2 bookmarks") and app.said("Showing at least 2 bookmarks")
+
+    def test_unconfirmed_members_say_at_least(self, bm_client):
+        bm_client.get_element_by_unique_name = _unique(BM_COLL)
+        bm_client.get_collection_members = paged([_el("a1")], *([[]] * 30))   # one row, then the run cap
+        app = BookmarksApp()
+        rows = app.list_my_bookmarks()
+        assert rows == [("a1", "Asset", "a1")] and not rows.complete and not rows.reached_end
         assert app.said("Showing at least 1 bookmarks")
 
     def test_unknown_collection_is_not_shown_as_no_bookmarks(self, bm_client):
-        bm_client.get_collections_by_name = MagicMock(side_effect=FILTERED)
-        rows = BookmarksApp().list_my_bookmarks()
-        assert rows == [] and not is_complete(rows)
+        bm_client.get_element_by_unique_name = _unique(error=_failed())
+        app = BookmarksApp()
+        assert app.list_my_bookmarks() is None   # the screen isn't shown with an empty list
+        assert app.said("Couldn't confirm whether Egeria already holds your bookmarks collection")
 
-    def test_absent_collection_is_none_in_what_egeria_returned(self, bm_client):
-        # absent (the read reached the end) is enough to create, but "none" as words needs a confirmed end,
-        # which get_collections_by_name (a suspect path) never gives
-        bm_client.get_collections_by_name = paged()
+    def test_not_found_collection_is_a_plain_none(self, bm_client):
+        # Egeria's exact not-found is an answer, not a paged end: "You have no bookmarks yet" may be said
+        bm_client.get_element_by_unique_name = _unique()
         rows = BookmarksApp().list_my_bookmarks()
-        assert rows == [] and rows.reached_end and not is_complete(rows)
+        assert rows == [] and is_complete(rows)
+        bm_client.get_collection_members.assert_not_called()
 
 
 class TestRowGuid:
@@ -266,43 +309,46 @@ def cm_client():
 
 
 class TestCommunityGuards:
-    def test_blog_log_on_a_later_page_is_used(self, cm_client):
-        cm_client.get_attached_note_logs = paged([], [_el("log-guid", BLOG_QN, type_name="NoteLog")])
+    def test_found_blog_log_is_used(self, cm_client):
+        cm_client.get_element_by_unique_name = _unique(_el("log-guid", BLOG_QN, type_name="NoteLog"))
         assert CommunityApp().add_community_blog_post("comm-guid", "Data", "Hi", "text") is True
+        cm_client.get_element_by_unique_name.assert_called_once_with(BLOG_QN)
         cm_client.create_note_log.assert_not_called()
-        cm_client.create_note.assert_called_once()
         assert cm_client.create_note.call_args.args[0] == "log-guid"
 
-    def test_absent_blog_log_is_created(self, cm_client):
-        cm_client.get_attached_note_logs = paged([_el("other-log", "NoteLog::other", type_name="NoteLog")])
+    def test_not_found_blog_log_is_created(self, cm_client):
+        cm_client.get_element_by_unique_name = _unique(error=_not_found())
         cm_client.create_note_log.return_value = "new-log"
         assert CommunityApp().add_community_blog_post("comm-guid", "Data", "Hi", "text") is True
         cm_client.create_note_log.assert_called_once()
         assert cm_client.create_note.call_args.args[0] == "new-log"
 
     def test_unknown_blog_log_refuses_and_posts_nothing(self, cm_client):
-        cm_client.get_attached_note_logs = MagicMock(side_effect=FILTERED)
+        cm_client.get_element_by_unique_name = _unique(error=_failed())
         app = CommunityApp()
         assert app.add_community_blog_post("comm-guid", "Data", "Hi", "text") is False
         cm_client.create_note_log.assert_not_called()
         cm_client.create_note.assert_not_called()
         assert app.said("Couldn't confirm whether Egeria already holds a blog for Data")
 
-    @pytest.mark.parametrize("pages, created", [((), True), (([], [_el("c", "Community::Data")]), False)])
-    def test_create_community_found_or_absent(self, cm_client, pages, created):
+    @pytest.mark.parametrize("unique, created", [(_unique(), True), (_unique(error=_not_found()), True),
+                                                 (_unique(_el("c", "Community::Data", type_name="Community")), False)],
+                             ids=["no-elements", "not-found", "found"])
+    def test_create_community_found_or_absent(self, cm_client, unique, created):
         cm_client.__create_qualified_name__ = MagicMock(return_value="Community::Data")
-        cm_client.get_communities_by_name = paged(*pages)
+        cm_client.get_element_by_unique_name = unique
         cm_client.create_community.return_value = "new-comm"
         app = CommunityApp()
         result = app.create_community("Data", "about data", assignment_type="")
         assert (result == "new-comm") is created
         assert cm_client.create_community.called is created
+        cm_client.get_communities_by_name.assert_not_called()   # no paged by-name search decides a create
         if not created:
             assert app.said("already exists")
 
     def test_create_community_unknown_refuses(self, cm_client):
         cm_client.__create_qualified_name__ = MagicMock(return_value="Community::Data")
-        cm_client.get_communities_by_name = MagicMock(side_effect=FILTERED)
+        cm_client.get_element_by_unique_name = _unique(error=_failed())
         app = CommunityApp()
         assert app.create_community("Data", "about data") is None
         cm_client.create_community.assert_not_called()
@@ -314,7 +360,7 @@ class TestCommunityDisplay:
     def test_search_reads_past_a_filtered_page(self, cm_client):
         cm_client.find_communities = paged([], [_el("c1", "Community::A", "A")])
         rows = CommunityApp().search_communities("*")
-        assert [r[3] for r in rows] == ["c1"] and rows.reached_end and rows.note is None
+        assert [r[3] for r in rows] == ["c1"] and rows.reached_end and rows.note.startswith("Showing at least 1")
 
     def test_unconfirmed_search_is_not_none(self, cm_client):
         cm_client.find_communities = MagicMock(side_effect=FILTERED)
@@ -347,27 +393,35 @@ class FeedbackApp(_App, FeedbackMixin):
     user_name = FEEDBACK_LOG_OWNER
 
 
-def _fb_client(note_logs):
+def _fb_client(unique):
     client = MagicMock()
-    client._async_get_note_logs_by_name = note_logs
+    client._async_get_element_by_unique_name = unique
     client._async_create_note_log = AsyncMock(return_value="new-log")
     client._async_create_note = AsyncMock(return_value="note-guid")
     return client
 
 
+def _aunique(element=None, error=None):
+    if error is not None:
+        return AsyncMock(side_effect=error)
+    return AsyncMock(return_value=element if element is not None else NULL)
+
+
 class TestFeedbackLog:
-    def test_found_on_a_later_page(self):
-        client = _fb_client(apaged([], [LOG]))
+    def test_found_is_reused(self):
+        client = _fb_client(_aunique(LOG))
         assert asyncio.run(FeedbackApp()._get_or_create_feedback_log(client)) == "fb-log"
+        client._async_get_element_by_unique_name.assert_awaited_once_with(FEEDBACK_LOG_QN)
         client._async_create_note_log.assert_not_called()
 
-    def test_absent_is_created(self):
-        client = _fb_client(apaged())
+    @pytest.mark.parametrize("unique", [_aunique(), _aunique(error=_not_found())], ids=["no-elements", "not-found"])
+    def test_not_found_is_created(self, unique):
+        client = _fb_client(unique)
         assert asyncio.run(FeedbackApp()._get_or_create_feedback_log(client)) == "new-log"
         client._async_create_note_log.assert_called_once()
 
     def test_unknown_refuses_and_saves_nothing(self):
-        client = _fb_client(AsyncMock(side_effect=FILTERED))
+        client = _fb_client(_aunique(error=_failed()))
         app = FeedbackApp()
         with patch.object(FeedbackApp, "_feedback_client", return_value=client):
             asyncio.run(app.feedback_callback({"category": "Bug", "screen": "S", "text": "t"}))
@@ -377,16 +431,17 @@ class TestFeedbackLog:
         assert app.said("not saved")
 
     def test_entries_unconfirmed(self):
-        client = _fb_client(apaged([LOG]))
+        client = _fb_client(_aunique(LOG))
         client._async_get_notes_for_note_log = AsyncMock(side_effect=FILTERED)
         entries = asyncio.run(FeedbackApp().get_feedback_entries(client))
         assert entries == [] and not entries.complete
 
-    def test_entries_across_pages(self):
-        client = _fb_client(apaged([LOG]))
+    def test_entries_across_pages_say_at_least(self):
+        client = _fb_client(_aunique(LOG))
         client._async_get_notes_for_note_log = apaged([_el("n1")], [], [_el("n2")])
         entries = asyncio.run(FeedbackApp().get_feedback_entries(client))
-        assert len(entries) == 2 and entries.reached_end
+        assert len(entries) == 2 and entries.reached_end and not entries.complete
+        assert paging_support.count_text(entries) == "at least 2"
 
 
 # ── network: add a peer, search people ─────────────────────────────────────────────────────────────────────
@@ -488,3 +543,36 @@ def test_display_max_pages_bounds_a_read():
     calls = MagicMock(side_effect=FILTERED)
     read = paging_support.read_all(calls, method="find_collections", max_pages=3)
     assert calls.call_count == 3 and not read.complete
+
+
+# ── R1: a confirmed end shows a plain list; R3: the by-name methods are classified centrally ─────────────────
+
+def test_a_confirmed_read_shows_plain_n():
+    trusted = paged([_el("a")], [_el("b")])   # find_authored_elements is a trusted path: its null is the end
+    read = paging_support.read_all(lambda s, z: trusted(start_from=s, page_size=z), method="find_authored_elements")
+    rows = paging_support.paged_rows(read.items, read, "things")
+    assert rows.complete and rows.note is None and paging_support.count_text(rows) == "2"
+    assert trusted.call_count == 3   # two pages, then the trusted null: no probes
+
+
+def test_a_suspect_null_then_empty_probes_shows_at_least_n():
+    fake = paged([_el("a")], [_el("b")])
+    read = paging_support.read_all(lambda s, z: fake(start_from=s, page_size=z), method="get_collection_members")
+    assert read.end_reason == "null_then_empty_probes" and read.reached_end
+    rows = paging_support.paged_rows(read.items, read, "things")
+    assert not rows.complete and paging_support.count_text(rows) == "at least 2"
+    assert rows.note.startswith("Showing at least 2 things")
+
+
+def test_by_name_methods_are_null_not_end_and_gated():
+    from pyegeria.core import paging
+    for name in ("get_collections_by_name", "_async_get_collections_by_name", "get_communities_by_name",
+                 "_async_get_communities_by_name", "get_note_logs_by_name", "_async_get_note_logs_by_name"):
+        assert name in paging.NULL_NOT_END_METHODS and name in paging.GATED_TRUSTED_METHODS, name
+        assert paging._paging(name, promoted=False)["null_not_end"] is True
+        assert paging._paging(name, promoted=True) == {"end_policy": "trusted"}
+    # search-string (findEntities) and attached/related (getRelatedMetadataElements) reads stay plain suspect
+    for name in ("find_communities", "find_actor_profiles", "find_tabular_data_sets", "get_notes_for_note_log",
+                 "_async_get_notes_for_note_log", "get_attached_note_logs", "get_attached_comments",
+                 "get_collection_members", "get_related_elements"):
+        assert paging.paging_for(name) == {"end_policy": "suspect"}, name

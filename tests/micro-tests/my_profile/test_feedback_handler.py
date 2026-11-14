@@ -56,8 +56,10 @@ def _first_page(rows):
 def fake_client(existing_log_guid=None, notes=None):
     """An Egeria client stand-in whose feedback calls are AsyncMocks, paged like Egeria."""
     client = MagicMock()
-    log = {"elementHeader": {"guid": existing_log_guid}, "properties": {"qualifiedName": FEEDBACK_LOG_QN}}
-    client._async_get_note_logs_by_name = AsyncMock(side_effect=_first_page([log] if existing_log_guid else None))
+    log = {"elementHeader": {"guid": existing_log_guid, "type": {"typeName": "NoteLog"}},
+           "properties": {"qualifiedName": FEEDBACK_LOG_QN}}
+    # Egeria's exact unique-name read of FEEDBACK_LOG_QN: the log, or its specific not-found
+    client._async_get_element_by_unique_name = AsyncMock(return_value=log if existing_log_guid else "No elements found")
     client._async_create_note_log = AsyncMock(return_value="new-log-guid")
     client._async_create_note = AsyncMock(return_value="note-guid")
     client._async_get_notes_for_note_log = AsyncMock(side_effect=_first_page(notes))
@@ -82,8 +84,7 @@ class TestFeedbackCallback:
 
         await app.feedback_callback(FEEDBACK)
 
-        # paged to Egeria's end (a null, then the probes) before it is created
-        assert client._async_get_note_logs_by_name.await_args_list[0].args[0] == FEEDBACK_LOG_QN
+        client._async_get_element_by_unique_name.assert_awaited_once_with(FEEDBACK_LOG_QN)
         client._async_create_note_log.assert_awaited_once()
         create_kwargs = client._async_create_note_log.await_args.kwargs
         assert create_kwargs["element_guid"] == "profile-guid-123"

@@ -28,8 +28,8 @@ if str(current_dir) not in sys.path:
     sys.path.append(str(current_dir))
 
 from pyegeria import Egeria, PyegeriaException
-from paging_support import (LookupUnconfirmed, PagedRows, async_lookup, async_read_all, element_guid, element_qn,
-                            paged_rows, refusal)
+from paging_support import (LookupUnconfirmed, PagedRows, async_by_unique_name, async_read_all, paged_rows,
+                            unique_refusal)
 from FeedbackScreens import FeedbackScreen, FeedbackLogScreen
 
 FEEDBACK_LOG_OWNER = "garygeeke"
@@ -100,15 +100,9 @@ class FeedbackMixin:
         }
 
     async def _find_feedback_log(self, client: Egeria):
-        """Whether the feedback log exists (a paging.Exists: found / absent / unknown), matched exactly on
-        its qualified name and paged per Egeria's contract: one page without it is not "absent"."""
-        async def fetch(start: int, size: int):
-            return await client._async_get_note_logs_by_name(FEEDBACK_LOG_QN, graph_query_depth=0,
-                                                             output_format="JSON", start_from=start,
-                                                             page_size=size)
-
-        return await async_lookup(fetch, lambda log: element_qn(log) == FEEDBACK_LOG_QN and bool(element_guid(log)),
-                                  method="_async_get_note_logs_by_name", client=client)
+        """Whether the feedback log exists, by Egeria's exact unique-name read of FEEDBACK_LOG_QN (a
+        paging_support.UniqueName: found / absent (Egeria's specific not-found) / unknown)."""
+        return await async_by_unique_name(client, FEEDBACK_LOG_QN, "NoteLog")
 
     async def _get_or_create_feedback_log(self, client: Egeria) -> str | None:
         """Return the feedback log's GUID, creating the log on first use.
@@ -116,14 +110,14 @@ class FeedbackMixin:
         When the owner creates it, it is attached to their profile. If another user
         gets there first the log is created standalone - it is still found by name.
 
-        The log is created only when the read reached Egeria's end without it (absent); when it can't tell, LookupUnconfirmed is
-        raised and nothing is created (a second feedback log would split the feedback).
+        The log is created only when Egeria's unique-name read says not-found; on any other answer
+        LookupUnconfirmed is raised and nothing is created (a second feedback log would split the feedback).
         """
         found = await self._find_feedback_log(client)
         if found.found:
-            return element_guid(found.matches[0])
+            return found.guid
         if found.answer != "absent":
-            raise LookupUnconfirmed(refusal("the feedback log", found))
+            raise LookupUnconfirmed(unique_refusal("the feedback log", found))
         properties = {
             "class": "NoteLogProperties",
             "typeName": "NoteLog",
@@ -166,11 +160,11 @@ class FeedbackMixin:
         """Retrieve the notes in the feedback log, newest first (PagedRows: ``complete`` False when Egeria
         didn't confirm that's all of them)."""
         found = await self._find_feedback_log(client)
-        if found.answer == "absent":
-            return PagedRows([], complete=found.read.complete, reached_end=True)
+        if found.answer == "absent":   # Egeria's exact not-found: no feedback has been recorded yet
+            return PagedRows([], complete=True)
         if not found.found:
-            return PagedRows([], complete=False, note=found.words("The feedback log"))
-        log_guid = element_guid(found.matches[0])
+            return PagedRows([], complete=False, note=unique_refusal("the feedback log", found, "Nothing is shown"))
+        log_guid = found.guid
 
         async def fetch(start: int, size: int):
             return await client._async_get_notes_for_note_log(log_guid, metadata_element_type_name="Note",

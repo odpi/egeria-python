@@ -29,17 +29,14 @@ from pyegeria.core._exceptions import PyegeriaNotFoundException
 from pyegeria.core._globals import NO_ELEMENTS_FOUND
 from pyegeria.core.paging import Exists
 from MyBookMarksScreen import MyBookMarksScreen
-from paging_support import LookupUnconfirmed, PagedRows, lookup, paged_rows, read_all, refusal
+from paging_support import (LookupUnconfirmed, PagedRows, UniqueName, by_unique_name, lookup, paged_rows, read_all,
+                            refusal, unique_refusal)
 from profile_utils import element_summary, row_identity
 
 BOOKMARKS_DISPLAY_NAME = "My Bookmarks"
 BOOKMARKS_RESOURCE_USE = "Bookmarks"
 ROW_HAS_NO_IDENTITY = "That row doesn't identify an Egeria element"
 
-
-def guid_of(found: Exists) -> str:
-    """The GUID of the first match of a "found" lookup."""
-    return element_summary(found.matches[0]).get("guid", "") if found.matches else ""
 
 
 def bookmarks_qualified_name(user_name: str) -> str:
@@ -56,21 +53,10 @@ class BookmarksMixin:
         client.create_egeria_bearer_token(self.user_name, self.user_password)
         return client
 
-    def _find_bookmarks_collection(self, client: Egeria) -> Exists:
-        """Whether the user's bookmarks collection exists: found (its GUID is ``guid_of(found)``), absent
-        (the read reached Egeria's end without it) or unknown. Paged per Egeria's contract: one page without it is not
-        "absent"."""
-        qualified_name = bookmarks_qualified_name(self.user_name)
-
-        def fetch(start: int, size: int) -> Any:
-            return client.get_collections_by_name(name=qualified_name, output_format="JSON", graph_query_depth=0,
-                                                  start_from=start, page_size=size)
-
-        def match(element: Any) -> bool:
-            summary = element_summary(element)
-            return summary.get("qualified_name") == qualified_name and bool(summary.get("guid"))
-
-        return lookup(fetch, match, method="get_collections_by_name", client=client)
+    def _find_bookmarks_collection(self, client: Egeria) -> UniqueName:
+        """Whether the user's bookmarks collection exists, by Egeria's exact unique-name read of its qualified
+        name: found (``.guid``), absent (Egeria's specific not-found) or unknown (any other answer or error)."""
+        return by_unique_name(client, bookmarks_qualified_name(self.user_name), "Collection")
 
     def _bookmarks_profile_guid(self, client: Egeria) -> str:
         """GUID of the user's profile, which owns the bookmarks collection."""
@@ -86,15 +72,15 @@ class BookmarksMixin:
         return guid
 
     def _get_or_create_bookmarks_collection(self, client: Egeria) -> str:
-        """The bookmarks collection's GUID, created only when the read reached Egeria's end without it (absent).
+        """The bookmarks collection's GUID, created only when Egeria's unique-name read says not-found.
 
-        Raises LookupUnconfirmed (nothing created) when Egeria didn't confirm whether it exists: creating then
-        could make a second bookmarks collection."""
+        Raises LookupUnconfirmed (nothing created) on any other answer: creating then could make a second
+        bookmarks collection."""
         found = self._find_bookmarks_collection(client)
         if found.found:
-            return guid_of(found)
+            return found.guid
         if found.answer != "absent":
-            raise LookupUnconfirmed(refusal("your bookmarks collection", found))
+            raise LookupUnconfirmed(unique_refusal("your bookmarks collection", found))
         profile_guid = self._bookmarks_profile_guid(client)
         body = {
             "class": "NewElementRequestBody",
@@ -152,13 +138,13 @@ class BookmarksMixin:
         try:
             client = self._bookmarks_client()
             found = self._find_bookmarks_collection(client)
-            if found.answer == "absent":
-                return PagedRows([], complete=found.read.complete, reached_end=True)
-            if not found.found:
-                self.notify(f"{refusal('your bookmarks collection', found, 'Nothing is shown')}", timeout=10,
-                            severity="warning")
-                return PagedRows([], complete=False, note=found.words("Your bookmarks collection"))
-            rows = self._bookmark_rows(client, guid_of(found))
+            if found.answer == "absent":   # Egeria's exact not-found: the user has no bookmarks collection yet
+                return PagedRows([], complete=True)
+            if not found.found:   # never "no bookmarks": the collection couldn't be read
+                self.notify(unique_refusal("your bookmarks collection", found, "Nothing is shown"), timeout=10,
+                            severity="error")
+                return None
+            rows = self._bookmark_rows(client, found.guid)
             if rows.note:
                 self.notify(rows.note, timeout=10, severity="warning")
             return rows
@@ -271,10 +257,10 @@ class BookmarksMixin:
                 self.notify("You have no bookmarks to remove", timeout=10, severity="warning")
                 return False
             if not found.found:
-                self.notify(refusal("your bookmarks collection", found, "Nothing was removed"), timeout=10,
+                self.notify(unique_refusal("your bookmarks collection", found, "Nothing was removed"), timeout=10,
                             severity="warning")
                 return False
-            collection_guid = guid_of(found)
+            collection_guid = found.guid
             client.remove_from_collection(collection_guid=collection_guid, element_guid=target_guid)
             self.notify(f"Removed bookmark {target_guid}", timeout=10, severity="information")
             return True

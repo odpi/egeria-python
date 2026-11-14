@@ -37,8 +37,8 @@ if str(current_dir) not in sys.path:
     sys.path.append(str(current_dir))
 
 from pyegeria import Egeria, PyegeriaException
-from paging_support import (LookupUnconfirmed, PagedRows, combine, element_qn, lookup, paged_rows, read_all,
-                            refusal)
+from paging_support import (LookupUnconfirmed, PagedRows, by_unique_name, combine, paged_rows, read_all,
+                            unique_refusal)
 from CommunitiesScreen import CommunitiesScreen, DIRECT_LINK, JOIN_ASSIGNMENT_TYPES, CREATOR_ASSIGNMENT_TYPES
 from CommunityScreen import comment_type_label
 
@@ -279,8 +279,8 @@ class CommunitiesMixin:
                                        properties.get("description") or "", _guid(post))))
         rows.sort(key=lambda r: r[0], reverse=True)
         latest = [row for _, row in rows[:LATEST_POSTS]]
-        if combine(*reads):   # every read reached Egeria's end: the newest shown are the newest there are
-            return PagedRows(latest, complete=all(r.complete for r in reads), reached_end=True)
+        if combine(*reads):   # every read reached a confirmed end: the newest shown are the newest there are
+            return PagedRows(latest, complete=True)
         # Some posts may not have been read, so the newest shown may not be the newest there is
         note = (f"Showing the newest of at least {len(rows)} posts read; Egeria didn't confirm there are no more, "
                 f"so newer posts may be missing")
@@ -296,22 +296,16 @@ class CommunitiesMixin:
         return read_all(fetch, method="get_attached_note_logs", client=client)
 
     def _community_blog_log(self, client: Egeria, community_guid: str, community_name: str) -> str:
-        """The GUID of the community's blog note log, which is created on first use: only when the read
-        reached Egeria's end without finding it (absent). Raises LookupUnconfirmed (nothing created) when it can't tell,
-        since creating then could give the community a second blog."""
+        """The GUID of the community's blog note log, which is created on first use: only when Egeria's exact
+        unique-name read of its qualified name says not-found. Raises LookupUnconfirmed (nothing created) on any
+        other answer, since creating then could give the community a second blog."""
         qualified_name = BLOG_LOG_QN.format(community_guid=community_guid)
-
-        def fetch(start: int, size: int):
-            return client.get_attached_note_logs(community_guid, graph_query_depth=0, start_from=start,
-                                                 page_size=size)
-
-        found = lookup(fetch, lambda log: element_qn(log) == qualified_name and bool(_guid(log)),
-                       method="get_attached_note_logs", client=client)
+        found = by_unique_name(client, qualified_name, "NoteLog")
         if found.found:
-            return _guid(found.matches[0])
+            return found.guid
         if found.answer != "absent":
-            raise LookupUnconfirmed(refusal(f"a blog for {community_name}", found,
-                                            "No blog was created and nothing was posted"))
+            raise LookupUnconfirmed(unique_refusal(f"a blog for {community_name}", found,
+                                                   "No blog was created and nothing was posted"))
         body = {
             "class": "NewAttachmentRequestBody",
             "properties": {
@@ -425,19 +419,15 @@ class CommunitiesMixin:
             client = self._community_client()
             qualified_name = client.__create_qualified_name__(COMMUNITY_TYPE, name)
 
-            # Egeria rejects a second element with the same qualified name, but only with a server error
-            def fetch(start: int, size: int):
-                return client.get_communities_by_name(filter_string=qualified_name, graph_query_depth=0,
-                                                      output_format="JSON", start_from=start, page_size=size)
-
-            existing = lookup(fetch, lambda community: element_qn(community) == qualified_name,
-                              method="get_communities_by_name", client=client)
+            # Egeria rejects a second element with the same qualified name, but only with a server error, so
+            # ask its exact unique-name read first: create only on its specific not-found
+            existing = by_unique_name(client, qualified_name)
             if existing.found:
                 self.notify(f"A community called {name} already exists - find it below to join it",
                             timeout=10, severity="warning")
                 return None
             if existing.answer != "absent":
-                self.notify(refusal(f"a community called {name}", existing), timeout=10, severity="warning")
+                self.notify(unique_refusal(f"a community called {name}", existing), timeout=10, severity="warning")
                 return None
             properties["qualifiedName"] = qualified_name
             community_guid = client.create_community(body={"class": "NewElementRequestBody", "isOwnAnchor": True,

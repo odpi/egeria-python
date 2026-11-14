@@ -60,13 +60,13 @@ def client():
 
 class TestBookmarksMixin:
     def test_list_without_collection_is_empty(self, client):
-        client.get_collections_by_name.return_value = "No elements found"
+        client.get_element_by_unique_name.return_value = "No elements found"
         assert DummyApp().list_my_bookmarks() == []
         client.get_collection_members.assert_not_called()
         client.close_session.assert_called_once()
 
     def test_list_returns_member_rows(self, client):
-        client.get_collections_by_name.return_value = [BOOKMARKS_COLLECTION]
+        client.get_element_by_unique_name.return_value = BOOKMARKS_COLLECTION
         # Members may come back wrapped in relatedElement
         client.get_collection_members.return_value = [
             _element("asset-1", "Sales Data", "DataSet"),
@@ -79,20 +79,21 @@ class TestBookmarksMixin:
                                                       graph_query_depth=0, start_from=0, page_size=100)
         assert rows == [("Sales Data", "DataSet", "asset-1"), ("Churn Model", "Asset", "asset-2")]
 
-    def test_list_ignores_same_name_collection_with_other_qualified_name(self, client):
-        client.get_collections_by_name.return_value = [
-            _element("other-guid", BOOKMARKS_DISPLAY_NAME, "Collection", "Bookmarks::erinoverview")]
+    def test_list_asks_for_the_users_own_qualified_name(self, client):
+        # the exact unique-name read of Bookmarks::<user>: another user's same-named collection can't answer
+        client.get_element_by_unique_name.return_value = "No elements found"
         assert DummyApp().list_my_bookmarks() == []
+        client.get_element_by_unique_name.assert_called_once_with(BOOKMARKS_QN)
 
     def test_list_error_returns_none(self, client):
-        client.get_collections_by_name.side_effect = PyegeriaException("boom")
+        client.get_element_by_unique_name.side_effect = PyegeriaException("boom")
         app = DummyApp()
         assert app.list_my_bookmarks() is None
         assert app.notices[-1][1] == "error"
 
     def test_add_creates_collection_first_time(self, client):
-        # null ("No elements found") is absent; [] would be a filtered page, and creating on it is refused
-        client.get_collections_by_name.return_value = "No elements found"
+        # Egeria's unique-name read says not-found: create (any other answer refuses)
+        client.get_element_by_unique_name.return_value = "No elements found"
         client.create_collection.return_value = "new-coll-guid"
         assert DummyApp().add_my_bookmark("asset-1") is True
         body = client.create_collection.call_args.kwargs["body"]
@@ -105,7 +106,7 @@ class TestBookmarksMixin:
         client.add_to_collection.assert_called_once_with(collection_guid="new-coll-guid", element_guid="asset-1")
 
     def test_add_looks_up_profile_guid_when_not_known(self, client):
-        client.get_collections_by_name.return_value = "No elements found"
+        client.get_element_by_unique_name.return_value = "No elements found"
         client.get_my_profile.return_value = [{"elementHeader": {"guid": "looked-up-profile"}, "properties": {}}]
         app = DummyApp()
         app.user_GUID = ""
@@ -113,7 +114,7 @@ class TestBookmarksMixin:
         assert client.create_collection.call_args.kwargs["body"]["parentGUID"] == "looked-up-profile"
 
     def test_add_already_bookmarked_is_refused(self, client):
-        client.get_collections_by_name.return_value = [BOOKMARKS_COLLECTION]
+        client.get_element_by_unique_name.return_value = BOOKMARKS_COLLECTION
         client.get_collection_members.return_value = [_element("asset-1", "Sales Data", "DataSet")]
         app = DummyApp()
         assert app.add_my_bookmark("asset-1") is False
@@ -121,29 +122,29 @@ class TestBookmarksMixin:
         assert app.notices[-1][1] == "warning"
 
     def test_add_reuses_existing_collection(self, client):
-        client.get_collections_by_name.return_value = [BOOKMARKS_COLLECTION]
+        client.get_element_by_unique_name.return_value = BOOKMARKS_COLLECTION
         assert DummyApp().add_my_bookmark("asset-1") is True
         client.create_collection.assert_not_called()
         client.add_to_collection.assert_called_once_with(collection_guid="bm-coll-guid", element_guid="asset-1")
 
     def test_add_failure_returns_false(self, client):
-        client.get_collections_by_name.return_value = [BOOKMARKS_COLLECTION]
+        client.get_element_by_unique_name.return_value = BOOKMARKS_COLLECTION
         client.add_to_collection.side_effect = PyegeriaException("bad guid")
         assert DummyApp().add_my_bookmark("nope") is False
         client.close_session.assert_called_once()
 
     def test_delete_removes_member(self, client):
-        client.get_collections_by_name.return_value = [BOOKMARKS_COLLECTION]
+        client.get_element_by_unique_name.return_value = BOOKMARKS_COLLECTION
         assert DummyApp().delete_my_bookmark("asset-1") is True
         client.remove_from_collection.assert_called_once_with(collection_guid="bm-coll-guid", element_guid="asset-1")
 
     def test_delete_without_collection(self, client):
-        client.get_collections_by_name.return_value = []
+        client.get_element_by_unique_name.return_value = "No elements found"
         assert DummyApp().delete_my_bookmark("asset-1") is False
         client.remove_from_collection.assert_not_called()
 
     def test_show_pushes_screen(self, client):
-        client.get_collections_by_name.return_value = []
+        client.get_element_by_unique_name.return_value = "No elements found"
         app = DummyApp()
         app.show_my_bookmarks()
         screen, callback = app.pushed[0]
@@ -151,7 +152,7 @@ class TestBookmarksMixin:
         assert callback == app.my_bookmarks_callback
 
     def test_show_passes_target_guid_to_screen(self, client):
-        client.get_collections_by_name.return_value = []
+        client.get_element_by_unique_name.return_value = "No elements found"
         app = DummyApp()
         app.show_my_bookmarks(target_guid="asset-7")
         assert app.pushed[0][0].target_guid == "asset-7"
@@ -265,7 +266,7 @@ class TestBookmarkTableRow:
 
     @pytest.mark.asyncio
     async def test_bookmarks_row_by_guid(self, client):
-        client.get_collections_by_name.return_value = [BOOKMARKS_COLLECTION]
+        client.get_element_by_unique_name.return_value = BOOKMARKS_COLLECTION
         app = TableHostApp(["Role Name", "Description", "GUID"], [("Steward", "Looks after data", "role-1")])
         async with app.run_test():
             assert DummyApp().bookmark_table_row(app.query_one("#t", DataTable), "r0") is True
@@ -274,7 +275,7 @@ class TestBookmarkTableRow:
 
     @pytest.mark.asyncio
     async def test_bookmarks_row_by_qualified_name(self, client):
-        client.get_collections_by_name.return_value = [BOOKMARKS_COLLECTION]
+        client.get_element_by_unique_name.return_value = BOOKMARKS_COLLECTION
         client.get_element_guid_by_unique_name.return_value = "gloss-1"
         app = TableHostApp(["Glossary Name", "Description", "Qualified Name"],
                            [("Clinical Terms", "Terms", "Glossary::Clinical-Terms")])

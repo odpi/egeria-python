@@ -14,7 +14,7 @@ from textual.app import ComposeResult
 from textual.containers import ScrollableContainer, Horizontal
 from textual.screen import ModalScreen
 from textual.widgets import Header, Static, Footer, Button, DataTable, Select, TextArea
-from paging_support import is_complete, none_words, reached_end
+from paging_support import count_text, is_complete, none_words
 from profile_utils import set_screen_heading
 
 FEEDBACK_CATEGORIES = ["Bug", "Suggestion", "Question", "Praise", "Other"]
@@ -110,11 +110,10 @@ class FeedbackLogScreen(ModalScreen):
         self.feedback_entries = feedback_entries or []
         # False when Egeria didn't confirm these are all the entries (paging_support.PagedRows)
         self.complete = is_complete(feedback_entries)
-        self.reached_end = reached_end(feedback_entries)
+        self.count_text = count_text(feedback_entries if feedback_entries is not None else [])
 
     def on_mount(self):
-        count = len(self.feedback_entries)
-        set_screen_heading(self, f"Feedback Log ({count if self.reached_end else f'at least {count}'} entries)")
+        set_screen_heading(self, f"Feedback Log ({self.count_text} entries)")
         table = self.query_one("#feedback_log_table", DataTable)
         table.add_columns("Date", "Submitted By", "Category", "Screen", "Feedback")
         table.zebra_stripes = True

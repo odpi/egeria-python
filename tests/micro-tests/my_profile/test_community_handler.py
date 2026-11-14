@@ -99,6 +99,8 @@ def client():
         # MagicMock doesn't create dunder-named attributes on demand
         mock_egeria.return_value.__create_qualified_name__ = MagicMock(
             side_effect=lambda type_name, name: f"{type_name}::{name.replace(' ', '-')}")
+        # Egeria's exact unique-name read: not-found unless a test says otherwise (only then may a create run)
+        mock_egeria.return_value.get_element_by_unique_name.return_value = "No elements found"
         yield mock_egeria.return_value
 
 
@@ -232,11 +234,10 @@ class TestCommunitiesMixin:
 
     def test_create_refuses_an_existing_name(self, client):
         existing = {**DATA_SCI, "properties": {**DATA_SCI["properties"], "qualifiedName": "Community::Data-Science-SIG"}}
-        client.get_communities_by_name.side_effect = (
-            lambda *a, start_from=0, **k: [existing] if start_from == 0 else "No elements found")
+        client.get_element_by_unique_name.return_value = existing
         app = DummyApp()
         assert app.create_community("Data Science SIG", "Again") is None
-        assert client.get_communities_by_name.call_args.kwargs["filter_string"] == "Community::Data-Science-SIG"
+        client.get_element_by_unique_name.assert_called_once_with("Community::Data-Science-SIG")
         client.create_community.assert_not_called()
         assert app.notices[-1] == ("A community called Data Science SIG already exists - find it below to join it",
                                    "warning")
@@ -323,8 +324,9 @@ class TestCommunitiesMixin:
     def test_later_posts_reuse_the_blog(self, client):
         blog = _element("blog-log", "NoteLog", "Blog")
         blog["properties"]["qualifiedName"] = "NoteLog::ds-guid::CommunityBlog"
-        client.get_attached_note_logs.return_value = [_element("other-log", "NoteLog", "Notifications"), blog]
+        client.get_element_by_unique_name.return_value = blog
         assert DummyApp().add_community_blog_post("ds-guid", "Data Science SIG", "Hi", "Hello") is True
+        client.get_element_by_unique_name.assert_called_once_with("NoteLog::ds-guid::CommunityBlog")
         client.create_note_log.assert_not_called()
         assert client.create_note.call_args.args[0] == "blog-log"
 
