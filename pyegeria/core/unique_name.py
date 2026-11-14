@@ -12,7 +12,9 @@ or "not found" for an exact qualified name (the exists-lookups / publish ruling;
 
 - found: the element (of ``type_name``, when given);
 - absent: Egeria's specific not-found (``NO_ELEMENTS_FOUND`` or ``PyegeriaNotFoundException``), or an element of
-  another type holds the name (``wrong_type``: then no element of ``type_name`` can hold it);
+  another type holds the name (``wrong_type``: then no element of ``type_name`` can hold it). wrong_type ->
+  absent is right for READERS only: a write guard must REFUSE on wrong_type, because Egeria rejects a second
+  element with the same qualified name;
 - unknown: any other answer or error. A write guard refuses on unknown and writes nothing; a reader says it
   couldn't tell (``words``), never "not found".
 """

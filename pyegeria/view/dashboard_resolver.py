@@ -141,9 +141,29 @@ def is_not_visible_error(exc: BaseException) -> bool:
     return isinstance(exc, PyegeriaUnauthorizedException) and getattr(exc, "related_http_code", None) == 403
 
 
+def is_server_not_available_error(exc: BaseException) -> bool:
+    """Egeria's OMAG-MULTI-TENANT-404-*: the server (or a service on it) isn't available. A 404 by number, but
+    a fact about the platform, never about the element (pyegeria raises it as an API error, not not-found)."""
+    info = getattr(exc, "additional_info", None)
+    message_id = str(info.get("exceptionErrorMessageId") or "") if isinstance(info, dict) else ""
+    try:
+        text = str(exc)
+    except Exception:  # noqa: BLE001
+        text = ""
+    return message_id.startswith("OMAG-MULTI-TENANT-404") or "OMAG-MULTI-TENANT-404" in text
+
+
 def _is_not_found_error(exc: BaseException) -> bool:
+    """Egeria's specific element not-found. Never OMAG-MULTI-TENANT-404 (server not available), whose text also
+    carries "-404-"."""
     from pyegeria.core._exceptions import PyegeriaNotFoundException
-    return isinstance(exc, PyegeriaNotFoundException) or "-404-" in str(exc)
+    if is_server_not_available_error(exc):
+        return False
+    try:
+        text = str(exc)
+    except Exception:  # noqa: BLE001
+        text = ""
+    return isinstance(exc, PyegeriaNotFoundException) or "-404-" in text
 
 
 def placements_for_perspective(placements: List[Any], perspective: Optional[str]) -> List[Any]:

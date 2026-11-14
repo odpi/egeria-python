@@ -637,6 +637,25 @@ async def _async_find_specs_by_label(client, label: str) -> List[Dict[str, Any]]
     return _spec_lookup_result(label, seen, unconfirmed)
 
 
+def _pinned_element_state(client, guid: str) -> Tuple[str, str]:
+    """Whether a pinned spec's element is still there, by GUID, three ways: ("found", ""), ("gone", why)
+    (Egeria's specific element not-found, or the element is no longer visible to the syncing identity: the
+    only answers that prune), or ("unknown", the error class): any other error, OMAG-MULTI-TENANT-404 (the
+    server or service isn't available) included, which keeps the entry."""
+    if not guid:
+        return "unknown", "no GUID recorded"
+    try:
+        el = _get_full(client, guid)
+    except Exception as exc:  # noqa: BLE001 -- classified below; only an element's absence prunes
+        if _folders.is_gone_error(exc):
+            from pyegeria.view.dashboard_resolver import is_not_visible_error
+            if is_not_visible_error(exc):
+                return "gone", f"is no longer visible to {_client_identity(client)}"
+            return "gone", "no longer exists"
+        return "unknown", type(exc).__name__
+    return ("found", "") if el else ("gone", "no longer exists")   # NO_ELEMENTS_FOUND: Egeria's not-found
+
+
 def _get_full(client, guid: str) -> Optional[Dict[str, Any]]:
     found = _call(client.get_collection_by_guid, guid, output_format="JSON")
     return found[0] if found else None
@@ -850,15 +869,17 @@ def sync_report_specs(client, *, folders: Optional[Iterable[str]] = None, specs:
                     rep.pruned.append(label)  # seen but skipped this time; the skip names the reason
                     continue
                 if old.get("pinned"):
-                    try:
-                        still = _get_full(client, old.get("guid", ""))
-                    except Exception:  # noqa: BLE001
-                        still = None
-                    if still:
+                    state, why = _pinned_element_state(client, old.get("guid", ""))
+                    if state == "found":
                         tgt_new["entries"][label] = old
                         continue
+                    if state == "unknown":   # a transient fault never drops what the user pinned
+                        tgt_new["entries"][label] = old
+                        rep.notes.append(f"{label}: kept; couldn't confirm whether its element {old.get('guid')} "
+                                         f"still exists ({why})")
+                        continue
                     rep.pruned.append(label)
-                    rep.notes.append(f"{label}: pruned, its element {old.get('guid')} no longer exists")
+                    rep.notes.append(f"{label}: pruned, its element {old.get('guid')} {why}")
                     continue
                 rep.pruned.append(label)
                 rep.notes.append(f"{label}: pruned, no longer a member of any synced folder")
