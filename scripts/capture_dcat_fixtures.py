@@ -11,7 +11,7 @@ any method whose name does not start with get_/find_.
     EGERIA_USER=erinoverview EGERIA_USER_PASSWORD=... \\
       uv run -p 3.13 python scripts/capture_dcat_fixtures.py tests/micro-tests/data/dcat
 
-Scopes captured (laz, 2026-11-11) are listed in SCOPES below; the zone-refused Report is read by
+Scopes captured (laz, 2026-11-11; re-captured 2026-11-14 on 5deda38d) are listed in SCOPES below; the zone-refused Report is read by
 GUID only, to record a real OPEN-METADATA-SECURITY-403-020 answer.
 """
 import json
@@ -25,7 +25,10 @@ from pyegeria.view.export_dcat import export_dcat
 SCOPES = [
     ("portal_dashboards", {"scope": "DashboardFolder::Consumer::Portal"}),
     ("org_structure_products", {"scope": "DigitalProductFamily::Jacquard::ORGANIZATION-STRUCTURE-FAMILY::Organization Structure"}),
-    ("clinical_trial_files", {"search_string": "DataLake::PROJ-CT-TBDF::WeeklyMeasurements::Oak Dene Hospital::PROJ-CT-TBDF_00002"}),
+    # 2026-11-14: laz's 11-11 20:27Z DB reset re-catalogued these files under new qualified names
+    # (CSVFile::egeria-workspaces:/deployments/coco-data-lake/research/clinical-trials/...), so the old exact
+    # DataLake::PROJ-CT-TBDF::... search matches nothing; this one finds the folder and its 10 CSVFiles.
+    ("clinical_trial_files", {"search_string": "PROJ-CT-TBDF_00002"}),
     ("coco_data_hub", {"search_string": "PostgreSQL Relational Database::Coco PostgreSQL Server 1::coco_data_hub"}),
 ]
 #: A Report zoned ['peterprofile'] (B4 scratch-restricted-demo); erinoverview's read by GUID is refused.
