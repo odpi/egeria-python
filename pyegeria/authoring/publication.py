@@ -33,8 +33,13 @@ history and orphan every pin.
 
 **Visibility.** The unique-name read is filtered by what the publisher may see (Egeria's
 getBeanByUniqueName): an element zoned away from the publisher reads as "not found", so its publish plans a
-create ("not held"). Whether that create then fails on the duplicate qualifiedName or makes a twin depends on
-the platform (not checked here). Publish as someone who can see the element.
+create ("not held"). Egeria then refuses that create: qualifiedName is a unique property (Referenceable,
+OpenMetadataTypesArchive1_2), and the generic create path (OpenMetadataAPIGenericHandler.createBeanInRepository
+-> validateNewEntityRequest -> validateUniqueProperties -> validateUniqueProperty, read at Egeria 8de9572c4d)
+looks the value up as the server's own user, so the caller's zones don't hide the existing element, and throws
+"unique name in use". So the publish fails rather than making a twin; it doesn't update the element either.
+Publish as someone who can see the element. (Read from the source for the generic-handler create path; not
+every OMVS create has been traced to it.)
 
 **No silent overwrite.** apply re-resolves the target and refuses if its GUID or `publishedVersion` changed
 since the plan was made.
