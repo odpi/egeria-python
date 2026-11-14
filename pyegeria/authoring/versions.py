@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Tuple
 
-from pyegeria.authoring.models import AuthoringRefused
+from pyegeria.authoring.models import ANSWER_ABSENT, ANSWER_UNKNOWN, AuthoringRefused
 
 
 def as_element(item: Dict[str, Any]) -> Dict[str, Any]:
@@ -44,12 +44,13 @@ async def async_spec_versions(client: Any, label: str) -> Tuple[Dict[str, Any], 
     from md_processing.v2.report import find_report_spec_element
     current = await find_report_spec_element(client, label)
     if not current:
-        raise AuthoringRefused(f"Egeria holds no report spec {label!r} that you can see.")
+        raise AuthoringRefused(f"Egeria holds no report spec {label!r} that you can see.", answer=ANSWER_ABSENT)
     guid = (current.get("elementHeader") or {}).get("guid")
     from pyegeria.authoring.publication import async_read_history
     versions, why = await async_read_history(client, guid)
     if why:
-        raise AuthoringRefused(f"The published versions of spec {label!r} can't be told: {why}.")
+        raise AuthoringRefused(f"The published versions of spec {label!r} can't be told: {why}.",
+                               answer=ANSWER_UNKNOWN)
     return current, versions
 
 
