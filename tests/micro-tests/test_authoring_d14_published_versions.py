@@ -465,3 +465,16 @@ def test_authoring_keys_have_a_stable_public_path():
     from pyegeria.authoring import AUTHORING_KEYS
     assert AUTHORING_KEYS == {"authoringState", "reportSpecVersion", "publishedVersion", "publishedAt",
                               "publishedBy"}
+
+
+@pytest.mark.parametrize("answer", [[], ["x"], "Something else", {"neither": "elementHeader nor element"}, None])
+def test_an_unexpected_unique_name_answer_is_refused_and_plans_nothing(monkeypatch, answer):
+    # step 5 read-back R1: only Egeria's "not found" (the string, or PyegeriaNotFoundException) is absent
+    eg = _Egeria()
+
+    async def odd(qn):
+        return answer
+    monkeypatch.setattr(eg.classification_manager, "_async_get_element_by_unique_name", odd)
+    with pytest.raises(AuthoringRefused, match="wasn't an element or 'not found'"):
+        asyncio.run(async_publish_plan(_spec_draft(), eg, folders=["ReportSpecFolder::Consumer::Portal"]))
+    assert eg.history_calls == []
