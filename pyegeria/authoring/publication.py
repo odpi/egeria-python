@@ -58,7 +58,7 @@ from loguru import logger
 
 from pyegeria.core._globals import NO_ELEMENTS_FOUND
 
-from pyegeria.authoring.models import AuthoringRefused, ReportDraft, SpecDraft, as_draft
+from pyegeria.authoring.models import ANSWER_UNKNOWN, AuthoringRefused, ReportDraft, SpecDraft, as_draft
 
 PUBLISHED_VERSION_KEY = "publishedVersion"
 PUBLISHED_AT_KEY = "publishedAt"
@@ -193,7 +193,8 @@ async def _find_exact(client: Any, type_name: str, prop: str, value: str) -> Lis
         logger.info(f"publication: unique-name read of {type_name} {value!r} failed: {type(exc).__name__}")
         raise AuthoringRefused(f"Couldn't find out whether Egeria already holds the {type_name} {value!r} (the "
                                f"unique-name read of qualifiedName failed: {type(exc).__name__}). Publishing "
-                               f"needs to know which element it writes, so nothing was planned; try again.") from exc
+                               f"needs to know which element it writes, so nothing was planned; try again.",
+                               answer=ANSWER_UNKNOWN) from exc
     if result == NO_ELEMENTS_FOUND:   # Egeria holds no element with that qualifiedName: absent
         return []
     el = result if isinstance(result, dict) and result.get("elementHeader") else (

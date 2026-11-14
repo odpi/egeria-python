@@ -14,7 +14,7 @@ from typing import Any, Dict, Iterable, List, Optional, Union
 from loguru import logger
 
 from pyegeria.authoring.models import (
-    AuthoringGates, AuthoringRefused, ReportDraft, SheetDraft, SheetPlacement, SpecDraft, as_draft, default_gates,
+    ANSWER_ABSENT, ANSWER_UNKNOWN, AuthoringGates, AuthoringRefused, ReportDraft, SheetDraft, SheetPlacement, SpecDraft, as_draft, default_gates,
 )
 from pyegeria.authoring.publication import AUTHORING_KEYS
 from pyegeria.authoring.serialize import (
@@ -79,7 +79,7 @@ async def _report_element(client: Any, label: str) -> Optional[Dict[str, Any]]:
     r = found.read
     raise AuthoringRefused(f"Couldn't confirm whether Egeria holds a Report named {label!r} (the display-name read "
                            f"ended {r.end}, {r.end_reason}, after {r.positions_read} positions: Egeria didn't "
-                           f"confirm there are no more). Give the Report's qualified name.")
+                           f"confirm there are no more). Give the Report's qualified name.", answer=ANSWER_UNKNOWN)
 
 
 def _type_name(el: Dict[str, Any]) -> str:
@@ -195,7 +195,7 @@ async def async_load_held(kind: str, label: str, client: Any) -> Union[SpecDraft
         from pyegeria.view.egeria_spec_cache import _Skip, _build
         el = await find_report_spec_element(client, label)
         if not el:
-            raise AuthoringRefused(f"Egeria holds no report spec {label!r} that you can see.")
+            raise AuthoringRefused(f"Egeria holds no report spec {label!r} that you can see.", answer=ANSWER_ABSENT)
         try:
             built = _build(el, folders=[], identity=getattr(client, "user_id", "") or "")
         except _Skip as exc:
@@ -206,13 +206,14 @@ async def async_load_held(kind: str, label: str, client: Any) -> Union[SpecDraft
     if kind == "report":
         el = await _report_element(client, label)   # unknown raises "couldn't confirm" (never "holds no")
         if not el:
-            raise AuthoringRefused(f"Egeria holds no Report named {label!r} that you can see.")
+            raise AuthoringRefused(f"Egeria holds no Report named {label!r} that you can see.", answer=ANSWER_ABSENT)
         return report_draft_from_element(el)
     if kind == "sheet":
         from pyegeria.view.dashboards import read_sheet_from_chain
         sheet = await read_sheet_from_chain(client, label)
         if sheet is None:
-            raise AuthoringRefused(f"Egeria holds no dashboard sheet {label!r} (Dashboard::{label}) that you can see.")
+            raise AuthoringRefused(f"Egeria holds no dashboard sheet {label!r} (Dashboard::{label}) that you can see.",
+                                   answer=ANSWER_ABSENT)
         draft = sheet_draft_from_sheet(sheet)
         dash = await _by_qualified_name(client, f"Dashboard::{label}")
         draft.base_version = _version(dash) if dash else None

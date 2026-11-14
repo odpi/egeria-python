@@ -21,7 +21,7 @@ from typing import Any, Dict, List, Optional, Protocol, Tuple, Union
 
 from pyegeria.authoring.publication import stamp_of
 from pyegeria.authoring.models import (
-    KINDS, AuthoringRefused, ReportDraft, SheetDraft, SheetPlacement, SpecDraft, as_draft, draft_key,
+    ANSWER_ABSENT, KINDS, AuthoringRefused, ReportDraft, SheetDraft, SheetPlacement, SpecDraft, as_draft, draft_key,
 )
 from pyegeria.view._output_format_models import Column, Format, FormatSet
 
@@ -476,7 +476,8 @@ class EgeriaDraftStore:
         self._author(user_id)
         draft = await self.async_load(user_id, kind, name)
         if draft is None:
-            raise AuthoringRefused(f"You have no {kind} draft named {name!r} in your private zone.")
+            raise AuthoringRefused(f"You have no {kind} draft named {name!r} in your private zone.",
+                                   answer=ANSWER_ABSENT)
         # The target is resolved as the author (its private zone comes back in `held`, so the plan stamps the
         # element, then declassifies it).
         return await async_publish_plan(draft, self.client, folders=folders)
