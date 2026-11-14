@@ -87,7 +87,10 @@ def main() -> None:
             # legacy ReportType:: loader, removed in pyegeria 7. A failed sync never stops the server.
             try:
                 from pyegeria.view.egeria_spec_cache import sync_report_specs
-                report = sync_report_specs(GLOBAL_EGERIA_CLIENT)
+                # shared=True: this server's registry serves every caller, so its cache must never hold a zoned
+                # spec (egeria_spec_cache §9). An unshared cache would cache what the startup identity can see and
+                # serve it to every user of this server (the Portal-3 hazard).
+                report = sync_report_specs(GLOBAL_EGERIA_CLIENT, shared=True)
                 logger.debug(f"Egeria report specs synced into the spec cache: {report.render()}")
             except Exception as sync_error:  # noqa: BLE001 -- best effort at startup
                 logger.warning(f"report spec sync at startup failed ({type(sync_error).__name__}): {sync_error}")
