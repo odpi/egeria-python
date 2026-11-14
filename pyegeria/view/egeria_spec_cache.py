@@ -31,6 +31,8 @@ import os
 import re
 import tempfile
 import time
+from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -144,6 +146,79 @@ def _settings_env():
         return settings.Environment
     except Exception:  # noqa: BLE001 -- settings may not load in every context
         return None
+
+
+# ── Whose cache: the credential identity (spec-cache identity ruling, item 3) ──
+# A private manifest is bound to the credential identity that synced it, and the tier loads it only for that
+# identity. The identity is the Egeria user on a platform and view server, never the OS user. It is the user id,
+# not a token hash, because a manifest outlives every token: a CLI mints a new token on each run.
+
+_SPEC_IDENTITY: "ContextVar[Optional[str]]" = ContextVar("pyegeria_spec_identity", default=None)
+_REFUSED_LOGGED: set = set()
+
+
+def credential_identity(user_id: Any, platform_url: Optional[str] = None,
+                        view_server: Optional[str] = None) -> Optional[str]:
+    """"<user>@<platform host_port>/<view server>", or None when there is no user."""
+    user = user_id.strip() if isinstance(user_id, str) else ""
+    if not user or user == "?":
+        return None
+    env = _settings_env()
+    url = platform_url if isinstance(platform_url, str) and platform_url else (
+        getattr(env, "egeria_view_server_url", None) if env else None)
+    server = view_server if isinstance(view_server, str) and view_server else (
+        getattr(env, "egeria_view_server", None) if env else None)
+    url = url if isinstance(url, str) else None
+    server = server if isinstance(server, str) else None
+    return f"{user}@{_host_port(url)}/{_safe(server or 'unknown-view-server')}"
+
+
+def client_credential_identity(client: Any) -> Optional[str]:
+    """The credential identity of the Egeria client a read is made with."""
+    return credential_identity(getattr(client, "user_id", None), getattr(client, "platform_url", None),
+                               getattr(client, "view_server", None))
+
+
+@contextmanager
+def spec_identity(identity: Optional[str]):
+    """Run the block as `identity` for the EGERIA tier (exec_report_spec and the async runner set it)."""
+    token = _SPEC_IDENTITY.set(identity)
+    try:
+        yield
+    finally:
+        _SPEC_IDENTITY.reset(token)
+
+
+def current_spec_identity() -> Optional[str]:
+    """The identity the EGERIA tier is read for: the one set by `spec_identity`, else this process's configured
+    Egeria user (settings.User_Profile.user_name / EGERIA_USER)."""
+    identity = _SPEC_IDENTITY.get()
+    if identity:
+        return identity
+    try:
+        from pyegeria.core.config import settings
+        return credential_identity(os.getenv("EGERIA_USER") or settings.User_Profile.user_name)
+    except Exception:  # noqa: BLE001 -- no settings: no identity, so no private manifest loads (fail safe)
+        return None
+
+
+def _manifest_loads_for(directory: Path, manifest: Dict[str, Any], identity: Optional[str]) -> bool:
+    """Whether a manifest may load into the tier for `identity`. A shared one loads for anyone; a private one
+    only for the identity it is bound to (one without a binding, e.g. from before this rule, for no one).
+    A refusal is logged once per (directory, bound identity, identity)."""
+    if manifest.get("shared") or not manifest.get("entries"):
+        return True
+    bound = manifest.get("bound_identity")
+    if bound and bound == identity:
+        return True
+    key = (str(directory), bound, identity)
+    if key not in _REFUSED_LOGGED:
+        _REFUSED_LOGGED.add(key)
+        why = (f"it is bound to {bound}" if bound else
+               "it records no bound identity (synced before private caches were bound); re-sync to bind it")
+        logger.warning(f"Report spec cache {directory}: a private cache, not loaded for {identity or 'no identity'}: "
+                       f"{why}")
+    return False
 
 
 def _host_port(url: Optional[str]) -> str:
@@ -772,9 +847,10 @@ def sync_report_specs(client, *, folders: Optional[Iterable[str]] = None, specs:
 
         main_dir, drafts_dir = directory, directory / DRAFTS_DIR
         main_old, drafts_old = _read_manifest(main_dir), _read_manifest(drafts_dir)
-        main_new = _new_manifest(main_old, identity, shared)
+        bound = client_credential_identity(client)
+        main_new = _new_manifest(main_old, identity, shared, bound)
         shared_cache = bool(main_new.get("shared"))  # §9: a shared cache never holds a zoned spec
-        drafts_new = _new_manifest(drafts_old, identity, shared)
+        drafts_new = _new_manifest(drafts_old, identity, shared, bound)
         drafts_report = SyncReport(cache_dir=str(drafts_dir), folders=folder_qns) if include_drafts else None
 
         # Identify every candidate; duplicate labels are skipped (both), with both GUIDs.
@@ -907,10 +983,12 @@ def sync_report_specs(client, *, folders: Optional[Iterable[str]] = None, specs:
     return report
 
 
-def _new_manifest(old: Dict[str, Any], identity: str, shared: Optional[bool]) -> Dict[str, Any]:
+def _new_manifest(old: Dict[str, Any], identity: str, shared: Optional[bool],
+                  bound: Optional[str] = None) -> Dict[str, Any]:
+    """`bound`: the credential identity that synced it; a private manifest loads only for it."""
     return {"format": MANIFEST_FORMAT,
             "shared": bool(old.get("shared")) if shared is None else bool(shared),
-            "sync_identity": identity, "synced_at": _now(), "entries": {}, "skipped": []}
+            "sync_identity": identity, "bound_identity": bound, "synced_at": _now(), "entries": {}, "skipped": []}
 
 
 def _resolve_cache_dir(client, override: Optional[str]) -> Path:
@@ -1157,10 +1235,11 @@ def egeria_tier(*, force: bool = False):
     from pyegeria.view._output_format_models import FormatSetDict
     with_drafts = os.getenv(DRAFTS_ENV, "").strip().lower() in ("1", "true", "yes")
     env = _settings_env()
+    identity = current_spec_identity()
     raw_key = (os.getenv(CACHE_DIR_ENV), getattr(env, "egeria_view_server_url", None),
                getattr(env, "egeria_view_server", None), getattr(env, "pyegeria_user_report_specs_dir", None),
                os.getenv("PYEGERIA_USER_REPORT_SPECS_DIR"), os.getenv("PYEGERIA_USER_FORMAT_SETS_DIR"),
-               with_drafts)
+               with_drafts, identity)
     now = time.monotonic()
     if not force and _TIER.get("raw_key") == raw_key and now - _TIER["checked"] < _RELOAD_INTERVAL_S:
         return _TIER["specs"]
@@ -1171,7 +1250,7 @@ def egeria_tier(*, force: bool = False):
             logger.warning(f"Report spec cache unavailable: {exc}")
         _TIER.update(key=("error", str(exc)), raw_key=raw_key, checked=now, specs=FormatSetDict(), meta={})
         return _TIER["specs"]
-    key = (str(directory), with_drafts)
+    key = (str(directory), with_drafts, identity)
     _TIER["raw_key"] = raw_key
     stamp = _stamp(directory, with_drafts)
     _TIER["checked"] = now
@@ -1179,9 +1258,11 @@ def egeria_tier(*, force: bool = False):
         return _TIER["specs"]
     specs, meta, skipped = FormatSetDict(), {}, []
     if stamp[0] is not None:
-        shared = bool(_read_manifest(directory).get("shared"))
-        _load_dir(directory, "main", specs, meta, skipped, shared)
-    if with_drafts and stamp[1] is not None:
+        main_manifest = _read_manifest(directory)
+        if _manifest_loads_for(directory, main_manifest, identity):
+            _load_dir(directory, "main", specs, meta, skipped, bool(main_manifest.get("shared")))
+    if with_drafts and stamp[1] is not None and _manifest_loads_for(
+            directory / DRAFTS_DIR, _read_manifest(directory / DRAFTS_DIR), identity):
         dspecs, dmeta = FormatSetDict(), {}
         _load_dir(directory / DRAFTS_DIR, "drafts", dspecs, dmeta, skipped, False)
         for label, fs in dspecs.items():
@@ -1199,8 +1280,9 @@ def egeria_tier(*, force: bool = False):
 def egeria_tier_info(label: str) -> Optional[Dict[str, Any]]:
     """Provenance for a label in the EGERIA tier (or a fetched `label@vN`), else None."""
     m = _FETCHED_SUFFIX.match(label or "")
-    if m and (m.group("label"), int(m.group("version"))) in _FETCHED:
-        return dict(_FETCHED[(m.group("label"), int(m.group("version")))][1])
+    hit = _fetched_hit(m.group("label"), int(m.group("version"))) if m else None
+    if hit:
+        return dict(hit[1])
     egeria_tier()
     info = _TIER.get("meta", {}).get(label)
     return dict(info) if info else None
@@ -1237,17 +1319,47 @@ def spec_footer(info: Optional[Dict[str, Any]]) -> Optional[str]:
 
 # ── Fetch on a call (§7a "Fetch on a call") ──
 
-#: Specs fetched with refresh_spec=True, kept for the life of the process, keyed by (label, header
-#: version). Addressed internally as "egeria:<label>@v<version>".
-_FETCHED: Dict[Tuple[str, int], Tuple[Any, Dict[str, Any]]] = {}
+#: Specs fetched with refresh_spec=True, kept for the life of the process, keyed by (credential identity, label,
+#: header version): served only to the identity that fetched them (spec-cache identity ruling, item 4), never to
+#: another identity, with no fallback to its copy. Addressed internally as "egeria:<label>@v<version>".
+_FETCHED: Dict[Tuple[Optional[str], str, int], Tuple[Any, Dict[str, Any]]] = {}
+NOT_FETCHED_FOR_YOU = "not fetched for you; fetch it as yourself"
+_REFUSAL_LOGGED: set = set()
 
 
-def fetched_spec(name: str):
-    """The FormatSet for an internal "<label>@v<N>" name, or None."""
+def _fetched_hit(label: str, version: int, identity: Optional[str] = None):
+    """The fetched copy for (`identity` or the current spec identity, label, version), or None. Never another
+    identity's copy."""
+    return _FETCHED.get((identity if identity is not None else current_spec_identity(), label, version))
+
+
+def fetched_refusal(name: str, identity: Optional[str] = None) -> Optional[str]:
+    """The words when `name` ("[egeria:]<label>@v<N>") was fetched in this process, but only by other identities:
+    "... not fetched for you; fetch it as yourself". None when it is this identity's, or never fetched."""
+    _tier, rest = split_tier_prefix(name)
+    m = _FETCHED_SUFFIX.match(rest or "") if isinstance(rest, str) else None
+    if not m:
+        return None
+    label, version = m.group("label"), int(m.group("version"))
+    if _fetched_hit(label, version, identity):
+        return None
+    if any(k[1] == label and k[2] == version for k in _FETCHED):
+        return f"Report spec '{label}' v{version}: {NOT_FETCHED_FOR_YOU}"
+    return None
+
+
+def fetched_spec(name: str, identity: Optional[str] = None):
+    """The FormatSet for an internal "<label>@v<N>" name fetched by this identity (`identity`, else the current
+    spec identity), or None. Another identity's copy is never returned (see `fetched_refusal`)."""
     m = _FETCHED_SUFFIX.match(name or "")
     if not m:
         return None
-    hit = _FETCHED.get((m.group("label"), int(m.group("version"))))
+    hit = _fetched_hit(m.group("label"), int(m.group("version")), identity)
+    if hit is None and (words := fetched_refusal(name, identity)):
+        key = (identity if identity is not None else current_spec_identity(), name)
+        if key not in _REFUSAL_LOGGED:
+            _REFUSAL_LOGGED.add(key)
+            logger.warning(f"{words} (asked for as {key[0] or 'no identity'})")
     return hit[0] if hit else None
 
 
@@ -1258,7 +1370,7 @@ def fetched_spec_source(name: str) -> Optional[Dict[str, Any]]:
     m = _FETCHED_SUFFIX.match(rest or "") if isinstance(rest, str) else None
     if not m:
         return None
-    hit = _FETCHED.get((m.group("label"), int(m.group("version"))))
+    hit = _fetched_hit(m.group("label"), int(m.group("version")))
     return dict(hit[1]) if hit else None
 
 
@@ -1271,7 +1383,8 @@ def _fetch_target(name: str) -> str:
     return label
 
 
-def _finish_fetch(directory: Path, el: Dict[str, Any], label: str, identity: str) -> str:
+def _finish_fetch(directory: Path, el: Dict[str, Any], label: str, identity: str,
+                  bound: Optional[str] = None) -> str:
     try:
         built = _build(el, folders=[], identity=identity)
     except _Skip as s:
@@ -1288,10 +1401,15 @@ def _finish_fetch(directory: Path, el: Dict[str, Any], label: str, identity: str
             "version": built.provenance["version_identifier"], "header_version": version,
             "fetched_at": built.provenance["fetched_at"], "fetched": True, "shared": shared,
             "qualified_name": built.provenance["qualified_name"]}
-    _FETCHED[(label, version)] = (built.format_set, info)
+    _FETCHED[(bound, label, version)] = (built.format_set, info)   # served only to the identity that fetched it
+    owner = manifest.get("bound_identity")
     if shared:
         logger.info(f"Report spec '{label}' v{version} fetched from Egeria; the cache {directory} is shared, so "
                     f"the copy is kept in this process only")
+    elif not bound or (manifest.get("entries") and owner != bound):
+        # a private cache is written only by the identity it is bound to (a new one is bound to this fetcher)
+        logger.info(f"Report spec '{label}' v{version} fetched from Egeria as {bound or 'no identity'}; the private "
+                    f"cache {directory} is bound to {owner or 'no identity'}, so the copy is kept in this process only")
     else:
         try:
             with _SyncLock(directory):
@@ -1301,6 +1419,7 @@ def _finish_fetch(directory: Path, el: Dict[str, Any], label: str, identity: str
                 entry["pinned"] = bool(old.get("pinned")) or not old.get("folders")
                 manifest["entries"][label] = entry
                 manifest.setdefault("format", MANIFEST_FORMAT)
+                manifest["bound_identity"] = bound
                 manifest["synced_at"] = manifest.get("synced_at") or _now()
                 _write_manifest(directory, manifest)
                 _prune_unnamed(directory, manifest)
@@ -1339,7 +1458,7 @@ def fetch_spec_for_call(client, name: str, *, cache_dir_override: Optional[str] 
     if el is None:
         raise SpecFetchError(f"Report spec '{label}' was not found in Egeria (refresh_spec=True never falls back "
                              f"to the cached copy)")
-    return _finish_fetch(directory, el, label, _client_identity(client))
+    return _finish_fetch(directory, el, label, _client_identity(client), client_credential_identity(client))
 
 
 async def async_fetch_spec_for_call(client, name: str) -> str:
@@ -1370,7 +1489,7 @@ async def async_fetch_spec_for_call(client, name: str) -> str:
     if el is None:
         raise SpecFetchError(f"Report spec '{label}' was not found in Egeria (refresh_spec=True never falls back "
                              f"to the cached copy)")
-    return _finish_fetch(directory, el, label, _client_identity(client))
+    return _finish_fetch(directory, el, label, _client_identity(client), client_credential_identity(client))
 
 
 def _collection_client(client, cls):

@@ -821,7 +821,7 @@ def test_fetch_on_call_never_writes_a_shared_cache_and_keeps_the_copy_in_process
     name = esc.fetch_spec_for_call(eg, "E-Collections")
     assert name == "egeria:E-Collections@v2"
     assert (tier["cache"] / esc.MANIFEST).read_text() == manifest_before
-    assert esc._FETCHED[("E-Collections", 2)][1]["shared"] is True
+    assert esc.egeria_tier_info("E-Collections@v2")["shared"] is True
     assert brf.select_report_format(name, "DICT")["formats"]["types"] == ["DICT"]  # the fetched v1.1
     assert brf.select_report_format("E-Collections", "DICT")["formats"]["types"] == ["ALL"]  # cache untouched
     assert eg.full_fetches[-1] == E_GUID  # looked up by the guid the cache knows
@@ -974,3 +974,97 @@ def test_server_not_available_is_never_element_not_found():
     assert dr.is_server_not_available_error(down) and not dr._is_not_found_error(down) and not is_gone_error(down)
     gone = _api_error("OMAG-COMMON-404-001", "The element is not found")
     assert dr._is_not_found_error(gone) and is_gone_error(gone)
+
+
+# ── A private manifest is bound to its sync identity (ruling item 3) ──
+
+def _identity(user):
+    return esc.credential_identity(user, "https://localhost:9443", "qs-view-server")
+
+
+def test_a_private_cache_loads_for_its_own_identity_only(tier):
+    _sync_e_collections(tier)   # FakeEgeria syncs as erinoverview, privately
+    manifest = json.loads((tier["cache"] / esc.MANIFEST).read_text())
+    assert manifest["shared"] is False and manifest["bound_identity"] == _identity("erinoverview")
+    with esc.spec_identity(_identity("erinoverview")):
+        esc._invalidate_tier()
+        assert "E-Collections" in esc.egeria_tier()
+    with esc.spec_identity(_identity("peterprofile")):   # a different identity: refused, logged once
+        assert "E-Collections" not in esc.egeria_tier()
+        assert "E-Collections" not in esc.egeria_tier()
+    assert sum(1 for k in esc._REFUSED_LOGGED if k[2] == _identity("peterprofile")) == 1
+
+
+def test_a_shared_cache_loads_for_anyone(tier):
+    eg = FakeEgeria()
+    eg.put(spec_element())
+    esc.sync_report_specs(eg, folders=[FOLDER_QN], shared=True)
+    for user in ("erinoverview", "peterprofile"):
+        with esc.spec_identity(_identity(user)):
+            assert "E-Collections" in esc.egeria_tier()
+
+
+def test_a_private_cache_with_no_binding_loads_for_no_one(tier):
+    _sync_e_collections(tier)
+    path = tier["cache"] / esc.MANIFEST
+    manifest = json.loads(path.read_text())
+    manifest.pop("bound_identity")   # a cache synced before private caches were bound
+    path.write_text(json.dumps(manifest))
+    with esc.spec_identity(_identity("erinoverview")):
+        esc._invalidate_tier()
+        assert "E-Collections" not in esc.egeria_tier()
+
+
+def test_exec_report_spec_reads_the_tier_as_its_caller(tier, monkeypatch):
+    from pyegeria.view import format_set_executor as fse
+    seen = []
+    monkeypatch.setattr(fse, "_exec_report_spec_impl", lambda *a, **k: seen.append(esc.current_spec_identity()) or {})
+    monkeypatch.setattr(fse, "_with_spec_source", lambda result, *a: result)
+    fse.exec_report_spec("E-Collections", user="peterprofile", view_url="https://localhost:9443",
+                         view_server="qs-view-server")
+    assert seen == [_identity("peterprofile")]
+
+
+def test_identity_is_the_egeria_user_never_the_os_user():
+    assert esc.credential_identity("erinoverview", "https://localhost:9443", "qs-view-server") == \
+        "erinoverview@localhost_9443/qs-view-server"
+    assert esc.credential_identity("", "https://x", "s") is None and esc.credential_identity("?") is None
+
+
+# ── A fetched spec is served only to the identity that fetched it (ruling item 4) ──
+
+def _as(user):
+    return esc.credential_identity(user, "https://localhost:9443", "qs-view-server")
+
+
+def test_a_fetched_spec_is_served_only_to_its_fetcher(tier):
+    eg = FakeEgeria()   # fetches as erinoverview
+    eg.put(spec_element())
+    esc.sync_report_specs(eg, folders=[FOLDER_QN], shared=True)
+    eg.put(spec_element(version=2, microflow=mfm.format_set_to_microflow(builtin()).to_json(),
+                        version_identifier="1.1"))
+    name = esc.fetch_spec_for_call(eg, "E-Collections")
+    internal = name.split(":", 1)[1]
+    with esc.spec_identity(_as("erinoverview")):
+        assert esc.fetched_spec(internal) is not None and esc.fetched_spec_source(name)["header_version"] == 2
+        assert esc.fetched_refusal(name) is None
+        assert brf.select_report_format(name, "DICT")["formats"]["types"] == ["DICT"]
+    with esc.spec_identity(_as("peterprofile")):   # another identity: no copy, no fallback to erin's
+        assert esc.fetched_spec(internal) is None and esc.fetched_spec_source(name) is None
+        assert esc.egeria_tier_info(internal) is None
+        assert esc.fetched_refusal(name) == "Report spec 'E-Collections' v2: not fetched for you; fetch it as yourself"
+        assert brf.select_report_format(name, "DICT") is None
+    assert esc.fetched_spec(internal, identity=_as("erinoverview")) is not None   # an explicit identity
+
+
+def test_each_identity_gets_its_own_fetched_copy(tier):
+    for user in ("erinoverview", "peterprofile"):
+        eg = FakeEgeria()
+        eg.user_id = user
+        eg.put(spec_element())
+        esc.fetch_spec_for_call(eg, "E-Collections")
+    assert {k[0] for k in esc._FETCHED} == {_as("erinoverview"), _as("peterprofile")}
+
+
+def test_a_name_never_fetched_has_no_refusal(tier):
+    assert esc.fetched_refusal("egeria:Nobody@v1") is None

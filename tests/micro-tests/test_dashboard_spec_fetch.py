@@ -135,4 +135,8 @@ async def test_the_note_stays_once_the_fetched_spec_is_in_the_viewers_cache(tier
     second = (await dr.async_resolve_dashboard_sheet(fake, "shared")).placements[0]
     assert second.fetched_as is None and second.spec_source["tier"] == "egeria"   # from the cache this time
     assert second.note == dr.SPEC_NOT_IN_FOLDER
-    assert _default_spec_lookup(LABEL)[0] is not None
+    # the per-user cache is bound to the viewer who fetched it (ruling item 3): found as them, not as another
+    from pyegeria.view.egeria_spec_cache import client_credential_identity, spec_identity
+    with spec_identity(client_credential_identity(fake)):
+        assert _default_spec_lookup(LABEL)[0] is not None
+    assert _default_spec_lookup(LABEL)[0] is None   # this process's configured user is someone else
