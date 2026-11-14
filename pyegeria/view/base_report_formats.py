@@ -79,7 +79,7 @@ This module may raise the following exceptions:
 
 import os
 import re as _re
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from importlib.metadata import entry_points
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
@@ -3964,6 +3964,10 @@ _CONFIG_REPORT_FORMATS = FormatSetDict()
 # Default TTL is 1 day; override with PYEGERIA_REPORT_SPECS_CACHE_TTL (seconds).
 _EGERIA_SPECS_LOADED_AT: Optional[datetime] = None
 _EGERIA_SPECS_CACHE_TTL: int = int(os.getenv("PYEGERIA_REPORT_SPECS_CACHE_TTL", str(86400)))
+#: After a read Egeria didn't confirm complete (pager step 6), the next load retries after this long; what was
+#: read stays registered. Only a confirmed end sets _EGERIA_SPECS_LOADED_AT.
+_EGERIA_SPECS_RETRY_SECONDS: int = 300
+_EGERIA_SPECS_RETRY_AT: Optional[datetime] = None
 
 
 class ReportFormatCollision(ValueError):
@@ -4796,7 +4800,7 @@ def load_egeria_report_specs(
           the file-based registry, a warning is logged and the Egeria version is
           ignored (file wins).
     """
-    global _RUNTIME_REPORT_FORMATS, _EGERIA_SPECS_LOADED_AT
+    global _RUNTIME_REPORT_FORMATS, _EGERIA_SPECS_LOADED_AT, _EGERIA_SPECS_RETRY_AT
 
     effective_ttl = ttl_seconds if ttl_seconds is not None else _EGERIA_SPECS_CACHE_TTL
 
@@ -4808,45 +4812,49 @@ def load_egeria_report_specs(
             )
             return False
 
-    # Paginate through all collections with "ReportType" in their qualified name.
-    # Use page_size=1000 (the platform maximum) to fetch all in as few calls as possible.
-    # Do NOT stop on `len(page) < _page_size` -- per Egeria's own paging contract
-    # (https://egeria-project.org/guides/developer/finding-metadata/overview/#paging),
-    # a short-but-nonempty page does not mean "last page": server-side filtering can
-    # legitimately shorten an individual page without ending the result set, and the
-    # documented termination signal is a genuinely empty/null result, not a short one.
-    # Confirmed live (2026-08-18, ISSUE-54 investigation) that a `Referenceable`-scoped
-    # find_metadata_elements page can come back well short of pageSize while thousands
-    # of further elements are still reachable at a later startFrom. Always advance by
-    # _page_size regardless of how many came back; the `if not page` check above is the
-    # only correct stop condition.
-    _page_size = 1000
-    _start = 0
-    report_types: list = []
-    try:
-        while True:
-            page = client.find_collections(
-                search_string="ReportType",
-                _type="Collection",
-                start_from=_start,
-                page_size=_page_size,
-            )
-            if not page or isinstance(page, str):
-                break
-            # Keep only entries whose qualified name contains "ReportType::"
-            report_types.extend(
-                r for r in page
-                if "ReportType::" in r.get("properties", {}).get("qualifiedName", "")
-            )
-            _start += _page_size
-    except Exception as e:
-        logger.warning(f"load_egeria_report_specs: could not query Egeria — skipping: {e}")
+    if not force and _EGERIA_SPECS_RETRY_AT is not None and datetime.now(timezone.utc) < _EGERIA_SPECS_RETRY_AT:
+        logger.debug("load_egeria_report_specs: the last read wasn't confirmed complete; retrying after "
+                     f"{_EGERIA_SPECS_RETRY_AT.isoformat()}")
         return False
 
+    # Every collection with "ReportType" in its qualified name, through pyegeria's pager (pager step 6): an
+    # empty page is a filtered one, not the end; startFrom advances by the page size; the read's end decides
+    # whether the load counts as done. find_collections is collection-manager by-search-string ->
+    # OpenMetadataHandlerBase.findRootElements -> findMetadataElementsWithString (not the findMetadataElements
+    # the step 4 capture covered), so it pages as a plain suspect path.
+    from pyegeria.core.paging import log_end, page_all, paging_for
+    _page_size = 1000   # the platform maximum: as few requests as possible
+    try:
+        paged = page_all(lambda start, size: client.find_collections(search_string="ReportType", _type="Collection",
+                                                                     start_from=start, page_size=size),
+                         fetch_page_size=_page_size, **paging_for("find_collections", client))
+    except Exception as e:
+        logger.warning(f"load_egeria_report_specs: could not query Egeria -- not loaded, will retry: {e}")
+        return False
+    end = log_end("load_egeria_report_specs (find_collections ReportType)", paged)
+    # Keep only entries whose qualified name contains "ReportType::"
+    report_types: list = [r for r in paged.items if isinstance(r, dict)
+                          and "ReportType::" in (r.get("properties") or {}).get("qualifiedName", "")]
+
+    def _settle_load() -> None:
+        """Mark the load done only on a confirmed end; otherwise keep what was read and retry soon, so an
+        unconfirmed (or filtered-empty) read is never cached for a day as the whole set."""
+        global _EGERIA_SPECS_LOADED_AT, _EGERIA_SPECS_RETRY_AT
+        if paged.complete:
+            _EGERIA_SPECS_LOADED_AT, _EGERIA_SPECS_RETRY_AT = datetime.now(timezone.utc), None
+        else:
+            _EGERIA_SPECS_RETRY_AT = datetime.now(timezone.utc) + timedelta(seconds=_EGERIA_SPECS_RETRY_SECONDS)
+            logger.info(f"load_egeria_report_specs: read {len(report_types)} ReportType(s) without Egeria "
+                        f"confirming there are no more ({end}); not marked loaded, retrying after "
+                        f"{_EGERIA_SPECS_RETRY_AT.isoformat()}")
+
     if not report_types:
-        logger.debug("load_egeria_report_specs: no ReportType entities found in Egeria")
-        _EGERIA_SPECS_LOADED_AT = datetime.now(timezone.utc)
-        return True
+        if paged.complete:
+            logger.debug("load_egeria_report_specs: no ReportType entities found in Egeria")
+        else:
+            logger.debug("load_egeria_report_specs: no ReportType found in what Egeria returned")
+        _settle_load()
+        return paged.complete
 
     registry = get_report_registry()
 
@@ -4988,8 +4996,9 @@ def load_egeria_report_specs(
         except Exception as e:
             logger.warning(f"load_egeria_report_specs: error processing ReportType — skipping: {e}")
 
-    _EGERIA_SPECS_LOADED_AT = datetime.now(timezone.utc)
-    logger.debug(f"load_egeria_report_specs: registry updated, cache set at {_EGERIA_SPECS_LOADED_AT.isoformat()}")
+    _settle_load()
+    logger.debug(f"load_egeria_report_specs: registry updated (loaded at {_EGERIA_SPECS_LOADED_AT}, "
+                 f"retry at {_EGERIA_SPECS_RETRY_AT})")
     _log_spec_resolution("Egeria archive load", force=True)
     return True
 
