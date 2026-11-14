@@ -1,5 +1,5 @@
 {
- "_about": "The catalog-health Reports, read by pyegeria.authoring.load_held('report', ...): one unique-name read and one exact displayName read per Report (unpaged). Split out of catalog_health_scratch.json when that fixture was re-captured with probe pages on 2026-11-14: these calls are as captured on 2026-11-12 on the round-trip probe's SCRATCH Egeria (odpi/egeria-platform@sha256:757a5df0..., PostgreSQL repository, https://localhost:19443) after processing the same document. Not read from laz. Replayed by tests/micro-tests/test_authoring_held_fixture.py.",
+ "_about": "The catalog-health Reports, read by pyegeria.authoring.load_held('report', ...): one unique-name read and one exact displayName read per Report (unpaged). Split out of catalog_health_scratch.json when that fixture was re-captured with probe pages on 2026-11-14: these calls are as captured on 2026-11-12 on the round-trip probe's SCRATCH Egeria (odpi/egeria-platform@sha256:757a5df0..., PostgreSQL repository, https://localhost:19443) after processing the same document. Not read from laz. Replayed by tests/micro-tests/test_authoring_held_fixture.py. Call shape only: the displayName reads' kwargs gain start_from=0 (pyegeria now passes it explicitly, pager step 6; the request is the same, 0 having been the default), 2026-11-14.",
  "calls": [
   {
    "args": [
@@ -23,6 +23,7 @@
     "ignore_case": false,
     "metadata_element_type": "Report",
     "page_size": 25,
+    "start_from": 0,
     "starts_with": false
    },
    "method": "_async_get_elements_by_property_value",
@@ -151,6 +152,7 @@
     "ignore_case": false,
     "metadata_element_type": "Report",
     "page_size": 25,
+    "start_from": 0,
     "starts_with": false
    },
    "method": "_async_get_elements_by_property_value",
@@ -279,6 +281,7 @@
     "ignore_case": false,
     "metadata_element_type": "Report",
     "page_size": 25,
+    "start_from": 0,
     "starts_with": false
    },
    "method": "_async_get_elements_by_property_value",
@@ -409,6 +412,7 @@
     "ignore_case": false,
     "metadata_element_type": "Report",
     "page_size": 25,
+    "start_from": 0,
     "starts_with": false
    },
    "method": "_async_get_elements_by_property_value",
@@ -539,6 +543,7 @@
     "ignore_case": false,
     "metadata_element_type": "Report",
     "page_size": 25,
+    "start_from": 0,
     "starts_with": false
    },
    "method": "_async_get_elements_by_property_value",

@@ -124,15 +124,16 @@ async def _sheet_for_resolver(draft: SheetDraft, client: Any, notes: List[str]):
         if p.text is not None:
             placements.append(EgeriaPlacement(ref=p.name, content=p.text, kind="text", **common))
             continue
+        why = "no Report by this name that you can see"
         try:
             el = await _report_element(client, p.report)
-        except AuthoringRefused as exc:
+        except AuthoringRefused as exc:   # two or more by that name, or an unknown read (never "no Report")
             el = None
+            why = str(exc)
             notes.append(f"placement {i} ({p.report}): {exc}")
         guid = (el or {}).get("elementHeader", {}).get("guid")
         placements.append(EgeriaPlacement(ref=p.report, kind="report" if guid else "missing", report_guid=guid,
-                                          note=None if guid else "no Report by this name that you can see",
-                                          **common))
+                                          note=None if guid else why, **common))
     return EgeriaDashboardSheet(name=draft.name, heading=draft.heading, description=draft.description,
                                 family=draft.family, placements=placements)
 

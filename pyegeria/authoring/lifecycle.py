@@ -48,18 +48,38 @@ async def _by_qualified_name(client: Any, qn: str) -> Optional[Dict[str, Any]]:
 
 
 async def _report_element(client: Any, label: str) -> Optional[Dict[str, Any]]:
-    """A Report by qualified name, else by exact display name (one Report must match)."""
+    """A Report by qualified name (Egeria's unique-name read), else by exact display name, three-way (pager
+    step 6, the Architect's _report_element ruling, 2026-11-14):
+    - found -> the Report (two or more by display name are refused: give its qualified name);
+    - absent -> None, only when the display-name read reached its end (trusted on a #9453 platform; never on
+      the by-property-value path otherwise, which is NULL_NOT_END);
+    - unknown -> AuthoringRefused "couldn't confirm whether Egeria holds a Report named X", with the read's
+      trace: never None, so no caller reads it as "holds no" (or acts on it as absent)."""
+    from pyegeria.core.paging import async_exists
     el = await _by_qualified_name(client, label)
     if el and _type_name(el) == "Report":
         return el
-    found = await client.classification_manager._async_get_elements_by_property_value(
-        label, ["displayName"], metadata_element_type="Report", starts_with=False, ends_with=False,
-        ignore_case=False, page_size=25, graph_query_depth=0)
-    matches = [e for e in found if isinstance(e, dict) and (e.get("properties") or {}).get("displayName") == label] \
-        if isinstance(found, list) else []
-    if len(matches) > 1:
-        raise AuthoringRefused(f"{len(matches)} Reports are named {label!r}; give its qualified name.")
-    return matches[0] if matches else None
+
+    async def fetch(start, size):
+        return await client.classification_manager._async_get_elements_by_property_value(
+            label, ["displayName"], metadata_element_type="Report", starts_with=False, ends_with=False,
+            ignore_case=False, start_from=start, page_size=size, graph_query_depth=0)
+
+    # Stops at the first page with a match (found is decisive; it never proves the name unique beyond that
+    # page, but two on it are refused); trusted on a #9453 platform through the client's /api/about.
+    found = await async_exists(fetch, lambda e: isinstance(e, dict)
+                               and (e.get("properties") or {}).get("displayName") == label,
+                               method="get_elements_by_property_value", fetch_page_size=25, client=client)
+    if len(found.matches) > 1:
+        raise AuthoringRefused(f"{len(found.matches)} Reports are named {label!r}; give its qualified name.")
+    if found.found:
+        return found.matches[0]
+    if found.answer == "absent":
+        return None   # "holds no Report named X"
+    r = found.read
+    raise AuthoringRefused(f"Couldn't confirm whether Egeria holds a Report named {label!r} (the display-name read "
+                           f"ended {r.end}, {r.end_reason}, after {r.positions_read} positions: Egeria didn't "
+                           f"confirm there are no more). Give the Report's qualified name.")
 
 
 def _type_name(el: Dict[str, Any]) -> str:
@@ -184,9 +204,9 @@ async def async_load_held(kind: str, label: str, client: Any) -> Union[SpecDraft
                          qualified_name=built.provenance.get("qualified_name"),
                          base_version=built.provenance.get("header_version"), notes=list(built.notes))
     if kind == "report":
-        el = await _report_element(client, label)
+        el = await _report_element(client, label)   # unknown raises "couldn't confirm" (never "holds no")
         if not el:
-            raise AuthoringRefused(f"Egeria holds no Report {label!r} that you can see.")
+            raise AuthoringRefused(f"Egeria holds no Report named {label!r} that you can see.")
         return report_draft_from_element(el)
     if kind == "sheet":
         from pyegeria.view.dashboards import read_sheet_from_chain

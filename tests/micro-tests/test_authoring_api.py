@@ -649,9 +649,17 @@ def test_a_held_pinned_report_reads_back_its_version():
 
 # ── D16: drafts in Egeria, private to the author ─────────────────────────────
 
+_LAZ_5DEDA38D_ABOUT = ('{"name":"platform-chassis-spring","time":"2026-11-14T19:55:39.317Z","version":"6.3-SNAPSHOT",'
+                       '"group":"org.odpi.egeria","artifact":"platform-chassis-spring"}')
+
+
 class _DraftEgeria:
-    """A fake Egeria holding elements by qualified name, with zones; records what the runner was given."""
-    def __init__(self, user="erinoverview"):
+    """A fake Egeria holding elements by qualified name, with zones; records what the runner was given. By
+    default it is a platform with the #9453 paging fix (laz's /api/about after the 2026-11-14 upgrade), so a
+    display-name lookup that finds nothing is "absent" (pager step 6); `gated=False` models an older platform."""
+    def __init__(self, user="erinoverview", gated=True):
+        self.platform_url = "https://draft-egeria-gated:9443" if gated else "https://draft-egeria-old:9443"
+        self._about = _LAZ_5DEDA38D_ABOUT if gated else '{"version":"6.3-SNAPSHOT","time":"2026-11-10T08:00:00Z"}'
         self.user_id = user
         self.elements: Dict[str, Dict[str, Any]] = {}
         self.ran: List[tuple] = []
@@ -704,6 +712,12 @@ class _DraftEgeria:
                              "properties": {"qualifiedName": qn, "displayName": name,
                                             "additionalProperties": {"reportSpec": "Project-DrE-Basic",
                                                                      **({"authoringState": "draft"} if marked else {})}}}
+
+    def get_platform_origin(self):
+        return self._about
+
+    async def async_get_platform_origin(self):
+        return self._about
 
     def run(self, md, directive):
         self.ran.append((directive, md))
@@ -811,6 +825,18 @@ def test_prune_never_takes_a_report_zoned_beyond_the_author():
     eg.hold("R::shared", "Shared draft", "Report", ["erinoverview", "finance"], _days_ago(60))
     out = EgeriaDraftStore(eg, eg.run).prune_drafts("erinoverview")
     assert out["removed"] == [] and eg.deleted == []
+
+
+def test_saving_a_new_report_draft_on_an_older_platform_refuses_rather_than_create():
+    """Pager step 6 (the _report_element ruling): before #9453 the display-name read can't prove a Report absent,
+    so saving a new Report draft (which would create one) refuses with "couldn't confirm", and runs nothing."""
+    from pyegeria.core import paging
+    paging._GATE_CACHE.clear()
+    eg = _DraftEgeria(gated=False)
+    with pytest.raises(AuthoringRefused, match="Couldn't confirm whether Egeria holds a Report named"):
+        EgeriaDraftStore(eg, eg.run).save("erinoverview", cdo_report())
+    assert eg.ran == []
+    paging._GATE_CACHE.clear()
 
 
 def test_the_zone_name_check_fails_closed_when_the_lookup_errors():
