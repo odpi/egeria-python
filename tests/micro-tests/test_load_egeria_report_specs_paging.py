@@ -149,3 +149,22 @@ def test_an_empty_result_never_implies_specs_are_missing(monkeypatch, trusted):
     words = load_status_words(brf.report_specs_load_status(), 0.1, [])
     assert words == NO_LEGACY_WORDS == ("No legacy ReportType collections found (Egeria-held specs load through "
                                         "the spec cache).")
+
+
+
+def test_the_deprecation_names_pyegeria_7_and_is_logged_once_at_warning(monkeypatch):
+    from loguru import logger
+    monkeypatch.setattr(brf, "_LEGACY_LOADER_WARNED", False)
+    logged = []
+    sink = logger.add(lambda m: logged.append((m.record["level"].name, m.record["message"])), level="WARNING")
+    try:
+        with pytest.warns(DeprecationWarning):
+            brf.load_egeria_report_specs(_Client({}))
+        brf.load_egeria_report_specs(_Client({}), force=True)
+    finally:
+        logger.remove(sink)
+    words = [m for level, m in logged if level == "WARNING" and "deprecated" in m]
+    assert words == [brf.LEGACY_LOADER_DEPRECATION]   # once, at WARNING
+    assert "will be removed in pyegeria 7 (expected early January 2027)" in brf.LEGACY_LOADER_DEPRECATION
+    assert "will be removed in pyegeria 7 (expected early January 2027)" in " ".join(
+        brf.load_egeria_report_specs.__doc__.split())
