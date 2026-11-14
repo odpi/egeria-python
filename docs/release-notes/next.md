@@ -18,3 +18,16 @@ Notes collected on `release/next` for the next release. The version number is se
   Egeria holds it couldn't be told; never to be read as "none") or `"refused"` (anything else, the default).
   `ANSWER_ABSENT`, `ANSWER_UNKNOWN` and `ANSWER_REFUSED` are exported. Branch on `answer`, not on the words. It's
   backward compatible: `AuthoringRefused` is still a `ValueError`, and its words are unchanged.
+
+- **`pyegeria.authoring.used_by(kind, label, client)` / `async_used_by`** answers "what uses this spec, Report or
+  sheet?" as `{"items": [{"kind", "name", "qualified_name", "via"}], "complete", "notes"}`. Every read is live, as
+  the user (no shared index, no cache):
+  - a spec's Reports (by their `reportSpec`) and its consumer folders;
+  - a Report's sheets (DataSetContent);
+  - a sheet's consumer folders.
+
+  `via` is Egeria's relationship name. `complete` is True only when every read reached a confirmed end. An empty
+  answer that isn't complete is "nothing found in what Egeria returned", never "used by none".
+- **Paging:** `get_elements` (read by type) is `findMetadataElements` underneath, so it's now NULL_NOT_END and
+  gate-trusted on a #9453 platform like the other find paths. The dashboard sheet list passes its client, so on
+  such a platform it can be confirmed complete.

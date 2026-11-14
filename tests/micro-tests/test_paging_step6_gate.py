@@ -84,6 +84,13 @@ def test_a_gated_method_is_trusted_on_a_promoted_platform_only(method):
     assert paging.paging_for(method)["null_not_end"] is True   # no client: not promoted
 
 
+def test_get_elements_by_type_is_findmetadataelements_so_gated():
+    """P3 (the Architect's ruling (c)): elements/by-type is getRootElementsByType -> findMetadataElements."""
+    assert {"get_elements", "_async_get_elements"} <= paging.GATED_TRUSTED_METHODS
+    assert paging.paging_for("get_elements", _Platform(LAZ_5DEDA38D)) == {"end_policy": "trusted"}
+    assert paging.paging_for("get_elements")["null_not_end"] is True
+
+
 def test_get_relationships_stays_null_not_end_while_promoted():
     p = paging.paging_for("get_relationships", _Platform(LAZ_5DEDA38D))
     assert p["null_not_end"] is True and p["probe_pages"] == paging.NULL_NOT_END_PROBE_PAGES
@@ -127,7 +134,7 @@ def test_one_about_read_per_platform_within_the_ttl(monkeypatch):
 
 def test_no_about_read_for_a_client_that_never_pages_a_gated_method():
     client = _Platform(LAZ_5DEDA38D)
-    for method in ("get_relationships", "get_collection_members", "get_elements", "find_authored_elements", None):
+    for method in ("get_relationships", "get_collection_members", "find_authored_elements", None):
         paging.paging_for(method, client)
         asyncio.run(paging.async_paging_for(method, client))
     assert client.about_reads == 0
