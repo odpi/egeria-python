@@ -23,7 +23,7 @@ class _FallbackClient:
     def __init__(self):
         self.calls = []
 
-    async def __async_get_guid__(self, qualified_name: str = None, display_name: str = None, property_name: str = "qualifiedName", tech_type: str = None):
+    async def __async_get_guid__(self, qualified_name: str = None, display_name: str = None, property_name: str = "qualifiedName", tech_type: str = None, **kw):
         self.calls.append((qualified_name, tech_type))
         if tech_type:
             raise Exception(

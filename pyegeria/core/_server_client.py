@@ -25,7 +25,8 @@ from pydantic import TypeAdapter, ValidationError
 from pyegeria.core.request_filters import deprecated_names
 from pyegeria.core._base_server_client import BaseServerClient
 from pyegeria.core._exceptions import (
-    PyegeriaConnectionException, PyegeriaInvalidParameterException, PyegeriaException, PyegeriaErrorCode
+    PyegeriaConnectionException, PyegeriaInvalidParameterException, PyegeriaException, PyegeriaErrorCode,
+    PyegeriaNotFoundException,
 )
 from pyegeria.core._globals import max_paging_size, NO_ELEMENTS_FOUND, default_timeout, COMMENT_TYPES
 from pyegeria.view.base_report_formats import get_report_spec_match
@@ -272,6 +273,7 @@ class ServerClient(BaseServerClient):
             tech_type: Optional[str] = None,
             organization_name: Optional[str] = None,
             for_lineage: bool = False,
+            strict_errors: bool = False,
     ) -> str:
         """Helper function to return a server_guid - one of server_guid, qualified_name or display_name should
         contain information. If all are None, an exception will be thrown. If all contain
@@ -316,8 +318,13 @@ class ServerClient(BaseServerClient):
                 guid_found = result.json().get("guid", NO_ELEMENTS_FOUND)
                 if guid_found != NO_ELEMENTS_FOUND:
                     return guid_found
+            except PyegeriaNotFoundException:
+                pass   # not held under that qualifiedName: try the display name
             except Exception:
-                pass
+                # strict_errors (pager step 5): a transport/auth/timeout error is not "not found", so it is raised,
+                # never folded into a fallback that may answer "not found" (and a Create-or-Update create).
+                if strict_errors:
+                    raise
 
         if display_name:
             if property_name == "resourceName":
