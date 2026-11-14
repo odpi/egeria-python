@@ -793,9 +793,10 @@ def test_prune_takes_a_sheet_only_when_it_is_an_unfiled_private_draft(monkeypatc
     out = store.prune_drafts("erinoverview")
     assert out["removed"] == ["sheet:scratchpad"] and eg.deleted_sheets == ["scratchpad"]
     assert out["kept"] == ["sheet:busy"]                       # aged by last update, not creation
-    assert out["kept_reasons"] == {"sheet:shared": "zoned beyond your private zone (shared)",
-                                   "sheet:filed": "filed in a collection (published)",
+    assert out["kept_reasons"] == {"sheet:filed": "filed in a collection (published)",
                                    "sheet:Legacy sheet": "not a Dashboard:: sheet"}
+    # zoned to the author and others: not a private draft at all (the exact-zone ruling), said in a note
+    assert "Dashboard::shared" in out["not_private"][0] and "zoned only to you" in out["not_private"][0]
 
 
 def test_prune_keeps_a_sheet_whose_memberships_cant_be_read(monkeypatch):
@@ -908,3 +909,34 @@ def test_a_promoted_report_is_marked_published():
     assert "### Additional Properties\nauthoringState: published" in plan["markdown"]
     stamp = ["publishedAt: (set when published)", "publishedBy: erinoverview", "publishedVersion: 1"]
     assert _publish(cdo_report())["markdown"] == serialize(cdo_report(), stamp=stamp)
+
+
+# ── D16 exact zone (the Architect's ruling (a), 2026-11-14 late): private means zoned exactly [userId] ──────
+
+def test_a_draft_zoned_exactly_to_the_author_is_saved_over():
+    eg = _DraftEgeria()
+    eg.hold(CDO_QN, "My Ninety Day Plan Progress", "Report", ["erinoverview"], _days_ago(1))
+    EgeriaDraftStore(eg, eg.run).save("erinoverview", cdo_report())
+    assert len(eg.ran) == 1
+
+
+def test_a_superset_zoned_element_is_refused_on_save_load_and_delete():
+    eg = _DraftEgeria()
+    eg.hold(CDO_QN, "My Ninety Day Plan Progress", "Report", ["erinoverview", "finance"], _days_ago(1))
+    store = EgeriaDraftStore(eg, eg.run)
+    for call in (lambda: store.save("erinoverview", cdo_report()),
+                 lambda: store.load("erinoverview", "report", CDO_QN),
+                 lambda: store.delete("erinoverview", "report", CDO_QN)):
+        with pytest.raises(AuthoringRefused, match="a private draft is zoned only to you; publish it to share it"):
+            call()
+    assert eg.ran == [] and eg.deleted == []
+
+
+def test_a_superset_zoned_element_is_left_out_of_the_list_with_a_note():
+    eg = _DraftEgeria()
+    eg.hold("R::mine", "Mine", "Report", ["erinoverview"], _days_ago(1))
+    eg.hold("R::shared", "Shared", "Report", ["erinoverview", "finance"], _days_ago(1))
+    notes: List[str] = []
+    listed = EgeriaDraftStore(eg, eg.run).list("erinoverview", "report", notes=notes)
+    assert [d["name"] for d in listed] == ["Mine"]
+    assert any("R::shared" in n and "zoned only to you" in n for n in notes)

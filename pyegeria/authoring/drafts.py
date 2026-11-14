@@ -19,6 +19,8 @@ import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Protocol, Tuple, Union
 
+from loguru import logger
+
 from pyegeria.authoring.publication import stamp_of
 from pyegeria.authoring.models import (
     ANSWER_ABSENT, KINDS, AuthoringRefused, ReportDraft, SheetDraft, SheetPlacement, SpecDraft, as_draft, draft_key,
@@ -193,6 +195,7 @@ class LocalDraftStore:
 
 _ELEMENT_TYPE = {"spec": "ReportSpec", "report": "Report", "sheet": "Dashboard"}
 PRUNE_DAYS = 30
+NOT_PRIVATE_WORDS = "a private draft is zoned only to you; publish it to share it"
 #: The draft marker on a Report (additionalProperties); a spec carries contentStatus DRAFT instead.
 DRAFT_MARKER = ("authoringState", "draft")
 
@@ -247,6 +250,9 @@ class EgeriaDraftStore:
       and the client must be signed in as the user whose draft it is.
     - **Never over a published element:** saving a draft whose element is already held outside the author's
       private zone is refused (it would change what others see); make a copy with new_from, or promote.
+    - **Private means zoned exactly `[<userId>]`.** An element whose zones include the author's and others is
+      shared, never a private draft: save, load and delete refuse it ("a private draft is zoned only to you;
+      publish it to share it"), and list leaves it out with a note.
     - **Never filed into a consumer folder:** a saved draft is only its element. Promotion files it.
     - **Promotion clears the zone:** promotion_plan() is the publish plan with Declassify Zone Membership (a
       blank Zone Membership would keep the zone), marking the element ACTIVE / published. After promoting a
@@ -319,6 +325,18 @@ class EgeriaDraftStore:
         from pyegeria.view.egeria_spec_cache import _zones
         return _zones(el)
 
+    def _privacy(self, el: Dict[str, Any], zone: str) -> str:
+        """"private" when the element is zoned exactly [zone] (D16: only the author's own zone; the store keeps
+        no marker zone); "shared" when its zones include the author's zone and others; "other" otherwise."""
+        zones = self._zones(el)
+        if zones == [zone]:
+            return "private"
+        return "shared" if zone in zones else "other"
+
+    def _not_private(self, kind: str, name: str, el: Dict[str, Any]) -> AuthoringRefused:
+        return AuthoringRefused(f"{kind} {name!r} is zoned to you and others ({', '.join(self._zones(el))}), so it "
+                                f"isn't one of your private drafts: {NOT_PRIVATE_WORDS}.")
+
     # ---------------------------------------------------------------- the store
 
     async def async_save(self, user_id: str, draft: AnyDraft) -> str:
@@ -331,7 +349,9 @@ class EgeriaDraftStore:
             raise AuthoringRefused("Saving a draft to Egeria runs a document as you: a runner is needed.")
         await self._check_zone_name(user_id)
         held = await self._element(draft.kind, draft_key(draft))
-        if held is not None and zone not in self._zones(held):
+        if held is not None and self._privacy(held, zone) == "shared":
+            raise self._not_private(draft.kind, draft_key(draft), held)
+        if held is not None and self._privacy(held, zone) == "other":
             raise AuthoringRefused(f"{draft.kind} {draft_key(draft)!r} is already held in Egeria outside your private "
                                    f"draft zone ({', '.join(self._zones(held)) or 'public'}): saving the draft there "
                                    f"would change what others see. Copy it with new_from, or promote the draft.")
@@ -351,8 +371,10 @@ class EgeriaDraftStore:
         from pyegeria.authoring.lifecycle import async_load_held
         zone = self._author(user_id)
         el = await self._element(kind, name)
-        if el is None or zone not in self._zones(el):
+        if el is None or self._privacy(el, zone) == "other":
             return None
+        if self._privacy(el, zone) == "shared":
+            raise self._not_private(kind, name, el)   # never read as a private draft, never silently "none"
         return await async_load_held(kind, name, self.client)
 
     async def async_list(self, user_id: str, kind: Optional[str] = None, *,
@@ -376,7 +398,15 @@ class EgeriaDraftStore:
             if notes is not None and (words := at_least_note(paged, f"{k} drafts")):
                 notes.append(words)
             raw = [e for e in paged.items if isinstance(e, dict) and e.get("elementHeader")]
-            for el in (e for e in raw if zone in self._zones(e)):
+            shared = [e for e in raw if self._privacy(e, zone) == "shared"]
+            if shared:
+                names = ", ".join(str((e.get("properties") or {}).get("qualifiedName")) for e in shared[:5])
+                words = (f"{len(shared)} {k} element(s) zoned to you and others aren't private drafts and aren't "
+                         f"listed ({names}{', ...' if len(shared) > 5 else ''}): {NOT_PRIVATE_WORDS}.")
+                logger.info(f"drafts.async_list: {words}")
+                if notes is not None:
+                    notes.append(words)
+            for el in (e for e in raw if self._privacy(e, zone) == "private"):
                 props = el.get("properties") or {}
                 versions = (el.get("elementHeader") or {}).get("versions") or {}
                 name = props.get("displayName") or props.get("qualifiedName")
@@ -393,8 +423,10 @@ class EgeriaDraftStore:
         """Delete the author's draft (only an element in their private zone), as the author."""
         zone = self._author(user_id)
         el = await self._element(kind, name)
-        if el is None or zone not in self._zones(el):
+        if el is None or self._privacy(el, zone) == "other":
             return False
+        if self._privacy(el, zone) == "shared":
+            raise self._not_private(kind, name, el)
         if stamp_of(el):
             raise AuthoringRefused(f"{kind} {name!r} is published (version {stamp_of(el)}): a published element is "
                                    f"never deleted (D14), so Reports pinned to it keep reading it.")
@@ -437,8 +469,12 @@ class EgeriaDraftStore:
         drafts = await self.async_list(user_id, notes=read_notes)
         out: Dict[str, Any] = {"removed": [], "kept": [], "not_dated": [], "not_marked": [], "not_deleted": [],
                                "kept_reasons": {}, "dry_run": dry_run, "older_than_days": older_than_days}
+        not_private = [n for n in read_notes if NOT_PRIVATE_WORDS in n]
+        read_notes = [n for n in read_notes if NOT_PRIVATE_WORDS not in n]
         if read_notes:   # pager step 4: the list read wasn't confirmed whole, so some old drafts may be unseen
             out["read_notes"] = read_notes
+        if not_private:  # zoned to the author and others: shared, never pruned as a draft
+            out["not_private"] = not_private
         for d in drafts:
             key = f"{d['kind']}:{d['name']}"
             when = _parse_time(d.get("updated")) or _parse_time(d.get("created"))
