@@ -905,3 +905,72 @@ def test_in_method_path_adds_the_footer_through_generate_formatted_output(tier):
                                                     output_format="MD", report_spec="Collections")
     assert out.rstrip().splitlines()[-1].startswith("_E-Collections v1.0 (Egeria")
     assert out.rsplit("\n\n_E-Collections", 1)[0] == plain.rstrip()
+
+
+# ── The pinned-spec prune is three-way (Architect, after the by-name dispositions) ──
+
+OTHER_GUID = "bbbbbbbb-0000-0000-0000-000000000000"
+
+
+def _pinned_then_folder_sync(tier, read_other):
+    """Pin Other-Spec (a --spec sync), then run a folder sync that doesn't hold it: its entry is re-checked by
+    GUID with `read_other` standing in for Egeria's read of Other-Spec's element."""
+    eg = FakeEgeria()
+    eg.put(spec_element())
+    eg.put(spec_element("Other-Spec", guid=OTHER_GUID, aliases=[]), folder=None)
+    esc.sync_report_specs(eg, specs=["Other-Spec"])
+    real = eg.get_collection_by_guid
+
+    def by_guid(guid, *a, **k):
+        return read_other() if guid == OTHER_GUID else real(guid, *a, **k)
+    eg.get_collection_by_guid = by_guid
+    report = esc.sync_report_specs(eg, folders=[FOLDER_QN])
+    entries = json.loads((tier["cache"] / esc.MANIFEST).read_text())["entries"]
+    return report, entries
+
+
+def _api_error(message_id, text):
+    import httpx
+    from pyegeria.core._exceptions import PyegeriaAPIException, PyegeriaNotFoundException
+    info = {"exceptionErrorMessageId": message_id, "exceptionErrorMessage": text, "relatedHTTPCode": 404}
+    response = httpx.Response(200, json=info, request=httpx.Request("POST", "https://localhost:9443/x"))
+    cls = PyegeriaAPIException if message_id.startswith("OMAG-MULTI-TENANT") else PyegeriaNotFoundException
+    return cls(response, {"caller method": "test"}, additional_info=info)
+
+
+def test_pinned_found_is_kept(tier):
+    report, entries = _pinned_then_folder_sync(tier, lambda: spec_element("Other-Spec", guid=OTHER_GUID, aliases=[]))
+    assert "Other-Spec" in entries and "Other-Spec" not in report.pruned
+
+
+@pytest.mark.parametrize("read_other", [
+    lambda: "No elements found",
+    lambda: (_ for _ in ()).throw(_api_error("OMAG-COMMON-404-001", "The element is not found")),
+], ids=["no-elements", "not-found-exception"])
+def test_pinned_gone_is_pruned_as_no_longer_existing(tier, read_other):
+    report, entries = _pinned_then_folder_sync(tier, read_other)
+    assert "Other-Spec" not in entries and "Other-Spec" in report.pruned
+    assert any(n == f"Other-Spec: pruned, its element {OTHER_GUID} no longer exists" for n in report.notes)
+
+
+@pytest.mark.parametrize("error, cls", [
+    (RuntimeError("timeout"), "RuntimeError"),
+    (_api_error("OMAG-MULTI-TENANT-404-001", "The OMAG Server qs-view-server is not available to service a "
+                "request from user erinoverview"), "PyegeriaAPIException"),
+], ids=["error", "server-not-available"])
+def test_pinned_unknown_is_kept_with_words(tier, error, cls):
+    def boom():
+        raise error
+    report, entries = _pinned_then_folder_sync(tier, boom)
+    assert "Other-Spec" in entries and "Other-Spec" not in report.pruned   # a fault never drops a pinned spec
+    assert any(n == f"Other-Spec: kept; couldn't confirm whether its element {OTHER_GUID} still exists ({cls})"
+               for n in report.notes)
+
+
+def test_server_not_available_is_never_element_not_found():
+    from pyegeria.view import dashboard_resolver as dr
+    from pyegeria.view.egeria_folders import is_gone_error
+    down = _api_error("OMAG-MULTI-TENANT-404-001", "The OMAG Server qs-view-server is not available")
+    assert dr.is_server_not_available_error(down) and not dr._is_not_found_error(down) and not is_gone_error(down)
+    gone = _api_error("OMAG-COMMON-404-001", "The element is not found")
+    assert dr._is_not_found_error(gone) and is_gone_error(gone)
