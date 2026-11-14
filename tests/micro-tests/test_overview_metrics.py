@@ -128,7 +128,7 @@ def test_count_relationships_viewer_path_without_expert():
         n = om.count_relationships(ce, "Certification", population="viewer")
     assert n == 2
     # a bare int can't carry the mark: the scan is recorded, and the executor puts it on the output
-    assert scans == [{"count": "Certification relationships", "unconfirmed": True, "positions_read": 2500,
+    assert scans == [{"count": "Certification relationships", "unconfirmed": True, "positions_read": 4000,
                       "read": 2, "reason": "Egeria didn't confirm there are no more"}]
 
 
@@ -232,10 +232,10 @@ def test_governed_coverage_pages_past_the_first_page():
     r = om.governed_coverage(mgr)
     assert r["governedCount"] == om.DEFAULT_CAP + 1 and r["governedCapped"] is False
     assert r["byClassification"] == {"Confidentiality": om.DEFAULT_CAP + 1}
-    # pager step 4: to Egeria's null at 1000, then 3 probes; the figures are marked unconfirmed (ruling (ii))
-    assert [c.args[0]["startFrom"] for c in mgr.find_metadata_elements.call_args_list] == [0, 500, 1000, 1500,
-                                                                                           2000, 2500]
-    assert r["unconfirmed"]["governedCount"] == {"unconfirmed": True, "positions_read": 3000,
+    # pager step 4: to Egeria's null at 1000, then 6 probes (NULL_NOT_END); the figures are marked unconfirmed
+    assert [c.args[0]["startFrom"] for c in mgr.find_metadata_elements.call_args_list] == [
+        k * 500 for k in range(9)]
+    assert r["unconfirmed"]["governedCount"] == {"unconfirmed": True, "positions_read": 4500,
                                                  "reason": "Egeria didn't confirm there are no more", "words": "at least 501"}
     assert r["unconfirmed"]["byClassification"]["words"].startswith("each count is at least what is shown")
 

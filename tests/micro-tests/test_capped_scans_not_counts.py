@@ -78,13 +78,15 @@ def test_orphan_terms_read_every_semantic_assignment_page():
     ce.get_relationships.side_effect = _rel_pages({"SemanticAssignment": _semantic_assignments(747, 77)})
     with om.recording_unmeasured() as notes:
         r = om.orphan_glossary_terms(_mgr(), ce)
-    marks = r.pop("unconfirmed")   # pager step 4: a suspect path, so the figures are marked (ruling (ii))
-    assert r == {"termTotal": 1061, "referencedCount": 77, "orphanCount": 984}   # not 8 / 1,053
+    marks = r.pop("unconfirmed")   # pager step 4: get_relationships is NULL_NOT_END, so marked (ruling (ii))
+    # 77, not 8; orphanCount needs the whole set, so it isn't measured on an unconfirmed read (after-capture
+    # ruling, 3): never 1,053 from part, and never "at most" either
+    assert r == {"termTotal": 1061, "referencedCount": 77, "orphanCount": None}
     assert marks["referencedCount"]["words"] == "77 found; Egeria didn't confirm there are no more"
-    assert notes == []
-    # to Egeria's null at 2*CAP, then 3 probes
+    assert [n["count"] for n in notes] == ["orphanCount"] and "needs the whole set" in notes[0]["reason"]
+    # to Egeria's null at 2*CAP, then 6 probes (NULL_NOT_END_PROBE_PAGES)
     assert [c.kwargs["body"]["startFrom"] for c in ce.get_relationships.call_args_list] == [
-        k * CAP for k in range(6)]
+        k * CAP for k in range(9)]
 
 
 def test_a_short_page_is_not_the_last_page():
@@ -95,7 +97,7 @@ def test_a_short_page_is_not_the_last_page():
     ce.get_relationships.side_effect = lambda *a, body=None, **kw: (
         pages[body["startFrom"] // CAP] if body["startFrom"] // CAP < len(pages) else "No elements found")
     r = om.orphan_glossary_terms(_mgr(), ce)
-    assert r["referencedCount"] == 77 and len(ce.get_relationships.call_args_list) == 2 + 4   # null + 3 probes
+    assert r["referencedCount"] == 77 and len(ce.get_relationships.call_args_list) == 2 + 7   # null + 6 probes
 
 
 def test_an_incomplete_semantic_assignment_scan_is_not_an_orphan_count(monkeypatch):

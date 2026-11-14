@@ -153,9 +153,9 @@ def test_a_viewer_relationship_count_reads_every_page():
     with om.recording_unmeasured() as notes, om.recording_unconfirmed() as scans:
         assert om.count_relationships(ce, "SemanticAssignment", population="viewer") == CAP + 247
     assert notes == []
-    # a suspect path: the null at 2*CAP, then 3 probes; the count is recorded as unconfirmed ("at least")
+    # NULL_NOT_END: the null at 2*CAP, then 6 probes; the count is recorded as unconfirmed ("at least")
     assert [c.kwargs["body"]["startFrom"] for c in ce.get_relationships.call_args_list] == [
-        k * CAP for k in range(6)]
+        k * CAP for k in range(9)]
     assert scans[0]["read"] == CAP + 247 and scans[0]["unconfirmed"] is True
 
 

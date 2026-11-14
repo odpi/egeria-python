@@ -59,7 +59,8 @@ FIGURES = {"count": (_count_figure, "links", 6, "at least 6"),
 
 @pytest.mark.parametrize("kind", FIGURES)
 def test_confirmed_figures_are_unchanged(monkeypatch, kind):
-    monkeypatch.setattr(paging, "TRUSTED_END_METHODS", paging.TRUSTED_END_METHODS | {"get_relationships"})
+    # Promotion is closed for get_relationships (NULL_NOT_END); a confirmed end is simulated at the seam.
+    monkeypatch.setattr(paging, "paging_for", lambda method: {"end_policy": "trusted"})
     fn, key, value, _words = FIGURES[kind]
     with om.recording_unmeasured() as notes, om.recording_unconfirmed() as scans:
         r = fn(_ce(ROWS))
@@ -72,7 +73,7 @@ def test_null_then_empty_probes_computes_over_what_was_read_and_marks_it(kind):
     with om.recording_unmeasured() as notes, om.recording_unconfirmed() as scans:
         r = fn(_ce(ROWS))
     assert r[key] == value
-    assert r["unconfirmed"][key] == {"unconfirmed": True, "positions_read": 2500, "reason": REASON,
+    assert r["unconfirmed"][key] == {"unconfirmed": True, "positions_read": 4000, "reason": REASON,
                                      "words": words}
     assert notes == []   # not "not measured": the executor would withhold the figure
     assert scans and scans[0]["unconfirmed"] is True
@@ -110,3 +111,64 @@ def test_the_executor_carries_unconfirmed_scans_on_an_analytic_output(monkeypatc
     extra = fse._unconfirmed_extra()
     assert extra["unconfirmed"][0]["count"] == "SemanticAssignment relationships"
     assert extra["unconfirmed"][0]["reason"] == REASON
+
+
+# ── the Architect's ruling after the step 4 capture ──
+
+def test_orphan_count_is_not_measured_unless_the_scan_is_confirmed():
+    mgr = MagicMock(spec=["platform_url", "view_server", "count_metadata_elements"])
+    mgr.count_metadata_elements.return_value = {"count": 10}
+    rels = [{"relationshipHeader": {"guid": "r1"}, "end1": {"guid": "a1", "type": {"typeName": "CSVFile"}},
+             "end2": {"guid": "t1", "type": {"typeName": "GlossaryTerm"}}}]
+    with om.recording_unmeasured() as notes:
+        r = om.orphan_glossary_terms(mgr, _ce(rels))
+    assert r["referencedCount"] == 1 and r["orphanCount"] is None            # never "at most 9"
+    assert "orphanCount" not in r["unconfirmed"]
+    assert any(n["count"] == "orphanCount" and "needs the whole set" in n["reason"] for n in notes)
+
+
+def test_a_null_not_end_method_never_reaches_the_end_and_probes_six_pages():
+    assert paging.NULL_NOT_END_METHODS == {"find_metadata_elements", "get_relationships"}
+    calls = []
+
+    def fetch(start, size):
+        calls.append(start)
+        return [{"guid": "a"}] if start == 0 else NULL
+
+    r = paging.page_all(fetch, fetch_page_size=25, **paging.paging_for("get_relationships"))
+    assert r.end_reason == "null_then_empty_probes" and r.reached_end is False and r.null_not_end is True
+    assert calls == [0, 25] + [25 * k for k in range(2, 8)]   # the null at 25, then 6 probes
+    plain = paging.page_all(fetch, fetch_page_size=25)          # another suspect method: 3 probes, an end
+    assert plain.reached_end is True and plain.positions_read == 25 * 5
+
+
+def test_a_run_of_three_mid_set_nulls_is_read_through():
+    # the capture's governed_coverage @25: nulls at 25, 50, 75, then rows at 100
+    pages = {0: [{"guid": "a"}], 100: [{"guid": "b"}]}
+    r = paging.page_all(lambda s, n: pages.get(s, NULL), fetch_page_size=25,
+                        **paging.paging_for("find_metadata_elements"))
+    assert [x["guid"] for x in r.items] == ["a", "b"]
+
+
+def test_null_not_end_methods_can_never_be_trusted():
+    assert not (paging.TRUSTED_END_METHODS & paging.NULL_NOT_END_METHODS)
+    assert all(paging.end_policy_for(m) == "suspect" for m in paging.NULL_NOT_END_METHODS)
+
+
+def test_no_write_path_reads_from_a_null_not_end_method():
+    """The ruling: no write path may act on a read from find_metadata_elements / get_relationships (a null is
+    never the end there). The write paths that page today, by source."""
+    import inspect
+
+    from md_processing.v2 import dashboard_sheet, processors
+    from pyegeria.authoring import drafts, publication
+    from pyegeria.view import saved_query
+    write_paths = [publication.async_read_history, processors.AsyncBaseCommandProcessor._parent_links_of_type,
+                   saved_query._all_related, saved_query.delete_saved_query,
+                   drafts.EgeriaDraftStore.async_prune_drafts, drafts.EgeriaDraftStore.async_list,
+                   dashboard_sheet.DashboardSheetEgeriaWriter._related,
+                   dashboard_sheet.DashboardSheetEgeriaWriter._resolve_report]
+    for fn in write_paths:
+        source = inspect.getsource(fn)
+        for method in paging.NULL_NOT_END_METHODS:
+            assert method not in source, f"{fn.__qualname__} reads {method}: a null is never the end there"

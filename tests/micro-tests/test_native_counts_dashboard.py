@@ -219,13 +219,13 @@ def test_orphan_term_count_runs_while_the_scan_pages():
         return {"count": 1061}
     mgr.count_metadata_elements.side_effect = count
     r = om.orphan_glossary_terms(mgr, _ce(_assignments(747, 77), on_read=scan_started.set))
-    # pager step 4, ruling (ii): the SemanticAssignment scan ended at a null with empty probes (a suspect
-    # path), so its distinct count is "found", and the total minus it is "at most"
+    # pager step 4, ruling (ii) as narrowed after the capture: the SemanticAssignment scan (get_relationships,
+    # NULL_NOT_END) is unconfirmed, so its distinct count is "found", and orphanCount (a total minus it) needs
+    # the whole set: not measured
     marks = r.pop("unconfirmed")
-    assert r == {"termTotal": 1061, "referencedCount": 77, "orphanCount": 984}
+    assert r == {"termTotal": 1061, "referencedCount": 77, "orphanCount": None}
     assert marks["referencedCount"]["words"] == "77 found; Egeria didn't confirm there are no more"
-    assert marks["orphanCount"]["words"] == "at most 984; Egeria didn't confirm there are no more"
-    assert all(m["unconfirmed"] is True and m["positions_read"] == 3000 for m in marks.values())
+    assert list(marks) == ["referencedCount"] and marks["referencedCount"]["positions_read"] == 4500
     assert seen == {"concurrent": True, "push_down": False}   # the viewer population, as the scan
 
 

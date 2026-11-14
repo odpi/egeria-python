@@ -38,7 +38,7 @@ from __future__ import annotations
 
 import json
 from contextlib import contextmanager
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any, Awaitable, Callable, Hashable, List, Optional, Tuple
 
 DEFAULT_FETCH_PAGE_SIZE = 100   # rows asked for per request; below the server's maximum page size
@@ -59,9 +59,33 @@ TRUSTED_END_METHODS = {
 }
 
 
+#: Methods proven to send null MID-SET (rows follow a null; a filtered-empty page is null, never []), so even a
+#: null followed by empty probes is NOT an end on them: PageResult.reached_end is False, as for a limit, and no
+#: write path may act on a read from them. Evidence: ~/.re-gate/CAPTURE-PAGER-STEP4-FINDINGS-2026-11-14.md
+#: (laz, read-only, 2026-11-14): at pageSize 25, runs of up to 3 nulls mid-set on both, and no [] in 457
+#: requests. Promotion to TRUSTED_END_METHODS is closed for these until Egeria returns [] for a filtered page
+#: (the Architect's ruling after the step 4 capture).
+NULL_NOT_END_METHODS = frozenset({"find_metadata_elements", "get_relationships"})
+
+#: Probe pages after a null on a NULL_NOT_END method: the capture's longest null run was 3; 6 gives 2x headroom.
+NULL_NOT_END_PROBE_PAGES = 6
+
+assert not (TRUSTED_END_METHODS & NULL_NOT_END_METHODS), "a NULL_NOT_END method can't be trusted"
+
+
 def end_policy_for(method_name: Optional[str]) -> str:
-    """"trusted" for a method in TRUSTED_END_METHODS, else "suspect"."""
+    """"trusted" for a method in TRUSTED_END_METHODS (never one in NULL_NOT_END_METHODS), else "suspect"."""
+    if method_name in NULL_NOT_END_METHODS:
+        return "suspect"
     return "trusted" if method_name in TRUSTED_END_METHODS else "suspect"
+
+
+def paging_for(method_name: Optional[str]) -> dict:
+    """page_all keyword arguments for a method: its end_policy and, for a NULL_NOT_END method, the longer
+    probe and ``null_not_end`` (so a null-then-empty-probes read is never ``reached_end``)."""
+    if method_name in NULL_NOT_END_METHODS:
+        return {"end_policy": "suspect", "probe_pages": NULL_NOT_END_PROBE_PAGES, "null_not_end": True}
+    return {"end_policy": end_policy_for(method_name)}
 
 
 @dataclass(frozen=True)
@@ -73,6 +97,7 @@ class PageResult:
     pages_read: int = 0
     positions_read: int = 0   # how far into the server's (pre-filter) rows the read got
     end_reason: Optional[str] = None   # why it ended: one of END_REASONS (None only for a caller-built result)
+    null_not_end: bool = False         # read from a NULL_NOT_END method: a null is never the end
 
     @property
     def complete(self) -> bool:
@@ -84,6 +109,8 @@ class PageResult:
         """True when the read may be acted on as the end (step-4 ruling (A)): a trusted null, or a suspect
         null whose probes found nothing. ``complete`` is stricter: only it allows a total or "none" to be
         shown. A limit (capped, stalled, the empty-run cap) is never the end."""
+        if self.end_reason == "null_then_empty_probes" and self.null_not_end:
+            return False   # NULL_NOT_END_METHODS: rows have followed a null on this method
         return self.end_reason in ("trusted_null", "null_then_empty_probes")
 
     def trace(self) -> dict:
@@ -271,7 +298,7 @@ def page_all(fetch: Callable[[int, int], Any], *, want: Optional[int] = None,
              fetch_page_size: int = DEFAULT_FETCH_PAGE_SIZE, end_policy: str = "suspect",
              probe_pages: int = DEFAULT_PROBE_PAGES, max_empty_rows: int = DEFAULT_MAX_EMPTY_ROWS,
              max_pages: int = DEFAULT_MAX_PAGES, key: Optional[Callable[[Any], Hashable]] = None,
-             start_from: int = 0, stall_pages: int = 1) -> PageResult:
+             start_from: int = 0, stall_pages: int = 1, null_not_end: bool = False) -> PageResult:
     """Read every row ``fetch(start, size)`` gives (or the first ``want``), paging until the end is known
     or a limit stops it, starting at ``start_from``. See the module docstring for ``end_policy`` and the
     ``end`` states.
@@ -285,14 +312,17 @@ def page_all(fetch: Callable[[int, int], Any], *, want: Optional[int] = None,
     "No elements found" is still read as a filtered page, not as the end.
 
     ``stall_pages`` is how many pages in a row bringing only rows already read end the read as "stalled"
-    (default 1; a path known to return overlapping short pages may allow 2)."""
+    (default 1; a path known to return overlapping short pages may allow 2).
+
+    ``null_not_end`` (a NULL_NOT_END method: pass ``**paging_for(method)``) marks the result so that a null
+    followed by empty probes is not ``reached_end``."""
     pager = _pager(want, fetch_page_size, end_policy, probe_pages, max_empty_rows, max_pages, key, start_from,
                    stall_pages)
     while (req := pager.request()) is not None:
         with _end_signal() as record:
             page = fetch(*req)
         pager.feed(_signalled(page, record))
-    return pager.result
+    return replace(pager.result, null_not_end=True) if null_not_end else pager.result
 
 
 async def async_page_all(fetch: Callable[[int, int], Awaitable[Any]], *, want: Optional[int] = None,
@@ -300,7 +330,7 @@ async def async_page_all(fetch: Callable[[int, int], Awaitable[Any]], *, want: O
                          probe_pages: int = DEFAULT_PROBE_PAGES, max_empty_rows: int = DEFAULT_MAX_EMPTY_ROWS,
                          max_pages: int = DEFAULT_MAX_PAGES,
                          key: Optional[Callable[[Any], Hashable]] = None, start_from: int = 0,
-                         stall_pages: int = 1) -> PageResult:
+                         stall_pages: int = 1, null_not_end: bool = False) -> PageResult:
     """``page_all`` for an async ``fetch`` (same ``key`` and end-signal rules)."""
     pager = _pager(want, fetch_page_size, end_policy, probe_pages, max_empty_rows, max_pages, key, start_from,
                    stall_pages)
@@ -308,7 +338,7 @@ async def async_page_all(fetch: Callable[[int, int], Awaitable[Any]], *, want: O
         with _end_signal() as record:
             page = await fetch(*req)
         pager.feed(_signalled(page, record))
-    return pager.result
+    return replace(pager.result, null_not_end=True) if null_not_end else pager.result
 
 
 # ── Step 4: what a loop says and logs about how its read ended (ruling (A), 2026-11-13) ──

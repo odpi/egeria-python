@@ -330,7 +330,7 @@ def _all_relationships(ce, relationship_type: str, as_of: Optional[str] = None) 
 
     The body always carries startFrom/pageSize: ClassificationExplorer.get_relationships ignores its
     start_from/page_size arguments whenever a body is given."""
-    from pyegeria.core.paging import end_policy_for, page_all
+    from pyegeria.core.paging import page_all, paging_for
 
     def fetch(start, size):
         body: Dict[str, Any] = {"class": "ResultsRequestBody", "startFrom": start, "pageSize": size}
@@ -343,7 +343,7 @@ def _all_relationships(ce, relationship_type: str, as_of: Optional[str] = None) 
     # Distinct by relationship GUID, as before; a row without one is always its own row (never merged).
     unkeyed = itertools.count()
     paged = page_all(fetch, fetch_page_size=DEFAULT_CAP, max_pages=MAX_SCAN_PAGES,
-                     end_policy=end_policy_for("get_relationships"),   # suspect until a capture promotes it
+                     **paging_for("get_relationships"),   # NULL_NOT_END: 6 probes, a null is never the end
                      key=lambda r: (r.get("relationshipHeader") or {}).get("guid") or r.get("guid")
                      or ("unkeyed", next(unkeyed)))
     return _settle_scan(paged, f"{relationship_type} relationships", "relationship")
@@ -360,7 +360,7 @@ def _all_elements(mgr, body: dict) -> Optional[list]:
     Distinct by element GUID. Returns None when a page query fails (no note: the caller's own failure
     path), and None with an "at least" note whenever the end isn't confirmed (MAX_SCAN_PAGES reached, a page
     that added nothing new, or Egeria not confirming there are no more). Never raises."""
-    from pyegeria.core.paging import end_policy_for, page_all
+    from pyegeria.core.paging import page_all, paging_for
 
     class _Failed(Exception):
         pass
@@ -380,7 +380,7 @@ def _all_elements(mgr, body: dict) -> Optional[list]:
     try:
         unkeyed = itertools.count()   # distinct by element GUID; a row without one is always its own row
         paged = page_all(fetch, fetch_page_size=DEFAULT_CAP, max_pages=MAX_SCAN_PAGES,
-                         end_policy=end_policy_for("find_metadata_elements"),   # B5: suspect
+                         **paging_for("find_metadata_elements"),   # B5, NULL_NOT_END: 6 probes, never the end
                          key=lambda el: _element_guid(el) or ("unkeyed", next(unkeyed)))
     except _Failed:
         return None
@@ -600,7 +600,8 @@ def _unconfirmed_scan(what: str, paged) -> None:
 #: How a figure is worded when a scan it depends on ended unconfirmed (ruling (ii) 1):
 #: - "count": "at least N";
 #: - "distinct": "N found; Egeria didn't confirm there are no more";
-#: - "at_most": a total minus a scan's count: "at most N; ..." (more of the scan would lower it);
+#: - "whole_set": a figure that needs the whole set (a total minus a scan's count): not measured, with the
+#:   reason (the Architect's ruling after the step 4 capture: it replaces "at most");
 #: - "counts": a map or list of counts: each is at least what it shows;
 #: - ("percent", denominator key): "X% of the N read; ...", the denominator from the same read;
 #: - "share_of_other" (or ("share_of_other", note key)): a share whose denominator is a separate count, so not
@@ -610,8 +611,6 @@ def _figure_words(kind: Any, key: str, value: Any, result: Dict[str, Any]) -> Op
         return f"at least {value}"
     if kind == "distinct":
         return f"{value} found; {UNCONFIRMED_REASON}"
-    if kind == "at_most":
-        return f"at most {value}; {UNCONFIRMED_REASON}"
     if kind == "counts":
         return f"each count is at least what is shown; {UNCONFIRMED_REASON}"
     if isinstance(kind, tuple) and kind[0] == "percent":
@@ -664,6 +663,11 @@ def _mark(result: Dict[str, Any], figures: Dict[str, Any], scans: List[Dict[str,
     for key, kind in figures.items():
         value = _get_path(result, key)
         if value is None or value == {} or value == []:
+            continue
+        if kind == "whole_set":
+            _set_path(result, key, None)
+            _not_measured(key, f"it needs the whole set, and the scan it uses was read without Egeria "
+                               f"confirming there are no more")
             continue
         if kind == "share_of_other" or (isinstance(kind, tuple) and kind[0] == "share_of_other"):
             reason = ("its numerator was read without Egeria confirming there are no more, and its denominator "
@@ -1340,7 +1344,7 @@ def certifications_summary(ce, as_of: Optional[str] = None) -> Dict[str, Any]:
     return out
 
 
-@_marks_unconfirmed({"referencedCount": "distinct", "orphanCount": "at_most"})
+@_marks_unconfirmed({"referencedCount": "distinct", "orphanCount": "whole_set"})
 def orphan_glossary_terms(mgr, ce, as_of: Optional[str] = None) -> Dict[str, Optional[int]]:
     """
     Approved-but-unassigned glossary terms -- the Attention Queue's "Orphan
