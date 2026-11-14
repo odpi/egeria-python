@@ -89,10 +89,6 @@ def _iri(guid: str, *suffix: str) -> URIRef:
     return URIRef("urn:egeria:guid:" + guid + "".join(f":{s}" for s in suffix))
 
 
-def _is_list(result: Any) -> bool:
-    return isinstance(result, list)
-
-
 def _type_names(element: Dict[str, Any]) -> Tuple[str, List[str]]:
     t = (element.get("elementHeader") or {}).get("type") or {}
     return t.get("typeName") or "", list(t.get("superTypeNames") or [])
@@ -200,11 +196,18 @@ def _read_scope(client: Any, scope: str) -> Dict[str, Any]:
         if isinstance(found, dict):
             return found
         raise ValueError(f"export_dcat: no collection with GUID {scope} is visible to {client.user_id}")
-    found = client.get_collections_by_name(scope, output_format="JSON", graph_query_depth=0)
-    exact = [c for c in found if _qn(c) == scope] if _is_list(found) else []
-    if not exact:
-        raise ValueError(f"export_dcat: no collection with qualifiedName '{scope}' is visible to {client.user_id}")
-    return exact[0]
+    # Egeria's exact unique-name read, not one page of a by-name search (which could read a filtered page as
+    # "no such collection"). Can't tell -> an error that says so, never "no collection".
+    from pyegeria.core.unique_name import by_unique_name
+    found = by_unique_name(client, scope, "Collection")
+    if found.answer == "unknown":
+        raise ValueError(f"export_dcat: couldn't tell whether a collection with qualifiedName '{scope}' is visible "
+                         f"to {client.user_id}: {found.reason}")
+    if not found.found:
+        held = f" ('{scope}' is a {found.wrong_type})" if found.wrong_type else ""
+        raise ValueError(f"export_dcat: no collection with qualifiedName '{scope}' is visible to "
+                         f"{client.user_id}{held}")
+    return found.element
 
 
 # ── The mapping ──

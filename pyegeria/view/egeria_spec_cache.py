@@ -556,20 +556,85 @@ def _find_folder(client, qn: str) -> Optional[Dict[str, Any]]:
     return _folders.find_folder(client, qn)
 
 
+#: The label lookup pages each by-name search through the pager (findMetadataElements underneath: NULL_NOT_END
+#: before #9453, trusted on a gated platform), up to this many requests of SPEC_LOOKUP_PAGE per name.
+SPEC_LOOKUP_PAGE = 100
+SPEC_LOOKUP_MAX_PAGES = 10
+
+
+class SpecLookupUnconfirmed(RuntimeError):
+    """Egeria returned no ReportSpec for a label, but didn't confirm there is none (or a lookup failed): the
+    words say "couldn't tell", never "not found"."""
+
+
+def _spec_label_names(label: str) -> Tuple[str, str, str]:
+    return label, f"ReportSpec::{label}", f"ReportType::{label}"
+
+
+def _spec_matches(read_items: Iterable[Any], label: str, seen: Dict[str, Dict[str, Any]]) -> None:
+    for e in read_items:
+        if isinstance(e, dict) and label_from_qualified_name(_props(e).get("qualifiedName") or "") == label \
+                and _guid(e):
+            seen[_guid(e)] = e
+
+
+def _spec_lookup_result(label: str, seen: Dict[str, Dict[str, Any]], unconfirmed: List[str]) -> List[Dict[str, Any]]:
+    """The matches; with none, "not found" only when every read reached a confirmed end."""
+    if not seen and unconfirmed:
+        raise SpecLookupUnconfirmed(f"couldn't tell whether Egeria holds report spec '{label}': none was found in "
+                                    f"what Egeria returned, but it didn't confirm there are no more "
+                                    f"({'; '.join(unconfirmed)})")
+    return list(seen.values())
+
+
 def _find_specs_by_label(client, label: str) -> List[Dict[str, Any]]:
-    """Every ReportSpec element whose label is `label`, under either qualified-name marker."""
+    """Every ReportSpec element whose label is `label`, under either qualified-name marker.
+
+    A label isn't an exact qualified name (a local qualifier may precede the marker), so each by-name search is
+    paged with `paging_for` rather than read as one page. [] only when every read reached a confirmed end;
+    otherwise, with no match, SpecLookupUnconfirmed (never "not found")."""
+    from pyegeria.core.paging import page_all, paging_for
     seen: Dict[str, Dict[str, Any]] = {}
-    for name in (label, f"ReportSpec::{label}", f"ReportType::{label}"):
+    unconfirmed: List[str] = []
+    paging = paging_for("get_collections_by_name", client)
+    for name in _spec_label_names(label):
+        def fetch(start: int, size: int, name: str = name):
+            return client.get_collections_by_name(name, metadata_element_type="ReportSpec", output_format="JSON",
+                                                  start_from=start, page_size=size)
         try:
-            found = _call(client.get_collections_by_name, name, metadata_element_type="ReportSpec",
-                          output_format="JSON")
+            read = page_all(fetch, fetch_page_size=SPEC_LOOKUP_PAGE, max_pages=SPEC_LOOKUP_MAX_PAGES, **paging)
         except Exception as exc:  # noqa: BLE001 -- one failing lookup must not hide the others
             logger.debug(f"report spec lookup by name {name!r} failed: {exc}")
+            unconfirmed.append(f"{name!r}: the read failed ({type(exc).__name__})")
             continue
-        for e in found:
-            if label_from_qualified_name(_props(e).get("qualifiedName") or "") == label and _guid(e):
-                seen[_guid(e)] = e
-    return list(seen.values())
+        if not read.complete:
+            unconfirmed.append(f"{name!r}: {read.end_reason}")
+        _spec_matches(read.items, label, seen)
+    return _spec_lookup_result(label, seen, unconfirmed)
+
+
+async def _async_find_specs_by_label(client, label: str) -> List[Dict[str, Any]]:
+    """`_find_specs_by_label` for async code."""
+    from pyegeria.core.paging import async_page_all, async_paging_for
+    seen: Dict[str, Dict[str, Any]] = {}
+    unconfirmed: List[str] = []
+    paging = await async_paging_for("_async_get_collections_by_name", client)
+    for name in _spec_label_names(label):
+        async def fetch(start: int, size: int, name: str = name):
+            return await client._async_get_collections_by_name(name, metadata_element_type="ReportSpec",
+                                                               output_format="JSON", start_from=start,
+                                                               page_size=size)
+        try:
+            read = await async_page_all(fetch, fetch_page_size=SPEC_LOOKUP_PAGE, max_pages=SPEC_LOOKUP_MAX_PAGES,
+                                        **paging)
+        except Exception as exc:  # noqa: BLE001
+            logger.debug(f"report spec lookup by name {name!r} failed: {exc}")
+            unconfirmed.append(f"{name!r}: the read failed ({type(exc).__name__})")
+            continue
+        if not read.complete:
+            unconfirmed.append(f"{name!r}: {read.end_reason}")
+        _spec_matches(read.items, label, seen)
+    return _spec_lookup_result(label, seen, unconfirmed)
 
 
 def _get_full(client, guid: str) -> Optional[Dict[str, Any]]:
@@ -1248,7 +1313,8 @@ def fetch_spec_for_call(client, name: str, *, cache_dir_override: Optional[str] 
     except SpecFetchError:
         raise
     except Exception as exc:  # noqa: BLE001
-        raise SpecFetchError(f"Report spec '{label}' could not be fetched from Egeria: {exc}") from exc
+        raise SpecFetchError(f"Report spec '{label}' could not be fetched from Egeria: {exc} (refresh_spec=True "
+                             f"never falls back to the cached copy)") from exc
     if el is None:
         raise SpecFetchError(f"Report spec '{label}' was not found in Egeria (refresh_spec=True never falls back "
                              f"to the cached copy)")
@@ -1268,23 +1334,18 @@ async def async_fetch_spec_for_call(client, name: str) -> str:
         if guid:
             el = (_elements(await getter._async_get_collection_by_guid(guid, output_format="JSON")) or [None])[0]
         if el is None:
-            seen: Dict[str, Dict[str, Any]] = {}
-            for nm in (label, f"ReportSpec::{label}", f"ReportType::{label}"):
-                res = _elements(await getter._async_get_collections_by_name(
-                    nm, metadata_element_type="ReportSpec", output_format="JSON"))
-                for e in res:
-                    if label_from_qualified_name(_props(e).get("qualifiedName") or "") == label and _guid(e):
-                        seen[_guid(e)] = e
-            if len(seen) > 1:
-                raise SpecFetchError(f"Report spec '{label}' is held by {len(seen)} elements in Egeria: "
-                                     f"{', '.join(sorted(seen))}")
-            if seen:
-                g = next(iter(seen))
-                el = (_elements(await getter._async_get_collection_by_guid(g, output_format="JSON")) or [None])[0]
+            found = await _async_find_specs_by_label(getter, label)
+            if len(found) > 1:
+                raise SpecFetchError(f"Report spec '{label}' is held by {len(found)} elements in Egeria: "
+                                     f"{', '.join(sorted(_guid(e) for e in found))}")
+            if found:
+                el = (_elements(await getter._async_get_collection_by_guid(_guid(found[0]), output_format="JSON"))
+                      or [None])[0]
     except SpecFetchError:
         raise
     except Exception as exc:  # noqa: BLE001
-        raise SpecFetchError(f"Report spec '{label}' could not be fetched from Egeria: {exc}") from exc
+        raise SpecFetchError(f"Report spec '{label}' could not be fetched from Egeria: {exc} (refresh_spec=True "
+                             f"never falls back to the cached copy)") from exc
     if el is None:
         raise SpecFetchError(f"Report spec '{label}' was not found in Egeria (refresh_spec=True never falls back "
                              f"to the cached copy)")

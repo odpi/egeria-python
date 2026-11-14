@@ -84,13 +84,24 @@ class FakeEgeria:
     def remove_member(self, guid, folder=FOLDER_GUID):
         self.members[folder] = [m for m in self.members[folder] if m["elementHeader"]["guid"] != guid]
 
-    def get_collections_by_name(self, name, metadata_element_type=None, output_format="JSON", **_):
+    def get_collections_by_name(self, name, metadata_element_type=None, output_format="JSON", start_from=0, **_):
+        if start_from:   # one page of hits, then Egeria's null
+            return "No elements found"
         if metadata_element_type == "CollectionFolder":
             f = self.folders.get(name)
             return [f] if f else "No elements found"
         hits = [e for e in self.elements.values()
                 if name in (e["properties"]["qualifiedName"], e["properties"]["displayName"])]
         return hits or "No elements found"
+
+    def get_element_by_unique_name(self, name, *_, **__):
+        """Egeria's exact unique-name read (folders and recorded elements), or its not-found."""
+        if name in self.folders:
+            return copy.deepcopy(self.folders[name])
+        for e in self.elements.values():
+            if e["properties"]["qualifiedName"] == name:
+                return copy.deepcopy(e)
+        return "No elements found"
 
     def get_collection_members(self, collection_guid=None, output_format="JSON", start_from=0, page_size=0, **_):
         items = list(self.members.get(collection_guid) or [])
@@ -818,9 +829,10 @@ def test_fetch_on_call_never_writes_a_shared_cache_and_keeps_the_copy_in_process
 
 def test_failed_fetch_raises_with_words_and_never_falls_back(tier):
     _sync_e_collections(tier)
-    eg = FakeEgeria()  # Egeria no longer has it
-    with pytest.raises(esc.SpecFetchError, match="never falls back"):
+    eg = FakeEgeria()  # Egeria no longer has it (or, before #9453, can't confirm it hasn't)
+    with pytest.raises(esc.SpecFetchError, match="never falls back") as raised:
         esc.fetch_spec_for_call(eg, "E-Collections")
+    assert "couldn't tell whether Egeria holds report spec 'E-Collections'" in str(raised.value)
     with pytest.raises(esc.SpecFetchError, match="built-in tier"):
         esc.fetch_spec_for_call(eg, "builtin:Collections")
 
@@ -834,7 +846,7 @@ async def test_async_fetch_through_a_find_request_helper(tier):
 
         async def _async_get_collections_by_name(self, name, metadata_element_type=None, output_format="JSON",
                                                  **k):
-            return self.get_collections_by_name(name, metadata_element_type)
+            return self.get_collections_by_name(name, metadata_element_type, start_from=k.get("start_from", 0))
 
     eg = AsyncFake()
     eg.put(spec_element())
