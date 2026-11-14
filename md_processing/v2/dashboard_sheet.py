@@ -523,8 +523,9 @@ class DashboardSheetEgeriaWriter:
         display-name match may be linked, but its uncertainty is said every time.
         (a) A ref that looks like a qualified name ("::") is read by Egeria's unique-name read: found -> link;
             Egeria's not-found -> the display-name path; any other error -> no link, with a note.
-        (b) A display-name ref is read through the pager (get_elements_by_property_value is NULL_NOT_END),
-            with exact displayName equality among Reports:
+        (b) A display-name ref is read through the pager (get_elements_by_property_value is NULL_NOT_END, and
+            trusted on a platform with the #9453 fix), with exact displayName equality among Reports:
+            - (step 6) on a trusted end: 1 match -> link, no note; 0 -> "There is no Report named X";
             - exactly 1 match, the read at null_then_empty_probes -> link, with a note naming its qualifiedName;
             - exactly 1 match, the read stopped at a limit -> no link, with a note;
             - 2 or more -> no link, with a note listing up to 5 qualifiedNames;
@@ -533,7 +534,7 @@ class DashboardSheetEgeriaWriter:
         Not Dr.Egeria's `__async_get_guid__`: it tries a unique-name lookup first, which Egeria rejects
         when the name is shared with an element of another type -- seen live 2026-11-09 for 'Term
         Definition Completeness' and 'Governance Classification Coverage', both real Reports."""
-        from pyegeria.core.paging import async_page_all, paging_for
+        from pyegeria.core.paging import async_page_all, async_paging_for
 
         if "::" in report_name:   # (a)
             try:
@@ -557,7 +558,8 @@ class DashboardSheetEgeriaWriter:
                 return None   # no Report by that name in this read
 
         paged = await async_page_all(fetch, fetch_page_size=PAGE_SIZE,
-                                     **paging_for("get_elements_by_property_value"), key=_element_key)
+                                     **await async_paging_for("get_elements_by_property_value", self.client),
+                                     key=_element_key)
         from pyegeria.core.paging import log_end
         log_end(f"dashboard_sheet (the Reports named {report_name!r})", paged)
         matches = [e for e in paged.items if isinstance(e, dict) and e.get("elementHeader")
@@ -568,6 +570,8 @@ class DashboardSheetEgeriaWriter:
             self._note(f"{len(matches)} Reports are named '{report_name}' in Egeria ({listed}): no report link was "
                        f"written for that placement. Give the placement the Report's qualified name.")
             return None
+        if len(matches) == 1 and paged.complete:   # step 6: a trusted end on a #9453 platform: unique, no note
+            return self._guid(matches[0])
         if len(matches) == 1 and paged.end_reason == "null_then_empty_probes":
             self._note(f"Linked the Report named '{report_name}' that Egeria returned ('{qns[0]}'); Egeria can't "
                        f"confirm it's the only one; give the Report's qualified name to be sure.")
@@ -576,6 +580,10 @@ class DashboardSheetEgeriaWriter:
             self._note(f"One Report named '{report_name}' was found ('{qns[0]}'), but the read stopped before the "
                        f"end ({paged.note}): no report link was written for that placement. Give the placement the "
                        f"Report's qualified name.")
+            return None
+        if paged.complete:   # step 6: a confirmed empty read may say "none"
+            self._note(f"There is no Report named '{report_name}' in Egeria: no report link was written for that "
+                       f"placement.")
             return None
         self._note(f"No Report named '{report_name}' was found in what Egeria returned ({paged.note or paged.end}): "
                    f"no report link was written for that placement.")

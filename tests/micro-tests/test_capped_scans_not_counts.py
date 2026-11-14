@@ -134,7 +134,9 @@ def _assets(n, updated="2020-01-01T00:00:00+00:00"):
 
 # ── the other scanners ─────────────────────────────────────────────────────
 
-def test_ai_ready_and_drl_on_a_full_asset_page_measure_nothing():
+def test_ai_ready_and_drl_on_a_limited_asset_read_measure_nothing():
+    # Pager step 6 (the sweep): the Asset find is paged; a server repeating its full page stalls the read -- a
+    # limit -- so nothing is measured, and the note carries the lower bound.
     mgr = _mgr(find=lambda body, *a, **kw: _assets(CAP))
     ce = MagicMock()
     ce.get_relationships.side_effect = _rel_pages({})
@@ -142,8 +144,38 @@ def test_ai_ready_and_drl_on_a_full_asset_page_measure_nothing():
         assert om.ai_ready_assets(mgr, ce) == {"aiReadyCount": None, "total": None, "capped": True}
         assert om.drl_readiness_gates(mgr, ce) == {"total": None, "capped": True, "aiReadyCount": None,
                                                     "aiReadyRecentCount": None, "byModality": None}
-    assert [n["count"] for n in notes] == ["AI-ready Assets", "DRL readiness gates"]
+    assert [n["count"] for n in notes] == ["Asset", "Asset"] and all(n["at_least"] == CAP for n in notes)
     ce.get_relationships.assert_not_called()
+
+
+def test_ai_ready_reads_assets_past_a_short_page():
+    # a short first page is not every Asset (pager step 6): a1 on page 1, a2 on page 2
+    def asset(guid):
+        return {"elementGUID": guid, "classifications": [{"classificationName": "Confidentiality"}],
+                "elementProperties": {"propertyValueMap": {"description": {"primitiveValue": "d"}}}}
+    pages = {0: [asset("a1")], CAP: [asset("a2")]}
+    mgr = _mgr(find=lambda body, *a, **kw: pages.get(body["startFrom"], "No elements found"))
+    ce = MagicMock()
+    ce.get_relationships.side_effect = _rel_pages({"DataFlow": [
+        {"relationshipHeader": {"guid": "f1"}, "end1": {"guid": "a1"}, "end2": {"guid": "a2"}}]})
+    r = om.ai_ready_assets(mgr, ce)
+    assert r["total"] == 2 and r["aiReadyCount"] == 2
+    assert r["unconfirmed"]["total"]["words"] == "at least 2"   # find_metadata_elements, ungated: unconfirmed
+
+
+def test_ai_ready_on_a_gated_platform_is_a_plain_total(monkeypatch):
+    from pyegeria.core import paging
+    monkeypatch.setattr(paging, "paging_for", lambda method, client=None: (
+        {"end_policy": "trusted"} if method == "find_metadata_elements" else paging._paging(method, False)))
+    asset = {"elementGUID": "a1", "classifications": [{"classificationName": "Confidentiality"}],
+             "elementProperties": {"propertyValueMap": {"description": {"primitiveValue": "d"}}}}
+    mgr = _mgr(find=_find_pages([asset]))
+    ce = MagicMock()
+    ce.get_relationships.side_effect = _rel_pages({"DataFlow": [
+        {"relationshipHeader": {"guid": "f1"}, "end1": {"guid": "a1"}, "end2": {}}]})
+    r = om.ai_ready_assets(mgr, ce)
+    assert r["total"] == 1   # a confirmed Asset read: no mark on the total
+    assert "total" not in r.get("unconfirmed", {}) and "aiReadyCount" in r["unconfirmed"]   # DataFlow: never trusted
 
 
 def test_lineage_reads_every_dataflow_page():

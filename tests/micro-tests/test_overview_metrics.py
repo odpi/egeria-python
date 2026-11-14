@@ -589,7 +589,8 @@ def test_drl_readiness_gates_narrows_ai_ready_by_recency():
     assert result["aiReadyRecentCount"] == 1
     assert result["unconfirmed"]["aiReadyCount"]["words"] == "at least 2"
     assert result["unconfirmed"]["aiReadyRecentCount"]["words"] == "at least 1"
-    assert "byModality" not in result["unconfirmed"]   # from the Asset find, not the scan
+    # the Portal B1 read-back: byModality is marked from pyegeria (one source), as "counts"
+    assert result["unconfirmed"]["byModality"]["words"].startswith("each count is at least what is shown")
     assert result["byModality"] == {"tabular": 1, "text_media": 1, "other": 1}
 
 

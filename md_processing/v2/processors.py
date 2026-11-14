@@ -1121,7 +1121,15 @@ class AsyncBaseCommandProcessor(ABC):
                                 # the attribute appeared to succeed while quietly doing nothing.
                                 attr_data["exists"] = False
                                 attr_data["valid"] = False  # Treat as invalid to block execution
-                                msg = f"Referenced element(s) {genuinely_failed} for attribute '{attr_name}' not found."
+                                unknown_items = [i for i in genuinely_failed if self._lookup_was_unknown(i)]
+                                if unknown_items:   # pager step 6: unknown is never "not found"
+                                    msg = (f"Couldn't tell whether referenced element(s) {unknown_items} for attribute "
+                                           f"'{attr_name}' exist in Egeria (the lookup failed); nothing was written.")
+                                    others = [i for i in genuinely_failed if i not in unknown_items]
+                                    if others:
+                                        msg += f" Referenced element(s) {others} not found."
+                                else:
+                                    msg = f"Referenced element(s) {genuinely_failed} for attribute '{attr_name}' not found."
                                 if attr_data.get("errors") is None: attr_data["errors"] = []
                                 attr_data["errors"].append(msg)
                                 logger.error(msg)
@@ -1151,7 +1159,11 @@ class AsyncBaseCommandProcessor(ABC):
                             # If it's a candidate ref and we couldn't resolve it, mark as not found
                             attr_data["exists"] = False
                             attr_data["valid"] = False # Treat as invalid to block execution
-                            msg = f"Referenced element '{val}' for attribute '{attr_name}' not found."
+                            if self._lookup_was_unknown(val):   # pager step 6: unknown is never "not found"
+                                msg = (f"Couldn't tell whether referenced element '{val}' for attribute '{attr_name}' "
+                                       f"exists in Egeria (the lookup failed); nothing was written.")
+                            else:
+                                msg = f"Referenced element '{val}' for attribute '{attr_name}' not found."
                             if attr_data.get("errors") is None: attr_data["errors"] = []
                             attr_data["errors"].append(msg)
                             logger.error(msg)
@@ -1892,6 +1904,12 @@ class AsyncBaseCommandProcessor(ABC):
             self._note_lookup_unknown(name_or_guid, e)   # pager step 5: unknown, never absent
 
         return None
+
+    def _lookup_was_unknown(self, name: str) -> bool:
+        """Whether a lookup of `name` failed with an error other than Egeria's not-found (pager step 6: then a
+        reference is "couldn't tell", never "not found")."""
+        prefix = f"couldn't tell whether '{name}' exists"
+        return any(w.startswith(prefix) for w in self.__dict__.get("_lookups_unknown") or [])
 
     def _note_lookup_unknown(self, name: str, exc: BaseException) -> None:
         """Pager step 5 (the exists-lookups ruling, 6): a lookup that failed with an error that isn't Egeria's

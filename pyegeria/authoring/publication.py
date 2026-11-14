@@ -24,9 +24,22 @@ zone) doesn't change the properties, so it doesn't count.
 
 **Pins name publications**, not Egeria instance versions (those count every change, zones included).
 
-**Exact target, never a twin.** Before any plan, the element is found by exact qualifiedName (a Report
-without one, by exact display name), as the user, with a page of 25 (B5: never 1). More than one match, a
-full page, or a failed read refuses: a wrongly created twin would split the history and orphan every pin.
+**Exact target, never a twin.** Before any plan, the element is found by Egeria's unique-name read of its
+qualifiedName, as the user: an exact server-side lookup, never a paged property search (pager step 5, the
+exists-lookups ruling, 2026-11-14). Found -> update; Egeria's "not found" -> create; any other error or answer
+refuses, as does an element of another type under that qualifiedName. A Report draft with no qualified name
+is refused: one display-name match can't be proven the only one. A wrongly created twin would split the
+history and orphan every pin.
+
+**Visibility.** The unique-name read is filtered by what the publisher may see (Egeria's
+getBeanByUniqueName): an element zoned away from the publisher reads as "not found", so its publish plans a
+create ("not held"). Egeria then refuses that create: qualifiedName is a unique property (Referenceable,
+OpenMetadataTypesArchive1_2), and the generic create path (OpenMetadataAPIGenericHandler.createBeanInRepository
+-> validateNewEntityRequest -> validateUniqueProperties -> validateUniqueProperty, read at Egeria 8de9572c4d)
+looks the value up as the server's own user, so the caller's zones don't hide the existing element, and throws
+"unique name in use". So the publish fails rather than making a twin; it doesn't update the element either.
+Publish as someone who can see the element. (Read from the source for the generic-handler create path; not
+every OMVS create has been traced to it.)
 
 **No silent overwrite.** apply re-resolves the target and refuses if its GUID or `publishedVersion` changed
 since the plan was made.

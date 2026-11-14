@@ -114,8 +114,9 @@ def test_drl_lineage_failure_keeps_the_asset_population():
 
     from pyegeria.view import overview_metrics as om
     mgr, _ = _failing_clients()
-    mgr.find_metadata_elements.side_effect = None
-    mgr.find_metadata_elements.return_value = [{"elementGUID": "a1", "type": {"typeName": "CSVFile"}}]
+    # pages like Egeria (pager step 6: the Asset find is paged): one Asset, then null
+    mgr.find_metadata_elements.side_effect = lambda body, *a, **kw: (
+        [{"elementGUID": "a1", "type": {"typeName": "CSVFile"}}] if not body.get("startFrom") else "No elements found")
     ce = MagicMock(spec=["get_relationships"])
     ce.get_relationships.side_effect = RuntimeError("boom")
     result = om.drl_readiness_gates(mgr, ce)

@@ -86,12 +86,197 @@ def end_policy_for(method_name: Optional[str]) -> str:
     return "trusted" if method_name in TRUSTED_END_METHODS else "suspect"
 
 
-def paging_for(method_name: Optional[str]) -> dict:
-    """page_all keyword arguments for a method: its end_policy and, for a NULL_NOT_END method, the longer
-    probe and ``null_not_end`` (so a null-then-empty-probes read is never ``reached_end``)."""
+# ── Step 6: the #9453 version gate (the Architect's step 6 ruling, 2026-11-14) ─────────────────────────────────
+# odpi/egeria #9453 (2a27dad5, merged 2026-11-14T19:52Z) fixed the find paths: on a platform with it,
+# find_metadata_elements and by-property-value return [] for a filtered page and null only at the end (post-#9453
+# capture on laz, 5deda38d: ~/.re-gate/RESULTS-EGERIA-UPGRADE-5deda38d-AND-POST-9453-CAPTURE-2026-11-14.md).
+# get_relationships by type is NOT fixed there (nulls mid-set, rows after, never []): it stays NULL_NOT_END on
+# every platform until its own upstream fix and a capture.
+
+#: Promoted to trusted on a gated platform only.
+GATED_TRUSTED_METHODS = frozenset({"find_metadata_elements", "get_elements_by_property_value",
+                                   "find_elements_by_property_value", "_async_get_elements_by_property_value"})
+assert GATED_TRUSTED_METHODS < NULL_NOT_END_METHODS and "get_relationships" not in GATED_TRUSTED_METHODS
+
+GATE_SNAPSHOT_VERSION = "6.3-SNAPSHOT"
+GATE_SNAPSHOT_TIME = "2026-11-14T19:52:00Z"   # the #9453 merge
+GATE_TTL_SECONDS = 3600          # a parsed /api/about answer
+GATE_FAILED_TTL_SECONDS = 60     # a failed about-read: retried soon, so a platform restart doesn't turn trust off
+GATE_ABOUT_TIMEOUT_SECONDS = 5   # the about-read's own timeout, where the client takes one
+GATE_OVERRIDE_ENV = "PYEGERIA_TRUSTED_END"   # "off" forces not-promoted everywhere; there is no "force on"
+
+_GATE_CACHE: dict = {}   # platform URL -> (expires at, promoted)
+
+
+def gate_from_about(about: Any) -> bool:
+    """Whether a platform's /api/about answer shows the #9453 paging fix. Fail-safe: anything not clearly
+    promoted (an older version or build time, unparsable, no time) is False.
+
+    - promoted: a release later than 6.3-SNAPSHOT (6.3 or newer, not a SNAPSHOT), or "6.3-SNAPSHOT" built at or
+      after GATE_SNAPSHOT_TIME;
+    - any SNAPSHOT whose (major, minor) is later than 6.3 (e.g. 6.4-SNAPSHOT) is promoted: #9453 merged on main
+      before the 6.3 line was cut (step 6 read-back R1); an earlier SNAPSHOT (6.2-SNAPSHOT) is not;
+    - known limit: a 6.3-SNAPSHOT built after that time from code without #9453 reads as promoted
+      (PYEGERIA_TRUSTED_END=off covers it)."""
+    import re
+    from datetime import datetime
+    try:
+        if isinstance(about, (str, bytes)):
+            about = json.loads(about)
+        if not isinstance(about, dict):
+            return False
+        version = str(about.get("version") or "").strip()
+        m = re.fullmatch(r"(\d+)\.(\d+)(?:\.(\d+))?(-SNAPSHOT)?", version)
+        if not m:
+            return False
+        numbers = tuple(int(g or 0) for g in m.groups()[:3])
+        if not m.group(4):
+            return numbers >= (6, 3, 0)
+        if numbers[:2] > (6, 3):   # step 6 read-back R1: every SNAPSHOT after 6.3 contains #9453 (merged on main)
+            return True
+        if version != GATE_SNAPSHOT_VERSION:
+            return False
+        built = about.get("time")
+        if not built:
+            return False
+        when = datetime.fromisoformat(str(built).replace("Z", "+00:00"))
+        gate = datetime.fromisoformat(GATE_SNAPSHOT_TIME.replace("Z", "+00:00"))
+        return when.tzinfo is not None and when >= gate
+    except Exception:  # noqa: BLE001 -- fail safe: never trusted on unknown
+        return False
+
+
+def _gate_overridden() -> bool:
+    import os
+    return os.environ.get(GATE_OVERRIDE_ENV, "").strip().lower() == "off"
+
+
+def _gate_cached(platform_url: str) -> Optional[bool]:
+    import time
+    hit = _GATE_CACHE.get(platform_url)
+    if hit is not None and hit[0] > time.monotonic():
+        return hit[1]
+    return None
+
+
+def _gate_store(platform_url: str, promoted: bool, failed: bool = False) -> bool:
+    import time
+    ttl = GATE_FAILED_TTL_SECONDS if failed else GATE_TTL_SECONDS
+    _GATE_CACHE[platform_url] = (time.monotonic() + ttl, promoted)
+    return promoted
+
+
+def _about_reader(client: Any, name: str):
+    """The client's own platform-origin reader (``name``), or a subclient's (EgeriaTech proxies), or None."""
+    reader = getattr(type(client), name, None) and getattr(client, name, None)
+    if reader is None:
+        for sub in ("classification_manager", "metadata_expert"):
+            inner = getattr(client, sub, None)
+            reader = getattr(inner, name, None) if inner is not None else None
+            if reader is not None:
+                break
+    return reader
+
+
+def _call_about(reader: Callable[[], Any]) -> Any:
+    """The sync about-read, bounded by GATE_ABOUT_TIMEOUT_SECONDS (on a worker thread, which is abandoned if
+    it overruns: the read is only ever "not promoted" then)."""
+    from concurrent.futures import ThreadPoolExecutor
+    pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="pyegeria-about")
+    try:
+        return pool.submit(_read_and_close, reader).result(timeout=GATE_ABOUT_TIMEOUT_SECONDS)
+    finally:
+        pool.shutdown(wait=False)
+
+
+def _read_and_close(reader: Callable[[], Any]) -> Any:
+    """Run the about-read on this worker thread, then close what the read opened here: the client's
+    thread-local session and this thread's run_sync loop (step 6 gate read-back advisory: one was left unclosed
+    per platform per TTL)."""
+    try:
+        return reader()
+    finally:
+        _close_thread_resources(getattr(reader, "__self__", None))
+
+
+def _close_thread_resources(owner: Any) -> None:
+    from pyegeria.core import async_runner
+    try:
+        local = getattr(owner, "_thread_local", None)
+        session = getattr(local, "session", None) if local is not None else None
+        loop = getattr(async_runner._thread_state, "loop", None)
+        if session is not None and loop is not None and not loop.is_closed():
+            loop.run_until_complete(session.aclose())
+        if local is not None:
+            for name in ("session", "session_loop"):
+                if hasattr(local, name):
+                    delattr(local, name)
+        if loop is not None and not loop.is_closed():
+            loop.close()
+    except Exception:  # noqa: BLE001 -- cleanup only: never turns a read into an error
+        pass
+
+
+def platform_promoted(client: Any) -> bool:
+    """Whether `client`'s platform carries the #9453 fix: one best-effort /api/about read per platform URL per
+    GATE_TTL_SECONDS. Never raises, never blocks a read: a failed or unparsable read is "not promoted"."""
+    if client is None or _gate_overridden():
+        return False
+    url = getattr(client, "platform_url", None)
+    if not isinstance(url, str) or not url:
+        return False
+    if (cached := _gate_cached(url)) is not None:
+        return cached
+    try:
+        reader = _about_reader(client, "get_platform_origin")
+        about = _call_about(reader) if reader is not None else None
+    except Exception:  # noqa: BLE001 -- a failed about-read only means "not promoted"
+        about = None
+    return _gate_store(url, gate_from_about(about), failed=not about)
+
+
+async def async_platform_promoted(client: Any) -> bool:
+    """``platform_promoted`` for async code (the same cache)."""
+    if client is None or _gate_overridden():
+        return False
+    url = getattr(client, "platform_url", None)
+    if not isinstance(url, str) or not url:
+        return False
+    if (cached := _gate_cached(url)) is not None:
+        return cached
+    try:
+        reader = _about_reader(client, "async_get_platform_origin")
+        about = None
+        if reader is not None:
+            import asyncio
+            about = await asyncio.wait_for(reader(), timeout=GATE_ABOUT_TIMEOUT_SECONDS)
+    except Exception:  # noqa: BLE001 -- a failed or slow about-read only means "not promoted"
+        about = None
+    return _gate_store(url, gate_from_about(about), failed=not about)
+
+
+def _paging(method_name: Optional[str], promoted: bool) -> dict:
+    if promoted and method_name in GATED_TRUSTED_METHODS:
+        return {"end_policy": "trusted"}
     if method_name in NULL_NOT_END_METHODS:
         return {"end_policy": "suspect", "probe_pages": NULL_NOT_END_PROBE_PAGES, "null_not_end": True}
     return {"end_policy": end_policy_for(method_name)}
+
+
+def paging_for(method_name: Optional[str], client: Any = None) -> dict:
+    """page_all keyword arguments for a method: its end_policy and, for a NULL_NOT_END method, the longer
+    probe and ``null_not_end`` (so a null-then-empty-probes read is never ``reached_end``).
+
+    Given the ``client`` that makes the read, a GATED_TRUSTED_METHODS method is trusted on a platform with the
+    #9453 fix (``platform_promoted``). The platform is only asked when the method is gated."""
+    promoted = method_name in GATED_TRUSTED_METHODS and platform_promoted(client)
+    return _paging(method_name, promoted)
+
+
+async def async_paging_for(method_name: Optional[str], client: Any = None) -> dict:
+    """``paging_for`` for async code: the platform's /api/about is read without blocking the event loop."""
+    promoted = method_name in GATED_TRUSTED_METHODS and await async_platform_promoted(client)
+    return _paging(method_name, promoted)
 
 
 @dataclass(frozen=True)
@@ -400,18 +585,17 @@ class Exists:
                 f"{self.read.end}, {self.read.end_reason}): Egeria didn't confirm there are no more")
 
 
-def _exists_pager(method: Optional[str], fetch_page_size: int, max_pages: int) -> _Pager:
+def _exists_pager(method: Optional[str], fetch_page_size: int, max_pages: int, p: dict) -> _Pager:
     if not isinstance(max_pages, int) or isinstance(max_pages, bool) or not 1 <= max_pages <= EXISTS_MAX_PAGES:
         raise ValueError(f"max_pages must be a whole number from 1 to {EXISTS_MAX_PAGES}, not {max_pages!r}")
-    p = paging_for(method)
     return _pager(None, fetch_page_size, p["end_policy"], p.get("probe_pages", DEFAULT_PROBE_PAGES),
                   DEFAULT_MAX_EMPTY_ROWS, max_pages, None)
 
 
-def _exists_answer(pager: _Pager, matches: List[Any], method: Optional[str]) -> Exists:
+def _exists_answer(pager: _Pager, matches: List[Any], p: dict) -> Exists:
     result = pager.result or PageResult(items=list(pager.items), end="capped", note="stopped at the first match",
                                         pages_read=pager.pages, positions_read=pager.start, end_reason="want")
-    if method in NULL_NOT_END_METHODS:
+    if p.get("null_not_end"):
         result = replace(result, null_not_end=True)
     if matches:
         return Exists("found", matches, result)
@@ -419,10 +603,12 @@ def _exists_answer(pager: _Pager, matches: List[Any], method: Optional[str]) -> 
 
 
 def exists(fetch: Callable[[int, int], Any], match: Callable[[Any], bool], *, method: Optional[str],
-           fetch_page_size: int = DEFAULT_FETCH_PAGE_SIZE, max_pages: int = EXISTS_MAX_PAGES) -> Exists:
-    """Page ``fetch`` (with ``**paging_for(method)``) until a row satisfies ``match`` (an exact, client-side
-    test), the end is reached, or ``max_pages`` (at most EXISTS_MAX_PAGES) stops it."""
-    pager = _exists_pager(method, fetch_page_size, max_pages)
+           fetch_page_size: int = DEFAULT_FETCH_PAGE_SIZE, max_pages: int = EXISTS_MAX_PAGES,
+           client: Any = None) -> Exists:
+    """Page ``fetch`` (with ``**paging_for(method, client)``) until a row satisfies ``match`` (an exact,
+    client-side test), the end is reached, or ``max_pages`` (at most EXISTS_MAX_PAGES) stops it."""
+    p = paging_for(method, client)
+    pager = _exists_pager(method, fetch_page_size, max_pages, p)
     matches: List[Any] = []
     while not matches and (req := pager.request()) is not None:
         with _end_signal() as record:
@@ -430,14 +616,15 @@ def exists(fetch: Callable[[int, int], Any], match: Callable[[Any], bool], *, me
         before = len(pager.items)
         pager.feed(_signalled(page, record))
         matches = [row for row in pager.items[before:] if match(row)]
-    return _exists_answer(pager, matches, method)
+    return _exists_answer(pager, matches, p)
 
 
 async def async_exists(fetch: Callable[[int, int], Awaitable[Any]], match: Callable[[Any], bool], *,
                        method: Optional[str], fetch_page_size: int = DEFAULT_FETCH_PAGE_SIZE,
-                       max_pages: int = EXISTS_MAX_PAGES) -> Exists:
+                       max_pages: int = EXISTS_MAX_PAGES, client: Any = None) -> Exists:
     """``exists`` for an async ``fetch``."""
-    pager = _exists_pager(method, fetch_page_size, max_pages)
+    p = await async_paging_for(method, client)
+    pager = _exists_pager(method, fetch_page_size, max_pages, p)
     matches: List[Any] = []
     while not matches and (req := pager.request()) is not None:
         with _end_signal() as record:
@@ -445,4 +632,4 @@ async def async_exists(fetch: Callable[[int, int], Awaitable[Any]], match: Calla
         before = len(pager.items)
         pager.feed(_signalled(page, record))
         matches = [row for row in pager.items[before:] if match(row)]
-    return _exists_answer(pager, matches, method)
+    return _exists_answer(pager, matches, p)
