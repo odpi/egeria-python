@@ -2,8 +2,10 @@
 # Copyright Contributors to the ODPi Egeria project.
 """load_held on a real sheet: the catalog-health sheet and its Reports, as Egeria answered.
 
-Fixture: tests/micro-tests/data/authoring/catalog_health_scratch.json, every client call load_held made and
-Egeria's answer, captured on the round-trip probe's scratch Egeria (757a5df0, PostgreSQL) after processing the
+Fixtures: tests/micro-tests/data/authoring/catalog_health_scratch.json, every client call load_held("sheet") made
+and Egeria's answer, re-captured 2026-11-14 with the pager's probe pages on the round-trip probe's scratch Egeria
+(5deda38d, PostgreSQL), and catalog_health_reports_scratch.json, the Reports' own unpaged reads as captured
+2026-11-12 (757a5df0). Both after processing the
 Catalog Health section of LOCAL_DASHBOARDS_USEFUL_SHEETS.dr-egeria.md, the document that seeded the sheet on
 laz. Not read from laz. Replayed here offline. It has 6 placements: laz's sheet also has the saved-query tile
 (LOCAL_DASHBOARDS_SAVED_QUERY_TILE.dr-egeria.md), covered from laz's real shape in test_authoring_laz_sheet.py.
@@ -21,6 +23,10 @@ from pyegeria.authoring.serialize import parsed_commands, report_parameter_maps
 pytestmark = pytest.mark.unit
 
 FX = json.loads((Path(__file__).parent / "data" / "authoring" / "catalog_health_scratch.json").read_text())
+#: The Reports' own reads (unpaged), as captured on 2026-11-12; the sheet's fixture above was re-captured with
+#: probe pages on 2026-11-14 (see each file's _about).
+REPORTS_FX = json.loads((Path(__file__).parent / "data" / "authoring" /
+                         "catalog_health_reports_scratch.json").read_text())
 
 
 def _key(sub, method, args, kwargs):
@@ -32,29 +38,9 @@ class _Replay:
     user_id = "garygeeke"
 
     def __init__(self):
-        self.synthesised = []
         self._answers = {}
-        for c in FX["calls"]:
+        for c in FX["calls"] + REPORTS_FX["calls"]:
             self._answers.setdefault(_key(c["sub"], c["method"], c["args"], c["kwargs"]), c["result"])
-
-    def _past_recorded_null(self, sub, method, args, kwargs):
-        """Pager step 4: the reader now advances by the page size and probes 3 pages past a null (a suspect
-        path); this fixture was captured before, so it stops at the null. A page past a RECORDED null of the
-        same call (same arguments but start_from) is answered with that null, and listed in `synthesised`. On
-        a suspect path a null only ends a read as not_confirmed, never as a confirmed end. To be replaced by
-        a re-capture that includes the probe pages."""
-        start = kwargs.get("start_from")
-        if not isinstance(start, int):
-            return None
-        rest = {k: v for k, v in kwargs.items() if k != "start_from"}
-        for c in FX["calls"]:
-            ks = c["kwargs"]
-            if ((c["sub"], c["method"], c["args"]) == (sub, method, args) and isinstance(ks.get("start_from"), int)
-                    and ks["start_from"] < start and {k: v for k, v in ks.items() if k != "start_from"} == rest
-                    and isinstance(c["result"], str)):
-                self.synthesised.append((sub, method, start))
-                return c["result"]
-        return None
 
     def __getattr__(self, sub):
         outer = self
@@ -65,8 +51,6 @@ class _Replay:
                     a = json.loads(json.dumps(list(args), default=str))
                     kw = json.loads(json.dumps(kwargs, default=str))
                     key = _key(sub, method, a, kw)
-                    if key not in outer._answers and (null := outer._past_recorded_null(sub, method, a, kw)):
-                        return null
                     assert key in outer._answers, f"unrecorded call {sub}.{method}{args}{kwargs}"
                     return outer._answers[key]
                 return call

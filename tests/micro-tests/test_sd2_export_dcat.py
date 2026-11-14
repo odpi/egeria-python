@@ -11,10 +11,18 @@ raises the recorded Egeria error. The fixtures and what they cover:
   (publisher; no access path, licence, keywords or themes).
 - org_structure_products: DigitalProductFamily Organization Structure, whose DigitalProduct members
   are Bitol's (the exclusion).
-- clinical_trial_files: a search over zoned (NON_PUBLIC), licensed CSVFiles with a path and an
-  endpoint (distribution, licence, access rights).
+- clinical_trial_files: a search ("PROJ-CT-TBDF_00002") for 10 CSVFiles and their FileFolder, re-captured
+  2026-11-14 on laz 5deda38d with the pager's probe pages. The scope string changed: laz's 11-11 20:27Z DB
+  reset re-catalogued the files under new qualified names, so the old exact DataLake::PROJ-CT-TBDF::...
+  search was stale. Since the reset the files are neither zoned nor licensed, and have no description.
+- clinical_trial_files_licensed_2026_11_11: the pre-reset capture of 5 zoned (NON_PUBLIC), licensed CSVFiles
+  with a path and an endpoint (distribution, licence, access rights): no such shape is on laz now. Its
+  element reads are replayed as captured; its search predates the probe pages, so the one test using it
+  answers the search with an explicit, labelled fake (the recorded page, then null), not a replay rule.
 - coco_data_hub: a search for a RelationalDatabase with no connection (no access path).
-- not_visible_report: a real OPEN-METADATA-SECURITY-403-020 answer (a Report zoned to another user).
+- not_visible_report: a real OPEN-METADATA-SECURITY-403-020 answer (a Report zoned to another user),
+  captured 2026-11-11. Kept: the 2026-11-14 re-capture got a 404, because that Report's GUID is gone since
+  the reset, so it no longer records a 403. One unpaged read, so the old capture is still exactly what it was.
 
 Gaps (no real shape on laz to capture): no Asset with SearchKeywords, a SemanticAssignment, a url
 or ExternalReference, and no non-template DataStore/Database or DeployedAPI with an endpoint. Those
@@ -63,7 +71,6 @@ class Replay:
         self.calls = [c for f in fixtures for c in f["calls"]]
         self.overrides = overrides or {}
         self.made = []
-        self.synthesised = []   # probe pages answered past a recorded null (see _probe_after_recorded_null)
 
     def __getattr__(self, name):
         def call(*args, **kwargs):
@@ -77,29 +84,9 @@ class Replay:
                     if "error" in c:
                         raise _egeria_error(c["error"])
                     return copy.deepcopy(c["result"])
-            if (probe := self._probe_after_recorded_null(name, want)) is not None:
-                return probe
             raise AssertionError(f"no recorded answer for {name}{args} {kwargs}")
         return call
 
-    def _probe_after_recorded_null(self, name, want):
-        """Pager step 4: the pager probes 3 pages past a null on a suspect path, and these fixtures were
-        captured before it did, so they stop at the null. A page past a RECORDED null of the same call (same
-        method and arguments but startFrom) is answered with that null, and listed in `synthesised`. On a
-        suspect path a null can only end a read as not_confirmed, never as a confirmed end. To be replaced by
-        a re-capture that includes the probe pages."""
-        start = want["kwargs"].get("start_from")
-        if not isinstance(start, int):
-            return None
-        rest = {k: v for k, v in want["kwargs"].items() if k != "start_from"}
-        for c in self.calls:
-            ks = c["kwargs"]
-            if (c["method"] == name and c["args"] == want["args"] and isinstance(ks.get("start_from"), int)
-                    and ks["start_from"] < start and {k: v for k, v in ks.items() if k != "start_from"} == rest
-                    and isinstance(c.get("result"), str)):
-                self.synthesised.append((name, start))
-                return c["result"]
-        return None
 
 
 def _export(name, **kw):
@@ -154,7 +141,15 @@ def test_datasets_are_assets_with_identity_dates_and_publisher():
 
 
 def test_distribution_licence_and_non_public_for_zoned_files():
-    out = _export("clinical_trial_files")
+    # The pre-reset shape (see the module docstring): its element reads replay as captured, and the search is
+    # answered by an explicit fake, the recorded first page then null, since the capture predates the probes.
+    fx = _fixture("clinical_trial_files_licensed_2026_11_11")
+    first = next(c["result"] for c in fx["calls"] if c["method"] == "find_in_asset_domain")
+
+    def search(*a, start_from=0, **k):
+        return copy.deepcopy(first) if start_from == 0 else "No elements found"
+
+    out = ed.export_dcat(Replay(fx, overrides={("find_in_asset_domain", None): search}), **fx["params"])
     g = _graph(out["text"])
     ds = _datasets(g)
     assert len(ds) == 5
@@ -188,7 +183,7 @@ def test_keywords_themes_landing_and_data_service_say_why_they_are_absent():
     notes = _export("clinical_trial_files")["notes"]
     for reason in ("dcat:keyword omitted: no SearchKeywords", "dcat:theme omitted: no glossary term",
                    "dcat:landingPage omitted"):
-        assert any(n.startswith(reason) and "for 5 datasets" in n for n in notes), reason
+        assert any(n.startswith(reason) and "for 11 datasets" in n for n in notes), reason
     assert "dcat:DataService omitted: no DeployedAPI with an endpoint in scope." in notes
     assert "dcat:contactPoint omitted: this exporter does not read owners' contact details." in notes
 
@@ -261,7 +256,7 @@ def test_a_repeated_page_ends_the_reading_with_a_note():
     assert any(n.startswith("Stopped reading the assets matching") and "at startFrom 2" in n
                and "exactly the page before" in n
                for n in out["notes"])
-    assert len(_datasets(_graph(out["text"]))) == 5
+    assert len(_datasets(_graph(out["text"]))) == len(first)   # the page once, the repeat never counted
 
 
 def _paged_members(pages):
@@ -377,15 +372,17 @@ EXPECTED_FINDINGS = {
     "org_structure_products": [
         "Catalog DigitalProductFamily::Jacquard::ORGANIZATION-STRUCTURE-FAMILY::Organization Structure: missing "
         "dct:publisher"],
-    "clinical_trial_files": [
-        "Catalog search:DataLake::PROJ-CT-TBDF::WeeklyMeasurements::Oak Dene Hospital::PROJ-CT-TBDF_00002: "
-        "missing dct:publisher"],
+    # Since the 11-11 reset these CSVFiles carry no description: a real DCAT-AP gap, named per dataset.
+    "clinical_trial_files": ["Catalog search:PROJ-CT-TBDF_00002: missing dct:publisher"] + [
+        f"Dataset CSVFile::egeria-workspaces:/deployments/coco-data-lake/research/clinical-trials/teddy-bear-drop-"
+        f"foot/weekly-measurements/PROJ-CT-TBDF_0000{i}.csv: missing dct:description" for i in range(20, 30)],
     "coco_data_hub": [
         "Catalog search:PostgreSQL Relational Database::Coco PostgreSQL Server 1::coco_data_hub: missing "
         "dct:publisher"],
 }
-#: The one documented gap: none of the real scope collections carries an Ownership classification, and a
-#: search has no owner, while DCAT-AP requires a Catalog publisher. The exporter omits it and says so.
+#: The documented gaps: none of the real scope collections carries an Ownership classification, and a
+#: search has no owner, while DCAT-AP requires a Catalog publisher (the exporter omits it and says so); and
+#: since laz's 11-11 reset the clinical-trial CSVFiles have no description, which DCAT-AP requires per Dataset.
 
 
 @pytest.mark.parametrize("name", sorted(EXPECTED_FINDINGS))
@@ -491,7 +488,7 @@ def test_seed_spec_runs_with_a_search_string(spec_name, ext):
                                supply=PlainSupply(Replay(fx)), view_server="vs", view_url="https://x",
                                user="u", user_pass="p")
     assert out["kind"] == "document"
-    assert out["file_name"] == f"DataLake_PROJ-CT-TBDF_WeeklyMeasurements_Oak_Dene_Hospital_PROJ-CT-TBDF_00002-dcat.{ext}"
+    assert out["file_name"] == f"PROJ-CT-TBDF_00002-dcat.{ext}"
     assert len(_graph(out["text"], "json-ld" if ext == "jsonld" else "turtle")) > 0
     assert out["validation"]["findings"] == EXPECTED_FINDINGS["clinical_trial_files"]
 

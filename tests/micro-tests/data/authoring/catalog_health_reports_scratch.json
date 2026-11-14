@@ -1,0 +1,652 @@
+{
+ "_about": "The catalog-health Reports, read by pyegeria.authoring.load_held('report', ...): one unique-name read and one exact displayName read per Report (unpaged). Split out of catalog_health_scratch.json when that fixture was re-captured with probe pages on 2026-11-14: these calls are as captured on 2026-11-12 on the round-trip probe's SCRATCH Egeria (odpi/egeria-platform@sha256:757a5df0..., PostgreSQL repository, https://localhost:19443) after processing the same document. Not read from laz. Replayed by tests/micro-tests/test_authoring_held_fixture.py.",
+ "calls": [
+  {
+   "args": [
+    "Catalog Health - AI Context Readiness"
+   ],
+   "kwargs": {},
+   "method": "_async_get_element_by_unique_name",
+   "result": "No elements found",
+   "sub": "classification_manager"
+  },
+  {
+   "args": [
+    "Catalog Health - AI Context Readiness",
+    [
+     "displayName"
+    ]
+   ],
+   "kwargs": {
+    "ends_with": false,
+    "graph_query_depth": 0,
+    "ignore_case": false,
+    "metadata_element_type": "Report",
+    "page_size": 25,
+    "starts_with": false
+   },
+   "method": "_async_get_elements_by_property_value",
+   "result": [
+    {
+     "class": "OpenMetadataRootElement",
+     "elementHeader": {
+      "anchor": {
+       "class": "ElementClassification",
+       "classificationName": "Anchors",
+       "classificationOrigin": "ASSIGNED",
+       "classificationProperties": {
+        "anchorDomainName": "Asset",
+        "anchorTypeName": "Report",
+        "class": "AnchorsProperties",
+        "typeName": "Anchors"
+       },
+       "headerVersion": 0,
+       "origin": {
+        "homeMetadataCollectionId": "368d582c-dfa2-4035-8655-433afdee255e",
+        "homeMetadataCollectionName": "simple-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "sourceServer": "simple-metadata-store"
+       },
+       "status": "ACTIVE",
+       "type": {
+        "typeCategory": "CLASSIFICATION_DEF",
+        "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+        "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+        "typeName": "Anchors",
+        "typeVersion": 1
+       },
+       "versions": {
+        "createTime": "2026-11-13T02:08:29.078+00:00",
+        "createdBy": "garygeeke",
+        "lastRequestId": "d2e52247-ded4-46dc-8433-a4e12303793c",
+        "maintainedBy": [
+         "garygeeke"
+        ],
+        "updateTime": "2026-11-13T02:08:29.078+00:00",
+        "updatedBy": "garygeeke",
+        "version": 1
+       }
+      },
+      "class": "ElementHeader",
+      "guid": "32c6d3d0-9fb7-4e50-8cd2-b217303fdea4",
+      "headerVersion": 0,
+      "origin": {
+       "homeMetadataCollectionId": "368d582c-dfa2-4035-8655-433afdee255e",
+       "homeMetadataCollectionName": "simple-metadata-store",
+       "originCategory": "LOCAL_COHORT",
+       "sourceServer": "simple-metadata-store"
+      },
+      "status": "ACTIVE",
+      "type": {
+       "superTypeNames": [
+        "DataSet",
+        "DataAsset",
+        "Asset",
+        "Referenceable",
+        "OpenMetadataRoot"
+       ],
+       "typeCategory": "ENTITY_DEF",
+       "typeDescription": "A collection of data items that describe a situation.  This is an instance of a report.",
+       "typeId": "e9077f4f-955b-4d7b-b1f7-12ee769ff0c3",
+       "typeName": "Report",
+       "typeVersion": 2
+      },
+      "versions": {
+       "createTime": "2026-11-13T02:08:29.082+00:00",
+       "createdBy": "garygeeke",
+       "lastRequestId": "d2e52247-ded4-46dc-8433-a4e12303793c",
+       "maintainedBy": [
+        "garygeeke"
+       ],
+       "updateTime": "2026-11-13T02:08:29.082+00:00",
+       "updatedBy": "garygeeke",
+       "version": 1
+      }
+     },
+     "properties": {
+      "additionalProperties": {
+       "endsWith": "False",
+       "graphQueryDepth": "1",
+       "ignoreCase": "False",
+       "limitResultByStatus": "['ACTIVE']",
+       "outputFormat": "DICT",
+       "pageSize": "0",
+       "reportSpec": "Analytic Demo - AI Context Readiness",
+       "searchString": "*",
+       "startFrom": "0",
+       "startsWith": "True"
+      },
+      "class": "ReportProperties",
+      "contentStatus": "ACTIVE",
+      "description": "Assets at each step from cataloged to AI-ready.",
+      "displayName": "Catalog Health - AI Context Readiness",
+      "outputFormat": "DICT",
+      "qualifiedName": "Coco Pharmaceuticals::DeployedReport::Catalog-Health---AI-Context-Readiness::1.0",
+      "typeName": "Report",
+      "versionIdentifier": "1.0"
+     }
+    }
+   ],
+   "sub": "classification_manager"
+  },
+  {
+   "args": [
+    "Catalog Health - Asset Ownership"
+   ],
+   "kwargs": {},
+   "method": "_async_get_element_by_unique_name",
+   "result": "No elements found",
+   "sub": "classification_manager"
+  },
+  {
+   "args": [
+    "Catalog Health - Asset Ownership",
+    [
+     "displayName"
+    ]
+   ],
+   "kwargs": {
+    "ends_with": false,
+    "graph_query_depth": 0,
+    "ignore_case": false,
+    "metadata_element_type": "Report",
+    "page_size": 25,
+    "starts_with": false
+   },
+   "method": "_async_get_elements_by_property_value",
+   "result": [
+    {
+     "class": "OpenMetadataRootElement",
+     "elementHeader": {
+      "anchor": {
+       "class": "ElementClassification",
+       "classificationName": "Anchors",
+       "classificationOrigin": "ASSIGNED",
+       "classificationProperties": {
+        "anchorDomainName": "Asset",
+        "anchorTypeName": "Report",
+        "class": "AnchorsProperties",
+        "typeName": "Anchors"
+       },
+       "headerVersion": 0,
+       "origin": {
+        "homeMetadataCollectionId": "368d582c-dfa2-4035-8655-433afdee255e",
+        "homeMetadataCollectionName": "simple-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "sourceServer": "simple-metadata-store"
+       },
+       "status": "ACTIVE",
+       "type": {
+        "typeCategory": "CLASSIFICATION_DEF",
+        "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+        "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+        "typeName": "Anchors",
+        "typeVersion": 1
+       },
+       "versions": {
+        "createTime": "2026-11-13T02:08:31.044+00:00",
+        "createdBy": "garygeeke",
+        "lastRequestId": "0ff69be3-406c-47aa-ade1-2f25beb72328",
+        "maintainedBy": [
+         "garygeeke"
+        ],
+        "updateTime": "2026-11-13T02:08:31.044+00:00",
+        "updatedBy": "garygeeke",
+        "version": 1
+       }
+      },
+      "class": "ElementHeader",
+      "guid": "43880ea6-30c8-4d2a-81e8-37a0ca74d21e",
+      "headerVersion": 0,
+      "origin": {
+       "homeMetadataCollectionId": "368d582c-dfa2-4035-8655-433afdee255e",
+       "homeMetadataCollectionName": "simple-metadata-store",
+       "originCategory": "LOCAL_COHORT",
+       "sourceServer": "simple-metadata-store"
+      },
+      "status": "ACTIVE",
+      "type": {
+       "superTypeNames": [
+        "DataSet",
+        "DataAsset",
+        "Asset",
+        "Referenceable",
+        "OpenMetadataRoot"
+       ],
+       "typeCategory": "ENTITY_DEF",
+       "typeDescription": "A collection of data items that describe a situation.  This is an instance of a report.",
+       "typeId": "e9077f4f-955b-4d7b-b1f7-12ee769ff0c3",
+       "typeName": "Report",
+       "typeVersion": 2
+      },
+      "versions": {
+       "createTime": "2026-11-13T02:08:31.046+00:00",
+       "createdBy": "garygeeke",
+       "lastRequestId": "0ff69be3-406c-47aa-ade1-2f25beb72328",
+       "maintainedBy": [
+        "garygeeke"
+       ],
+       "updateTime": "2026-11-13T02:08:31.046+00:00",
+       "updatedBy": "garygeeke",
+       "version": 1
+      }
+     },
+     "properties": {
+      "additionalProperties": {
+       "endsWith": "False",
+       "graphQueryDepth": "1",
+       "ignoreCase": "False",
+       "limitResultByStatus": "['ACTIVE']",
+       "outputFormat": "BAR",
+       "pageSize": "0",
+       "reportSpec": "Analytic Demo - Ownership Coverage",
+       "searchString": "*",
+       "startFrom": "0",
+       "startsWith": "True"
+      },
+      "class": "ReportProperties",
+      "contentStatus": "ACTIVE",
+      "description": "Assets with an owner, by the kind of owner.",
+      "displayName": "Catalog Health - Asset Ownership",
+      "outputFormat": "BAR",
+      "qualifiedName": "Coco Pharmaceuticals::DeployedReport::Catalog-Health---Asset-Ownership::1.0",
+      "typeName": "Report",
+      "versionIdentifier": "1.0"
+     }
+    }
+   ],
+   "sub": "classification_manager"
+  },
+  {
+   "args": [
+    "Catalog Health - Stale Assets"
+   ],
+   "kwargs": {},
+   "method": "_async_get_element_by_unique_name",
+   "result": "No elements found",
+   "sub": "classification_manager"
+  },
+  {
+   "args": [
+    "Catalog Health - Stale Assets",
+    [
+     "displayName"
+    ]
+   ],
+   "kwargs": {
+    "ends_with": false,
+    "graph_query_depth": 0,
+    "ignore_case": false,
+    "metadata_element_type": "Report",
+    "page_size": 25,
+    "starts_with": false
+   },
+   "method": "_async_get_elements_by_property_value",
+   "result": [
+    {
+     "class": "OpenMetadataRootElement",
+     "elementHeader": {
+      "anchor": {
+       "class": "ElementClassification",
+       "classificationName": "Anchors",
+       "classificationOrigin": "ASSIGNED",
+       "classificationProperties": {
+        "anchorDomainName": "Asset",
+        "anchorTypeName": "Report",
+        "class": "AnchorsProperties",
+        "typeName": "Anchors"
+       },
+       "headerVersion": 0,
+       "origin": {
+        "homeMetadataCollectionId": "368d582c-dfa2-4035-8655-433afdee255e",
+        "homeMetadataCollectionName": "simple-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "sourceServer": "simple-metadata-store"
+       },
+       "status": "ACTIVE",
+       "type": {
+        "typeCategory": "CLASSIFICATION_DEF",
+        "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+        "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+        "typeName": "Anchors",
+        "typeVersion": 1
+       },
+       "versions": {
+        "createTime": "2026-11-13T02:08:32.812+00:00",
+        "createdBy": "garygeeke",
+        "lastRequestId": "71b7cb07-4780-4406-965f-f525f3f471fb",
+        "maintainedBy": [
+         "garygeeke"
+        ],
+        "updateTime": "2026-11-13T02:08:32.812+00:00",
+        "updatedBy": "garygeeke",
+        "version": 1
+       }
+      },
+      "class": "ElementHeader",
+      "guid": "8fec54de-503f-41f9-a1a2-a692794b7199",
+      "headerVersion": 0,
+      "origin": {
+       "homeMetadataCollectionId": "368d582c-dfa2-4035-8655-433afdee255e",
+       "homeMetadataCollectionName": "simple-metadata-store",
+       "originCategory": "LOCAL_COHORT",
+       "sourceServer": "simple-metadata-store"
+      },
+      "status": "ACTIVE",
+      "type": {
+       "superTypeNames": [
+        "DataSet",
+        "DataAsset",
+        "Asset",
+        "Referenceable",
+        "OpenMetadataRoot"
+       ],
+       "typeCategory": "ENTITY_DEF",
+       "typeDescription": "A collection of data items that describe a situation.  This is an instance of a report.",
+       "typeId": "e9077f4f-955b-4d7b-b1f7-12ee769ff0c3",
+       "typeName": "Report",
+       "typeVersion": 2
+      },
+      "versions": {
+       "createTime": "2026-11-13T02:08:32.823+00:00",
+       "createdBy": "garygeeke",
+       "lastRequestId": "71b7cb07-4780-4406-965f-f525f3f471fb",
+       "maintainedBy": [
+        "garygeeke"
+       ],
+       "updateTime": "2026-11-13T02:08:32.823+00:00",
+       "updatedBy": "garygeeke",
+       "version": 1
+      }
+     },
+     "properties": {
+      "additionalProperties": {
+       "analyticParams": "{\"days\": 180}",
+       "endsWith": "False",
+       "graphQueryDepth": "1",
+       "ignoreCase": "False",
+       "limitResultByStatus": "['ACTIVE']",
+       "outputFormat": "DICT",
+       "pageSize": "0",
+       "reportSpec": "Analytic Demo - Stale Assets",
+       "searchString": "*",
+       "startFrom": "0",
+       "startsWith": "True"
+      },
+      "class": "ReportProperties",
+      "contentStatus": "ACTIVE",
+      "description": "Assets that have not changed in 180 days, out of all assets.",
+      "displayName": "Catalog Health - Stale Assets",
+      "outputFormat": "DICT",
+      "qualifiedName": "Coco Pharmaceuticals::DeployedReport::Catalog-Health---Stale-Assets::1.0",
+      "reportParameters": "{\"days\": 180}",
+      "typeName": "Report",
+      "versionIdentifier": "1.0"
+     }
+    }
+   ],
+   "sub": "classification_manager"
+  },
+  {
+   "args": [
+    "Catalog Health - Asset Composition"
+   ],
+   "kwargs": {},
+   "method": "_async_get_element_by_unique_name",
+   "result": "No elements found",
+   "sub": "classification_manager"
+  },
+  {
+   "args": [
+    "Catalog Health - Asset Composition",
+    [
+     "displayName"
+    ]
+   ],
+   "kwargs": {
+    "ends_with": false,
+    "graph_query_depth": 0,
+    "ignore_case": false,
+    "metadata_element_type": "Report",
+    "page_size": 25,
+    "starts_with": false
+   },
+   "method": "_async_get_elements_by_property_value",
+   "result": [
+    {
+     "class": "OpenMetadataRootElement",
+     "elementHeader": {
+      "anchor": {
+       "class": "ElementClassification",
+       "classificationName": "Anchors",
+       "classificationOrigin": "ASSIGNED",
+       "classificationProperties": {
+        "anchorDomainName": "Asset",
+        "anchorTypeName": "Report",
+        "class": "AnchorsProperties",
+        "typeName": "Anchors"
+       },
+       "headerVersion": 0,
+       "origin": {
+        "homeMetadataCollectionId": "368d582c-dfa2-4035-8655-433afdee255e",
+        "homeMetadataCollectionName": "simple-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "sourceServer": "simple-metadata-store"
+       },
+       "status": "ACTIVE",
+       "type": {
+        "typeCategory": "CLASSIFICATION_DEF",
+        "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+        "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+        "typeName": "Anchors",
+        "typeVersion": 1
+       },
+       "versions": {
+        "createTime": "2026-11-13T02:08:33.922+00:00",
+        "createdBy": "garygeeke",
+        "lastRequestId": "7a98474f-3171-4763-a8b2-171cb94e6fbc",
+        "maintainedBy": [
+         "garygeeke"
+        ],
+        "updateTime": "2026-11-13T02:08:33.922+00:00",
+        "updatedBy": "garygeeke",
+        "version": 1
+       }
+      },
+      "class": "ElementHeader",
+      "guid": "55949b95-94a9-4985-b26d-a69e16bba453",
+      "headerVersion": 0,
+      "origin": {
+       "homeMetadataCollectionId": "368d582c-dfa2-4035-8655-433afdee255e",
+       "homeMetadataCollectionName": "simple-metadata-store",
+       "originCategory": "LOCAL_COHORT",
+       "sourceServer": "simple-metadata-store"
+      },
+      "status": "ACTIVE",
+      "type": {
+       "superTypeNames": [
+        "DataSet",
+        "DataAsset",
+        "Asset",
+        "Referenceable",
+        "OpenMetadataRoot"
+       ],
+       "typeCategory": "ENTITY_DEF",
+       "typeDescription": "A collection of data items that describe a situation.  This is an instance of a report.",
+       "typeId": "e9077f4f-955b-4d7b-b1f7-12ee769ff0c3",
+       "typeName": "Report",
+       "typeVersion": 2
+      },
+      "versions": {
+       "createTime": "2026-11-13T02:08:33.925+00:00",
+       "createdBy": "garygeeke",
+       "lastRequestId": "7a98474f-3171-4763-a8b2-171cb94e6fbc",
+       "maintainedBy": [
+        "garygeeke"
+       ],
+       "updateTime": "2026-11-13T02:08:33.925+00:00",
+       "updatedBy": "garygeeke",
+       "version": 1
+      }
+     },
+     "properties": {
+      "additionalProperties": {
+       "analyticParams": "{\"type_map\": [[\"Data Stores\", \"DataStore\"], [\"Data Sets\", \"DataSet\"], [\"Software Components\", \"DeployedSoftwareComponent\"], [\"Infrastructure\", \"ITInfrastructure\"], [\"APIs\", \"DeployedAPI\"], [\"Processes\", \"Process\"]]}",
+       "endsWith": "False",
+       "graphQueryDepth": "1",
+       "ignoreCase": "False",
+       "limitResultByStatus": "['ACTIVE']",
+       "outputFormat": "PIE",
+       "pageSize": "0",
+       "reportSpec": "Analytic Demo - Assets by Type Breakdown",
+       "searchString": "*",
+       "startFrom": "0",
+       "startsWith": "True"
+      },
+      "class": "ReportProperties",
+      "contentStatus": "ACTIVE",
+      "description": "How many assets of each main kind the catalog holds.",
+      "displayName": "Catalog Health - Asset Composition",
+      "outputFormat": "PIE",
+      "qualifiedName": "Coco Pharmaceuticals::DeployedReport::Catalog-Health---Asset-Composition::1.0",
+      "reportParameters": "{\"type_map\": [[\"Data Stores\", \"DataStore\"], [\"Data Sets\", \"DataSet\"], [\"Software Components\", \"DeployedSoftwareComponent\"], [\"Infrastructure\", \"ITInfrastructure\"], [\"APIs\", \"DeployedAPI\"], [\"Processes\", \"Process\"]]}",
+      "typeName": "Report",
+      "versionIdentifier": "1.0"
+     }
+    }
+   ],
+   "sub": "classification_manager"
+  },
+  {
+   "args": [
+    "Catalog Health - Catalog Growth, 90 Days"
+   ],
+   "kwargs": {},
+   "method": "_async_get_element_by_unique_name",
+   "result": "No elements found",
+   "sub": "classification_manager"
+  },
+  {
+   "args": [
+    "Catalog Health - Catalog Growth, 90 Days",
+    [
+     "displayName"
+    ]
+   ],
+   "kwargs": {
+    "ends_with": false,
+    "graph_query_depth": 0,
+    "ignore_case": false,
+    "metadata_element_type": "Report",
+    "page_size": 25,
+    "starts_with": false
+   },
+   "method": "_async_get_elements_by_property_value",
+   "result": [
+    {
+     "class": "OpenMetadataRootElement",
+     "elementHeader": {
+      "anchor": {
+       "class": "ElementClassification",
+       "classificationName": "Anchors",
+       "classificationOrigin": "ASSIGNED",
+       "classificationProperties": {
+        "anchorDomainName": "Asset",
+        "anchorTypeName": "Report",
+        "class": "AnchorsProperties",
+        "typeName": "Anchors"
+       },
+       "headerVersion": 0,
+       "origin": {
+        "homeMetadataCollectionId": "368d582c-dfa2-4035-8655-433afdee255e",
+        "homeMetadataCollectionName": "simple-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "sourceServer": "simple-metadata-store"
+       },
+       "status": "ACTIVE",
+       "type": {
+        "typeCategory": "CLASSIFICATION_DEF",
+        "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+        "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+        "typeName": "Anchors",
+        "typeVersion": 1
+       },
+       "versions": {
+        "createTime": "2026-11-13T02:08:34.496+00:00",
+        "createdBy": "garygeeke",
+        "lastRequestId": "3d6cccb9-989f-412a-b2e2-32dddbfa84ed",
+        "maintainedBy": [
+         "garygeeke"
+        ],
+        "updateTime": "2026-11-13T02:08:34.496+00:00",
+        "updatedBy": "garygeeke",
+        "version": 1
+       }
+      },
+      "class": "ElementHeader",
+      "guid": "91ec2f77-3eb9-4575-8d6b-98461435e632",
+      "headerVersion": 0,
+      "origin": {
+       "homeMetadataCollectionId": "368d582c-dfa2-4035-8655-433afdee255e",
+       "homeMetadataCollectionName": "simple-metadata-store",
+       "originCategory": "LOCAL_COHORT",
+       "sourceServer": "simple-metadata-store"
+      },
+      "status": "ACTIVE",
+      "type": {
+       "superTypeNames": [
+        "DataSet",
+        "DataAsset",
+        "Asset",
+        "Referenceable",
+        "OpenMetadataRoot"
+       ],
+       "typeCategory": "ENTITY_DEF",
+       "typeDescription": "A collection of data items that describe a situation.  This is an instance of a report.",
+       "typeId": "e9077f4f-955b-4d7b-b1f7-12ee769ff0c3",
+       "typeName": "Report",
+       "typeVersion": 2
+      },
+      "versions": {
+       "createTime": "2026-11-13T02:08:34.507+00:00",
+       "createdBy": "garygeeke",
+       "lastRequestId": "3d6cccb9-989f-412a-b2e2-32dddbfa84ed",
+       "maintainedBy": [
+        "garygeeke"
+       ],
+       "updateTime": "2026-11-13T02:08:34.507+00:00",
+       "updatedBy": "garygeeke",
+       "version": 1
+      }
+     },
+     "properties": {
+      "additionalProperties": {
+       "analyticParams": "{\"window\": \"90d\", \"points\": 6}",
+       "endsWith": "False",
+       "graphQueryDepth": "1",
+       "ignoreCase": "False",
+       "limitResultByStatus": "['ACTIVE']",
+       "outputFormat": "SERIES",
+       "pageSize": "0",
+       "reportSpec": "Analytic Demo - Catalog Growth Trend",
+       "searchString": "*",
+       "startFrom": "0",
+       "startsWith": "True"
+      },
+      "class": "ReportProperties",
+      "contentStatus": "ACTIVE",
+      "description": "Assets, glossary terms, governed elements and digital products at six points over 90 days. Repository counts: they include elements you may not be able to see.",
+      "displayName": "Catalog Health - Catalog Growth, 90 Days",
+      "outputFormat": "SERIES",
+      "qualifiedName": "Coco Pharmaceuticals::DeployedReport::Catalog-Health---Catalog-Growth,-90-Days::1.0",
+      "reportParameters": "{\"points\": 6, \"window\": \"90d\"}",
+      "typeName": "Report",
+      "versionIdentifier": "1.0"
+     }
+    }
+   ],
+   "sub": "classification_manager"
+  }
+ ],
+ "user": "garygeeke"
+}
