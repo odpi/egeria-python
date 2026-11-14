@@ -51,7 +51,9 @@ class _Platform:
     (LAZ_002A3EF1, False),                                  # 6.3-SNAPSHOT built before it
     ({"version": "6.3"}, True), ({"version": "6.4.1"}, True), ({"version": "7.0"}, True),   # releases > SNAPSHOT
     ({"version": "6.2"}, False), ({"version": "6.2.9"}, False),                             # older releases
-    ({"version": "6.4-SNAPSHOT", "time": "2027-01-01T00:00:00Z"}, False),   # another SNAPSHOT: not covered
+    ({"version": "6.4-SNAPSHOT", "time": "2027-01-01T00:00:00Z"}, True),   # read-back R1: later SNAPSHOTs
+    ({"version": "6.4-SNAPSHOT"}, True), ({"version": "7.0.1-SNAPSHOT"}, True),
+    ({"version": "6.2-SNAPSHOT", "time": "2027-01-01T00:00:00Z"}, False),   # an earlier SNAPSHOT: never
     ({"version": "6.3-SNAPSHOT"}, False),                   # a SNAPSHOT with no time
     ({"version": "6.3-SNAPSHOT", "time": "yesterday"}, False),
     ({"version": "6.3-SNAPSHOT", "time": "2026-11-14T19:55:39"}, False),   # no timezone: not comparable
@@ -171,3 +173,30 @@ def test_a_promoted_single_display_match_is_linked_without_a_note():
     assert [r["end2"] for r in egeria.rels("DataSetContent")] == [report]
     assert not any("Egeria can't confirm" in n for n in writer.notes)
     assert any(f"There is no Report named '{absent_name}' in Egeria" in n for n in writer.notes)   # "none"
+
+
+def test_a_failed_about_read_is_retried_after_a_short_ttl(monkeypatch):
+    import time
+    client = _Platform(TimeoutError("restarting"))
+    assert paging.platform_promoted(client) is False and client.about_reads == 1
+    real = time.monotonic
+    monkeypatch.setattr(time, "monotonic", lambda: real() + paging.GATE_FAILED_TTL_SECONDS + 1)
+    client.about = LAZ_5DEDA38D   # the platform is back
+    assert paging.platform_promoted(client) is True and client.about_reads == 2
+
+
+def test_a_slow_about_read_times_out_as_not_promoted(monkeypatch):
+    monkeypatch.setattr(paging, "GATE_ABOUT_TIMEOUT_SECONDS", 0.05)
+
+    class Slow(_Platform):
+        async def async_get_platform_origin(self):
+            await asyncio.sleep(1)
+            return json.dumps(LAZ_5DEDA38D)
+
+        def get_platform_origin(self):
+            import time
+            time.sleep(1)
+            return json.dumps(LAZ_5DEDA38D)
+
+    assert asyncio.run(paging.async_platform_promoted(Slow(None, url="https://slow-a"))) is False
+    assert paging.platform_promoted(Slow(None, url="https://slow-b")) is False

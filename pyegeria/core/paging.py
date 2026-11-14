@@ -100,7 +100,9 @@ assert GATED_TRUSTED_METHODS < NULL_NOT_END_METHODS and "get_relationships" not 
 
 GATE_SNAPSHOT_VERSION = "6.3-SNAPSHOT"
 GATE_SNAPSHOT_TIME = "2026-11-14T19:52:00Z"   # the #9453 merge
-GATE_TTL_SECONDS = 3600
+GATE_TTL_SECONDS = 3600          # a parsed /api/about answer
+GATE_FAILED_TTL_SECONDS = 60     # a failed about-read: retried soon, so a platform restart doesn't turn trust off
+GATE_ABOUT_TIMEOUT_SECONDS = 5   # the about-read's own timeout, where the client takes one
 GATE_OVERRIDE_ENV = "PYEGERIA_TRUSTED_END"   # "off" forces not-promoted everywhere; there is no "force on"
 
 _GATE_CACHE: dict = {}   # platform URL -> (expires at, promoted)
@@ -112,8 +114,10 @@ def gate_from_about(about: Any) -> bool:
 
     - promoted: a release later than 6.3-SNAPSHOT (6.3 or newer, not a SNAPSHOT), or "6.3-SNAPSHOT" built at or
       after GATE_SNAPSHOT_TIME;
+    - any SNAPSHOT whose (major, minor) is later than 6.3 (e.g. 6.4-SNAPSHOT) is promoted: #9453 merged on main
+      before the 6.3 line was cut (step 6 read-back R1); an earlier SNAPSHOT (6.2-SNAPSHOT) is not;
     - known limit: a 6.3-SNAPSHOT built after that time from code without #9453 reads as promoted
-      (PYEGERIA_TRUSTED_END=off covers it); any other SNAPSHOT (e.g. 6.4-SNAPSHOT) is not promoted."""
+      (PYEGERIA_TRUSTED_END=off covers it)."""
     import re
     from datetime import datetime
     try:
@@ -128,6 +132,8 @@ def gate_from_about(about: Any) -> bool:
         numbers = tuple(int(g or 0) for g in m.groups()[:3])
         if not m.group(4):
             return numbers >= (6, 3, 0)
+        if numbers[:2] > (6, 3):   # step 6 read-back R1: every SNAPSHOT after 6.3 contains #9453 (merged on main)
+            return True
         if version != GATE_SNAPSHOT_VERSION:
             return False
         built = about.get("time")
@@ -153,9 +159,10 @@ def _gate_cached(platform_url: str) -> Optional[bool]:
     return None
 
 
-def _gate_store(platform_url: str, promoted: bool) -> bool:
+def _gate_store(platform_url: str, promoted: bool, failed: bool = False) -> bool:
     import time
-    _GATE_CACHE[platform_url] = (time.monotonic() + GATE_TTL_SECONDS, promoted)
+    ttl = GATE_FAILED_TTL_SECONDS if failed else GATE_TTL_SECONDS
+    _GATE_CACHE[platform_url] = (time.monotonic() + ttl, promoted)
     return promoted
 
 
@@ -171,6 +178,17 @@ def _about_reader(client: Any, name: str):
     return reader
 
 
+def _call_about(reader: Callable[[], Any]) -> Any:
+    """The sync about-read, bounded by GATE_ABOUT_TIMEOUT_SECONDS (on a worker thread, which is abandoned if
+    it overruns: the read is only ever "not promoted" then)."""
+    from concurrent.futures import ThreadPoolExecutor
+    pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="pyegeria-about")
+    try:
+        return pool.submit(reader).result(timeout=GATE_ABOUT_TIMEOUT_SECONDS)
+    finally:
+        pool.shutdown(wait=False)
+
+
 def platform_promoted(client: Any) -> bool:
     """Whether `client`'s platform carries the #9453 fix: one best-effort /api/about read per platform URL per
     GATE_TTL_SECONDS. Never raises, never blocks a read: a failed or unparsable read is "not promoted"."""
@@ -183,10 +201,10 @@ def platform_promoted(client: Any) -> bool:
         return cached
     try:
         reader = _about_reader(client, "get_platform_origin")
-        about = reader() if reader is not None else None
+        about = _call_about(reader) if reader is not None else None
     except Exception:  # noqa: BLE001 -- a failed about-read only means "not promoted"
         about = None
-    return _gate_store(url, gate_from_about(about))
+    return _gate_store(url, gate_from_about(about), failed=not about)
 
 
 async def async_platform_promoted(client: Any) -> bool:
@@ -200,10 +218,13 @@ async def async_platform_promoted(client: Any) -> bool:
         return cached
     try:
         reader = _about_reader(client, "async_get_platform_origin")
-        about = await reader() if reader is not None else None
-    except Exception:  # noqa: BLE001
         about = None
-    return _gate_store(url, gate_from_about(about))
+        if reader is not None:
+            import asyncio
+            about = await asyncio.wait_for(reader(), timeout=GATE_ABOUT_TIMEOUT_SECONDS)
+    except Exception:  # noqa: BLE001 -- a failed or slow about-read only means "not promoted"
+        about = None
+    return _gate_store(url, gate_from_about(about), failed=not about)
 
 
 def _paging(method_name: Optional[str], promoted: bool) -> dict:
