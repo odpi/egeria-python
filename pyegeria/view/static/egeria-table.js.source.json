@@ -1,0 +1,8 @@
+{
+  "_about": "egeria-table.js is pyegeria's renderer for its own structured TABLE result (kind \"table\"), shipped as package data so the renderer and the shape it draws travel in one release (owner decision D3, 2026-11-14). Its stylesheet is inside the file (EgeriaTable.CSS, injected once). Copied byte for byte from the Egeria Portal, where it was first written; from this release pyegeria is its home, and the Portal and trellis-ui serve this copy (pyegeria.view.renderers). tests/micro-tests/test_renderer_package_data.py checks the sha256 below and that the file is in the wheel.",
+  "origin_repo": "odpi/egeria-workspaces",
+  "origin_path": "compose-configs/egeria-quickstart/PyegeriaWebHandler/static/egeria-table.js",
+  "origin_commit": "9d3953430dda3ede0f431bf0d53cb79eed032a11",
+  "sha256": "5ad395feb3e7402fd58825a7ceddccc1c9ae1883edf343d56880ebb12ea95069",
+  "lines": 549
+}
