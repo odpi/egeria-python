@@ -83,6 +83,14 @@ Notes collected on `release/next` for the next release. The version number is se
   retries after a read Egeria didn't confirm complete, and reports an empty result as "No legacy ReportType
   collections found (Egeria-held specs load through the spec cache)".
 
+## Changed
+
+- `md_processing/md_processing_utils/properties_class_fields.py` is now regenerated from Egeria c61bad65.
+- `ProjectProperties` gains `scope`; 25 SchemaType-family classes drop `queries`, matching #9448's `SchemaTypeProperties`
+  change.
+- Dr.Egeria and authoring validation now follow Egeria 6.3's type system, so a `queries` attribute or column is no
+  longer sent or accepted.
+
 ## Fixes (spec cache)
 
 - **The EGERIA report-spec tier is cached per identity** (`pyegeria.view.egeria_spec_cache`). It used to be held in
