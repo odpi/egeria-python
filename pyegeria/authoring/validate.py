@@ -5,8 +5,12 @@
 - **Structural:** the draft's model, and whether it serializes safely (no line break, rule or heading
   where Dr.Egeria would read a new block).
 - **Semantic:**
-  - spec: the target type exists in Egeria's type system (pyegeria's Properties-class catalog); every
-    column of a find spec names an attribute of that type, or a key pyegeria's own specs use; the spec
+  - spec: the target type exists in Egeria's type system (pyegeria's Properties-class catalog); the find
+    method returns the target type (FIND_ELEMENT_TYPES: a mismatch is refused, an unknown fit is a warning);
+    every column of a find spec names an attribute of that type (its supertypes' included), a key the
+    formatter derives (computed from the formatter), a documented related-element or annotation field, or, for a
+    generated "-DrE-" spec, a Dr.Egeria command attribute; an unknown key is refused naming it (``legacy=True`` keeps the old loose check, which
+    also accepted any key some pyegeria spec uses, for legacy specs, with a warning per such key); the spec
     passes pyegeria's load-time resolution (the find method or analytic routine is registered and
     allowed, its parameters are ones it accepts, chart formats have a routine, detail specs exist);
   - report: its spec resolves (pyegeria's registry, else Egeria as the caller); the output format is one
@@ -35,6 +39,77 @@ from pyegeria.authoring.serialize import FIND_PARAMETERS, serialize
 #: Column keys the formatter derives from an element's header or relationships, not a property of the type.
 DERIVED_KEYS = {"guid", "type_name", "classifications", "created_by", "create_time", "updated_by", "update_time",
                 "version", "status", "anchor", "mermaid", "related", "members", "member_of", "properties"}
+
+
+#: Fields the view service attaches to an element from its relationships, read by the formatter's step 3
+#: (`element[camelCase(key)]`). No type definition lists them, so the attribute catalog can't. Each is used by
+#: a shipped find spec.
+RELATED_ELEMENT_KEYS = frozenset({
+    "collection_members", "member_of_collections", "assigned_actors", "actor_list", "governed_by", "next_version",
+    "solution_designs", "used_by_digital_products", "uses_digital_products", "agreement_items", "service_levels",
+    "support_level", "folder_display_names", "as_of_data_field", "basis_data_field", "managed_projects",
+    "project_roles", "resource_list", "report_type_instances", "note_log_name", "note_log_qualified_name",
+    # The shipped 'Projects' spec reads start_date, which ProjectProperties doesn't have (it has
+    # planned/actual start dates) and the view service doesn't attach, so it shows nothing today. Allowed so that
+    # authoring doesn't refuse a copy of a shipped spec; the spec itself is to be fixed against live output.
+    "start_date",
+})
+
+#: Properties of the survey annotation subtypes, which the Properties-class catalog doesn't list.
+ANNOTATION_KEYS = frozenset({
+    "report_name", "finding_type", "package_url", "installed_version", "fixed_version", "patch_available",
+    "report_completion_time", "critical_findings", "high_findings", "medium_findings", "low_findings",
+    "none_findings",
+})
+
+_GENERATED_MARK = "Auto-generated format for"
+
+
+def _formatter_derived_keys() -> Set[str]:
+    """Keys the output formatter fills from an element's header and referenceable properties
+    (`_extract_referenceable_properties`: guid, origin, versions, type, classifications, status, zones, ...), plus
+    the ones it handles by name (subject_area, mermaid). Computed from the formatter itself, so it can't drift."""
+    from pyegeria.view.output_formatter import _extract_referenceable_properties
+    probe = {"elementHeader": {"guid": "g", "origin": {}, "versions": {}, "type": {}}, "properties": {"qualifiedName": "q"}}
+    return set(DERIVED_KEYS) | set(_extract_referenceable_properties(probe)) | {"subject_area", "mermaid"}
+
+
+def _derived_by_rule(key: str) -> bool:
+    """Keys the formatter fills by a rule rather than a list: GUID in any case, Mermaid graphs, chart columns."""
+    from pyegeria.view.output_formatter import is_mermaid_graph_key
+    return key.lower() == "guid" or is_mermaid_graph_key(key) or key.endswith(("BarGraph", "PieGraph"))
+
+
+_COMMAND_ATTRIBUTE_KEYS: Optional[Set[str]] = None
+
+
+def _command_attribute_keys() -> Set[str]:
+    """The variable names of every attribute of every Dr.Egeria command, as the compact loader expands them
+    (gen_report_specs reads the same). Generated "-DrE-" specs take their columns from a Create command's
+    attributes, so those keys are valid for them."""
+    global _COMMAND_ATTRIBUTE_KEYS
+    if _COMMAND_ATTRIBUTE_KEYS is None:
+        from pathlib import Path
+        import md_processing
+        from md_processing.md_processing_utils.compact_loader import load_compact_specs_from_dir
+        keys: Set[str] = set()
+        try:
+            specs = load_compact_specs_from_dir(str(Path(md_processing.__file__).parent / "data" / "compact_commands"))
+        except Exception:  # noqa: BLE001 -- no specs: no extra keys, so the strict check stays strict
+            specs = {}
+        for spec in specs.values():
+            for entry in spec.get("Attributes") or []:
+                if not isinstance(entry, dict):
+                    continue
+                for details in ([entry] if entry.get("variable_name") else entry.values()):
+                    if isinstance(details, dict) and details.get("variable_name"):
+                        keys.add(details["variable_name"])
+        _COMMAND_ATTRIBUTE_KEYS = keys
+    return _COMMAND_ATTRIBUTE_KEYS
+
+
+def _is_generated(fs: Any, label: str) -> bool:
+    return str(getattr(fs, "description", "") or "").startswith(_GENERATED_MARK) or "-DrE" in (label or "")
 
 
 def _snake(camel: str) -> str:
@@ -70,7 +145,91 @@ def _registry_columns_and_types() -> tuple:
     return keys, types
 
 
-def _check_spec(draft: SpecDraft, result: ValidationResult) -> None:
+#: What each find method returns, as an Egeria type name; None = any element type. The fit check refuses a
+#: spec whose target type isn't this type or one of its subtypes (prototype C06: target Asset + find_projects).
+#: A method not listed is "unknown", which is a warning, never a pass. Keys are the spec's `action.function`.
+FIND_ELEMENT_TYPES: Dict[str, Optional[str]] = {
+    "ActorManager.find_actor_profiles": "ActorProfile",
+    "ActorManager.find_actor_roles": "ActorRole",
+    "ActorManager.find_perspectives": "Perspective",
+    "ActorManager.find_skills": "Skill",
+    "ActorManager.find_user_identities": "UserIdentity",
+    "AssetMaker.find_assets": "Asset",
+    "AssetCatalog.get_asset_graph_by_guid": "Asset",
+    "ClassificationExplorer.find_elements_by_property_value": None,
+    "ClassificationExplorer.get_elements": None,
+    "CollectionManager.find_collections": "Collection",
+    "CollectionManager.get_collection_members": None,
+    "DataDesigner.find_data_fields": "DataField",
+    "DataDesigner.find_data_structures": "DataStructure",
+    "DataDesigner.find_data_value_specifications": "DataValueSpecification",
+    "EgeriaTech.get_elements_by_property_value": None,
+    "ExternalReference.find_external_references": "ExternalReference",
+    "ExternalReferences.find_external_references": "ExternalReference",
+    "GlossaryManager.find_glossaries": "Glossary",
+    "GlossaryManager.find_glossary_terms": "GlossaryTerm",
+    "GovernanceOfficer.find_governance_definitions": "GovernanceDefinition",
+    "MetadataExpert.find_metadata_elements_with_string": None,
+    "ProjectManager.find_projects": "Project",
+    "ReferenceDataManager.find_valid_value_definitions": "ValidValueDefinition",
+    "SecurityOfficer.find_statements_of_applicability": "StatementOfApplicability",
+    "SolutionArchitect.find_design_patterns": "DesignPattern",
+    "SolutionArchitect.find_information_supply_chains": "InformationSupplyChain",
+    "SolutionArchitect.find_solution_blueprints": "SolutionBlueprint",
+    "SolutionArchitect.find_solution_components": "SolutionComponent",
+    "SolutionArchitect.find_solution_roles": "SolutionActorRole",
+    "reference_data.find_valid_value_definitions": "ValidValueDefinition",
+}
+
+
+def _type_key(name: Optional[str]) -> str:
+    """'Actor Profile', 'User-Identity' and 'ActorProfile' are the same type."""
+    return "".join(ch for ch in (name or "") if ch.isalnum()).lower()
+
+
+def _registry_pairs() -> Set[tuple]:
+    """(find method, normalised target type) pairs pyegeria's own registered specs already use: known to fit."""
+    from pyegeria.view.base_report_formats import get_report_registry
+    pairs: Set[tuple] = set()
+    for fs in get_report_registry().values():
+        action = getattr(fs, "action", None)
+        function = getattr(action, "function", None) if action else None
+        if function and getattr(fs, "target_type", None):
+            pairs.add((function, _type_key(fs.target_type)))
+    return pairs
+
+
+async def _check_find_fit(fs: Any, client: Any, result: ValidationResult) -> None:
+    """The find method must return the target type: refuse when it returns another type."""
+    action = fs.action
+    function = getattr(action, "function", None)
+    target = fs.target_type
+    if not function or getattr(action, "analytic_function", None) or not target:
+        return
+    if function not in FIND_ELEMENT_TYPES:
+        result.warn(f"Can't tell whether find method {function} returns {target} elements: pyegeria has no "
+                    f"record of its element type.")
+        result.not_checked.append(f"find method {function} fits target type {target}: element type unknown")
+        return
+    expected = FIND_ELEMENT_TYPES[function]
+    if expected is None or _type_key(expected) == _type_key(target) or (function, _type_key(target)) in _registry_pairs():
+        result.checked.append("find method fits the target type")
+        return
+    from md_processing.md_processing_utils.typed_properties import type_super_chain
+    chain = await type_super_chain(client, target) if client is not None else None
+    if chain is None:
+        result.warn(f"Can't tell whether find method {function} (which returns {expected}) fits target type "
+                    f"{target}: {target}'s super types couldn't be read from Egeria.")
+        result.not_checked.append(f"find method {function} fits target type {target}: super types not read")
+    elif any(_type_key(t) == _type_key(expected) for t in chain):
+        result.checked.append("find method fits the target type")
+    else:
+        result.error(f"Find method {function} returns {expected} elements, but the target type is {target}, "
+                     f"which isn't {expected} or a subtype of it ({' > '.join(chain)}).")
+
+
+async def _check_spec(draft: SpecDraft, result: ValidationResult, client: Any = None, *,
+                      legacy: bool = False) -> None:
     from pyegeria.view.spec_resolver import Unrunnable, resolve
     fs = draft.format_set
     used_keys, used_types = _registry_columns_and_types()
@@ -83,16 +242,25 @@ def _check_spec(draft: SpecDraft, result: ValidationResult) -> None:
         result.checked.append("target type")
     action = fs.action
     is_find = bool(getattr(action, "function", None)) and not getattr(action, "analytic_function", None)
+    if is_find and target:
+        await _check_find_fit(fs, client, result)
     if is_find and attrs is not None:
-        known = attrs | DERIVED_KEYS | used_keys
+        strict_known = attrs | _formatter_derived_keys() | RELATED_ELEMENT_KEYS | ANNOTATION_KEYS
+        if _is_generated(fs, draft.label):
+            strict_known = strict_known | _command_attribute_keys()
         for fmt in fs.formats or []:
             for col in getattr(fmt, "attributes", None) or []:
                 key = col.get("key") if isinstance(col, dict) else col.key
                 name = col.get("name") if isinstance(col, dict) else col.name
-                if key and key not in known:
-                    result.error(f"Column '{name}' names '{key}', which isn't an attribute of {target} "
-                                 f"(nor a key pyegeria's formatter derives).")
-        result.checked.append("column attributes")
+                if not key or key in strict_known or _derived_by_rule(key):
+                    continue
+                if legacy and key in used_keys:
+                    result.warn(f"Column '{name}' names '{key}', which isn't an attribute of {target}; it is "
+                                f"accepted only because another pyegeria spec uses that key (legacy spec).")
+                else:
+                    result.error(f"Column '{name}' names '{key}', which isn't an attribute of {target} (or its "
+                                 f"super types), nor a key pyegeria's formatter derives.")
+        result.checked.append("column attributes" + (" (legacy: loose)" if legacy else ""))
     elif is_find:
         result.not_checked.append(f"column attributes: no attribute catalog for target type {target!r}")
     else:
@@ -250,7 +418,7 @@ async def _check_sheet(draft: SheetDraft, client: Any, result: ValidationResult,
 
 
 async def async_validate(draft: Any, client: Any = None, *, run: Any = None,
-                         gates: Optional[AuthoringGates] = None) -> ValidationResult:
+                         gates: Optional[AuthoringGates] = None, legacy: bool = False) -> ValidationResult:
     result = ValidationResult()
     gates = gates or default_gates()
     try:
@@ -267,7 +435,7 @@ async def async_validate(draft: Any, client: Any = None, *, run: Any = None,
         markdown = None
     try:
         if isinstance(draft, SpecDraft):
-            _check_spec(draft, result)
+            await _check_spec(draft, result, client, legacy=legacy)
         elif isinstance(draft, ReportDraft):
             await _check_report(draft, client, result, gates)
         else:
@@ -301,6 +469,6 @@ async def async_validate(draft: Any, client: Any = None, *, run: Any = None,
 
 
 def validate(draft: Any, client: Any = None, *, run: Any = None,
-             gates: Optional[AuthoringGates] = None) -> ValidationResult:
+             gates: Optional[AuthoringGates] = None, legacy: bool = False) -> ValidationResult:
     from pyegeria.core.async_runner import run_sync
-    return run_sync(async_validate(draft, client, run=run, gates=gates))
+    return run_sync(async_validate(draft, client, run=run, gates=gates, legacy=legacy))
