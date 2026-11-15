@@ -128,6 +128,9 @@ def tier(monkeypatch, tmp_path):
     monkeypatch.delenv("PYEGERIA_USER_FORMAT_SETS_DIR", raising=False)
     monkeypatch.delenv(esc.DRAFTS_ENV, raising=False)
     monkeypatch.delenv(esc.FOLDERS_ENV, raising=False)
+    # Hermetic: a test that constructs a real client must not reach a platform (CI has none on :9443).
+    from pyegeria.core._base_server_client import BaseServerClient
+    monkeypatch.setattr(BaseServerClient, "check_connection", lambda self: "test")
     # CONFIG reloads from the entry points (pyegeria's own demo specs are part of the 437) and the
     # empty temporary user directory; monkeypatch restores the original tier object afterwards.
     monkeypatch.setattr(brf, "_CONFIG_REPORT_FORMATS", FormatSetDict())
