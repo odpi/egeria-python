@@ -124,8 +124,9 @@ def test_pages_until_empty_result_not_until_short_page(monkeypatch):
 
     # Keeps asking past the short-but-nonempty second page -- correctly
     # treating "short" as not proof of "last" -- and stops at Egeria's null on the third page, after
-    # probing 3 pages past it (a suspect path; pager step 4).
-    assert FakeClient.instances[-1].calls == [("Thing", s, 3) for s in (0, 3, 6, 9, 12, 15)]
+    # probing 6 pages past it: get_elements by type is findMetadataElements underneath, a NULL_NOT_END path
+    # (P3, the Architect's ruling (c)), and this fake platform isn't #9453-promoted.
+    assert FakeClient.instances[-1].calls == [("Thing", s, 3) for s in range(0, 27, 3)]
 
 
 def test_an_unconfirmed_end_shows_counts_as_at_least(monkeypatch, capsys):

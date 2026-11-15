@@ -79,9 +79,13 @@ TRUSTED_END_METHODS = {
 BY_NAME_METHODS = frozenset({"get_collections_by_name", "_async_get_collections_by_name",
                              "get_communities_by_name", "_async_get_communities_by_name",
                              "get_note_logs_by_name", "_async_get_note_logs_by_name"})
+#: get_elements (classification-explorer elements/by-type) -> ClassificationExplorerRESTServices.getRootElementsByType
+#: -> StewardshipManagementHandler.getRootElementsByType -> openMetadataClient.findMetadataElements: the same server
+#: method again (traced 2026-11-14 for P3 used_by, the Architect's ruling (c)), so NULL_NOT_END and gated like it.
+BY_TYPE_METHODS = frozenset({"get_elements", "_async_get_elements"})
 NULL_NOT_END_METHODS = frozenset({"find_metadata_elements", "get_relationships",
                                   "get_elements_by_property_value", "find_elements_by_property_value",
-                                  "_async_get_elements_by_property_value"}) | BY_NAME_METHODS
+                                  "_async_get_elements_by_property_value"}) | BY_NAME_METHODS | BY_TYPE_METHODS
 
 #: Probe pages after a null on a NULL_NOT_END method: the capture's longest null run was 3; 6 gives 2x headroom.
 NULL_NOT_END_PROBE_PAGES = 6
@@ -106,7 +110,7 @@ def end_policy_for(method_name: Optional[str]) -> str:
 #: Promoted to trusted on a gated platform only.
 GATED_TRUSTED_METHODS = frozenset({"find_metadata_elements", "get_elements_by_property_value",
                                    "find_elements_by_property_value", "_async_get_elements_by_property_value"}
-                                  ) | BY_NAME_METHODS   # findMetadataElements underneath: fixed by #9453 too
+                                  ) | BY_NAME_METHODS | BY_TYPE_METHODS   # findMetadataElements underneath: #9453
 assert GATED_TRUSTED_METHODS < NULL_NOT_END_METHODS and "get_relationships" not in GATED_TRUSTED_METHODS
 
 GATE_SNAPSHOT_VERSION = "6.3-SNAPSHOT"

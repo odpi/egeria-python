@@ -280,13 +280,13 @@ async def _dashboard_elements(client: Any, notes: Optional[List[str]] = None) ->
     (pager step 4; Dashboard is a small type) and filtered here: a starts-with search on qualifiedName
     took 21 s on the live platform with no Dashboards at all, the type read 2.8 s. When the read isn't
     confirmed complete, `notes` (if given) gets "Showing at least N Dashboards: ..."."""
-    from pyegeria.core.paging import async_page_all, at_least_note, log_end, paging_for
+    from pyegeria.core.paging import async_page_all, async_paging_for, at_least_note, log_end
 
     async def fetch(start, size):
         return await client.classification_manager._async_get_elements(
             "Dashboard", start_from=start, page_size=size, graph_query_depth=0)
 
-    paged = await async_page_all(fetch, fetch_page_size=PAGE_SIZE, **paging_for("get_elements"))
+    paged = await async_page_all(fetch, fetch_page_size=PAGE_SIZE, **await async_paging_for("get_elements", client))
     log_end("dashboards._dashboard_elements", paged)
     out = [e for e in paged.items if isinstance(e, dict) and e.get("elementHeader")
            and ((e.get("properties") or {}).get("qualifiedName") or "").startswith(DASHBOARD_QN_PREFIX)]
