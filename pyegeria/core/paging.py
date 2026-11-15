@@ -100,65 +100,120 @@ def end_policy_for(method_name: Optional[str]) -> str:
     return "trusted" if method_name in TRUSTED_END_METHODS else "suspect"
 
 
-# ── Step 6: the #9453 version gate (the Architect's step 6 ruling, 2026-11-14) ─────────────────────────────────
-# odpi/egeria #9453 (2a27dad5, merged 2026-11-14T19:52Z) fixed the find paths: on a platform with it,
-# find_metadata_elements and by-property-value return [] for a filtered page and null only at the end (post-#9453
-# capture on laz, 5deda38d: ~/.re-gate/RESULTS-EGERIA-UPGRADE-5deda38d-AND-POST-9453-CAPTURE-2026-11-14.md).
-# get_relationships by type is NOT fixed there (nulls mid-set, rows after, never []): it stays NULL_NOT_END on
-# every platform until its own upstream fix and a capture.
+# ── Step 6: the per-fix version gate (#9453, the Architect's step 6 ruling, 2026-11-14; #9454, G2, 2026-11-15) ──
+# Each upstream paging fix makes some reads send [] for a filtered page and null only at the end. A read is promoted
+# to trusted only on a platform whose /api/about shows every fix it needs (METHOD_NEEDS); anything else keeps the
+# NULL_NOT_END paging (6 probes, never reached_end).
+# - #9453 (2a27dad5, merged 2026-11-14T19:52Z) fixed the find paths: find_metadata_elements, by-property-value,
+#   by-name and by-type (post-#9453 capture on laz, 5deda38d:
+#   ~/.re-gate/RESULTS-EGERIA-UPGRADE-5deda38d-AND-POST-9453-CAPTURE-2026-11-14.md).
+# - #9454 (970092b9) fixed get_relationships and get_related_elements (G1 capture on laz a5c3a195, main c61bad65:
+#   ~/.re-gate/CAPTURE-G1-9454-2026-11-15/, read back PASS in READBACK-G1-9454-CAPTURE-AND-G2-BRIEF-2026-11-15.md).
+#   get_related_elements' metadata_element_type-filtered form is the same endpoint with a body filter, so it rides
+#   along; if a later capture shows a mid-set null there, it comes back out.
 
-#: Promoted to trusted on a gated platform only.
-GATED_TRUSTED_METHODS = frozenset({"find_metadata_elements", "get_elements_by_property_value",
-                                   "find_elements_by_property_value", "_async_get_elements_by_property_value"}
-                                  ) | BY_NAME_METHODS | BY_TYPE_METHODS   # findMetadataElements underneath: #9453
-assert GATED_TRUSTED_METHODS < NULL_NOT_END_METHODS and "get_relationships" not in GATED_TRUSTED_METHODS
+FIX_9453 = "9453"
+FIX_9454 = "9454"
+
+#: The upstream paging fixes the gate knows. For each:
+#: - snapshot_cutoff: a "6.3-SNAPSHOT" built at or after it carries the fix;
+#: - release_floor: the first release (major, minor, patch) that carries it, or None: no release is promoted;
+#: - later_snapshots: whether every SNAPSHOT of a later line (6.4-SNAPSHOT, ...) carries it.
+FIXES = {
+    FIX_9453: {"snapshot_cutoff": "2026-11-14T19:52:00Z",   # the #9453 merge
+               "release_floor": (6, 3, 0),                  # #9453 merged on main before the 6.3 line was cut
+               "later_snapshots": True},                    # step 6 read-back R1
+    FIX_9454: {"snapshot_cutoff": "2026-11-15T07:26:00Z",
+               "release_floor": None,      # G3: set only once `merge-base --is-ancestor 970092b9 <6.3.0 tag>` passes
+               "later_snapshots": True},   # a5c3a195 (6.3-SNAPSHOT, built 08:29Z) carries 970092b9 (merged 07:26Z)
+                                           # on main, so every later line's SNAPSHOT does too (G2 ruling 4)
+}
+
+#: The relationship reads #9454 fixed (G2 ruling, 2026-11-15). The async names are what report specs page under
+#: (format_set_executor prefixes ``_async_``).
+#: - get_relationships (OpenMetadataRelationshipList) was caught sending null mid-set (the 11-14 capture and G1's
+#:   pre-#9454 runs): NULL_NOT_END without #9454. _async_get_relationships is the same server call, so it joins.
+#: - get_related_elements (getRelatedMetadataElements, another list class) was never shown sending a mid-set null:
+#:   its filtered page is [] (MyEgeria R3 Java check), and G1 shows [] and a clean end. It stays plain suspect
+#:   without #9454 (today's behaviour), and is trusted with it.
+RELATIONSHIP_NULL_NOT_END_METHODS = frozenset({"get_relationships", "_async_get_relationships"})
+RELATED_ELEMENTS_METHODS = frozenset({"get_related_elements", "_async_get_related_elements"})
+RELATIONSHIP_METHODS = RELATIONSHIP_NULL_NOT_END_METHODS | RELATED_ELEMENTS_METHODS
+NULL_NOT_END_METHODS = NULL_NOT_END_METHODS | RELATIONSHIP_NULL_NOT_END_METHODS
+assert not (TRUSTED_END_METHODS & NULL_NOT_END_METHODS), "a NULL_NOT_END method can't be trusted"
+
+#: The fixes each gated method needs before it is trusted. Every other method is never promoted.
+METHOD_NEEDS = {
+    **{m: frozenset({FIX_9453}) for m in ({"find_metadata_elements", "get_elements_by_property_value",
+                                          "find_elements_by_property_value", "_async_get_elements_by_property_value"}
+                                         | BY_NAME_METHODS | BY_TYPE_METHODS)},   # findMetadataElements underneath
+    **{m: frozenset({FIX_9454}) for m in RELATIONSHIP_METHODS},
+}
+#: Promoted to trusted on a platform carrying the fixes they need (METHOD_NEEDS) only.
+GATED_TRUSTED_METHODS = frozenset(METHOD_NEEDS)
+assert GATED_TRUSTED_METHODS <= NULL_NOT_END_METHODS | RELATED_ELEMENTS_METHODS
+assert not (GATED_TRUSTED_METHODS & TRUSTED_END_METHODS)
+assert all(needs <= set(FIXES) for needs in METHOD_NEEDS.values())
 
 GATE_SNAPSHOT_VERSION = "6.3-SNAPSHOT"
-GATE_SNAPSHOT_TIME = "2026-11-14T19:52:00Z"   # the #9453 merge
+GATE_SNAPSHOT_TIME = FIXES[FIX_9453]["snapshot_cutoff"]   # back-compatible name: the #9453 cutoff
 GATE_TTL_SECONDS = 3600          # a parsed /api/about answer
 GATE_FAILED_TTL_SECONDS = 60     # a failed about-read: retried soon, so a platform restart doesn't turn trust off
 GATE_ABOUT_TIMEOUT_SECONDS = 5   # the about-read's own timeout, where the client takes one
-GATE_OVERRIDE_ENV = "PYEGERIA_TRUSTED_END"   # "off" forces not-promoted everywhere; there is no "force on"
+GATE_OVERRIDE_ENV = "PYEGERIA_TRUSTED_END"   # "off" turns every fix off everywhere; there is no "force on"
 
-_GATE_CACHE: dict = {}   # platform URL -> (expires at, promoted)
+NO_FIXES: frozenset = frozenset()
+
+_GATE_CACHE: dict = {}   # platform URL -> (expires at, frozenset of the fixes it carries)
 
 
-def gate_from_about(about: Any) -> bool:
-    """Whether a platform's /api/about answer shows the #9453 paging fix. Fail-safe: anything not clearly
-    promoted (an older version or build time, unparsable, no time) is False.
+def _fix_in(fix: dict, numbers: Tuple[int, int, int], snapshot: bool, built: Any) -> bool:
+    from datetime import datetime
+    if not snapshot:
+        floor = fix.get("release_floor")
+        return floor is not None and numbers >= tuple(floor)
+    if numbers[:2] > (6, 3):
+        return bool(fix.get("later_snapshots"))
+    if numbers[:2] < (6, 3) or not built:
+        return False
+    when = datetime.fromisoformat(str(built).replace("Z", "+00:00"))
+    cutoff = datetime.fromisoformat(str(fix["snapshot_cutoff"]).replace("Z", "+00:00"))
+    return when.tzinfo is not None and when >= cutoff
 
-    - promoted: a release later than 6.3-SNAPSHOT (6.3 or newer, not a SNAPSHOT), or "6.3-SNAPSHOT" built at or
-      after GATE_SNAPSHOT_TIME;
-    - any SNAPSHOT whose (major, minor) is later than 6.3 (e.g. 6.4-SNAPSHOT) is promoted: #9453 merged on main
-      before the 6.3 line was cut (step 6 read-back R1); an earlier SNAPSHOT (6.2-SNAPSHOT) is not;
-    - known limit: a 6.3-SNAPSHOT built after that time from code without #9453 reads as promoted
+
+def fixes_from_about(about: Any) -> frozenset:
+    """The paging fixes (FIXES keys) a platform's /api/about answer shows. Fail-safe: anything not clearly
+    carrying a fix (an older version or build time, unparsable, no time) leaves it out, so doubt is NO_FIXES.
+
+    - a release carries a fix from its release_floor on; a fix with no floor is carried by no release;
+    - "6.3-SNAPSHOT" carries a fix when built at or after its snapshot_cutoff;
+    - a SNAPSHOT of a later line (6.4-SNAPSHOT) carries the fixes marked later_snapshots; an earlier one, none;
+    - known limit: a 6.3-SNAPSHOT built after a cutoff from code without that fix reads as carrying it
       (PYEGERIA_TRUSTED_END=off covers it)."""
     import re
-    from datetime import datetime
     try:
         if isinstance(about, (str, bytes)):
             about = json.loads(about)
         if not isinstance(about, dict):
-            return False
+            return NO_FIXES
         version = str(about.get("version") or "").strip()
         m = re.fullmatch(r"(\d+)\.(\d+)(?:\.(\d+))?(-SNAPSHOT)?", version)
         if not m:
-            return False
+            return NO_FIXES
         numbers = tuple(int(g or 0) for g in m.groups()[:3])
-        if not m.group(4):
-            return numbers >= (6, 3, 0)
-        if numbers[:2] > (6, 3):   # step 6 read-back R1: every SNAPSHOT after 6.3 contains #9453 (merged on main)
-            return True
-        if version != GATE_SNAPSHOT_VERSION:
-            return False
+        snapshot = bool(m.group(4))
+        if snapshot and numbers[:2] == (6, 3) and version != GATE_SNAPSHOT_VERSION:
+            return NO_FIXES   # e.g. "6.3.1-SNAPSHOT": not the main-line SNAPSHOT the cutoffs are measured on
         built = about.get("time")
-        if not built:
-            return False
-        when = datetime.fromisoformat(str(built).replace("Z", "+00:00"))
-        gate = datetime.fromisoformat(GATE_SNAPSHOT_TIME.replace("Z", "+00:00"))
-        return when.tzinfo is not None and when >= gate
+        return frozenset(name for name, fix in FIXES.items() if _fix_in(fix, numbers, snapshot, built))
     except Exception:  # noqa: BLE001 -- fail safe: never trusted on unknown
-        return False
+        return NO_FIXES
+
+
+def gate_from_about(about: Any) -> bool:
+    """Whether a platform's /api/about answer shows the #9453 paging fix (back-compatible alias:
+    ``FIX_9453 in fixes_from_about(about)``)."""
+    return FIX_9453 in fixes_from_about(about)
 
 
 def _gate_overridden() -> bool:
@@ -166,7 +221,7 @@ def _gate_overridden() -> bool:
     return os.environ.get(GATE_OVERRIDE_ENV, "").strip().lower() == "off"
 
 
-def _gate_cached(platform_url: str) -> Optional[bool]:
+def _gate_cached(platform_url: str) -> Optional[frozenset]:
     import time
     hit = _GATE_CACHE.get(platform_url)
     if hit is not None and hit[0] > time.monotonic():
@@ -174,11 +229,11 @@ def _gate_cached(platform_url: str) -> Optional[bool]:
     return None
 
 
-def _gate_store(platform_url: str, promoted: bool, failed: bool = False) -> bool:
+def _gate_store(platform_url: str, fixes: frozenset, failed: bool = False) -> frozenset:
     import time
     ttl = GATE_FAILED_TTL_SECONDS if failed else GATE_TTL_SECONDS
-    _GATE_CACHE[platform_url] = (time.monotonic() + ttl, promoted)
-    return promoted
+    _GATE_CACHE[platform_url] = (time.monotonic() + ttl, fixes)
+    return fixes
 
 
 def _about_reader(client: Any, name: str):
@@ -232,31 +287,32 @@ def _close_thread_resources(owner: Any) -> None:
         pass
 
 
-def platform_promoted(client: Any) -> bool:
-    """Whether `client`'s platform carries the #9453 fix: one best-effort /api/about read per platform URL per
-    GATE_TTL_SECONDS. Never raises, never blocks a read: a failed or unparsable read is "not promoted"."""
+def platform_fixes(client: Any) -> frozenset:
+    """The paging fixes `client`'s platform carries: one best-effort /api/about read per platform URL per
+    GATE_TTL_SECONDS, shared by every fix. Never raises, never blocks a read: a failed or unparsable read, no
+    client, or PYEGERIA_TRUSTED_END=off is NO_FIXES."""
     if client is None or _gate_overridden():
-        return False
+        return NO_FIXES
     url = getattr(client, "platform_url", None)
     if not isinstance(url, str) or not url:
-        return False
+        return NO_FIXES
     if (cached := _gate_cached(url)) is not None:
         return cached
     try:
         reader = _about_reader(client, "get_platform_origin")
         about = _call_about(reader) if reader is not None else None
-    except Exception:  # noqa: BLE001 -- a failed about-read only means "not promoted"
+    except Exception:  # noqa: BLE001 -- a failed about-read only means "no fixes"
         about = None
-    return _gate_store(url, gate_from_about(about), failed=not about)
+    return _gate_store(url, fixes_from_about(about), failed=not about)
 
 
-async def async_platform_promoted(client: Any) -> bool:
-    """``platform_promoted`` for async code (the same cache)."""
+async def async_platform_fixes(client: Any) -> frozenset:
+    """``platform_fixes`` for async code (the same cache)."""
     if client is None or _gate_overridden():
-        return False
+        return NO_FIXES
     url = getattr(client, "platform_url", None)
     if not isinstance(url, str) or not url:
-        return False
+        return NO_FIXES
     if (cached := _gate_cached(url)) is not None:
         return cached
     try:
@@ -265,12 +321,23 @@ async def async_platform_promoted(client: Any) -> bool:
         if reader is not None:
             import asyncio
             about = await asyncio.wait_for(reader(), timeout=GATE_ABOUT_TIMEOUT_SECONDS)
-    except Exception:  # noqa: BLE001 -- a failed or slow about-read only means "not promoted"
+    except Exception:  # noqa: BLE001 -- a failed or slow about-read only means "no fixes"
         about = None
-    return _gate_store(url, gate_from_about(about), failed=not about)
+    return _gate_store(url, fixes_from_about(about), failed=not about)
+
+
+def platform_promoted(client: Any) -> bool:
+    """Whether `client`'s platform carries the #9453 fix (back-compatible alias: ``FIX_9453 in platform_fixes``)."""
+    return FIX_9453 in platform_fixes(client)
+
+
+async def async_platform_promoted(client: Any) -> bool:
+    """``platform_promoted`` for async code (the same cache)."""
+    return FIX_9453 in await async_platform_fixes(client)
 
 
 def _paging(method_name: Optional[str], promoted: bool) -> dict:
+    """page_all keywords for a method; ``promoted`` means the platform carries every fix the method needs."""
     if promoted and method_name in GATED_TRUSTED_METHODS:
         return {"end_policy": "trusted"}
     if method_name in NULL_NOT_END_METHODS:
@@ -278,19 +345,33 @@ def _paging(method_name: Optional[str], promoted: bool) -> dict:
     return {"end_policy": end_policy_for(method_name)}
 
 
+def _needs_met(method_name: Optional[str], fixes: frozenset) -> bool:
+    needs = METHOD_NEEDS.get(method_name)
+    return needs is not None and needs <= fixes
+
+
+# What the old ``"get_relationships" not in GATED_TRUSTED_METHODS`` assert stood for: on a platform without #9454,
+# get_relationships stays NULL_NOT_END (the long probe, never reached_end), whatever else it carries; and
+# get_related_elements stays plain suspect there (G2 ruling 1).
+_WITHOUT_9454 = frozenset(FIXES) - {FIX_9454}
+assert all(_paging(m, _needs_met(m, _WITHOUT_9454)).get("null_not_end") is True
+           for m in RELATIONSHIP_NULL_NOT_END_METHODS)
+assert all(_paging(m, _needs_met(m, _WITHOUT_9454)) == {"end_policy": "suspect"} for m in RELATED_ELEMENTS_METHODS)
+
+
 def paging_for(method_name: Optional[str], client: Any = None) -> dict:
     """page_all keyword arguments for a method: its end_policy and, for a NULL_NOT_END method, the longer
     probe and ``null_not_end`` (so a null-then-empty-probes read is never ``reached_end``).
 
-    Given the ``client`` that makes the read, a GATED_TRUSTED_METHODS method is trusted on a platform with the
-    #9453 fix (``platform_promoted``). The platform is only asked when the method is gated."""
-    promoted = method_name in GATED_TRUSTED_METHODS and platform_promoted(client)
+    Given the ``client`` that makes the read, a GATED_TRUSTED_METHODS method is trusted on a platform that carries
+    every fix it needs (METHOD_NEEDS, ``platform_fixes``). The platform is only asked when the method is gated."""
+    promoted = method_name in GATED_TRUSTED_METHODS and _needs_met(method_name, platform_fixes(client))
     return _paging(method_name, promoted)
 
 
 async def async_paging_for(method_name: Optional[str], client: Any = None) -> dict:
     """``paging_for`` for async code: the platform's /api/about is read without blocking the event loop."""
-    promoted = method_name in GATED_TRUSTED_METHODS and await async_platform_promoted(client)
+    promoted = method_name in GATED_TRUSTED_METHODS and _needs_met(method_name, await async_platform_fixes(client))
     return _paging(method_name, promoted)
 
 

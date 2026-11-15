@@ -97,9 +97,9 @@ async def test_on_a_gated_platform_a_hidden_spec_is_not_found(tier, monkeypatch)
     # With #9453 the by-name read is trusted: its null is the end, so "not found" may be said
     from pyegeria.core import paging
 
-    async def promoted(_client):
-        return True
-    monkeypatch.setattr(paging, "async_platform_promoted", promoted)
+    async def fixes(_client):
+        return frozenset({paging.FIX_9453})
+    monkeypatch.setattr(paging, "async_platform_fixes", fixes)
     fake = await _sheet_naming_the_spec()
     fake.hidden.add(SPEC_GUID)
     trend = (await dr.async_resolve_dashboard_sheet(fake, "shared", spec_lookup=_no_tier_holds_it)).placements[0]

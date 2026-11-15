@@ -15,6 +15,7 @@ pytestmark = pytest.mark.unit
 NULL = "No elements found"
 GATED = json.dumps({"version": "6.3-SNAPSHOT", "time": "2026-11-14T19:55:39.317Z"})
 OLD = json.dumps({"version": "6.3-SNAPSHOT", "time": "2026-11-10T08:00:00Z"})
+WITH_9454 = json.dumps({"version": "6.3-SNAPSHOT", "time": "2026-11-15T08:29:25.754Z"})   # laz a5c3a195
 
 
 @pytest.fixture(autouse=True)
@@ -113,9 +114,9 @@ def test_the_report_scan_on_an_older_platform_is_never_complete():
     assert out["complete"] is False and any("Reports that run this spec" in n for n in out["notes"])
 
 
-def test_complete_only_when_every_read_is_confirmed(monkeypatch):
-    monkeypatch.setattr(paging, "GATED_TRUSTED_METHODS", paging.GATED_TRUSTED_METHODS | {"get_related_elements"})
-    eg = _Egeria(elements=[SPEC], reports=[_report("Weekly", "Stale Assets")],
+def test_complete_only_when_every_read_is_confirmed():
+    # G2 (#9454): get_related_elements is trusted on a platform carrying #9454, with no change to used_by (P3-3)
+    eg = _Egeria(about=WITH_9454, elements=[SPEC], reports=[_report("Weekly", "Stale Assets")],
                  related={("spec1", "CollectionMembership", 2): [FOLDER]})
     out = _ask("spec", "Stale Assets", eg)
     assert out["complete"] is True and len(out["items"]) == 2

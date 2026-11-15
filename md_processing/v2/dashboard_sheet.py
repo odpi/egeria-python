@@ -321,7 +321,7 @@ class DashboardSheetEgeriaWriter:
         sheet written from it is never silently short. Each read's end is logged."""
         if not guid or self._is_planned(guid):
             return []
-        from pyegeria.core.paging import async_page_all, paging_for
+        from pyegeria.core.paging import async_page_all, async_paging_for
 
         async def fetch(start, size):
             try:
@@ -331,8 +331,8 @@ class DashboardSheetEgeriaWriter:
             except PyegeriaNotFoundException:
                 return None   # nothing related: the end
 
-        paged = await async_page_all(fetch, fetch_page_size=PAGE_SIZE, **paging_for("get_related_elements"),
-                                     key=_element_key)
+        paged = await async_page_all(fetch, fetch_page_size=PAGE_SIZE, **await async_paging_for("get_related_elements", self.client),
+                                     key=_element_key)   # trusted on a #9454 platform (G2)
         return self._read_settled(paged, f"the {relationship} links of {guid}")
 
     def _read_settled(self, paged, what: str) -> List[Dict[str, Any]]:

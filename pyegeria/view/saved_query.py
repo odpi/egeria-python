@@ -717,7 +717,7 @@ def _all_related(client, guid: str, relationship: str, end: int):
     paged = page_all(lambda start, size: _page_of(client.get_related_elements(
         guid, relationship, start_at_end=end, start_from=start, page_size=size, output_format="JSON")),
         fetch_page_size=DELETE_LINK_PAGE, max_pages=DELETE_LINK_MAX_PAGES, key=_element_key,
-        **paging_for("get_related_elements"))
+        **paging_for("get_related_elements", client))   # trusted on a #9454 platform (G2)
     log_end("saved_query._all_related", paged)
     if paged.end_reason == "max_pages":
         raise RuntimeError(f"delete_saved_query: {guid} has more than {DELETE_LINK_MAX_PAGES * DELETE_LINK_PAGE} "
