@@ -30,10 +30,12 @@ import json
 import os
 import re
 import tempfile
+import threading
 import time
+from collections import OrderedDict
 from contextlib import contextmanager, nullcontext
 from contextvars import ContextVar
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
@@ -158,7 +160,17 @@ def _settings_env():
 
 from pyegeria.core._client_identities import declare_multi_user, is_multi_user  # noqa: E402 -- re-exported
 
-_SPEC_IDENTITY: "ContextVar[Optional[str]]" = ContextVar("pyegeria_spec_identity", default=None)
+class _Unset:
+    __slots__ = ()
+
+    def __repr__(self) -> str:
+        return "UNSET"
+
+
+#: The ContextVar's default: no spec_identity block is active. Distinct from None, which a block sets to mean
+#: "explicitly no one" (T4 (3)): None is never read as unset, so it never falls back to a process identity.
+_UNSET: Any = _Unset()
+_SPEC_IDENTITY: "ContextVar[Any]" = ContextVar("pyegeria_spec_identity", default=_UNSET)
 _REFUSED_LOGGED: set = set()
 
 
@@ -186,8 +198,10 @@ def client_credential_identity(client: Any) -> Optional[str]:
 
 @contextmanager
 def spec_identity(identity: Optional[str]):
-    """Run the block as `identity` for the EGERIA tier (exec_report_spec and the async runner set it)."""
-    token = _SPEC_IDENTITY.set(identity)
+    """Run the block as `identity` for the EGERIA tier (exec_report_spec and the async runner set it).
+    ``spec_identity(None)`` (or an empty identity) runs it as explicitly NO ONE: no private cache loads and no
+    fetched copy is served, whether or not the process is declared multi-user; it never falls back."""
+    token = _SPEC_IDENTITY.set(identity if identity else None)
     try:
         yield
     finally:
@@ -210,7 +224,8 @@ def as_client(client: Any):
 def current_spec_identity() -> Optional[str]:
     """The identity the EGERIA tier is read for:
     1. the one set by `spec_identity` (exec_report_spec, the async runner and the dashboard resolver set it
-       from the request's client);
+       from the request's client). Inside ``spec_identity(None)`` that is None, explicitly no one, with no
+       fallback below;
     In a process DECLARED multi-user (`pyegeria.core._client_identities.declare_multi_user()` or
     PYEGERIA_MULTI_USER=1: the Portal, EA, Studio, the MCP HTTP server), nothing else: None, so no private cache
     loads and no fetched copy is served outside a request's own identity. Otherwise:
@@ -225,8 +240,8 @@ def current_spec_identity() -> Optional[str]:
        (`pyegeria.core.config.configured_user_id`: EGERIA_USER, the settings' user, the quickstart default).
     A path that holds a client binds to it instead (`as_client`), whatever this fallback says."""
     identity = _SPEC_IDENTITY.get()
-    if identity:
-        return identity
+    if identity is not _UNSET:
+        return identity   # set by a spec_identity block: a credential identity, or None for explicitly no one
     try:
         from pyegeria.core._client_identities import is_multi_user
         if is_multi_user():
@@ -635,7 +650,8 @@ def _known_names() -> set:
     from pyegeria.view import base_report_formats as brf
     names = set(brf._builtin_tier().keys())
     names |= set(brf._CONFIG_REPORT_FORMATS.keys()) | set(brf._RUNTIME_REPORT_FORMATS.keys())
-    names |= set(_TIER.get("specs", {}).keys())
+    entry = _peek_tier_entry()   # the caller's own entry, never another identity's; peeked: this never loads
+    names |= set(entry.specs.keys()) if entry is not None else set()
     return names
 
 
@@ -1266,12 +1282,65 @@ def read_consumer_index(*, cache_dir: Optional[str] = None, client=None) -> Dict
 
 # ── The EGERIA tier: what the registry reads ──
 
-_TIER: Dict[str, Any] = {"key": None, "checked": 0.0, "stamp": None, "specs": {}, "meta": {}, "aliases_dropped": {}}
+@dataclass(frozen=True)
+class _TierEntry:
+    """One identity's EGERIA tier, built whole and never changed after (T4): a reload builds a new entry and
+    swaps it in with one assignment under _TIER_LOCK, so no reader sees one identity's key with another's specs."""
+    raw_key: Tuple
+    key: Any
+    stamp: Any
+    checked: float
+    specs: Any
+    meta: Dict[str, Any]
+    skipped: Tuple = ()
+    dir: Optional[str] = None
+
+
+#: Per-identity tier entries, keyed by the full raw key (cache dir and settings, drafts, identity), LRU-bounded.
+#: Never one shared slot: a reload for one identity can't hand its half-loaded state, or the previous
+#: identity's specs, to a concurrent read for another (the Portal's threaded routes, per-request identities).
+TIER_CACHE_SIZE = 64
+_TIERS: "OrderedDict[Tuple, _TierEntry]" = OrderedDict()
+_TIER_LOCK = threading.Lock()
 
 
 def _invalidate_tier() -> None:
-    _TIER["checked"] = 0.0
-    _TIER["stamp"] = None
+    with _TIER_LOCK:
+        _TIERS.clear()
+
+
+def _tier_raw_key(identity: Optional[str]) -> Tuple:
+    with_drafts = os.getenv(DRAFTS_ENV, "").strip().lower() in ("1", "true", "yes")
+    env = _settings_env()
+    return (os.getenv(CACHE_DIR_ENV), getattr(env, "egeria_view_server_url", None),
+            getattr(env, "egeria_view_server", None), getattr(env, "pyegeria_user_report_specs_dir", None),
+            os.getenv("PYEGERIA_USER_REPORT_SPECS_DIR"), os.getenv("PYEGERIA_USER_FORMAT_SETS_DIR"),
+            with_drafts, identity)
+
+
+def _get_entry(raw_key: Tuple) -> Optional[_TierEntry]:
+    with _TIER_LOCK:
+        entry = _TIERS.get(raw_key)
+        if entry is not None:
+            _TIERS.move_to_end(raw_key)
+        return entry
+
+
+def _put_entry(entry: _TierEntry) -> _TierEntry:
+    with _TIER_LOCK:
+        _TIERS[entry.raw_key] = entry
+        _TIERS.move_to_end(entry.raw_key)
+        while len(_TIERS) > TIER_CACHE_SIZE:
+            _TIERS.popitem(last=False)
+    return entry
+
+
+def _peek_tier_entry() -> Optional[_TierEntry]:
+    """The current identity's entry if one is loaded, without loading (for reads made during a load)."""
+    try:
+        return _get_entry(_tier_raw_key(current_spec_identity()))
+    except Exception:  # noqa: BLE001
+        return None
 
 
 def _stamp(directory: Path, with_drafts: bool) -> Tuple:
@@ -1313,33 +1382,34 @@ def _load_dir(directory: Path, tier_label: str, specs, meta: Dict[str, Any], ski
 
 
 def egeria_tier(*, force: bool = False):
-    """The EGERIA tier as a FormatSetDict, loaded from the cache manifest(s). Reloaded when a
-    manifest changes, checked at most once per second. Never raises: a broken cache is an empty
+    """The EGERIA tier as a FormatSetDict, loaded from the cache manifest(s), for the current spec identity.
+    Reloaded when a manifest changes, checked at most once per second. Never raises: a broken cache is an empty
     tier, logged."""
+    return _tier_entry(force=force).specs
+
+
+def _tier_entry(*, force: bool = False) -> _TierEntry:
+    """The current identity's tier entry: its own, never another identity's (T4). The identity is resolved once,
+    so the entry, its specs and its meta all belong to it."""
     from pyegeria.view._output_format_models import FormatSetDict
-    with_drafts = os.getenv(DRAFTS_ENV, "").strip().lower() in ("1", "true", "yes")
-    env = _settings_env()
     identity = current_spec_identity()
-    raw_key = (os.getenv(CACHE_DIR_ENV), getattr(env, "egeria_view_server_url", None),
-               getattr(env, "egeria_view_server", None), getattr(env, "pyegeria_user_report_specs_dir", None),
-               os.getenv("PYEGERIA_USER_REPORT_SPECS_DIR"), os.getenv("PYEGERIA_USER_FORMAT_SETS_DIR"),
-               with_drafts, identity)
+    raw_key = _tier_raw_key(identity)
+    with_drafts = raw_key[6]
     now = time.monotonic()
-    if not force and _TIER.get("raw_key") == raw_key and now - _TIER["checked"] < _RELOAD_INTERVAL_S:
-        return _TIER["specs"]
+    entry = _get_entry(raw_key)
+    if not force and entry is not None and now - entry.checked < _RELOAD_INTERVAL_S:
+        return entry
     try:
         directory = cache_dir()
     except Exception as exc:  # noqa: BLE001
-        if _TIER.get("key") != ("error", str(exc)):
+        if entry is None or entry.key != ("error", str(exc)):
             logger.warning(f"Report spec cache unavailable: {exc}")
-        _TIER.update(key=("error", str(exc)), raw_key=raw_key, checked=now, specs=FormatSetDict(), meta={})
-        return _TIER["specs"]
+        return _put_entry(_TierEntry(raw_key=raw_key, key=("error", str(exc)), stamp=None, checked=now,
+                                     specs=FormatSetDict(), meta={}))
     key = (str(directory), with_drafts, identity)
-    _TIER["raw_key"] = raw_key
     stamp = _stamp(directory, with_drafts)
-    _TIER["checked"] = now
-    if not force and _TIER.get("key") == key and _TIER.get("stamp") == stamp:
-        return _TIER["specs"]
+    if not force and entry is not None and entry.key == key and entry.stamp == stamp:
+        return _put_entry(replace(entry, checked=now))
     specs, meta, skipped = FormatSetDict(), {}, []
     if stamp[0] is not None:
         main_manifest = _read_manifest(directory)
@@ -1357,18 +1427,18 @@ def egeria_tier(*, force: bool = False):
             meta[label] = dict(dmeta[label], draft=True)
     for who, why in skipped:
         logger.warning(f"Report spec cache {directory}: skipping {who}: {why}")
-    _TIER.update(key=key, stamp=stamp, specs=specs, meta=meta, skipped=skipped, dir=str(directory))
-    return specs
+    return _put_entry(_TierEntry(raw_key=raw_key, key=key, stamp=stamp, checked=now, specs=specs, meta=meta,
+                                 skipped=tuple(skipped), dir=str(directory)))
 
 
 def egeria_tier_info(label: str) -> Optional[Dict[str, Any]]:
-    """Provenance for a label in the EGERIA tier (or a fetched `label@vN`), else None."""
+    """Provenance for a label in the EGERIA tier (or a fetched `label@vN`), else None. Read from the caller's own
+    tier entry, the one its specs came from (T4)."""
     m = _FETCHED_SUFFIX.match(label or "")
     hit = _fetched_hit(m.group("label"), int(m.group("version"))) if m else None
     if hit:
         return dict(hit[1])
-    egeria_tier()
-    info = _TIER.get("meta", {}).get(label)
+    info = _tier_entry().meta.get(label)
     return dict(info) if info else None
 
 
