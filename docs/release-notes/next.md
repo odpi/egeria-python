@@ -26,8 +26,15 @@ Notes collected on `release/next` for the next release. The version number is se
   - a Report's sheets (DataSetContent);
   - a sheet's consumer folders.
 
-  `via` is Egeria's relationship name. `complete` is True only when every read reached a confirmed end. An empty
-  answer that isn't complete is "nothing found in what Egeria returned", never "used by none".
+  `via` is one of the closed set `VIA_KEYS` (`reportSpec`, `CollectionMembership`, `DataSetContent`): machine keys
+  for the caller to put into words. `complete` is True only when every read reached a confirmed end. An empty answer
+  that isn't complete is "nothing found in what Egeria returned", never "used by none".
+
+  The artifact is resolved first, through Egeria's exact unique-name read. If it can't be resolved, `used_by` raises
+  `AuthoringRefused` with `answer` "absent" (only on Egeria's own not-found) or "unknown". A built-in spec that Egeria
+  doesn't hold still has its Reports listed. A Report's `reportSpec` matches the label exactly, case-sensitively,
+  after one `ReportSpec::` prefix is stripped; the legacy `ReportType::` prefix is also stripped, until pyegeria 7.
+  Call it on demand, when the user asks.
 - **Paging:** `get_elements` (read by type) is `findMetadataElements` underneath, so it's now NULL_NOT_END and
   gate-trusted on a #9453 platform like the other find paths. The dashboard sheet list passes its client, so on
   such a platform it can be confirmed complete.

@@ -33,7 +33,7 @@ from pyegeria.authoring.models import (
     ValidationResult, as_draft, default_gates,
 )
 from pyegeria.authoring.preview import async_preview, preview
-from pyegeria.authoring.used_by import async_used_by, used_by
+from pyegeria.authoring.used_by import VIA_KEYS, async_used_by, spec_label_of, used_by
 from pyegeria.authoring.publication import AUTHORING_KEYS, STAMP_KEYS
 from pyegeria.authoring.runner import inprocess_runner
 from pyegeria.authoring.serialize import has_parent_id, report_parameter_maps, serialize
@@ -45,5 +45,5 @@ __all__ = [
     "ValidationResult", "apply", "as_draft", "async_apply", "async_publish_plan", "async_history", "async_load_held", "async_new_from", "async_preview",
     "async_used_by", "async_validate", "default_gates", "diff", "draft_store", "has_parent_id", "history", "inprocess_runner",
     "load_held", "new_draft", "new_from", "preview", "publish_plan", "report_parameter_maps", "serialize",
-    "used_by", "validate", "withdraw_plan",
+    "used_by", "VIA_KEYS", "spec_label_of", "validate", "withdraw_plan",
 ]

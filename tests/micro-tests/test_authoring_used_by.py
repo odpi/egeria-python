@@ -6,7 +6,7 @@ import json
 
 import pytest
 
-from pyegeria.authoring import AuthoringRefused, async_used_by, used_by
+from pyegeria.authoring import VIA_KEYS, AuthoringRefused, async_used_by, spec_label_of, used_by
 from pyegeria.authoring.models import ANSWER_ABSENT, ANSWER_UNKNOWN
 from pyegeria.core import paging
 
@@ -18,7 +18,10 @@ OLD = json.dumps({"version": "6.3-SNAPSHOT", "time": "2026-11-10T08:00:00Z"})
 
 
 @pytest.fixture(autouse=True)
-def _fresh_gate():
+def _fresh_gate(monkeypatch):
+    """Hermetic (P3-4): no EGERIA_* identity from the developer's shell; a fresh #9453 gate cache."""
+    for var in ("EGERIA_USER", "EGERIA_USER_PASSWORD", "EGERIA_PASSWORD"):
+        monkeypatch.delenv(var, raising=False)
     paging._GATE_CACHE.clear()
     yield
     paging._GATE_CACHE.clear()
@@ -49,6 +52,9 @@ class _Egeria:
 
         class CM:
             async def _async_get_element_by_unique_name(self, qn):
+                outer.reads.append(("unique", qn))
+                if "unique" in outer.fail:
+                    raise TimeoutError("slow")
                 return outer.elements.get(qn) or NULL
 
             async def _async_get_elements_by_property_value(self, value, names, **kw):
@@ -179,3 +185,73 @@ def test_bad_arguments_refuse_and_the_sync_form_works():
     with pytest.raises(AuthoringRefused):
         _ask("spec", "x", None)
     assert used_by("spec", "Stale Assets", _Egeria(elements=[SPEC]))["items"] == []
+
+
+# ── P3-1..P3-4 (the Architect's approval, 2026-11-15) ──
+
+def test_p3_1_a_spec_egeria_doesnt_hold_and_isnt_built_in_raises_absent_and_scans_nothing():
+    eg = _Egeria(reports=[_report("Weekly", "Nowhere Spec")])
+    with pytest.raises(AuthoringRefused) as ei:
+        _ask("spec", "Nowhere Spec", eg)
+    assert ei.value.answer == ANSWER_ABSENT and "holds no report spec named 'Nowhere Spec'" in str(ei.value)
+    assert not any(r[0] == "elements" for r in eg.reads)   # resolved first: no Report scan
+
+
+@pytest.mark.parametrize("kind, label", [("spec", "Stale Assets"), ("report", "Report::Weekly"), ("sheet", "ops")])
+def test_p3_1_a_unique_name_read_that_fails_raises_unknown_never_absent(kind, label):
+    eg = _Egeria(elements=[SPEC], fail={"unique"})
+    with pytest.raises(AuthoringRefused) as ei:
+        _ask(kind, label, eg)
+    assert ei.value.answer == ANSWER_UNKNOWN and "Couldn't confirm" in str(ei.value)
+
+
+def test_p3_1_a_report_lookup_that_errors_is_unknown(monkeypatch):
+    import pyegeria.authoring.lifecycle as lc
+
+    async def _boom(client, label):
+        raise ConnectionError("down")
+
+    monkeypatch.setattr(lc, "_report_element", _boom)
+    with pytest.raises(AuthoringRefused) as ei:
+        _ask("report", "Weekly", _Egeria())
+    assert ei.value.answer == ANSWER_UNKNOWN
+
+
+def test_p3_2_exact_case_sensitive_match_after_one_prefix():
+    assert spec_label_of("ReportSpec::X") == "X" and spec_label_of("ReportType::X") == "X"
+    assert spec_label_of("ReportSpec::ReportSpec::X") == "ReportSpec::X" and spec_label_of(None) == ""
+    eg = _Egeria(elements=[SPEC], reports=[
+        _report("Plain", "Stale Assets"), _report("Spec", "ReportSpec::Stale Assets"),
+        _report("Legacy", "ReportType::Stale Assets"),
+        _report("Case", "stale assets"), _report("CasePrefix", "reportspec::Stale Assets"),
+        _report("Twice", "ReportSpec::ReportSpec::Stale Assets"), _report("Space", "Stale Assets ")])
+    out = _ask("spec", "ReportSpec::Stale Assets", eg)
+    assert {i["name"] for i in out["items"] if i["kind"] == "report"} == {"Plain", "Spec", "Legacy"}
+
+
+def test_p3_3_a_forbidden_read_is_a_failed_read_never_not_used():
+    from pyegeria.core._exceptions import PyegeriaUnauthorizedException
+    eg = _Egeria(elements=[SPEC])
+
+    async def _forbidden(*a, **kw):
+        raise PyegeriaUnauthorizedException.__new__(PyegeriaUnauthorizedException)
+
+    eg.classification_manager._async_get_related_elements = _forbidden
+    out = _ask("spec", "Stale Assets", eg)
+    assert out["complete"] is False and any("couldn't be read" in n for n in out["notes"])
+    assert any("isn't \"used by none\"" in n for n in out["notes"])
+
+
+def test_via_is_a_closed_set_of_machine_keys():
+    assert VIA_KEYS == ("reportSpec", "CollectionMembership", "DataSetContent")
+    eg = _Egeria(elements=[SPEC], reports=[_report("Weekly", "Stale Assets")],
+                 related={("spec1", "CollectionMembership", 2): [FOLDER]})
+    assert {i["via"] for i in _ask("spec", "Stale Assets", eg)["items"]} <= set(VIA_KEYS)
+
+
+@pytest.mark.parametrize("shell_user", [None, "peterprofile", "someoneelse"])
+def test_p3_4_the_shells_user_changes_nothing(monkeypatch, shell_user):
+    if shell_user:
+        monkeypatch.setenv("EGERIA_USER", shell_user)
+    eg = _Egeria(user="erinoverview", elements=[SPEC], reports=[_report("Weekly", "Stale Assets")])
+    assert [i["name"] for i in _ask("spec", "Stale Assets", eg)["items"]] == ["Weekly"]

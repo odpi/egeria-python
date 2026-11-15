@@ -13,7 +13,17 @@ index is never used (it's built as the sync identity, leaves zoned specs out, an
 - a Report's sheets: DataSetContent from a Dashboard to the Report (the Report at end 2); via ``"DataSetContent"``;
 - a sheet's consumer folders: ``Dashboard::<name>``'s CollectionMembership, kept to ``DashboardFolder::Consumer::``.
 
-``via`` carries Egeria's own names; callers map them to words. ``complete`` is True only when every read ended
+``via`` is a closed set of machine keys (``VIA_KEYS``): ``"reportSpec"`` (runs this spec),
+``"CollectionMembership"`` (in a consumer folder), ``"DataSetContent"`` (placed on a sheet). They're Egeria's own
+names; callers (Studio) map them to words, and pyegeria carries no UI words (the Architect's P3 open point 2).
+
+Resolving the artifact comes first, through Egeria's exact unique-name read (P3-1): "absent" only on Egeria's
+specific not-found; anything else is "unknown". An unresolvable artifact raises AuthoringRefused with ``.answer``
+``"absent"`` or ``"unknown"``; nothing is scanned. One exception: a built-in spec that Egeria doesn't hold still
+gets its Reports listed, with a note.
+
+Call it on demand (when the user opens "Used by"), never per keystroke or on page load: a spec costs one bounded
+Report scan (at most 2,000 Reports) plus a related read. ``complete`` is True only when every read ended
 confirmed. A read that fails, or isn't confirmed, is said in ``notes`` and makes ``complete`` False: an empty
 ``items`` is then "nothing found in what Egeria returned", never "used by none". What the user can't see is not
 listed: the answer is their view.
@@ -22,13 +32,26 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
-from pyegeria.authoring.models import ANSWER_ABSENT, AuthoringRefused
+from pyegeria.authoring.models import ANSWER_ABSENT, ANSWER_UNKNOWN, AuthoringRefused
 
 REPORT_SCAN_PAGE = 100
 REPORT_SCAN_MAX_PAGES = 20       # at most 2000 Reports per call (the Architect's cost guard)
 RELATED_PAGE = 100
 RELATED_MAX_PAGES = 10
 USED_BY_KINDS = ("spec", "report", "sheet")
+VIA_KEYS = ("reportSpec", "CollectionMembership", "DataSetContent")   # closed: Studio's word map tests against it
+SPEC_PREFIX = "ReportSpec::"
+LEGACY_SPEC_PREFIX = "ReportType::"   # the legacy loader's form only: remove with it in pyegeria 7
+
+
+def spec_label_of(value: Any) -> str:
+    """A reportSpec value (or a spec name) as a bare label: one ``ReportSpec::`` or legacy ``ReportType::`` prefix
+    stripped, nothing else changed. Matching is exact and case-sensitive on the result (P3-2)."""
+    value = value if isinstance(value, str) else ""
+    for prefix in (SPEC_PREFIX, LEGACY_SPEC_PREFIX):
+        if value.startswith(prefix):
+            return value[len(prefix):]
+    return value
 AS_YOU = "Read as you: what you can't see in Egeria isn't listed."
 
 
@@ -82,7 +105,6 @@ async def _paged(fetch, method: str, client: Any, page: int, max_pages: int):
 
 async def _reports_running(spec_label: str, client: Any, out: _Answer) -> None:
     from pyegeria.core.paging import at_least_note
-    names = {spec_label, f"ReportSpec::{spec_label}", f"ReportType::{spec_label}"}
 
     async def fetch(start, size):
         return await client.classification_manager._async_get_elements(
@@ -93,7 +115,7 @@ async def _reports_running(spec_label: str, client: Any, out: _Answer) -> None:
         out.unconfirmed(f"The Reports couldn't be read ({type(exc).__name__}), so which run this spec isn't known.")
         return
     hits = [e for e in paged.items if isinstance(e, dict) and _type(e) == "Report"
-            and str((_props(e).get("additionalProperties") or {}).get("reportSpec") or "") in names]
+            and spec_label_of((_props(e).get("additionalProperties") or {}).get("reportSpec")) == spec_label]
     for e in hits:
         p = _props(e)
         out.add("report", p.get("displayName") or p.get("qualifiedName"), p.get("qualifiedName"), "reportSpec")
@@ -157,11 +179,31 @@ async def _sheets_placing(report_guid: str, client: Any, out: _Answer) -> None:
         out.unconfirmed(at_least_note(paged, "sheets placing this Report", n))
 
 
+async def _unique(client: Any, qn: str, what: str):
+    """Egeria's exact unique-name read of `qn`: the element, or None on Egeria's specific not-found. Unknown raises
+    AuthoringRefused(answer="unknown"), never None."""
+    from pyegeria.core.unique_name import async_by_unique_name
+    found = await async_by_unique_name(client, qn)
+    if found.answer == "unknown":
+        raise AuthoringRefused(f"Couldn't confirm whether Egeria holds {what}: {found.reason or 'no clear answer'}",
+                               answer=ANSWER_UNKNOWN)
+    return found.element if found.found else None
+
+
+def _is_builtin_spec(label: str) -> bool:
+    from pyegeria.view.base_report_formats import lookup_report_spec
+    try:
+        fs, _tier, _label = lookup_report_spec(f"builtin:{label}")
+    except Exception:  # noqa: BLE001 -- not known as built in
+        return False
+    return fs is not None
+
+
 async def async_used_by(kind: str, label: str, client: Any) -> Dict[str, Any]:
-    """What uses `kind` `label`, as `client`'s user. Never raises for a failed read (it's in ``notes``); raises
-    AuthoringRefused for a bad kind, no client, or a Report or sheet that can't be resolved (pyegeria's words, with
-    ``answer`` absent or unknown)."""
-    from pyegeria.authoring.lifecycle import _by_qualified_name, _report_element
+    """What uses `kind` `label`, as `client`'s user. Never raises for a failed read of what USES it (that's in
+    ``notes``, and ``complete`` is False). Raises AuthoringRefused for a bad kind or no client, and, with ``answer``
+    ``"absent"`` or ``"unknown"``, for an artifact that can't be resolved (P3-1)."""
+    from pyegeria.authoring.lifecycle import _report_element
     from pyegeria.authoring.serialize import DASHBOARD_FOLDER_PREFIX, SPEC_FOLDER_PREFIX
     if kind not in USED_BY_KINDS:
         raise AuthoringRefused(f"used_by works on one of {', '.join(USED_BY_KINDS)}, not {kind!r}.")
@@ -172,34 +214,40 @@ async def async_used_by(kind: str, label: str, client: Any) -> Dict[str, Any]:
     out = _Answer()
 
     if kind == "spec":
-        from md_processing.v2.report import find_report_spec_element
-        bare = label.split("::", 1)[1] if label.startswith(("ReportSpec::", "ReportType::")) else label
+        bare = spec_label_of(label)
+        el = None
+        for qn in (f"{SPEC_PREFIX}{bare}", f"{LEGACY_SPEC_PREFIX}{bare}"):
+            el = await _unique(client, qn, f"a report spec {qn}")
+            if el:
+                break
+        if el is None and not _is_builtin_spec(bare):
+            raise AuthoringRefused(f"Egeria holds no report spec named {bare!r} that you can see.",
+                                   answer=ANSWER_ABSENT)
         await _reports_running(bare, client, out)
-        try:
-            el = await find_report_spec_element(client, label)
-        except Exception as exc:  # noqa: BLE001
-            out.unconfirmed(f"The spec's element couldn't be read ({type(exc).__name__}), so its folders aren't known.")
-            return out.result()
         if el is None:
-            out.notes.append(f"Egeria holds no report spec {label!r} that you can see, so no consumer folder holds "
-                             f"it for you (it may be built in, or local).")
+            out.notes.append(f"Egeria holds no report spec {bare!r} that you can see (it's built in), so no "
+                             f"consumer folder holds it for you.")
         elif _guid(el):
             await _members_of(_guid(el), client, SPEC_FOLDER_PREFIX, "spec", out)
         return out.result()
 
     if kind == "report":
-        el = await _report_element(client, label)   # unknown raises "couldn't confirm" (answer unknown)
+        el = await _unique(client, label, f"a Report {label}")
+        if not (el and _type(el) == "Report"):
+            try:
+                el = await _report_element(client, label)   # by display name; unknown raises (answer unknown)
+            except AuthoringRefused:
+                raise
+            except Exception as exc:  # noqa: BLE001 -- couldn't tell: unknown, never absent
+                raise AuthoringRefused(f"Couldn't confirm whether Egeria holds a Report named {label!r} "
+                                       f"({type(exc).__name__}).", answer=ANSWER_UNKNOWN) from exc
         if not el:
             raise AuthoringRefused(f"Egeria holds no Report named {label!r} that you can see.", answer=ANSWER_ABSENT)
         await _sheets_placing(_guid(el), client, out)
         return out.result()
 
     qn = label if label.startswith("Dashboard::") else f"Dashboard::{label}"
-    try:
-        el = await _by_qualified_name(client, qn)
-    except Exception as exc:  # noqa: BLE001
-        out.unconfirmed(f"The sheet's Dashboard couldn't be read ({type(exc).__name__}), so its folders aren't known.")
-        return out.result()
+    el = await _unique(client, qn, f"a dashboard sheet {qn}")
     if not el:
         raise AuthoringRefused(f"Egeria holds no dashboard sheet {label!r} ({qn}) that you can see.",
                                answer=ANSWER_ABSENT)
