@@ -15,7 +15,10 @@ OLD = json.dumps({"version": "6.3-SNAPSHOT", "time": "2026-11-10T08:00:00Z"})
 
 
 @pytest.fixture(autouse=True)
-def _fresh_gate():
+def _fresh_gate(monkeypatch):
+    """Hermetic: no EGERIA_* identity from the developer's shell (READBACK-STUDIO-FIXES 2026-11-15 §1)."""
+    for var in ("EGERIA_USER", "EGERIA_USER_PASSWORD", "EGERIA_PASSWORD"):
+        monkeypatch.delenv(var, raising=False)
     paging._GATE_CACHE.clear()
     yield
     paging._GATE_CACHE.clear()
@@ -116,3 +119,14 @@ def test_bad_arguments_are_refused_and_the_sync_form_works():
     with pytest.raises(AuthoringRefused):
         _ask("spec", "x", None)
     assert can_edit("spec", "Referenceable", _Client())["answer"] == "no"
+
+
+@pytest.mark.parametrize("shell_user", [None, "peterprofile", "someoneelse"])
+def test_the_shells_user_changes_nothing(monkeypatch, shell_user):
+    """The answer is the client's user's, whatever EGERIA_USER says."""
+    if shell_user:
+        monkeypatch.setenv("EGERIA_USER", shell_user)
+    c = _Client(elements=[_el("ReportSpec::Made", created_by="peterprofile")])
+    assert _ask("spec", "Made", c)["answer"] == "yes"
+    other = _Client(elements=[_el("ReportSpec::Made", created_by="peterprofile")], user="erinoverview")
+    assert _ask("spec", "Made", other)["answer"] == "unknown"
