@@ -2531,14 +2531,14 @@
       "Journal Entry": ""
     },
     "Project Scope": {
-      "variable_name": "project_scope",
+      "variable_name": "scope",
       "inUpdate": true,
       "attr_labels": "",
       "examples": "",
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "The scope of the project \u2014 what is in and out of scope.",
+      "description": "The scope of the project: what is in and out of its scope. Stored in Egeria's ProjectProperties.scope.",
       "generated": false,
       "style": "Simple",
       "user_specified": true,

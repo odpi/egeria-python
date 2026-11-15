@@ -97,7 +97,7 @@ class ProjectProcessor(AsyncBaseCommandProcessor):
             "successCriteria": attributes.get('Success Criteria', {}).get('value'),
         })
         # PROJECT-ATTRIBUTES-MAPPING-2026-11-12 + the owner's decisions (F-B group 7). ProjectProperties
-        # (odpi/egeria origin/main 0b7ee0fb) has no projectIdentifier / purposes / projectType / projectScope /
+        # (odpi/egeria origin/main 0b7ee0fb) has no projectIdentifier / purposes / projectType /
         # project{Approach,ManagementStyle,ResultsUsage}: those keys were sent and silently ignored.
         if attributes.get('Project Identifier', {}).get('value'):
             if not prop_body.get("identifier"):
@@ -108,10 +108,9 @@ class ProjectProcessor(AsyncBaseCommandProcessor):
         if attributes.get('Purposes', {}).get('value'):
             record_not_applied(attributes, "Purposes", [
                 "not applied: Purposes: Project Purposes was removed (owner's decision, 2026-11-12)"])
-        if attributes.get('Project Scope', {}).get('value'):
-            record_not_applied(attributes, "Project Scope", [
-                "not applied: Project Scope: Project has no scope property in Egeria (owner's decision, 2026-11-12: "
-                "use relationships such as governedBy or assignedTo)"])
+        # ProjectProperties.scope ("what is in and out of the scope of the project", odpi/egeria #9448). None is
+        # dropped on a merge update, so an omitted Project Scope leaves the stored scope alone.
+        prop_body["scope"] = attributes.get('Project Scope', {}).get('value')
         project_classification = {k: attributes.get(a, {}).get('value') for a, k in (
             ("Project Approach", "approach"), ("Project Management Style", "managementStyle"),
             ("Project Results Usage", "resultsUsage"))}
