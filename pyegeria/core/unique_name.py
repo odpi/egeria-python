@@ -101,44 +101,117 @@ def answer_for_error(exc: BaseException, qualified_name: str) -> UniqueName:
                       reason=f"the unique-name read failed: {type(exc).__name__}" + (f": {detail}" if detail else ""))
 
 
-def _reader(client: Any, name: str) -> Any:
+def _text(value: Any) -> Optional[str]:
+    return (value.strip() or None) if isinstance(value, str) else None
+
+
+def _caller_token(client: Any) -> Optional[str]:
+    """The caller's own bearer token, bare (``get_token`` may return the "Bearer ..." header value), or None."""
+    try:
+        token = _text(client.get_token())
+    except Exception:  # noqa: BLE001 -- no Authorization header: the caller holds no token
+        return None
+    if token and token.lower().startswith("bearer "):
+        token = _text(token[7:])
+    return token
+
+
+@dataclass
+class _Read:
+    """How to make the unique-name read: `fn`, plus the explorer built for it (closed after), or `unknown`."""
+    fn: Any = None
+    explorer: Any = None
+    unknown: Optional[str] = None
+
+
+def _reader(client: Any, name: str) -> _Read:
     """The unique-name read on `client`, its classification_manager, or a ClassificationExplorer made on the
-    same platform as the same caller (their token): CollectionManager has no unique-name read of its own."""
+    same platform AS THE SAME CALLER (CollectionManager has no unique-name read of its own; READBACK U1):
+
+    - the caller's token, built with ``user_pwd=NO_PASSWORD``: the explorer never holds the settings default
+      password, so a 401 auto-retry can't sign in again with it (C2);
+    - with no token, ``carried_password(client)``: the password the caller holds, or its NO_PASSWORD opt-out
+      (then, with no token either, unknown); never a settings default;
+    - with neither, or no real ``view_server``/``platform_url`` strings (a fake, a non-client): unknown, with no
+      client built and no call to Egeria.
+    """
     fn = getattr(client, name, None)
     if callable(fn):
-        return fn
+        return _Read(fn)
     sub = getattr(client, "classification_manager", None)
     fn = getattr(sub, name, None) if sub is not None else None
     if callable(fn):
-        return fn
+        return _Read(fn)
+    view_server = _text(getattr(client, "view_server", None))
+    platform_url = _text(getattr(client, "platform_url", None))
+    if not (view_server and platform_url):
+        return _Read(unknown="the caller isn't a client on an Egeria platform, so no unique-name read was made")
+    from pyegeria.core._no_password import NO_PASSWORD, carried_password
+    token = _caller_token(client)
+    user_id = _text(getattr(client, "user_id", None))
+    if token:
+        user_pwd = NO_PASSWORD
+    else:
+        carried = carried_password(client)
+        user_pwd = carried if carried is not NO_PASSWORD and _text(carried) else None
+        if not (user_id and user_pwd):
+            return _Read(unknown="the caller holds neither a token nor its own password, so no unique-name read "
+                                 "was made")
     from pyegeria.omvs.classification_explorer import ClassificationExplorer
-    explorer = ClassificationExplorer(client.view_server, client.platform_url, user_id=getattr(client, "user_id", None),
-                                      user_pwd=getattr(client, "user_pwd", None))
-    try:
-        token = client.get_token()
-    except Exception:  # noqa: BLE001 -- no token to share: the explorer authenticates as the user itself
-        token = None
+    explorer = ClassificationExplorer(view_server, platform_url, user_id=user_id, user_pwd=user_pwd)
     if token:
         explorer.set_bearer_token(token)
-    return getattr(explorer, name)
+    return _Read(getattr(explorer, name), explorer)
+
+
+def _close(explorer: Any) -> None:
+    try:
+        explorer.close_session()
+    except Exception:  # noqa: BLE001 -- closing is best-effort; the answer stands
+        pass
+
+
+async def _async_close(explorer: Any) -> None:
+    try:
+        await explorer._async_close_session()
+    except Exception:  # noqa: BLE001 -- closing is best-effort; the answer stands
+        pass
 
 
 def by_unique_name(client: Any, qualified_name: str, type_name: Optional[str] = None) -> UniqueName:
     """Egeria's exact unique-name read of `qualified_name` (optionally of `type_name` or a subtype). Never raises:
     an error is "unknown" (or "absent" for Egeria's specific not-found)."""
     try:
-        result = _reader(client, "get_element_by_unique_name")(qualified_name)
+        read = _reader(client, "get_element_by_unique_name")
+    except Exception as exc:  # noqa: BLE001 -- couldn't even build the read: unknown, never absent
+        return UniqueName("unknown", qualified_name, reason=f"the unique-name read failed: {type(exc).__name__}")
+    if read.unknown:
+        return UniqueName("unknown", qualified_name, reason=read.unknown)
+    try:
+        result = read.fn(qualified_name)
     except Exception as exc:  # noqa: BLE001 -- only Egeria's specific not-found is "absent"
         return answer_for_error(exc, qualified_name)
+    finally:
+        if read.explorer is not None:
+            _close(read.explorer)
     return answer_for(result, qualified_name, type_name)
 
 
 async def async_by_unique_name(client: Any, qualified_name: str, type_name: Optional[str] = None) -> UniqueName:
     """``by_unique_name`` for async code."""
     try:
-        result = await _reader(client, "_async_get_element_by_unique_name")(qualified_name)
+        read = _reader(client, "_async_get_element_by_unique_name")
+    except Exception as exc:  # noqa: BLE001 -- couldn't even build the read: unknown, never absent
+        return UniqueName("unknown", qualified_name, reason=f"the unique-name read failed: {type(exc).__name__}")
+    if read.unknown:
+        return UniqueName("unknown", qualified_name, reason=read.unknown)
+    try:
+        result = await read.fn(qualified_name)
     except Exception as exc:  # noqa: BLE001 -- only Egeria's specific not-found is "absent"
         return answer_for_error(exc, qualified_name)
+    finally:
+        if read.explorer is not None:
+            await _async_close(read.explorer)
     return answer_for(result, qualified_name, type_name)
 
 
