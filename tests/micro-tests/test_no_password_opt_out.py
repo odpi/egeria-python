@@ -182,3 +182,45 @@ async def test_control_an_expired_token_with_none_still_renews_with_the_default(
     await tech._get_subclient("glossary_manager")._async_make_request("POST", ENDPOINT, {})
     assert egeria.served_as == ["peterprofile"]
     assert egeria.mint_attempts[-1] == ("peterprofile", DEMO_PWD)
+
+
+# ── C1: a parent scrubbed after construction hands no password to the sub-clients it builds later ──
+
+def _scrubbed_tech():
+    """The Portal's use_token / Studio's and EA's _scrub: built with None (so the default filled it), then the
+    password cleared."""
+    tech = EgeriaTech(VIEW_SERVER, PLATFORM, user_id="peterprofile", user_pwd=None, token="peter-token")
+    assert tech.user_pwd == DEMO_PWD
+    tech.user_pwd = None
+    return tech
+
+
+def test_a_scrubbed_parent_hands_no_password_to_a_lazily_built_sub_client(demo_default):
+    tech = _scrubbed_tech()
+    assert carried_password(tech) is NO_PASSWORD
+    for name in _names():
+        assert tech._get_subclient(name).user_pwd is None, name
+
+
+def test_a_scrubbed_parent_hands_no_password_to_a_helper_client(demo_default):
+    from pyegeria.omvs.collection_manager import CollectionManager
+    from pyegeria.view import egeria_spec_cache as esc
+    assert esc._collection_client(_scrubbed_tech(), CollectionManager).user_pwd is None
+
+
+def test_carried_password_keeps_a_cli_parent_password(demo_default):
+    assert carried_password(EgeriaTech(VIEW_SERVER, PLATFORM, user_id="peterprofile", user_pwd=None)) == DEMO_PWD
+    assert carried_password(EgeriaTech(VIEW_SERVER, PLATFORM, user_id="peterprofile", user_pwd="own")) == "own"
+
+
+async def test_a_scrubbed_parent_s_expired_token_fails_as_401_not_a_sign_in(egeria):
+    tech = EgeriaTech(VIEW_SERVER, PLATFORM, user_id="peterprofile", user_pwd=None)
+    await tech._async_create_egeria_bearer_token("peterprofile", DEMO_PWD)
+    tech.user_pwd = None   # the scrub
+    sub = tech._get_subclient("glossary_manager")
+    egeria.valid.clear()
+    egeria.mint_attempts.clear()
+    with pytest.raises(PyegeriaUnauthorizedException):
+        await sub._async_make_request("POST", ENDPOINT, {})
+    assert egeria.mint_attempts == []
+    assert egeria.served_as == []

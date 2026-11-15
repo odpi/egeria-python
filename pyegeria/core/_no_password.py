@@ -52,8 +52,12 @@ def password_as_given(user_pwd: Any) -> Optional[str]:
 
 
 def carried_password(client: Any) -> Any:
-    """The `user_pwd` to build a sub-client or helper client with, acting for `client`: NO_PASSWORD when `client`
-    opted out of the default, else the password it holds."""
-    if getattr(client, "use_default_password", True) is False:
+    """The `user_pwd` to build a sub-client or helper client with, acting for `client`: the password `client`
+    holds, or NO_PASSWORD when it holds none (it opted out, or its password was cleared after construction, as
+    the Portal's use_token and Studio's/EA's scrub do). A child never holds a password its parent doesn't, so
+    it never falls back to the configured default (Architect C1). A CLI's client holds the configured password
+    already (None filled it at construction), so CLIs are unaffected."""
+    password = getattr(client, "user_pwd", None)
+    if getattr(client, "use_default_password", True) is False or not password:
         return NO_PASSWORD
-    return getattr(client, "user_pwd", None)
+    return password
