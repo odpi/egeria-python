@@ -687,10 +687,24 @@ class _DraftEgeria:
 
             async def _async_find_elements_by_property_value(self, value, names, metadata_element_type=None,
                                                              governance_zone_filter=None, start_from=0, **kw):
+                # like Egeria (PY-18): the value is matched LITERALLY, never as a regular expression
                 if start_from:
                     return []
                 return [e for e in outer.elements.values()
-                        if e["elementHeader"]["type"]["typeName"] == metadata_element_type]
+                        if e["elementHeader"]["type"]["typeName"] == metadata_element_type
+                        and any(value in str(e["properties"].get(n) or "") for n in names)] or "No elements found"
+
+            async def _async_get_elements(self, metadata_element_type="Referenceable", start_from=0, page_size=10,
+                                          governance_zone_filter=None, **kw):
+                # elements/by-type: every element of the type, limited to the zones asked for; null (not [])
+                # past the last row, as Egeria ends a read
+                from pyegeria.view.egeria_spec_cache import _zones
+                if start_from:
+                    return "No elements found"
+                return [e for e in outer.elements.values()
+                        if e["elementHeader"]["type"]["typeName"] == metadata_element_type
+                        and (not governance_zone_filter or set(_zones(e)) & set(governance_zone_filter))
+                        ] or "No elements found"
 
             async def _async_get_related_elements(self, guid, relationship_type=None, start_at_end=1, **kw):
                 assert relationship_type == "CollectionMembership" and start_at_end == 2

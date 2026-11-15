@@ -195,6 +195,7 @@ class LocalDraftStore:
 
 _ELEMENT_TYPE = {"spec": "ReportSpec", "report": "Report", "sheet": "Dashboard"}
 PRUNE_DAYS = 30
+LIST_PAGE_SIZE = 50   # rows per by-type request when listing an author's drafts (never below 25)
 NOT_PRIVATE_WORDS = "a private draft is zoned only to you; publish it to share it"
 #: The draft marker on a Report (additionalProperties); a spec carries contentStatus DRAFT instead.
 DRAFT_MARKER = ("authoringState", "draft")
@@ -381,7 +382,10 @@ class EgeriaDraftStore:
                          notes: Optional[List[str]] = None) -> List[Dict[str, Any]]:
         """The author's drafts: every ReportSpec, Report and Dashboard in their private zone, read as them.
 
-        Paged through ``page_all`` (pager step 4; a suspect path, classification-explorer property search).
+        Read by TYPE with the author's zone as the filter (classification-explorer elements/by-type, which is
+        findMetadataElements underneath: NULL_NOT_END before #9453, gate-trusted after it), paged through
+        ``page_all``. Never a property search for ".*": Egeria matches a property value literally, so that
+        listed no drafts on a live server (PY-18, found by the D16 run on laz, 2026-11-15).
         When a kind's read isn't confirmed complete, ``notes`` (if given) gets "Showing at least N ..." for it,
         so a caller that shows the list never presents it as all of them."""
         from pyegeria.core.paging import async_page_all, async_paging_for, at_least_note, log_end
@@ -389,11 +393,11 @@ class EgeriaDraftStore:
         out: List[Dict[str, Any]] = []
         for k in ([kind] if kind else list(KINDS)):
             async def fetch(start, size, k=k):
-                return await self.client.classification_manager._async_find_elements_by_property_value(
-                    ".*", ["qualifiedName"], metadata_element_type=_ELEMENT_TYPE[k], starts_with=False,
-                    governance_zone_filter=[zone], graph_query_depth=0, start_from=start, page_size=size)
-            paged = await async_page_all(fetch, fetch_page_size=50,
-                                         **await async_paging_for("find_elements_by_property_value", self.client))
+                return await self.client.classification_manager._async_get_elements(
+                    metadata_element_type=_ELEMENT_TYPE[k], governance_zone_filter=[zone], graph_query_depth=0,
+                    start_from=start, page_size=size)
+            paged = await async_page_all(fetch, fetch_page_size=LIST_PAGE_SIZE,
+                                         **await async_paging_for("_async_get_elements", self.client))
             log_end("drafts.async_list", paged)
             if notes is not None and (words := at_least_note(paged, f"{k} drafts")):
                 notes.append(words)

@@ -125,6 +125,12 @@ Notes collected on `release/next` for the next release. The version number is se
 
 ## Fixes (drafts)
 
+- **`EgeriaDraftStore.list` and `prune_drafts` find the author's drafts on a live Egeria** (PY-18). The list used
+  to search property values for `".*"`, which Egeria matches as literal text, not as a pattern, so on a real server
+  it listed no drafts and prune removed none. It now reads each kind by type (ReportSpec, Report, Dashboard), with
+  the author's zone as the filter, paged like the other by-type reads: complete on a platform with the #9453 fix,
+  "at least N" before it. The exact-zone rule and the "at least" notes are unchanged. Found by the D16 privacy run
+  on laz (2026-11-15).
 - **Private drafts are zoned exactly to their author** (`EgeriaDraftStore`, D16). An element whose zones include
   the author's own zone and others is shared, never a private draft:
   - save, load and delete refuse it with "a private draft is zoned only to you; publish it to share it";

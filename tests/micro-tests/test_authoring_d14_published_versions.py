@@ -404,10 +404,10 @@ def test_draft_prune_and_delete_never_take_a_published_element():
             raise AssertionError("a published element was deleted")
     eg.asset_maker = AM()
 
-    async def find(value, names, metadata_element_type=None, **kw):
+    async def by_type(metadata_element_type=None, **kw):
         return [as_view_element(h[0]) for h in eg.histories.values()
                 if h[0]["type"]["typeName"] == metadata_element_type] if not kw.get("start_from") else []
-    eg.classification_manager._async_find_elements_by_property_value = find
+    eg.classification_manager._async_get_elements = by_type
     store = EgeriaDraftStore(eg)
     out = store.prune_drafts(ERIN, older_than_days=1)
     assert out["removed"] == [] and "published (version 1)" in out["kept_reasons"]["report:Old"]
