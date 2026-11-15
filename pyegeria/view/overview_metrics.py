@@ -343,7 +343,7 @@ def _all_relationships(ce, relationship_type: str, as_of: Optional[str] = None) 
     # Distinct by relationship GUID, as before; a row without one is always its own row (never merged).
     unkeyed = itertools.count()
     paged = page_all(fetch, fetch_page_size=DEFAULT_CAP, max_pages=MAX_SCAN_PAGES,
-                     **paging_for("get_relationships"),   # NULL_NOT_END: 6 probes, a null is never the end
+                     **paging_for("get_relationships", ce),   # NULL_NOT_END without #9454; trusted with it
                      key=lambda r: (r.get("relationshipHeader") or {}).get("guid") or r.get("guid")
                      or ("unkeyed", next(unkeyed)))
     return _settle_scan(paged, f"{relationship_type} relationships", "relationship")
