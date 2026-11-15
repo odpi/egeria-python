@@ -6,6 +6,7 @@ Copyright Contributors to the ODPi Egeria project.
 
 """
 
+from pyegeria.core._no_password import NO_PASSWORD, carried_password, password_as_given, resolve_password
 import asyncio
 import warnings
 from datetime import datetime
@@ -88,7 +89,7 @@ class AutomatedCuration(ServerClient):
         self.view_server = view_server
         self.platform_url = platform_url
         self.user_id = user_id
-        self.user_pwd = user_pwd
+        self.user_pwd = password_as_given(user_pwd)
         ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token=token, timeout=timeout)
         self.ref_curation_command_base = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/automated-curation"
 

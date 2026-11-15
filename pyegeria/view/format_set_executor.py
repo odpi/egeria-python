@@ -13,6 +13,7 @@ Notes
 """
 from __future__ import annotations
 
+from pyegeria.core._no_password import NO_PASSWORD, carried_password, password_as_given, resolve_password
 import asyncio
 import contextvars
 import inspect
@@ -512,7 +513,7 @@ def _resolve_action_target_client(egeria_client: EgeriaTech, client_class: type)
         egeria_client.view_server,
         egeria_client.platform_url,
         user_id=egeria_client.user_id,
-        user_pwd=egeria_client.user_pwd,
+        user_pwd=carried_password(egeria_client),
         token=egeria_client.token,
     )
     client._token_minted_for = getattr(egeria_client, "_token_minted_for", None)
