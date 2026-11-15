@@ -37,12 +37,17 @@ def bare_token(parent: Any) -> Optional[str]:
     """The parent's bearer token without any "Bearer " prefix, or None when it holds none. Read from its
     Authorization header (`get_token`) first, which `set_bearer_token` keeps current, then its `token`."""
     token = None
-    # The class's own get_token only: a facade that delegates unknown names to its sub-clients (EgeriaConfig's
-    # __getattr__) would build a sub-client to answer, and that sub-client is built by this function.
-    getter = getattr(type(parent), "get_token", None)
+    # A facade (it holds a _subclient_map) is asked only through its class's own get_token: one that delegates
+    # unknown names to its sub-clients (EgeriaConfig's __getattr__) would build a sub-client to answer, and
+    # that sub-client is built by this function.
+    if "_subclient_map" in getattr(parent, "__dict__", {}):
+        method = getattr(type(parent), "get_token", None)
+        getter = (lambda: method(parent)) if callable(method) else None
+    else:
+        getter = getattr(parent, "get_token", None)
     if callable(getter):
         try:
-            token = _text(getter(parent))
+            token = _text(getter())
         except Exception:  # noqa: BLE001 -- no Authorization header
             token = None
     if not token:

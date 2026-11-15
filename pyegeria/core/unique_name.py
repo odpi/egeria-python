@@ -105,17 +105,6 @@ def _text(value: Any) -> Optional[str]:
     return (value.strip() or None) if isinstance(value, str) else None
 
 
-def _caller_token(client: Any) -> Optional[str]:
-    """The caller's own bearer token, bare (``get_token`` may return the "Bearer ..." header value), or None."""
-    try:
-        token = _text(client.get_token())
-    except Exception:  # noqa: BLE001 -- no Authorization header: the caller holds no token
-        return None
-    if token and token.lower().startswith("bearer "):
-        token = _text(token[7:])
-    return token
-
-
 @dataclass
 class _Read:
     """How to make the unique-name read: `fn`, plus the explorer built for it (closed after), or `unknown`."""
