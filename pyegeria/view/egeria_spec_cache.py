@@ -69,6 +69,8 @@ __all__ = [
     "egeria_tier",
     "egeria_tier_info",
     "as_client",
+    "declare_multi_user",
+    "is_multi_user",
     "spec_footer",
     "fetched_spec",
     "fetched_spec_source",
@@ -154,6 +156,8 @@ def _settings_env():
 # identity. The identity is the Egeria user on a platform and view server, never the OS user. It is the user id,
 # not a token hash, because a manifest outlives every token: a CLI mints a new token on each run.
 
+from pyegeria.core._client_identities import declare_multi_user, is_multi_user  # noqa: E402 -- re-exported
+
 _SPEC_IDENTITY: "ContextVar[Optional[str]]" = ContextVar("pyegeria_spec_identity", default=None)
 _REFUSED_LOGGED: set = set()
 
@@ -198,6 +202,8 @@ def as_client(client: Any):
     hand is for that client's credential, never for the process fallback. A client with no readable identity
     (a bare object) leaves the current identity as it is."""
     identity = client_credential_identity(client) if client is not None else None
+    if identity:
+        _note_client(client)   # its current identity (after any user_id swap) counts towards "more than one"
     return spec_identity(identity) if identity else nullcontext()
 
 
@@ -205,17 +211,28 @@ def current_spec_identity() -> Optional[str]:
     """The identity the EGERIA tier is read for:
     1. the one set by `spec_identity` (exec_report_spec, the async runner and the dashboard resolver set it
        from the request's client);
-    2. else the credentials of this process's Egeria clients (`pyegeria.core._client_identities`), when it has
-       seen exactly one: a single-user process (a CLI, the MCP server) reads as the user its client signs in
+    In a process DECLARED multi-user (`pyegeria.core._client_identities.declare_multi_user()` or
+    PYEGERIA_MULTI_USER=1: the Portal, EA, Studio, the MCP HTTP server), nothing else: None, so no private cache
+    loads and no fetched copy is served outside a request's own identity. Otherwise:
+    2. the credentials of this process's Egeria clients (`pyegeria.core._client_identities`), when it has seen
+       exactly one: a single-user process (a CLI, the stdio MCP server) reads as the user its client signs in
        as, whatever the settings say;
-    3. else, when it has seen more than one, None: a multi-user process (Portal, EA) loads no private cache
-       outside a request's own identity (logged once);
+    3. when it has seen more than one, None (logged once). This is only a BACKSTOP for an undeclared server:
+       it can be skipped, because a server that builds clients as its service user and then swaps user_id
+       (the Portal's use_token) records the service user first, and reads as it until a second identity is
+       seen. A multi-user process must declare itself;
     4. else, with no client yet, this process's configured Egeria user, resolved exactly as a CLI's client is
        (`pyegeria.core.config.configured_user_id`: EGERIA_USER, the settings' user, the quickstart default).
     A path that holds a client binds to it instead (`as_client`), whatever this fallback says."""
     identity = _SPEC_IDENTITY.get()
     if identity:
         return identity
+    try:
+        from pyegeria.core._client_identities import is_multi_user
+        if is_multi_user():
+            return None
+    except Exception:  # noqa: BLE001
+        return None   # can't tell: fail safe
     try:
         from pyegeria.core._client_identities import seen_credentials
         seen = {credential_identity(*entry) for entry in seen_credentials()} - {None}
@@ -1397,7 +1414,10 @@ _REFUSAL_LOGGED: set = set()
 def _fetched_hit(label: str, version: int, identity: Optional[str] = None):
     """The fetched copy for (`identity` or the current spec identity, label, version), or None. Never another
     identity's copy."""
-    return _FETCHED.get((identity if identity is not None else current_spec_identity(), label, version))
+    who = identity if identity is not None else current_spec_identity()
+    if who is None:
+        return None   # no identity (a declared multi-user process outside a request): served to no one
+    return _FETCHED.get((who, label, version))
 
 
 def fetched_refusal(name: str, identity: Optional[str] = None) -> Optional[str]:
@@ -1469,7 +1489,8 @@ def _finish_fetch(directory: Path, el: Dict[str, Any], label: str, identity: str
             "version": built.provenance["version_identifier"], "header_version": version,
             "fetched_at": built.provenance["fetched_at"], "fetched": True, "shared": shared,
             "qualified_name": built.provenance["qualified_name"], "visibility": visibility}
-    _FETCHED[(bound, label, version)] = (built.format_set, info)   # served only to the identity that fetched it
+    if bound is not None:   # a fetcher with no identity keeps no copy anyone could be served
+        _FETCHED[(bound, label, version)] = (built.format_set, info)   # served only to the identity that fetched it
     owner = manifest.get("bound_identity")
     if visibility != "public":
         # The spec-cache identity ruling, item 2: a zoned spec (or one whose visibility can't be read) is never

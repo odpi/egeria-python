@@ -76,6 +76,12 @@ def main() -> None:
 
     global GLOBAL_EGERIA_CLIENT
 
+    # This server acts for every MCP caller (tools run as the credential the caller passes), so it declares
+    # itself multi-user: a read outside a caller's own identity takes no fallback identity (its startup client's
+    # included), and sees only the shared spec cache it syncs below (spec-cache R-A).
+    from pyegeria.core._client_identities import declare_multi_user
+    declare_multi_user()
+
     try:
         """ Runs ONCE when the server starts.
             Initializes the Egeria client and stores it in the server's state.
