@@ -129,10 +129,11 @@ def test_orphan_count_is_not_measured_unless_the_scan_is_confirmed():
 
 
 def test_a_null_not_end_method_never_reaches_the_end_and_probes_six_pages():
-    assert paging.NULL_NOT_END_METHODS == {"find_metadata_elements", "get_relationships",
+    assert paging.NULL_NOT_END_METHODS - paging.BY_TYPE_METHODS == {"find_metadata_elements", "get_relationships",
                                            "get_elements_by_property_value", "find_elements_by_property_value",
                                            "_async_get_elements_by_property_value"   # + the exists-lookups ruling
                                            } | paging.BY_NAME_METHODS   # + the MyEgeria read-back R3 (findMetadataElements)
+    assert paging.BY_TYPE_METHODS < paging.NULL_NOT_END_METHODS   # + P3 ruling (c): elements/by-type, the same
     calls = []
 
     def fetch(start, size):
