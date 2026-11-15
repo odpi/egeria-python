@@ -9,6 +9,7 @@ Copyright Contributors to the ODPi Egeria project.
 
 """
 
+from pyegeria.core._no_password import NO_PASSWORD, carried_password, password_as_given, resolve_password
 import asyncio
 
 from loguru import logger
@@ -120,7 +121,7 @@ class AssetCatalog(ServerClient):
         self.view_server = view_server
         self.platform_url = platform_url
         self.user_id = user_id
-        self.user_pwd = user_pwd
+        self.user_pwd = password_as_given(user_pwd)
 
     #
     # Output helpers

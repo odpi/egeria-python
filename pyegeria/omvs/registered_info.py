@@ -13,6 +13,7 @@ make sure the companion service is also configured and running.
 
 from typing import Optional
 
+from pyegeria.core._no_password import NO_PASSWORD, carried_password, password_as_given, resolve_password
 from pyegeria.core._server_client import ServerClient
 from pyegeria.view.base_report_formats import select_report_spec, get_report_spec_match
 from pyegeria.view.output_formatter import (
@@ -65,7 +66,7 @@ class RegisteredInfo(ServerClient):
         self.view_server = view_server
         self.platform_url = platform_url
         self.user_id = user_id
-        self.user_pwd = user_pwd
+        self.user_pwd = password_as_given(user_pwd)
         self.reg_command_root = (
             f"{self.platform_url}/open-metadata/platform-services/"
             f"server-platform/registered-services"

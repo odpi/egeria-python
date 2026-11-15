@@ -2,6 +2,28 @@
 
 Notes collected on `release/next` for the next release. The version number is set when it's cut.
 
+## New
+
+- **`NO_PASSWORD`: opt out of the configured default password** (`from pyegeria.core._no_password import
+  NO_PASSWORD`). Pass `user_pwd=NO_PASSWORD` to any client (`EgeriaTech`, `EgeriaCat`, `Egeria`, `EgeriaConfig`, the
+  OMVS classes, `BaseServerClient`, `BasePlatformClient`), typically with a bearer token for a signed-in user. The
+  client then holds no password (`user_pwd is None`, `use_default_password is False`), and so does every sub-client
+  `EgeriaTech` builds and every helper client pyegeria builds for it. The configured password
+  (`settings.User_Profile.user_pwd`) is never used, so when the token expires the request fails with a 401
+  (`PyegeriaUnauthorizedException`) instead of the one auto-retry signing in again as the configured (demo) user.
+  Every client pyegeria builds to act for another (sub-clients and helpers) now goes through one
+  `pyegeria.core._helper_client.helper_client`: the caller's bearer token set once (exactly one `Bearer ` prefix), and
+  the caller's own password or none, never the configured default, even when the token arrived through
+  `set_bearer_token`.
+  This replaces the password scrub and `_get_subclient` patch that token-only callers needed. **`user_pwd=None` is
+  unchanged**: it still takes the configured password, which CLIs rely on.
+
+## Planned for pyegeria 7 (expected early January 2027)
+
+- **No default password, and no built-in identity outside a named demo profile.** pyegeria 7 drops the quickstart
+  defaults (`erinoverview` / `secret`): a client gets credentials only from its arguments, the environment,
+  config.json, or a demo profile named explicitly.
+
 ## Deprecations
 
 - **`pyegeria.view.base_report_formats.load_egeria_report_specs` is deprecated and will be removed in pyegeria 7
@@ -61,3 +83,19 @@ Notes collected on `release/next` for the next release. The version number is se
 - **`spec_identity(None)` now means "explicitly no one"**: no private cache loads and no fetched copy is served,
   whether or not the process is declared multi-user. Before, None was read as "not set" and fell back to the
   process's own identity. An empty identity means no one too.
+
+## Fixes
+
+- **The exact unique-name read no longer signs in with the settings default password** (`pyegeria.core.unique_name`).
+  When the caller has no unique-name read of its own (a `CollectionManager`, say), pyegeria builds a
+  `ClassificationExplorer` on the same platform. It now acts exactly as the caller:
+  - The explorer gets the caller's token and is built with `user_pwd=NO_PASSWORD`, so it never holds a password. Before, a caller that had cleared its password (as Studio
+    and EA do) gave the explorer the settings default. A 401 auto-retry could then sign in again as that default user.
+  - With no token, the explorer uses only `carried_password(client)`: a password the caller itself holds, or the
+    caller's own `NO_PASSWORD` opt-out. If the caller has neither, the answer is
+    "unknown" and Egeria isn't called.
+  - The token is shared bare. Before, the `"Bearer ..."` header value was set as the token, which gave `"Bearer
+    Bearer ..."`.
+  - A caller without real `view_server` and `platform_url` strings (a fake, or anything that isn't a client) gets
+    "unknown". No client is built.
+  - The explorer is closed after the read.

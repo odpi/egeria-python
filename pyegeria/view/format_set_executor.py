@@ -13,6 +13,7 @@ Notes
 """
 from __future__ import annotations
 
+from pyegeria.core._no_password import NO_PASSWORD, carried_password, password_as_given, resolve_password
 import asyncio
 import contextvars
 import inspect
@@ -508,15 +509,8 @@ def _resolve_action_target_client(egeria_client: EgeriaTech, client_class: type)
                 return egeria_client._get_subclient(attr_name)
 
     # Fallback for non-standard clients outside EgeriaTech's map.
-    client = client_class(
-        egeria_client.view_server,
-        egeria_client.platform_url,
-        user_id=egeria_client.user_id,
-        user_pwd=egeria_client.user_pwd,
-        token=egeria_client.token,
-    )
-    client._token_minted_for = getattr(egeria_client, "_token_minted_for", None)
-    return client
+    from pyegeria.core._helper_client import helper_client
+    return helper_client(client_class, egeria_client)
 
 
 def _normalize_report_params(params: Dict[str, Any], action_mode: str = "generic") -> Dict[str, Any]:

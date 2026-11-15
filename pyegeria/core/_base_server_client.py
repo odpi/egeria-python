@@ -7,6 +7,7 @@ different client capabilities. It also provides the common methods used to make 
 
 """
 
+from pyegeria.core._no_password import NO_PASSWORD, carried_password, password_as_given, resolve_password
 import asyncio
 import inspect
 import json
@@ -117,7 +118,7 @@ class BaseServerClient:
         self.user_id = user_id or settings.User_Profile.user_name
         if self.user_id:
             _validate_url_path_safe(self.user_id, "user_id")
-        self.user_pwd = user_pwd or settings.User_Profile.user_pwd
+        self.user_pwd, self.use_default_password = resolve_password(user_pwd)  # NO_PASSWORD: opt out
         try:  # whose report-spec cache a read outside a request is for (see _client_identities)
             from pyegeria.core._client_identities import note_credentials
             note_credentials(self.user_id, self.platform_url, self.server_name)

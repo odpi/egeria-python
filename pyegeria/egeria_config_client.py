@@ -5,6 +5,7 @@ Copyright Contributors to the ODPi Egeria project.
 Client to configure the Egeria platform and servers
 
 """
+from pyegeria.core._no_password import NO_PASSWORD, carried_password, password_as_given, resolve_password
 from pyegeria.omvs.core_omag_server_config import CoreServerConfig
 from pyegeria.omvs.full_omag_server_config import FullServerConfig
 from pyegeria.omvs.server_operations import  ServerOps
@@ -28,7 +29,7 @@ class EgeriaConfig:
         self.view_server = view_server or settings.Environment.egeria_view_server
         self.platform_url = platform_url or settings.Environment.egeria_platform_url
         self.user_id = user_id or settings.User_Profile.user_name
-        self.user_pwd = user_pwd or settings.User_Profile.user_pwd
+        self.user_pwd, self.use_default_password = resolve_password(user_pwd)  # NO_PASSWORD: opt out
         self.token = token
         self.timeout = timeout
 
@@ -39,16 +40,11 @@ class EgeriaConfig:
         self._instantiated_clients = {}
 
     def _get_subclient(self, attr_name: str):
+        """Lazy-load and cache sub-clients, each built to act for this client (helper_client, C3)."""
         if attr_name not in self._instantiated_clients:
-            client_cls = self._subclient_map[attr_name]
-            self._instantiated_clients[attr_name] = client_cls(
-                self.view_server,
-                self.platform_url,
-                self.user_id,
-                self.user_pwd,
-                self.token,
-                timeout=self.timeout,
-            )
+            from pyegeria.core._helper_client import helper_client
+            self._instantiated_clients[attr_name] = helper_client(
+                self._subclient_map[attr_name], self, timeout=self.timeout)
         return self._instantiated_clients[attr_name]
 
     def __getattr__(self, name):
