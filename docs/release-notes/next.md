@@ -45,3 +45,19 @@ Notes collected on `release/next` for the next release. The version number is se
 - **Paging:** `get_elements` (read by type) is `findMetadataElements` underneath, so it's now NULL_NOT_END and
   gate-trusted on a #9453 platform like the other find paths. The dashboard sheet list passes its client, so on
   such a platform it can be confirmed complete.
+
+## Fixes (spec cache)
+
+- **The EGERIA report-spec tier is cached per identity** (`pyegeria.view.egeria_spec_cache`). It used to be held in
+  one shared slot, which a server with threaded, per-request identities (the Portal) could race:
+  - A reload for a new user marked the slot as that user's before its disk load finished, while the slot still held
+    the previous user's specs.
+  - A concurrent request for the new user in that window got the previous user's tier, private specs included, and
+    `egeria_tier_info` could return that user's provenance.
+
+  Now each identity has its own entry, held in a bounded LRU (64 entries). An entry is built whole and swapped in
+  with one locked assignment. `egeria_tier_info`, and the name check used while specs load, read only the caller's
+  own entry.
+- **`spec_identity(None)` now means "explicitly no one"**: no private cache loads and no fetched copy is served,
+  whether or not the process is declared multi-user. Before, None was read as "not set" and fell back to the
+  process's own identity. An empty identity means no one too.

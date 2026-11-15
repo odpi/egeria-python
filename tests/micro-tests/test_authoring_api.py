@@ -316,7 +316,7 @@ def _state():
     from pyegeria.view.base_report_formats import get_report_registry
     reg = get_report_registry()
     return (sorted(reg.keys()), {k: id(v) for k, v in reg.items()}, dict(egeria_spec_cache._FETCHED),
-            dict(getattr(egeria_spec_cache, "_TIER", {}) or {}))
+            {k: (e.key, e.stamp, id(e.specs), sorted(e.meta)) for k, e in egeria_spec_cache._TIERS.items()})
 
 
 def test_preview_runs_as_the_caller_caps_and_leaves_the_registry_alone(monkeypatch):
