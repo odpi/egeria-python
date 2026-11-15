@@ -168,9 +168,40 @@ def test_the_allow_lists_name_only_keys_a_shipped_spec_uses():
     assert not unused, f"allow-listed but no shipped spec uses them (remove): {unused}"
 
 
+def _own_command_only_key(command="Create Project", target="Project"):
+    """A key of the TARGET's own Dr.Egeria command that strict validation doesn't otherwise accept (not a
+    type attribute, not formatter-derived, not on the documented lists), derived from the compact loader at test
+    time so no rename of one attribute breaks the test."""
+    from pathlib import Path
+    import md_processing
+    from md_processing.md_processing_utils.compact_loader import load_compact_specs_from_dir
+    from pyegeria.authoring.validate import (ANNOTATION_KEYS, RELATED_ELEMENT_KEYS, _derived_by_rule,
+                                             _formatter_derived_keys)
+    specs = load_compact_specs_from_dir(str(Path(md_processing.__file__).parent / "data" / "compact_commands"))
+    keys = set()
+    for entry in specs[command].get("Attributes") or []:
+        for details in ([entry] if entry.get("variable_name") else entry.values()):
+            if isinstance(details, dict) and details.get("variable_name"):
+                keys.add(details["variable_name"])
+    known = type_attributes(target) | _formatter_derived_keys() | RELATED_ELEMENT_KEYS | ANNOTATION_KEYS
+    candidates = sorted(k for k in keys if k not in known and not _derived_by_rule(k))
+    assert candidates, f"{command} has no command-only attribute key to test with"
+    return candidates[0]
+
+
 def test_a_generated_dre_spec_may_use_command_attribute_keys_but_a_hand_spec_may_not():
-    odd = {"types": ["TABLE"], "attributes": [{"name": "Scope", "key": "project_scope"}]}
+    key = _own_command_only_key()
+    odd = {"types": ["TABLE"], "attributes": [{"name": "Odd", "key": key}]}
     hand = validate(_spec(formats=[odd]))
-    assert any("'project_scope'" in e for e in hand.errors)
+    assert any(f"'{key}'" in e for e in hand.errors)
     generated = validate(_spec(formats=[odd], description="Auto-generated format for Project (Create, Advanced)."))
-    assert not any("'project_scope'" in e for e in generated.errors)
+    assert not any(f"'{key}'" in e for e in generated.errors)
+
+
+def test_a_hand_written_project_spec_may_show_scope():
+    """ProjectProperties.scope is real in Egeria since #9448 (c61bad65): strict must not refuse it, so the
+    Properties catalog (properties_class_fields) is regenerated from an Egeria that has it."""
+    assert "scope" in type_attributes("Project")
+    result = validate(_spec(formats=[{"types": ["TABLE"], "attributes": [{"name": "Scope", "key": "scope"}]}]))
+    assert not any("'scope'" in e for e in result.errors), result.errors
+    assert result.ok, result.errors
