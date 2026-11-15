@@ -16,7 +16,7 @@ data_classes = client.find_data_value_specifications(
     "*", metadata_element_subtypes=["DataClass"],
 )
 
-# Glossary terms that are ACTIVE, newest first, as they were on 1 March:
+# Glossary terms that aren't deleted, newest first, as they were on 1 March:
 terms = client.find_glossary_terms(
     "customer",
     limit_results_by_status=["ACTIVE"],
@@ -170,6 +170,53 @@ specs: `displayName` and `qualifiedName`) within `metadata_element_type`.
   `metadata_element_type`, `skip_relationships`). Those parameters work as before. PEP 692 does
   not allow a `TypedDict` key to repeat a named parameter, so those methods keep a plain
   `**kwargs` annotation; the filters still pass through and are still checked.
+
+### Element status and lifecycle status
+
+`limit_results_by_status` (`limitResultsByStatus`) filters on an element's **element status**, Egeria's `ElementStatus`: `UNKNOWN`, `ACTIVE`, `INVALID`, `DELETED` or `OTHER` (pyegeria checks this before sending, see `pyegeria.models.element_status`). In practice elements hold `ACTIVE` or `DELETED`:
+
+| Value | Returns |
+|---|---|
+| `None` or `[]` | `ACTIVE` elements only (Egeria's default) |
+| `["ACTIVE"]` | the same, stated explicitly |
+| `["DELETED"]` | soft-deleted elements only |
+| `["ACTIVE", "DELETED"]` | both |
+
+Lifecycle states such as `DRAFT` or `DEPRECATED` used to be element statuses too. They moved into typed properties (see the egeria-docs page for type `0010 Base Model`); Egeria rejects a lifecycle value in `limit_results_by_status` with HTTP 400 (`CLIENT_ERROR_400`), and pyegeria refuses it before sending. Filter on lifecycle with the list parameter of the method that supports it:
+
+| Property | Enum | Parameter | Methods that accept it |
+|---|---|---|---|
+| `contentStatus` | `ContentStatus` | `content_status_list` | `ClassificationExplorer.find_authored_elements`, `find_authored_elements_by_category`; `AssetMaker.find_data_assets`, `get_data_assets_by_category` |
+| `deploymentStatus` | `DeploymentStatus` | `deployment_status_list` | `AssetMaker.find_infrastructure`, `get_infrastructure_by_category` |
+| `activityStatus` | `ActivityStatus` | `activity_status_list` | `AssetMaker.find_processes`, `get_processes_by_category`, `get_action_targets`, `get_actions_for_*`, `get_assigned_actions`; `MyProfile.get_my_*_actions` |
+
+These methods send the matching `ContentStatusSearchString` / `ContentStatusFilterRequestBody` (or `Deployment…`, `Activity…`) body. Other methods don't take a lifecycle filter; when a report spec runs on one of them, the report executor drops the filter with an `UnknownFilterWarning`.
+
+### Searching efficiently
+
+A search string (`find_*` with a string, `find_elements_by_property_value` with `starts_with`, `ends_with` or a contains match) is evaluated as a regular expression against the repository, so each call is a scan. One call per item of a list adds up quickly. Measured on a loaded quickstart, 66 `starts_with` searches, one per schema, took over 10 minutes. One `starts_with` search on their common prefix took about 150 seconds.
+
+When you need many elements of one type, list them by type and match in Python:
+
+```python
+PAGE_SIZE = 100   # STAR_PAGE_MAX: a by-type listing returns at most 100 per page
+start, tables = 0, []
+while True:
+    page = client.find_elements_by_property_value(
+        property_value="*", property_names=["qualifiedName"],
+        metadata_element_type="RelationalTable", graph_query_depth=0,
+        start_from=start, page_size=PAGE_SIZE)
+    if not isinstance(page, list) or not page:
+        break
+    tables += page
+    if len(page) < PAGE_SIZE:
+        break
+    start += PAGE_SIZE
+```
+
+The same 555 tables took about 4 seconds this way. With `"*"`, the page size is capped at `STAR_PAGE_MAX` (100), so test for the last page against 100, not against a larger page size you asked for.
+
+Pass `graph_query_depth=0` when only the elements' own properties are needed.
 
 ## Filter reference
 
