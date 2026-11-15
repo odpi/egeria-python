@@ -1522,14 +1522,28 @@ async def async_fetch_spec_for_call(client, name: str) -> str:
     return _finish_fetch(directory, el, label, _client_identity(client), client_credential_identity(client))
 
 
-def _collection_client(client, cls):
-    """A CollectionManager on the caller's platform, as the caller (their token)."""
-    cm = cls(client.view_server, client.platform_url, user_id=client.user_id, user_pwd=carried_password(client))
-    token = None
+def _bare_token(client) -> Optional[str]:
+    """The caller's bearer token without its "Bearer " prefix (get_token returns the Authorization header
+    value), or None when it holds none."""
     try:
         token = client.get_token()
-    except Exception:  # noqa: BLE001
-        token = None
+    except Exception:  # noqa: BLE001 -- no Authorization header: no token
+        return None
+    if not isinstance(token, str):
+        return None
+    token = token.strip()
+    while token.lower().startswith("bearer "):
+        token = token[7:].strip()
+    return token or None
+
+
+def _collection_client(client, cls):
+    """A CollectionManager on the caller's platform, as the caller: their token (exactly one "Bearer " prefix)
+    and no password at all; with no token, only a password the caller itself holds (`carried_password`), never
+    the configured default. The same shape as unique_name's reader (U1)."""
+    token = _bare_token(client)
+    cm = cls(client.view_server, client.platform_url, user_id=client.user_id,
+             user_pwd=NO_PASSWORD if token else carried_password(client))
     if token:
         cm.set_bearer_token(token)
     return cm

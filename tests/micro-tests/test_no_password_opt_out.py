@@ -224,3 +224,31 @@ async def test_a_scrubbed_parent_s_expired_token_fails_as_401_not_a_sign_in(eger
         await sub._async_make_request("POST", ENDPOINT, {})
     assert egeria.mint_attempts == []
     assert egeria.served_as == []
+
+
+# ── The spec cache's helper client: one "Bearer " prefix, and no password when it shares the caller's token ──
+
+@pytest.mark.parametrize("stored", ["peter-token", "Bearer peter-token"])
+def test_the_spec_cache_helper_gets_the_token_with_one_bearer_prefix_and_no_password(demo_default, stored):
+    from pyegeria.omvs.collection_manager import CollectionManager
+    from pyegeria.view import egeria_spec_cache as esc
+    tech = EgeriaTech(VIEW_SERVER, PLATFORM, user_id="peterprofile", user_pwd="peters-own")
+    tech._get_subclient("collections").set_bearer_token(stored)
+    helper = esc._collection_client(tech, CollectionManager)
+    assert helper.headers["Authorization"] == "Bearer peter-token"
+    assert helper.text_headers["Authorization"] == "Bearer peter-token"
+    assert helper.user_pwd is None and helper.use_default_password is False
+
+
+def test_the_spec_cache_helper_without_a_token_uses_only_the_callers_own_password(demo_default):
+    from pyegeria.omvs.collection_manager import CollectionManager
+    from pyegeria.view import egeria_spec_cache as esc
+    assert esc._collection_client(EgeriaTech(VIEW_SERVER, PLATFORM, user_id="peterprofile", user_pwd="own"),
+                                  CollectionManager).user_pwd == "own"
+    assert esc._collection_client(_scrubbed_no_token(), CollectionManager).user_pwd is None
+
+
+def _scrubbed_no_token():
+    tech = EgeriaTech(VIEW_SERVER, PLATFORM, user_id="peterprofile", user_pwd=None)
+    tech.user_pwd = None
+    return tech
