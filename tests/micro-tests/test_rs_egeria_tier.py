@@ -1080,6 +1080,39 @@ def test_a_name_never_fetched_has_no_refusal(tier):
     assert esc.fetched_refusal("egeria:Nobody@v1") is None
 
 
+def test_no_identity_gets_no_refusal_words_and_none_are_logged(tier):
+    """PY-11: fetched_refusal has the same None guard as _fetched_hit. Someone fetched it, the reader is no one:
+    nothing is served, and there is no one to tell "fetch it as yourself" to, so no words and no log entry."""
+    eg = FakeEgeria()
+    eg.put(spec_element())
+    esc.sync_report_specs(eg, folders=[FOLDER_QN], shared=True)
+    eg.put(spec_element(version=2, microflow=mfm.format_set_to_microflow(builtin()).to_json(),
+                        version_identifier="1.1"))
+    name = esc.fetch_spec_for_call(eg, "E-Collections")
+    internal = name.split(":", 1)[1]
+    esc._REFUSAL_LOGGED.clear()
+    with esc.spec_identity(None):                    # explicitly no one
+        assert esc.current_spec_identity() is None
+        assert esc.fetched_refusal(name) is None
+        assert esc.fetched_spec(internal) is None
+    assert esc._REFUSAL_LOGGED == set()              # no (None, name) key
+    with esc.spec_identity(_as("peterprofile")):     # a real other identity still gets the words, once logged
+        assert esc.fetched_refusal(name) == "Report spec 'E-Collections' v2: not fetched for you; fetch it as yourself"
+        assert esc.fetched_spec(internal) is None
+    assert esc._REFUSAL_LOGGED == {(_as("peterprofile"), internal)}
+
+
+def test_same_identity_readers_share_one_tier_entry_and_other_identities_do_not(tier):
+    """PY-11 (documented): the tier entry's specs are handed to every reader with that identity, uncopied."""
+    with esc.spec_identity(_as("erinoverview")):
+        first, second = esc.egeria_tier(), esc.egeria_tier()
+    with esc.spec_identity(_as("peterprofile")):
+        other = esc.egeria_tier()
+    assert first is second
+    assert other is not first
+    assert "read-only" in (esc._TierEntry.__doc__ or "") and "read-only" in (esc.egeria_tier.__doc__ or "")
+
+
 # ── Fetch-on-call never writes a zoned (or visibility-unknown) spec to any disk manifest (ruling item 2) ──
 
 ZONED_GUID = "cccccccc-0000-0000-0000-000000000000"

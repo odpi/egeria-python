@@ -1286,7 +1286,12 @@ def read_consumer_index(*, cache_dir: Optional[str] = None, client=None) -> Dict
 @dataclass(frozen=True)
 class _TierEntry:
     """One identity's EGERIA tier, built whole and never changed after (T4): a reload builds a new entry and
-    swaps it in with one assignment under _TIER_LOCK, so no reader sees one identity's key with another's specs."""
+    swaps it in with one assignment under _TIER_LOCK, so no reader sees one identity's key with another's specs.
+
+    Every reader with the same identity (and cache settings) gets THIS entry's `specs` and `meta` objects, not
+    copies: the entry is frozen, but the FormatSetDict and dicts inside it are ordinary mutable objects. Treat
+    them as read-only; a caller that wants to change a spec copies it first. A mutation would be seen by every
+    concurrent reader of that identity (never by another identity, which has its own entry)."""
     raw_key: Tuple
     key: Any
     stamp: Any
@@ -1385,7 +1390,10 @@ def _load_dir(directory: Path, tier_label: str, specs, meta: Dict[str, Any], ski
 def egeria_tier(*, force: bool = False):
     """The EGERIA tier as a FormatSetDict, loaded from the cache manifest(s), for the current spec identity.
     Reloaded when a manifest changes, checked at most once per second. Never raises: a broken cache is an empty
-    tier, logged."""
+    tier, logged.
+
+    The returned FormatSetDict is the identity's own entry, shared by every reader with that identity (see
+    `_TierEntry`): treat it as read-only; copy a spec before editing."""
     return _tier_entry(force=force).specs
 
 
@@ -1493,13 +1501,21 @@ def _fetched_hit(label: str, version: int, identity: Optional[str] = None):
 
 def fetched_refusal(name: str, identity: Optional[str] = None) -> Optional[str]:
     """The words when `name` ("[egeria:]<label>@v<N>") was fetched in this process, but only by other identities:
-    "... not fetched for you; fetch it as yourself". None when it is this identity's, or never fetched."""
+    "... not fetched for you; fetch it as yourself". None when it is this identity's, or never fetched.
+
+    None too when there is no identity to say it to (`identity`, else the current spec identity, is None: a
+    declared multi-user process outside a request, or inside ``spec_identity(None)``): the same guard as
+    `_fetched_hit`, which serves that reader nothing. "Fetch it as yourself" has no one to speak to, so no words
+    are made and none are logged."""
+    who = identity if identity is not None else current_spec_identity()
+    if who is None:
+        return None
     _tier, rest = split_tier_prefix(name)
     m = _FETCHED_SUFFIX.match(rest or "") if isinstance(rest, str) else None
     if not m:
         return None
     label, version = m.group("label"), int(m.group("version"))
-    if _fetched_hit(label, version, identity):
+    if _fetched_hit(label, version, who):
         return None
     if any(k[1] == label and k[2] == version for k in _FETCHED):
         return f"Report spec '{label}' v{version}: {NOT_FETCHED_FOR_YOU}"
@@ -1512,12 +1528,13 @@ def fetched_spec(name: str, identity: Optional[str] = None):
     m = _FETCHED_SUFFIX.match(name or "")
     if not m:
         return None
-    hit = _fetched_hit(m.group("label"), int(m.group("version")), identity)
-    if hit is None and (words := fetched_refusal(name, identity)):
-        key = (identity if identity is not None else current_spec_identity(), name)
+    who = identity if identity is not None else current_spec_identity()   # resolved once for the hit and the words
+    hit = _fetched_hit(m.group("label"), int(m.group("version")), who)
+    if hit is None and who is not None and (words := fetched_refusal(name, who)):
+        key = (who, name)
         if key not in _REFUSAL_LOGGED:
             _REFUSAL_LOGGED.add(key)
-            logger.warning(f"{words} (asked for as {key[0] or 'no identity'})")
+            logger.warning(f"{words} (asked for as {who})")
     return hit[0] if hit else None
 
 
