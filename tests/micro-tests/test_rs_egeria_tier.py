@@ -122,6 +122,9 @@ def tier(monkeypatch, tmp_path):
     user.mkdir()
     monkeypatch.setenv(esc.CACHE_DIR_ENV, str(cache))
     monkeypatch.setenv("PYEGERIA_USER_REPORT_SPECS_DIR", str(user))
+    # T1: no tier test depends on the developer's shell; a test that needs a configured user sets it itself
+    monkeypatch.delenv("EGERIA_USER", raising=False)
+    monkeypatch.delenv("PYEGERIA_MULTI_USER", raising=False)
     monkeypatch.delenv("PYEGERIA_USER_FORMAT_SETS_DIR", raising=False)
     monkeypatch.delenv(esc.DRAFTS_ENV, raising=False)
     monkeypatch.delenv(esc.FOLDERS_ENV, raising=False)
@@ -859,16 +862,20 @@ async def test_async_fetch_through_a_find_request_helper(tier):
 
 # ── 7. Provenance in the run envelope ──
 
+# exec_report_spec runs as its `user` (default: the configured user at import); the tests name the fake's user
+AS_ERIN = dict(user="erinoverview", view_url="https://localhost:9443", view_server="qs-view-server")
+
+
 def test_spec_source_is_beside_kind_and_never_inside_data(tier, monkeypatch):
     from pyegeria.view import format_set_executor as fse
     _sync_e_collections(tier)
     rows = [{"display_name": "x"}]
     monkeypatch.setattr(fse, "_exec_report_spec_impl", lambda name, **k: {"kind": "json", "data": list(rows)})
-    out = fse.exec_report_spec("E-Collections", output_format="DICT", params={"search_string": "x"})
+    out = fse.exec_report_spec("E-Collections", output_format="DICT", params={"search_string": "x"}, **AS_ERIN)
     assert out["data"] == rows
     assert out["spec_source"] == {"tier": "egeria", "label": "E-Collections", "version": "1.0", "guid": E_GUID,
                                   "synced_at": out["spec_source"]["synced_at"]}
-    out = fse.exec_report_spec("Collections", output_format="DICT", params={})
+    out = fse.exec_report_spec("Collections", output_format="DICT", params={}, **AS_ERIN)
     # RS-EGERIA-TIER stage 2: a builtin spec also names the seed file it was loaded from.
     assert out["spec_source"] == {"tier": "builtin", "label": "Collections", "version": None,
                                   "seed": "Collection Manager.json"}
@@ -879,10 +886,10 @@ def test_footer_on_report_md_html_only_for_egeria_specs(tier, monkeypatch):
     _sync_e_collections(tier)
     monkeypatch.setattr(fse, "_exec_report_spec_impl",
                         lambda name, **k: {"kind": "text", "mime": "text/markdown", "content": "# H\nbody\n"})
-    md = fse.exec_report_spec("E-Collections", output_format="MD")["content"]
+    md = fse.exec_report_spec("E-Collections", output_format="MD", **AS_ERIN)["content"]
     assert md.rstrip().splitlines()[-1].startswith("_E-Collections v1.0 (Egeria, synced ")
     assert brf.add_spec_footer(md, "E-Collections", "MD") == md  # idempotent
-    assert fse.exec_report_spec("Collections", output_format="MD")["content"] == "# H\nbody\n"
+    assert fse.exec_report_spec("Collections", output_format="MD", **AS_ERIN)["content"] == "# H\nbody\n"
     assert brf.add_spec_footer([{"a": 1}], "E-Collections", "DICT") == [{"a": 1}]
     assert brf.add_spec_footer("t", "E-Collections", "TABLE") == "t"
     html = brf.add_spec_footer("<p>x</p>", "E-Collections", "HTML")
@@ -1118,3 +1125,242 @@ def test_zone_state():
     assert esc._zone_state({}) == ("unknown", [])
     assert esc._zone_state(spec_element()) == ("public", [])
     assert esc._zone_state(_zoned("X", {"classificationProperties": {"zoneMembership": "hr"}})) == ("zoned", ["hr"])
+
+
+# ── The default identity: the process's own client, never the shell's EGERIA_USER (Coordinator 2026-11-14) ──
+
+@pytest.mark.parametrize("egeria_user", [None, "erinoverview", "someoneelse"])
+def test_a_single_user_process_reads_its_own_private_cache_whatever_egeria_user_says(tier, monkeypatch,
+                                                                                      egeria_user):
+    """A CLI that syncs as its client's user then lists specs (no spec_identity) loads its own private cache,
+    with EGERIA_USER unset, matching, or naming someone else: the identity is the client's credential."""
+    if egeria_user is None:
+        monkeypatch.delenv("EGERIA_USER", raising=False)
+    else:
+        monkeypatch.setenv("EGERIA_USER", egeria_user)
+    eg = FakeEgeria()
+    eg.user_id = "peterprofile"
+    eg.put(spec_element())
+    esc.sync_report_specs(eg, folders=[FOLDER_QN])
+    esc._invalidate_tier()
+    assert esc.current_spec_identity() == _identity("peterprofile")
+    assert brf.report_spec_source("E-Collections")["tier"] == "egeria"
+
+
+def test_a_real_client_is_this_process_identity(tier, monkeypatch):
+    """Constructing a view-server client records its credentials; the default identity is that client's,
+    not the configured user's."""
+    from pyegeria.core._client_identities import note_credentials, seen_credentials
+    from pyegeria.omvs.collection_manager import CollectionManager
+    monkeypatch.setenv("EGERIA_USER", "someoneelse")
+    CollectionManager("qs-view-server", "https://localhost:9443", user_id="peterprofile", user_pwd="secret")
+    assert seen_credentials() == [("peterprofile", "https://localhost:9443", "qs-view-server")]
+    assert esc.current_spec_identity() == _identity("peterprofile")
+    note_credentials("peterprofile", "https://localhost:9443", "qs-view-server")   # the same one again: still one
+    assert esc.current_spec_identity() == _identity("peterprofile")
+
+
+def test_a_multi_user_process_loads_no_private_cache_outside_a_request(tier, monkeypatch):
+    """Two identities in one process (a Portal, EA): a read outside spec_identity is for no one, so neither
+    user's private cache loads; each still loads inside its own spec_identity."""
+    monkeypatch.setenv("EGERIA_USER", "erinoverview")
+    _sync_e_collections(tier)                       # bound to erinoverview
+    from pyegeria.core._client_identities import note_credentials
+    note_credentials("peterprofile", "https://localhost:9443", "qs-view-server")
+    esc._invalidate_tier()
+    assert esc.current_spec_identity() is None
+    assert brf.report_spec_source("E-Collections") is None
+    with esc.spec_identity(_identity("erinoverview")):
+        assert brf.report_spec_source("E-Collections")["tier"] == "egeria"
+    with esc.spec_identity(_identity("peterprofile")):
+        assert brf.report_spec_source("E-Collections") is None
+
+
+def test_with_no_client_the_configured_user_is_the_identity(tier, monkeypatch):
+    monkeypatch.setenv("EGERIA_USER", "someoneelse")
+    assert esc.current_spec_identity().startswith("someoneelse@")
+    monkeypatch.delenv("EGERIA_USER", raising=False)
+    from pyegeria.core.config import settings
+    monkeypatch.setattr(settings.User_Profile, "user_name", "configured")
+    assert esc.current_spec_identity().startswith("configured@")
+
+
+def test_client_credential_identity_uses_server_name_when_there_is_no_view_server():
+    class Omvs:
+        user_id, platform_url, server_name = "peterprofile", "https://localhost:9443", "qs-view-server"
+    assert esc.client_credential_identity(Omvs()) == _identity("peterprofile")
+
+
+# ── T2: a path with a client in hand reads the tier as that client; T3: one "configured user" ──
+
+class _Client:
+    """A stand-in client: only the credential attributes the tier binding reads."""
+
+    def __init__(self, user):
+        self.user_id, self.platform_url, self.view_server = user, "https://localhost:9443", "qs-view-server"
+
+
+def _in_method_md(client):
+    from pyegeria.core._server_client import ServerClient
+    element = {"elementHeader": {"guid": "g1", "type": {"typeName": "Collection"},
+                                 "origin": {"homeMetadataCollectionId": "m", "homeMetadataCollectionName": "m"},
+                                 "versions": {"createdBy": "u", "createTime": "2026-11-08T00:00:00Z"}},
+               "properties": {"displayName": "Coll A", "qualifiedName": "Collection::A"}}
+    return ServerClient._generate_formatted_output(client, [element], query_string="A", entity_type="Collection",
+                                                   output_format="MD", report_spec="E-Collections")
+
+
+@pytest.mark.parametrize("egeria_user", [None, "erinoverview", "someoneelse"])
+def test_the_in_method_path_reads_the_tier_as_its_client(tier, monkeypatch, egeria_user):
+    """generate_formatted_output binds to the client it runs on: its private cache loads for it and for no
+    other client, whatever EGERIA_USER says and even in a multi-user process (no fallback identity)."""
+    if egeria_user:
+        monkeypatch.setenv("EGERIA_USER", egeria_user)
+    _sync_e_collections(tier)                                   # bound to erinoverview
+    from pyegeria.core._client_identities import note_credentials
+    note_credentials("peterprofile", "https://localhost:9443", "qs-view-server")   # now a multi-user process
+    esc._invalidate_tier()
+    assert esc.current_spec_identity() is None
+    assert _in_method_md(_Client("erinoverview")).rstrip().splitlines()[-1].startswith("_E-Collections v1.0")
+    assert "_E-Collections v1.0" not in _in_method_md(_Client("peterprofile"))
+
+
+@pytest.mark.parametrize("egeria_user", [None, "erinoverview", "someoneelse"])
+def test_a_fetch_writes_through_and_reads_as_its_client(tier, monkeypatch, egeria_user):
+    if egeria_user:
+        monkeypatch.setenv("EGERIA_USER", egeria_user)
+    eg = FakeEgeria()
+    eg.put(spec_element())
+    esc.sync_report_specs(eg, folders=[FOLDER_QN])
+    open_el = spec_element("Open-Spec", guid=ZONED_GUID, aliases=[])
+    open_el["elementHeader"]["zoneMembership"] = {"classificationProperties": {"zoneMembership": []}}
+    eg.put(open_el, folder=None)
+    from pyegeria.core._client_identities import note_credentials
+    note_credentials("peterprofile", "https://localhost:9443", "qs-view-server")
+    internal = esc.fetch_spec_for_call(eg, "Open-Spec")
+    assert json.loads((tier["cache"] / esc.MANIFEST).read_text())["entries"]["Open-Spec"]["pinned"] is True
+    assert internal == "egeria:Open-Spec@v1"
+    with esc.as_client(eg):
+        assert esc.egeria_tier_info("Open-Spec@v1")["visibility"] == "public"
+        assert esc.fetched_spec("Open-Spec@v1") is not None
+    with esc.as_client(_Client("peterprofile")):
+        assert esc.egeria_tier_info("Open-Spec@v1") is None
+
+
+def test_as_client_with_no_identity_leaves_the_current_one():
+    with esc.spec_identity("x@h_1/v"):
+        with esc.as_client(object()):
+            assert esc.current_spec_identity() == "x@h_1/v"
+        with esc.as_client(_Client("erinoverview")):
+            assert esc.current_spec_identity() == _identity("erinoverview")
+
+
+def test_one_configured_user_for_client_construction_and_the_tier(tier, monkeypatch):
+    """T3: a CLI with no configuration builds its client as resolve_egeria_credentials' user and the tier's
+    client-less identity is that same user, so its own private cache loads."""
+    from pyegeria.core import config
+    monkeypatch.delenv("EGERIA_USER", raising=False)
+    monkeypatch.setattr(config.settings.User_Profile, "user_name", None)
+    user, _pwd = config.resolve_egeria_credentials()
+    assert user == config.configured_user_id() == "erinoverview"
+    assert esc.current_spec_identity() == esc.credential_identity(user)
+    monkeypatch.setenv("EGERIA_USER", "someoneelse")
+    assert config.resolve_egeria_credentials()[0] == config.configured_user_id() == "someoneelse"
+    assert esc.current_spec_identity() == esc.credential_identity("someoneelse")
+
+
+# ── R-A: a multi-user process declares itself; no fallback identity there (Architect, delta 3984046d) ──
+
+def _swapped_client(service_user="erinoverview", signed_in="peterprofile"):
+    """The Portal's shape: built as the service user, then user_id swapped to the token's subject."""
+    from pyegeria.omvs.collection_manager import CollectionManager
+    client = CollectionManager("qs-view-server", "https://localhost:9443", user_id=service_user, user_pwd="secret")
+    client.user_id = signed_in
+    return client
+
+
+@pytest.mark.parametrize("how", ["call", "env"])
+def test_a_declared_process_built_as_the_service_user_then_swapped_has_no_fallback(tier, monkeypatch, how):
+    from pyegeria.core._client_identities import declare_multi_user
+    if how == "call":
+        declare_multi_user()
+    else:
+        monkeypatch.setenv("PYEGERIA_MULTI_USER", "1")
+    client = _swapped_client()
+    assert esc.client_credential_identity(client) == _identity("peterprofile")
+    assert esc.current_spec_identity() is None              # never the service user erinoverview
+    with esc.as_client(client):
+        assert esc.current_spec_identity() == _identity("peterprofile")
+    assert esc.current_spec_identity() is None
+
+
+def test_undeclared_the_swap_is_caught_once_the_client_is_used(tier):
+    """Backstop only: undeclared, the service user is the one identity until the swapped client is used."""
+    client = _swapped_client()
+    assert esc.current_spec_identity() == _identity("erinoverview")   # why a server must declare itself
+    with esc.as_client(client):
+        pass
+    assert esc.current_spec_identity() is None              # two identities seen now
+
+
+def test_an_undeclared_cli_with_userid_x_reads_as_x(tier, monkeypatch):
+    from pyegeria.omvs.collection_manager import CollectionManager
+    monkeypatch.setenv("EGERIA_USER", "someoneelse")
+    CollectionManager("qs-view-server", "https://localhost:9443", user_id="peterprofile", user_pwd="secret")
+    assert esc.current_spec_identity() == _identity("peterprofile")
+
+
+def _open_spec_for(user):
+    eg = FakeEgeria()
+    eg.user_id = user
+    el = spec_element("Open-Spec", guid=ZONED_GUID, aliases=[], version_identifier=f"1.0-{user}")
+    el["elementHeader"]["zoneMembership"] = {"classificationProperties": {"zoneMembership": []}}
+    eg.put(el, folder=None)
+    return eg
+
+
+def _footer(client, spec):
+    from pyegeria.core._server_client import ServerClient
+    element = {"elementHeader": {"guid": "g1", "type": {"typeName": "Collection"},
+                                 "origin": {"homeMetadataCollectionId": "m", "homeMetadataCollectionName": "m"},
+                                 "versions": {"createdBy": "u", "createTime": "2026-11-08T00:00:00Z"}},
+               "properties": {"displayName": "Coll A", "qualifiedName": "Collection::A"}}
+    try:
+        out = ServerClient._generate_formatted_output(client, [element], query_string="A", entity_type="Collection",
+                                                      output_format="MD", report_spec=spec)
+    except Exception as exc:  # noqa: BLE001 -- a spec not served to this caller doesn't resolve
+        return f"refused: {exc}"
+    last = out.rstrip().splitlines()[-1] if isinstance(out, str) and out.strip() else ""
+    return last if last.startswith("_Open-Spec") else None
+
+
+@pytest.mark.parametrize("declared", [True, False])
+def test_the_footer_serves_each_user_only_their_own_fetched_copy(tier, declared):
+    from pyegeria.core._client_identities import declare_multi_user
+    if declared:
+        declare_multi_user()
+    erin, peter = _open_spec_for("erinoverview"), _open_spec_for("peterprofile")
+    assert esc.fetch_spec_for_call(erin, "Open-Spec") == "egeria:Open-Spec@v1"
+    assert esc.fetch_spec_for_call(peter, "Open-Spec") == "egeria:Open-Spec@v1"
+    assert _footer(_Client("erinoverview"), "egeria:Open-Spec@v1").startswith("_Open-Spec v1.0-erinoverview ")
+    assert _footer(_Client("peterprofile"), "egeria:Open-Spec@v1").startswith("_Open-Spec v1.0-peterprofile ")
+    assert not (_footer(_Client("someoneelse"), "egeria:Open-Spec@v1") or "").startswith("_Open-Spec")
+    # outside any client: two identities fetched (and, when declared, a multi-user process): no one's copy
+    assert esc.current_spec_identity() is None
+    assert esc.fetched_spec("Open-Spec@v1") is None
+
+
+def test_the_mcp_server_declares_itself_multi_user(monkeypatch):
+    import pyegeria.core.mcp_server as ms
+    from pyegeria.core._client_identities import is_multi_user
+    monkeypatch.setattr(ms, "_startup_client", lambda settings: None)
+
+    class Stop(Exception):
+        pass
+
+    def stop(*a, **k):
+        raise Stop
+    monkeypatch.setattr(ms, "MCPServer", stop)
+    with pytest.raises(Stop):
+        ms.main()
+    assert is_multi_user()

@@ -31,7 +31,7 @@ import os
 import re
 import tempfile
 import time
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from contextvars import ContextVar
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -68,6 +68,9 @@ __all__ = [
     "async_fetch_spec_for_call",
     "egeria_tier",
     "egeria_tier_info",
+    "as_client",
+    "declare_multi_user",
+    "is_multi_user",
     "spec_footer",
     "fetched_spec",
     "fetched_spec_source",
@@ -153,6 +156,8 @@ def _settings_env():
 # identity. The identity is the Egeria user on a platform and view server, never the OS user. It is the user id,
 # not a token hash, because a manifest outlives every token: a CLI mints a new token on each run.
 
+from pyegeria.core._client_identities import declare_multi_user, is_multi_user  # noqa: E402 -- re-exported
+
 _SPEC_IDENTITY: "ContextVar[Optional[str]]" = ContextVar("pyegeria_spec_identity", default=None)
 _REFUSED_LOGGED: set = set()
 
@@ -176,7 +181,7 @@ def credential_identity(user_id: Any, platform_url: Optional[str] = None,
 def client_credential_identity(client: Any) -> Optional[str]:
     """The credential identity of the Egeria client a read is made with."""
     return credential_identity(getattr(client, "user_id", None), getattr(client, "platform_url", None),
-                               getattr(client, "view_server", None))
+                               getattr(client, "view_server", None) or getattr(client, "server_name", None))
 
 
 @contextmanager
@@ -189,15 +194,62 @@ def spec_identity(identity: Optional[str]):
         _SPEC_IDENTITY.reset(token)
 
 
+_MULTI_LOGGED: set = set()
+
+
+def as_client(client: Any):
+    """`spec_identity(client_credential_identity(client))`: every EGERIA-tier read a path makes with a client in
+    hand is for that client's credential, never for the process fallback. A client with no readable identity
+    (a bare object) leaves the current identity as it is."""
+    identity = client_credential_identity(client) if client is not None else None
+    if identity:
+        _note_client(client)   # its current identity (after any user_id swap) counts towards "more than one"
+    return spec_identity(identity) if identity else nullcontext()
+
+
 def current_spec_identity() -> Optional[str]:
-    """The identity the EGERIA tier is read for: the one set by `spec_identity`, else this process's configured
-    Egeria user (settings.User_Profile.user_name / EGERIA_USER)."""
+    """The identity the EGERIA tier is read for:
+    1. the one set by `spec_identity` (exec_report_spec, the async runner and the dashboard resolver set it
+       from the request's client);
+    In a process DECLARED multi-user (`pyegeria.core._client_identities.declare_multi_user()` or
+    PYEGERIA_MULTI_USER=1: the Portal, EA, Studio, the MCP HTTP server), nothing else: None, so no private cache
+    loads and no fetched copy is served outside a request's own identity. Otherwise:
+    2. the credentials of this process's Egeria clients (`pyegeria.core._client_identities`), when it has seen
+       exactly one: a single-user process (a CLI, the stdio MCP server) reads as the user its client signs in
+       as, whatever the settings say;
+    3. when it has seen more than one, None (logged once). This is only a BACKSTOP for an undeclared server:
+       it can be skipped, because a server that builds clients as its service user and then swaps user_id
+       (the Portal's use_token) records the service user first, and reads as it until a second identity is
+       seen. A multi-user process must declare itself;
+    4. else, with no client yet, this process's configured Egeria user, resolved exactly as a CLI's client is
+       (`pyegeria.core.config.configured_user_id`: EGERIA_USER, the settings' user, the quickstart default).
+    A path that holds a client binds to it instead (`as_client`), whatever this fallback says."""
     identity = _SPEC_IDENTITY.get()
     if identity:
         return identity
     try:
-        from pyegeria.core.config import settings
-        return credential_identity(os.getenv("EGERIA_USER") or settings.User_Profile.user_name)
+        from pyegeria.core._client_identities import is_multi_user
+        if is_multi_user():
+            return None
+    except Exception:  # noqa: BLE001
+        return None   # can't tell: fail safe
+    try:
+        from pyegeria.core._client_identities import seen_credentials
+        seen = {credential_identity(*entry) for entry in seen_credentials()} - {None}
+    except Exception:  # noqa: BLE001
+        seen = set()
+    if len(seen) == 1:
+        return next(iter(seen))
+    if seen:
+        key = frozenset(seen)
+        if key not in _MULTI_LOGGED:
+            _MULTI_LOGGED.add(key)
+            logger.info(f"Report spec cache: this process has Egeria clients for {len(seen)} identities; a read "
+                        f"outside a request's own identity (spec_identity) loads no private cache")
+        return None
+    try:
+        from pyegeria.core.config import configured_user_id
+        return credential_identity(configured_user_id())
     except Exception:  # noqa: BLE001 -- no settings: no identity, so no private manifest loads (fail safe)
         return None
 
@@ -219,6 +271,15 @@ def _manifest_loads_for(directory: Path, manifest: Dict[str, Any], identity: Opt
         logger.warning(f"Report spec cache {directory}: a private cache, not loaded for {identity or 'no identity'}: "
                        f"{why}")
     return False
+
+
+def _note_client(client: Any) -> None:
+    """Record a sync's or fetch's client as one of this process's identities (see current_spec_identity)."""
+    try:
+        from pyegeria.core._client_identities import note_client
+        note_client(client)
+    except Exception:  # noqa: BLE001
+        pass
 
 
 def _host_port(url: Optional[str]) -> str:
@@ -811,7 +872,8 @@ def sync_report_specs(client, *, folders: Optional[Iterable[str]] = None, specs:
         report.notes.append(f"no report spec folders are configured (set {FOLDERS_ENV} or config.json's "
                             f"\"Pyegeria Report Spec Folders\", or pass --folder/--spec); nothing synced")
         return report
-    with _SyncLock(directory):
+    _note_client(client)
+    with as_client(client), _SyncLock(directory):
         identity = _client_identity(client)
         # Gather candidates: guid -> (member element, [folders])
         members: Dict[str, Tuple[Dict[str, Any], List[str]]] = {}
@@ -1352,7 +1414,10 @@ _REFUSAL_LOGGED: set = set()
 def _fetched_hit(label: str, version: int, identity: Optional[str] = None):
     """The fetched copy for (`identity` or the current spec identity, label, version), or None. Never another
     identity's copy."""
-    return _FETCHED.get((identity if identity is not None else current_spec_identity(), label, version))
+    who = identity if identity is not None else current_spec_identity()
+    if who is None:
+        return None   # no identity (a declared multi-user process outside a request): served to no one
+    return _FETCHED.get((who, label, version))
 
 
 def fetched_refusal(name: str, identity: Optional[str] = None) -> Optional[str]:
@@ -1424,7 +1489,8 @@ def _finish_fetch(directory: Path, el: Dict[str, Any], label: str, identity: str
             "version": built.provenance["version_identifier"], "header_version": version,
             "fetched_at": built.provenance["fetched_at"], "fetched": True, "shared": shared,
             "qualified_name": built.provenance["qualified_name"], "visibility": visibility}
-    _FETCHED[(bound, label, version)] = (built.format_set, info)   # served only to the identity that fetched it
+    if bound is not None:   # a fetcher with no identity keeps no copy anyone could be served
+        _FETCHED[(bound, label, version)] = (built.format_set, info)   # served only to the identity that fetched it
     owner = manifest.get("bound_identity")
     if visibility != "public":
         # The spec-cache identity ruling, item 2: a zoned spec (or one whose visibility can't be read) is never
@@ -1463,6 +1529,12 @@ def _lookup_guid(directory: Path, label: str) -> Optional[str]:
 
 
 def fetch_spec_for_call(client, name: str, *, cache_dir_override: Optional[str] = None) -> str:
+    """Fetch `name` from Egeria for one call, as `client` (see `_fetch_spec_for_call`)."""
+    with as_client(client):
+        return _fetch_spec_for_call(client, name, cache_dir_override=cache_dir_override)
+
+
+def _fetch_spec_for_call(client, name: str, *, cache_dir_override: Optional[str] = None) -> str:
     """Fetch `name` from Egeria for this call (sync client methods). Returns the internal name
     ("egeria:<label>@v<N>") the call should use. Writes through to a per-user cache; never to a
     shared one. Raises SpecFetchError with words; never falls back to the cached copy."""
@@ -1487,10 +1559,17 @@ def fetch_spec_for_call(client, name: str, *, cache_dir_override: Optional[str] 
     if el is None:
         raise SpecFetchError(f"Report spec '{label}' was not found in Egeria (refresh_spec=True never falls back "
                              f"to the cached copy)")
+    _note_client(client)
     return _finish_fetch(directory, el, label, _client_identity(client), client_credential_identity(client))
 
 
 async def async_fetch_spec_for_call(client, name: str) -> str:
+    """The async `fetch_spec_for_call`, as `client`."""
+    with as_client(client):
+        return await _async_fetch_spec_for_call(client, name)
+
+
+async def _async_fetch_spec_for_call(client, name: str) -> str:
     """The async twin of `fetch_spec_for_call`, for the request helpers of an async find method."""
     from pyegeria.omvs.collection_manager import CollectionManager
     label = _fetch_target(name)
@@ -1518,6 +1597,7 @@ async def async_fetch_spec_for_call(client, name: str) -> str:
     if el is None:
         raise SpecFetchError(f"Report spec '{label}' was not found in Egeria (refresh_spec=True never falls back "
                              f"to the cached copy)")
+    _note_client(client)
     return _finish_fetch(directory, el, label, _client_identity(client), client_credential_identity(client))
 
 

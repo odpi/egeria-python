@@ -139,4 +139,6 @@ async def test_the_note_stays_once_the_fetched_spec_is_in_the_viewers_cache(tier
     from pyegeria.view.egeria_spec_cache import client_credential_identity, spec_identity
     with spec_identity(client_credential_identity(fake)):
         assert _default_spec_lookup(LABEL)[0] is not None
-    assert _default_spec_lookup(LABEL)[0] is None   # this process's configured user is someone else
+    other = client_credential_identity(fake).replace(f"{fake.user_id}@", "someoneelse@", 1)
+    with spec_identity(other):
+        assert _default_spec_lookup(LABEL)[0] is None   # another identity: not loaded

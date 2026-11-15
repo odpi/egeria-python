@@ -118,6 +118,11 @@ class BaseServerClient:
         if self.user_id:
             _validate_url_path_safe(self.user_id, "user_id")
         self.user_pwd = user_pwd or settings.User_Profile.user_pwd
+        try:  # whose report-spec cache a read outside a request is for (see _client_identities)
+            from pyegeria.core._client_identities import note_credentials
+            note_credentials(self.user_id, self.platform_url, self.server_name)
+        except Exception:  # noqa: BLE001 -- recording must never break a client
+            pass
         self.page_size = page_size or max_paging_size
         self.token_src = token_src
         self.token = token

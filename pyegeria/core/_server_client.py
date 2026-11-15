@@ -1954,7 +1954,19 @@ class ServerClient(BaseServerClient):
         """
         if output_format.upper() == "JSON":
             return elements
+        # The EGERIA tier is read for this client's credential, not the process fallback (spec-cache T2).
+        from pyegeria.view.egeria_spec_cache import as_client
+        with as_client(self):
+            return ServerClient._generate_formatted_output_as_client(
+                self, elements, query_string, entity_type, output_format, extract_properties_func, report_spec, **kwargs)
 
+    def _spec_identity(self):
+        """A context in which EGERIA-tier reads are for this client's credential (spec-cache T2)."""
+        from pyegeria.view.egeria_spec_cache import as_client
+        return as_client(self)
+
+    def _generate_formatted_output_as_client(self, elements, query_string, entity_type, output_format,
+                                             extract_properties_func, report_spec, **kwargs):
         # Resolve output formats structure
         output_formats = resolve_output_formats(
             entity_type,
