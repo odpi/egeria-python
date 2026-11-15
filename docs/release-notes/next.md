@@ -42,9 +42,10 @@ Notes collected on `release/next` for the next release. The version number is se
 - **The exact unique-name read no longer signs in with the settings default password** (`pyegeria.core.unique_name`).
   When the caller has no unique-name read of its own (a `CollectionManager`, say), pyegeria builds a
   `ClassificationExplorer` on the same platform. It now acts exactly as the caller:
-  - The explorer gets the caller's token and no password. Before, a caller that had cleared its password (as Studio
+  - The explorer gets the caller's token and is built with `user_pwd=NO_PASSWORD`, so it never holds a password. Before, a caller that had cleared its password (as Studio
     and EA do) gave the explorer the settings default. A 401 auto-retry could then sign in again as that default user.
-  - With no token, the explorer uses only a password the caller itself holds. If the caller has neither, the answer is
+  - With no token, the explorer uses only `carried_password(client)`: a password the caller itself holds, or the
+    caller's own `NO_PASSWORD` opt-out. If the caller has neither, the answer is
     "unknown" and Egeria isn't called.
   - The token is shared bare. Before, the `"Bearer ..."` header value was set as the token, which gave `"Bearer
     Bearer ..."`.

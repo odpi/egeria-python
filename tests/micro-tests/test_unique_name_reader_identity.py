@@ -157,3 +157,56 @@ def test_a_caller_with_its_own_read_builds_nothing(explorers):
             return "No elements found"
 
     assert un.by_unique_name(Own(), "Q").answer == "absent" and explorers == []
+
+
+# ── C2: NO_PASSWORD (fix/no-password-opt-out 7dd64417) ──
+
+@pytest.fixture
+def constructed(monkeypatch):
+    """What each ClassificationExplorer was constructed with, and what it held right after construction."""
+    from pyegeria.omvs.classification_explorer import ClassificationExplorer
+    seen = []
+    real_init = ClassificationExplorer.__init__
+
+    def _init(self, *a, **kw):
+        real_init(self, *a, **kw)
+        seen.append({"given": kw.get("user_pwd"), "held": self.user_pwd,
+                     "default_ok": getattr(self, "use_default_password", None)})
+
+    monkeypatch.setattr(ClassificationExplorer, "__init__", _init)
+    return seen
+
+
+@pytest.mark.parametrize("caller", [
+    _Caller(token="tok", user_pwd=None),
+    _Caller(token="tok", user_pwd="peters-own"),
+    _Caller(token=None, user_pwd="peters-own"),
+])
+def test_c2_the_explorer_never_holds_the_settings_default_password(caller, explorers, constructed, no_network):
+    from pyegeria.core._no_password import NO_PASSWORD
+    un.by_unique_name(caller, "Q")
+    asyncio.run(un.async_by_unique_name(caller, "Q"))
+    assert len(constructed) == 2
+    for c in constructed:
+        assert c["held"] != CANARY                     # never the settings default, even for a moment
+    if caller._token:
+        assert all(c["given"] is NO_PASSWORD and c["held"] is None and c["default_ok"] is False
+                   for c in constructed)
+    else:
+        assert all(c["given"] == "peters-own" and c["held"] == "peters-own" for c in constructed)
+
+
+def test_c2_a_caller_that_opted_out_with_no_token_is_unknown(explorers, no_network):
+    caller = _Caller(token=None, user_pwd=None)
+    caller.use_default_password = False                # built with NO_PASSWORD
+    assert un.by_unique_name(caller, "Q").answer == "unknown" and explorers == []
+
+
+def test_c2_a_real_opted_out_client_with_a_token_carries_no_password(explorers, constructed, no_network):
+    from pyegeria.core._no_password import NO_PASSWORD
+    from pyegeria.omvs.collection_manager import CollectionManager
+    cm = CollectionManager("qs-view-server", "https://laz:9443", user_id="peterprofile", user_pwd=NO_PASSWORD)
+    cm.set_bearer_token("tok-real")
+    assert cm.user_pwd is None and CANARY not in repr(vars(cm))
+    assert un.by_unique_name(cm, "Q").guid == "e"
+    assert constructed[0]["held"] is None and explorers[0].seen == (None, "Bearer tok-real")

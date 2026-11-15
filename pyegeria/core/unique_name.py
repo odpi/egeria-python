@@ -128,9 +128,10 @@ def _reader(client: Any, name: str) -> _Read:
     """The unique-name read on `client`, its classification_manager, or a ClassificationExplorer made on the
     same platform AS THE SAME CALLER (CollectionManager has no unique-name read of its own; READBACK U1):
 
-    - the caller's token, and no password at all (``user_pwd`` is cleared after construction, because the
-      constructor fills a None from the settings default, and a 401 auto-retry could re-sign with it);
-    - with no token, only a password the caller itself holds; never a settings default;
+    - the caller's token, built with ``user_pwd=NO_PASSWORD``: the explorer never holds the settings default
+      password, so a 401 auto-retry can't sign in again with it (C2);
+    - with no token, ``carried_password(client)``: the password the caller holds, or its NO_PASSWORD opt-out
+      (then, with no token either, unknown); never a settings default;
     - with neither, or no real ``view_server``/``platform_url`` strings (a fake, a non-client): unknown, with no
       client built and no call to Egeria.
     """
@@ -145,17 +146,20 @@ def _reader(client: Any, name: str) -> _Read:
     platform_url = _text(getattr(client, "platform_url", None))
     if not (view_server and platform_url):
         return _Read(unknown="the caller isn't a client on an Egeria platform, so no unique-name read was made")
+    from pyegeria.core._no_password import NO_PASSWORD, carried_password
     token = _caller_token(client)
     user_id = _text(getattr(client, "user_id", None))
-    password = _text(getattr(client, "user_pwd", None))
-    if not token and not (user_id and password):
-        return _Read(unknown="the caller holds neither a token nor its own password, so no unique-name read "
-                             "was made")
-    from pyegeria.omvs.classification_explorer import ClassificationExplorer
-    explorer = ClassificationExplorer(view_server, platform_url, user_id=user_id,
-                                      user_pwd=None if token else password)
     if token:
-        explorer.user_pwd = None   # the constructor's settings default must never be used to re-sign
+        user_pwd = NO_PASSWORD
+    else:
+        carried = carried_password(client)
+        user_pwd = carried if carried is not NO_PASSWORD and _text(carried) else None
+        if not (user_id and user_pwd):
+            return _Read(unknown="the caller holds neither a token nor its own password, so no unique-name read "
+                                 "was made")
+    from pyegeria.omvs.classification_explorer import ClassificationExplorer
+    explorer = ClassificationExplorer(view_server, platform_url, user_id=user_id, user_pwd=user_pwd)
+    if token:
         explorer.set_bearer_token(token)
     return _Read(getattr(explorer, name), explorer)
 
