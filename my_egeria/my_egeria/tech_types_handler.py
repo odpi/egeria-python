@@ -28,6 +28,7 @@ from TechnologyTypeScreens import (
     TechnologyTypeTemplatesScreen,
     TechnologyTypeProcessesScreen,
 )
+from paging_support import none_words
 from profile_utils import clean_structure, bools_to_strings
 
 
@@ -41,7 +42,8 @@ class TechTypesMixin:
         # self.log(f"Tech Type Response: {self.tech_type_response} | {self.tech_type_list}")
         if self.tech_type_response == []:
             # self.log("No technology types found.")
-            self.notify("No technology types are defined in Egeria", timeout=10, severity="warning")
+            # An empty list from Egeria is a page filtered empty, not proof that none are defined
+            self.notify(none_words("technology types", complete=False), timeout=10, severity="warning")
             return
         elif len(self.tech_type_response) == 3 and int(self.tech_type_response) >= 400:
             # self.log("Error fetching technology types.")

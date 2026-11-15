@@ -231594,23 +231594,10 @@
             "detail_spec": null,
             "valid_values": [
               "UNKNOWN",
-              "DRAFT",
-              "PREPARED",
-              "PROPOSED",
-              "APPROVED",
-              "REJECTED",
-              "APPROVED_CONCEPT",
-              "UNDER_DEVELOPMENT",
-              "DEVELOPMENT_COMPLETE",
-              "APPROVED_FOR_DEPLOYMENT",
-              "STANDBY",
               "ACTIVE",
-              "FAILED",
-              "DISABLED",
-              "COMPLETE",
-              "DEPRECATED",
-              "OTHER",
-              "DELETED"
+              "INVALID",
+              "DELETED",
+              "OTHER"
             ]
           },
           {
@@ -232100,23 +232087,10 @@
             "detail_spec": null,
             "valid_values": [
               "UNKNOWN",
-              "DRAFT",
-              "PREPARED",
-              "PROPOSED",
-              "APPROVED",
-              "REJECTED",
-              "APPROVED_CONCEPT",
-              "UNDER_DEVELOPMENT",
-              "DEVELOPMENT_COMPLETE",
-              "APPROVED_FOR_DEPLOYMENT",
-              "STANDBY",
               "ACTIVE",
-              "FAILED",
-              "DISABLED",
-              "COMPLETE",
-              "DEPRECATED",
-              "OTHER",
-              "DELETED"
+              "INVALID",
+              "DELETED",
+              "OTHER"
             ]
           },
           {
@@ -232475,23 +232449,10 @@
             "detail_spec": null,
             "valid_values": [
               "UNKNOWN",
-              "DRAFT",
-              "PREPARED",
-              "PROPOSED",
-              "APPROVED",
-              "REJECTED",
-              "APPROVED_CONCEPT",
-              "UNDER_DEVELOPMENT",
-              "DEVELOPMENT_COMPLETE",
-              "APPROVED_FOR_DEPLOYMENT",
-              "STANDBY",
               "ACTIVE",
-              "FAILED",
-              "DISABLED",
-              "COMPLETE",
-              "DEPRECATED",
-              "OTHER",
-              "DELETED"
+              "INVALID",
+              "DELETED",
+              "OTHER"
             ]
           },
           {
@@ -232989,23 +232950,10 @@
             "detail_spec": null,
             "valid_values": [
               "UNKNOWN",
-              "DRAFT",
-              "PREPARED",
-              "PROPOSED",
-              "APPROVED",
-              "REJECTED",
-              "APPROVED_CONCEPT",
-              "UNDER_DEVELOPMENT",
-              "DEVELOPMENT_COMPLETE",
-              "APPROVED_FOR_DEPLOYMENT",
-              "STANDBY",
               "ACTIVE",
-              "FAILED",
-              "DISABLED",
-              "COMPLETE",
-              "DEPRECATED",
-              "OTHER",
-              "DELETED"
+              "INVALID",
+              "DELETED",
+              "OTHER"
             ]
           },
           {

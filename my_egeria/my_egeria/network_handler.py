@@ -23,9 +23,17 @@ if str(current_dir) not in sys.path:
     sys.path.append(str(current_dir))
 
 from pyegeria import Egeria, PyegeriaException
+from paging_support import element_guid, lookup, paged_rows, read_all, refusal
 from MyNetworkScreen import MyNetworkScreen
 
 PEER_RELATIONSHIP = "Peer"
+PEERS_BODY = {
+    "class": "ResultsRequestBody",
+    "metadataElementTypeName": "Referenceable",
+    "includeOnlyRelationships": ["ContactThrough"],
+}
+#: Rows per people-search request (the search used to read one page of 10 and show it as the whole answer)
+PEOPLE_PAGE = 25
 
 
 class NetworkMixin:
@@ -43,14 +51,7 @@ class NetworkMixin:
         client = None
         try:
             client = self._network_client()
-            body = {
-                "class": "ResultsRequestBody",
-                "metadataElementTypeName": "Referenceable",
-                "includeOnlyRelationships": ["ContactThrough"],
-            }
-            peers = client.get_related_elements(element_guid=self.user_GUID,
-                                                relationship_type=PEER_RELATIONSHIP,
-                                                body=body)
+            read = read_all(self._peers_fetch(client), method="get_related_elements", client=client)
         except PyegeriaException as e:
             # self.log(f"Retrieving peers failed: {e}")
             self.notify(f"Could not retrieve your network: {e}", timeout=10, severity="error")
@@ -60,8 +61,9 @@ class NetworkMixin:
                 client.close_session()
         # self.log(f"Peers: {peers}")
         rows = []
-        # "No elements found" is returned, rather than an exception, when the user has no peers
-        for peer in peers if isinstance(peers, list) else []:
+        for peer in read.items:
+            if not isinstance(peer, dict):
+                continue
             properties = peer.get("properties") or {}
             if properties.get("class") != "PersonProperties":
                 continue
@@ -76,7 +78,17 @@ class NetworkMixin:
                          properties.get("pronouns") or "",
                          guid,
                          relationship_properties.get("description") or ""))
-        return rows
+        result = paged_rows(rows, read, "people in your network")
+        if result.note:
+            self.notify(result.note, timeout=10, severity="warning")
+        return result
+
+    def _peers_fetch(self, client: Egeria):
+        """fetch(start, size) for the user's Peer-related elements (paging goes into the body: 6.2.36+)."""
+        def fetch(start: int, size: int):
+            return client.get_related_elements(element_guid=self.user_GUID, relationship_type=PEER_RELATIONSHIP,
+                                               body=dict(PEERS_BODY), start_from=start, page_size=size)
+        return fetch
 
     def show_my_network(self) -> None:
         """Show the My Network screen for the current user."""
@@ -99,9 +111,14 @@ class NetworkMixin:
         client = None
         try:
             client = self._network_client()
-            found = client.find_actor_profiles(search_string=search_string, ignore_case=True,
-                                               output_format="DICT", report_spec="User-Identities",
-                                               query_depth=0, page_size=10)
+
+            def fetch(start: int, size: int):
+                page = client.find_actor_profiles(search_string=search_string, ignore_case=True,
+                                                  output_format="DICT", report_spec="User-Identities",
+                                                  query_depth=0, start_from=start, page_size=size)
+                return [page] if isinstance(page, dict) else page   # one match comes back as a dict
+
+            read = read_all(fetch, method="find_actor_profiles", client=client, fetch_page_size=PEOPLE_PAGE)
         except PyegeriaException as e:
             # self.log(f"Searching for {search_string} failed: {e}")
             self.notify(f"Searching for people failed: {e}", timeout=10, severity="error")
@@ -110,15 +127,15 @@ class NetworkMixin:
             if client:
                 client.close_session()
         # self.log(f"People found for {search_string}: {found}")
-        if isinstance(found, dict):
-            found = [found]
         rows = []
-        for person in found if isinstance(found, list) else []:
+        for person in read.items:
+            if not isinstance(person, dict):
+                continue
             guid = person.get("GUID")
             # the current user can't be their own peer
             if guid and guid != self.user_GUID:
                 rows.append((person.get("Display Name") or "", guid, person.get("Qualified Name") or ""))
-        return rows
+        return paged_rows(rows, read, "people")
 
     def link_peer(self, peer_guid: str, nickname: str = "", description: str = "") -> bool:
         """Add the person with the given GUID to the user's network. Returns True on success."""
@@ -135,6 +152,17 @@ class NetworkMixin:
         client = None
         try:
             client = self._network_client()
+            # The search hides people already in the network only as far as the network list was read, so check
+            # this person isn't already a peer: a second Peer link would duplicate them
+            already = lookup(self._peers_fetch(client), lambda peer: element_guid(peer) == peer_guid,
+                             method="get_related_elements", client=client)
+            if already.found:
+                self.notify("That person is already in your network", timeout=10, severity="warning")
+                return False
+            if already.answer != "absent":
+                self.notify(refusal("a link to that person in your network", already, "Nothing was added"),
+                            timeout=10, severity="warning")
+                return False
             client.link_peer_person(self.user_GUID, peer_guid, body)
             self.notify("Added to your network", timeout=10, severity="information")
             return True

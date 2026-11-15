@@ -15,6 +15,7 @@ from textual.screen import ModalScreen
 from textual.widgets import DataTable, Header, Static, Footer, Input, Button
 
 from pyegeria import PyegeriaException, EgeriaTech, exec_report_spec, load_app_config, settings
+from paging_support import none_words, report_empty_words, report_end_complete
 from profile_utils import set_screen_heading
 
 
@@ -94,7 +95,8 @@ class ShowCommentsScreen(ModalScreen):
                 user_pass=self.user_password,
             )
         except PyegeriaException as e:
-            self.notify(f"No comments found: {str(e)}", severity="warning")
+            # a failed read is not "no comments"
+            self.notify(f"Couldn't retrieve the comments: {str(e)}", severity="error")
             return
 
         # self.log(f"comments_list: {comments_list}")
@@ -116,7 +118,12 @@ class ShowCommentsScreen(ModalScreen):
                 comment_table.add_row(str(comment), "", "", "")
 
         if comment_table.row_count == 0:
-            if self.selected_comment_guid:
+            if not report_end_complete(comments_list):
+                # Egeria didn't confirm the end, so "has no comments" can't be said
+                what = "responses to this comment" if self.selected_comment_guid else "comments on the selected element"
+                self.notify(f"{none_words(what, complete=False)} - use Ctrl+N to add one", timeout=10,
+                            severity="warning")
+            elif self.selected_comment_guid:
                 self.notify("This comment has no responses yet - use Ctrl+N to add one", timeout=10)
             else:
                 self.notify("Selected element does not have any comments - use Ctrl+N to add one", timeout=10)

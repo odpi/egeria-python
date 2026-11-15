@@ -519,7 +519,9 @@ class TestShopForDataMixin:
         mock_event.state = WorkerState.SUCCESS
 
         app.on_worker_state_changed(mock_event)
-        mock_table.add_row.assert_called_once_with("No digital product catalogs found", "No data returned from Egeria", "", "")
+        # the error sentinel is a failed read, not "none found"
+        mock_table.add_row.assert_called_once_with("Couldn't retrieve digital product catalogs from Egeria",
+                                                   "the read failed; see the log", "", "")
         assert mock_table.loading is False
 
     def test_on_worker_state_changed_all_groups_raw_list(self):

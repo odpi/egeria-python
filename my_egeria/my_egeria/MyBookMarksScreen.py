@@ -10,6 +10,7 @@ from textual.app import ComposeResult
 from textual.containers import ScrollableContainer, Container, Horizontal
 from textual.screen import ModalScreen
 from textual.widgets import DataTable, Header, Static, Footer, Input, Button
+from paging_support import is_complete, none_words
 from profile_utils import set_screen_heading
 
 
@@ -33,6 +34,8 @@ class MyBookMarksScreen(ModalScreen):
         super().__init__(id="bookmark_screen", *args, **kwargs)
         # Rows of (name, type, GUID)
         self.my_bookmarks_data = list(my_bookmarks or [])
+        # False when Egeria didn't confirm these are all of them (see paging_support.PagedRows)
+        self.my_bookmarks_complete = is_complete(my_bookmarks)
         # GUID of the row highlighted when the screen was opened, if any, used to pre-fill a new bookmark
         self.target_guid = target_guid or ""
 
@@ -58,12 +61,16 @@ class MyBookMarksScreen(ModalScreen):
         for name, element_type, guid in self.my_bookmarks_data:
             table.add_row(name, element_type, guid, key=guid)
         if not self.my_bookmarks_data:
-            self.notify("You have no bookmarks yet - press Ctrl+N to add one", timeout=5)
+            if self.my_bookmarks_complete:
+                self.notify("You have no bookmarks yet - press Ctrl+N to add one", timeout=5)
+            else:
+                self.notify(none_words("bookmarks", complete=False), timeout=10, severity="warning")
 
     def _reload(self) -> None:
         rows = self.app.list_my_bookmarks()
         if rows is not None:
             self.my_bookmarks_data = rows
+            self.my_bookmarks_complete = is_complete(rows)
             self._fill_table()
 
     def action_quit(self) -> None:

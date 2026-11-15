@@ -548,6 +548,16 @@ class _LazySettings:
 settings = _LazySettings()
 
 
+def configured_user_id() -> str:
+    """The configured Egeria user, resolved now: EGERIA_USER as it is now, then the User Profile from pyegeria's
+    settings (config.json / .env), then the quickstart default. The one resolution of "the configured user":
+    `resolve_egeria_credentials` (which builds a CLI's client) and the report-spec cache's client-less identity
+    (`egeria_spec_cache.current_spec_identity`) both use it, so a CLI with no configuration binds its private
+    spec cache to, and loads it as, the same user. (pyegeria 7 drops the quickstart default; both sides then
+    become None together.)"""
+    return os.environ.get("EGERIA_USER") or settings.User_Profile.user_name or "erinoverview"
+
+
 def resolve_egeria_credentials(user_id: Optional[str] = None, user_pwd: Optional[str] = None) -> tuple[str, str]:
     """Resolve the Egeria user and password at call time (ISSUE-161).
 
@@ -556,7 +566,7 @@ def resolve_egeria_credentials(user_id: Optional[str] = None, user_pwd: Optional
     .env), then the quickstart defaults. Call it when a command runs, not at import, so a
     variable set after import is still honoured.
     """
-    user = user_id or os.environ.get("EGERIA_USER") or settings.User_Profile.user_name or "erinoverview"
+    user = user_id or configured_user_id()
     pwd = user_pwd or os.environ.get("EGERIA_USER_PASSWORD") or settings.User_Profile.user_pwd or "secret"
     return user, pwd
 

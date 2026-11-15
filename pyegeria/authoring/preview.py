@@ -45,10 +45,14 @@ def _cap(result: Dict[str, Any], max_rows: int, notes: List[str]) -> Dict[str, A
         rows = result.get("rows")
     elif isinstance(result, dict) and result.get("kind") == "json" and isinstance(result.get("data"), list):
         rows = result.get("data")
-    out = {"result": result, "capped": False, "shown": None, "notes": notes}
+    end = result.get("end") if isinstance(result, dict) else None
+    out = {"result": result, "capped": False, "shown": None, "notes": notes, "end": end}
     if isinstance(result, dict) and result.get("kind") == "empty":
         out["shown"] = 0
-        notes.append("ran, and found nothing")
+        if end in (None, "confirmed"):   # None: not a find (an analytic or chart result says its own absence)
+            notes.append("ran, and found nothing")
+        else:   # pager step 3: "found nothing" only when the end is confirmed
+            notes.extend(result.get("notes") or ["nothing in what was read; can't rule out more"])
         return out
     if rows is None:
         notes.append(f"ran; the result is {result.get('kind') if isinstance(result, dict) else type(result).__name__}, "
@@ -64,6 +68,9 @@ def _cap(result: Dict[str, Any], max_rows: int, notes: List[str]) -> Dict[str, A
     elif len(rows) == max_rows:
         out["capped"] = True
         notes.append(f"capped: the run asked for {max_rows} rows and got {max_rows}; there may be more")
+    elif end not in (None, "confirmed"):   # pager step 3: the end wasn't reached, whatever the count
+        out["capped"] = True
+        notes.append(f"{len(rows)} rows shown; Egeria didn't confirm there are no more")  # end stays structured
     elif not rows:
         notes.append("ran, and found nothing")
     return out
@@ -80,7 +87,9 @@ async def _run(label: str, fs, client: Any, output_format: str, params: Dict[str
                      f"isn't registered")
         out = "DICT"
     params = {**params, "page_size": max_rows}
-    kwargs = dict(output_format=out, params=params, **_identity(client))
+    # Pager step 3: page a list format fully, up to max_rows rows, so a filtered first page doesn't read as
+    # "found nothing" (a text format reads its first page and says so when that showed nothing).
+    kwargs = dict(output_format=out, params=params, page_to=max_rows, **_identity(client))
     if out == "TABLE":
         kwargs["table_shape"] = "structured"
     result = await asyncio.to_thread(exec_report_spec, run_dict(label, fs, out), **kwargs)
@@ -115,15 +124,16 @@ async def _sheet_for_resolver(draft: SheetDraft, client: Any, notes: List[str]):
         if p.text is not None:
             placements.append(EgeriaPlacement(ref=p.name, content=p.text, kind="text", **common))
             continue
+        why = "no Report by this name that you can see"
         try:
             el = await _report_element(client, p.report)
-        except AuthoringRefused as exc:
+        except AuthoringRefused as exc:   # two or more by that name, or an unknown read (never "no Report")
             el = None
+            why = str(exc)
             notes.append(f"placement {i} ({p.report}): {exc}")
         guid = (el or {}).get("elementHeader", {}).get("guid")
         placements.append(EgeriaPlacement(ref=p.report, kind="report" if guid else "missing", report_guid=guid,
-                                          note=None if guid else "no Report by this name that you can see",
-                                          **common))
+                                          note=None if guid else why, **common))
     return EgeriaDashboardSheet(name=draft.name, heading=draft.heading, description=draft.description,
                                 family=draft.family, placements=placements)
 

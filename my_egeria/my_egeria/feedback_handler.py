@@ -28,6 +28,8 @@ if str(current_dir) not in sys.path:
     sys.path.append(str(current_dir))
 
 from pyegeria import Egeria, PyegeriaException
+from paging_support import (LookupUnconfirmed, PagedRows, async_by_unique_name, async_read_all, paged_rows,
+                            unique_refusal)
 from FeedbackScreens import FeedbackScreen, FeedbackLogScreen
 
 FEEDBACK_LOG_OWNER = "garygeeke"
@@ -61,7 +63,11 @@ class FeedbackMixin:
         client = None
         try:
             client = self._feedback_client()
-            log_guid = await self._get_or_create_feedback_log(client)
+            try:
+                log_guid = await self._get_or_create_feedback_log(client)
+            except LookupUnconfirmed as e:
+                self.notify(f"{e} Your feedback was not saved.", timeout=10, severity="warning")
+                return
             if not log_guid:
                 self.notify("Unable to locate or create the feedback log, feedback not saved",
                             timeout=10, severity="error")
@@ -93,22 +99,25 @@ class FeedbackMixin:
             },
         }
 
-    async def _find_feedback_log(self, client: Egeria) -> str | None:
-        response = await client._async_get_note_logs_by_name(FEEDBACK_LOG_QN, graph_query_depth=0,
-                                                             output_format="JSON")
-        if isinstance(response, list) and response:
-            return response[0].get("elementHeader", {}).get("guid")
-        return None
+    async def _find_feedback_log(self, client: Egeria):
+        """Whether the feedback log exists, by Egeria's exact unique-name read of FEEDBACK_LOG_QN (a
+        paging_support.UniqueName: found / absent (Egeria's specific not-found) / unknown)."""
+        return await async_by_unique_name(client, FEEDBACK_LOG_QN, "NoteLog")
 
     async def _get_or_create_feedback_log(self, client: Egeria) -> str | None:
         """Return the feedback log's GUID, creating the log on first use.
 
         When the owner creates it, it is attached to their profile. If another user
         gets there first the log is created standalone - it is still found by name.
+
+        The log is created only when Egeria's unique-name read says not-found; on any other answer
+        LookupUnconfirmed is raised and nothing is created (a second feedback log would split the feedback).
         """
-        log_guid = await self._find_feedback_log(client)
-        if log_guid:
-            return log_guid
+        found = await self._find_feedback_log(client)
+        if found.found:
+            return found.guid
+        if found.answer != "absent":
+            raise LookupUnconfirmed(unique_refusal("the feedback log", found))
         properties = {
             "class": "NoteLogProperties",
             "typeName": "NoteLog",
@@ -143,19 +152,30 @@ class FeedbackMixin:
         finally:
             if client:
                 client.close_session()
+        if getattr(entries, "note", None):
+            self.notify(entries.note, timeout=10, severity="warning")
         await self.push_screen(FeedbackLogScreen(entries))
 
     async def get_feedback_entries(self, client: Egeria) -> list[dict]:
-        """Retrieve the notes in the feedback log, newest first."""
-        log_guid = await self._find_feedback_log(client)
-        if not log_guid:
-            return []
-        notes = await client._async_get_notes_for_note_log(log_guid, metadata_element_type_name="Note",
-                                                           graph_query_depth=0, output_format="JSON")
-        if not isinstance(notes, list):
-            return []
+        """Retrieve the notes in the feedback log, newest first (PagedRows: ``complete`` False when Egeria
+        didn't confirm that's all of them)."""
+        found = await self._find_feedback_log(client)
+        if found.answer == "absent":   # Egeria's exact not-found: no feedback has been recorded yet
+            return PagedRows([], complete=True)
+        if not found.found:
+            return PagedRows([], complete=False, note=unique_refusal("the feedback log", found, "Nothing is shown"))
+        log_guid = found.guid
+
+        async def fetch(start: int, size: int):
+            return await client._async_get_notes_for_note_log(log_guid, metadata_element_type_name="Note",
+                                                              graph_query_depth=0, output_format="JSON",
+                                                              start_from=start, page_size=size)
+
+        read = await async_read_all(fetch, method="_async_get_notes_for_note_log", client=client)
         entries = []
-        for note in notes:
+        for note in read.items:
+            if not isinstance(note, dict):
+                continue
             props = note.get("properties") or {}
             extra = props.get("additionalProperties") or {}
             versions = (note.get("elementHeader") or {}).get("versions") or {}
@@ -167,4 +187,4 @@ class FeedbackMixin:
                 "text": props.get("description", ""),
             })
         entries.sort(key=lambda e: str(e["date"]), reverse=True)
-        return entries
+        return paged_rows(entries, read, "feedback entries")

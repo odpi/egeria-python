@@ -18,6 +18,10 @@ os.environ.pop("PYEGERIA_REPORT_SPEC_DRAFTS", None)
 load_commands()
 
 
+def pytest_configure(config):
+    config.addinivalue_line("markers", "slow: builds or runs something heavy (e.g. a wheel); deselect with -m 'not slow'")
+
+
 def pytest_collection_modifyitems(config, items):
     """Mark all tests in this directory as unit tests."""
     for item in items:
@@ -48,3 +52,13 @@ def test_params():
     }
 
 
+
+
+@pytest.fixture(autouse=True)
+def _forget_noted_egeria_credentials():
+    """Each test starts with no noted Egeria client identity (pyegeria.core._client_identities), so the
+    report-spec cache's default identity comes from what that test does, never from an earlier test."""
+    from pyegeria.core._client_identities import reset_credentials
+    reset_credentials()
+    yield
+    reset_credentials()

@@ -89,10 +89,6 @@ def _iri(guid: str, *suffix: str) -> URIRef:
     return URIRef("urn:egeria:guid:" + guid + "".join(f":{s}" for s in suffix))
 
 
-def _is_list(result: Any) -> bool:
-    return isinstance(result, list)
-
-
 def _type_names(element: Dict[str, Any]) -> Tuple[str, List[str]]:
     t = (element.get("elementHeader") or {}).get("type") or {}
     return t.get("typeName") or "", list(t.get("superTypeNames") or [])
@@ -138,6 +134,7 @@ class _Notes:
     def __init__(self) -> None:
         self.general: List[str] = []
         self.by_reason: Dict[str, List[str]] = {}
+        self.read_unconfirmed = False   # a paged read whose end Egeria didn't confirm (pager step 4)
 
     def add(self, sentence: str) -> None:
         if sentence not in self.general:
@@ -156,41 +153,29 @@ class _Notes:
 
 # ── Reads (as the client's user) ──
 
-def _paged(read, page_size: int, notes: _Notes, what: str) -> List[Dict[str, Any]]:
-    """Read pages until one comes back empty, advancing startFrom by the full page size each time
-    (Egeria's paging contract: a short page is not the last page, and only an empty one is). Egeria
-    answers "no elements" with a string, which counts as an empty page.
+def _paged(read, page_size: int, notes: _Notes, what: str, method: Optional[str] = None) -> List[Dict[str, Any]]:
+    """Every element ``read(start, size)`` returns, through the pager (pager step 4; a suspect path), advancing
+    startFrom by the full page size each time (Egeria's paging contract: an empty page is a filtered one, not
+    the end; only null ends it, and on a suspect path only after the probes find nothing too).
 
-    Pages may overlap (laz's asset-domain search returns short pages that share elements), so an
-    element already read is skipped, never counted twice (ISSUE-185), and a page with nothing new
-    does not by itself end the reading. Reading stops early only when a page is identical to the
-    one before it (the server ignored startFrom) or after two pages in a row bring nothing new; the
-    note says which, since later pages, if any, were not read."""
-    items: List[Dict[str, Any]] = []
-    seen: set = set()
-    start = 0
-    previous: Optional[List[str]] = None
-    no_new_in_a_row = 0
-    for _ in range(_MAX_PAGES):
-        page = read(start, page_size)
-        if not _is_list(page) or not page:
-            return items
-        guids = [_guid(e) for e in page]
-        if guids == previous:
-            notes.add(f"Stopped reading {what} at startFrom {start}: Egeria answered with exactly the page before "
-                      f"it (it ignored startFrom), so later pages, if any, were not read.")
-            return items
-        new = [e for e in page if _guid(e) not in seen]
-        seen.update(_guid(e) for e in new)
-        items.extend(new)
-        no_new_in_a_row = 0 if new else no_new_in_a_row + 1
-        if no_new_in_a_row == 2:
-            notes.add(f"Stopped reading {what} at startFrom {start}: two pages in a row held only elements already "
-                      f"read, so later pages, if any, were not read.")
-            return items
-        previous = guids
-        start += page_size
-    notes.add(f"Stopped reading {what} after {_MAX_PAGES} pages of {page_size}: the catalog may be incomplete.")
+    Pages may overlap (laz's asset-domain search returns short pages that share elements), so an element
+    already read is skipped, never counted twice (ISSUE-185), and one page with nothing new does not by itself
+    end the reading: two in a row do (``stall_pages=2``). Whenever the end isn't confirmed, a note says the
+    catalog shows at least what was read, and why."""
+    from pyegeria.core.paging import at_least_note, log_end, page_all, paging_for
+    paged = page_all(lambda start, size: read(start, size), fetch_page_size=page_size, max_pages=_MAX_PAGES,
+                     stall_pages=2, key=lambda e: _guid(e) or id(e), **paging_for(method))
+    log_end(f"export_dcat._paged ({what})", paged)
+    notes.read_unconfirmed = notes.read_unconfirmed or not paged.complete
+    items = [e for e in paged.items if isinstance(e, dict)]
+    if paged.end_reason == "max_pages":
+        notes.add(f"Stopped reading {what} after {_MAX_PAGES} pages of {page_size}: the catalog may be incomplete.")
+    elif paged.end_reason == "stalled":
+        notes.add(f"Stopped reading {what} at startFrom {paged.positions_read - page_size}: Egeria answered with "
+                  f"only elements already read (exactly the page before it, or two pages in a row with nothing "
+                  f"new), so later pages, if any, were not read.")
+    elif (words := at_least_note(paged, what, len(items))) is not None:
+        notes.add(words)
     return items
 
 
@@ -211,11 +196,18 @@ def _read_scope(client: Any, scope: str) -> Dict[str, Any]:
         if isinstance(found, dict):
             return found
         raise ValueError(f"export_dcat: no collection with GUID {scope} is visible to {client.user_id}")
-    found = client.get_collections_by_name(scope, output_format="JSON", graph_query_depth=0)
-    exact = [c for c in found if _qn(c) == scope] if _is_list(found) else []
-    if not exact:
-        raise ValueError(f"export_dcat: no collection with qualifiedName '{scope}' is visible to {client.user_id}")
-    return exact[0]
+    # Egeria's exact unique-name read, not one page of a by-name search (which could read a filtered page as
+    # "no such collection"). Can't tell -> an error that says so, never "no collection".
+    from pyegeria.core.unique_name import by_unique_name
+    found = by_unique_name(client, scope, "Collection")
+    if found.answer == "unknown":
+        raise ValueError(f"export_dcat: couldn't tell whether a collection with qualifiedName '{scope}' is visible "
+                         f"to {client.user_id}: {found.reason}")
+    if not found.found:
+        held = f" ('{scope}' is a {found.wrong_type})" if found.wrong_type else ""
+        raise ValueError(f"export_dcat: no collection with qualifiedName '{scope}' is visible to "
+                         f"{client.user_id}{held}")
+    return found.element
 
 
 # ── The mapping ──
@@ -436,11 +428,15 @@ def serialise(graph: Graph, fmt: str) -> str:
 
 # ── The routine ──
 
-def _nothing_exported(outcome: Dict[str, int], viewer: str, *, searched: bool) -> str:
+def _nothing_exported(outcome: Dict[str, int], viewer: str, *, searched: bool, confirmed: bool = True) -> str:
     """Why the catalog has no dataset, from what happened to each element in scope. An empty scope,
     a scope of only Bitol types or non-Assets, and Assets the viewer could not read are different
     answers and are never reported as one another."""
     if not any(outcome.values()):
+        if not confirmed:   # pager step 4: never "nothing" unless the end was confirmed
+            where = "the search matched nothing" if searched else "the scope showed no members"
+            return (f"No dataset exported: {where} that {viewer} can see in what was read; Egeria didn't "
+                    f"confirm there are no more.")
         where = "the search matched nothing" if searched else "the scope has no members"
         return f"No dataset exported: {where} that {viewer} can see."
     words = {"bitol": "a DigitalProduct or Agreement (Bitol's, not DCAT's)",
@@ -475,14 +471,14 @@ def export_dcat(client: Any, scope: Optional[str] = None, search_string: Optiona
         guid = _guid(collection)
         members = _paged(lambda s, n: client.get_collection_members(
             collection_guid=guid, start_from=s, page_size=n, output_format="JSON", graph_query_depth=0), page_size, b.notes,
-            f"the members of {_qn(collection)}")
+            f"the members of {_qn(collection)}", "get_collection_members")
         b.notes.add(f"Read as {viewer}: Egeria leaves members in zones {viewer} cannot see out of the member "
                     f"listing, so this catalog lists only what {viewer} can see.")
     else:
         catalog = b.catalog(None, search_string=search_string)
         members = _paged(lambda s, n: client.find_in_asset_domain(
             search_string=search_string, start_from=s, page_size=n, output_format="JSON", graph_query_depth=0), page_size, b.notes,
-            f"the assets matching '{search_string}'")
+            f"the assets matching '{search_string}'", "find_in_asset_domain")
         b.notes.add(f"Read as {viewer}: Egeria leaves assets in zones {viewer} cannot see out of a search, so this "
                     f"catalog lists only what {viewer} can see.")
 
@@ -527,7 +523,7 @@ def export_dcat(client: Any, scope: Optional[str] = None, search_string: Optiona
         exported += 1
 
     if exported == 0:
-        b.notes.add(_nothing_exported(outcome, viewer, searched=not scope))
+        b.notes.add(_nothing_exported(outcome, viewer, searched=not scope, confirmed=not b.notes.read_unconfirmed))
     if not any(True for _ in b.g.subjects(RDF.type, DCAT.DataService)):
         b.notes.add("dcat:DataService omitted: no DeployedAPI with an endpoint in scope.")
     b.notes.add("dcat:contactPoint omitted: this exporter does not read owners' contact details.")

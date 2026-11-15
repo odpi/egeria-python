@@ -10,6 +10,7 @@ from textual.app import ComposeResult
 from textual.containers import ScrollableContainer, Container, Horizontal
 from textual.screen import ModalScreen
 from textual.widgets import DataTable, Header, Static, Footer, Input, Button
+from paging_support import is_complete, none_words
 from profile_utils import set_screen_heading
 
 
@@ -75,7 +76,7 @@ class MyNetworkScreen(ModalScreen):
     def __init__(self, my_peers, *args, **kwargs):
         super().__init__(id="my_network_screen", *args, **kwargs)
         # Rows of (qualified name, display name, full name, pronouns, GUID, description)
-        self.my_peers_data = list(my_peers or [])
+        self.my_peers_data = my_peers if isinstance(my_peers, list) else list(my_peers or [])  # keeps PagedRows.complete
         # (display name, GUID) of the person picked from the search results to add
         self.selected_person = None
         # GUID of the peer whose details are currently displayed
@@ -129,7 +130,10 @@ class MyNetworkScreen(ModalScreen):
         for row in self.my_peers_data:
             table.add_row(*row, key=row[4])
         if not self.my_peers_data:
-            self.notify("There is no-one in your network yet - search for someone to add them", timeout=5)
+            if is_complete(self.my_peers_data):
+                self.notify("There is no-one in your network yet - search for someone to add them", timeout=5)
+            else:
+                self.notify(none_words("people in your network", complete=False), timeout=10, severity="warning")
 
     def _reload(self) -> None:
         rows = self.app.list_my_peers()
@@ -228,8 +232,14 @@ class MyNetworkScreen(ModalScreen):
             if guid not in in_network:
                 table.add_row(name, guid, qualified_name, key=guid)
         if table.row_count == 0:
-            self.notify(f"No-one new found matching {search_string}", timeout=5, severity="warning")
+            if is_complete(found):
+                self.notify(f"No-one new found matching {search_string}", timeout=5, severity="warning")
+            else:
+                self.notify(none_words("new people", complete=False, matching=search_string), timeout=10,
+                            severity="warning")
         else:
+            if getattr(found, "note", None):
+                self.notify(found.note, timeout=10, severity="warning")
             self.notify("Select a person to add them to your network", timeout=5)
             table.focus()
 

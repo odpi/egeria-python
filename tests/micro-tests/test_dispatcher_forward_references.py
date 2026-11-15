@@ -25,10 +25,12 @@ from md_processing.md_processing_utils.md_processing_constants import load_comma
 
 
 class _FakeClient:
-    """No live methods needed - resolve_element_guid() gracefully returns None
-    for anything it can't resolve via cache/planned_elements/batch_target_qns,
-    swallowing the resulting AttributeError from a missing client method."""
-    pass
+    """Egeria holds nothing: every unique-name lookup answers "not found". (It used to have no methods at all,
+    relying on resolve_element_guid() swallowing the AttributeError as "not found"; pager step 5 makes any error
+    other than Egeria's not-found "unknown", which blocks a create, so the fake answers explicitly.)"""
+
+    async def __async_get_guid__(self, *args, **kwargs):
+        return "No elements found"
 
 
 class _FakeParentChildProcessor(AsyncBaseCommandProcessor):

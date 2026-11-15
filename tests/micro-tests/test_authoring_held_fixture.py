@@ -2,8 +2,10 @@
 # Copyright Contributors to the ODPi Egeria project.
 """load_held on a real sheet: the catalog-health sheet and its Reports, as Egeria answered.
 
-Fixture: tests/micro-tests/data/authoring/catalog_health_scratch.json, every client call load_held made and
-Egeria's answer, captured on the round-trip probe's scratch Egeria (757a5df0, PostgreSQL) after processing the
+Fixtures: tests/micro-tests/data/authoring/catalog_health_scratch.json, every client call load_held("sheet") made
+and Egeria's answer, re-captured 2026-11-14 with the pager's probe pages on the round-trip probe's scratch Egeria
+(5deda38d, PostgreSQL), and catalog_health_reports_scratch.json, the Reports' own unpaged reads as captured
+2026-11-12 (757a5df0). Both after processing the
 Catalog Health section of LOCAL_DASHBOARDS_USEFUL_SHEETS.dr-egeria.md, the document that seeded the sheet on
 laz. Not read from laz. Replayed here offline. It has 6 placements: laz's sheet also has the saved-query tile
 (LOCAL_DASHBOARDS_SAVED_QUERY_TILE.dr-egeria.md), covered from laz's real shape in test_authoring_laz_sheet.py.
@@ -21,6 +23,10 @@ from pyegeria.authoring.serialize import parsed_commands, report_parameter_maps
 pytestmark = pytest.mark.unit
 
 FX = json.loads((Path(__file__).parent / "data" / "authoring" / "catalog_health_scratch.json").read_text())
+#: The Reports' own reads (unpaged), as captured on 2026-11-12; the sheet's fixture above was re-captured with
+#: probe pages on 2026-11-14 (see each file's _about).
+REPORTS_FX = json.loads((Path(__file__).parent / "data" / "authoring" /
+                         "catalog_health_reports_scratch.json").read_text())
 
 
 def _key(sub, method, args, kwargs):
@@ -33,7 +39,7 @@ class _Replay:
 
     def __init__(self):
         self._answers = {}
-        for c in FX["calls"]:
+        for c in FX["calls"] + REPORTS_FX["calls"]:
             self._answers.setdefault(_key(c["sub"], c["method"], c["args"], c["kwargs"]), c["result"])
 
     def __getattr__(self, sub):
@@ -42,8 +48,9 @@ class _Replay:
         class Sub:
             def __getattr__(self, method):
                 async def call(*args, **kwargs):
-                    key = _key(sub, method, json.loads(json.dumps(list(args), default=str)),
-                               json.loads(json.dumps(kwargs, default=str)))
+                    a = json.loads(json.dumps(list(args), default=str))
+                    kw = json.loads(json.dumps(kwargs, default=str))
+                    key = _key(sub, method, a, kw)
                     assert key in outer._answers, f"unrecorded call {sub}.{method}{args}{kwargs}"
                     return outer._answers[key]
                 return call

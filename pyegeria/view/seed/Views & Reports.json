@@ -561,7 +561,7 @@
        {"field": "supplementary_properties", "label": "Supplementary Properties"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "status", "label": "Status"},
-       {"field": "limit_result_by_status", "label": "Limit Result by Status", "valid_values": ["UNKNOWN", "DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "APPROVED_CONCEPT", "UNDER_DEVELOPMENT", "DEVELOPMENT_COMPLETE", "APPROVED_FOR_DEPLOYMENT", "STANDBY", "ACTIVE", "FAILED", "DISABLED", "COMPLETE", "DEPRECATED", "OTHER", "DELETED"]},
+       {"field": "limit_result_by_status", "label": "Limit Result by Status", "valid_values": ["UNKNOWN", "ACTIVE", "INVALID", "DELETED", "OTHER"]},
        {"field": "user_defined_status", "label": "User Defined Status"},
        {"field": "category", "label": "Category"}
       ]
@@ -604,7 +604,7 @@
        {"field": "ignore_case", "label": "Ignore Case"},
        {"field": "include_only_classified_elements", "label": "Include Only Classified Elements"},
        {"field": "include_only_relationships", "label": "Include Only Relationships"},
-       {"field": "limit_result_by_status", "label": "Limit Result by Status", "valid_values": ["UNKNOWN", "DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "APPROVED_CONCEPT", "UNDER_DEVELOPMENT", "DEVELOPMENT_COMPLETE", "APPROVED_FOR_DEPLOYMENT", "STANDBY", "ACTIVE", "FAILED", "DISABLED", "COMPLETE", "DEPRECATED", "OTHER", "DELETED"]},
+       {"field": "limit_result_by_status", "label": "Limit Result by Status", "valid_values": ["UNKNOWN", "ACTIVE", "INVALID", "DELETED", "OTHER"]},
        {"field": "metadata_element_subtype_names", "label": "Metadata Element Subtype Names"},
        {"field": "metadata_element_type_name", "label": "Metadata Element Type Name"},
        {"field": "order_property_name", "label": "Order Property Name"},

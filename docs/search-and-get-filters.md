@@ -209,7 +209,7 @@ Used by get_*_by_name and other list gets. Maps to `FilterRequestBody` (by name)
 | `anchor_guid` | `str` | `anchorGUID` | Only return elements anchored to the element with this GUID. |
 | `anchor_domain` | `str` | `anchorDomainName` | Only return elements whose anchor is in this domain (an open metadata type name). |
 | `anchor_scope_guid` | `str` | `anchorScopeGUID` | Only return elements whose anchor scope is the element with this GUID. |
-| `limit_results_by_status` | `list[str]` | `limitResultsByStatus` | Only return elements whose status is one of these, e.g. `["ACTIVE", "DRAFT"]`. |
+| `limit_results_by_status` | `list[str]` | `limitResultsByStatus` | Only return elements whose status is one of these, e.g. `["ACTIVE"]`; Egeria's ElementStatus: UNKNOWN, ACTIVE, INVALID, DELETED, OTHER (a content status such as DRAFT is refused). |
 | `sequencing_order` | `str` | `sequencingOrder` | Order of the results; `PROPERTY_ASCENDING`/`PROPERTY_DESCENDING` need `sequencing_property`. |
 | `sequencing_property` | `str` | `sequencingProperty` | Property name to sort on when `sequencing_order` is a PROPERTY_* order. |
 

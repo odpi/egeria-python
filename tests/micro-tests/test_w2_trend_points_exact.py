@@ -54,7 +54,11 @@ class _Egeria:
     def find_metadata_elements(self, body, *a, **kw):
         self.find_calls.append(body.get("asOfTime"))
         n = self.past if body.get("asOfTime") else self.now
-        return [{"elementGUID": f"g{i}"} for i in range(min(n, body.get("pageSize") or CAP, CAP))]
+        start, size = body.get("startFrom") or 0, min(body.get("pageSize") or CAP, CAP)
+        if n > CAP:   # a population past the cap: this server repeats its first page, so the scan stalls (a limit)
+            start = 0
+        # pages like Egeria (pager step 5: the fallback pages): rows from startFrom, then null
+        return [{"elementGUID": f"g{i}"} for i in range(start, min(n, start + size))] or "No elements found"
 
 
 def _trend(egeria, population="repository", **kw):
@@ -97,11 +101,14 @@ def test_a_repository_count_that_refuses_as_of_time_is_not_measured_not_a_bound(
     assert series[2]["measurement"]["exact"]
 
 
-def test_a_short_find_page_is_exact_and_says_find():
+def test_a_short_find_page_is_a_lower_bound_and_says_so():
+    # pager step 5: the viewer fallback pages through find_metadata_elements (NULL_NOT_END), so a short page is
+    # not the total: the past points are "at least 40", unconfirmed, never exact; the native point is exact
     series = _trend(_Egeria(past=40, now=50, as_of_ok=False), population="viewer")
-    assert [p["display"] for p in series] == ["40", "40", "50"]
-    assert [p["measurement"]["how"] for p in series] == ["find", "find", "native"]
-    assert all(p["measurement"]["exact"] for p in series)
+    assert [p["display"] for p in series] == ["\u226540", "\u226540", "50"]
+    assert [p["measurement"]["how"] for p in series] == ["find-unconfirmed", "find-unconfirmed", "native"]
+    assert [p["measurement"]["exact"] for p in series] == [False, False, True]
+    assert [p["measurement"].get("unconfirmed") for p in series] == [True, True, None]
 
 
 def test_strict_raises_with_the_points_that_are_not_exact():

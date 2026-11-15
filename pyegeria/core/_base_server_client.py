@@ -7,6 +7,7 @@ different client capabilities. It also provides the common methods used to make 
 
 """
 
+from pyegeria.core._no_password import NO_PASSWORD, carried_password, password_as_given, resolve_password
 import asyncio
 import inspect
 import json
@@ -38,6 +39,13 @@ from pyegeria.core.async_runner import run_sync
 
 ...
 
+
+
+def _is_server_not_available(json_response: dict) -> bool:
+    """Egeria's "the OMAG Server / service is not available" 404 (OMAG-MULTI-TENANT-404-001/-002): a request to a
+    server or service that isn't running there, not a missing element."""
+    message_id = str((json_response or {}).get("exceptionErrorMessageId") or "")
+    return message_id.startswith("OMAG-MULTI-TENANT-404")
 
 
 def _is_authorization_failure(json_response: dict) -> bool:
@@ -110,7 +118,12 @@ class BaseServerClient:
         self.user_id = user_id or settings.User_Profile.user_name
         if self.user_id:
             _validate_url_path_safe(self.user_id, "user_id")
-        self.user_pwd = user_pwd or settings.User_Profile.user_pwd
+        self.user_pwd, self.use_default_password = resolve_password(user_pwd)  # NO_PASSWORD: opt out
+        try:  # whose report-spec cache a read outside a request is for (see _client_identities)
+            from pyegeria.core._client_identities import note_credentials
+            note_credentials(self.user_id, self.platform_url, self.server_name)
+        except Exception:  # noqa: BLE001 -- recording must never break a client
+            pass
         self.page_size = page_size or max_paging_size
         self.token_src = token_src
         self.token = token
@@ -679,6 +692,11 @@ class BaseServerClient:
                     related_http_code = json_response.get("relatedHTTPCode", 0)
                     if related_http_code == 200:
                         return response
+                    elif related_http_code == 404 and _is_server_not_available(json_response):
+                        # OMAG-MULTI-TENANT-404-*: the server (or a service on it) isn't available, e.g. a
+                        # wrong view server name. That is not "the element isn't there": raised as an API
+                        # error so no caller's not-found handling reads it as absent (pager step 6).
+                        raise PyegeriaAPIException(response, context, additional_info=json_response)
                     elif related_http_code == 404:
                         raise PyegeriaNotFoundException(response, context, additional_info=json_response)
                     elif related_http_code in (401, 403) and _is_authorization_failure(json_response):

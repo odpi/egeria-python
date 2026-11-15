@@ -3,7 +3,7 @@
 
 [project]
 name = "pyegeria"
-version = "6.2.41"
+version = "6.2.42"
 license = 'Apache-2.0'
 license-files = ["LICENSE"]
 authors = [{name = "Dan Wolfson", email = "dan.wolfson@pdr-associates.com"},]
@@ -246,7 +246,7 @@ namespaces = false
 ]
 "my_egeria" = ["**/*.tcss"]
 "commands" = ["tech/spec_editor_static/*"]
-"pyegeria" = ["view/schemas/*.json", "view/seed/*.json", "view/data/dcat-ap-3/*"]
+"pyegeria" = ["view/schemas/*.json", "view/seed/*.json", "view/data/dcat-ap-3/*", "view/static/*"]
 
 
 [project.optional-dependencies]

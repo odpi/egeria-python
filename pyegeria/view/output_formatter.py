@@ -488,6 +488,7 @@ def _extract_referenceable_properties(element: dict[str, Any]) -> dict[str, Any]
     created_by = element['elementHeader']["versions"].get("createdBy", None)
     create_time = element['elementHeader']["versions"].get("createTime", None)
     updated_by = element['elementHeader']["versions"].get("updatedBy", None)
+    update_time = element['elementHeader']["versions"].get("updateTime", None)
     version = element['elementHeader']["versions"].get("version", None)
     type_name = element['elementHeader']["type"].get("typeName", None)
     classifications = element['elementHeader'].get("classifications", [])
@@ -542,6 +543,7 @@ def _extract_referenceable_properties(element: dict[str, Any]) -> dict[str, Any]
         "created_by": created_by,
         "create_time": create_time,
         "updated_by": updated_by,
+        "update_time": update_time,
         "version": version,
         "type_name": type_name,
         "classifications": classifications,

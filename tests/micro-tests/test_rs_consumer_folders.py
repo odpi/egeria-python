@@ -69,12 +69,20 @@ class Tree:
     def link(self, parent, child):
         self.members[parent["elementHeader"]["guid"]].append(child)
 
-    def get_collections_by_name(self, name, metadata_element_type=None, output_format="JSON", **_):
+    def get_collections_by_name(self, name, metadata_element_type=None, output_format="JSON", start_from=0, **_):
         if metadata_element_type == "RootCollection" and self.root_error:
             raise RuntimeError(self.root_error)
         hits = [e for e in self.by_guid.values() if e["properties"]["qualifiedName"] == name
                 and (metadata_element_type in (None, e["elementHeader"]["type"]["typeName"]))]
-        return copy.deepcopy(hits) or "No elements found"
+        return (copy.deepcopy(hits) if not start_from else []) or "No elements found"
+
+    def get_element_by_unique_name(self, name, *_, **__):
+        """Egeria's exact unique-name read; `root_error` fails the read of a RootCollection (or of a name no
+        element holds), as the by-name read of the root did."""
+        hits = [e for e in self.by_guid.values() if e["properties"]["qualifiedName"] == name]
+        if self.root_error and (not hits or hits[0]["elementHeader"]["type"]["typeName"] == "RootCollection"):
+            raise RuntimeError(self.root_error)
+        return copy.deepcopy(hits[0]) if hits else "No elements found"
 
     def get_collection_members(self, collection_guid=None, output_format="JSON", start_from=0, page_size=0, **_):
         if start_from == 0:   # one entry per folder read; a read pages on to its empty page (6.2.36)

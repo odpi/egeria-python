@@ -94,16 +94,18 @@ def test_saved_query_reads_every_member_once_through_the_real_call(client):
         lambda start, size: client.get_collection_members(collection_guid="rs-1", start_from=start, page_size=size,
                                                           output_format="JSON"),
         3, 20)
-    assert _guids(found) == [f"m{i}" for i in range(7)] and capped is False and note is None
+    # pager step 4: a suspect path, so the read is "at least" (capped) with the pager's note, never a total
+    assert _guids(found) == [f"m{i}" for i in range(7)] and capped is True
+    assert note.startswith("Egeria reported no more at position 9")
 
 
-# ── a server that ignores paging (what laz showed): repetition is never a count, and never "capped" ──
+# ── a server that ignores paging (what laz showed): repetition is never a count; the read is "at least" ──
 
 def test_a_page_that_repeats_stops_the_read_and_says_so():
     first3 = MEMBERS[:3]
     found, capped, note = sq._read_pages(lambda start, size: list(first3), 50, 20)
-    assert _guids(found) == ["m0", "m1", "m2"] and capped is False
-    assert note.startswith("paging did not advance: the read from position 3 returned only elements already read")
+    assert _guids(found) == ["m0", "m1", "m2"] and capped is True   # stalled: a limit, not the end (step 4)
+    assert note.startswith("paging did not advance: the read from position 50 returned only elements already read")
 
 
 def test_a_genuinely_long_read_is_still_capped():
@@ -129,5 +131,5 @@ def test_the_tile_the_architect_saw_reads_3_not_at_least_60():
             return list(MEMBERS[:3])
 
     out = sq.saved_query(Stuck(), "SavedQuery::stuck")
-    assert out["value"] == 3 and out["display"] == "3" and not out.get("capped")
+    assert out["atLeast"] == 3 and out["display"] == "≥3" and out["capped"] is True   # 3, never "at least 60"
     assert "paging did not advance" in out["note"]

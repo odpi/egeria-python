@@ -589,7 +589,7 @@ class ProjectManager(ServerClient):
             }
         response = await self._async_make_request("POST", url, body, **kwargs)
 
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        elements = self._elements_noting_page_cap(response, NO_ELEMENTS_FOUND)
         if type(elements) is str or len(elements) == 0:
             logger.info(NO_ELEMENTS_FOUND)
             return NO_ELEMENTS_FOUND
@@ -707,7 +707,7 @@ class ProjectManager(ServerClient):
         else:
             response = await self._async_make_request("POST", url, **kwargs)
 
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        elements = self._elements_noting_page_cap(response, NO_ELEMENTS_FOUND)
         if type(elements) is str or len(elements) == 0:
             logger.info(NO_ELEMENTS_FOUND)
             return NO_ELEMENTS_FOUND
@@ -802,7 +802,7 @@ class ProjectManager(ServerClient):
         else:
             response = await self._async_make_request("POST", url, **kwargs)
 
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        elements = self._elements_noting_page_cap(response, NO_ELEMENTS_FOUND)
         if type(elements) is str or len(elements) == 0:
             logger.info(NO_ELEMENTS_FOUND)
             return NO_ELEMENTS_FOUND

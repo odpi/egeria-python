@@ -25,7 +25,8 @@ from pydantic import TypeAdapter, ValidationError
 from pyegeria.core.request_filters import deprecated_names
 from pyegeria.core._base_server_client import BaseServerClient
 from pyegeria.core._exceptions import (
-    PyegeriaConnectionException, PyegeriaInvalidParameterException, PyegeriaException, PyegeriaErrorCode
+    PyegeriaConnectionException, PyegeriaInvalidParameterException, PyegeriaException, PyegeriaErrorCode,
+    PyegeriaNotFoundException,
 )
 from pyegeria.core._globals import max_paging_size, NO_ELEMENTS_FOUND, default_timeout, COMMENT_TYPES
 from pyegeria.view.base_report_formats import get_report_spec_match
@@ -272,6 +273,7 @@ class ServerClient(BaseServerClient):
             tech_type: Optional[str] = None,
             organization_name: Optional[str] = None,
             for_lineage: bool = False,
+            strict_errors: bool = False,
     ) -> str:
         """Helper function to return a server_guid - one of server_guid, qualified_name or display_name should
         contain information. If all are None, an exception will be thrown. If all contain
@@ -316,8 +318,13 @@ class ServerClient(BaseServerClient):
                 guid_found = result.json().get("guid", NO_ELEMENTS_FOUND)
                 if guid_found != NO_ELEMENTS_FOUND:
                     return guid_found
+            except PyegeriaNotFoundException:
+                pass   # not held under that qualifiedName: try the display name
             except Exception:
-                pass
+                # strict_errors (pager step 5): a transport/auth/timeout error is not "not found", so it is raised,
+                # never folded into a fallback that may answer "not found" (and a Create-or-Update create).
+                if strict_errors:
+                    raise
 
         if display_name:
             if property_name == "resourceName":
@@ -542,7 +549,7 @@ class ServerClient(BaseServerClient):
         response: Response = await self._async_make_request(
             "POST", url, body_slimmer(body), timeout=timeout
         )
-        rels = response.json().get("relationships", NO_ELEMENTS_FOUND)
+        rels = self._elements_noting_page_cap(response, NO_ELEMENTS_FOUND, key="relationships")
         if type(rels) is list:
             if len(rels) == 0:
                 return NO_ELEMENTS_FOUND
@@ -843,6 +850,32 @@ class ServerClient(BaseServerClient):
             self._async_get_guid_for_name(name, property_name, type_name)
         )
         return response
+
+    async def _async_lookup_guid_for_name(
+            self, name: str, property_name: list[str] = ["qualifiedName", "displayName", "resourceName", "identifier"],
+            type_name: str = None, max_pages: int = 10):
+        """The three-way form of `_async_get_guid_for_name` (pager step 5, the exists-lookups ruling): a
+        `pyegeria.core.paging.Exists` -- "found" (an element whose `property_name` equals `name` exactly was
+        read; `matches` holds them), "absent" (the read reached the end) or "unknown". The by-property-value
+        read is NULL_NOT_END, so it is never "absent" before Egeria returns [] for a filtered page: a write
+        guard must treat "unknown" as "don't create; say so". It stops at the first page with a match, so it
+        never proves the name unique; more than one match read raises, as `_async_get_guid_for_name` does.
+        `_async_get_guid_for_name`'s own return is unchanged."""
+        from pyegeria.core.paging import async_exists
+
+        async def fetch(start, size):
+            return await self._async_get_elements_by_property_value(name, property_name, type_name,
+                                                                    start_from=start, page_size=size)
+
+        def match(el):
+            props = (el.get("properties") or {}) if isinstance(el, dict) else {}
+            return any(props.get(p) == name for p in property_name)
+
+        found = await async_exists(fetch, match, method="_async_get_elements_by_property_value",
+                                   max_pages=max_pages, client=self)   # trusted on a #9453 platform (step 6)
+        if len(found.matches) > 1:
+            raise PyegeriaException(context={"issue": "Multiple elements found for supplied name!"})
+        return found
 
     async def _async_get_element_by_guid_(self, element_guid: str) -> dict | str:
         """
@@ -1921,7 +1954,19 @@ class ServerClient(BaseServerClient):
         """
         if output_format.upper() == "JSON":
             return elements
+        # The EGERIA tier is read for this client's credential, not the process fallback (spec-cache T2).
+        from pyegeria.view.egeria_spec_cache import as_client
+        with as_client(self):
+            return ServerClient._generate_formatted_output_as_client(
+                self, elements, query_string, entity_type, output_format, extract_properties_func, report_spec, **kwargs)
 
+    def _spec_identity(self):
+        """A context in which EGERIA-tier reads are for this client's credential (spec-cache T2)."""
+        from pyegeria.view.egeria_spec_cache import as_client
+        return as_client(self)
+
+    def _generate_formatted_output_as_client(self, elements, query_string, entity_type, output_format,
+                                             extract_properties_func, report_spec, **kwargs):
         # Resolve output formats structure
         output_formats = resolve_output_formats(
             entity_type,
@@ -3138,9 +3183,14 @@ class ServerClient(BaseServerClient):
         """
         note_log_guid = None
         element_guid = None
-        # If a note_log_qn has been provided, look up its GUID
+        # If a note_log_qn has been provided, look up its GUID. Pager step 5: a write guard (not found -> a new
+        # NoteLog is created), so it uses the three-way lookup: "unknown" never creates a second NoteLog.
         if note_log_qn:
-            note_log_guid = await self._async_get_guid_for_name(note_log_qn, ["qualifiedName"],'NoteLog' ) if note_log_qn else None
+            found = await self._async_lookup_guid_for_name(note_log_qn, ["qualifiedName"], 'NoteLog')
+            if found.answer == "unknown":
+                context = {"reason": f"{found.words(f'NoteLog {note_log_qn!r}')}; no new NoteLog was created"}
+                raise PyegeriaException(error_code=PyegeriaErrorCode.VALIDATION_ERROR, context=context)
+            note_log_guid = found.matches[0]["elementHeader"]["guid"] if found.found else None
 
         # If we need to create a new note_log, then use the qualified name from the element_qn parameter, if provided.
         if note_log_guid is None or note_log_guid == NO_ELEMENTS_FOUND:
@@ -3149,10 +3199,13 @@ class ServerClient(BaseServerClient):
                     note_log_display_name = f"NoteLog-{datetime.now().strftime('%Y-%m-%d %H:%M')}"
 
             else:
-                element_guid = await self._async_get_guid_for_name(element_qn, ["qualifiedName"])
-                if element_guid is None or element_guid == NO_ELEMENTS_FOUND:
-                    context = { "reason" : "The specified associated element was not found"}
+                found = await self._async_lookup_guid_for_name(element_qn, ["qualifiedName"])
+                if not found.found:
+                    reason = ("The specified associated element was not found" if found.answer == "absent"
+                              else found.words(f"the associated element {element_qn!r}"))
+                    context = {"reason": reason}
                     raise PyegeriaException(error_code = PyegeriaErrorCode.VALIDATION_ERROR, context = context)
+                element_guid = found.matches[0]["elementHeader"]["guid"]
 
             note_log = await self._async_create_note_log(element_guid = element_guid, display_name = note_log_display_name)
             note_log_guid = note_log
@@ -6519,17 +6572,25 @@ class ServerClient(BaseServerClient):
             validated_body = None
         return validated_body
 
-    def _elements_noting_page_cap(self, response, default):
-        """The `elements` of a list answer. When a caller is recording (`recording_list_requests`), the
-        answer's facts go into the caller's own record, read back from the request that was sent, so
-        every list helper is covered: `cap` = (shown, page_size, start_from) when the answer filled the
-        page size, plus the graph depth and relationship filters sent. Nothing is kept on the client: a
-        client shared by concurrent runs (dashboard tiles) never mixes one run's cap with another's
-        (fix-now F8, read-back C1)."""
-        elements = response.json().get("elements", default)
+    def _elements_noting_page_cap(self, response, default, key: str = "elements"):
+        """The `elements` (or `key`, e.g. "relationships") of a list answer. When a caller is recording
+        (`recording_list_requests`), the answer's facts go into the caller's own record, read back from the
+        request that was sent, so every list helper is covered: `cap` = (shown, page_size, start_from) when
+        the answer filled the page size, plus the graph depth and relationship filters sent. Nothing is kept
+        on the client: a client shared by concurrent runs (dashboard tiles) never mixes one run's cap with
+        another's (fix-now F8, read-back C1).
+
+        `page` records what Egeria actually sent, before any method collapses it into "No elements found":
+        "null" (the key absent or null: Egeria's "no more"), "empty" (`[]`: filtering emptied this page, so a
+        pager carries on) or "rows". The return value is unchanged by recording (pager step 2)."""
+        raw = response.json()
+        elements = raw.get(key, default)
         record = LIST_REQUEST_RECORD.get()
         if record is None:
             return elements
+        sent_value = raw.get(key)
+        record["page"] = ("null" if sent_value is None
+                          else "empty" if isinstance(sent_value, list) and not sent_value else "rows")
         try:
             sent = json.loads(response.request.content or b"{}")
         except Exception:  # noqa: BLE001 -- no request body (a GET) or not JSON: nothing to record

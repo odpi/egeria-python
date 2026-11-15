@@ -13,7 +13,6 @@ from pydantic_core import ValidationError
 
 from pyegeria.egeria_tech_client import EgeriaTech
 from pyegeria.core._exceptions import print_validation_error
-from pyegeria.view.base_report_formats import load_egeria_report_specs
 
 GLOBAL_EGERIA_CLIENT: Optional[EgeriaTech] = None
 
@@ -40,32 +39,67 @@ def _ok(result: Dict[str, Any]) -> Dict[str, Any]:
     return result
 
 
+def _startup_client(settings):
+    """The server's startup Egeria client, signed in as the CONFIGURED identity, or None.
+
+    The identity comes from pyegeria's settings (the config file, or EGERIA_USER / EGERIA_USER_PASSWORD),
+    the same as every other entry point. Nothing here names a user or a password: until 2026-11 this function's
+    body signed in with a hard-coded demo persona whatever the settings said, which put a credential in released
+    source and tied every MCP server to one persona.
+
+    When no user or password is configured, the server starts WITHOUT Egeria and says so: the startup spec sync
+    is skipped, and the tools that read Egeria build their own client per call from the same settings, so they
+    report the missing identity themselves.
+    """
+    user_id = settings.User_Profile.user_name
+    user_pwd = settings.User_Profile.user_pwd
+    if not user_id or not user_pwd:
+        logger.warning("pyegeria MCP server: no Egeria user or password is configured (EGERIA_USER / "
+                       "EGERIA_USER_PASSWORD, or the pyegeria config file); starting without an Egeria "
+                       "connection, and the startup report-spec sync is skipped.")
+        return None
+    logger.debug("Initializing Egeria client...")
+    client = EgeriaTech(
+        settings.Environment.egeria_view_server,
+        settings.Environment.egeria_view_server_url,
+        user_id,
+        user_pwd,
+    )
+    logger.debug("Egeria Client initialized")
+    client.create_egeria_bearer_token(user_id, user_pwd)
+    logger.debug("Egeria Client connected")
+    return client
+
+
 def main() -> None:
     # Initialize the server
 
     global GLOBAL_EGERIA_CLIENT
 
+    # This server acts for every MCP caller (tools run as the credential the caller passes), so it declares
+    # itself multi-user: a read outside a caller's own identity takes no fallback identity (its startup client's
+    # included), and sees only the shared spec cache it syncs below (spec-cache R-A).
+    from pyegeria.core._client_identities import declare_multi_user
+    declare_multi_user()
+
     try:
         """ Runs ONCE when the server starts.
             Initializes the Egeria client and stores it in the server's state.
         """
-        logger.debug("Initializing Egeria client...")
         from pyegeria.core.config import settings as _settings
-        user_id = _settings.User_Profile.user_name
-        user_pwd = _settings.User_Profile.user_pwd
-
-        GLOBAL_EGERIA_CLIENT = EgeriaTech(
-            _settings.Environment.egeria_view_server,
-            _settings.Environment.egeria_view_server_url,
-            user_id,
-            user_pwd
-        )
-        logger.debug("Egeria Client initialized")
-        GLOBAL_EGERIA_CLIENT.create_egeria_bearer_token("erinoverview", "secret")
-        logger.debug("Egeria Client connected")
-
-        load_egeria_report_specs(GLOBAL_EGERIA_CLIENT)
-        logger.debug("Egeria report specs loaded into registry")
+        GLOBAL_EGERIA_CLIENT = _startup_client(_settings)
+        if GLOBAL_EGERIA_CLIENT is not None:
+            # The spec cache's sync (the system of record for Egeria-held report specs) replaces the deprecated
+            # legacy ReportType:: loader, removed in pyegeria 7. A failed sync never stops the server.
+            try:
+                from pyegeria.view.egeria_spec_cache import sync_report_specs
+                # shared=True: this server's registry serves every caller, so its cache must never hold a zoned
+                # spec (egeria_spec_cache §9). An unshared cache would cache what the startup identity can see and
+                # serve it to every user of this server (the Portal-3 hazard).
+                report = sync_report_specs(GLOBAL_EGERIA_CLIENT, shared=True)
+                logger.debug(f"Egeria report specs synced into the spec cache: {report.render()}")
+            except Exception as sync_error:  # noqa: BLE001 -- best effort at startup
+                logger.warning(f"report spec sync at startup failed ({type(sync_error).__name__}): {sync_error}")
 
     except ValidationError as e:
         print_validation_error(e)

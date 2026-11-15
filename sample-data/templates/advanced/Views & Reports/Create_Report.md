@@ -562,9 +562,9 @@ ___
 
 >	**Attribute Type**: Valid Value
 
->	**Description**: One of the status values from a list of valid values.
+>	**Description**: The element (header) statuses to limit results to: Egeria's ElementStatus, one of UNKNOWN, ACTIVE, INVALID, DELETED, OTHER. Content statuses such as DRAFT or APPROVED are not element statuses and are refused.
 
->	**Valid Values**: UNKNOWN,DRAFT,PREPARED,PROPOSED,APPROVED,REJECTED,APPROVED_CONCEPT,UNDER_DEVELOPMENT,DEVELOPMENT_COMPLETE,APPROVED_FOR_DEPLOYMENT,STANDBY,ACTIVE,FAILED,DISABLED,COMPLETE,DEPRECATED,OTHER,DELETED
+>	**Valid Values**: UNKNOWN,ACTIVE,INVALID,DELETED,OTHER
 
 >	**Default Value**: ['ACTIVE']
 

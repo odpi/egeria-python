@@ -5,6 +5,7 @@ Copyright Contributors to the ODPi Egeria project.
 This module contains the Data Discovery View Service client.
 """
 
+from pyegeria.core._no_password import NO_PASSWORD, carried_password, password_as_given, resolve_password
 import asyncio
 import uuid
 from typing import Optional
@@ -67,7 +68,7 @@ class DataDiscovery(ServerClient):
         self.view_server = view_server
         self.platform_url = platform_url
         self.user_id = user_id
-        self.user_pwd = user_pwd
+        self.user_pwd = password_as_given(user_pwd)
         self.url_marker = "data-discovery"
 
     def _extract_annotation_properties(self, element: dict, columns_struct: dict) -> dict:
@@ -1974,9 +1975,8 @@ class DataDiscovery(ServerClient):
         from pyegeria.omvs.asset_maker import AssetMaker
         client = getattr(self, "_asset_maker", None)
         if client is None:
-            client = AssetMaker(self.view_server, self.platform_url, self.user_id, self.user_pwd,
-                                token=self.token, timeout=getattr(self, "timeout", None))
-            client._token_minted_for = self._token_minted_for
+            from pyegeria.core._helper_client import helper_client
+            client = helper_client(AssetMaker, self, timeout=getattr(self, "timeout", None))
             self._asset_maker = client
         return client
 

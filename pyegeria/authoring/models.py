@@ -217,5 +217,23 @@ class Diff(BaseModel):
                 "breaking": [c.model_dump() for c in self.breaking]}
 
 
+ANSWER_ABSENT = "absent"      # a read that reached a confirmed end: Egeria holds no such artifact for this user
+ANSWER_UNKNOWN = "unknown"    # whether Egeria holds it couldn't be told (a read that didn't reach a confirmed end)
+ANSWER_REFUSED = "refused"    # anything else: the request itself can't be carried out
+ANSWERS = (ANSWER_ABSENT, ANSWER_UNKNOWN, ANSWER_REFUSED)
+
+
 class AuthoringRefused(ValueError):
-    """The request can't be carried out; the words say why and what to do instead."""
+    """The request can't be carried out; the words say why and what to do instead.
+
+    `answer` is the machine-readable kind, so callers branch on it, never on the words:
+    - "absent": Egeria holds no such artifact that this user can see (said only on a confirmed end);
+    - "unknown": whether Egeria holds it couldn't be told; never to be read as "none";
+    - "refused" (the default): any other refusal (a bad argument, a guard, a failed write).
+    """
+
+    def __init__(self, *args: Any, answer: str = ANSWER_REFUSED) -> None:
+        if answer not in ANSWERS:
+            raise ValueError(f"AuthoringRefused answer is one of {', '.join(ANSWERS)}, not {answer!r}.")
+        super().__init__(*args)
+        self.answer = answer

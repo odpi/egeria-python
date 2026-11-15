@@ -17,6 +17,7 @@ from textual.screen import Screen, ModalScreen
 from textual.widgets import Tree, Header, Static, Placeholder, Footer, TextArea, Markdown
 
 from StatusScreen import StatusScreen
+from paging_support import report_empty_words
 from profile_utils import set_screen_heading
 
 
@@ -168,6 +169,8 @@ class SelectionOverviewScreen(ModalScreen):
                     self.glossary_term_data = self.glossary_term_data.get("content")
                 else:
                     self.glossary_term_data = "No Markdown content found for this glossary term"
+            elif self.glossary_term_data.get("kind") == "empty":
+                self.glossary_term_data = report_empty_words("glossary term", self.glossary_term_data, self.term_GUID)
             else:
                 self.glossary_term_data = "No Markdown content found for this glossary term"
         else:
@@ -214,7 +217,7 @@ class SelectionOverviewScreen(ModalScreen):
         else:
             # self.log(f"Digital product data returned for: {self.digital_product_GUID}")
             if isinstance(self.digital_product_data, dict) and self.digital_product_data.get("kind") == "empty":
-                self.digital_product_data = "# No content found for this digital product"
+                self.digital_product_data = (f"# {report_empty_words('digital product', self.digital_product_data, self.digital_product_GUID)}")
             elif isinstance(self.digital_product_data, dict) and self.digital_product_data.get("kind") == "text":
                 if self.digital_product_data.get("mime") == "text/markdown":
                     self.digital_product_data = self.digital_product_data.get("content")
@@ -257,7 +260,10 @@ class SelectionOverviewScreen(ModalScreen):
             container.mount(Static(f"No data dictionary data returned for GUID: {self.data_dictionary_GUID}"))
         else:
             # self.log(f"Data dictionary data returned for GUID: {self.data_dictionary_GUID}")
-            if isinstance(self.data_dictionary_data, dict) and self.data_dictionary_data.get("kind") == "text":
+            if isinstance(self.data_dictionary_data, dict) and self.data_dictionary_data.get("kind") == "empty":
+                self.data_dictionary_data = report_empty_words("data dictionary", self.data_dictionary_data,
+                                                               self.data_dictionary_GUID)
+            elif isinstance(self.data_dictionary_data, dict) and self.data_dictionary_data.get("kind") == "text":
                 if self.data_dictionary_data.get("mime") == "text/markdown":
                     self.data_dictionary_data = self.data_dictionary_data.get("content")
                 else:
@@ -292,6 +298,9 @@ class SelectionOverviewScreen(ModalScreen):
         if not self.business_domain_data or self.business_domain_data == []:
             # self.log(f"No business domain data returned for GUID: {self.business_domain_GUID}")
             container.mount(Static(f"No business domain data returned for GUID: {self.business_domain_GUID}"))
+        elif isinstance(self.business_domain_data, dict) and self.business_domain_data.get("kind") == "empty":
+            container.mount(Static(report_empty_words("business domain", self.business_domain_data,
+                                                      self.business_domain_GUID)))
         else:
             # self.log(f"Business domain data returned for GUID: {self.business_domain_GUID}")
             text_area = TextArea(f"Business domain data returned for GUID: {self.business_domain_GUID}",
@@ -325,6 +334,9 @@ class SelectionOverviewScreen(ModalScreen):
         if not self.data_specification_data or self.data_specification_data == []:
             # self.log(f"No data specification data returned for qualified name: {self.data_specification_qualified_name}")
             container.mount(Static(f"No data specification data returned for qualified name: {self.data_specification_qualified_name}"))
+        elif isinstance(self.data_specification_data, dict) and self.data_specification_data.get("kind") == "empty":
+            container.mount(Static(report_empty_words("data specification", self.data_specification_data,
+                                                      self.data_specification_qualified_name)))
         else:
             # self.log(f"Data specification data returned for qualified name: {self.data_specification_qualified_name}")
             text_area = TextArea(f"Data specification data returned for qualified name: {self.data_specification_qualified_name}",
@@ -352,6 +364,7 @@ class SelectionOverviewScreen(ModalScreen):
         except PyegeriaException as e:
             # self.log(f"Error retrieving root collection data: {e}")
             self.collection_data = []
+            self.root_collection_data = []   # never show an earlier selection's details after a failed read
 
         container = self.query_one("#data_details_placeholder_container")
         container.remove_children()
@@ -361,7 +374,10 @@ class SelectionOverviewScreen(ModalScreen):
             container.mount(Static(f"No Root collection data returned for GUID: {self.root_collection_GUID}"))
         else:
             # self.log(f"Root collection data returned for GUID: {self.root_collection_GUID}")
-            if isinstance(self.root_collection_data, dict) and self.root_collection_data.get("kind") == "text":
+            if isinstance(self.root_collection_data, dict) and self.root_collection_data.get("kind") == "empty":
+                self.root_collection_data = report_empty_words("root collection", self.root_collection_data,
+                                                               self.root_collection_GUID)
+            elif isinstance(self.root_collection_data, dict) and self.root_collection_data.get("kind") == "text":
                 if self.root_collection_data.get("mime") == "text/markdown":
                     self.root_collection_data = self.root_collection_data.get("content")
                 else:

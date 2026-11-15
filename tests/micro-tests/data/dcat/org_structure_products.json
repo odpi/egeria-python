@@ -20,7 +20,7 @@
        "classificationProperties": {
         "anchorDomainName": "AuthoredReferenceable",
         "anchorScopeGUIDs": [
-         "cf98ae54-b68b-415d-a28f-15ac33f9611b"
+         "0541d843-20a4-439c-9361-39d8a694f7de"
         ],
         "anchorTypeName": "DigitalProductFamily",
         "class": "AnchorsProperties",
@@ -45,19 +45,19 @@
         "typeVersion": 1
        },
        "versions": {
-        "createTime": "2026-11-10T14:38:52.683+00:00",
+        "createTime": "2026-11-11T20:36:23.249+00:00",
         "createdBy": "jacquardnpa",
-        "lastRequestId": "9749f47e-914f-42a6-b49c-0e18fc1f15d5",
+        "lastRequestId": "d7db5891-f62d-4508-9d92-52330d9e9c62",
         "maintainedBy": [
          "jacquardnpa"
         ],
-        "updateTime": "2026-11-10T14:38:52.683+00:00",
+        "updateTime": "2026-11-11T20:36:23.249+00:00",
         "updatedBy": "jacquardnpa",
         "version": 1
        }
       },
       "class": "ElementHeader",
-      "guid": "315e6e75-4f47-4b3a-a43e-ca692ce739e4",
+      "guid": "d1d3ad47-7095-4e49-97e4-8c9f7092792e",
       "headerVersion": 0,
       "origin": {
        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
@@ -89,7 +89,7 @@
         "deleteAttachmentCount": 0,
         "deleteFeedbackCount": 0,
         "explicitGetCount": 0,
-        "findCount": 108,
+        "findCount": 159,
         "typeName": "UsageActivity",
         "updateAttachmentCount": 0,
         "updateFeedbackCount": 0,
@@ -111,25 +111,25 @@
         "typeVersion": 1
        },
        "versions": {
-        "createTime": "2026-11-10T15:11:11.067+00:00",
+        "createTime": "2026-11-12T11:20:22.260+00:00",
         "createdBy": "pepysnpa",
-        "lastRequestId": "6c9fcf4f-3483-4cfa-9dbe-7a3ed871e817",
+        "lastRequestId": "d4541878-b950-44b2-8432-269e0699adae",
         "maintainedBy": [
          "pepysnpa"
         ],
-        "updateTime": "2026-11-11T15:29:40.674+00:00",
+        "updateTime": "2026-11-14T20:11:01.461+00:00",
         "updatedBy": "pepysnpa",
-        "version": 9
+        "version": 19
        }
       },
       "versions": {
-       "createTime": "2026-11-10T14:38:52.686+00:00",
+       "createTime": "2026-11-11T20:36:23.251+00:00",
        "createdBy": "jacquardnpa",
-       "lastRequestId": "9749f47e-914f-42a6-b49c-0e18fc1f15d5",
+       "lastRequestId": "d7db5891-f62d-4508-9d92-52330d9e9c62",
        "maintainedBy": [
         "jacquardnpa"
        ],
-       "updateTime": "2026-11-10T14:38:52.686+00:00",
+       "updateTime": "2026-11-11T20:36:23.251+00:00",
        "updatedBy": "jacquardnpa",
        "version": 1
       },
@@ -160,13 +160,13 @@
         "typeVersion": 1
        },
        "versions": {
-        "createTime": "2026-11-10T14:38:52.683+00:00",
+        "createTime": "2026-11-11T20:36:23.249+00:00",
         "createdBy": "jacquardnpa",
-        "lastRequestId": "9749f47e-914f-42a6-b49c-0e18fc1f15d5",
+        "lastRequestId": "d7db5891-f62d-4508-9d92-52330d9e9c62",
         "maintainedBy": [
          "jacquardnpa"
         ],
-        "updateTime": "2026-11-10T14:38:52.683+00:00",
+        "updateTime": "2026-11-11T20:36:23.249+00:00",
         "updatedBy": "jacquardnpa",
         "version": 1
        }
@@ -180,7 +180,7 @@
       "description": "Each product in this folder describes the shape of the business: the business capabilities it delivers, the departments it is organized into (the teams that are part of an organization's reporting structure), and which departments deliver each business capability.  Subscribing to the family delivers all three as related tables that join on the business capability and department unique identifiers.",
       "displayName": "Organization Structure",
       "identifier": "ORGANIZATION-STRUCTURE-FAMILY",
-      "introductionDate": "2026-11-10T14:38:52.673+00:00",
+      "introductionDate": "2026-11-11T20:36:23.238+00:00",
       "productName": "Organization Structure",
       "qualifiedName": "DigitalProductFamily::Jacquard::ORGANIZATION-STRUCTURE-FAMILY::Organization Structure",
       "typeName": "DigitalProductFamily",
@@ -192,7 +192,7 @@
   {
    "args": [],
    "kwargs": {
-    "collection_guid": "315e6e75-4f47-4b3a-a43e-ca692ce739e4",
+    "collection_guid": "d1d3ad47-7095-4e49-97e4-8c9f7092792e",
     "graph_query_depth": 0,
     "output_format": "JSON",
     "page_size": 50,
@@ -210,7 +210,7 @@
        "classificationProperties": {
         "anchorDomainName": "AuthoredReferenceable",
         "anchorScopeGUIDs": [
-         "cf98ae54-b68b-415d-a28f-15ac33f9611b"
+         "0541d843-20a4-439c-9361-39d8a694f7de"
         ],
         "anchorTypeName": "DigitalProduct",
         "class": "AnchorsProperties",
@@ -235,19 +235,19 @@
         "typeVersion": 1
        },
        "versions": {
-        "createTime": "2026-11-10T14:40:12.181+00:00",
+        "createTime": "2026-11-11T20:37:01.826+00:00",
         "createdBy": "jacquardnpa",
-        "lastRequestId": "9749f47e-914f-42a6-b49c-0e18fc1f15d5",
+        "lastRequestId": "d7db5891-f62d-4508-9d92-52330d9e9c62",
         "maintainedBy": [
          "jacquardnpa"
         ],
-        "updateTime": "2026-11-10T14:40:12.181+00:00",
+        "updateTime": "2026-11-11T20:37:01.826+00:00",
         "updatedBy": "jacquardnpa",
         "version": 1
        }
       },
       "class": "ElementHeader",
-      "guid": "b3173035-41ea-49fb-bb70-6702070d11b8",
+      "guid": "671390ea-9e33-438a-afe1-731d6b3acad3",
       "headerVersion": 0,
       "origin": {
        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
@@ -278,7 +278,7 @@
         "deleteAttachmentCount": 0,
         "deleteFeedbackCount": 0,
         "explicitGetCount": 0,
-        "findCount": 304,
+        "findCount": 183,
         "typeName": "UsageActivity",
         "updateAttachmentCount": 0,
         "updateFeedbackCount": 0,
@@ -300,25 +300,25 @@
         "typeVersion": 1
        },
        "versions": {
-        "createTime": "2026-11-10T15:11:13.520+00:00",
+        "createTime": "2026-11-12T11:20:10.326+00:00",
         "createdBy": "pepysnpa",
-        "lastRequestId": "1cfd7278-e313-41fa-ac60-f5d936aeb3ea",
+        "lastRequestId": "7e3a826b-a47d-4b71-aed0-3754beab7254",
         "maintainedBy": [
          "pepysnpa"
         ],
-        "updateTime": "2026-11-11T15:50:37.113+00:00",
+        "updateTime": "2026-11-14T21:29:41.431+00:00",
         "updatedBy": "pepysnpa",
-        "version": 10
+        "version": 20
        }
       },
       "versions": {
-       "createTime": "2026-11-10T14:40:12.184+00:00",
+       "createTime": "2026-11-11T20:37:01.827+00:00",
        "createdBy": "jacquardnpa",
-       "lastRequestId": "9749f47e-914f-42a6-b49c-0e18fc1f15d5",
+       "lastRequestId": "d7db5891-f62d-4508-9d92-52330d9e9c62",
        "maintainedBy": [
         "jacquardnpa"
        ],
-       "updateTime": "2026-11-10T14:40:12.184+00:00",
+       "updateTime": "2026-11-11T20:37:01.827+00:00",
        "updatedBy": "jacquardnpa",
        "version": 1
       },
@@ -349,13 +349,13 @@
         "typeVersion": 1
        },
        "versions": {
-        "createTime": "2026-11-10T14:40:12.181+00:00",
+        "createTime": "2026-11-11T20:37:01.826+00:00",
         "createdBy": "jacquardnpa",
-        "lastRequestId": "9749f47e-914f-42a6-b49c-0e18fc1f15d5",
+        "lastRequestId": "d7db5891-f62d-4508-9d92-52330d9e9c62",
         "maintainedBy": [
          "jacquardnpa"
         ],
-        "updateTime": "2026-11-10T14:40:12.181+00:00",
+        "updateTime": "2026-11-11T20:37:01.826+00:00",
         "updatedBy": "jacquardnpa",
         "version": 1
        }
@@ -369,7 +369,7 @@
       "description": "A tabular data set where each record links a business capability to a department that belongs to it, with the type of membership (such as owner) and the reason for it.",
       "displayName": "Business Capability Departments",
       "identifier": "BUSINESS-CAPABILITY-DEPARTMENTS",
-      "introductionDate": "2026-11-10T14:40:12.178+00:00",
+      "introductionDate": "2026-11-11T20:37:01.824+00:00",
       "productName": "Business Capability Departments",
       "qualifiedName": "DigitalProduct::Jacquard::BUSINESS-CAPABILITY-DEPARTMENTS::Business Capability Departments",
       "typeName": "DigitalProduct",
@@ -378,7 +378,7 @@
      "relatedBy": {
       "relationshipHeader": {
        "class": "ElementHeader",
-       "guid": "7827826c-11cc-4331-9f27-748ecc6d3240",
+       "guid": "fde6d303-b32a-4d4b-af4a-b0fa64076f32",
        "headerVersion": 0,
        "origin": {
         "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
@@ -395,13 +395,13 @@
         "typeVersion": 1
        },
        "versions": {
-        "createTime": "2026-11-10T14:40:12.411+00:00",
+        "createTime": "2026-11-11T20:37:01.922+00:00",
         "createdBy": "jacquardnpa",
-        "lastRequestId": "d4b6e0b6-c2f4-4a35-8ced-e57f438792db",
+        "lastRequestId": "b50ab19c-b08c-498f-9b08-12c0d4162353",
         "maintainedBy": [
          "jacquardnpa"
         ],
-        "updateTime": "2026-11-10T21:20:47.613+00:00",
+        "updateTime": "2026-11-12T14:47:24.029+00:00",
         "updatedBy": "jacquardnpa",
         "version": 2
        }
@@ -423,7 +423,7 @@
        "classificationProperties": {
         "anchorDomainName": "AuthoredReferenceable",
         "anchorScopeGUIDs": [
-         "cf98ae54-b68b-415d-a28f-15ac33f9611b"
+         "0541d843-20a4-439c-9361-39d8a694f7de"
         ],
         "anchorTypeName": "DigitalProduct",
         "class": "AnchorsProperties",
@@ -448,19 +448,19 @@
         "typeVersion": 1
        },
        "versions": {
-        "createTime": "2026-11-10T14:39:46.293+00:00",
+        "createTime": "2026-11-11T20:36:49.382+00:00",
         "createdBy": "jacquardnpa",
-        "lastRequestId": "9749f47e-914f-42a6-b49c-0e18fc1f15d5",
+        "lastRequestId": "d7db5891-f62d-4508-9d92-52330d9e9c62",
         "maintainedBy": [
          "jacquardnpa"
         ],
-        "updateTime": "2026-11-10T14:39:46.293+00:00",
+        "updateTime": "2026-11-11T20:36:49.382+00:00",
         "updatedBy": "jacquardnpa",
         "version": 1
        }
       },
       "class": "ElementHeader",
-      "guid": "da8a02a5-5206-4e1d-a41d-c695b328a631",
+      "guid": "6955daa8-3663-420a-8219-7f28d4ecd8ad",
       "headerVersion": 0,
       "origin": {
        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
@@ -491,7 +491,7 @@
         "deleteAttachmentCount": 0,
         "deleteFeedbackCount": 0,
         "explicitGetCount": 0,
-        "findCount": 197,
+        "findCount": 179,
         "typeName": "UsageActivity",
         "updateAttachmentCount": 0,
         "updateFeedbackCount": 0,
@@ -513,25 +513,25 @@
         "typeVersion": 1
        },
        "versions": {
-        "createTime": "2026-11-10T15:11:03.931+00:00",
+        "createTime": "2026-11-12T11:20:02.472+00:00",
         "createdBy": "pepysnpa",
-        "lastRequestId": "6c9fcf4f-3483-4cfa-9dbe-7a3ed871e817",
+        "lastRequestId": "7e3a826b-a47d-4b71-aed0-3754beab7254",
         "maintainedBy": [
          "pepysnpa"
         ],
-        "updateTime": "2026-11-11T15:27:44.474+00:00",
+        "updateTime": "2026-11-14T21:29:21.357+00:00",
         "updatedBy": "pepysnpa",
-        "version": 9
+        "version": 20
        }
       },
       "versions": {
-       "createTime": "2026-11-10T14:39:46.295+00:00",
+       "createTime": "2026-11-11T20:36:49.383+00:00",
        "createdBy": "jacquardnpa",
-       "lastRequestId": "9749f47e-914f-42a6-b49c-0e18fc1f15d5",
+       "lastRequestId": "d7db5891-f62d-4508-9d92-52330d9e9c62",
        "maintainedBy": [
         "jacquardnpa"
        ],
-       "updateTime": "2026-11-10T14:39:46.295+00:00",
+       "updateTime": "2026-11-11T20:36:49.383+00:00",
        "updatedBy": "jacquardnpa",
        "version": 1
       },
@@ -562,13 +562,13 @@
         "typeVersion": 1
        },
        "versions": {
-        "createTime": "2026-11-10T14:39:46.293+00:00",
+        "createTime": "2026-11-11T20:36:49.382+00:00",
         "createdBy": "jacquardnpa",
-        "lastRequestId": "9749f47e-914f-42a6-b49c-0e18fc1f15d5",
+        "lastRequestId": "d7db5891-f62d-4508-9d92-52330d9e9c62",
         "maintainedBy": [
          "jacquardnpa"
         ],
-        "updateTime": "2026-11-10T14:39:46.293+00:00",
+        "updateTime": "2026-11-11T20:36:49.382+00:00",
         "updatedBy": "jacquardnpa",
         "version": 1
        }
@@ -582,7 +582,7 @@
       "description": "A tabular data set where each record describes a department - a team that is part of an organization's reporting structure - with the team it reports to and the organization at the top of its structure.",
       "displayName": "Department List",
       "identifier": "DEPARTMENT-LIST",
-      "introductionDate": "2026-11-10T14:39:46.290+00:00",
+      "introductionDate": "2026-11-11T20:36:49.380+00:00",
       "productName": "Department List",
       "qualifiedName": "DigitalProduct::Jacquard::DEPARTMENT-LIST::Department List",
       "typeName": "DigitalProduct",
@@ -591,7 +591,7 @@
      "relatedBy": {
       "relationshipHeader": {
        "class": "ElementHeader",
-       "guid": "ee6a58f4-9646-486f-92d8-635f4198d377",
+       "guid": "50f24796-db67-46a0-8909-fd184205b258",
        "headerVersion": 0,
        "origin": {
         "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
@@ -608,13 +608,13 @@
         "typeVersion": 1
        },
        "versions": {
-        "createTime": "2026-11-10T14:39:46.497+00:00",
+        "createTime": "2026-11-11T20:36:49.472+00:00",
         "createdBy": "jacquardnpa",
-        "lastRequestId": "d4b6e0b6-c2f4-4a35-8ced-e57f438792db",
+        "lastRequestId": "b50ab19c-b08c-498f-9b08-12c0d4162353",
         "maintainedBy": [
          "jacquardnpa"
         ],
-        "updateTime": "2026-11-10T21:20:39.408+00:00",
+        "updateTime": "2026-11-12T14:46:58.338+00:00",
         "updatedBy": "jacquardnpa",
         "version": 2
        }
@@ -636,7 +636,7 @@
        "classificationProperties": {
         "anchorDomainName": "AuthoredReferenceable",
         "anchorScopeGUIDs": [
-         "cf98ae54-b68b-415d-a28f-15ac33f9611b"
+         "0541d843-20a4-439c-9361-39d8a694f7de"
         ],
         "anchorTypeName": "DigitalProduct",
         "class": "AnchorsProperties",
@@ -661,19 +661,19 @@
         "typeVersion": 1
        },
        "versions": {
-        "createTime": "2026-11-10T14:39:17.847+00:00",
+        "createTime": "2026-11-11T20:36:36.723+00:00",
         "createdBy": "jacquardnpa",
-        "lastRequestId": "9749f47e-914f-42a6-b49c-0e18fc1f15d5",
+        "lastRequestId": "d7db5891-f62d-4508-9d92-52330d9e9c62",
         "maintainedBy": [
          "jacquardnpa"
         ],
-        "updateTime": "2026-11-10T14:39:17.847+00:00",
+        "updateTime": "2026-11-11T20:36:36.723+00:00",
         "updatedBy": "jacquardnpa",
         "version": 1
        }
       },
       "class": "ElementHeader",
-      "guid": "08eba611-3a24-4b97-9c24-39724c0b10cb",
+      "guid": "9f432354-3346-421a-b087-8d989bf51cf4",
       "headerVersion": 0,
       "origin": {
        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
@@ -704,7 +704,7 @@
         "deleteAttachmentCount": 0,
         "deleteFeedbackCount": 0,
         "explicitGetCount": 0,
-        "findCount": 204,
+        "findCount": 164,
         "typeName": "UsageActivity",
         "updateAttachmentCount": 0,
         "updateFeedbackCount": 0,
@@ -726,25 +726,25 @@
         "typeVersion": 1
        },
        "versions": {
-        "createTime": "2026-11-10T15:10:47.560+00:00",
+        "createTime": "2026-11-12T11:18:19.759+00:00",
         "createdBy": "pepysnpa",
-        "lastRequestId": "6c9fcf4f-3483-4cfa-9dbe-7a3ed871e817",
+        "lastRequestId": "d4541878-b950-44b2-8432-269e0699adae",
         "maintainedBy": [
          "pepysnpa"
         ],
-        "updateTime": "2026-11-11T15:28:07.339+00:00",
+        "updateTime": "2026-11-14T20:10:15.182+00:00",
         "updatedBy": "pepysnpa",
-        "version": 9
+        "version": 19
        }
       },
       "versions": {
-       "createTime": "2026-11-10T14:39:17.850+00:00",
+       "createTime": "2026-11-11T20:36:36.725+00:00",
        "createdBy": "jacquardnpa",
-       "lastRequestId": "9749f47e-914f-42a6-b49c-0e18fc1f15d5",
+       "lastRequestId": "d7db5891-f62d-4508-9d92-52330d9e9c62",
        "maintainedBy": [
         "jacquardnpa"
        ],
-       "updateTime": "2026-11-10T14:39:17.850+00:00",
+       "updateTime": "2026-11-11T20:36:36.725+00:00",
        "updatedBy": "jacquardnpa",
        "version": 1
       },
@@ -775,13 +775,13 @@
         "typeVersion": 1
        },
        "versions": {
-        "createTime": "2026-11-10T14:39:17.848+00:00",
+        "createTime": "2026-11-11T20:36:36.723+00:00",
         "createdBy": "jacquardnpa",
-        "lastRequestId": "9749f47e-914f-42a6-b49c-0e18fc1f15d5",
+        "lastRequestId": "d7db5891-f62d-4508-9d92-52330d9e9c62",
         "maintainedBy": [
          "jacquardnpa"
         ],
-        "updateTime": "2026-11-10T14:39:17.848+00:00",
+        "updateTime": "2026-11-11T20:36:36.723+00:00",
         "updatedBy": "jacquardnpa",
         "version": 1
        }
@@ -795,7 +795,7 @@
       "description": "A tabular data set where each record describes a business capability - a business area, function or service that the organization delivers.",
       "displayName": "Business Capability List",
       "identifier": "BUSINESS-CAPABILITY-LIST",
-      "introductionDate": "2026-11-10T14:39:17.845+00:00",
+      "introductionDate": "2026-11-11T20:36:36.721+00:00",
       "productName": "Business Capability List",
       "qualifiedName": "DigitalProduct::Jacquard::BUSINESS-CAPABILITY-LIST::Business Capability List",
       "typeName": "DigitalProduct",
@@ -804,7 +804,7 @@
      "relatedBy": {
       "relationshipHeader": {
        "class": "ElementHeader",
-       "guid": "40ec40c6-05f7-419f-af23-2fb8dab3dd36",
+       "guid": "7235372a-94b4-489c-89f8-1884e952c301",
        "headerVersion": 0,
        "origin": {
         "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
@@ -821,13 +821,13 @@
         "typeVersion": 1
        },
        "versions": {
-        "createTime": "2026-11-10T14:39:18.067+00:00",
+        "createTime": "2026-11-11T20:36:36.833+00:00",
         "createdBy": "jacquardnpa",
-        "lastRequestId": "d4b6e0b6-c2f4-4a35-8ced-e57f438792db",
+        "lastRequestId": "b50ab19c-b08c-498f-9b08-12c0d4162353",
         "maintainedBy": [
          "jacquardnpa"
         ],
-        "updateTime": "2026-11-10T21:20:31.804+00:00",
+        "updateTime": "2026-11-12T14:46:32.171+00:00",
         "updatedBy": "jacquardnpa",
         "version": 2
        }
@@ -848,9 +848,9 @@
        "classificationOrigin": "ASSIGNED",
        "classificationProperties": {
         "anchorDomainName": "AuthoredReferenceable",
-        "anchorGUID": "315e6e75-4f47-4b3a-a43e-ca692ce739e4",
+        "anchorGUID": "d1d3ad47-7095-4e49-97e4-8c9f7092792e",
         "anchorScopeGUIDs": [
-         "cf98ae54-b68b-415d-a28f-15ac33f9611b"
+         "0541d843-20a4-439c-9361-39d8a694f7de"
         ],
         "anchorTypeName": "DigitalProductFamily",
         "class": "AnchorsProperties",
@@ -875,19 +875,19 @@
         "typeVersion": 1
        },
        "versions": {
-        "createTime": "2026-11-10T14:39:14.236+00:00",
+        "createTime": "2026-11-11T20:36:35.273+00:00",
         "createdBy": "jacquardnpa",
-        "lastRequestId": "9749f47e-914f-42a6-b49c-0e18fc1f15d5",
+        "lastRequestId": "d7db5891-f62d-4508-9d92-52330d9e9c62",
         "maintainedBy": [
          "jacquardnpa"
         ],
-        "updateTime": "2026-11-10T14:39:14.236+00:00",
+        "updateTime": "2026-11-11T20:36:35.273+00:00",
         "updatedBy": "jacquardnpa",
         "version": 1
        }
       },
       "class": "ElementHeader",
-      "guid": "bac92225-a622-4fdc-b8fe-0c4097e7b25d",
+      "guid": "08ae1d4c-2b3e-4762-b7f9-c127e1824b1a",
       "headerVersion": 0,
       "origin": {
        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
@@ -910,13 +910,13 @@
        "typeVersion": 2
       },
       "versions": {
-       "createTime": "2026-11-10T14:39:14.238+00:00",
+       "createTime": "2026-11-11T20:36:35.274+00:00",
        "createdBy": "jacquardnpa",
-       "lastRequestId": "9749f47e-914f-42a6-b49c-0e18fc1f15d5",
+       "lastRequestId": "d7db5891-f62d-4508-9d92-52330d9e9c62",
        "maintainedBy": [
         "jacquardnpa"
        ],
-       "updateTime": "2026-11-10T14:39:14.238+00:00",
+       "updateTime": "2026-11-11T20:36:35.274+00:00",
        "updatedBy": "jacquardnpa",
        "version": 1
       }
@@ -933,7 +933,7 @@
      "relatedBy": {
       "relationshipHeader": {
        "class": "ElementHeader",
-       "guid": "182744e6-64d9-45f0-8e28-eecfe3d33f92",
+       "guid": "0641c5c6-9a69-4f08-9aec-4203aedba0c2",
        "headerVersion": 0,
        "origin": {
         "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
@@ -950,13 +950,13 @@
         "typeVersion": 1
        },
        "versions": {
-        "createTime": "2026-11-10T14:39:14.287+00:00",
+        "createTime": "2026-11-11T20:36:35.298+00:00",
         "createdBy": "jacquardnpa",
-        "lastRequestId": "9749f47e-914f-42a6-b49c-0e18fc1f15d5",
+        "lastRequestId": "d7db5891-f62d-4508-9d92-52330d9e9c62",
         "maintainedBy": [
          "jacquardnpa"
         ],
-        "updateTime": "2026-11-10T14:39:14.287+00:00",
+        "updateTime": "2026-11-11T20:36:35.298+00:00",
         "updatedBy": "jacquardnpa",
         "version": 1
        }
@@ -977,9 +977,9 @@
        "classificationOrigin": "ASSIGNED",
        "classificationProperties": {
         "anchorDomainName": "AuthoredReferenceable",
-        "anchorGUID": "315e6e75-4f47-4b3a-a43e-ca692ce739e4",
+        "anchorGUID": "d1d3ad47-7095-4e49-97e4-8c9f7092792e",
         "anchorScopeGUIDs": [
-         "cf98ae54-b68b-415d-a28f-15ac33f9611b"
+         "0541d843-20a4-439c-9361-39d8a694f7de"
         ],
         "anchorTypeName": "DigitalProductFamily",
         "class": "AnchorsProperties",
@@ -1004,19 +1004,19 @@
         "typeVersion": 1
        },
        "versions": {
-        "createTime": "2026-11-10T14:38:53.284+00:00",
+        "createTime": "2026-11-11T20:36:23.559+00:00",
         "createdBy": "jacquardnpa",
-        "lastRequestId": "9749f47e-914f-42a6-b49c-0e18fc1f15d5",
+        "lastRequestId": "d7db5891-f62d-4508-9d92-52330d9e9c62",
         "maintainedBy": [
          "jacquardnpa"
         ],
-        "updateTime": "2026-11-10T14:38:53.284+00:00",
+        "updateTime": "2026-11-11T20:36:23.559+00:00",
         "updatedBy": "jacquardnpa",
         "version": 1
        }
       },
       "class": "ElementHeader",
-      "guid": "f032f938-650f-4485-838d-469647894e71",
+      "guid": "0b4c857a-3876-412a-a5a4-ae0e49bc5a97",
       "headerVersion": 0,
       "origin": {
        "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
@@ -1048,7 +1048,7 @@
         "deleteAttachmentCount": 0,
         "deleteFeedbackCount": 0,
         "explicitGetCount": 0,
-        "findCount": 10,
+        "findCount": 11,
         "typeName": "UsageActivity",
         "updateAttachmentCount": 0,
         "updateFeedbackCount": 0,
@@ -1070,25 +1070,25 @@
         "typeVersion": 1
        },
        "versions": {
-        "createTime": "2026-11-10T17:06:23.654+00:00",
+        "createTime": "2026-11-12T11:20:41.649+00:00",
         "createdBy": "pepysnpa",
-        "lastRequestId": "6c9fcf4f-3483-4cfa-9dbe-7a3ed871e817",
+        "lastRequestId": "5e0babb4-a4a6-4fc6-b7dc-3fda52c88a83",
         "maintainedBy": [
          "pepysnpa"
         ],
-        "updateTime": "2026-11-11T15:27:34.981+00:00",
+        "updateTime": "2026-11-13T18:16:09.697+00:00",
         "updatedBy": "pepysnpa",
-        "version": 5
+        "version": 4
        }
       },
       "versions": {
-       "createTime": "2026-11-10T14:38:53.285+00:00",
+       "createTime": "2026-11-11T20:36:23.561+00:00",
        "createdBy": "jacquardnpa",
-       "lastRequestId": "9749f47e-914f-42a6-b49c-0e18fc1f15d5",
+       "lastRequestId": "d7db5891-f62d-4508-9d92-52330d9e9c62",
        "maintainedBy": [
         "jacquardnpa"
        ],
-       "updateTime": "2026-11-10T14:38:53.285+00:00",
+       "updateTime": "2026-11-11T20:36:23.561+00:00",
        "updatedBy": "jacquardnpa",
        "version": 1
       }
@@ -1104,7 +1104,7 @@
      "relatedBy": {
       "relationshipHeader": {
        "class": "ElementHeader",
-       "guid": "b6ad7428-08ad-4b4c-ad73-636851eb0dbc",
+       "guid": "c8d0ee18-6d47-4083-b57e-01b50153823c",
        "headerVersion": 0,
        "origin": {
         "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
@@ -1121,13 +1121,13 @@
         "typeVersion": 1
        },
        "versions": {
-        "createTime": "2026-11-10T14:38:53.333+00:00",
+        "createTime": "2026-11-11T20:36:23.592+00:00",
         "createdBy": "jacquardnpa",
-        "lastRequestId": "9749f47e-914f-42a6-b49c-0e18fc1f15d5",
+        "lastRequestId": "d7db5891-f62d-4508-9d92-52330d9e9c62",
         "maintainedBy": [
          "jacquardnpa"
         ],
-        "updateTime": "2026-11-10T14:38:53.333+00:00",
+        "updateTime": "2026-11-11T20:36:23.592+00:00",
         "updatedBy": "jacquardnpa",
         "version": 1
        }
@@ -1144,7 +1144,7 @@
   {
    "args": [],
    "kwargs": {
-    "collection_guid": "315e6e75-4f47-4b3a-a43e-ca692ce739e4",
+    "collection_guid": "d1d3ad47-7095-4e49-97e4-8c9f7092792e",
     "graph_query_depth": 0,
     "output_format": "JSON",
     "page_size": 50,
@@ -1154,8 +1154,44 @@
    "result": "No elements found"
   },
   {
+   "args": [],
+   "kwargs": {
+    "collection_guid": "d1d3ad47-7095-4e49-97e4-8c9f7092792e",
+    "graph_query_depth": 0,
+    "output_format": "JSON",
+    "page_size": 50,
+    "start_from": 100
+   },
+   "method": "get_collection_members",
+   "result": "No elements found"
+  },
+  {
+   "args": [],
+   "kwargs": {
+    "collection_guid": "d1d3ad47-7095-4e49-97e4-8c9f7092792e",
+    "graph_query_depth": 0,
+    "output_format": "JSON",
+    "page_size": 50,
+    "start_from": 150
+   },
+   "method": "get_collection_members",
+   "result": "No elements found"
+  },
+  {
+   "args": [],
+   "kwargs": {
+    "collection_guid": "d1d3ad47-7095-4e49-97e4-8c9f7092792e",
+    "graph_query_depth": 0,
+    "output_format": "JSON",
+    "page_size": 50,
+    "start_from": 200
+   },
+   "method": "get_collection_members",
+   "result": "No elements found"
+  },
+  {
    "args": [
-    "f032f938-650f-4485-838d-469647894e71"
+    "0b4c857a-3876-412a-a5a4-ae0e49bc5a97"
    ],
    "kwargs": {
     "include_only_relationships": [
@@ -1184,9 +1220,9 @@
          "classificationOrigin": "ASSIGNED",
          "classificationProperties": {
           "anchorDomainName": "AuthoredReferenceable",
-          "anchorGUID": "315e6e75-4f47-4b3a-a43e-ca692ce739e4",
+          "anchorGUID": "d1d3ad47-7095-4e49-97e4-8c9f7092792e",
           "anchorScopeGUIDs": [
-           "cf98ae54-b68b-415d-a28f-15ac33f9611b"
+           "0541d843-20a4-439c-9361-39d8a694f7de"
           ],
           "anchorTypeName": "DigitalProductFamily",
           "class": "AnchorsProperties",
@@ -1211,19 +1247,19 @@
           "typeVersion": 1
          },
          "versions": {
-          "createTime": "2026-11-10T14:38:53.580+00:00",
+          "createTime": "2026-11-11T20:36:23.712+00:00",
           "createdBy": "jacquardnpa",
-          "lastRequestId": "9749f47e-914f-42a6-b49c-0e18fc1f15d5",
+          "lastRequestId": "d7db5891-f62d-4508-9d92-52330d9e9c62",
           "maintainedBy": [
            "jacquardnpa"
           ],
-          "updateTime": "2026-11-10T14:38:53.580+00:00",
+          "updateTime": "2026-11-11T20:36:23.712+00:00",
           "updatedBy": "jacquardnpa",
           "version": 1
          }
         },
         "class": "ElementHeader",
-        "guid": "def53ebb-1d3f-41fd-b806-fdfa3cc66a1c",
+        "guid": "6336900e-f09c-4aef-b19e-7ea723c46563",
         "headerVersion": 0,
         "origin": {
          "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
@@ -1245,13 +1281,13 @@
          "typeVersion": 1
         },
         "versions": {
-         "createTime": "2026-11-10T14:38:53.583+00:00",
+         "createTime": "2026-11-11T20:36:23.713+00:00",
          "createdBy": "jacquardnpa",
-         "lastRequestId": "9749f47e-914f-42a6-b49c-0e18fc1f15d5",
+         "lastRequestId": "d7db5891-f62d-4508-9d92-52330d9e9c62",
          "maintainedBy": [
           "jacquardnpa"
          ],
-         "updateTime": "2026-11-10T14:38:53.583+00:00",
+         "updateTime": "2026-11-11T20:36:23.713+00:00",
          "updatedBy": "jacquardnpa",
          "version": 1
         }
@@ -1261,7 +1297,7 @@
         "configurationProperties": {
          "maxPageSize": 1000,
          "serverName": "qs-metadata-store",
-         "startingElementGUID": "315e6e75-4f47-4b3a-a43e-ca692ce739e4"
+         "startingElementGUID": "d1d3ad47-7095-4e49-97e4-8c9f7092792e"
         },
         "description": "This connection provides access to the metadata access server that supplied the data for this digital product.",
         "displayName": "Asset Connection for Organization Structure",
@@ -1274,7 +1310,7 @@
       "relatedElementAtEnd1": false,
       "relationshipHeader": {
        "class": "ElementHeader",
-       "guid": "d8d9f556-bd14-4d92-a215-717fcb70572a",
+       "guid": "c1b21ade-82a2-40df-abe9-7abab302a2ff",
        "headerVersion": 0,
        "origin": {
         "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
@@ -1294,13 +1330,13 @@
         "typeVersion": 1
        },
        "versions": {
-        "createTime": "2026-11-10T14:38:53.638+00:00",
+        "createTime": "2026-11-11T20:36:23.742+00:00",
         "createdBy": "jacquardnpa",
-        "lastRequestId": "9749f47e-914f-42a6-b49c-0e18fc1f15d5",
+        "lastRequestId": "d7db5891-f62d-4508-9d92-52330d9e9c62",
         "maintainedBy": [
          "jacquardnpa"
         ],
-        "updateTime": "2026-11-10T14:38:53.638+00:00",
+        "updateTime": "2026-11-11T20:36:23.742+00:00",
         "updatedBy": "jacquardnpa",
         "version": 1
        }
@@ -1316,9 +1352,9 @@
            "classificationOrigin": "ASSIGNED",
            "classificationProperties": {
             "anchorDomainName": "AuthoredReferenceable",
-            "anchorGUID": "315e6e75-4f47-4b3a-a43e-ca692ce739e4",
+            "anchorGUID": "d1d3ad47-7095-4e49-97e4-8c9f7092792e",
             "anchorScopeGUIDs": [
-             "cf98ae54-b68b-415d-a28f-15ac33f9611b"
+             "0541d843-20a4-439c-9361-39d8a694f7de"
             ],
             "anchorTypeName": "DigitalProductFamily",
             "class": "AnchorsProperties",
@@ -1343,19 +1379,19 @@
             "typeVersion": 1
            },
            "versions": {
-            "createTime": "2026-11-10T14:38:53.855+00:00",
+            "createTime": "2026-11-11T20:36:23.836+00:00",
             "createdBy": "jacquardnpa",
-            "lastRequestId": "9749f47e-914f-42a6-b49c-0e18fc1f15d5",
+            "lastRequestId": "d7db5891-f62d-4508-9d92-52330d9e9c62",
             "maintainedBy": [
              "jacquardnpa"
             ],
-            "updateTime": "2026-11-10T14:38:53.855+00:00",
+            "updateTime": "2026-11-11T20:36:23.836+00:00",
             "updatedBy": "jacquardnpa",
             "version": 1
            }
           },
           "class": "ElementHeader",
-          "guid": "a1e5bae0-8b8a-4744-87a3-55d25b8d2af0",
+          "guid": "c45374fd-1e69-4991-a8bb-d0221009fbb9",
           "headerVersion": 0,
           "origin": {
            "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
@@ -1376,13 +1412,13 @@
            "typeVersion": 1
           },
           "versions": {
-           "createTime": "2026-11-10T14:38:53.856+00:00",
+           "createTime": "2026-11-11T20:36:23.837+00:00",
            "createdBy": "jacquardnpa",
-           "lastRequestId": "9749f47e-914f-42a6-b49c-0e18fc1f15d5",
+           "lastRequestId": "d7db5891-f62d-4508-9d92-52330d9e9c62",
            "maintainedBy": [
             "jacquardnpa"
            ],
-           "updateTime": "2026-11-10T14:38:53.856+00:00",
+           "updateTime": "2026-11-11T20:36:23.837+00:00",
            "updatedBy": "jacquardnpa",
            "version": 1
           }
@@ -1400,7 +1436,7 @@
         "relatedElementAtEnd1": false,
         "relationshipHeader": {
          "class": "ElementHeader",
-         "guid": "d2ec9e02-ca93-4a25-992c-13cfba149482",
+         "guid": "149503f0-1814-46b7-9897-32a5bb443442",
          "headerVersion": 0,
          "origin": {
           "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
@@ -1417,13 +1453,13 @@
           "typeVersion": 1
          },
          "versions": {
-          "createTime": "2026-11-10T14:38:53.907+00:00",
+          "createTime": "2026-11-11T20:36:23.867+00:00",
           "createdBy": "jacquardnpa",
-          "lastRequestId": "9749f47e-914f-42a6-b49c-0e18fc1f15d5",
+          "lastRequestId": "d7db5891-f62d-4508-9d92-52330d9e9c62",
           "maintainedBy": [
            "jacquardnpa"
           ],
-          "updateTime": "2026-11-10T14:38:53.907+00:00",
+          "updateTime": "2026-11-11T20:36:23.867+00:00",
           "updatedBy": "jacquardnpa",
           "version": 1
          }
@@ -1439,9 +1475,9 @@
       "classificationOrigin": "ASSIGNED",
       "classificationProperties": {
        "anchorDomainName": "AuthoredReferenceable",
-       "anchorGUID": "315e6e75-4f47-4b3a-a43e-ca692ce739e4",
+       "anchorGUID": "d1d3ad47-7095-4e49-97e4-8c9f7092792e",
        "anchorScopeGUIDs": [
-        "cf98ae54-b68b-415d-a28f-15ac33f9611b"
+        "0541d843-20a4-439c-9361-39d8a694f7de"
        ],
        "anchorTypeName": "DigitalProductFamily",
        "class": "AnchorsProperties",
@@ -1466,19 +1502,19 @@
        "typeVersion": 1
       },
       "versions": {
-       "createTime": "2026-11-10T14:38:53.284+00:00",
+       "createTime": "2026-11-11T20:36:23.559+00:00",
        "createdBy": "jacquardnpa",
-       "lastRequestId": "9749f47e-914f-42a6-b49c-0e18fc1f15d5",
+       "lastRequestId": "d7db5891-f62d-4508-9d92-52330d9e9c62",
        "maintainedBy": [
         "jacquardnpa"
        ],
-       "updateTime": "2026-11-10T14:38:53.284+00:00",
+       "updateTime": "2026-11-11T20:36:23.559+00:00",
        "updatedBy": "jacquardnpa",
        "version": 1
       }
      },
      "class": "ElementHeader",
-     "guid": "f032f938-650f-4485-838d-469647894e71",
+     "guid": "0b4c857a-3876-412a-a5a4-ae0e49bc5a97",
      "headerVersion": 0,
      "origin": {
       "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
@@ -1510,7 +1546,7 @@
        "deleteAttachmentCount": 0,
        "deleteFeedbackCount": 0,
        "explicitGetCount": 0,
-       "findCount": 10,
+       "findCount": 11,
        "typeName": "UsageActivity",
        "updateAttachmentCount": 0,
        "updateFeedbackCount": 0,
@@ -1532,30 +1568,30 @@
        "typeVersion": 1
       },
       "versions": {
-       "createTime": "2026-11-10T17:06:23.654+00:00",
+       "createTime": "2026-11-12T11:20:41.649+00:00",
        "createdBy": "pepysnpa",
-       "lastRequestId": "6c9fcf4f-3483-4cfa-9dbe-7a3ed871e817",
+       "lastRequestId": "5e0babb4-a4a6-4fc6-b7dc-3fda52c88a83",
        "maintainedBy": [
         "pepysnpa"
        ],
-       "updateTime": "2026-11-11T15:27:34.981+00:00",
+       "updateTime": "2026-11-13T18:16:09.697+00:00",
        "updatedBy": "pepysnpa",
-       "version": 5
+       "version": 4
       }
      },
      "versions": {
-      "createTime": "2026-11-10T14:38:53.285+00:00",
+      "createTime": "2026-11-11T20:36:23.561+00:00",
       "createdBy": "jacquardnpa",
-      "lastRequestId": "9749f47e-914f-42a6-b49c-0e18fc1f15d5",
+      "lastRequestId": "d7db5891-f62d-4508-9d92-52330d9e9c62",
       "maintainedBy": [
        "jacquardnpa"
       ],
-      "updateTime": "2026-11-10T14:38:53.285+00:00",
+      "updateTime": "2026-11-11T20:36:23.561+00:00",
       "updatedBy": "jacquardnpa",
       "version": 1
      }
     },
-    "mermaidGraph": "---\ntitle: TabularDataSetCollection - Data sets for Organization Structure [f032f938-650f-4485-838d-469647894e71]\n---\nflowchart TD\n%%{init: {\"flowchart\": {\"htmlLabels\": false}} }%%\n\n1@{ shape: rounded, label: \"*Tabular Data Set Collection*\n**Data sets for Organization Structure**\"}\n2@{ shape: delay, label: \"*Search Keyword*\n**productized**\"}\n1==>|\"Search Keyword Link\"|2\n3@{ shape: rounded, label: \"*Virtual Connection*\n**Asset Connection for Organization Structure**\"}\n1==>|\"Resource Connection\"|3\n4@{ shape: rounded, label: \"*Endpoint*\n**Reference data set for Organization Structure**\"}\n3==>|\"Connect To Endpoint\"|4\nstyle 1 color:#000000, fill:#e0ab18, stroke:#004563\nstyle 2 color:#9ACD32, fill:#8B008B, stroke:#004563\nstyle 3 color:#000000, fill:#39add1, stroke:#004563\nstyle 4 color:#000000, fill:#39add1, stroke:#004563\n",
+    "mermaidGraph": "---\ntitle: TabularDataSetCollection - Data sets for Organization Structure [0b4c857a-3876-412a-a5a4-ae0e49bc5a97]\n---\nflowchart TD\n%%{init: {\"flowchart\": {\"htmlLabels\": false}} }%%\n\n1@{ shape: rounded, label: \"*Tabular Data Set Collection*\n**Data sets for Organization Structure**\"}\n2@{ shape: delay, label: \"*Search Keyword*\n**productized**\"}\n1==>|\"Search Keyword Link\"|2\n3@{ shape: rounded, label: \"*Virtual Connection*\n**Asset Connection for Organization Structure**\"}\n1==>|\"Resource Connection\"|3\n4@{ shape: rounded, label: \"*Endpoint*\n**Reference data set for Organization Structure**\"}\n3==>|\"Connect To Endpoint\"|4\nstyle 1 color:#000000, fill:#e0ab18, stroke:#004563\nstyle 2 color:#9ACD32, fill:#8B008B, stroke:#004563\nstyle 3 color:#000000, fill:#39add1, stroke:#004563\nstyle 4 color:#000000, fill:#39add1, stroke:#004563\n",
     "properties": {
      "class": "TabularDataSetCollectionProperties",
      "description": "This asset represents the source of data for the digital product.",
@@ -1575,9 +1611,9 @@
          "classificationOrigin": "ASSIGNED",
          "classificationProperties": {
           "anchorDomainName": "Asset",
-          "anchorGUID": "f032f938-650f-4485-838d-469647894e71",
+          "anchorGUID": "0b4c857a-3876-412a-a5a4-ae0e49bc5a97",
           "anchorScopeGUIDs": [
-           "cf98ae54-b68b-415d-a28f-15ac33f9611b"
+           "0541d843-20a4-439c-9361-39d8a694f7de"
           ],
           "anchorTypeName": "TabularDataSetCollection",
           "class": "AnchorsProperties",
@@ -1599,19 +1635,19 @@
           "typeVersion": 1
          },
          "versions": {
-          "createTime": "2026-11-10T14:38:53.380+00:00",
+          "createTime": "2026-11-11T20:36:23.618+00:00",
           "createdBy": "jacquardnpa",
-          "lastRequestId": "9749f47e-914f-42a6-b49c-0e18fc1f15d5",
+          "lastRequestId": "d7db5891-f62d-4508-9d92-52330d9e9c62",
           "maintainedBy": [
            "jacquardnpa"
           ],
-          "updateTime": "2026-11-10T14:38:53.380+00:00",
+          "updateTime": "2026-11-11T20:36:23.618+00:00",
           "updatedBy": "jacquardnpa",
           "version": 1
          }
         },
         "class": "ElementHeader",
-        "guid": "6c4dede7-ca85-4649-9269-65229563d533",
+        "guid": "1381f8c3-6f06-4b0e-ab23-425b052eccc3",
         "headerVersion": 0,
         "origin": {
          "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
@@ -1631,20 +1667,20 @@
          "typeVersion": 1
         },
         "versions": {
-         "createTime": "2026-11-10T14:38:53.380+00:00",
+         "createTime": "2026-11-11T20:36:23.618+00:00",
          "createdBy": "jacquardnpa",
-         "lastRequestId": "9749f47e-914f-42a6-b49c-0e18fc1f15d5",
+         "lastRequestId": "d7db5891-f62d-4508-9d92-52330d9e9c62",
          "maintainedBy": [
           "jacquardnpa"
          ],
-         "updateTime": "2026-11-10T14:38:53.380+00:00",
+         "updateTime": "2026-11-11T20:36:23.618+00:00",
          "updatedBy": "jacquardnpa",
          "version": 1
         }
        },
        "properties": {
         "class": "SearchKeywordProperties",
-        "description": "Asset f032f938-650f-4485-838d-469647894e71 is a part of product 315e6e75-4f47-4b3a-a43e-ca692ce739e4.",
+        "description": "Asset 0b4c857a-3876-412a-a5a4-ae0e49bc5a97 is a part of product d1d3ad47-7095-4e49-97e4-8c9f7092792e.",
         "displayName": "productized",
         "typeName": "SearchKeyword"
        }
@@ -1652,7 +1688,7 @@
       "relatedElementAtEnd1": false,
       "relationshipHeader": {
        "class": "ElementHeader",
-       "guid": "a6d94832-1de9-455f-8568-80cbd7126d45",
+       "guid": "bab4e8cc-ab31-4675-9f70-a12b84c02e66",
        "headerVersion": 0,
        "origin": {
         "homeMetadataCollectionId": "9905c3cb-94c5-4494-9229-0d6f69c0b842",
@@ -1669,13 +1705,13 @@
         "typeVersion": 1
        },
        "versions": {
-        "createTime": "2026-11-10T14:38:53.438+00:00",
+        "createTime": "2026-11-11T20:36:23.641+00:00",
         "createdBy": "jacquardnpa",
-        "lastRequestId": "9749f47e-914f-42a6-b49c-0e18fc1f15d5",
+        "lastRequestId": "d7db5891-f62d-4508-9d92-52330d9e9c62",
         "maintainedBy": [
          "jacquardnpa"
         ],
-        "updateTime": "2026-11-10T14:38:53.438+00:00",
+        "updateTime": "2026-11-11T20:36:23.641+00:00",
         "updatedBy": "jacquardnpa",
         "version": 1
        }
@@ -1685,7 +1721,7 @@
    }
   }
  ],
- "captured": "2026-11-11T16:05:25Z",
+ "captured": "2026-11-14T21:34:48Z",
  "params": {
   "scope": "DigitalProductFamily::Jacquard::ORGANIZATION-STRUCTURE-FAMILY::Organization Structure"
  },

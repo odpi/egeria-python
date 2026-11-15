@@ -400,7 +400,80 @@ async def test_report_found_when_its_name_is_shared_with_another_type(egeria):
     await writer.write_sheet(DashboardSheet(name="s", heading="S",
                                             placements=[Placement(ref="Term Definition Completeness")]))
     assert [r["end2"] for r in egeria.rels("DataSetContent")] == [report]
-    assert writer.notes == []
+    # pager step 5, the _resolve_report ruling: a display-name match is linked, and its uncertainty said
+    assert writer.notes == [_LINKED_NOTE.format(name="Term Definition Completeness", qn="X::Report::TDC")]
+
+
+_LINKED_NOTE = ("Linked the Report named '{name}' that Egeria returned ('{qn}'); Egeria can't confirm it's the only "
+                "one; give the Report's qualified name to be sure.")
+
+
+async def _one_placement(egeria, ref):
+    from pyegeria.view._output_dashboard_sheet_models import DashboardSheet, Placement
+    writer = DashboardSheetEgeriaWriter(egeria)
+    await writer.write_sheet(DashboardSheet(name="s", heading="S", placements=[Placement(ref=ref)]))
+    return writer, [r["end2"] for r in egeria.rels("DataSetContent")]
+
+
+@pytest.mark.asyncio
+async def test_a_qualified_name_ref_is_read_exactly_and_linked_without_a_note(egeria):
+    report = egeria.add_entity("Report", "X::Report::Exact", "Exact")
+    writer, linked = await _one_placement(egeria, "X::Report::Exact")
+    assert linked == [report] and not any("Egeria can't confirm" in n for n in writer.notes)
+
+
+@pytest.mark.asyncio
+async def test_a_qualified_name_ref_not_found_falls_through_to_the_display_name(egeria):
+    report = egeria.add_entity("Report", "Other::QN", "Odd::Name")   # its displayName contains "::"
+    writer, linked = await _one_placement(egeria, "Odd::Name")
+    assert linked == [report] and _LINKED_NOTE.format(name="Odd::Name", qn="Other::QN") in writer.notes
+
+
+@pytest.mark.asyncio
+async def test_a_qualified_name_ref_read_error_writes_no_link(egeria, monkeypatch):
+    egeria.add_entity("Report", "X::Report::Exact", "Exact")
+
+    real = egeria._async_get_element_by_unique_name
+
+    async def boom(name, *a, **kw):
+        if name == "X::Report::Exact":
+            raise TimeoutError("slow")
+        return await real(name, *a, **kw)
+    monkeypatch.setattr(egeria, "_async_get_element_by_unique_name", boom)
+    writer, linked = await _one_placement(egeria, "X::Report::Exact")
+    assert linked == [] and any("couldn't be read (TimeoutError): no report link" in n for n in writer.notes)
+
+
+@pytest.mark.asyncio
+async def test_one_display_match_at_a_limit_writes_no_link(egeria, monkeypatch):
+    egeria.add_entity("Report", "X::Report::L", "Limited")
+    real = egeria._async_get_elements_by_property_value
+
+    async def repeating(*a, start_from=0, page_size=0, **kw):   # ignores startFrom: the read stalls
+        return await real(*a, start_from=0, page_size=page_size, **kw)
+    monkeypatch.setattr(egeria, "_async_get_elements_by_property_value", repeating)
+    writer, linked = await _one_placement(egeria, "Limited")
+    assert linked == [] and any("the read stopped before the end" in n and "'X::Report::L'" in n
+                                for n in writer.notes)
+
+
+@pytest.mark.asyncio
+async def test_no_display_match_says_none_found_in_what_egeria_returned(egeria):
+    writer, linked = await _one_placement(egeria, "Nothing Like This")
+    assert linked == []
+    assert any("No Report named 'Nothing Like This' was found in what Egeria returned" in n for n in writer.notes)
+    assert not any("not found in Egeria" in n for n in writer.notes)   # never "no such Report"
+
+
+@pytest.mark.asyncio
+async def test_an_unknown_display_read_writes_no_link(egeria, monkeypatch):
+    egeria.add_entity("Report", "X::Report::U", "Unknown")
+
+    async def filtered(*a, **kw):
+        return []   # every page filtered: the empty-run cap, unknown
+    monkeypatch.setattr(egeria, "_async_get_elements_by_property_value", filtered)
+    writer, linked = await _one_placement(egeria, "Unknown")
+    assert linked == [] and any("found in what Egeria returned" in n for n in writer.notes)
 
 
 @pytest.mark.asyncio
@@ -411,7 +484,7 @@ async def test_two_reports_with_one_name_is_a_note_not_a_guess(egeria):
     writer = DashboardSheetEgeriaWriter(egeria)
     await writer.write_sheet(DashboardSheet(name="s", heading="S", placements=[Placement(ref="Twin")]))
     assert not egeria.rels("DataSetContent")
-    assert any("2 Reports are named 'Twin'" in n for n in writer.notes)
+    assert any("2 Reports are named 'Twin' in Egeria ('X::Report::1', 'X::Report::2')" in n for n in writer.notes)
 
 
 # ---------------------------------------------------------------------------- read-back P3s (2026-11-09)

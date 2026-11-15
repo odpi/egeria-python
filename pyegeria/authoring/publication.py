@@ -24,9 +24,22 @@ zone) doesn't change the properties, so it doesn't count.
 
 **Pins name publications**, not Egeria instance versions (those count every change, zones included).
 
-**Exact target, never a twin.** Before any plan, the element is found by exact qualifiedName (a Report
-without one, by exact display name), as the user, with a page of 25 (B5: never 1). More than one match, a
-full page, or a failed read refuses: a wrongly created twin would split the history and orphan every pin.
+**Exact target, never a twin.** Before any plan, the element is found by Egeria's unique-name read of its
+qualifiedName, as the user: an exact server-side lookup, never a paged property search (pager step 5, the
+exists-lookups ruling, 2026-11-14). Found -> update; Egeria's "not found" -> create; any other error or answer
+refuses, as does an element of another type under that qualifiedName. A Report draft with no qualified name
+is refused: one display-name match can't be proven the only one. A wrongly created twin would split the
+history and orphan every pin.
+
+**Visibility.** The unique-name read is filtered by what the publisher may see (Egeria's
+getBeanByUniqueName): an element zoned away from the publisher reads as "not found", so its publish plans a
+create ("not held"). Egeria then refuses that create: qualifiedName is a unique property (Referenceable,
+OpenMetadataTypesArchive1_2), and the generic create path (OpenMetadataAPIGenericHandler.createBeanInRepository
+-> validateNewEntityRequest -> validateUniqueProperties -> validateUniqueProperty, read at Egeria 8de9572c4d)
+looks the value up as the server's own user, so the caller's zones don't hide the existing element, and throws
+"unique name in use". So the publish fails rather than making a twin; it doesn't update the element either.
+Publish as someone who can see the element. (Read from the source for the generic-handler create path; not
+every OMVS create has been traced to it.)
 
 **No silent overwrite.** apply re-resolves the target and refuses if its GUID or `publishedVersion` changed
 since the plan was made.
@@ -37,10 +50,15 @@ unstamped private drafts.
 """
 from __future__ import annotations
 
+import json
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
-from pyegeria.authoring.models import AuthoringRefused, ReportDraft, SpecDraft, as_draft
+from loguru import logger
+
+from pyegeria.core._globals import NO_ELEMENTS_FOUND
+
+from pyegeria.authoring.models import ANSWER_UNKNOWN, AuthoringRefused, ReportDraft, SpecDraft, as_draft
 
 PUBLISHED_VERSION_KEY = "publishedVersion"
 PUBLISHED_AT_KEY = "publishedAt"
@@ -148,61 +166,109 @@ def _is_not_found(exc: BaseException) -> bool:
     return isinstance(exc, PyegeriaNotFoundException)
 
 
+def _type_names(el: Dict[str, Any]) -> List[str]:
+    t = (el.get("elementHeader") or {}).get("type") or {}
+    return [t.get("typeName"), *(t.get("superTypeNames") or [])]
+
+
 async def _find_exact(client: Any, type_name: str, prop: str, value: str) -> List[Dict[str, Any]]:
+    """The element publishing writes ([] when Egeria holds none), by Egeria's unique-name read: an exact,
+    server-side lookup by qualifiedName, with no client paging (the exists-lookups ruling, 2026-11-14).
+
+    Publishing never pages a property search to choose create versus update: on a NULL_NOT_END path a
+    filtered page reads as "none", and a create would duplicate the element. So:
+    - found -> that element (update); Egeria's specific not-found -> [] (create);
+    - any other error -> unknown: refused with the words and the read, nothing planned;
+    - a target named by another property (a Report by displayName) -> refused: one match can't be proven the
+      only one, so the qualified name is needed."""
+    if prop != "qualifiedName":
+        raise AuthoringRefused(f"Give the qualified name: Egeria can't confirm there's only one {type_name} with "
+                               f"{prop} {value!r}, so which element publishing would write can't be told. "
+                               f"Nothing was planned.")
     try:
-        found = await client.classification_manager._async_get_elements_by_property_value(
-            value, [prop], metadata_element_type=type_name, starts_with=False, ends_with=False, ignore_case=False,
-            page_size=LOOKUP_PAGE, graph_query_depth=0)
+        result = await client.classification_manager._async_get_element_by_unique_name(value)
     except Exception as exc:  # noqa: BLE001
         if _is_not_found(exc):
             return []
-        raise AuthoringRefused(f"Couldn't find out whether Egeria already holds the {type_name} {value!r} "
-                               f"({type(exc).__name__}). Publishing needs to know which element it writes, so "
-                               f"nothing was planned; try again.") from exc
-    rows = [e for e in found if isinstance(e, dict) and e.get("elementHeader")] if isinstance(found, list) else []
-    if len(rows) >= LOOKUP_PAGE:
-        raise AuthoringRefused(f"Egeria answered a full page ({LOOKUP_PAGE}) for the {type_name} {value!r}, so "
-                               f"which element to write can't be told. Nothing was planned.")
-    return [e for e in rows if (e.get("properties") or {}).get(prop) == value]
+        logger.info(f"publication: unique-name read of {type_name} {value!r} failed: {type(exc).__name__}")
+        raise AuthoringRefused(f"Couldn't find out whether Egeria already holds the {type_name} {value!r} (the "
+                               f"unique-name read of qualifiedName failed: {type(exc).__name__}). Publishing "
+                               f"needs to know which element it writes, so nothing was planned; try again.",
+                               answer=ANSWER_UNKNOWN) from exc
+    if result == NO_ELEMENTS_FOUND:   # Egeria holds no element with that qualifiedName: absent
+        return []
+    el = result if isinstance(result, dict) and result.get("elementHeader") else (
+        result.get("element") if isinstance(result, dict) and isinstance(result.get("element"), dict) else None)
+    if el is None:   # step 5 read-back R1: only "not found" is absent; any other answer is unknown, never a create
+        raise AuthoringRefused(f"Egeria's answer to the unique-name read of {type_name} {value!r} wasn't an element "
+                               f"or 'not found' ({type(result).__name__}); nothing was planned.")
+    if type_name not in _type_names(el):
+        raise AuthoringRefused(f"Egeria holds a {_type_names(el)[0] or 'different element'} with qualifiedName "
+                               f"{value!r}, not a {type_name}; publishing won't write over it. Nothing was planned.")
+    return [el]
 
 
-#: Element history is read in pages of this size until an empty page (a short page isn't the last page:
-#: Egeria's paging contract), up to HISTORY_MAX_PAGES pages.
+#: Element history is read through the pager in pages of this size (pager step 4: >= 100, so the probes after a
+#: null cover >= 300 positions), up to HISTORY_MAX_PAGES requests.
 HISTORY_PAGE = 100
 HISTORY_MAX_PAGES = 50
 HISTORY_CAPPED = ("its history is too long to read whole (more than {n} versions were returned and more may "
                   "follow), so the entry that is each published version can't be told")
 
 
-async def async_read_history(client: Any, guid: str) -> Tuple[List[Dict[str, Any]], Optional[str]]:
+def _history_key(entry: Any) -> Any:
+    """A history entry's identity: every entry of one element carries the same GUID, so the GUID alone (the
+    pager's default key) would read the second version as a repeat. GUID + version + update time."""
+    if isinstance(entry, dict):   # the raw OpenMetadataElement (elementGUID, versions) or an elementHeader
+        header = entry.get("elementHeader") if isinstance(entry.get("elementHeader"), dict) else entry
+        guid = header.get("elementGUID") or header.get("guid")
+        versions = header.get("versions") or {}
+        if guid and (versions.get("version") is not None or versions.get("updateTime")):
+            return (guid, versions.get("version"), versions.get("updateTime"))
+    return "content:" + json.dumps(entry, sort_keys=True, default=str)
+
+
+async def async_read_history(client: Any, guid: str, *,
+                             trace: Optional[Dict[str, Any]] = None) -> Tuple[List[Dict[str, Any]], Optional[str]]:
     """(every history entry of `guid` in view shape, why it isn't whole or None), read as the user.
 
-    Paged (HISTORY_PAGE) until Egeria answers an empty page. The oldest entry stamped N is published version
-    N only if the history is whole: a page cap could hide the publication and leave a later edit as the
-    oldest one returned. So when the pages run out before an empty one (HISTORY_MAX_PAGES), or a read
-    fails, the reason is returned and the caller refuses or says "not checked"; it never resolves on part
-    of the history."""
+    Paged through ``page_all`` (pager step 4, ruling (A)) at HISTORY_PAGE, up to HISTORY_MAX_PAGES requests.
+    The oldest entry stamped N is published version N only if the history is whole: a page cap could hide
+    the publication and leave a later edit as the oldest one returned. The read is acted on as whole when it
+    reached the end (a null, then empty probes on this suspect path); when a limit stopped it (capped,
+    stalled, the empty-run cap), or a read fails, the reason is returned and the caller refuses or says
+    "not checked"; it never resolves on part of the history.
+
+    ``trace`` (if given) gets how the read ended (method, positions_read, end, end_reason), also logged, so a
+    later miss can be traced to the read."""
     from pyegeria.core.element_shape import as_view_element
-    entries: List[Dict[str, Any]] = []
-    start = 0
-    for _ in range(HISTORY_MAX_PAGES):
-        try:
-            raw = await client.metadata_expert._async_get_element_history(
-                guid, oldest_first=False, start_from=start, page_size=HISTORY_PAGE)
-        except Exception as exc:  # noqa: BLE001 -- said, not raised
-            if _is_not_found(exc):
-                return entries, None
-            return entries, f"its history couldn't be read ({type(exc).__name__})"
-        page = [e for e in raw if isinstance(e, dict)] if isinstance(raw, list) else []
-        if not page:   # "No elements found" or an empty list: the history is whole
-            return [as_view_element(e) for e in entries], None
-        entries += page
-        start += len(page)
-    return [as_view_element(e) for e in entries], HISTORY_CAPPED.format(n=len(entries))
+    from pyegeria.core.paging import async_page_all, log_end, paging_for
+
+    async def fetch(start, size):
+        return await client.metadata_expert._async_get_element_history(
+            guid, oldest_first=False, start_from=start, page_size=size)
+
+    try:
+        paged = await async_page_all(fetch, fetch_page_size=HISTORY_PAGE, max_pages=HISTORY_MAX_PAGES,
+                                     key=_history_key, **paging_for("get_element_history"))
+    except Exception as exc:  # noqa: BLE001 -- said, not raised
+        if _is_not_found(exc):
+            return [], None
+        return [], f"its history couldn't be read ({type(exc).__name__})"
+    fields = log_end("publication.async_read_history", paged)
+    if trace is not None:
+        trace.update(fields)
+    entries = [as_view_element(e) for e in paged.items if isinstance(e, dict)]
+    if paged.reached_end:
+        return entries, None
+    if paged.end_reason == "max_pages":
+        return entries, HISTORY_CAPPED.format(n=len(entries))
+    return entries, f"its history wasn't read whole ({paged.note})"
 
 
-async def _history(client: Any, guid: str) -> Tuple[List[Dict[str, Any]], Optional[str]]:
-    return await async_read_history(client, guid)
+async def _history(client: Any, guid: str, trace: Optional[Dict[str, Any]] = None
+                   ) -> Tuple[List[Dict[str, Any]], Optional[str]]:
+    return await async_read_history(client, guid, trace=trace)
 
 
 async def async_resolve_target(client: Any, draft: Any) -> Dict[str, Any]:
@@ -231,14 +297,16 @@ async def _resolve(client: Any, target: Tuple[str, str, str, str]) -> Dict[str, 
     el = matches[0]
     from pyegeria.view.egeria_spec_cache import _zones
     guid = (el.get("elementHeader") or {}).get("guid")
-    history, why = await _history(client, guid) if guid else ([], "it has no GUID")
+    history_read: Dict[str, Any] = {}
+    history, why = await _history(client, guid, history_read) if guid else ([], "it has no GUID")
     entries = ordered_entries(el, history)
     current = stamp_of(el)
     notes = [f"Edited-since check not done: {why}."] if why else []
     edited = None if why else edited_since(entries, current)
     return {"resolved": True, "held": True, "guid": guid, "qualified_name": (el.get("properties") or {}).get("qualifiedName"),
             "zones": list(_zones(el)), "published_version": current,
-            "published_versions": published_versions(entries), "edited_since": edited, "notes": notes}
+            "published_versions": published_versions(entries), "edited_since": edited, "notes": notes,
+            "history_read": history_read}
 
 
 async def async_check_unchanged_target(client: Any, plan: Dict[str, Any]) -> None:
