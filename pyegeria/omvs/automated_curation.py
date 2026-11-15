@@ -2542,10 +2542,9 @@ class AutomatedCuration(ServerClient):
         from pyegeria.omvs.governance_engine import GovernanceEngine
         client = getattr(self, "_gov_engine_client", None)
         if client is None:
-            client = GovernanceEngine(self.view_server, self.platform_url, self.user_id, self.user_pwd,
-                                      token=self.token, timeout=getattr(self, "timeout", None),
-                                      legacy_fallback=True)
-            client._token_minted_for = self._token_minted_for
+            from pyegeria.core._helper_client import helper_client
+            client = helper_client(GovernanceEngine, self, timeout=getattr(self, "timeout", None),
+                                   legacy_fallback=True)
             self._gov_engine_client = client
         return client
 

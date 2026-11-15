@@ -40,16 +40,11 @@ class EgeriaConfig:
         self._instantiated_clients = {}
 
     def _get_subclient(self, attr_name: str):
+        """Lazy-load and cache sub-clients, each built to act for this client (helper_client, C3)."""
         if attr_name not in self._instantiated_clients:
-            client_cls = self._subclient_map[attr_name]
-            self._instantiated_clients[attr_name] = client_cls(
-                self.view_server,
-                self.platform_url,
-                self.user_id,
-                carried_password(self),
-                self.token,
-                timeout=self.timeout,
-            )
+            from pyegeria.core._helper_client import helper_client
+            self._instantiated_clients[attr_name] = helper_client(
+                self._subclient_map[attr_name], self, timeout=self.timeout)
         return self._instantiated_clients[attr_name]
 
     def __getattr__(self, name):

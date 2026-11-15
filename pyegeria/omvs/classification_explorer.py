@@ -12496,9 +12496,8 @@ class ClassificationExplorer(ServerClient):
         from pyegeria.omvs.collection_manager import CollectionManager
         client = getattr(self, "_collection_mgr", None)
         if client is None:
-            client = CollectionManager(self.view_server, self.platform_url, self.user_id, self.user_pwd,
-                                       token=self.token, timeout=getattr(self, "timeout", None))
-            client._token_minted_for = self._token_minted_for
+            from pyegeria.core._helper_client import helper_client
+            client = helper_client(CollectionManager, self, timeout=getattr(self, "timeout", None))
             self._collection_mgr = client
         return client
 

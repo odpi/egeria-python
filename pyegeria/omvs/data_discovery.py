@@ -1975,9 +1975,8 @@ class DataDiscovery(ServerClient):
         from pyegeria.omvs.asset_maker import AssetMaker
         client = getattr(self, "_asset_maker", None)
         if client is None:
-            client = AssetMaker(self.view_server, self.platform_url, self.user_id, self.user_pwd,
-                                token=self.token, timeout=getattr(self, "timeout", None))
-            client._token_minted_for = self._token_minted_for
+            from pyegeria.core._helper_client import helper_client
+            client = helper_client(AssetMaker, self, timeout=getattr(self, "timeout", None))
             self._asset_maker = client
         return client
 

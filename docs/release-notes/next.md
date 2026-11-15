@@ -11,6 +11,10 @@ Notes collected on `release/next` for the next release. The version number is se
   `EgeriaTech` builds and every helper client pyegeria builds for it. The configured password
   (`settings.User_Profile.user_pwd`) is never used, so when the token expires the request fails with a 401
   (`PyegeriaUnauthorizedException`) instead of the one auto-retry signing in again as the configured (demo) user.
+  Every client pyegeria builds to act for another (sub-clients and helpers) now goes through one
+  `pyegeria.core._helper_client.helper_client`: the caller's bearer token set once (exactly one `Bearer ` prefix), and
+  the caller's own password or none, never the configured default, even when the token arrived through
+  `set_bearer_token`.
   This replaces the password scrub and `_get_subclient` patch that token-only callers needed. **`user_pwd=None` is
   unchanged**: it still takes the configured password, which CLIs rely on.
 

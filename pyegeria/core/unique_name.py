@@ -146,21 +146,17 @@ def _reader(client: Any, name: str) -> _Read:
     platform_url = _text(getattr(client, "platform_url", None))
     if not (view_server and platform_url):
         return _Read(unknown="the caller isn't a client on an Egeria platform, so no unique-name read was made")
-    from pyegeria.core._no_password import NO_PASSWORD, carried_password
-    token = _caller_token(client)
+    from pyegeria.core._helper_client import bare_token, helper_client, helper_password
+    from pyegeria.core._no_password import NO_PASSWORD
+    token = bare_token(client)
     user_id = _text(getattr(client, "user_id", None))
-    if token:
-        user_pwd = NO_PASSWORD
-    else:
-        carried = carried_password(client)
-        user_pwd = carried if carried is not NO_PASSWORD and _text(carried) else None
-        if not (user_id and user_pwd):
+    if not token:
+        password = helper_password(client, None)
+        if not (user_id and password is not NO_PASSWORD and _text(password)):
             return _Read(unknown="the caller holds neither a token nor its own password, so no unique-name read "
                                  "was made")
     from pyegeria.omvs.classification_explorer import ClassificationExplorer
-    explorer = ClassificationExplorer(view_server, platform_url, user_id=user_id, user_pwd=user_pwd)
-    if token:
-        explorer.set_bearer_token(token)
+    explorer = helper_client(ClassificationExplorer, client, view_server=view_server)   # C3: the one helper
     return _Read(getattr(explorer, name), explorer)
 
 
