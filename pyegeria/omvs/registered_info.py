@@ -125,14 +125,15 @@ class RegisteredInfo(ServerClient):
 
         # Choose a report spec
         columns_struct = None
-        if isinstance(report_spec, str):
-            columns_struct = select_report_spec(report_spec, output_format)
-        elif isinstance(report_spec, dict):
-            columns_struct = get_report_spec_match(report_spec, output_format)
-        else:
-            columns_struct = select_report_spec("Registered-Services", output_format)
-        if columns_struct is None:
-            columns_struct = select_report_spec("Default", output_format)
+        with self._spec_identity():  # EGERIA-tier reads as this client (spec-cache T2)
+            if isinstance(report_spec, str):
+                columns_struct = select_report_spec(report_spec, output_format)
+            elif isinstance(report_spec, dict):
+                columns_struct = get_report_spec_match(report_spec, output_format)
+            else:
+                columns_struct = select_report_spec("Registered-Services", output_format)
+            if columns_struct is None:
+                columns_struct = select_report_spec("Default", output_format)
 
         return self._generate_registered_info_output(
             elements=elements,
@@ -179,14 +180,15 @@ class RegisteredInfo(ServerClient):
             return elements or "No severities found"
 
         columns_struct = None
-        if isinstance(report_spec, str):
-            columns_struct = select_report_spec(report_spec, output_format)
-        elif isinstance(report_spec, dict):
-            columns_struct = get_report_spec_match(report_spec, output_format)
-        else:
-            columns_struct = select_report_spec("Severity-Definitions", output_format)
-        if columns_struct is None:
-            columns_struct = select_report_spec("Default", output_format)
+        with self._spec_identity():  # EGERIA-tier reads as this client (spec-cache T2)
+            if isinstance(report_spec, str):
+                columns_struct = select_report_spec(report_spec, output_format)
+            elif isinstance(report_spec, dict):
+                columns_struct = get_report_spec_match(report_spec, output_format)
+            else:
+                columns_struct = select_report_spec("Severity-Definitions", output_format)
+            if columns_struct is None:
+                columns_struct = select_report_spec("Default", output_format)
 
         return self._generate_registered_info_output(
             elements=elements,
@@ -232,14 +234,15 @@ class RegisteredInfo(ServerClient):
             return elements or "no types found"
 
         columns_struct = None
-        if isinstance(report_spec, str):
-            columns_struct = select_report_spec(report_spec, output_format)
-        elif isinstance(report_spec, dict):
-            columns_struct = get_report_spec_match(report_spec, output_format)
-        else:
-            columns_struct = select_report_spec("Asset-Types", output_format)
-        if columns_struct is None:
-            columns_struct = select_report_spec("Default", output_format)
+        with self._spec_identity():  # EGERIA-tier reads as this client (spec-cache T2)
+            if isinstance(report_spec, str):
+                columns_struct = select_report_spec(report_spec, output_format)
+            elif isinstance(report_spec, dict):
+                columns_struct = get_report_spec_match(report_spec, output_format)
+            else:
+                columns_struct = select_report_spec("Asset-Types", output_format)
+            if columns_struct is None:
+                columns_struct = select_report_spec("Default", output_format)
 
         return self._generate_registered_info_output(
             elements=elements,

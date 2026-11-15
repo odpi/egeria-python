@@ -124,7 +124,8 @@ class SolutionArchitect(ServerClient):
     def generate_design_pattern_output(self, elements: list | dict, search_string: Optional[str] = None,
                                      element_type_name: Optional[str] = None, output_format: str = 'MD',
                                      report_spec: dict | str | None = None, **kwargs):
-        report_spec = select_report_spec(report_spec, 'Design-Pattern-DrE')
+        with self._spec_identity():  # EGERIA-tier reads as this client (spec-cache T2)
+            report_spec = select_report_spec(report_spec, 'Design-Pattern-DrE')
         return self.generate_output(elements, self._extract_design_pattern_properties, report_spec,
                                   search_string=search_string, element_type_name=element_type_name,
                                   output_format=output_format, **kwargs)

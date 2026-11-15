@@ -31,7 +31,7 @@ import os
 import re
 import tempfile
 import time
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from contextvars import ContextVar
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -68,6 +68,7 @@ __all__ = [
     "async_fetch_spec_for_call",
     "egeria_tier",
     "egeria_tier_info",
+    "as_client",
     "spec_footer",
     "fetched_spec",
     "fetched_spec_source",
@@ -192,6 +193,14 @@ def spec_identity(identity: Optional[str]):
 _MULTI_LOGGED: set = set()
 
 
+def as_client(client: Any):
+    """`spec_identity(client_credential_identity(client))`: every EGERIA-tier read a path makes with a client in
+    hand is for that client's credential, never for the process fallback. A client with no readable identity
+    (a bare object) leaves the current identity as it is."""
+    identity = client_credential_identity(client) if client is not None else None
+    return spec_identity(identity) if identity else nullcontext()
+
+
 def current_spec_identity() -> Optional[str]:
     """The identity the EGERIA tier is read for:
     1. the one set by `spec_identity` (exec_report_spec, the async runner and the dashboard resolver set it
@@ -201,8 +210,9 @@ def current_spec_identity() -> Optional[str]:
        as, whatever the settings say;
     3. else, when it has seen more than one, None: a multi-user process (Portal, EA) loads no private cache
        outside a request's own identity (logged once);
-    4. else, with no client yet, this process's configured Egeria user (EGERIA_USER /
-       settings.User_Profile.user_name)."""
+    4. else, with no client yet, this process's configured Egeria user, resolved exactly as a CLI's client is
+       (`pyegeria.core.config.configured_user_id`: EGERIA_USER, the settings' user, the quickstart default).
+    A path that holds a client binds to it instead (`as_client`), whatever this fallback says."""
     identity = _SPEC_IDENTITY.get()
     if identity:
         return identity
@@ -221,8 +231,8 @@ def current_spec_identity() -> Optional[str]:
                         f"outside a request's own identity (spec_identity) loads no private cache")
         return None
     try:
-        from pyegeria.core.config import settings
-        return credential_identity(os.getenv("EGERIA_USER") or settings.User_Profile.user_name)
+        from pyegeria.core.config import configured_user_id
+        return credential_identity(configured_user_id())
     except Exception:  # noqa: BLE001 -- no settings: no identity, so no private manifest loads (fail safe)
         return None
 
@@ -846,7 +856,7 @@ def sync_report_specs(client, *, folders: Optional[Iterable[str]] = None, specs:
                             f"\"Pyegeria Report Spec Folders\", or pass --folder/--spec); nothing synced")
         return report
     _note_client(client)
-    with _SyncLock(directory):
+    with as_client(client), _SyncLock(directory):
         identity = _client_identity(client)
         # Gather candidates: guid -> (member element, [folders])
         members: Dict[str, Tuple[Dict[str, Any], List[str]]] = {}
@@ -1498,6 +1508,12 @@ def _lookup_guid(directory: Path, label: str) -> Optional[str]:
 
 
 def fetch_spec_for_call(client, name: str, *, cache_dir_override: Optional[str] = None) -> str:
+    """Fetch `name` from Egeria for one call, as `client` (see `_fetch_spec_for_call`)."""
+    with as_client(client):
+        return _fetch_spec_for_call(client, name, cache_dir_override=cache_dir_override)
+
+
+def _fetch_spec_for_call(client, name: str, *, cache_dir_override: Optional[str] = None) -> str:
     """Fetch `name` from Egeria for this call (sync client methods). Returns the internal name
     ("egeria:<label>@v<N>") the call should use. Writes through to a per-user cache; never to a
     shared one. Raises SpecFetchError with words; never falls back to the cached copy."""
@@ -1527,6 +1543,12 @@ def fetch_spec_for_call(client, name: str, *, cache_dir_override: Optional[str] 
 
 
 async def async_fetch_spec_for_call(client, name: str) -> str:
+    """The async `fetch_spec_for_call`, as `client`."""
+    with as_client(client):
+        return await _async_fetch_spec_for_call(client, name)
+
+
+async def _async_fetch_spec_for_call(client, name: str) -> str:
     """The async twin of `fetch_spec_for_call`, for the request helpers of an async find method."""
     from pyegeria.omvs.collection_manager import CollectionManager
     label = _fetch_target(name)

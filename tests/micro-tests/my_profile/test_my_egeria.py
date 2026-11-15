@@ -95,6 +95,9 @@ class TestMyProfileAppLifecycle:
         )
 
         app = MyProfileApp()
+        # The test's own user, not the shell's EGERIA_USER: My Collections keeps only the user's own (garygeeke's
+        # in the fake data), so a developer's EGERIA_USER emptied it (gate rule: env -u EGERIA_USER / another user)
+        backend.apply_connection(app)
         async with app.run_test() as pilot:
             # A live load takes several seconds; checking before it finishes sees half-loaded data
             await app._load_task

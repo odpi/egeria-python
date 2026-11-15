@@ -122,6 +122,8 @@ def tier(monkeypatch, tmp_path):
     user.mkdir()
     monkeypatch.setenv(esc.CACHE_DIR_ENV, str(cache))
     monkeypatch.setenv("PYEGERIA_USER_REPORT_SPECS_DIR", str(user))
+    # T1: no tier test depends on the developer's shell; a test that needs a configured user sets it itself
+    monkeypatch.delenv("EGERIA_USER", raising=False)
     monkeypatch.delenv("PYEGERIA_USER_FORMAT_SETS_DIR", raising=False)
     monkeypatch.delenv(esc.DRAFTS_ENV, raising=False)
     monkeypatch.delenv(esc.FOLDERS_ENV, raising=False)
@@ -1186,3 +1188,81 @@ def test_client_credential_identity_uses_server_name_when_there_is_no_view_serve
     class Omvs:
         user_id, platform_url, server_name = "peterprofile", "https://localhost:9443", "qs-view-server"
     assert esc.client_credential_identity(Omvs()) == _identity("peterprofile")
+
+
+# ── T2: a path with a client in hand reads the tier as that client; T3: one "configured user" ──
+
+class _Client:
+    """A stand-in client: only the credential attributes the tier binding reads."""
+
+    def __init__(self, user):
+        self.user_id, self.platform_url, self.view_server = user, "https://localhost:9443", "qs-view-server"
+
+
+def _in_method_md(client):
+    from pyegeria.core._server_client import ServerClient
+    element = {"elementHeader": {"guid": "g1", "type": {"typeName": "Collection"},
+                                 "origin": {"homeMetadataCollectionId": "m", "homeMetadataCollectionName": "m"},
+                                 "versions": {"createdBy": "u", "createTime": "2026-11-08T00:00:00Z"}},
+               "properties": {"displayName": "Coll A", "qualifiedName": "Collection::A"}}
+    return ServerClient._generate_formatted_output(client, [element], query_string="A", entity_type="Collection",
+                                                   output_format="MD", report_spec="E-Collections")
+
+
+@pytest.mark.parametrize("egeria_user", [None, "erinoverview", "someoneelse"])
+def test_the_in_method_path_reads_the_tier_as_its_client(tier, monkeypatch, egeria_user):
+    """generate_formatted_output binds to the client it runs on: its private cache loads for it and for no
+    other client, whatever EGERIA_USER says and even in a multi-user process (no fallback identity)."""
+    if egeria_user:
+        monkeypatch.setenv("EGERIA_USER", egeria_user)
+    _sync_e_collections(tier)                                   # bound to erinoverview
+    from pyegeria.core._client_identities import note_credentials
+    note_credentials("peterprofile", "https://localhost:9443", "qs-view-server")   # now a multi-user process
+    esc._invalidate_tier()
+    assert esc.current_spec_identity() is None
+    assert _in_method_md(_Client("erinoverview")).rstrip().splitlines()[-1].startswith("_E-Collections v1.0")
+    assert "_E-Collections v1.0" not in _in_method_md(_Client("peterprofile"))
+
+
+@pytest.mark.parametrize("egeria_user", [None, "erinoverview", "someoneelse"])
+def test_a_fetch_writes_through_and_reads_as_its_client(tier, monkeypatch, egeria_user):
+    if egeria_user:
+        monkeypatch.setenv("EGERIA_USER", egeria_user)
+    eg = FakeEgeria()
+    eg.put(spec_element())
+    esc.sync_report_specs(eg, folders=[FOLDER_QN])
+    open_el = spec_element("Open-Spec", guid=ZONED_GUID, aliases=[])
+    open_el["elementHeader"]["zoneMembership"] = {"classificationProperties": {"zoneMembership": []}}
+    eg.put(open_el, folder=None)
+    from pyegeria.core._client_identities import note_credentials
+    note_credentials("peterprofile", "https://localhost:9443", "qs-view-server")
+    internal = esc.fetch_spec_for_call(eg, "Open-Spec")
+    assert json.loads((tier["cache"] / esc.MANIFEST).read_text())["entries"]["Open-Spec"]["pinned"] is True
+    assert internal == "egeria:Open-Spec@v1"
+    with esc.as_client(eg):
+        assert esc.egeria_tier_info("Open-Spec@v1")["visibility"] == "public"
+        assert esc.fetched_spec("Open-Spec@v1") is not None
+    with esc.as_client(_Client("peterprofile")):
+        assert esc.egeria_tier_info("Open-Spec@v1") is None
+
+
+def test_as_client_with_no_identity_leaves_the_current_one():
+    with esc.spec_identity("x@h_1/v"):
+        with esc.as_client(object()):
+            assert esc.current_spec_identity() == "x@h_1/v"
+        with esc.as_client(_Client("erinoverview")):
+            assert esc.current_spec_identity() == _identity("erinoverview")
+
+
+def test_one_configured_user_for_client_construction_and_the_tier(tier, monkeypatch):
+    """T3: a CLI with no configuration builds its client as resolve_egeria_credentials' user and the tier's
+    client-less identity is that same user, so its own private cache loads."""
+    from pyegeria.core import config
+    monkeypatch.delenv("EGERIA_USER", raising=False)
+    monkeypatch.setattr(config.settings.User_Profile, "user_name", None)
+    user, _pwd = config.resolve_egeria_credentials()
+    assert user == config.configured_user_id() == "erinoverview"
+    assert esc.current_spec_identity() == esc.credential_identity(user)
+    monkeypatch.setenv("EGERIA_USER", "someoneelse")
+    assert config.resolve_egeria_credentials()[0] == config.configured_user_id() == "someoneelse"
+    assert esc.current_spec_identity() == esc.credential_identity("someoneelse")
