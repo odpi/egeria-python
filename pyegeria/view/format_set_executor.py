@@ -526,6 +526,7 @@ def _normalize_report_params(params: Dict[str, Any], action_mode: str = "generic
         "sequencing_order": ["sort_order", "output_sort_order"],
         "sequencing_property": ["order_property_name"],
         "anchor_scope_guid": ["anchor_scope_id"],
+        **{canonical: [alias] for canonical, alias in LIFECYCLE_FILTERS.items()},
     }
 
     for canonical_key, alias_keys in aliases.items():
@@ -550,7 +551,12 @@ def _normalize_report_params(params: Dict[str, Any], action_mode: str = "generic
         "include_only_classified_elements",
         "governance_zone_filter",
         "classification_names",
+        *LIFECYCLE_FILTERS,
+        *LIFECYCLE_FILTERS.values(),
     }
+    # Status values are enum names: "active" and "in progress" mean ACTIVE and IN_PROGRESS.
+    status_keys = {"limit_results_by_status", "limit_result_by_status", *LIFECYCLE_FILTERS,
+                   *LIFECYCLE_FILTERS.values()}
 
     def _to_string_list(raw_value: Any) -> Any:
         if isinstance(raw_value, str):
@@ -570,6 +576,9 @@ def _normalize_report_params(params: Dict[str, Any], action_mode: str = "generic
     for list_key in list_like_keys:
         if list_key in normalized:
             normalized[list_key] = _to_string_list(normalized.get(list_key))
+            if list_key in status_keys and isinstance(normalized[list_key], list):
+                normalized[list_key] = [re.sub(r"[\s\-]+", "_", str(v).strip()).upper()
+                                        for v in normalized[list_key] if str(v).strip()]
 
     # The header-status filter takes Egeria's ElementStatus only: refuse DRAFT, APPROVED, ... (content,
     # activity or deployment statuses) in words here, before a client is built, rather than letting Egeria 400.
@@ -595,13 +604,63 @@ def _normalize_report_params(params: Dict[str, Any], action_mode: str = "generic
     return _canonical_param_names(cleaned)
 
 
+# Lifecycle filters (Create Report / View Report's Limit Result by Content / Deployment / Activity Status):
+# the find-method parameter -> the Dr.Egeria variable name. Element status (limit_results_by_status) is Egeria's
+# ElementStatus (pyegeria.models.element_status); lifecycle lives in typed properties that only the
+# *_status_list-taking finds can filter on (they send ContentStatusSearchString, DeploymentStatusFilter-
+# RequestBody, ActivityStatusRequestBody, ...). These are passed only to a method that names the parameter
+# in its signature -- never through **kwargs, where the standard-filter helpers would reject them -- and
+# dropped with a warning otherwise (_add_lifecycle_filters).
+LIFECYCLE_FILTERS: Dict[str, str] = {
+    "content_status_list": "limit_result_by_content_status",
+    "deployment_status_list": "limit_result_by_deployment_status",
+    "activity_status_list": "limit_result_by_activity_status",
+}
+_LIFECYCLE_KEYS = frozenset(LIFECYCLE_FILTERS) | frozenset(LIFECYCLE_FILTERS.values())
+
+
+def _add_lifecycle_filters(report_name: str, func: Any, params: Dict[str, Any],
+                           call_params: Dict[str, Any]) -> Dict[str, Any]:
+    """Pass each lifecycle filter the caller gave to a method whose signature names it; warn and drop the rest.
+
+    A report spec that declares one in required/optional params already has it in call_params."""
+    import warnings
+    from pyegeria.core.request_filters import UnknownFilterWarning, _SKIP_PREFIXES
+
+    given = {k: params[k] for k in LIFECYCLE_FILTERS if (params or {}).get(k) not in (None, "", [])}
+    if not given:
+        return call_params
+    try:
+        names = set(inspect.signature(func).parameters)
+    except (TypeError, ValueError):
+        names = set()
+    out = dict(call_params)
+    dropped = []
+    for key, value in given.items():
+        if key in out:
+            continue
+        if key in names:
+            out[key] = value
+        else:
+            dropped.append(key)
+    if dropped:
+        method = getattr(func, "__qualname__", None) or getattr(func, "__name__", "its find method")
+        msg = (f"report '{report_name}': lifecycle filter(s) "
+               f"{', '.join(f'{k!r} ({LIFECYCLE_FILTERS[k]})' for k in dropped)} ignored -- "
+               f"{str(method).replace('_async_', '')} does not filter by that status.")
+        logger.warning(msg)
+        warnings.warn(msg, UnknownFilterWarning, skip_file_prefixes=_SKIP_PREFIXES)
+    return out
+
+
 # Run-parameter names that are aliases or rendering options rather than parameters of the report:
-# consumed under another name, so never reported as dropped.
+# consumed under another name, so never reported as dropped. The lifecycle filters are reported by
+# _add_lifecycle_filters instead, with their own words.
 _RUN_PARAM_ALIASES = frozenset({
     "search_string", "filter_string", "property_value", "filter", "output_format", "report_spec",
     "graph_query_depth", "metadata_element_name", "limit_result_by_status", "sort_order",
     "output_sort_order", "order_property_name", "anchor_scope_id",
-})
+}) | _LIFECYCLE_KEYS
 
 
 def _warn_dropped_params(report_name: str, params: Dict[str, Any], call_params: Dict[str, Any],
@@ -678,6 +737,7 @@ def _extract_param_value(params: Dict[str, Any], param_name: str, action_mode: s
         "sequencing_order": ["sort_order", "output_sort_order"],
         "sequencing_property": ["order_property_name"],
         "anchor_scope_guid": ["anchor_scope_id"],
+        **{canonical: [alias] for canonical, alias in LIFECYCLE_FILTERS.items()},
     }
     for alias in alias_lookup.get(param_name, []):
         if alias in params:
@@ -708,6 +768,8 @@ def _merge_signature_params(func: Any, params: Dict[str, Any], call_params: Dict
     for key, value in (params or {}).items():
         if key in {"output_format", "report_spec"}:
             continue
+        if key in _LIFECYCLE_KEYS:
+            continue  # only to a method that names it: _add_lifecycle_filters
         if key in merged:
             continue
         if key in accepted or has_var_kw:
@@ -954,6 +1016,7 @@ async def _async_run_report_impl(
             )
 
         call_params = _merge_signature_params(func, params, call_params)
+        call_params = _add_lifecycle_filters(report_name, func, params, call_params)
         call_params = _bind_search_parameter(func, call_params)
         _warn_dropped_params(report_name, params, call_params,
                              [*required_params, *optional_params, *spec_params])
@@ -1848,6 +1911,7 @@ def _exec_report_spec_impl(
             )
 
         call_params = _add_request_options(func, params, call_params)
+        call_params = _add_lifecycle_filters(format_set_name, func, params, call_params)
         call_params = _bind_search_parameter(func, call_params)
         _warn_dropped_params(format_set_name, params, call_params,
                              [*required_params, *optional_params, *spec_params])

@@ -23,15 +23,20 @@ from pyegeria.authoring.models import AuthoringRefused, ReportDraft, SheetDraft,
 from pyegeria.view.report_spec_publish import PublishRefused, _flatten, _list_item, _one_line, section, spec_rows
 
 #: The common find parameters Create Report carries as attributes: snake_case name -> (attribute, style).
-#: The same 20 as md_processing.v2.report._REPORT_PARAM_ATTRS, less Report Spec / Output Format.
+#: The same 23 as md_processing.v2.report._REPORT_PARAM_ATTRS, less Report Spec / Output Format.
 FIND_PARAMETERS: Dict[str, Tuple[str, str]] = {
     "search_string": ("Search String", "text"),
     "starts_with": ("Starts With", "bool"),
     "ends_with": ("Ends With", "bool"),
     "ignore_case": ("Ignore Case", "bool"),
-    # A Valid Value attribute, not a list attribute: written as a JSON list, so reportParameters holds a real
-    # list. The executor reads "ACTIVE", "['ACTIVE']" and '["ACTIVE"]' alike (_normalize_report_params).
-    "limit_result_by_status": ("Limit Result by Status", "jsonlist"),
+    # The status filters are list attributes validated locally by Dr.Egeria (Egeria's ElementStatus for element
+    # status; the ContentStatus / DeploymentStatus / ActivityStatus enums for lifecycle). Written as a plain
+    # list ("ACTIVE, DELETED"). A stored legacy value -- "['ACTIVE']" or '["ACTIVE"]' -- is unpacked first, so
+    # an old Report round-trips to the same list (and the parser accepts the legacy forms as well).
+    "limit_result_by_status": ("Limit Result by Status", "statuslist"),
+    "limit_result_by_content_status": ("Limit Result by Content Status", "statuslist"),
+    "limit_result_by_deployment_status": ("Limit Result by Deployment Status", "statuslist"),
+    "limit_result_by_activity_status": ("Limit Result by Activity Status", "statuslist"),
     "metadata_element_type_name": ("Metadata Element Type Name", "text"),
     "metadata_element_subtype_names": ("Metadata Element Subtype Names", "list"),
     "skip_relationships": ("Skip Relationships", "list"),
@@ -68,13 +73,26 @@ def _scalar(field: str, value: Any, style: str) -> str:
         if isinstance(value, bool) or not isinstance(value, (int, str)) or not str(value).strip().lstrip("-").isdigit():
             raise AuthoringRefused(f"{field} must be a whole number, not {value!r}.")
         return str(int(value))
-    if style == "jsonlist":
-        items = value if isinstance(value, (list, tuple)) else [value]
-        return _one_line(field, json.dumps([str(_list_item(f"An entry of {field}", v)) for v in items]))
+    if style == "statuslist":
+        items = _status_items(value)
+        return ", ".join(_list_item(f"An entry of {field}", v) for v in items)
     if style == "list":
         items = value if isinstance(value, (list, tuple)) else [value]
         return ", ".join(_list_item(f"An entry of {field}", v) for v in items)
     return _one_line(field, value if isinstance(value, str) else json.dumps(value))
+
+
+def _status_items(value: Any) -> List[str]:
+    """A status filter's entries: a list as given, or a string in any form a stored Report holds --
+    "ACTIVE", "ACTIVE, DELETED", "['ACTIVE']", '["ACTIVE", "DELETED"]'. Upper-cased."""
+    if isinstance(value, str):
+        text = value.strip()
+        if text.startswith("[") and text.endswith("]"):
+            text = text[1:-1]
+        value = text.replace(";", ",").replace("\n", ",").split(",")
+    items = value if isinstance(value, (list, tuple)) else [value]
+    out = [str(v).strip().strip("\"'").strip().upper() for v in items]
+    return [v for v in out if v]
 
 
 def _map_lines(field: str, values: Dict[str, Any]) -> Optional[str]:
@@ -112,8 +130,8 @@ def report_rows(draft: ReportDraft, zones: Optional[List[str]] = None, marker: O
         value = draft.parameters[name]
         if name in FIND_PARAMETERS:
             attribute, style = FIND_PARAMETERS[name]
-            if value is None:
-                continue
+            if value is None or (style == "statuslist" and not _status_items(value)):
+                continue   # an empty status filter: nothing to write (Egeria's default applies)
             rows.append((attribute, _scalar(attribute, value, style)))
         else:
             other[name] = value

@@ -164,7 +164,19 @@ async def test_report_create_to_update_keeps_the_cdo_search_keys():
     sent = body["properties"]["additionalProperties"]
     # all 10 stored keys, with only outputFormat changed (what had to be done by hand on laz, 2026-11-12)
     assert sent == {**CDO_STORED, "outputFormat": "TABLE"}
+    # The document didn't write Limit Result by Status, so the stored legacy value is carried over as is
+    # (a read of a legacy record, not a write of the old form).
     assert len(sent) == 10 and sent["limitResultByStatus"] == "['ACTIVE']"
+
+
+@pytest.mark.asyncio
+async def test_report_document_status_is_written_as_a_json_list_over_the_legacy_stored_value():
+    p, client = _processor(ReportProcessor, "Report",
+                           _a(**{**CDO_DOCUMENT_KEYS, "Limit Result by Status": ["ACTIVE", "DELETED"]}),
+                           _element(dict(CDO_STORED)))
+    await _run(p)
+    sent = client.updates()[0][1]["properties"]["additionalProperties"]
+    assert sent["limitResultByStatus"] == '["ACTIVE", "DELETED"]'
 
 
 @pytest.mark.asyncio

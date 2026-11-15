@@ -332,6 +332,23 @@ def find_key_with_value(value: str) -> str | None:
     return None  # If value not found
 
 
+def _status_list(value: Any) -> list | None:
+    """Limit Result by Status as Egeria's limitResultsByStatus wants it: a list of element statuses, or None.
+
+    A lone string ("ACTIVE", or a legacy "['ACTIVE']") becomes a one-or-more item list."""
+    if value is None or value == "" or value == []:
+        return None
+    if isinstance(value, str):
+        text = value.strip()
+        if text.startswith("[") and text.endswith("]"):
+            text = text[1:-1]
+        items = [p.strip().strip("\"'").strip().upper() for p in re.split(r"[,;\n]", text)]
+        return [p for p in items if p] or None
+    if isinstance(value, (list, tuple, set)):
+        return [str(v).strip().upper() for v in value if str(v).strip()] or None
+    return value
+
+
 def set_find_body(object_type: str, attributes: dict)->dict:
     prop_name = object_type.replace(" ", "")
     s = attributes.get('Search String', {}).get('value', None)
@@ -344,7 +361,7 @@ def set_find_body(object_type: str, attributes: dict)->dict:
         "startsWith": attributes.get('Start With', {}).get('value', True),
         "endsWith": attributes.get('End With', {}).get('value', False),
         "ignoreCase": attributes.get('Ignore Case', {}).get('value', False),
-        "limitResultsByStatus": attributes.get('Limit Results By Status', {}).get('value', []),
+        "limitResultsByStatus": _status_list(attributes.get('Limit Result by Status', {}).get('value')),
         "startFrom": int(attributes.get('Start From', {}).get('value', 0)),
         "pageSize": int(attributes.get('Page Size', {}).get('value', 0)),
         # "metadataElementSubtypeNames": attributes.get('Metadata Element Subtype Name', {}).get('value', None),
@@ -1057,7 +1074,7 @@ def set_filter_request_body(object_type: str, attributes: dict)->dict:
             "effectiveTime": attributes.get('Effective Time', {}).get('value', None),
             "forLineage": attributes.get('For Lineage', {}).get('value', False),
             "forDuplicateProcessing": attributes.get('For Duplicate Processing', {}).get('value', False),
-            "limitResultsByStatus": attributes.get('Limit Result by Status', {}).get('value', None),
+            "limitResultsByStatus": _status_list(attributes.get('Limit Result by Status', {}).get('value')),
             "sequencingOrder": attributes.get('Sequencing Order', {}).get('value', None),
             "sequencingProperty": attributes.get('Sequencing Property', {}).get('value', None),
             "filter": attributes.get('Search String', {}).get('value', None),

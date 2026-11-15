@@ -562,6 +562,9 @@
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "status", "label": "Status"},
        {"field": "limit_result_by_status", "label": "Limit Result by Status", "valid_values": ["UNKNOWN", "ACTIVE", "INVALID", "DELETED", "OTHER"]},
+       {"field": "limit_result_by_content_status", "label": "Limit Result by Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OBSOLETE", "OTHER"]},
+       {"field": "limit_result_by_deployment_status", "label": "Limit Result by Deployment Status", "valid_values": ["PROPOSED", "UNDER_DEVELOPMENT", "DEVELOPMENT_COMPLETE", "APPROVED_FOR_DEPLOYMENT", "REJECTED", "STANDBY", "ACTIVE", "DISABLED", "FAILED", "OTHER"]},
+       {"field": "limit_result_by_activity_status", "label": "Limit Result by Activity Status", "valid_values": ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRESS", "PAUSED", "FOR_INFO", "COMPLETED", "INVALID", "IGNORED", "FAILED", "CANCELLED", "ABANDONED", "OTHER"]},
        {"field": "user_defined_status", "label": "User Defined Status"},
        {"field": "category", "label": "Category"}
       ]
@@ -605,6 +608,9 @@
        {"field": "include_only_classified_elements", "label": "Include Only Classified Elements"},
        {"field": "include_only_relationships", "label": "Include Only Relationships"},
        {"field": "limit_result_by_status", "label": "Limit Result by Status", "valid_values": ["UNKNOWN", "ACTIVE", "INVALID", "DELETED", "OTHER"]},
+       {"field": "limit_result_by_content_status", "label": "Limit Result by Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OBSOLETE", "OTHER"]},
+       {"field": "limit_result_by_deployment_status", "label": "Limit Result by Deployment Status", "valid_values": ["PROPOSED", "UNDER_DEVELOPMENT", "DEVELOPMENT_COMPLETE", "APPROVED_FOR_DEPLOYMENT", "REJECTED", "STANDBY", "ACTIVE", "DISABLED", "FAILED", "OTHER"]},
+       {"field": "limit_result_by_activity_status", "label": "Limit Result by Activity Status", "valid_values": ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRESS", "PAUSED", "FOR_INFO", "COMPLETED", "INVALID", "IGNORED", "FAILED", "CANCELLED", "ABANDONED", "OTHER"]},
        {"field": "metadata_element_subtype_names", "label": "Metadata Element Subtype Names"},
        {"field": "metadata_element_type_name", "label": "Metadata Element Type Name"},
        {"field": "order_property_name", "label": "Order Property Name"},

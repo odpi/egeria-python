@@ -281,7 +281,7 @@ _TYPE_CHECKS = {
     "bool": lambda v: isinstance(v, bool) or (isinstance(v, str) and v.strip().lower() in ("true", "false")),
     "dict": lambda v: isinstance(v, dict),
 }
-_FIND_TYPES = {"text": "str", "bool": "bool", "int": "int", "list": "list", "jsonlist": "list"}
+_FIND_TYPES = {"text": "str", "bool": "bool", "int": "int", "list": "list", "statuslist": "list"}
 
 
 def _type_ok(declared: str, value: Any) -> Optional[bool]:

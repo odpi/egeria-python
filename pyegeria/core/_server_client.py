@@ -1798,7 +1798,7 @@ class ServerClient(BaseServerClient):
             - as_of_time : str - Historical query time
             - effective_time : str - Effective time for the query
             - relationship_page_size : int - Page size for relationships
-            - limit_results_by_status : list[str] - Filter by element status
+            - limit_results_by_status : list[str] - Element status: ACTIVE (default) and/or DELETED
             - sequencing_order : str - Order of results
             - sequencing_property : str - Property to sequence by
             - property_names : list[str] - Specific properties to search
@@ -2531,7 +2531,7 @@ class ServerClient(BaseServerClient):
             - as_of_time : str - Historical query time
             - effective_time : str - Effective time for the query
             - relationship_page_size : int - Page size for relationships
-            - limit_results_by_status : list[str] - Filter by element status
+            - limit_results_by_status : list[str] - Element status: ACTIVE (default) and/or DELETED
             - sequencing_order : str - Order of results
             - sequencing_property : str - Property to sequence by
             - property_names : list[str] - Specific properties to search
@@ -3585,7 +3585,7 @@ class ServerClient(BaseServerClient):
         relationship_page_size : int, default 0
             Page size for relationship queries.
         limit_results_by_status : list[str], optional
-            Filter by element status (e.g., ["ACTIVE"]).
+            Element status: ACTIVE (the default when empty) and/or DELETED, e.g. ["ACTIVE", "DELETED"].
         sequencing_order : str, optional
             Order of results (e.g., "PROPERTY_ASCENDING").
         sequencing_property : str, optional
@@ -4397,7 +4397,7 @@ class ServerClient(BaseServerClient):
             - as_of_time : str - Historical query time
             - effective_time : str - Effective time for the query
             - relationship_page_size : int - Page size for relationships
-            - limit_results_by_status : list[str] - Filter by element status
+            - limit_results_by_status : list[str] - Element status: ACTIVE (default) and/or DELETED
             - sequencing_order : str - Order of results
             - sequencing_property : str - Property to sequence by
             - property_names : list[str] - Specific properties to search
@@ -6003,7 +6003,7 @@ class ServerClient(BaseServerClient):
             - as_of_time : str - Historical query time
             - effective_time : str - Effective time for the query
             - relationship_page_size : int - Page size for relationships
-            - limit_results_by_status : list[str] - Filter by element status
+            - limit_results_by_status : list[str] - Element status: ACTIVE (default) and/or DELETED
             - sequencing_order : str - Order of results
             - sequencing_property : str - Property to sequence by
             - property_names : list[str] - Specific properties to search
@@ -8028,7 +8028,7 @@ class ServerClient(BaseServerClient):
             - as_of_time : str - Historical query time (ISO 8601 format)
             - effective_time : str - Effective time for the query (ISO 8601 format)
             - relationship_page_size : int - Page size for relationships
-            - limit_results_by_status : list[str] - Filter by element status (e.g., ["ACTIVE"])
+            - limit_results_by_status : list[str] - Element status: ACTIVE (default) and/or DELETED
             - sequencing_order : str - Order of results (e.g., "PROPERTY_ASCENDING")
             - sequencing_property : str - Property to sequence by
             - property_names : list[str] - Specific properties to search

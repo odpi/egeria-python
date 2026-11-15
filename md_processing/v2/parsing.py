@@ -418,9 +418,53 @@ class AttributeFirstParser:
         elif style in {"List", "NameList", "Simple List", "Reference Name List"}:
             # 6.2.39: a bulleted or multi-line value is one item per bullet, verbatim (a comma inside a
             # bullet stays in it); only a single-line value is split on commas and semicolons.
+            if details.get("valid_values"):
+                return self._local_enum_list(value, details)
             return split_list_value(value)
-            
+
         return value
+
+    def _local_enum_list(self, value: str, details: dict) -> list:
+        """A list attribute with spec valid_values, checked locally -- Egeria is never asked.
+
+        Used by the report status filters (Limit Result by Status / Content / Deployment / Activity
+        Status). Accepts `A, B`, a bulleted list, and the legacy Python/JSON list forms `['A']` /
+        `["A", "B"]` (outer brackets and quotes stripped); values are upper-cased with spaces and hyphens
+        as underscores. A value not in valid_values is dropped with a WARNING, never an error.
+        """
+        text = value.strip()
+        if text.startswith("[") and text.endswith("]"):
+            text = text[1:-1]
+        valid = [str(v) for v in details.get("valid_values") or []]
+        by_norm = {v.upper(): v for v in valid}
+        name = details.get("name", "attribute")
+        hint = _LOCAL_LIST_HINTS.get(details.get("variable_name", ""))
+        out: list = []
+        for item in split_list_value(text) or []:
+            item = item.strip().strip("\"'").strip()
+            if not item:
+                continue
+            norm = re.sub(r"[\s\-]+", "_", item).upper()
+            if norm in by_norm:
+                if by_norm[norm] not in out:
+                    out.append(by_norm[norm])
+                continue
+            msg = (f"'{item}' is not a valid value for '{name}' and was ignored "
+                   f"(valid: {', '.join(valid)}).")
+            if hint:
+                msg += " " + hint.format(value=norm)
+            if msg not in self.warnings:
+                self.warnings.append(msg)
+        return out
+
+
+# Extra guidance when a value is rejected, keyed by the attribute's variable_name.
+_LOCAL_LIST_HINTS = {
+    "limit_result_by_status": (
+        "{value} is no longer an element status; use Content Status / Deployment Status / Activity Status "
+        "(Limit Result by Content Status, Limit Result by Deployment Status, Limit Result by Activity Status) "
+        "for lifecycle."),
+}
 
 async def parse_dr_egeria_content(text: str) -> List[Dict[str, Any]]:
     """Helper to extract and parse all commands in one go."""

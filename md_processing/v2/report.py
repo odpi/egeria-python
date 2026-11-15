@@ -5,7 +5,7 @@ Handles `Create Report` (and its Update transition) -- persists a real
 Egeria `Report` asset (DataSet -> Asset -> Referenceable; see
 odpi/egeria-project.ai/types/2/0239-Reports) carrying a Report Spec
 reference plus optional default execution parameters (Output Format,
-Search String, and the rest of the same 22-attribute vocabulary
+Search String, and the rest of the same 25-attribute vocabulary
 `View Report` already supports ad-hoc). Egeria 6.3 (odpi/egeria#9432) gives
 Report a typed `outputFormat`, one `reportParameters` JSON document and the
 `ReportTypeInstance` link from its spec; all three are written. The older
@@ -54,7 +54,7 @@ REPORT_SPEC_QN_PREFIXES = ("ReportSpec::", "ReportType::")
 # one reportParameters document.
 _TYPED_REPORT_KEYS = {"reportSpec", "outputFormat"}
 
-# The 22 report-execution-parameter attributes (same set View Report exposes
+# The 25 report-execution-parameter attributes (same set View Report exposes
 # ad-hoc) -- short-term, all of these land in additionalProperties rather
 # than typed Report fields. camelCase keys distinguish them from anything a
 # user puts in their own "Additional Properties" dict.
@@ -65,7 +65,13 @@ _REPORT_PARAM_ATTRS = {
     "Starts With": "startsWith",
     "Ends With": "endsWith",
     "Ignore Case": "ignoreCase",
+    # Element (header) status: Egeria's ElementStatus (pyegeria.models.element_status). The key name is kept --
+    # stored Reports and the executor's aliases (limit_result_by_status) depend on it.
     "Limit Result by Status": "limitResultByStatus",
+    # Lifecycle filters (typed contentStatus / deploymentStatus / activityStatus properties); same naming.
+    "Limit Result by Content Status": "limitResultByContentStatus",
+    "Limit Result by Deployment Status": "limitResultByDeploymentStatus",
+    "Limit Result by Activity Status": "limitResultByActivityStatus",
     "Metadata Element Type Name": "metadataElementTypeName",
     "Metadata Element Subtype Names": "metadataElementSubtypeNames",
     "Skip Relationships": "skipRelationships",
@@ -156,7 +162,7 @@ def report_parameters_document(attributes: Dict[str, Any]) -> Dict[str, Any]:
         if attr.get("is_default"):
             continue  # a spec default the author did not write: the report spec decides, not a pinned value
         value = attr.get("value")
-        if value is not None and value != "":
+        if value is not None and value != "" and value != []:
             doc[_camel_to_snake(key)] = _coerce_analytic_value(value)
     for attr in ("Report Parameters", "Analytic Parameters"):
         value = attributes.get(attr, {}).get("value")
@@ -181,7 +187,7 @@ def _report_additional_properties(attributes: Dict[str, Any]) -> Dict[str, str]:
 
     # Arbitrary report-spec-specific params (e.g. {"collection_guid": "..."}
     # for the "Collection Members" report) that aren't part of the standard
-    # 22-key find/search vocabulary in _REPORT_PARAM_ATTRS. Merged FLAT
+    # 25-key find/search vocabulary in _REPORT_PARAM_ATTRS. Merged FLAT
     # (unlike analyticParams below, which is JSON-encoded under its own key)
     # because the consumption side (egeria-workspaces-fs's
     # local_dashboards_handler.py:_find_report_by_name) already passes
@@ -212,12 +218,19 @@ def _report_additional_properties(attributes: Dict[str, Any]) -> Dict[str, str]:
     for canonical_name, key in _REPORT_PARAM_ATTRS.items():
         value = attributes.get(canonical_name, {}).get("value")
         if value is not None and value != "":
-            merged[key] = value if isinstance(value, str) else str(value)
+            if isinstance(value, (list, dict)):
+                # JSON, not str(): '["ACTIVE", "DELETED"]', not the Python repr "['ACTIVE', 'DELETED']".
+                # The executor reads both (and a bare "ACTIVE"), so stored legacy values still work.
+                if value == []:
+                    continue
+                merged[key] = json.dumps(value)
+            else:
+                merged[key] = value if isinstance(value, str) else str(value)
 
     # Arbitrary parameters for a report spec's analytic_function (extra_find)
     # -- e.g. {"window": "90d", "points": "12"} for a growth_series-backed
     # spec. Kept under its own distinct key rather than merged flat into the
-    # 22 find-oriented keys above, so a consumer can tell "analytic params"
+    # 25 find-oriented keys above, so a consumer can tell "analytic params"
     # from "find params" unambiguously without guessing by key name. No
     # fixed set of expected keys here by design -- see ActionParameter's
     # docstring in _output_format_models.py.

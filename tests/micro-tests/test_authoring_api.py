@@ -125,7 +125,10 @@ def test_cdo_report_round_trip_reproduces_all_ten_keys_and_typed_parameters():
     camel = maps["additionalProperties"]
     assert set(camel) == set(CDO_STORED)
     for key, stored in CDO_STORED.items():
-        if key == "limitResultByStatus":   # written as JSON; the executor reads both forms as ["ACTIVE"]
+        if key == "limitResultByStatus":
+            # Stored as the legacy Python repr "['ACTIVE']"; now written as a JSON list. The executor reads
+            # both (and a bare "ACTIVE") as ["ACTIVE"].
+            assert camel[key] == '["ACTIVE"]'
             assert _equivalent_status(camel[key], stored)
         else:
             assert camel[key] == stored, key
@@ -139,6 +142,16 @@ def test_every_parameter_is_written_out():
     for attribute in ("Search String", "Graph Query Depth", "Start From", "Ignore Case", "Ends With", "Page Size",
                       "Limit Result by Status", "Starts With"):
         assert f"### {attribute}\n" in md
+    assert "### Limit Result by Status\nACTIVE\n" in md   # a list attribute now: no "['ACTIVE']" / JSON form
+
+
+def test_a_legacy_stored_status_round_trips_to_the_same_list():
+    for stored in ("['ACTIVE']", '["ACTIVE", "DELETED"]', "ACTIVE"):
+        draft = cdo_report(parameters={"limit_result_by_status": stored})
+        maps = report_parameter_maps(draft)
+        want = ["ACTIVE", "DELETED"] if "DELETED" in stored else ["ACTIVE"]
+        assert maps["reportParameters"]["limit_result_by_status"] == want, stored
+        assert json.loads(maps["additionalProperties"]["limitResultByStatus"]) == want, stored
 
 
 def test_d7_switch_drops_the_camel_copy_only():

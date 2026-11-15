@@ -2169,6 +2169,10 @@ class AsyncBaseCommandProcessor(ABC):
                 status = "❌ Not Found"
             elif details.get("is_planned"):
                 status = "🕒 Planned"
+            elif details.get("valid") and details.get("status") == "WARNING":
+                # Parsed, but with a warning -- e.g. a value outside valid_values that was
+                # dropped. "✅ Valid" next to "was ignored" in Warnings read as a contradiction.
+                status = "⚠️ Warning"
             else:
                 status = "✅ Valid" if details.get("valid") else "❌ Invalid"
                 
