@@ -90,6 +90,14 @@ Notes collected on `release/next` for the next release. The version number is se
   change.
 - Dr.Egeria and authoring validation now follow Egeria 6.3's type system, so a `queries` attribute or column is no
   longer sent or accepted.
+- **MCP report runs page to their max rows and say their count** (PY-17; the MCP part of PY-16). Today these are
+  the `run_report` tool, `mcp_adapter.run_report` and `_execute_egeria_call_blocking`. A list format is paged up to
+  the caller's `page_size`, else `MCP_MAX_ROWS` (100), as `preview` is, so a filtered first page doesn't read as
+  "nothing". The result is otherwise unchanged and gains `count`.
+- **`result_count(result)`** (`pyegeria.view.format_set_executor`) gives `{"count", "count_text", "complete",
+  "end", "reason"}` for a find run's result. `count_text` is "N" only when the end is confirmed; otherwise it is
+  "at least N", and `reason` says why. For a result that isn't a counted find (an analytic, a chart, text) it gives
+  None. Use it to show a count, rather than reading `end` yourself.
 
 ## Fixes (spec cache)
 

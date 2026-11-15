@@ -1320,6 +1320,47 @@ def _async_fetcher(func: Any, call_params: Dict[str, Any]):
     return fetch
 
 
+#: Why a find run's count isn't a total, by its `end` (PY-17). "confirmed" is the only end that may be a total.
+END_REASONS_WORDS = {
+    "first_page": "only the first page was read",
+    "not_confirmed": "Egeria didn't confirm there are no more",
+    "capped": "the read stopped at its row limit; there may be more",
+    "stalled": "the server repeated rows it had already sent, so reading stopped",
+}
+
+
+def result_count(result: Any) -> Optional[Dict[str, Any]]:
+    """How many rows a find run's result holds, and how that may be said (PY-17).
+
+    ``{"count": N, "count_text": "N" | "at least N", "complete": bool, "end": <end>, "reason": str | None}``
+    for a find result (``kind`` "table", "json" with a list, or "empty", carrying ``end``). Only a
+    ``"confirmed"`` end is a total; any other end is "at least N", with the reason (the result's own notes
+    when it has them). None for a result that isn't a counted find (an analytic, a chart, text, or no
+    ``end``): no count is claimed for it. Portal and EA consumers can use this instead of reading ``end``
+    themselves."""
+    if not isinstance(result, dict) or "end" not in result:
+        return None
+    kind, end = result.get("kind"), result.get("end")
+    if kind == "table":
+        rows = result.get("rows")
+    elif kind == "json":
+        rows = result.get("data")
+    elif kind == "empty":
+        rows = []
+    else:
+        return None
+    if not isinstance(rows, list):
+        return None
+    n = len(rows)
+    complete = end == "confirmed"
+    reason = None
+    if not complete:
+        notes = [str(x) for x in (result.get("notes") or []) if x]
+        reason = "; ".join(notes) if notes else END_REASONS_WORDS.get(end, f"the read ended {end!r}")
+    return {"count": n, "count_text": str(n) if complete else f"at least {n}", "complete": complete,
+            "end": end, "reason": reason}
+
+
 def _paged_notes(paged: PageResult) -> List[str]:
     if paged.complete:
         return []
