@@ -206,3 +206,48 @@ def new_element_properties(typed: dict | None) -> dict | None:
                        "primitiveTypeCategory": category,
                        "primitiveValue": value if type_name != "string" else str(value)}
     return {"class": "NewElementProperties", "propertyValueMap": values} if values else None
+
+
+async def type_declares_property(client: Any, type_name: str, property_name: str) -> bool | None:
+    """True/False: does the running Egeria's type system declare `property_name` on `type_name` (or a super type)?
+    None when it can't be told (no type read, an unreadable type, or no valid_metadata client) -- undetermined is
+    not absent, so callers must not treat None as "not declared"."""
+    valid = getattr(client, "valid_metadata", None)
+    if valid is None:
+        return None
+    seen: set[str] = set()
+    current: str | None = type_name
+    try:
+        while current and current not in seen:
+            seen.add(current)
+            definition = await valid._async_get_typedef_by_name(current)
+            if not isinstance(definition, dict) or not definition.get("guid"):
+                return None
+            for attribute in definition.get("attributeDefinitions") or []:
+                if attribute.get("attributeName") == property_name:
+                    return True
+            current = (definition.get("superType") or {}).get("name")
+    except Exception:           # a failed read is "can't tell", never "not declared"
+        return None
+    return False
+
+
+async def type_super_chain(client: Any, type_name: str) -> list[str] | None:
+    """`type_name` and its super types, nearest first, from the running Egeria's type definitions; None when a
+    definition can't be read (no valid_metadata client, an unknown type, a failed read): can't tell, not "no
+    super types"."""
+    valid = getattr(client, "valid_metadata", None)
+    if valid is None:
+        return None
+    chain: list[str] = []
+    current: str | None = type_name
+    try:
+        while current and current not in chain:
+            definition = await valid._async_get_typedef_by_name(current)
+            if not isinstance(definition, dict) or not definition.get("guid"):
+                return None
+            chain.append(current)
+            current = (definition.get("superType") or {}).get("name")
+    except Exception:
+        return None
+    return chain
