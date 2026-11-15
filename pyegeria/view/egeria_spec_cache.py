@@ -26,6 +26,7 @@ replaces it, and files it no longer names are deleted after that.
 
 from __future__ import annotations
 
+from pyegeria.core._no_password import NO_PASSWORD, carried_password, password_as_given, resolve_password
 import json
 import os
 import re
@@ -1523,7 +1524,7 @@ async def async_fetch_spec_for_call(client, name: str) -> str:
 
 def _collection_client(client, cls):
     """A CollectionManager on the caller's platform, as the caller (their token)."""
-    cm = cls(client.view_server, client.platform_url, user_id=client.user_id, user_pwd=getattr(client, "user_pwd", None))
+    cm = cls(client.view_server, client.platform_url, user_id=client.user_id, user_pwd=carried_password(client))
     token = None
     try:
         token = client.get_token()

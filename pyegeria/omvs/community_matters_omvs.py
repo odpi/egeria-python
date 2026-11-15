@@ -11,6 +11,7 @@ and project_manager.py), reusing the ServerClient helper methods for request
 validation and transport.
 """
 
+from pyegeria.core._no_password import NO_PASSWORD, carried_password, password_as_given, resolve_password
 import asyncio
 from typing import Any, Optional
 
@@ -61,7 +62,7 @@ class CommunityMatters(ServerClient):
         self.view_server = view_server
         self.platform_url = platform_url
         self.user_id = user_id
-        self.user_pwd = user_pwd
+        self.user_pwd = password_as_given(user_pwd)
         self.community_command_base: str = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/community-matters"
         )
