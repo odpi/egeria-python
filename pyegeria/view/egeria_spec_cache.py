@@ -176,7 +176,7 @@ def credential_identity(user_id: Any, platform_url: Optional[str] = None,
 def client_credential_identity(client: Any) -> Optional[str]:
     """The credential identity of the Egeria client a read is made with."""
     return credential_identity(getattr(client, "user_id", None), getattr(client, "platform_url", None),
-                               getattr(client, "view_server", None))
+                               getattr(client, "view_server", None) or getattr(client, "server_name", None))
 
 
 @contextmanager
@@ -189,12 +189,37 @@ def spec_identity(identity: Optional[str]):
         _SPEC_IDENTITY.reset(token)
 
 
+_MULTI_LOGGED: set = set()
+
+
 def current_spec_identity() -> Optional[str]:
-    """The identity the EGERIA tier is read for: the one set by `spec_identity`, else this process's configured
-    Egeria user (settings.User_Profile.user_name / EGERIA_USER)."""
+    """The identity the EGERIA tier is read for:
+    1. the one set by `spec_identity` (exec_report_spec, the async runner and the dashboard resolver set it
+       from the request's client);
+    2. else the credentials of this process's Egeria clients (`pyegeria.core._client_identities`), when it has
+       seen exactly one: a single-user process (a CLI, the MCP server) reads as the user its client signs in
+       as, whatever the settings say;
+    3. else, when it has seen more than one, None: a multi-user process (Portal, EA) loads no private cache
+       outside a request's own identity (logged once);
+    4. else, with no client yet, this process's configured Egeria user (EGERIA_USER /
+       settings.User_Profile.user_name)."""
     identity = _SPEC_IDENTITY.get()
     if identity:
         return identity
+    try:
+        from pyegeria.core._client_identities import seen_credentials
+        seen = {credential_identity(*entry) for entry in seen_credentials()} - {None}
+    except Exception:  # noqa: BLE001
+        seen = set()
+    if len(seen) == 1:
+        return next(iter(seen))
+    if seen:
+        key = frozenset(seen)
+        if key not in _MULTI_LOGGED:
+            _MULTI_LOGGED.add(key)
+            logger.info(f"Report spec cache: this process has Egeria clients for {len(seen)} identities; a read "
+                        f"outside a request's own identity (spec_identity) loads no private cache")
+        return None
     try:
         from pyegeria.core.config import settings
         return credential_identity(os.getenv("EGERIA_USER") or settings.User_Profile.user_name)
@@ -219,6 +244,15 @@ def _manifest_loads_for(directory: Path, manifest: Dict[str, Any], identity: Opt
         logger.warning(f"Report spec cache {directory}: a private cache, not loaded for {identity or 'no identity'}: "
                        f"{why}")
     return False
+
+
+def _note_client(client: Any) -> None:
+    """Record a sync's or fetch's client as one of this process's identities (see current_spec_identity)."""
+    try:
+        from pyegeria.core._client_identities import note_client
+        note_client(client)
+    except Exception:  # noqa: BLE001
+        pass
 
 
 def _host_port(url: Optional[str]) -> str:
@@ -811,6 +845,7 @@ def sync_report_specs(client, *, folders: Optional[Iterable[str]] = None, specs:
         report.notes.append(f"no report spec folders are configured (set {FOLDERS_ENV} or config.json's "
                             f"\"Pyegeria Report Spec Folders\", or pass --folder/--spec); nothing synced")
         return report
+    _note_client(client)
     with _SyncLock(directory):
         identity = _client_identity(client)
         # Gather candidates: guid -> (member element, [folders])
@@ -1487,6 +1522,7 @@ def fetch_spec_for_call(client, name: str, *, cache_dir_override: Optional[str] 
     if el is None:
         raise SpecFetchError(f"Report spec '{label}' was not found in Egeria (refresh_spec=True never falls back "
                              f"to the cached copy)")
+    _note_client(client)
     return _finish_fetch(directory, el, label, _client_identity(client), client_credential_identity(client))
 
 
@@ -1518,6 +1554,7 @@ async def async_fetch_spec_for_call(client, name: str) -> str:
     if el is None:
         raise SpecFetchError(f"Report spec '{label}' was not found in Egeria (refresh_spec=True never falls back "
                              f"to the cached copy)")
+    _note_client(client)
     return _finish_fetch(directory, el, label, _client_identity(client), client_credential_identity(client))
 
 

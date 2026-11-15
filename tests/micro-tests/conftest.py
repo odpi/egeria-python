@@ -48,3 +48,13 @@ def test_params():
     }
 
 
+
+
+@pytest.fixture(autouse=True)
+def _forget_noted_egeria_credentials():
+    """Each test starts with no noted Egeria client identity (pyegeria.core._client_identities), so the
+    report-spec cache's default identity comes from what that test does, never from an earlier test."""
+    from pyegeria.core._client_identities import reset_credentials
+    reset_credentials()
+    yield
+    reset_credentials()

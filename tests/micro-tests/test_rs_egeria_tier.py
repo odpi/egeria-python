@@ -859,16 +859,20 @@ async def test_async_fetch_through_a_find_request_helper(tier):
 
 # ── 7. Provenance in the run envelope ──
 
+# exec_report_spec runs as its `user` (default: the configured user at import); the tests name the fake's user
+AS_ERIN = dict(user="erinoverview", view_url="https://localhost:9443", view_server="qs-view-server")
+
+
 def test_spec_source_is_beside_kind_and_never_inside_data(tier, monkeypatch):
     from pyegeria.view import format_set_executor as fse
     _sync_e_collections(tier)
     rows = [{"display_name": "x"}]
     monkeypatch.setattr(fse, "_exec_report_spec_impl", lambda name, **k: {"kind": "json", "data": list(rows)})
-    out = fse.exec_report_spec("E-Collections", output_format="DICT", params={"search_string": "x"})
+    out = fse.exec_report_spec("E-Collections", output_format="DICT", params={"search_string": "x"}, **AS_ERIN)
     assert out["data"] == rows
     assert out["spec_source"] == {"tier": "egeria", "label": "E-Collections", "version": "1.0", "guid": E_GUID,
                                   "synced_at": out["spec_source"]["synced_at"]}
-    out = fse.exec_report_spec("Collections", output_format="DICT", params={})
+    out = fse.exec_report_spec("Collections", output_format="DICT", params={}, **AS_ERIN)
     # RS-EGERIA-TIER stage 2: a builtin spec also names the seed file it was loaded from.
     assert out["spec_source"] == {"tier": "builtin", "label": "Collections", "version": None,
                                   "seed": "Collection Manager.json"}
@@ -879,10 +883,10 @@ def test_footer_on_report_md_html_only_for_egeria_specs(tier, monkeypatch):
     _sync_e_collections(tier)
     monkeypatch.setattr(fse, "_exec_report_spec_impl",
                         lambda name, **k: {"kind": "text", "mime": "text/markdown", "content": "# H\nbody\n"})
-    md = fse.exec_report_spec("E-Collections", output_format="MD")["content"]
+    md = fse.exec_report_spec("E-Collections", output_format="MD", **AS_ERIN)["content"]
     assert md.rstrip().splitlines()[-1].startswith("_E-Collections v1.0 (Egeria, synced ")
     assert brf.add_spec_footer(md, "E-Collections", "MD") == md  # idempotent
-    assert fse.exec_report_spec("Collections", output_format="MD")["content"] == "# H\nbody\n"
+    assert fse.exec_report_spec("Collections", output_format="MD", **AS_ERIN)["content"] == "# H\nbody\n"
     assert brf.add_spec_footer([{"a": 1}], "E-Collections", "DICT") == [{"a": 1}]
     assert brf.add_spec_footer("t", "E-Collections", "TABLE") == "t"
     html = brf.add_spec_footer("<p>x</p>", "E-Collections", "HTML")
@@ -1118,3 +1122,67 @@ def test_zone_state():
     assert esc._zone_state({}) == ("unknown", [])
     assert esc._zone_state(spec_element()) == ("public", [])
     assert esc._zone_state(_zoned("X", {"classificationProperties": {"zoneMembership": "hr"}})) == ("zoned", ["hr"])
+
+
+# ── The default identity: the process's own client, never the shell's EGERIA_USER (Coordinator 2026-11-14) ──
+
+@pytest.mark.parametrize("egeria_user", [None, "erinoverview", "someoneelse"])
+def test_a_single_user_process_reads_its_own_private_cache_whatever_egeria_user_says(tier, monkeypatch,
+                                                                                      egeria_user):
+    """A CLI that syncs as its client's user then lists specs (no spec_identity) loads its own private cache,
+    with EGERIA_USER unset, matching, or naming someone else: the identity is the client's credential."""
+    if egeria_user is None:
+        monkeypatch.delenv("EGERIA_USER", raising=False)
+    else:
+        monkeypatch.setenv("EGERIA_USER", egeria_user)
+    eg = FakeEgeria()
+    eg.user_id = "peterprofile"
+    eg.put(spec_element())
+    esc.sync_report_specs(eg, folders=[FOLDER_QN])
+    esc._invalidate_tier()
+    assert esc.current_spec_identity() == _identity("peterprofile")
+    assert brf.report_spec_source("E-Collections")["tier"] == "egeria"
+
+
+def test_a_real_client_is_this_process_identity(tier, monkeypatch):
+    """Constructing a view-server client records its credentials; the default identity is that client's,
+    not the configured user's."""
+    from pyegeria.core._client_identities import note_credentials, seen_credentials
+    from pyegeria.omvs.collection_manager import CollectionManager
+    monkeypatch.setenv("EGERIA_USER", "someoneelse")
+    CollectionManager("qs-view-server", "https://localhost:9443", user_id="peterprofile", user_pwd="secret")
+    assert seen_credentials() == [("peterprofile", "https://localhost:9443", "qs-view-server")]
+    assert esc.current_spec_identity() == _identity("peterprofile")
+    note_credentials("peterprofile", "https://localhost:9443", "qs-view-server")   # the same one again: still one
+    assert esc.current_spec_identity() == _identity("peterprofile")
+
+
+def test_a_multi_user_process_loads_no_private_cache_outside_a_request(tier, monkeypatch):
+    """Two identities in one process (a Portal, EA): a read outside spec_identity is for no one, so neither
+    user's private cache loads; each still loads inside its own spec_identity."""
+    monkeypatch.setenv("EGERIA_USER", "erinoverview")
+    _sync_e_collections(tier)                       # bound to erinoverview
+    from pyegeria.core._client_identities import note_credentials
+    note_credentials("peterprofile", "https://localhost:9443", "qs-view-server")
+    esc._invalidate_tier()
+    assert esc.current_spec_identity() is None
+    assert brf.report_spec_source("E-Collections") is None
+    with esc.spec_identity(_identity("erinoverview")):
+        assert brf.report_spec_source("E-Collections")["tier"] == "egeria"
+    with esc.spec_identity(_identity("peterprofile")):
+        assert brf.report_spec_source("E-Collections") is None
+
+
+def test_with_no_client_the_configured_user_is_the_identity(tier, monkeypatch):
+    monkeypatch.setenv("EGERIA_USER", "someoneelse")
+    assert esc.current_spec_identity().startswith("someoneelse@")
+    monkeypatch.delenv("EGERIA_USER", raising=False)
+    from pyegeria.core.config import settings
+    monkeypatch.setattr(settings.User_Profile, "user_name", "configured")
+    assert esc.current_spec_identity().startswith("configured@")
+
+
+def test_client_credential_identity_uses_server_name_when_there_is_no_view_server():
+    class Omvs:
+        user_id, platform_url, server_name = "peterprofile", "https://localhost:9443", "qs-view-server"
+    assert esc.client_credential_identity(Omvs()) == _identity("peterprofile")
