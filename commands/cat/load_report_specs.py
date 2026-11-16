@@ -3,10 +3,10 @@
 SPDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 
-DEPRECATED command name, kept until the next release: it now runs the spec cache's sync
+DEPRECATED command name, kept until pyegeria 6.4 or the next release: it now runs the spec cache's sync
 (pyegeria.view.egeria_spec_cache.sync_report_specs, the same as `pyegeria report-specs sync`), which
 loads the report specs held in Egeria into the cache the registry's EGERIA tier reads. It used to run
-the legacy ReportType:: loader (load_egeria_report_specs), deprecated and removed in the next release.
+the legacy ReportType:: loader (load_egeria_report_specs), deprecated and removed in pyegeria 6.4 or the next release.
 
 Usage (standalone):
     load_report_specs [--force] [--ttl <seconds>]
@@ -46,7 +46,7 @@ def _run(
 ) -> None:
     console = Console(width=width, force_terminal=not jupyter)
     # The owner's direction (2026-11-14): our own callers move off the deprecated legacy ReportType:: loader
-    # (load_egeria_report_specs, removed in the next release). This command now runs the spec cache's sync, the
+    # (load_egeria_report_specs, removed in pyegeria 6.4 or the next release). This command now runs the spec cache's sync, the
     # system of record for Egeria-held report specs, exactly as `pyegeria report-specs sync` does.
     console.print(DEPRECATION_WORDS)
     if force or ttl_seconds is not None:
@@ -72,7 +72,7 @@ def _run(
 
 #: Printed by load-report-specs / load_report_specs since it moved to the spec cache.
 DEPRECATION_WORDS = ("[yellow]load-report-specs is deprecated[/yellow]: it ran the legacy ReportType:: loader, "
-                     "which will be removed in the next release. It now runs the spec "
+                     "which will be removed in pyegeria 6.4 or the next release. It now runs the spec "
                      "cache's sync (`pyegeria report-specs sync`), which loads Egeria-held report specs.")
 
 
@@ -83,7 +83,7 @@ NO_LEGACY_WORDS = "No legacy ReportType collections found (Egeria-held specs loa
 def load_status_words(status: dict, elapsed: float, new_specs: list) -> str:
     """Words for how the deprecated load_egeria_report_specs ended (85f5bc15 read-back R1): one sentence per
     status, never "no ReportType collections" unless Egeria confirmed the end. Kept for anyone still calling the
-    legacy loader until the next release; this command itself now runs the spec cache's sync."""
+    legacy loader until pyegeria 6.4 or the next release; this command itself now runs the spec cache's sync."""
     kind, count = status.get("status"), status.get("count") or 0
     retry_at, error = status.get("retry_at"), status.get("error")
     if kind in ("loaded", "registered_unconfirmed") and not count:

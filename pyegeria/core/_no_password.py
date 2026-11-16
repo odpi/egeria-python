@@ -12,7 +12,7 @@ acting for a signed-in user: the Portal, Studio, EA) passes `user_pwd=NO_PASSWOR
 - so the settings default password is never used: an expired token fails with a 401, and the one 401 auto-retry
   can't sign in again as the configured (demo) user.
 
-The next release drops the default password altogether.
+pyegeria 6.4 or the next release drops the default password altogether.
 """
 from __future__ import annotations
 
