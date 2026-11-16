@@ -23,6 +23,9 @@ notes and are not repeated here.
     is the same server call. `get_related_elements` keeps today's paging there.
   - The saved-query delete and the dashboard-sheet link reads now pass their client, so they can be confirmed
     complete on a #9454 platform. With no change to them, `used_by` and My Egeria's network list can too.
+  - **On Egeria 6.3, find counts can be incomplete and are reported as "at least N".** The two fixes cover
+    `get_relationships` and `get_related_elements`; the find methods are not trusted, so a short find is never
+    called complete. In one test install on released 6.3, an unfiltered `find_data_assets("*")` read 1357 of 1797 assets.
 
 - **Limit Result by Status is a list of element statuses, with three lifecycle filters beside it** (Dr.Egeria Create
   Report / View Report, the report-spec executor).
