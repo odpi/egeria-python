@@ -202,7 +202,7 @@ def test_none_found_without_a_confirmed_end_is_unconfirmed_not_not_found():
 
 
 def test_none_found_on_a_gated_platform_is_not_found(monkeypatch):
-    monkeypatch.setattr(paging, "platform_promoted", lambda client: True)
+    monkeypatch.setattr(paging, "platform_fixes", lambda client: frozenset({paging.FIX_9453}))
     assert esc._find_specs_by_label(ByName(), "Trend") == []
 
 

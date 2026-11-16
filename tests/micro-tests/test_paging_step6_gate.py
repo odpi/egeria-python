@@ -77,7 +77,7 @@ def test_the_override_forces_not_promoted(monkeypatch):
 
 # ── what is promoted, and what isn't ──
 
-@pytest.mark.parametrize("method", sorted(paging.GATED_TRUSTED_METHODS))
+@pytest.mark.parametrize("method", sorted(m for m, needs in paging.METHOD_NEEDS.items() if needs == {"9453"}))
 def test_a_gated_method_is_trusted_on_a_promoted_platform_only(method):
     assert paging.paging_for(method, _Platform(LAZ_5DEDA38D)) == {"end_policy": "trusted"}
     assert paging.paging_for(method, _Platform(LAZ_002A3EF1, url="https://old"))["null_not_end"] is True
@@ -134,7 +134,7 @@ def test_one_about_read_per_platform_within_the_ttl(monkeypatch):
 
 def test_no_about_read_for_a_client_that_never_pages_a_gated_method():
     client = _Platform(LAZ_5DEDA38D)
-    for method in ("get_relationships", "get_collection_members", "find_authored_elements", None):
+    for method in ("get_collection_members", "find_authored_elements", "get_element_history", None):
         paging.paging_for(method, client)
         asyncio.run(paging.async_paging_for(method, client))
     assert client.about_reads == 0

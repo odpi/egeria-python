@@ -21,7 +21,24 @@ from pyegeria.view.base_report_formats import (
     find_report_specs_by_perspective, find_report_specs_by_question,
 )
 from pyegeria.egeria_tech_client import EgeriaTech
-from pyegeria.view.format_set_executor import exec_report_spec, _async_run_report
+from pyegeria.view.format_set_executor import exec_report_spec, _async_run_report, result_count
+
+#: Rows an MCP report run reads, at most, when the caller gives no page_size (PY-17): list formats are paged to
+#: this many rows, so a filtered first page never reads as "nothing", and the count says "at least" unless the
+#: end was confirmed.
+MCP_MAX_ROWS = 100
+
+
+def _max_rows(params: Optional[Dict[str, Any]]) -> int:
+    size = (params or {}).get("page_size")
+    return size if isinstance(size, int) and not isinstance(size, bool) and size > 0 else MCP_MAX_ROWS
+
+
+def _with_count(result: Any) -> Any:
+    """The result with its count attached (``count``, from ``result_count``) when it is a counted find."""
+    if isinstance(result, dict) and (count := result_count(result)) is not None:
+        return {**result, "count": count}
+    return result
 
 
 def list_reports() -> dict:
@@ -145,7 +162,7 @@ def _execute_egeria_call_blocking(
     from pyegeria.core.config import settings as _settings
 
 
-    return exec_report_spec(
+    return _with_count(exec_report_spec(
         format_set_name=report,
         output_format="DICT",
         params=params or {},
@@ -154,7 +171,8 @@ def _execute_egeria_call_blocking(
         user=user if user is not None else _settings.User_Profile.user_name,
         user_pass=user_pass if user_pass is not None else _settings.User_Profile.user_pwd,
         token=token,
-    )
+        page_to=_max_rows(params),
+    ))
     # # Returning the hardcoded success for now to prove the async structure works.
     # return {
     #     "status": "SUCCESS (Thread Test)",
@@ -194,7 +212,7 @@ def run_report(
     # Lazy import of settings to avoid circulars when optional args are None
     from pyegeria.core.config import settings as _settings
     logger.info(description)
-    return exec_report_spec(
+    return _with_count(exec_report_spec(
         format_set_name=report,
         output_format="DICT",
         params=params or {},
@@ -204,7 +222,8 @@ def run_report(
         user_pass=user_pass if user_pass is not None else _settings.User_Profile.user_pwd,
         token=token,
         refresh_spec=refresh_spec,
-    )
+        page_to=_max_rows(params),
+    ))
 
 async def _async_run_report_tool(
     *,
@@ -220,5 +239,8 @@ async def _async_run_report_tool(
     # Lazy import of settings to avoid circulars when optional args are None
 
     print(f"Report: {report}\n params: {json.dumps(params)}\n", file=sys.stderr)
-    result = await _async_run_report(report, egeria_client, output_format=output_format, params=params)
-    return result
+    # PY-17: a list format is paged to its max rows (page_size, else MCP_MAX_ROWS), as preview is, and the result
+    # says its count: "N" only on a confirmed end, else "at least N" with the reason
+    result = await _async_run_report(report, egeria_client, output_format=output_format, params=params,
+                                     page_to=_max_rows(params))
+    return _with_count(result)

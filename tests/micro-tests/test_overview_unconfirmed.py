@@ -60,8 +60,8 @@ FIGURES = {"count": (_count_figure, "links", 6, "at least 6"),
 
 @pytest.mark.parametrize("kind", FIGURES)
 def test_confirmed_figures_are_unchanged(monkeypatch, kind):
-    # Promotion is closed for get_relationships (NULL_NOT_END); a confirmed end is simulated at the seam.
-    monkeypatch.setattr(paging, "paging_for", lambda method: {"end_policy": "trusted"})
+    # A confirmed end is simulated at the seam (a #9454 platform gives one for real: the G2 R1 tests below).
+    monkeypatch.setattr(paging, "paging_for", lambda method, client=None: {"end_policy": "trusted"})
     fn, key, value, _words = FIGURES[kind]
     with om.recording_unmeasured() as notes, om.recording_unconfirmed() as scans:
         r = fn(_ce(ROWS))
@@ -130,6 +130,7 @@ def test_orphan_count_is_not_measured_unless_the_scan_is_confirmed():
 
 def test_a_null_not_end_method_never_reaches_the_end_and_probes_six_pages():
     assert paging.NULL_NOT_END_METHODS - paging.BY_TYPE_METHODS == {"find_metadata_elements", "get_relationships",
+                                           "_async_get_relationships",   # + G2: the same server call
                                            "get_elements_by_property_value", "find_elements_by_property_value",
                                            "_async_get_elements_by_property_value"   # + the exists-lookups ruling
                                            } | paging.BY_NAME_METHODS   # + the MyEgeria read-back R3 (findMetadataElements)
@@ -217,3 +218,51 @@ def test_prune_decides_only_from_rows_read():
     store.async_list = listing([])   # nothing read (an unconfirmed, empty read): nothing is deleted
     out = asyncio.run(store.async_prune_drafts("erin"))
     assert deleted == [] and out["removed"] == []
+
+
+# ── G2 R1: the Overview's relationship scans pass their client, so the #9454 gate can promote them ──
+
+class _CeOn:
+    """_ce(ROWS) on a platform whose /api/about is a 6.3-SNAPSHOT built at `about_time`."""
+
+    def __init__(self, about_time, url):
+        self.platform_url, self._time, self._ce = url, about_time, _ce(ROWS)
+
+    def get_relationships(self, *a, **kw):
+        return self._ce.get_relationships(*a, **kw)
+
+    def get_platform_origin(self):
+        import json
+        return json.dumps({"version": "6.3-SNAPSHOT", "time": self._time})
+
+
+def _ce_on(about_time, url):
+    return _CeOn(about_time, url)
+
+
+@pytest.fixture
+def _fresh_gate(monkeypatch):
+    paging._GATE_CACHE.clear()
+    monkeypatch.delenv(paging.GATE_OVERRIDE_ENV, raising=False)
+    yield
+    paging._GATE_CACHE.clear()
+
+
+def test_a_9454_client_makes_the_relationship_scan_trusted_and_complete(_fresh_gate, monkeypatch):
+    seen = []
+    real = paging.page_all
+    monkeypatch.setattr(paging, "page_all", lambda fetch, **kw: seen.append(kw) or real(fetch, **kw))
+    with om.recording_unconfirmed() as scans:
+        rels = om._all_relationships(_ce_on("2026-11-15T08:29:25.754Z", "https://a5c3a195"), "SemanticAssignment")
+    assert seen[-1]["end_policy"] == "trusted" and "null_not_end" not in seen[-1]
+    assert len(rels) == 6 and scans == []   # a confirmed end: the figure is a total, no unconfirmed marker
+
+
+def test_a_9453_only_client_keeps_the_relationship_scan_null_not_end(_fresh_gate, monkeypatch):
+    seen = []
+    real = paging.page_all
+    monkeypatch.setattr(paging, "page_all", lambda fetch, **kw: seen.append(kw) or real(fetch, **kw))
+    with om.recording_unconfirmed() as scans:
+        rels = om._all_relationships(_ce_on("2026-11-14T19:55:39.317Z", "https://5deda38d"), "SemanticAssignment")
+    assert seen[-1]["null_not_end"] is True and seen[-1]["probe_pages"] == paging.NULL_NOT_END_PROBE_PAGES
+    assert len(rels) == 6 and scans and scans[0]["unconfirmed"] is True   # what was read, marked: never a total

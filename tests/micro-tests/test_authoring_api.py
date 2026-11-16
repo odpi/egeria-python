@@ -125,7 +125,10 @@ def test_cdo_report_round_trip_reproduces_all_ten_keys_and_typed_parameters():
     camel = maps["additionalProperties"]
     assert set(camel) == set(CDO_STORED)
     for key, stored in CDO_STORED.items():
-        if key == "limitResultByStatus":   # written as JSON; the executor reads both forms as ["ACTIVE"]
+        if key == "limitResultByStatus":
+            # Stored as the legacy Python repr "['ACTIVE']"; now written as a JSON list. The executor reads
+            # both (and a bare "ACTIVE") as ["ACTIVE"].
+            assert camel[key] == '["ACTIVE"]'
             assert _equivalent_status(camel[key], stored)
         else:
             assert camel[key] == stored, key
@@ -139,6 +142,16 @@ def test_every_parameter_is_written_out():
     for attribute in ("Search String", "Graph Query Depth", "Start From", "Ignore Case", "Ends With", "Page Size",
                       "Limit Result by Status", "Starts With"):
         assert f"### {attribute}\n" in md
+    assert "### Limit Result by Status\nACTIVE\n" in md   # a list attribute now: no "['ACTIVE']" / JSON form
+
+
+def test_a_legacy_stored_status_round_trips_to_the_same_list():
+    for stored in ("['ACTIVE']", '["ACTIVE", "DELETED"]', "ACTIVE"):
+        draft = cdo_report(parameters={"limit_result_by_status": stored})
+        maps = report_parameter_maps(draft)
+        want = ["ACTIVE", "DELETED"] if "DELETED" in stored else ["ACTIVE"]
+        assert maps["reportParameters"]["limit_result_by_status"] == want, stored
+        assert json.loads(maps["additionalProperties"]["limitResultByStatus"]) == want, stored
 
 
 def test_d7_switch_drops_the_camel_copy_only():
@@ -687,10 +700,24 @@ class _DraftEgeria:
 
             async def _async_find_elements_by_property_value(self, value, names, metadata_element_type=None,
                                                              governance_zone_filter=None, start_from=0, **kw):
+                # like Egeria (PY-18): the value is matched LITERALLY, never as a regular expression
                 if start_from:
                     return []
                 return [e for e in outer.elements.values()
-                        if e["elementHeader"]["type"]["typeName"] == metadata_element_type]
+                        if e["elementHeader"]["type"]["typeName"] == metadata_element_type
+                        and any(value in str(e["properties"].get(n) or "") for n in names)] or "No elements found"
+
+            async def _async_get_elements(self, metadata_element_type="Referenceable", start_from=0, page_size=10,
+                                          governance_zone_filter=None, **kw):
+                # elements/by-type: every element of the type, limited to the zones asked for; null (not [])
+                # past the last row, as Egeria ends a read
+                from pyegeria.view.egeria_spec_cache import _zones
+                if start_from:
+                    return "No elements found"
+                return [e for e in outer.elements.values()
+                        if e["elementHeader"]["type"]["typeName"] == metadata_element_type
+                        and (not governance_zone_filter or set(_zones(e)) & set(governance_zone_filter))
+                        ] or "No elements found"
 
             async def _async_get_related_elements(self, guid, relationship_type=None, start_at_end=1, **kw):
                 assert relationship_type == "CollectionMembership" and start_at_end == 2
@@ -793,9 +820,10 @@ def test_prune_takes_a_sheet_only_when_it_is_an_unfiled_private_draft(monkeypatc
     out = store.prune_drafts("erinoverview")
     assert out["removed"] == ["sheet:scratchpad"] and eg.deleted_sheets == ["scratchpad"]
     assert out["kept"] == ["sheet:busy"]                       # aged by last update, not creation
-    assert out["kept_reasons"] == {"sheet:shared": "zoned beyond your private zone (shared)",
-                                   "sheet:filed": "filed in a collection (published)",
+    assert out["kept_reasons"] == {"sheet:filed": "filed in a collection (published)",
                                    "sheet:Legacy sheet": "not a Dashboard:: sheet"}
+    # zoned to the author and others: not a private draft at all (the exact-zone ruling), said in a note
+    assert "Dashboard::shared" in out["not_private"][0] and "zoned only to you" in out["not_private"][0]
 
 
 def test_prune_keeps_a_sheet_whose_memberships_cant_be_read(monkeypatch):
@@ -908,3 +936,34 @@ def test_a_promoted_report_is_marked_published():
     assert "### Additional Properties\nauthoringState: published" in plan["markdown"]
     stamp = ["publishedAt: (set when published)", "publishedBy: erinoverview", "publishedVersion: 1"]
     assert _publish(cdo_report())["markdown"] == serialize(cdo_report(), stamp=stamp)
+
+
+# ── D16 exact zone (the Architect's ruling (a), 2026-11-14 late): private means zoned exactly [userId] ──────
+
+def test_a_draft_zoned_exactly_to_the_author_is_saved_over():
+    eg = _DraftEgeria()
+    eg.hold(CDO_QN, "My Ninety Day Plan Progress", "Report", ["erinoverview"], _days_ago(1))
+    EgeriaDraftStore(eg, eg.run).save("erinoverview", cdo_report())
+    assert len(eg.ran) == 1
+
+
+def test_a_superset_zoned_element_is_refused_on_save_load_and_delete():
+    eg = _DraftEgeria()
+    eg.hold(CDO_QN, "My Ninety Day Plan Progress", "Report", ["erinoverview", "finance"], _days_ago(1))
+    store = EgeriaDraftStore(eg, eg.run)
+    for call in (lambda: store.save("erinoverview", cdo_report()),
+                 lambda: store.load("erinoverview", "report", CDO_QN),
+                 lambda: store.delete("erinoverview", "report", CDO_QN)):
+        with pytest.raises(AuthoringRefused, match="a private draft is zoned only to you; publish it to share it"):
+            call()
+    assert eg.ran == [] and eg.deleted == []
+
+
+def test_a_superset_zoned_element_is_left_out_of_the_list_with_a_note():
+    eg = _DraftEgeria()
+    eg.hold("R::mine", "Mine", "Report", ["erinoverview"], _days_ago(1))
+    eg.hold("R::shared", "Shared", "Report", ["erinoverview", "finance"], _days_ago(1))
+    notes: List[str] = []
+    listed = EgeriaDraftStore(eg, eg.run).list("erinoverview", "report", notes=notes)
+    assert [d["name"] for d in listed] == ["Mine"]
+    assert any("R::shared" in n and "zoned only to you" in n for n in notes)

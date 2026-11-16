@@ -121,7 +121,7 @@ def test_the_cli_words_an_unconfirmed_load():
 
 def test_a_one_time_deprecation_warning(monkeypatch):
     monkeypatch.setattr(brf, "_LEGACY_LOADER_WARNED", False)
-    with pytest.warns(DeprecationWarning, match="removed in pyegeria 7 .*egeria_spec_cache.sync_report_specs"):
+    with pytest.warns(DeprecationWarning, match="removed in pyegeria 6.4 or the next release.*egeria_spec_cache.sync_report_specs"):
         brf.load_egeria_report_specs(_Client({}))
     import warnings
     with warnings.catch_warnings():
@@ -165,6 +165,6 @@ def test_the_deprecation_names_pyegeria_7_and_is_logged_once_at_warning(monkeypa
         logger.remove(sink)
     words = [m for level, m in logged if level == "WARNING" and "deprecated" in m]
     assert words == [brf.LEGACY_LOADER_DEPRECATION]   # once, at WARNING
-    assert "will be removed in pyegeria 7 (expected early January 2027)" in brf.LEGACY_LOADER_DEPRECATION
-    assert "will be removed in pyegeria 7 (expected early January 2027)" in " ".join(
+    assert "will be removed in pyegeria 6.4 or the next release" in brf.LEGACY_LOADER_DEPRECATION
+    assert "will be removed in pyegeria 6.4 or the next release" in " ".join(
         brf.load_egeria_report_specs.__doc__.split())

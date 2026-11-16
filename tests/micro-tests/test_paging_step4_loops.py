@@ -130,7 +130,7 @@ def test_drafts_list_says_at_least_unless_confirmed():
     zone = "private-erin"
 
     class CM:
-        async def _async_find_elements_by_property_value(self, *a, start_from=0, **kw):
+        async def _async_get_elements(self, *a, start_from=0, **kw):
             return [{"elementHeader": {"guid": "d1", "versions": {}}, "properties": {"qualifiedName": "Q",
                      "displayName": "D"}}] if start_from == 0 else NULL
 

@@ -1,5 +1,5 @@
 """The owner's direction (2026-11-14): pyegeria's own code is off the deprecated legacy ReportType:: loader
-(load_egeria_report_specs, removed in pyegeria 7). Only its own module defines it; nothing in pyegeria,
+(load_egeria_report_specs, removed in pyegeria 6.4 or the next release). Only its own module defines it; nothing in pyegeria,
 md_processing or commands calls it. The load-report-specs command runs the spec cache's sync instead."""
 import ast
 from pathlib import Path
@@ -54,5 +54,5 @@ def test_the_command_runs_the_spec_cache_sync(monkeypatch):
     monkeypatch.setattr(cli.Console, "print", lambda self, *a, **kw: printed.append(" ".join(map(str, a))))
     cli._run(view_server="vs", view_url="https://x", user="u", user_pass="p", force=True)
     assert calls == ["sync", "closed"]
-    assert printed[0] == cli.DEPRECATION_WORDS and "removed in pyegeria 7" in printed[0]
+    assert printed[0] == cli.DEPRECATION_WORDS and "removed in pyegeria 6.4 or the next release" in printed[0]
     assert any("ignored" in p for p in printed) and "synced" in printed

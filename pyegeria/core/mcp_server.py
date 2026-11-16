@@ -90,7 +90,7 @@ def main() -> None:
         GLOBAL_EGERIA_CLIENT = _startup_client(_settings)
         if GLOBAL_EGERIA_CLIENT is not None:
             # The spec cache's sync (the system of record for Egeria-held report specs) replaces the deprecated
-            # legacy ReportType:: loader, removed in pyegeria 7. A failed sync never stops the server.
+            # legacy ReportType:: loader, removed in pyegeria 6.4 or the next release. A failed sync never stops the server.
             try:
                 from pyegeria.view.egeria_spec_cache import sync_report_specs
                 # shared=True: this server's registry serves every caller, so its cache must never hold a zoned

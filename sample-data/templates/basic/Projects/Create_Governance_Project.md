@@ -114,7 +114,7 @@ ___
 
 >	**Attribute Type**: Simple
 
->	**Description**: The scope of the project — what is in and out of scope.
+>	**Description**: The scope of the project: what is in and out of its scope. Stored in Egeria's ProjectProperties.scope.
 
 
 ### Project Status

@@ -26,11 +26,26 @@
 >   LAST_UPDATE_RECENT, LAST_UPDATE_OLDEST,
 >   PROPERTY_ASCENDING, PROPERTY_DESCENDING
 >
-> Limit Result by Status valid values (Advanced):
->   UNKNOWN, DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED,
->   APPROVED_CONCEPT, UNDER_DEVELOPMENT, DEVELOPMENT_COMPLETE,
->   APPROVED_FOR_DEPLOYMENT, STANDBY, ACTIVE, FAILED, DISABLED,
->   COMPLETE, DEPRECATED, OTHER, DELETED
+> Limit Result by Status valid values (Advanced; a list, default ACTIVE):
+>   ACTIVE, DELETED
+>   Element (instance) status only has these two values since Egeria's
+>   December 2025 change: ACTIVE = live elements (also what empty means),
+>   DELETED = soft-deleted only, "ACTIVE, DELETED" = both. A legacy
+>   ['ACTIVE'] is still accepted. Old lifecycle values (DRAFT, ...) give a
+>   warning and are ignored.
+>
+> Lifecycle filters (Advanced; lists, no default = no lifecycle filtering):
+>   Limit Result by Content Status:    DRAFT, PREPARED, PROPOSED, APPROVED,
+>                                      REJECTED, ACTIVE, DEPRECATED, OBSOLETE, OTHER
+>   Limit Result by Deployment Status: PROPOSED, UNDER_DEVELOPMENT,
+>                                      DEVELOPMENT_COMPLETE, APPROVED_FOR_DEPLOYMENT,
+>                                      REJECTED_FOR_DEPLOYMENT, STANDBY, ACTIVE,
+>                                      DISABLED, FAILED, OTHER
+>   Limit Result by Activity Status:   REQUESTED, APPROVED, WAITING, ACTIVATING,
+>                                      IN_PROGRESS, PAUSED, COMPLETED, INVALID,
+>                                      IGNORED, FAILED, CANCELLED, ABANDONED, OTHER
+>   Only report specs whose find method takes the matching *_status_list
+>   parameter use them; elsewhere they are dropped with a warning.
 
 ---
 
@@ -302,7 +317,7 @@ ___
 # RP-14: Report — Advanced: Limit Result by Status
 
 > Advanced attribute. Filters results to elements in ACTIVE status only.
-> Default is ['ACTIVE'] but here it is set explicitly to verify the attribute is parsed.
+> Default is ACTIVE but here it is set explicitly to verify the attribute is parsed.
 
 ## View Report
 
@@ -317,6 +332,78 @@ LIST
 
 ### Limit Result by Status
 ACTIVE
+
+___
+
+# RP-14a: Report — Advanced: Limit Result by Status ACTIVE, DELETED
+
+> Both element statuses: live and soft-deleted elements are returned.
+> Expected: no warning; the request carries limitResultsByStatus
+> ["ACTIVE", "DELETED"].
+
+## View Report
+
+### Report Spec
+Collections
+
+### Search String
+Sales Forecast
+
+### Output Format
+LIST
+
+### Limit Result by Status
+ACTIVE, DELETED
+
+___
+
+# RP-14b: Report — Advanced: Limit Result by Status DRAFT (warning)
+
+> DRAFT is a lifecycle value, no longer an element status.
+> Expected: a WARNING (not an error) -- "DRAFT is no longer an element
+> status; use Content Status / Deployment Status / Activity Status for
+> lifecycle" -- DRAFT is ignored, so Egeria's default (ACTIVE) applies and the report
+> still runs.
+
+## View Report
+
+### Report Spec
+Collections
+
+### Search String
+Sales Forecast
+
+### Output Format
+LIST
+
+### Limit Result by Status
+DRAFT
+
+___
+
+# RP-14c: Report — Advanced: Limit Result by Content Status
+
+> Lifecycle filter on the typed contentStatus property.
+> The Collections spec's find method (find_collections) can't filter by
+> content status, so this exercises the drop path: expected a warning that
+> the lifecycle filter 'content_status_list' was ignored, and the report runs
+> unfiltered. (A spec backed by a content-status find --
+> ClassificationExplorer.find_authored_elements, AssetMaker.find_data_assets
+> -- would pass it through as contentStatusList.)
+
+## View Report
+
+### Report Spec
+Collections
+
+### Search String
+Sales Forecast
+
+### Output Format
+LIST
+
+### Limit Result by Content Status
+DRAFT, APPROVED
 
 ___
 
@@ -617,6 +704,34 @@ SalesAnalytics
 
 ___
 
+# CR-03a: Create Report — status and lifecycle filters stored
+
+> Stores both element statuses and a Content Status lifecycle filter.
+> Expected: additionalProperties holds limitResultByStatus
+> '["ACTIVE", "DELETED"]' and limitResultByContentStatus '["DRAFT"]' (JSON
+> lists, not the old "['ACTIVE']" form); reportParameters holds the same as
+> real lists. No "is not a valid metadata value" warning.
+
+## Create Report
+
+### Display Name
+Sales Forecast Draft Collections
+
+### Report Spec
+Collections
+
+### Search String
+Sales Forecast
+
+### Limit Result by Status
+- ACTIVE
+- DELETED
+
+### Limit Result by Content Status
+DRAFT
+
+___
+
 # CR-04: Create Report — re-run CR-01 with a changed Description
 
 > Same Display Name as CR-01, with Report Spec unchanged and a new
@@ -643,6 +758,7 @@ ___
 >   CR-01 : New Report element created; GUID + Qualified Name present in output
 >   CR-02 : additionalProperties contains outputFormat=TABLE, searchString="Sales Forecast"
 >   CR-03 : additionalProperties contains all combined filter params
+>   CR-03a: limitResultByStatus '["ACTIVE", "DELETED"]', limitResultByContentStatus '["DRAFT"]'
 >   CR-04 : Transitions to Update Report; same GUID as CR-01, description updated
 
 ___
@@ -661,6 +777,9 @@ ___
 >   RP-11         : Only RootCollection and CollectionFolder subtypes returned
 >   RP-12, RP-13  : Pagination returns 10 results per page from the correct offset
 >   RP-14         : Only ACTIVE status elements returned
+>   RP-14a        : ACTIVE and soft-deleted (DELETED) elements returned
+>   RP-14b        : Warning that DRAFT is no longer an element status; ACTIVE default applies
+>   RP-14c        : Warning that content_status_list is ignored by find_collections; unfiltered results
 >   RP-15         : Results sorted alphabetically by displayName
 >   RP-16         : Results sorted most recently updated first
 >   RP-17         : Hierarchy traversed to depth 3

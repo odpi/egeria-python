@@ -13,23 +13,24 @@ Dr.Egeria is a Markdown-based processing engine for Egeria. It allows users to i
     - [Directives](#directives)
     - [Planned Elements](#planned-elements)
     - [Reference Resolution](#reference-resolution)
-4. [Supported Command Families](#supported-command-families)
-5. [CLI Utility: dr_egeria](#cli-utility-dr_egeria)
+4. [Techniques and Best Practices](#techniques-and-best-practices)
+5. [Supported Command Families](#supported-command-families)
+6. [CLI Utility: dr_egeria](#cli-utility-dr_egeria)
     - [Running a folder: dr_egeria_folder](#running-a-folder-dr_egeria_folder)
     - [The `_batch.json` manifest](#the-_batchjson-manifest)
     - [Automatic loading in the Egeria Portal](#automatic-loading-in-the-egeria-portal)
-6. [Python API](#python-api)
+7. [Python API](#python-api)
     - [process_md_file (synchronous)](#process_md_file-synchronous)
     - [process_md_file_v2 (async)](#process_md_file_v2-async)
-7. [Supporting Utilities](#supporting-utilities)
+8. [Supporting Utilities](#supporting-utilities)
     - [Template Generation (`gen_md_cmd_templates`)](#template-generation-gen_md_cmd_templates)
     - [Help Documentation (`gen_dr_help`)](#help-documentation-gen_dr_help)
     - [Command Search (`dr_egeria_help`)](#command-search-dr_egeria_help)
     - [Report Specification (`gen_report_specs`)](#report-specification-gen_report_specs)
     - [Spec Validation (`validate_compact_specs`)](#spec-validation-validate_compact_specs)
     - [Migration Tool (`migrate_dr_egeria.py`)](#migration-tool-migrate_dr_egeriapy)
-8. [Advanced Configuration](#advanced-configuration)
-9. [Jupyter Notebook Support](#jupyter-notebook-support)
+9. [Advanced Configuration](#advanced-configuration)
+10. [Jupyter Notebook Support](#jupyter-notebook-support)
 
 ---
 
@@ -44,7 +45,7 @@ Dr.Egeria utilizes a specific header hierarchy to distinguish between document c
 ### Document Structure
 
 - `# Title`: Single-hash headers are reserved for document titles and narrative text. Dr.Egeria ignores these during command processing but preserves them in the output.
-- `---` or `___`: Horizontal rules are used as optional delimiters between command blocks.
+- `---` or `___`: Horizontal rules end a command block. Between two commands they are optional, because the next `##` header also starts a new block, but a command followed by prose must end with one: otherwise any `###` heading in the prose is read as an attribute of the command. See [Techniques and Best Practices](#techniques-and-best-practices).
 - **Bullet Points**: Dr.Egeria supports both `*` and `-` for list-style attributes on input. For generated output, it defaults to using `-` for better compatibility with various Markdown editors.
 
 ### Command Blocks
@@ -244,6 +245,39 @@ Dr.Egeria's defaults (added 2026-10-01):
 - A **Memento** element found by an editing command is treated as not found. A `Create` for a deleted element's name therefore still creates a new element, as it did before, instead of updating the deleted one.
 
 In the SDK, `with pyegeria.lineage_visible():` applies the same `forLineage=true` default to every request a pyegeria client sends inside the block.
+
+---
+
+## Techniques and Best Practices
+
+These rules follow from how the parser (`md_processing/v2/extraction.py`) reads a document. They matter most in long documents that mix commands with prose, such as tutorials, and in documents that are loaded more than once, such as Portal bootstrap batches.
+
+### How a document is read
+
+The document is cut into **blocks**. A new block starts at every line that begins with `# ` or `## `, and at every line that is only `___` or `---`. Code fences are not recognised: a fence line is ordinary text.
+
+A block is a **command** if its first non-blank line matches `Verb Object`, with or without a leading `## `, where Verb is one of: Add, Attach, Cancel, Classify, Clear, Count, Create, Declassify, Delete, Detach, Display, Find, Import, Initiate, Link, Process, Provenance, Publish, Reclassify, Remove, Run, Search, Set, Setup, Unlink, Update, Validate, View (case-insensitive). Every other block is prose and is copied to the output unchanged.
+
+Inside a command block, every `### ` heading is an attribute, up to the end of the block, and the lines below it, up to the next `###`, are its value.
+
+### Rules that follow
+
+- **End every command with `___`.** Prose after a command is part of its block until the next block boundary, so a prose `###` heading becomes an attribute of the command.
+- **Don't start a `##` heading, or the first line after a separator or heading, with a verb** unless it is a command. `## Process Parameter Time Series` is read as the command *Process* on *Parameter Time Series*, and logs `No processor registered for 'Process Parameter Time Series'`. Use `#` or `###` for such headings, or reword them.
+- **Fenced commands run.** A command inside a ```` ```markdown ```` fence, or any other fence, is executed. End a runnable fenced command with `___` before the closing fence, or the fence line becomes part of the last attribute's value. To show a command that must not run, write it as `## <Verb> <Object>`, or indent it below a line of prose in the same block. An indented command straight after a separator is still a command.
+- **Attributes are headings.** A `Key: value` line is not an attribute. Before the first `###` it is ignored, and after one it becomes part of that attribute's value.
+- **Validate before processing.** References to elements created earlier in the same document show as not found during `--validate` (see [Planned Elements and Forward References](#planned-elements-and-forward-references)). On `--process` the commands run in order, so they resolve.
+
+### Re-running documents
+
+- `Create` and `Update` commands upsert by qualified name, which is derived from the display name and the command's type unless given. Renaming an element, or changing its type (for example `Create Agreement` to `Create Digital Subscription`), therefore creates a second element on a repository that is already loaded.
+- `Link` commands handle an existing relationship in different ways. `Link Report to Dashboard Sheet` replaces an existing placement, and `Link Governance Results` skips a pair that is already linked. Before relying on a re-run, check what the command does; a folder that uses one that adds a relationship on every run should set `"idempotent": false` in its [`_batch.json`](#the-_batchjson-manifest).
+
+### Status filters
+
+`Limit Result by Status` filters on element status, Egeria's `ElementStatus`: `UNKNOWN`, `ACTIVE`, `INVALID`, `DELETED` or `OTHER`. Empty or `ACTIVE` returns elements that aren't deleted, `DELETED` returns soft-deleted elements, and `ACTIVE, DELETED` returns both. It is validated locally, and lifecycle values such as `DRAFT` produce a warning.
+
+Lifecycle states are filtered with `Limit Result by Content Status` (`ContentStatus`), `Limit Result by Deployment Status` (`DeploymentStatus`) and `Limit Result by Activity Status` (`ActivityStatus`). Each reaches Egeria only through a report whose find method has the matching `content_status_list`, `deployment_status_list` or `activity_status_list` parameter. For any other report it is dropped with a warning. See [search-and-get-filters.md](search-and-get-filters.md).
 
 ---
 
