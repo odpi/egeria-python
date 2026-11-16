@@ -1,8 +1,8 @@
 # Design: Migrating Report Specs to Egeria
 
 > **Superseded loader (2026-11-14).** `load_egeria_report_specs()`, the loader this document describes, is the
-> legacy path for the May-2026 `ReportType::` collections. It is **deprecated and will be removed in pyegeria 7
-> (expected early January 2027)**. Egeria-held report specs are `ReportSpec::` elements, and they load through
+> legacy path for the May-2026 `ReportType::` collections. It is **deprecated and will be removed in the next
+> release**. Egeria-held report specs are `ReportSpec::` elements, and they load through
 > the spec cache: `pyegeria.view.egeria_spec_cache.sync_report_specs` (`pyegeria report-specs sync`), the system of
 > record. It reads both markers and serves the registry's EGERIA tier, the consumer index and the authoring API.
 > pyegeria's own callers have moved: the MCP server's startup and the `load_report_specs` / `hey_egeria ...

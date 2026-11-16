@@ -41,7 +41,7 @@ RELATED_MAX_PAGES = 10
 USED_BY_KINDS = ("spec", "report", "sheet")
 VIA_KEYS = ("reportSpec", "CollectionMembership", "DataSetContent")   # closed: Studio's word map tests against it
 SPEC_PREFIX = "ReportSpec::"
-LEGACY_SPEC_PREFIX = "ReportType::"   # the legacy loader's form only: remove with it in pyegeria 7
+LEGACY_SPEC_PREFIX = "ReportType::"   # the legacy loader's form only: remove with it in the next release
 
 
 def spec_label_of(value: Any) -> str:

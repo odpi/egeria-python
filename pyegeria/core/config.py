@@ -553,7 +553,7 @@ def configured_user_id() -> str:
     settings (config.json / .env), then the quickstart default. The one resolution of "the configured user":
     `resolve_egeria_credentials` (which builds a CLI's client) and the report-spec cache's client-less identity
     (`egeria_spec_cache.current_spec_identity`) both use it, so a CLI with no configuration binds its private
-    spec cache to, and loads it as, the same user. (pyegeria 7 drops the quickstart default; both sides then
+    spec cache to, and loads it as, the same user. (the next release drops the quickstart default; both sides then
     become None together.)"""
     return os.environ.get("EGERIA_USER") or settings.User_Profile.user_name or "erinoverview"
 

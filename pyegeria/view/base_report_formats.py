@@ -3973,8 +3973,8 @@ _EGERIA_SPECS_RETRY_AT: Optional[datetime] = None
 #: confirmed load (the legacy-loader ruling, 2026-11-14).
 _EGERIA_SPECS_RETRY_DELAY: Optional[int] = None
 _LEGACY_LOADER_WARNED = False
-LEGACY_LOADER_DEPRECATION = ("load_egeria_report_specs is deprecated and will be removed in pyegeria 7 (expected "
-                             "early January 2027): it is the legacy ReportType:: loader. Use "
+LEGACY_LOADER_DEPRECATION = ("load_egeria_report_specs is deprecated and will be removed in the next release: "
+                             "it is the legacy ReportType:: loader. Use "
                              "pyegeria.view.egeria_spec_cache.sync_report_specs instead.")
 #: How the last load_egeria_report_specs call ended (85f5bc15 read-back R1), beside its bool return:
 #: {"status": one of REPORT_SPECS_LOAD_STATUSES, "count": ReportTypes read or None, "retry_at": ISO or None,
@@ -4799,7 +4799,7 @@ def load_egeria_report_specs(
     force: bool = False,
     ttl_seconds: Optional[int] = None,
 ) -> bool:
-    """DEPRECATED, and will be removed in pyegeria 7 (expected early January 2027). Use
+    """DEPRECATED, and will be removed in the next release. Use
     ``pyegeria.view.egeria_spec_cache.sync_report_specs`` instead: the spec cache is the system of record for
     Egeria-held report specs. It reads both the ``ReportSpec::`` and ``ReportType::`` markers and serves the
     consumer index and the authoring API. This legacy loader (the May-2026 ``ReportType::`` path) reads

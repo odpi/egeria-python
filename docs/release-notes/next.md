@@ -38,9 +38,9 @@ notes and are not repeated here.
   reported "not applied".
 - **Dr.Egeria Project Scope maps to `ProjectProperties.scope`** (PY-5 / EG-14).
 
-## Planned for pyegeria 7 (expected early January 2027)
+## Planned for the next release
 
-- **No default password, and no built-in identity outside a named demo profile.** pyegeria 7 drops the quickstart
+- **No default password, and no built-in identity outside a named demo profile.** The next release drops the quickstart
   defaults (`erinoverview` / `secret`): a client gets credentials only from its arguments, the environment,
   config.json, or a demo profile named explicitly.
 
