@@ -68,9 +68,8 @@ notes and are not repeated here.
   and every column key must be an attribute of the target type, a key the output formatter derives, a documented
   related-element or annotation field, or (for a generated -DrE- spec) a Dr.Egeria command attribute. An unknown
   key is refused by name. The old loose check remains only as `validate(..., legacy=True)`, with a warning per key.
-- **Status values match Egeria** (PY-21). The deployment-status fallback offered `REJECTED_FOR_DEPLOYMENT`;
-  Egeria's value is `REJECTED`. The seed report specs' activity-status columns (Actor Manager, Feedback, Projects)
-  now offer `FOR_INFO`.
+- **The deployment-status fallback matches Egeria** (PY-21). It offered `REJECTED_FOR_DEPLOYMENT`; Egeria's value is
+  `REJECTED`.
 
 ## Fixes (drafts)
 
