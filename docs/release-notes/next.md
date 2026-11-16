@@ -26,7 +26,8 @@ notes and are not repeated here.
   - **On Egeria 6.3, counts from type-specific searches (for example `find_data_assets`) can be incomplete and are
     reported as "at least N".** `get_relationships`, `get_related_elements` and the `find_metadata_elements` family
     (by type, by name, by property value) report their end. Their totals count only what Egeria lets the caller see:
-    elements in zones the caller can't read, or anchored to a Promise, are left out on every path.
+    elements in zones the caller can't read are left out on every path; elements anchored to a Promise are left out
+    unless the request asks for lineage (`pyegeria.lineage_visible()`).
 
 - **Limit Result by Status is a list of element statuses, with three lifecycle filters beside it** (Dr.Egeria Create
   Report / View Report, the report-spec executor).
