@@ -121,10 +121,11 @@ FIX_9454 = "9454"
 #: - later_snapshots: whether every SNAPSHOT of a later line (6.4-SNAPSHOT, ...) carries it.
 FIXES = {
     FIX_9453: {"snapshot_cutoff": "2026-11-14T19:52:00Z",   # the #9453 merge
-               "release_floor": (6, 3, 0),                  # #9453 merged on main before the 6.3 line was cut
+               "release_floor": (6, 3, 0),                  # 2a27dad5 is in the V6.3 tag (a81af02c), checked 2026-11-16
                "later_snapshots": True},                    # step 6 read-back R1
     FIX_9454: {"snapshot_cutoff": "2026-11-15T07:26:00Z",
-               "release_floor": None,      # G3: set only once `merge-base --is-ancestor 970092b9 <6.3.0 tag>` passes
+               "release_floor": (6, 3, 0), # G3 passed 2026-11-16: 970092b9 is an ancestor of the V6.3 tag (a81af02c)
+                                           # (GitHub compare 970092b9...V6.3 = "ahead"), so 6.3.0 carries #9454
                "later_snapshots": True},   # a5c3a195 (6.3-SNAPSHOT, built 08:29Z) carries 970092b9 (merged 07:26Z)
                                            # on main, so every later line's SNAPSHOT does too (G2 ruling 4)
 }

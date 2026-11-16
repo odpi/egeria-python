@@ -54,7 +54,7 @@ def test_each_fix_has_a_cutoff_a_floor_and_a_later_line_rule():
     assert paging.FIXES["9453"]["snapshot_cutoff"] == paging.GATE_SNAPSHOT_TIME == "2026-11-14T19:52:00Z"
     assert paging.FIXES["9453"]["release_floor"] == (6, 3, 0)
     assert paging.FIXES["9454"]["snapshot_cutoff"] == "2026-11-15T07:26:00Z"
-    assert paging.FIXES["9454"]["release_floor"] is None          # G3: set only from the 6.3.0 tag check
+    assert paging.FIXES["9454"]["release_floor"] == (6, 3, 0)    # G3: 970092b9 is in the V6.3 tag (2026-11-16)
     assert paging.FIXES["9454"]["later_snapshots"] is True        # ruling 4
 
 
@@ -82,8 +82,18 @@ def test_each_fix_on_each_side_of_its_snapshot_cutoff(about, fixes):
 # ── the release floor ──
 
 @pytest.mark.parametrize("version", ["6.3", "6.3.0", "6.3.2", "6.4.1", "7.0"])
-def test_a_release_carries_9453_but_not_9454_while_its_floor_is_none(version):
-    assert paging.fixes_from_about({"version": version}) == {"9453"}
+def test_a_release_from_6_3_carries_both_fixes(version):
+    assert paging.fixes_from_about({"version": version}) == BOTH
+
+
+@pytest.mark.parametrize("version", ["6.2", "6.2.9", "6.1.0"])
+def test_a_release_before_6_3_carries_neither_fix(version):
+    assert paging.fixes_from_about({"version": version}) == set()
+
+
+def test_with_no_9454_floor_a_release_carries_only_9453(monkeypatch):
+    monkeypatch.setitem(paging.FIXES, "9454", {**paging.FIXES["9454"], "release_floor": None})
+    assert paging.fixes_from_about({"version": "6.3.0"}) == {"9453"}
 
 
 def test_a_release_floor_present_promotes_releases_from_it_on(monkeypatch):
