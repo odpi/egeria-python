@@ -1088,7 +1088,7 @@ def print_episode_roster():
         print(f"  • Lead Persona: {ep.lead_persona} ({ep.persona_role})")
         print(f"  • Team: {ep.persona_team}")
         print(f"  • Business Driver: {ep.business_driver}")
-        print(f"  • Assigned Voice: {ep.voice_name} ({ep.voice_gender}, {ep.voice_accent})")
+        print(f"  • Assigned Voice: {ep.voice_name} ({ep.voice_accent})")
         print(f"  • Scenes: {len(ep.scenes)} scenes")
     print("\n" + "=" * 80 + "\n")
 
