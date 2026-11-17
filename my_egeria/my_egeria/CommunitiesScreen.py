@@ -11,15 +11,12 @@ from textual.containers import ScrollableContainer, Horizontal
 from textual.screen import ModalScreen
 from textual.widgets import DataTable, Header, Static, Footer, Input, Button, Select, TextArea
 
-from CommunityScreen import CommunityScreen
+from CommunityScreen import CommunityScreen, JOIN_ASSIGNMENT_TYPES
 from paging_support import is_complete, none_words
 from profile_utils import set_screen_heading
 
 # The "Linked Through" value of a membership held by the user's own profile, which they can leave
 DIRECT_LINK = "Your profile"
-# Assignment types a user can give themselves when joining. Leaders and administrators are
-# assigned by the people who manage the community (https://egeria-project.org/concepts/community/)
-JOIN_ASSIGNMENT_TYPES = ["Contributor", "Observer"]
 # Whoever creates a community manages it, so they may also lead it
 CREATOR_ASSIGNMENT_TYPES = ["Leader"] + JOIN_ASSIGNMENT_TYPES
 # The "Your part in it" choice for a creator who doesn't join their new community
@@ -159,10 +156,12 @@ class CommunitiesScreen(ModalScreen):
 
     CSS_PATH = "my_profile.tcss"
 
-    def __init__(self, my_communities, *args, **kwargs):
+    def __init__(self, my_communities, *args, focus_search: bool = False, **kwargs):
         super().__init__(id="communities_screen", *args, **kwargs)
         # Rows of (name, assignment type, linked through, description, GUID)
         self.my_communities_data = list(my_communities or [])
+        # Start in the search box (the Find Community menu option) rather than the user's own list
+        self.focus_search = focus_search
         # The last search, repeated after joining or leaving so the found list stays current
         self.search_string = "*"
 
@@ -170,7 +169,8 @@ class CommunitiesScreen(ModalScreen):
         yield Header(show_clock=True)
         yield Static("Communities", classes="span-3", id="communities_title")
         yield ScrollableContainer(
-            Static("The communities you belong to. Enter or ctrl+o opens one (members, blog and comments); "
+            Static("The communities you belong to. Enter or ctrl+o opens one (members, blog, resources and "
+                   "comments); "
                    "ctrl+d leaves; ctrl+t creates a new community."),
             DataTable(id="my_communities_table", zebra_stripes=True, cursor_type="row"),
             Horizontal(
@@ -204,6 +204,8 @@ class CommunitiesScreen(ModalScreen):
             "Name", "Description", "Qualified Name", "GUID")
         self._fill_my_table()
         self._search()
+        if self.focus_search:
+            self.query_one("#community_search_input", Input).focus()
 
     def _fill_my_table(self) -> None:
         table = self.query_one("#my_communities_table", DataTable)
@@ -254,12 +256,17 @@ class CommunitiesScreen(ModalScreen):
     # --- opening a community ----------------------------------------------
 
     def _open(self, community_guid: str, community_name: str) -> None:
+        community_screen = CommunityScreen(community_guid, community_name)
+
         def on_close(result) -> None:
             # q on the community screen goes on to the main screen
             if result == 210:
                 self.dismiss(200)
+            elif community_screen.joined:
+                # Joined from inside the community: it moves from the found list to the user's own
+                self._reload()
 
-        self.app.push_screen(CommunityScreen(community_guid, community_name), callback=on_close)
+        self.app.push_screen(community_screen, callback=on_close)
 
     def action_open_community(self) -> None:
         """ Open the highlighted community in whichever list has focus """

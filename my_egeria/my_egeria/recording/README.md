@@ -1,153 +1,171 @@
-# My Profile — Automated Terminal Recording Suite
+# Egeria Video Production & Automated Recording Suite
 
-**Series:** *Coco Pharmaceuticals Data Governance Journey*  
-**Presenter Persona:** Callie Quartile (Data Scientist)  
-**Companion Script:** [`../VIDEO_SCRIPT_DRAFT.md`](../VIDEO_SCRIPT_DRAFT.md)  
-
-This directory contains production-ready automated recording scripts that capture high-definition terminal screencasts and vector SVG frames of `my_profile.py` for video blogs, tutorials, presentations, and documentation.
+Automated video generation, slide rendering, terminal interaction recording, neural speech synthesis, and video assembly framework for the **Coco Pharmaceuticals Video Series** in `pyegeria` / `my_profile`.
 
 ---
 
-## 📁 Directory Structure
+## Series Architecture
 
-```text
+The repository contains two complementary video suites:
+1. **Practitioner Walkthrough (Callie Quartile - Episode 0)**: In-depth interactive walkthrough of the `my_profile.py` textual cockpit (launch, dashboard, to-dos/curation, shop for data, subscriptions, and networks).
+2. **Business Value Series (Episodes 1 through 7)**: 7 modular video blog episodes covering enterprise ROI and governance value propositions presented by authentic Coco Pharmaceuticals personas with unique regional accents and voices.
+
+---
+
+## Business Value Episodes & Persona Voice Roster
+
+| Ep # | Title & Value Driver | Lead Persona & Role | Assigned Voice | Accent & Character |
+|:---:|:---|:---|:---|:---|
+| **0** | **Shop for Data & Governed Research** | Callie Quartile (Data Scientist) | `en-GB-SoniaNeural` | British English (Engaging & Clear) |
+| **1** | **Automating Data Privacy & GDPR** | Faith Broker (Privacy Officer & HR) | `en-GB-LibbyNeural` | British English (Authoritative & Rigorous) |
+| **2** | **Zero-Touch Data Stewardship** | Peter Profile (Lead Data Steward) | `en-GB-RyanNeural` | British English (Methodical & Enthusiastic) |
+| **3** | **Clinical Data Provenance & Integrity** | Dr. Tessa Tube (Lead Clinical Researcher) | `en-US-AriaNeural` | American English (Academic & Authoritative) |
+| **4** | **Supply Chain & ESG Sustainability** | Stew Faster (Manufacturing GM) | `en-AU-WilliamMultilingualNeural` | Australian English (Direct & Pragmatic) |
+| **5** | **Business Glossaries & Architecture** | Erin Overview (Information Architect) | `en-US-JennyNeural` | American English (Strategic & Visionary) |
+| **6** | **Forensic Auditing & Fraud Investigation** | Sidney Seeker (Lead Fraud Auditor) | `en-IE-ConnorNeural` | Irish English (Inquisitive & Sharp) |
+| **7** | **The Executive Cockpit & Measuring ROI** | Jules Keeper (CDO) & Reggie Mint (CFO) | `en-GB-ThomasNeural` & `en-US-GuyNeural` | British Executive & American CFO |
+
+---
+
+## Directory Layout
+
+```
 recording/
-├── my_profile_full_walkthrough.tape  # Full continuous end-to-end VHS recording (Scenes 2-6)
-├── scenes/
-│   ├── scene2_launch_and_startup.tape            # Scene 2: Splash screen, async loading, continue
-│   ├── scene3_main_dashboard.tape                # Scene 3: Dashboard grid, roles & team drill-down
-│   ├── scene4_curation_todos_comments.tape       # Scene 4: To-Dos (Ctrl+T), Comments (Ctrl+O/N), Bookmarks (Ctrl+K/B)
-│   ├── scene5_shop_for_data.tape                 # Scene 5: Catalogs, sample data (Ctrl+L), subscribe (Ctrl+U)
-│   └── scene6_network_communities_feedback.tape # Scene 6: My Network, communities, feedback (Ctrl+F), tech types
-├── generate_voiceover.py               # AI Text-to-Speech voiceover generator & video assembly pipeline
-├── record_demo.py                      # Python Textual Pilot automated driver (generates vector SVG captures)
-├── run_recordings.sh                   # Master runner script for VHS, Pilot captures, and narration
-├── output/                             # Generated recording artifacts (ignored by git)
-│   ├── audio/                          # Synthesized MP3 narration audio tracks per scene & full episode
-│   ├── videos/                         # Rendered raw 1080p MP4 videos
-│   ├── videos_narrated/                # 1080p MP4 videos with synchronized voiceover narration
-│   ├── gifs/                           # Animated GIF screencasts
-│   ├── slides/                         # 1080p PNG slide title cards
-│   └── captures/                       # Timestamped SVG/PNG screenshots per scene
-└── README.md                           # This documentation guide
+├── episode_specs.py              # Narrative scripts, scene breakdowns & persona voice metadata
+├── generate_series_videos.py     # Multi-episode video & slide generator (Episodes 1 to 7)
+├── generate_voiceover.py         # Callie Quartile foundational walkthrough generator (Episode 0)
+├── run_series.sh                 # Master CLI runner for the Business Value Video Series
+├── run_recordings.sh             # Terminal recording runner (VHS tapes + headless pilot)
+├── my_profile_full_walkthrough.tape  # Full 1080p VHS terminal recording script
+├── record_demo.py                # Headless Textual Pilot automated SVG/PNG frame capture
+├── README.md                     # This documentation guide
+└── output/
+    ├── episode1/ ... episode7/   # Per-episode audio, 1080p slide PNGs, scene clips & master MP4s
+    │   ├── audio/                # Scene MP3 voiceovers & full stitched episode audio
+    │   ├── slides/               # 1080p Catppuccin Mocha slide cards
+    │   └── videos_narrated/      # Assembled master MP4 episodes
+    ├── audio/                    # Callie Quartile voiceover tracks
+    ├── slides/                   # Callie Quartile intro/outro slides
+    ├── videos/                   # Raw raster terminal recordings from VHS
+    └── videos_narrated/          # Callie Quartile assembled video blog master
 ```
 
 ---
 
-## 🛠️ Prerequisites & Installation
+## Generating & Rebuilding Video Episodes
 
-### Option A: VHS Recording (Recommended for MP4/GIF Video Capture)
-Charm's [VHS](https://github.com/charmbracelet/vhs) runs headless terminal scripts with exact millisecond timings and renders 1080p, 60fps MP4 and GIF videos.
-
-- **macOS (Homebrew):**
-  ```bash
-  brew install vhs ffmpeg ttyd
-  ```
-- **Linux (Debian / Ubuntu):**
-  ```bash
-  sudo apt-get install ffmpeg ttyd
-  go install github.com/charmbracelet/vhs@latest
-  ```
-
-### Option B: Textual Pilot Recorder (Python Native, No External Binary Needed)
-Built on Textual's async `Pilot` framework, included out of the box with the project dependencies (`uv sync`).
-
----
-
-## 🚀 Running Recordings
-
-### 1. Master Runner Script (`run_recordings.sh`)
-
+### 1. Generate the Entire Business Value Series (Episodes 1–7)
 ```bash
-# Make sure the script is executable
-chmod +x my_egeria/my_egeria/recording/run_recordings.sh
-
-# Record the full continuous walkthrough (Scenes 2 to 6)
-./my_egeria/my_egeria/recording/run_recordings.sh --walkthrough
-
-# Record all individual scene clips
-./my_egeria/my_egeria/recording/run_recordings.sh --scenes
-
-# Record a specific scene clip (e.g. Scene 5: Shop for Data)
-./my_egeria/my_egeria/recording/run_recordings.sh --scene 5
-
-# Generate all vector SVG screenshots via Textual Pilot
-./my_egeria/my_egeria/recording/run_recordings.sh --pilot
-
-# Generate AI Voiceover narration (Callie Quartile) and merge with recorded video clips
-./my_egeria/my_egeria/recording/run_recordings.sh --narrate
-
-# Assemble the complete 5-minute master video blog episode (Scenes 0-7)
-./my_egeria/my_egeria/recording/run_recordings.sh --assemble
-
-# Run everything (walkthrough + all individual scenes + SVG captures + narration + master episode)
-./my_egeria/my_egeria/recording/run_recordings.sh --all
+./my_egeria/my_egeria/recording/run_series.sh --all
 ```
 
-### 2. Running Voiceover Generator Directly (`generate_voiceover.py`)
-
+### 2. Generate and Automatically Export to `pdr-vault`
 ```bash
-# Generate narration and merge videos using Edge Neural TTS (default: en-GB-SoniaNeural)
-uv run python my_egeria/my_egeria/recording/generate_voiceover.py --assemble
+# Generate all episodes and auto-sync master videos to the shared vault
+./my_egeria/my_egeria/recording/run_series.sh --all --export-vault
 
-# Use native macOS speech synthesizer (offline fallback)
-uv run python my_egeria/my_egeria/recording/generate_voiceover.py --tts say --voice "Flo (English (UK))" --assemble
-
-# Generate narration audio files only
-uv run python my_egeria/my_egeria/recording/generate_voiceover.py --audio-only
-
-# Target a specific scene (e.g. Scene 5)
-uv run python my_egeria/my_egeria/recording/generate_voiceover.py --scene 5
+# Generate a single episode and auto-sync with all audio/slide assets
+./my_egeria/my_egeria/recording/run_series.sh --episode 1 --export-vault --all-assets
 ```
 
-### 3. Running Individual VHS Tapes Directly
-
+### 3. Generate an Individual Episode
 ```bash
-cd my_egeria/my_egeria/recording
+# Generate Episode 1 (Faith Broker - Data Privacy)
+./my_egeria/my_egeria/recording/run_series.sh --episode 1
 
-# Run full walkthrough tape
-vhs my_profile_full_walkthrough.tape
+# Generate Episode 2 (Peter Profile - Stewardship)
+./my_egeria/my_egeria/recording/run_series.sh --episode 2
 
-# Run a specific scene tape
-vhs scenes/scene5_shop_for_data.tape
+# Generate Episode 4 (Stew Faster - Supply Chain)
+./my_egeria/my_egeria/recording/run_series.sh --episode 4
 ```
 
-### 4. Running the Python Pilot Driver Directly
-
+### 4. Generate Audio Tracks or Slide Cards Only
 ```bash
-# Record all scenes headlessly to SVG
-uv run python my_egeria/my_egeria/recording/record_demo.py
+# Audio tracks only
+./my_egeria/my_egeria/recording/run_series.sh --all --audio-only
 
-# Record a specific scene
-uv run python my_egeria/my_egeria/recording/record_demo.py --scene 4
-
-# Specify custom output directory
-uv run python my_egeria/my_egeria/recording/record_demo.py --output-dir ./my_captures
+# Slide cards only
+./my_egeria/my_egeria/recording/run_series.sh --all --slides-only
 ```
 
 ---
 
-## ⚙️ Environment Configuration
+## Centralized Video Vault Synchronization (`pdr-vault`)
 
-You can customize the target persona and Egeria platform environment variables before executing recordings:
+To prevent repository bloat while providing a certified, single source of truth for distribution, master video exports and media assets are synchronized to the shared `pdr-vault` repository.
 
+### 1. On-Demand Vault Synchronization
+Run the standalone vault exporter anytime to sync master videos to the vault:
 ```bash
-# Set persona to Callie Quartile (default)
-export EGERIA_USER_NAME="calliequartile"
+# Default destination ($PDR_VAULT_PATH or /Users/Shared/pdr-vault)
+uv run python my_egeria/my_egeria/recording/export_vault.py
 
-# Set custom view server or platform URL if recording against live or demo servers
-export EGERIA_VIEW_SERVER="qs-view-server"
-export EGERIA_PLATFORM_URL="https://127.0.0.1:9443"
+# Custom vault location
+uv run python my_egeria/my_egeria/recording/export_vault.py --vault-path /Volumes/pdr-vault
+
+# Export all media assets (master MP4s, per-scene audio MP3s, slide PNGs)
+uv run python my_egeria/my_egeria/recording/export_vault.py --all-assets
+
+# Dry-run preview
+uv run python my_egeria/my_egeria/recording/export_vault.py --dry-run
+```
+
+### 2. Destination Resolution Hierarchy
+The exporter automatically resolves the vault target in the following order:
+1. Explicit `--vault-path` or `--export-vault <path>` CLI argument
+2. `PDR_VAULT_PATH` or `EGERIA_VAULT_PATH` environment variable
+3. `/Volumes/pdr-vault` (if mounted)
+4. `/Users/Shared/pdr-vault` (default local shared directory)
+5. `~/pdr-vault`
+
+### 3. Vault Structure & Metadata Index
+Upon synchronization, `export_vault.py` writes a `README.md` and `vault_manifest.json` inside the vault directory with file checksums, sizes, durations, and episode personas:
+```
+pdr-vault/
+├── README.md               # Vault index catalog and playback guidance
+├── vault_manifest.json     # Machine-readable sync manifest with checksums
+├── videos/                 # 1080p Master MP4 video episodes
+├── audio/                  # (Optional) Synthesized neural voiceover MP3 tracks
+└── slides/                 # (Optional) 1080p Catppuccin Mocha slide PNGs
 ```
 
 ---
 
-## 🎬 Video Production Workflow
+## How to Play and View the Rendered Videos
 
-1. **Audio Narration:** Record spoken voiceover according to [`VIDEO_SCRIPT_DRAFT.md`](../VIDEO_SCRIPT_DRAFT.md).
-2. **Video Capture:** Execute `./run_recordings.sh --walkthrough` to generate `output/videos/my_profile_full_walkthrough.mp4` (or use individual scene `.mp4` files from `output/videos/`).
-3. **Assembly & Editing:** In your video editor (e.g. DaVinci Resolve, Premiere Pro, Camtasia, CapCut, or via `ffmpeg`):
-   - Place the presenter intro / title card (Scene 0 & Scene 1).
-   - Sync the recorded `.mp4` terminal clips with Callie's narration for Scenes 2 through 6.
-   - Insert lower-thirds, hotkey overlays (`Ctrl+T`, `Ctrl+O`, `Ctrl+L`, `Ctrl+U`), and zoom spotlights onto active dialogs.
-   - Attach the closing call to action and link end cards (Scene 7).
+On macOS, you can launch the completed MP4 video files directly in QuickTime Player or open their folders in Finder:
+
+```bash
+# Episode 1: Faith Broker (Data Privacy & GDPR)
+open my_egeria/my_egeria/recording/output/episode1/videos_narrated/coco_pharma_episode_1_faith_broker.mp4
+
+# Episode 2: Peter Profile (Zero-Touch Stewardship)
+open my_egeria/my_egeria/recording/output/episode2/videos_narrated/coco_pharma_episode_2_peter_profile.mp4
+
+# Episode 3: Dr. Tessa Tube (Clinical Data Provenance)
+open my_egeria/my_egeria/recording/output/episode3/videos_narrated/coco_pharma_episode_3_dr_tessa_tube.mp4
+
+# Episode 4: Stew Faster (Supply Chain & ESG Sustainability)
+open my_egeria/my_egeria/recording/output/episode4/videos_narrated/coco_pharma_episode_4_stew_faster.mp4
+
+# Episode 5: Erin Overview (Business Glossaries & Architecture)
+open my_egeria/my_egeria/recording/output/episode5/videos_narrated/coco_pharma_episode_5_erin_overview.mp4
+
+# Episode 6: Sidney Seeker (Forensic Auditing & Fraud Investigation)
+open my_egeria/my_egeria/recording/output/episode6/videos_narrated/coco_pharma_episode_6_sidney_seeker.mp4
+
+# Episode 7: Jules Keeper & Reggie Mint (The Executive Cockpit & ROI)
+open my_egeria/my_egeria/recording/output/episode7/videos_narrated/coco_pharma_episode_7_jules_keeper_reggie_mint.mp4
+
+# Open the Master Episodes Folder in macOS Finder
+open my_egeria/my_egeria/recording/output
+```
+
+---
+
+## Required Toolchain & Dependencies
+
+- **Python Environment**: `uv pip install edge-tts Pillow textual rich`
+- **System CLI Utilities (Homebrew)**: `brew install vhs ffmpeg ttyd`
+- **Container / Video Standards**: 1080p H.264 video (`yuv420p`), 48kHz stereo AAC audio, QuickTime `-bf 0` stream safety, and `faststart` metadata for instant seeking.

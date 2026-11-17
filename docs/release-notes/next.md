@@ -43,6 +43,18 @@ notes and are not repeated here.
   reported "not applied".
 - **Dr.Egeria Project Scope maps to `ProjectProperties.scope`** (PY-5 / EG-14).
 
+- **My Profile: work with communities directly (#601, Peter Coldicott).**
+  - Press `Enter` on a community in the main screen's User Associations to open it.
+  - **Find Community** on the Other Functions menu opens the Communities screen ready to search.
+  - A community now shows its **resources**: what it lists with `ResourceList`, and what is `ScopedBy` it.
+  - If you aren't a member, the community screen offers **Join Community** (Contributor or Observer).
+  - Blog posts and resources have a **feedback** screen: like/unlike, a 1–5 star rating with an optional review
+    (one per person; rating again replaces it), and comments.
+  - The main screen reloads after you join, leave or create-and-join a community.
+  - Feedback reads use the same paging rules as the rest of My Profile: counts say "at least N" unless Egeria
+    confirms the end.
+  - See `docs/my_egeria_manual.md` and `docs/My-Egeria-Doc.md`.
+
 ## Planned for pyegeria 6.4 or the next release
 
 - **No default password, and no built-in identity outside a named demo profile.** pyegeria 6.4 or the next release drops the quickstart

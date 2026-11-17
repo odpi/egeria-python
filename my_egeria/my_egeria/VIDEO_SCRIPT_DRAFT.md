@@ -67,9 +67,9 @@ Camera pans through the structured grid layout:
 > At the top, my **User Associations** and **Collections** organize the clinical datasets and glossaries I care about.
 > In the middle, you see my appointed **Roles** and **Teams**. Notice how governance comes alive here: pressing Enter on my Clinical Trials team role instantly opens **My Team**, showing colleagues like Tessa Tube and Tanya Tidie along with their active responsibilities.
 > Down here is my daily activity stream: team **Blogs**, my personal **Journal**, and my **To-Dos**.
-> And at the top right, Egeria tracks my **Karma Points**, recognizing active curation and collaboration across Coco Pharmaceuticals!
+> And at the top right, Egeria tracks my **Karma Points**, calculated quietly in the background by Egeria's `Simon` housekeeping connector to recognize active curation and collaboration across Coco Pharmaceuticals!
 
-**[ON-SCREEN CALLOUT]** "Live metadata synchronization • Role & Team drill-down • Automated Karma recognition"
+**[ON-SCREEN CALLOUT]** "Live metadata synchronization • Role & Team drill-down • Simon Housekeeping Connector & Karma recognition"
 
 ---
 
@@ -83,6 +83,7 @@ Camera pans through the structured grid layout:
 **CALLIE:**
 > Data governance only works if metadata is maintained as part of our normal flow of work, not as an afterthought.
 > Pressing **Ctrl+T** lets me edit any highlighted table in place—adding action items from morning stand-ups or updating project milestones.
+> And we don't have to worry about our task lists becoming bloated: behind the scenes, Egeria's `Pasteur` connector automatically archives completed tasks while preserving our full audit lineage, and `Mendel` deduplicates our keyword tags.
 > With **Ctrl+O** and **Ctrl+N**, threaded discussions attach directly to the metadata asset or task itself. Instead of losing critical context in email threads, Dr. Tube and I keep our clinical trial discussions permanently linked to the data.
 > And with **Ctrl+K** and **Ctrl+B**, I can bookmark key assets and retrieve them instantly with a single keystroke.
 
@@ -99,19 +100,19 @@ Camera pans through the structured grid layout:
    - **Business Domains** & **Root Collections**
    - **Glossaries** (Business concepts curated by Erin Overview & Peter Profile)
    - **Data Dictionaries** (Physical schemas & clinical data specifications)
-   - **Digital Product Catalog** (Certified research data products)
+   - **Digital Product Catalog** (Certified research data products adhering to Bitol ODPS standards)
 3. Callie searches for *"Patient Cohort Treatment Efficacy"*, selects the data product, and presses `Ctrl+L` (**Sample Data**). A clean sample data preview opens displaying distribution metrics and confidentiality tags.
-4. Confident in the data quality, she presses `Ctrl+U` (**Subscribe**). The **Create Subscription Request** modal opens. She enters her purpose (*"AI oncology treatment response modeling"*), agrees to governance terms, and submits.
+4. Confident in the data quality, she presses `Ctrl+U` (**Subscribe**). The **Create Subscription Request** modal opens. She enters her purpose (*"AI oncology treatment response modeling"*), agrees to the Bitol Open Data Contract terms, and submits.
 5. She navigates to **Other Functions** → **Subscriptions**, where the new active governed subscription appears.
 
 **CALLIE:**
 > Now for the most powerful feature in my workflow: **Shop for Data**.
-> Before Jules Keeper established our open metadata catalog, finding trusted clinical data meant weeks of meetings and manual approvals. Here, Egeria brings together Business Domains, Glossaries, Data Dictionaries, and Digital Product Catalogs into a unified data marketplace.
+> Before Jules Keeper established our open metadata catalog, finding trusted clinical data meant weeks of meetings and manual approvals. Here, Egeria brings together Business Domains, Glossaries, Data Dictionaries, and Digital Product Catalogs into a unified data marketplace. External partner hospital data is also seamlessly ingested using standard W3C DCAT version 3 connectors.
 > I can explore standardized terminology, verify classifications, and hit **Ctrl+L** to **sample** the dataset right in my terminal to ensure it fits my AI model requirements.
-> When it's right, **Ctrl+U** lets me submit a formal **Subscription Request**. Egeria ensures Faith Broker's privacy rules and compliance policies are satisfied, giving data owners full visibility into who is using their data and why.
+> When it's right, **Ctrl+U** lets me submit a formal **Subscription Request** under Bitol Open Data Contract standards. Egeria ensures Faith Broker's privacy rules and compliance policies are satisfied, and our `Baudot` connector delivers differential delta updates directly to subscribers without redundant event traffic.
 > In less than sixty seconds, governed access is requested, validated, and tracked in **Subscriptions**.
 
-**[ON-SCREEN CALLOUT]** "Unified Data Marketplace • Instant Data Sampling (`Ctrl+L`) • Governed Subscriptions (`Ctrl+U`)"
+**[ON-SCREEN CALLOUT]** "Unified Data Marketplace • Bitol ODCS Contracts • W3C DCAT v3 • Instant Sampling (`Ctrl+L`) • Governed Subscriptions (`Ctrl+U`)"
 
 ---
 
@@ -125,10 +126,10 @@ Camera pans through the structured grid layout:
 
 **CALLIE:**
 > My Profile also strengthens our human network across Coco Pharmaceuticals.
-> **My Network** visualizes collaboration graphs and reporting relationships across departments.
+> **My Network** visualizes collaboration graphs and reporting relationships across departments, using bounded OpenLineage graph queries to keep navigation lightning fast across multi-layer data supply chains.
 > **Work with Communities** connects us to cross-functional working groups, like our Oncology Research and Sustainability circles.
 > If I notice something that needs improvement, pressing **Ctrl+F** lets me log feedback directly into Egeria from anywhere in the app.
-> And for our integration architects like Bob Nitter, the **Technology Types** screen displays the automated governance action templates Egeria executes behind the scenes.
+> And for our integration architects like Bob Nitter, the **Technology Types** screen displays the automated governance action templates and engine connectors Egeria executes behind the scenes.
 
 ---
 
@@ -146,6 +147,12 @@ Camera pans through the structured grid layout:
 - **Egeria Project:** [https://egeria-project.org](https://egeria-project.org)
 - **Coco Pharmaceuticals Personas:** [https://egeria-project.org/practices/coco-pharmaceuticals/personas/](https://egeria-project.org/practices/coco-pharmaceuticals/personas/)
 - **PRD Associates & Jules Keeper Video Blogs:** [https://www.prd-associates.com](https://www.prd-associates.com)
+- **Mandy Chessell Egeria Technical Blogs (Parts 6–10):** [https://github.com/odpi/egeria-docs/tree/main/blogs](https://github.com/odpi/egeria-docs/tree/main/blogs)
+  - *Blog 6:* Egeria 6.3: A Metadata Platform Built for the Long Run (Housekeeping & Reversibility)
+  - *Blog 7:* Supporting Security Professionals: Frameworks, Threat Models & Findings (NIST & STRIDE)
+  - *Blog 8:* Building the Data Mesh: Products, Subscriptions, Contracts & Dependencies (Bitol ODCS & Darwin)
+  - *Blog 9:* From Pipeline Runs to Business Flows: Extracting Lineage Layers (OpenLineage in PostgreSQL)
+  - *Blog 10:* Speaking the Language of Open Data: Exchanging DCAT Documents (W3C DCAT v3)
 - **Egeria Python SDK & TUI:** [https://github.com/odpi/egeria-python](https://github.com/odpi/egeria-python) (`my_egeria` package)
 - **Launch Command:** `uv run my_profile` or web interface via `uv run serve_my_profile`
 - *"Watch Video Blog 3: Establishing Data Governance by Jules Keeper on YouTube"*

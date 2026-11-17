@@ -53,7 +53,7 @@ class MainScreen(Screen):
         yield Header(show_clock=True, id="main_header")
 
         yield ScrollableContainer(
-            Static("User Associations"),
+            Static("User Associations  [dim](Enter on a community: open it)[/dim]"),
             DataTable(id="associations_table"),
             id="main_associations_container"
         )
@@ -69,6 +69,7 @@ class MainScreen(Screen):
                 # Option("[] User Identities"),
                 Option("[] My Network"),
                 Option("[] Work with Communities"),
+                Option("[] Find Community"),
                 Option("[] User Bookmarks"),
                 Option("[] Leave Feedback"),
                 Option("[] Feedback Log"),
