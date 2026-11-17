@@ -5015,17 +5015,13 @@ class ServerClient(BaseServerClient):
         """
 
         if body is None and emoji:
+            # The like carries the caller's emoji. No zone is set here: a caller that wants the like in a
+            # zone passes its own body with initialClassifications.ZoneMembership.
             body = {
               "class" : "NewAttachmentRequestBody",
-              "initialClassifications" : {
-                "ZoneMembership" : {
-                  "class" : "ZoneMembershipProperties",
-                  "zoneMembership" : "erinoverview"
-                }
-              },
               "properties" : {
                 "class" : "LikeProperties",
-                "emoji" : "Add characters here as text"
+                "emoji" : emoji
                 }
             }
         url = f"{self.command_root}feedback-manager/elements/{element_guid}/likes"
