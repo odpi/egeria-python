@@ -287,6 +287,15 @@ class TestMyProfileAppActionsAndOptions:
         await app.handle_option_selected(event)
         app.show_communities.assert_called_once_with()
 
+    @pytest.mark.asyncio
+    async def test_find_community_option_starts_in_the_search_box(self):
+        app = MyProfileApp()
+        app.show_communities = MagicMock()
+        event = MagicMock()
+        event.option.prompt = "[] Find Community"
+        await app.handle_option_selected(event)
+        app.show_communities.assert_called_once_with(find=True)
+
     def test_status_callback(self):
         """Closing a status screen returns to the main screen; it must not end the app."""
         app = MyProfileApp()

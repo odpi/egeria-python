@@ -13,6 +13,8 @@ Screen {
     layout: grid;
     grid-size: 3;
     grid-gutter: 1;
+    background: #1e1e2e;
+    color: #cdd6f4;
 }
 
 #main_screen {
@@ -22,18 +24,23 @@ Screen {
     /*grid-rows: 3 1fr 1fr 1fr 1;*/
     grid-rows: 1fr 1fr 1fr;
     grid-gutter: 1;
+    background: #1e1e2e;
 }
 
 #main_header {
     column-span: 3;
     height: 3;
     width: 100%;
+    background: #11111b;
+    color: #89b4fa;
 }
 
 #main_footer {
     column-span: 3;
     height: 1;
     width: 100%;
+    background: #11111b;
+    color: #cdd6f4;
 }
 
 ModalScreen {
@@ -72,17 +79,26 @@ MyNetworkScreen {
     column-span: 2;
     width: 100%;
     height: 100%;
+    border: round #89b4fa;
+    background: #181825;
+    padding: 0 1;
 }
 
 #people_search_container {
     width: 100%;
     height: 100%;
+    border: round #89b4fa;
+    background: #181825;
+    padding: 0 1;
 }
 
 #peer_details_container {
     column-span: 3;
     width: 100%;
     height: 100%;
+    border: round #89b4fa;
+    background: #181825;
+    padding: 0 1;
 }
 
 #my_network_table {
@@ -139,7 +155,7 @@ CommunitiesScreen {
     max-height: 12;
 }
 
-/* Title row, then the blog + members side by side, then the comments */
+/* Title row, then the blog + members side by side, then the resources + comments */
 CommunityScreen {
     grid-rows: auto 1fr 1fr;
     background: $background;
@@ -156,37 +172,88 @@ CommunityScreen {
     height: 100%;
 }
 
+#community_resources_container {
+    column-span: 2;
+    width: 100%;
+    height: 100%;
+}
+
 #community_comments_container {
-    column-span: 3;
     width: 100%;
     height: 100%;
 }
 
 #community_posts_table,
 #community_members_table,
+#community_resources_table,
 #community_comments_table {
     height: auto;
     max-height: 12;
+}
+
+#community_blog_buttons,
+#community_join_controls {
+    height: auto;
+}
+
+#community_join_assignment_type {
+    width: 20;
+}
+
+/* Title row, the like/rating summary, then the ratings + comments side by side */
+ElementFeedbackScreen {
+    grid-rows: auto auto 1fr;
+    background: $background;
+}
+
+#feedback_summary_container {
+    column-span: 3;
+    height: auto;
+}
+
+#feedback_buttons {
+    height: auto;
+}
+
+#element_ratings_container {
+    width: 100%;
+    height: 100%;
+}
+
+#element_comments_container {
+    column-span: 2;
+    width: 100%;
+    height: 100%;
+}
+
+#element_ratings_table,
+#element_comments_table {
+    height: auto;
+    max-height: 16;
 }
 
 #community_post_text {
     padding: 1 0;
 }
 
-NewBlogPostScreen, AddCommunityCommentScreen {
+NewBlogPostScreen, AddCommunityCommentScreen, RateElementScreen {
     grid-rows: auto 1fr;
     background: $background;
 }
 
-#new_blog_post_container, #add_community_comment_container, #create_community_container {
+#new_blog_post_container, #add_community_comment_container, #create_community_container, #rate_element_container {
     column-span: 3;
 }
 
-#new_blog_post_container Horizontal, #add_community_comment_container Horizontal, #create_community_container Horizontal {
+#new_blog_post_container Horizontal, #add_community_comment_container Horizontal, #create_community_container Horizontal, #rate_element_container Horizontal {
     height: auto;
 }
 
-#blog_post_text, #community_comment_text, #community_mission_text {
+#star_rating_select {
+    width: 30;
+}
+
+#blog_post_text, #community_comment_text, #community_mission_text, #rating_review_text {
     height: 10;
 }
 
@@ -194,23 +261,45 @@ ModalScreen > Header, ModalScreen > Footer {
     column-span: 3;
 }
 
-#communities_title, #community_title, #new_blog_post_title, #add_community_comment_title, #create_community_title, #confirm_leave_community_title, #my_network_title, #confirm_remove_peer_title, #edit_profile_title, #create_profile_title, #edit_teams_title, #edit_roles_title, #edit_communities_title, #edit_identities_title, #status_title, #generic_data_view_title, #feedback_title, #feedback_log_title, .span-3 {
+#communities_title, #community_title, #element_feedback_title, #rate_element_title, #new_blog_post_title, #add_community_comment_title, #create_community_title, #confirm_leave_community_title, #my_network_title, #confirm_remove_peer_title, #edit_profile_title, #create_profile_title, #edit_teams_title, #edit_roles_title, #edit_communities_title, #edit_identities_title, #status_title, #generic_data_view_title, #feedback_title, #feedback_log_title, .span-3 {
     column-span: 3;
     text-align: center;
-    background: darkblue;
-    color: white;
+    background: #89b4fa;
+    color: #11111b;
+    text-style: bold;
 }
 
 #main_projects_container,
 #main_communities_container,
 #main_roles_container,
 #main_teams_container,
-#main_activities_container,
-#main_identities_container,
 #other_function_container,
-#other_function_list {
+#other_function_list,
+#main_associations_container,
+#my_collections_container {
     width: 100%;
     height: 100%;
+    border: round #89b4fa;
+    background: #181825;
+}
+
+#main_activities_container {
+    width: 100%;
+    height: 100%;
+    background: #181825;
+}
+
+#main_identities_container {
+    column-span: 2;
+    width: 100%;
+    height: 100%;
+    border: round #89b4fa;
+    background: #181825;
+}
+
+#main_screen ScrollableContainer > Static {
+    color: #89b4fa;
+    text-style: bold;
 }
 
 #edit_roles_container,
@@ -229,11 +318,12 @@ ModalScreen > Header, ModalScreen > Footer {
 #user_identities_container,
 #generic_data_view_container,
 #feedback_container,
-#feedback_log_container,
-#main_identities_container {
+#feedback_log_container {
     column-span: 2;
     width: 100%;
     height: 100%;
+    border: round #89b4fa;
+    background: #181825;
 }
 
 #technology_types_table,
@@ -267,14 +357,25 @@ ModalScreen > Header, ModalScreen > Footer {
 }
 
 Button {
-    /*background: greenyellow;*/
-    color: black;
-    border: solid white;
+    background: #89b4fa;
+    color: #11111b;
+    border: none;
+    text-style: bold;
+}
+
+Button:focus {
+    background: #a6e3a1;
+    color: #11111b;
+}
+
+Button:hover {
+    background: #b4befe;
+    color: #11111b;
 }
 
 DataTable, TextArea, SelectionList, Tree, OptionList {
-    color: white;
-    background: black;
+    color: #cdd6f4;
+    background: #181825;
 }
 
 DataTable {
@@ -282,18 +383,19 @@ DataTable {
 }
 
 DataTable:focus {
-    border: heavy green;
-    background: $surface-lighten-1;
+    border: heavy #a6e3a1;
+    background: #1e1e2e;
 }
 DataTable > .datatable--header {
-    background: darkblue;
-    color: white;
+    background: #313244;
+    color: #89b4fa;
     text-style: bold;
 }
 
 DataTable > .datatable--cursor, OptionList > .option-list--cursor {
-    background: greenyellow;
-    color: black;
+    background: #a6e3a1;
+    color: #11111b;
+    text-style: bold;
 }
 
 #edit_profile_form Horizontal {
@@ -319,43 +421,55 @@ DataTable > .datatable--cursor, OptionList > .option-list--cursor {
 Input {
     width: 1fr;
     height: auto;
-    border: solid white;
+    border: round #89b4fa;
+    background: #11111b;
+    color: #cdd6f4;
 }
-#show_comment_textarea_container {
-    width: 100%;
-    height: 1fr;
-    border: solid white;
+
+Input:focus {
+    border: round #a6e3a1;
 }
+
+#show_comment_textarea_container,
 #add_comment_textarea_container {
     width: 100%;
     height: 1fr;
-    border: solid white;
+    border: round #89b4fa;
+    background: #181825;
 }
+
 #feedback_text {
     width: 100%;
     height: 10;
-    border: solid white;
+    border: round #89b4fa;
+    background: #11111b;
+    color: #cdd6f4;
 }
+
 #feedback_container Horizontal {
     height: auto;
 }
+
 .SplashScreen {
-        align: center middle;              /* 1. Center the entire card on the screen */
-        background: rgba(0, 0, 0, 0.6);    /* Dim the 3x3 grid behind it */
-    }
+    align: center middle;              /* 1. Center the entire card on the screen */
+    background: rgba(30, 30, 46, 0.7);    /* Dim the 3x3 grid behind it */
+}
+
 #splash-card {
-        background: $panel;
-        border: thick $accent;
-        padding: 2 4;
-        width: 80;
-        height: 24;
-        /* 2. Vertically pushes layout content down and horizontally centers items */
-        align: center bottom;
-    }
+    background: #181825;
+    border: thick #89b4fa;
+    padding: 2 4;
+    width: 80;
+    height: 24;
+    /* 2. Vertically pushes layout content down and horizontally centers items */
+    align: center bottom;
+}
+
 #splash-text {
     text-align: center;
     width: 100%;
     margin-bottom: 2;
+    color: #cdd6f4;
 }
 
 #splash_buttons {
@@ -368,22 +482,30 @@ Input {
 #splash_buttons Button {
     margin: 0 1;                       /* Space out the two buttons side by side */
 }
+
 .empty {
-        background: transparent; /* Invisible structural spacer */
-    }
+    background: transparent; /* Invisible structural spacer */
+}
+
 ConnectionErrorScreen, ChangeUserScreen {
     align: center middle;
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(30, 30, 46, 0.7);
 }
-#connection_error_card, #change_user_card {
-    background: $panel;
-    border: thick $error;
+
+#connection_error_card {
+    background: #181825;
+    border: thick #f38ba8;
     padding: 1 2;
     width: 90;
     height: auto;
 }
+
 #change_user_card {
-    border: thick $accent;
+    background: #181825;
+    border: thick #89b4fa;
+    padding: 1 2;
+    width: 90;
+    height: auto;
 }
 #connection_error_reason {
     color: $error;

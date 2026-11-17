@@ -729,6 +729,8 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
             self.show_my_network()
         elif selected_option == "Work with Communities":
             self.show_communities()
+        elif selected_option == "Find Community":
+            self.show_communities(find=True)
         elif selected_option == "Change User":
             await self.push_screen(ChangeUserScreen(), callback=self.change_user_callback)
         elif selected_option == "Subscriptions":
@@ -751,6 +753,14 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         handlers from its own classes, so a decorator on the plain mixin never fires.
         """
         self.handle_roles_table_row_selection(event)
+
+    @on(DataTable.RowSelected, "#associations_table")
+    def _on_associations_row_selected(self, event: DataTable.RowSelected) -> None:
+        """Open the community in a User Associations row: its members, blog, resources and comments.
+
+        Registered here rather than on CommunitiesMixin, for the same reason as the roles handler.
+        """
+        self.open_community_row(event.data_table, event.row_key)
 
     def show_main_screen(self) -> None:
         """Show or switch back to the main screen by unwinding the screen stack."""

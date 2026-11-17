@@ -21,6 +21,16 @@
    posts are read from every note log attached to the community, so entries
    written by other tools are shown too. Comments are attached to the community
    directly.
+
+   A community's resources are the elements it lists with ResourceList
+   relationships (https://egeria-project.org/types/0/0019-More-Information/) and
+   those scoped to it with ScopedBy relationships (such as the digital products a
+   special interest group looks after). The other end of a ResourceList - where
+   the community is itself someone else's resource - is not shown.
+
+   Feedback on a blog post or a resource is its comments, likes and star ratings.
+   Egeria keeps one like and one rating per user on an element: liking or rating
+   again replaces the user's earlier one.
 """
 
 import sys
@@ -38,7 +48,7 @@ if str(current_dir) not in sys.path:
 
 from pyegeria import Egeria, PyegeriaException
 from CommunitiesScreen import CommunitiesScreen, DIRECT_LINK, JOIN_ASSIGNMENT_TYPES, CREATOR_ASSIGNMENT_TYPES
-from CommunityScreen import comment_type_label
+from CommunityScreen import CommunityScreen, comment_type_label, star_label, STAR_VALUES
 
 COMMUNITY_TYPE = "Community"
 PERSON_TYPE = "Person"
@@ -50,6 +60,12 @@ MEMBER_DIRECT = "Direct"
 BLOG_LOG_QN = "NoteLog::{community_guid}::CommunityBlog"
 # How many of a community's most recent blog posts are listed
 LATEST_POSTS = 20
+# The relationships that link a community to its resources, and the "Linked As" text of a scoped element
+RESOURCE_RELATIONSHIPS = ["ResourceList", "ScopedBy"]
+IN_SCOPE = "In scope"
+# Sent with every like: pyegeria's add_like_to_element, given an emoji, sends a placeholder
+# text and a fixed zone instead, so the body is always built here
+LIKE_EMOJI = "👍"
 
 
 def _type_name(element: dict) -> str:
@@ -134,8 +150,9 @@ class CommunitiesMixin:
         return [(c["name"], ", ".join(c["types"]), "; ".join(c["through"]), c["description"], guid)
                 for guid, c in communities.items()]
 
-    def show_communities(self) -> None:
-        """Show the Work with Communities screen for the current user."""
+    def show_communities(self, find: bool = False) -> None:
+        """Show the Work with Communities screen for the current user. With find, the cursor starts
+           in the search box (the Find Community menu option)."""
         if not getattr(self, "user_GUID", ""):
             self.notify("Your profile has not loaded yet, so your communities can't be shown", timeout=10,
                         severity="warning")
@@ -143,11 +160,36 @@ class CommunitiesMixin:
         communities = self.list_my_communities()
         if communities is None:
             return
-        self.push_screen(CommunitiesScreen(communities), callback=self.communities_callback)
+        self.push_screen(CommunitiesScreen(communities, focus_search=find), callback=self.communities_callback)
 
     def communities_callback(self, result: Any) -> None:
-        pass
         # self.log(f"Communities screen returned: {result}")
+        self._refresh_if_communities_changed()
+
+    def open_community_row(self, table, row_key) -> None:
+        """Open the community in a main-screen User Associations row: (type, name, description, GUID)."""
+        try:
+            row = table.get_row(row_key)
+        except Exception:
+            return
+        community_guid, community_name = str(row[3] or ""), str(row[1] or "")
+        if not community_guid:
+            self.notify("This row has no GUID, so the community can't be opened", timeout=5, severity="warning")
+            return
+        self.push_screen(CommunityScreen(community_guid, community_name), callback=self.community_callback)
+
+    def community_callback(self, result: Any) -> None:
+        # self.log(f"Community screen returned: {result}")
+        self._refresh_if_communities_changed()
+
+    def _communities_changed(self) -> None:
+        """Note that the user's memberships changed, so the main screen is re-read when they return to it."""
+        self.communities_changed = True
+
+    def _refresh_if_communities_changed(self) -> None:
+        if getattr(self, "communities_changed", False):
+            self.communities_changed = False
+            self.call_later(self.action_refresh)
 
     def search_communities(self, search_string: str) -> list[tuple[str, str, str, str]] | None:
         """Communities matching search_string ('*' for all) as (name, description, qualified name, GUID) rows,
@@ -237,6 +279,47 @@ class CommunitiesMixin:
         return sorted(((p["name"], ", ".join(p["types"]), "; ".join(p["through"]), p["qualified_name"], guid)
                        for guid, p in people.items()), key=lambda row: row[0].lower())
 
+    def get_community_resources(self, community_guid: str) -> list[tuple[str, str, str, str, str]] | None:
+        """The community's resources as (name, type, linked as, description, GUID) rows, sorted by name,
+           or None if they could not be retrieved. An element linked both ways is one row."""
+        client = None
+        try:
+            client = self._community_client()
+            community = client.get_community_by_guid(community_guid, output_format="JSON", graph_query_depth=1,
+                                                     include_only_relationships=RESOURCE_RELATIONSHIPS)
+        except PyegeriaException as e:
+            # self.log(f"Retrieving the resources of community {community_guid} failed: {e}")
+            self.notify(f"Could not retrieve the community's resources: {e}", timeout=10, severity="error")
+            return None
+        finally:
+            if client:
+                client.close_session()
+        if not isinstance(community, dict):
+            return []
+
+        links = []
+        # resourceList is the community's own list; resourceListUsers, the other end, is left out
+        for link in community.get("resourceList") or []:
+            link_properties = link.get("relationshipProperties") or {}
+            use = link_properties.get("resourceUse") or link_properties.get("label") or ""
+            links.append((link, f"Resource: {use}" if use else "Resource"))
+        links += [(link, IN_SCOPE) for link in community.get("relevantToScopes") or []]
+
+        resources: dict[str, dict] = {}
+        for link, linked_as in links:
+            element = link.get("relatedElement") or {}
+            guid = _guid(element)
+            if not guid:
+                continue
+            properties = element.get("properties") or {}
+            entry = resources.setdefault(guid, {"name": _name(properties), "type": _type_name(element),
+                                                "description": properties.get("description") or "",
+                                                "linked_as": []})
+            if linked_as not in entry["linked_as"]:
+                entry["linked_as"].append(linked_as)
+        return sorted(((r["name"], r["type"], "; ".join(r["linked_as"]), r["description"], guid)
+                       for guid, r in resources.items()), key=lambda row: row[0].lower())
+
     def get_community_blog_posts(self, community_guid: str) -> list[tuple[str, str, str, str, str]] | None:
         """The community's latest blog posts, newest first, as (title, author, posted, text, GUID) rows,
            or None if they could not be retrieved."""
@@ -313,6 +396,20 @@ class CommunitiesMixin:
             if client:
                 client.close_session()
 
+    @staticmethod
+    def _comment_rows(comments) -> list[tuple[str, str, str, str, str]]:
+        """(comment, type, author, posted, GUID) rows, newest first"""
+        rows = []
+        # "No elements found" is returned, rather than an exception, when there are none
+        for comment in comments if isinstance(comments, list) else []:
+            properties = comment.get("properties") or {}
+            author, create_time = _created(comment)
+            comment_type = comment_type_label(properties.get("commentType") or "")
+            rows.append((create_time, (properties.get("description") or "", comment_type, author,
+                                       _posted(create_time), _guid(comment))))
+        rows.sort(key=lambda r: r[0], reverse=True)
+        return [row for _, row in rows]
+
     def get_community_comments(self, community_guid: str) -> list[tuple[str, str, str, str, str]] | None:
         """The comments attached to the community, newest first, as (comment, type, author, posted, GUID) rows,
            or None if they could not be retrieved."""
@@ -327,33 +424,113 @@ class CommunitiesMixin:
         finally:
             if client:
                 client.close_session()
-        rows = []
-        for comment in comments if isinstance(comments, list) else []:
-            properties = comment.get("properties") or {}
-            author, create_time = _created(comment)
-            comment_type = comment_type_label(properties.get("commentType") or "")
-            rows.append((create_time, (properties.get("description") or "", comment_type, author,
-                                       _posted(create_time), _guid(comment))))
-        rows.sort(key=lambda r: r[0], reverse=True)
-        return [row for _, row in rows]
+        return self._comment_rows(comments)
 
-    def add_community_comment(self, community_guid: str, text: str, comment_type: str) -> bool:
-        """Attach a comment to the community. comment_type is one of pyegeria's COMMENT_TYPES.
-           Returns True on success."""
+    def add_element_comment(self, element_guid: str, text: str, comment_type: str) -> bool:
+        """Attach a comment to an element (a community, blog post or resource). comment_type is one of
+           pyegeria's COMMENT_TYPES. Returns True on success."""
         client = None
         try:
             client = self._community_client()
-            response = client.add_comment_to_element(community_guid, text, comment_type)
-            # self.log(f"Commented on community {community_guid}: {response}")
+            response = client.add_comment_to_element(element_guid, text, comment_type)
+            # self.log(f"Commented on element {element_guid}: {response}")
             self.notify("Your comment has been added", timeout=10, severity="information")
             return True
         except PyegeriaException as e:
-            # self.log(f"Commenting on community {community_guid} failed: {e}")
+            # self.log(f"Commenting on element {element_guid} failed: {e}")
             self.notify(f"Adding the comment failed: {e}", timeout=10, severity="error")
             return False
         finally:
             if client:
                 client.close_session()
+
+    def add_community_comment(self, community_guid: str, text: str, comment_type: str) -> bool:
+        """Attach a comment to the community. Returns True on success."""
+        return self.add_element_comment(community_guid, text, comment_type)
+
+    # --- feedback on a blog post or resource -----------------------------------
+
+    def get_element_feedback(self, element_guid: str) -> dict | None:
+        """The feedback on an element, or None if it could not be retrieved:
+             comments    (comment, type, author, posted, GUID) rows, newest first
+             likes       how many people like it
+             i_like      whether the user is one of them
+             ratings     (stars, review, rated by, rated) rows, newest first
+             average     mean stars over the ratings that give some, or None
+             my_rating   the user's own (StarRating value, review), or None
+        """
+        client = None
+        try:
+            client = self._community_client()
+            comments = client.get_attached_comments(element_guid, graph_query_depth=0)
+            likes = client.get_attached_likes(element_guid, graph_query_depth=0)
+            ratings = client.get_attached_ratings(element_guid, graph_query_depth=0)
+        except PyegeriaException as e:
+            # self.log(f"Retrieving the feedback on element {element_guid} failed: {e}")
+            self.notify(f"Could not retrieve the feedback: {e}", timeout=10, severity="error")
+            return None
+        finally:
+            if client:
+                client.close_session()
+
+        likes = likes if isinstance(likes, list) else []
+        rating_rows, stars, my_rating = [], [], None
+        for rating in ratings if isinstance(ratings, list) else []:
+            properties = rating.get("properties") or {}
+            star_rating = properties.get("starRating") or ""
+            review = properties.get("review") or ""
+            rated_by, create_time = _created(rating)
+            rating_rows.append((create_time, (star_label(star_rating), review, rated_by, _posted(create_time))))
+            if STAR_VALUES.get(star_rating):
+                stars.append(STAR_VALUES[star_rating])
+            if rated_by == self.user_name:
+                my_rating = (star_rating, review)
+        rating_rows.sort(key=lambda r: r[0], reverse=True)
+        return {
+            "comments": self._comment_rows(comments),
+            "likes": len(likes),
+            "i_like": any(_created(like)[0] == self.user_name for like in likes),
+            "ratings": [row for _, row in rating_rows],
+            "average": sum(stars) / len(stars) if stars else None,
+            "my_rating": my_rating,
+        }
+
+    def _feedback_call(self, action, done: str, failed: str) -> bool:
+        client = None
+        try:
+            client = self._community_client()
+            action(client)
+            self.notify(done, timeout=10, severity="information")
+            return True
+        except PyegeriaException as e:
+            # self.log(f"{failed}: {e}")
+            self.notify(f"{failed}: {e}", timeout=10, severity="error")
+            return False
+        finally:
+            if client:
+                client.close_session()
+
+    def like_element(self, element_guid: str) -> bool:
+        """Like an element. Returns True on success."""
+        body = {"class": "NewAttachmentRequestBody",
+                "properties": {"class": "LikeProperties", "emoji": LIKE_EMOJI}}
+        return self._feedback_call(lambda client: client.add_like_to_element(element_guid, body=body),
+                                   "You like this", "Adding your like failed")
+
+    def unlike_element(self, element_guid: str) -> bool:
+        """Remove the user's like from an element. Returns True on success."""
+        return self._feedback_call(lambda client: client.remove_like_from_element(element_guid),
+                                   "Your like has been removed", "Removing your like failed")
+
+    def rate_element(self, element_guid: str, star_rating: str, review: str = "") -> bool:
+        """Give an element a star rating (one of STAR_VALUES) and an optional review, replacing any
+           earlier rating by the user. Returns True on success."""
+        properties = {"class": "RatingProperties", "starRating": star_rating}
+        if review:
+            properties["review"] = review
+        body = {"class": "NewAttachmentRequestBody", "properties": properties}
+        return self._feedback_call(lambda client: client.add_rating_to_element(element_guid, True, body),
+                                   f"You rated it {star_label(star_rating)}", "Adding your rating failed")
 
     def create_community(self, name: str, description: str, mission: str = "",
                          assignment_type: str = CREATOR_ASSIGNMENT_TYPES[0]) -> str | None:
@@ -395,6 +572,7 @@ class CommunitiesMixin:
                 # self.log(f"Joining new community {community_guid} failed: {e}")
                 self.notify(f"Community {name} created, but joining it failed: {e}", timeout=10, severity="warning")
                 return community_guid
+            self._communities_changed()
             self.notify(f"Community {name} created, and you have joined it as its {assignment_type}",
                         timeout=10, severity="information")
             return community_guid
@@ -419,6 +597,7 @@ class CommunitiesMixin:
         try:
             client = self._community_client()
             client.link_assignment_scope(community_guid, self.user_GUID, body)
+            self._communities_changed()
             self.notify(f"You have joined the community as a {assignment_type}", timeout=10,
                         severity="information")
             return True
@@ -437,6 +616,7 @@ class CommunitiesMixin:
             client = self._community_client()
             # same GUID order as link_assignment_scope: scope (the community) first, actor second
             client.detach_assignment_scope(community_guid, self.user_GUID, {"class": "DeleteRelationshipRequestBody"})
+            self._communities_changed()
             self.notify("You have left the community", timeout=10, severity="information")
             return True
         except PyegeriaException as e:

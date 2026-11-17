@@ -120,12 +120,13 @@ SCENES: Dict[int, SceneSpec] = {
             "pressing Enter on my Clinical Trials team role instantly opens My Team, showing colleagues like Tessa Tube and Tanya Tidie "
             "along with their active responsibilities. "
             "Down here is my daily activity stream: team Blogs, my personal Journal, and my To-Dos. "
-            "And at the top right, Egeria tracks my Karma Points, recognizing active curation and collaboration across Coco Pharmaceuticals!"
+            "And at the top right, Egeria tracks my Karma Points, calculated quietly in the background by Egeria's Simon housekeeping connector "
+            "to recognize active curation and collaboration across Coco Pharmaceuticals!"
         ),
         scene_type="terminal",
         video_file="scene3_main_dashboard.mp4",
         slide_title="Main Dashboard & Roles",
-        callouts=["Live metadata synchronization", "Role & Team drill-down", "Automated Karma recognition"],
+        callouts=["Live metadata synchronization", "Role & Team drill-down", "Simon Housekeeping & Karma Points"],
     ),
     4: SceneSpec(
         number=4,
@@ -133,6 +134,8 @@ SCENES: Dict[int, SceneSpec] = {
         dialogue=(
             "Data governance only works if metadata is maintained as part of our normal flow of work, not as an afterthought. "
             "Pressing Control plus T lets me edit any highlighted table in place, adding action items from morning stand-ups or updating project milestones. "
+            "Behind the scenes, Egeria's Pasteur connector automatically archives completed tasks while preserving full audit lineage, "
+            "and Mendel deduplicates our tags. "
             "With Control plus O and Control plus N, threaded discussions attach directly to the metadata asset or task itself. "
             "Instead of losing critical context in email threads, Dr. Tube and I keep our clinical trial discussions permanently linked to the data. "
             "And with Control plus K and Control plus B, I can bookmark key assets and retrieve them instantly with a single keystroke."
@@ -152,11 +155,13 @@ SCENES: Dict[int, SceneSpec] = {
         dialogue=(
             "Now for the most powerful feature in my workflow: Shop for Data. "
             "Before Jules Keeper established our open metadata catalog, finding trusted clinical data meant weeks of meetings and manual approvals. "
-            "Here, Egeria brings together Business Domains, Glossaries, Data Dictionaries, and Digital Product Catalogs into a unified data marketplace. "
+            "Here, Egeria brings together Business Domains, Glossaries, Data Dictionaries, and Digital Product Catalogs into a unified data marketplace, "
+            "with external hospital data ingested via standard W3C DCAT version 3 connectors. "
             "I can explore standardized terminology, verify classifications, and hit Control plus L to sample the dataset right in my terminal "
             "to ensure it fits my AI model requirements. "
-            "When it's right, Control plus U lets me submit a formal Subscription Request. "
-            "Egeria ensures Faith Broker's privacy rules and compliance policies are satisfied, giving data owners full visibility into who is using their data and why. "
+            "When it's right, Control plus U lets me submit a formal Subscription Request under Bitol Open Data Contract standards. "
+            "Egeria ensures Faith Broker's privacy rules and compliance policies are satisfied, and our Baudot connector delivers differential delta updates "
+            "directly to subscribers without redundant event traffic. "
             "In less than sixty seconds, governed access is requested, validated, and tracked in Subscriptions."
         ),
         scene_type="terminal",
@@ -164,6 +169,7 @@ SCENES: Dict[int, SceneSpec] = {
         slide_title="Governed Data Marketplace",
         callouts=[
             "Unified Data Marketplace",
+            "Bitol ODCS Contracts & DCAT v3",
             "Instant Data Sampling (Ctrl+L)",
             "Governed Subscriptions (Ctrl+U)",
         ],
@@ -173,11 +179,12 @@ SCENES: Dict[int, SceneSpec] = {
         title="Collaboration, Networks & Technology Curation",
         dialogue=(
             "My Profile also strengthens our human network across Coco Pharmaceuticals. "
-            "My Network visualizes collaboration graphs and reporting relationships across departments. "
+            "My Network visualizes collaboration graphs and reporting relationships across departments, "
+            "using bounded OpenLineage graph queries to keep navigation lightning fast across multi-layer data supply chains. "
             "Work with Communities connects us to cross-functional working groups, like our Oncology Research and Sustainability circles. "
             "If I notice something that needs improvement, pressing Control plus F lets me log feedback directly into Egeria from anywhere in the app. "
             "And for our integration architects like Bob Nitter, the Technology Types screen displays the automated governance action templates "
-            "Egeria executes behind the scenes."
+            "and engine connectors Egeria executes behind the scenes."
         ),
         scene_type="terminal",
         video_file="scene6_network_communities_feedback.mp4",
@@ -799,6 +806,18 @@ async def main_async() -> None:
     parser.add_argument("--audio-only", action="store_true", help="Generate audio tracks without merging video")
     parser.add_argument("--merge-only", action="store_true", help="Merge existing audio without re-synthesizing")
     parser.add_argument("--assemble", action="store_true", help="Assemble complete master multi-scene video episode")
+    parser.add_argument(
+        "--export-vault",
+        nargs="?",
+        const="DEFAULT",
+        default=None,
+        help="Automatically sync generated videos to pdr-vault (optional custom vault path)",
+    )
+    parser.add_argument(
+        "--all-assets",
+        action="store_true",
+        help="When exporting to vault, include all audio and slide assets alongside master videos",
+    )
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR, help="Output directory path")
 
     args = parser.parse_args()
@@ -850,6 +869,17 @@ async def main_async() -> None:
     print(f" Narrated Videos: {processor.narrated_dir}")
     print(f" Audio Tracks:    {processor.audio_dir}")
     print("========================================================================")
+
+    # Automated Vault Export Trigger
+    should_export = args.export_vault is not None or os.getenv("PDR_VAULT_PATH") is not None
+    if should_export and not args.audio_only:
+        try:
+            from export_vault import export_to_vault
+            vault_custom = None if args.export_vault in (None, "DEFAULT") else args.export_vault
+            print("\n[AUTO-EXPORT] Initiating automated synchronization to pdr-vault...")
+            export_to_vault(vault_path=vault_custom, all_assets=args.all_assets)
+        except Exception as e:
+            print(f"[WARN] Failed to export to vault: {e}")
 
 
 def main() -> None:

@@ -108,6 +108,7 @@ run_pilot_all() {
 
 run_voiceover() {
     local assemble_flag="${1:-}"
+    local export_vault_flag="${2:-}"
     echo ""
     echo ">>> Running Automated Voiceover & Video Assembly Pipeline..."
     local repo_root
@@ -117,6 +118,10 @@ run_voiceover() {
         extra_args+=("--assemble")
     elif [[ "${assemble_flag}" == "--audio-only" ]]; then
         extra_args+=("--audio-only")
+    fi
+
+    if [[ -n "${export_vault_flag}" ]]; then
+        extra_args+=(${export_vault_flag})
     fi
 
     if command -v uv &>/dev/null; then
@@ -130,19 +135,21 @@ usage() {
     echo "Usage: $0 [OPTION]"
     echo ""
     echo "Recording Options:"
-    echo "  --walkthrough   Record the continuous full walkthrough video tape (Scenes 2-6)"
-    echo "  --scenes        Record all individual scene video tapes (Scenes 2, 3, 4, 5, 6)"
-    echo "  --scene <2-6>   Record a specific scene tape (e.g. $0 --scene 5)"
-    echo "  --pilot         Run Python Textual Pilot SVG screenshot capture"
+    echo "  --walkthrough         Record the continuous full walkthrough video tape (Scenes 2-6)"
+    echo "  --scenes              Record all individual scene video tapes (Scenes 2, 3, 4, 5, 6)"
+    echo "  --scene <2-6>         Record a specific scene tape (e.g. $0 --scene 5)"
+    echo "  --pilot               Run Python Textual Pilot SVG screenshot capture"
     echo ""
     echo "Voiceover & Assembly Options:"
-    echo "  --narrate       Generate Callie Quartile's voiceover & merge with video clips"
-    echo "  --assemble      Generate narration and assemble complete master video episode (Scenes 0-7)"
-    echo "  --audio-only    Generate spoken audio MP3 tracks without video merging"
+    echo "  --narrate             Generate Callie Quartile's voiceover & merge with video clips"
+    echo "  --assemble            Generate narration and assemble complete master video episode (Scenes 0-7)"
+    echo "  --audio-only          Generate spoken audio MP3 tracks without video merging"
+    echo "  --export-vault [PATH] Automatically export master videos to pdr-vault"
+    echo "  --all-assets          Include audio tracks and slide graphics in vault export"
     echo ""
     echo "Master Workflow:"
-    echo "  --all           Record walkthrough, scenes, pilot SVGs, voiceover, and master episode"
-    echo "  --help          Display this help message"
+    echo "  --all                 Record walkthrough, scenes, pilot SVGs, voiceover, and master episode"
+    echo "  --help                Display this help message"
     echo ""
 }
 
@@ -153,7 +160,50 @@ if [[ $# -eq 0 ]]; then
     exit 0
 fi
 
-case "$1" in
+EXPORT_FLAG=""
+ALL_ASSETS_FLAG=""
+COMMAND=""
+SCENE_NUM=""
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --export-vault)
+            if [[ $# -gt 1 && ! "$2" =~ ^-- ]]; then
+                EXPORT_FLAG="--export-vault $2"
+                shift 2
+            else
+                EXPORT_FLAG="--export-vault"
+                shift
+            fi
+            ;;
+        --all-assets)
+            ALL_ASSETS_FLAG="--all-assets"
+            shift
+            ;;
+        --walkthrough|--scenes|--pilot|--narrate|--assemble|--audio-only|--all)
+            COMMAND="$1"
+            shift
+            ;;
+        --scene)
+            COMMAND="--scene"
+            SCENE_NUM="${2:-}"
+            shift 2
+            ;;
+        --help|-h)
+            usage
+            exit 0
+            ;;
+        *)
+            echo "[ERROR] Unknown option: $1"
+            usage
+            exit 1
+            ;;
+    esac
+done
+
+VAULT_ARGS="${EXPORT_FLAG} ${ALL_ASSETS_FLAG}"
+
+case "${COMMAND}" in
     --walkthrough)
         run_walkthrough
         ;;
@@ -161,37 +211,36 @@ case "$1" in
         run_scenes_all
         ;;
     --scene)
-        if [[ -z "${2:-}" ]]; then
+        if [[ -z "${SCENE_NUM}" ]]; then
             echo "[ERROR] --scene requires a scene number (2, 3, 4, 5, or 6)"
             exit 1
         fi
-        run_scene "$2"
+        run_scene "${SCENE_NUM}"
         ;;
     --pilot)
         run_pilot_all
         ;;
     --narrate)
-        run_voiceover ""
+        run_voiceover "" "${VAULT_ARGS}"
         ;;
     --assemble)
-        run_voiceover "--assemble"
+        run_voiceover "--assemble" "${VAULT_ARGS}"
         ;;
     --audio-only)
-        run_voiceover "--audio-only"
+        run_voiceover "--audio-only" ""
         ;;
     --all)
         run_walkthrough
         run_scenes_all
         run_pilot_all
-        run_voiceover "--assemble"
+        run_voiceover "--assemble" "${VAULT_ARGS}"
         ;;
-    --help|-h)
-        usage
-        ;;
-    *)
-        echo "[ERROR] Unknown option: $1"
-        usage
-        exit 1
+    "")
+        if [[ -n "${EXPORT_FLAG}" ]]; then
+            uv run python "${SCRIPT_DIR}/export_vault.py" ${EXPORT_FLAG} ${ALL_ASSETS_FLAG}
+        else
+            run_walkthrough
+        fi
         ;;
 esac
 

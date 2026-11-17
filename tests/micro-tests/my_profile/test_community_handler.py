@@ -17,7 +17,9 @@ import community_handler
 from community_handler import CommunitiesMixin
 from CommunitiesScreen import (CommunitiesScreen, ConfirmLeaveCommunityScreen, CreateCommunityScreen, DIRECT_LINK,
                                NOT_JOINING)
-from CommunityScreen import CommunityScreen, NewBlogPostScreen, AddCommunityCommentScreen
+from CommunityScreen import (CommunityScreen, NewBlogPostScreen, AddCommunityCommentScreen, ElementFeedbackScreen,
+                             RateElementScreen, star_label)
+from community_handler import IN_SCOPE, LIKE_EMOJI
 from pyegeria import PyegeriaException
 
 
@@ -374,9 +376,10 @@ ALL_COMMUNITIES = [("Data Science SIG", "Data science", "Community::ds-guid", "d
 class CommunitiesHostApp(App):
     """Host app standing in for MyProfileApp's community methods."""
 
-    def __init__(self, rows):
+    def __init__(self, rows, focus_search=False):
         super().__init__()
         self.rows = list(rows)
+        self.focus_search = focus_search
         self.join_community = MagicMock(side_effect=self._join)
         self.leave_community = MagicMock(side_effect=self._leave)
         self.search_communities = MagicMock(return_value=list(ALL_COMMUNITIES))
@@ -389,7 +392,40 @@ class CommunitiesHostApp(App):
         self.add_community_blog_post = MagicMock(side_effect=self._post)
         self.add_community_comment = MagicMock(side_effect=self._comment)
         self.create_community = MagicMock(side_effect=self._create)
+        # The members list holds "g", so by default the user is a member of every community
+        self.user_GUID = "g"
+        self.resources = [("Software Servers", "DigitalProduct", IN_SCOPE, "Servers", "r1"),
+                          ("Runbook", "ExternalReference", "Resource: Guidance", "How to", "r2")]
+        self.get_community_resources = MagicMock(side_effect=lambda guid: list(self.resources))
+        self.feedback = {"comments": [("Nice", "Standard Comment", "erin", "2026-10-02 10:00", "fc1")],
+                         "likes": 2, "i_like": False,
+                         "ratings": [("★★★★☆", "Good", "erin", "2026-10-02 10:00")],
+                         "average": 4.0, "my_rating": None}
+        self.get_element_feedback = MagicMock(side_effect=lambda guid: dict(self.feedback))
+        self.like_element = MagicMock(side_effect=self._like)
+        self.unlike_element = MagicMock(side_effect=self._unlike)
+        self.rate_element = MagicMock(side_effect=self._rate)
+        self.add_element_comment = MagicMock(side_effect=self._element_comment)
         self.dismissed = None
+
+    def _like(self, guid):
+        self.feedback.update(likes=self.feedback["likes"] + 1, i_like=True)
+        return True
+
+    def _unlike(self, guid):
+        self.feedback.update(likes=self.feedback["likes"] - 1, i_like=False)
+        return True
+
+    def _rate(self, guid, star_rating, review):
+        self.feedback["my_rating"] = (star_rating, review)
+        self.feedback["ratings"] = [(star_label(star_rating), review, "garygeeke", "2026-10-28 12:00")] + \
+            self.feedback["ratings"]
+        return True
+
+    def _element_comment(self, guid, text, comment_type):
+        self.feedback["comments"] = [(text, comment_type, "garygeeke", "2026-10-28 12:00", "fc-new")] + \
+            self.feedback["comments"]
+        return True
 
     def _create(self, name, description, mission, assignment_type):
         self.search_communities.return_value.append((name, description, f"Community::{name}", "new-guid"))
@@ -418,7 +454,7 @@ class CommunitiesHostApp(App):
         return list(self.rows)
 
     async def on_mount(self):
-        self.screen_under_test = CommunitiesScreen(list(self.rows))
+        self.screen_under_test = CommunitiesScreen(list(self.rows), focus_search=self.focus_search)
         await self.push_screen(self.screen_under_test, callback=lambda r: setattr(self, "dismissed", r))
 
 
@@ -771,3 +807,387 @@ class TestCommunityScreen:
             await pilot.pause()
             assert app.get_community_blog_posts.call_count == 1
             assert screen.query_one("#community_posts_table", DataTable).row_count == 2
+
+
+def _link(element, relationship_properties=None):
+    return {"relationshipProperties": relationship_properties or {}, "relatedElement": element}
+
+
+SERVERS = _element("srv-guid", "DigitalProduct", "Software Servers", "Servers")
+RUNBOOK = _element("run-guid", "ExternalReference", "Runbook", "How to")
+
+
+class TestResourcesAndFeedbackMixin:
+    def test_resources_merge_resource_list_and_scope(self, client):
+        client.get_community_by_guid.return_value = {
+            "resourceList": [_link(RUNBOOK, {"resourceUse": "Guidance"}), _link(SERVERS, {})],
+            "relevantToScopes": [_link(SERVERS)],
+            # the community is a resource of something else: not one of its resources
+            "resourceListUsers": [_link(_element("vmv-guid", "ValidMetadataValue", "Sustainability"))],
+        }
+        rows = DummyApp().get_community_resources("sus-guid")
+        client.get_community_by_guid.assert_called_once_with(
+            "sus-guid", output_format="JSON", graph_query_depth=1,
+            include_only_relationships=["ResourceList", "ScopedBy"])
+        assert rows == [
+            ("Runbook", "ExternalReference", "Resource: Guidance", "How to", "run-guid"),
+            ("Software Servers", "DigitalProduct", f"Resource; {IN_SCOPE}", "Servers", "srv-guid"),
+        ]
+        client.close_session.assert_called_once()
+
+    def test_no_resources(self, client):
+        client.get_community_by_guid.return_value = {"elementHeader": {"guid": "ds-guid"}}
+        assert DummyApp().get_community_resources("ds-guid") == []
+
+    def test_resources_error_returns_none(self, client):
+        client.get_community_by_guid.side_effect = PyegeriaException("boom")
+        app = DummyApp()
+        assert app.get_community_resources("ds-guid") is None
+        assert app.notices[-1][1] == "error"
+
+    def test_feedback(self, client):
+        def rating(guid, by, at, stars, review=""):
+            r = _created(_element(guid, "Rating", ""), by, at)
+            r["properties"] = {"starRating": stars, "review": review}
+            return r
+
+        client.get_attached_comments.return_value = [
+            _created({**_element("c1", "Comment", ""), "properties": {"description": "Old", "commentType": "QUESTION"}},
+                     "erin", "2026-10-01T09:00:00"),
+            _created({**_element("c2", "Comment", ""), "properties": {"description": "New",
+                                                                       "commentType": "STANDARD_COMMENT"}},
+                     "garygeeke", "2026-10-05T09:00:00"),
+        ]
+        client.get_attached_likes.return_value = [_created(_element("l1", "Like", ""), "erin", "2026-10-01"),
+                                                  _created(_element("l2", "Like", ""), "garygeeke", "2026-10-02")]
+        client.get_attached_ratings.return_value = [
+            rating("r1", "erin", "2026-10-01T09:00:00", "FIVE_STARS", "Great"),
+            rating("r2", "garygeeke", "2026-10-03T09:00:00", "TWO_STARS", "Meh"),
+            rating("r3", "peter", "2026-10-02T09:00:00", "NO_RECOMMENDATION"),
+        ]
+        feedback = DummyApp().get_element_feedback("post-guid")
+        assert [c[0] for c in feedback["comments"]] == ["New", "Old"]
+        assert feedback["comments"][1][1] == "Question"
+        assert feedback["likes"] == 2 and feedback["i_like"] is True
+        assert [r[2] for r in feedback["ratings"]] == ["garygeeke", "peter", "erin"]
+        assert feedback["ratings"][0][0] == "★★☆☆☆"
+        # NO_RECOMMENDATION gives no stars, so it is left out of the average
+        assert feedback["average"] == 3.5
+        assert feedback["my_rating"] == ("TWO_STARS", "Meh")
+        client.close_session.assert_called_once()
+
+    def test_no_feedback(self, client):
+        for method in (client.get_attached_comments, client.get_attached_likes, client.get_attached_ratings):
+            method.return_value = "No elements found"
+        feedback = DummyApp().get_element_feedback("post-guid")
+        assert feedback == {"comments": [], "likes": 0, "i_like": False, "ratings": [], "average": None,
+                            "my_rating": None}
+
+    def test_feedback_error_returns_none(self, client):
+        client.get_attached_likes.side_effect = PyegeriaException("boom")
+        app = DummyApp()
+        assert app.get_element_feedback("post-guid") is None
+        assert app.notices[-1][1] == "error"
+
+    def test_like_sends_its_own_body(self, client):
+        assert DummyApp().like_element("post-guid") is True
+        client.add_like_to_element.assert_called_once_with("post-guid", body={
+            "class": "NewAttachmentRequestBody", "properties": {"class": "LikeProperties", "emoji": LIKE_EMOJI}})
+        client.close_session.assert_called_once()
+
+    def test_unlike(self, client):
+        assert DummyApp().unlike_element("post-guid") is True
+        client.remove_like_from_element.assert_called_once_with("post-guid")
+
+    def test_rate(self, client):
+        assert DummyApp().rate_element("post-guid", "FOUR_STARS", "Useful") is True
+        client.add_rating_to_element.assert_called_once_with("post-guid", True, {
+            "class": "NewAttachmentRequestBody",
+            "properties": {"class": "RatingProperties", "starRating": "FOUR_STARS", "review": "Useful"}})
+
+    def test_rate_without_review(self, client):
+        DummyApp().rate_element("post-guid", "ONE_STAR")
+        assert "review" not in client.add_rating_to_element.call_args.args[2]["properties"]
+
+    def test_feedback_action_error(self, client):
+        client.add_rating_to_element.side_effect = PyegeriaException("boom")
+        app = DummyApp()
+        assert app.rate_element("post-guid", "ONE_STAR") is False
+        assert app.notices[-1][1] == "error"
+        client.close_session.assert_called_once()
+
+    def test_comment_on_any_element(self, client):
+        assert DummyApp().add_element_comment("run-guid", "Handy", "USAGE_EXPERIENCE") is True
+        client.add_comment_to_element.assert_called_once_with("run-guid", "Handy", "USAGE_EXPERIENCE")
+
+    def test_star_label(self):
+        assert star_label("FIVE_STARS") == "★★★★★"
+        assert star_label("ONE_STAR") == "★☆☆☆☆"
+        assert star_label("NO_RECOMMENDATION") == "No recommendation"
+
+    def test_find_starts_in_the_search_box(self, client):
+        client.get_my_profile.return_value = PROFILE
+        app = DummyApp()
+        app.show_communities(find=True)
+        assert app.pushed[-1][0].focus_search is True
+        app.show_communities()
+        assert app.pushed[-1][0].focus_search is False
+
+    def test_open_community_from_a_main_screen_row(self):
+        app = DummyApp()
+        table = MagicMock()
+        table.get_row.return_value = ["Contributor", "Data Science SIG", "Data science", "ds-guid"]
+        app.open_community_row(table, "row-key")
+        table.get_row.assert_called_once_with("row-key")
+        screen, callback = app.pushed[-1]
+        assert isinstance(screen, CommunityScreen)
+        assert (screen.community_guid, screen.community_name) == ("ds-guid", "Data Science SIG")
+        assert callback == app.community_callback
+
+    def test_open_community_row_without_guid(self):
+        app = DummyApp()
+        table = MagicMock()
+        table.get_row.return_value = ["", "No GUID", "", ""]
+        app.open_community_row(table, "row-key")
+        assert app.pushed == []
+        assert app.notices[-1][1] == "warning"
+
+    @pytest.mark.parametrize("change", ["join", "leave", "create"])
+    def test_membership_change_refreshes_the_main_screen(self, client, change):
+        client.get_communities_by_name.return_value = "No elements found"
+        app = DummyApp()
+        app.call_later = MagicMock()
+        app.action_refresh = MagicMock()
+        {"join": lambda: app.join_community("ds-guid"),
+         "leave": lambda: app.leave_community("ds-guid"),
+         "create": lambda: app.create_community("New", "A new one")}[change]()
+        app.communities_callback(200)
+        app.call_later.assert_called_once_with(app.action_refresh)
+        # only once per change
+        app.community_callback(200)
+        app.call_later.assert_called_once()
+
+    def test_no_change_no_refresh(self, client):
+        app = DummyApp()
+        app.call_later = MagicMock()
+        app.communities_callback(200)
+        app.community_callback(200)
+        app.call_later.assert_not_called()
+
+    def test_failed_join_does_not_refresh(self, client):
+        client.link_assignment_scope.side_effect = PyegeriaException("boom")
+        app = DummyApp()
+        app.call_later = MagicMock()
+        app.join_community("ds-guid")
+        app.communities_callback(200)
+        app.call_later.assert_not_called()
+
+
+class TestCommunityResourcesAndJoining:
+    @pytest.mark.asyncio
+    async def test_shows_resources(self):
+        app = CommunitiesHostApp(MY_ROWS)
+        async with app.run_test() as pilot:
+            screen = await _open_community(app, pilot)
+            app.get_community_resources.assert_called_once_with("ds-guid")
+            table = screen.query_one("#community_resources_table", DataTable)
+            assert [table.get_row_at(i)[2] for i in range(table.row_count)] == [IN_SCOPE, "Resource: Guidance"]
+
+    @pytest.mark.asyncio
+    async def test_a_member_is_not_offered_joining(self):
+        app = CommunitiesHostApp(MY_ROWS)
+        async with app.run_test() as pilot:
+            screen = await _open_community(app, pilot)
+            assert screen.is_member is True
+            assert not screen.query_one("#community_join_controls").display
+            screen.action_join()
+            app.join_community.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_join_from_a_found_community(self):
+        app = CommunitiesHostApp(MY_ROWS)
+        app.user_GUID = "someone-else"
+        async with app.run_test() as pilot:
+            communities = app.screen_under_test
+            communities.query_one("#communities_found_table", DataTable).focus()
+            await pilot.press("ctrl+o")
+            await pilot.pause()
+            screen = app.screen
+            assert isinstance(screen, CommunityScreen) and screen.community_guid == "priv-guid"
+            assert screen.query_one("#community_join_controls").display
+            screen.query_one("#community_join_assignment_type", Select).value = "Observer"
+            # once joined, the members list includes the user
+            app.get_community_members.return_value = [("Me", "Observer", "Direct", "Person::me", "someone-else")]
+            await pilot.press("ctrl+w")
+            await pilot.pause()
+            app.join_community.assert_called_once_with("priv-guid", "Observer")
+            assert screen.joined and screen.is_member
+            assert not screen.query_one("#community_join_controls").display
+            # back on the list, the community has moved from found to mine
+            await pilot.press("escape")
+            await pilot.pause()
+            assert app.screen is communities
+            assert "priv-guid" in communities.query_one("#my_communities_table", DataTable).rows
+            assert "priv-guid" not in communities.query_one("#communities_found_table", DataTable).rows
+
+    @pytest.mark.asyncio
+    async def test_unreadable_members_offer_no_join(self):
+        app = CommunitiesHostApp(MY_ROWS)
+        app.get_community_members = MagicMock(return_value=None)
+        async with app.run_test() as pilot:
+            screen = await _open_community(app, pilot)
+            assert screen.is_member is None
+            assert not screen.query_one("#community_join_controls").display
+            screen.action_join()
+            app.join_community.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_find_starts_in_the_search_box(self):
+        app = CommunitiesHostApp(MY_ROWS, focus_search=True)
+        async with app.run_test() as pilot:
+            await pilot.pause()
+            screen = app.screen_under_test
+            assert screen.focused is screen.query_one("#community_search_input", Input)
+
+
+async def _open_post_feedback(app, pilot) -> ElementFeedbackScreen:
+    community = await _open_community(app, pilot)
+    community.query_one("#community_posts_table", DataTable).focus()
+    await pilot.press("enter")
+    await pilot.pause()
+    assert isinstance(app.screen, ElementFeedbackScreen)
+    return app.screen
+
+
+class TestElementFeedbackScreen:
+    @pytest.mark.asyncio
+    async def test_enter_on_a_post_shows_its_feedback(self):
+        app = CommunitiesHostApp(MY_ROWS)
+        async with app.run_test() as pilot:
+            screen = await _open_post_feedback(app, pilot)
+            # the newest post is highlighted first
+            assert (screen.element_guid, screen.element_name, screen.element_kind) == ("p2", "Second", "Blog post")
+            app.get_element_feedback.assert_called_once_with("p2")
+            summary = str(screen.query_one("#feedback_summary", Static).render())
+            assert "2 people like this" in summary and "Average rating 4.0 of 5 from 1 rating(s)" in summary
+            assert screen.query_one("#element_ratings_table", DataTable).row_count == 1
+            assert screen.query_one("#element_comments_table", DataTable).row_count == 1
+            assert str(screen.query_one("#toggle_like_btn", Button).label) == "Like"
+
+    @pytest.mark.asyncio
+    async def test_feedback_on_a_resource(self):
+        app = CommunitiesHostApp(MY_ROWS)
+        async with app.run_test() as pilot:
+            community = await _open_community(app, pilot)
+            resources = community.query_one("#community_resources_table", DataTable)
+            resources.focus()
+            resources.move_cursor(row=1)
+            await pilot.press("ctrl+o")
+            await pilot.pause()
+            assert isinstance(app.screen, ElementFeedbackScreen)
+            assert (app.screen.element_guid, app.screen.element_kind) == ("r2", "Resource")
+
+    @pytest.mark.asyncio
+    async def test_no_resources_to_give_feedback_on(self):
+        app = CommunitiesHostApp(MY_ROWS)
+        app.resources = []
+        async with app.run_test() as pilot:
+            community = await _open_community(app, pilot)
+            community.query_one("#resource_feedback_btn", Button).press()
+            await pilot.pause()
+            assert app.screen is community
+
+    @pytest.mark.asyncio
+    async def test_like_then_unlike(self):
+        app = CommunitiesHostApp(MY_ROWS)
+        async with app.run_test() as pilot:
+            screen = await _open_post_feedback(app, pilot)
+            await pilot.press("ctrl+l")
+            await pilot.pause()
+            app.like_element.assert_called_once_with("p2")
+            assert "3 people like this" in str(screen.query_one("#feedback_summary", Static).render())
+            assert str(screen.query_one("#toggle_like_btn", Button).label) == "Unlike"
+            screen.query_one("#toggle_like_btn", Button).press()
+            await pilot.pause()
+            app.unlike_element.assert_called_once_with("p2")
+            assert str(screen.query_one("#toggle_like_btn", Button).label) == "Like"
+
+    @pytest.mark.asyncio
+    async def test_rate(self):
+        app = CommunitiesHostApp(MY_ROWS)
+        async with app.run_test() as pilot:
+            screen = await _open_post_feedback(app, pilot)
+            await pilot.press("ctrl+r")
+            await pilot.pause()
+            assert isinstance(app.screen, RateElementScreen)
+            app.screen.query_one("#star_rating_select", Select).value = "THREE_STARS"
+            app.screen.query_one("#rating_review_text", TextArea).text = "  OK  "
+            app.screen.query_one("#submit_rating_btn", Button).press()
+            await pilot.pause()
+            app.rate_element.assert_called_once_with("p2", "THREE_STARS", "OK")
+            assert app.screen is screen
+            assert screen.query_one("#element_ratings_table", DataTable).row_count == 2
+            assert str(screen.query_one("#rate_element_btn", Button).label) == "Change Rating"
+            # rating again starts from the user's current rating
+            screen.action_rate()
+            await pilot.pause()
+            assert app.screen.query_one("#star_rating_select", Select).value == "THREE_STARS"
+            assert app.screen.query_one("#rating_review_text", TextArea).text == "OK"
+
+    @pytest.mark.asyncio
+    async def test_cancel_rating(self):
+        app = CommunitiesHostApp(MY_ROWS)
+        async with app.run_test() as pilot:
+            screen = await _open_post_feedback(app, pilot)
+            screen.action_rate()
+            await pilot.pause()
+            await pilot.press("escape")
+            await pilot.pause()
+            assert app.screen is screen
+            app.rate_element.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_comment(self):
+        app = CommunitiesHostApp(MY_ROWS)
+        async with app.run_test() as pilot:
+            screen = await _open_post_feedback(app, pilot)
+            await pilot.press("ctrl+n")
+            await pilot.pause()
+            assert isinstance(app.screen, AddCommunityCommentScreen)
+            app.screen.query_one("#community_comment_text", TextArea).text = "Agreed"
+            app.screen.action_submit()
+            await pilot.pause()
+            app.add_element_comment.assert_called_once_with("p2", "Agreed", "STANDARD_COMMENT")
+            # the community's own comments are not touched
+            app.add_community_comment.assert_not_called()
+            assert screen.query_one("#element_comments_table", DataTable).row_count == 2
+
+    @pytest.mark.asyncio
+    async def test_unreadable_feedback(self):
+        app = CommunitiesHostApp(MY_ROWS)
+        app.get_element_feedback = MagicMock(return_value=None)
+        async with app.run_test() as pilot:
+            screen = await _open_post_feedback(app, pilot)
+            assert screen.query_one("#element_comments_table", DataTable).row_count == 0
+            # without knowing whether the user likes it, the button likes
+            screen.action_toggle_like()
+            app.like_element.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_back_returns_to_the_community(self):
+        app = CommunitiesHostApp(MY_ROWS)
+        async with app.run_test() as pilot:
+            await _open_post_feedback(app, pilot)
+            await pilot.press("escape")
+            await pilot.pause()
+            assert isinstance(app.screen, CommunityScreen)
+
+    @pytest.mark.asyncio
+    async def test_q_goes_to_the_main_screen(self):
+        app = CommunitiesHostApp(MY_ROWS)
+        async with app.run_test() as pilot:
+            await _open_post_feedback(app, pilot)
+            await pilot.press("q")
+            await pilot.pause()
+            assert app.dismissed == 200
+            assert not isinstance(app.screen, (CommunitiesScreen, CommunityScreen, ElementFeedbackScreen))

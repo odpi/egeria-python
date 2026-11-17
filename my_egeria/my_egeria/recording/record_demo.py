@@ -48,41 +48,139 @@ async def wait_for_table(pilot: Pilot, table: DataTable, timeout: float = 30.0) 
     return False
 
 
-def sanitize_svg(svg_content: str) -> str:
-    """Sanitize Textual/Rich SVG export to fix character spacing and typography.
+BOX_CHARS = set("╭╮╯╰│─┌┐└┘├┤┬┴┼═║╔╗╚╝╠╣╦╩╬━┃┏┓┗┛┣┫┳┻╋")
 
-    Removes font-variant-east-asian: full-width (which forces double spacing in modern SVG viewers),
-    ensures proper JetBrains Mono and standard monospace font metrics, and adjusts styling.
-    """
-    # 1. Remove font-variant-east-asian: full-width
+EXTRA_SVG_STYLES = """
+    .term-border { fill: #89b4fa !important; font-weight: normal; }
+    .term-header-title { fill: #89b4fa !important; font-weight: bold; }
+    .term-section-title { fill: #cba6f7 !important; font-weight: bold; }
+    .term-table-header { fill: #74c7ec !important; font-weight: bold; }
+    .term-gold { fill: #f9e2af !important; font-weight: bold; }
+    .term-green { fill: #a6e3a1 !important; font-weight: bold; }
+    .term-peach { fill: #fab387 !important; font-weight: bold; }
+    .term-red { fill: #f38ba8 !important; font-weight: bold; }
+    .term-sky { fill: #74c7ec !important; font-weight: bold; }
+    .term-white { fill: #cdd6f4 !important; }
+"""
+
+CATPPUCCIN_MOCHA_MAP = {
+    r"#0178d4\b": "#89b4fa",  # Sapphire / Blue
+    r"#004578\b": "#74c7ec",  # Sky
+    r"#004854\b": "#cba6f7",  # Mauve
+    r"#00008b\b": "#89b4fa",  # Dark Blue -> Blue
+    r"#28c840\b": "#a6e3a1",  # Green
+    r"#febc2e\b": "#f9e2af",  # Yellow
+    r"#ff5f57\b": "#f38ba8",  # Red
+}
+
+KNOWN_SECTIONS = [
+    "User Associations", "My Collections", "Other Functions", "Roles", "Teams",
+    "Blogs", "Journal", "To-Dos", "User Identity", "Projects", "Select a function",
+    "Shop for Data", "My Network", "Work with Communities", "User Bookmarks",
+    "Leave Feedback", "Feedback Log", "Subscriptions", "Catalogs/Shop for Data",
+    "Technology Types", "Edit Profile", "Change User", "Peer Details", "People Search",
+    "Community Details", "Active Communities", "Joined Communities", "Available Roles",
+    "Catalog Search", "Digital Data Products", "Data Dictionaries", "Business Domains"
+]
+
+
+def sanitize_svg(svg_content: str) -> str:
+    """Sanitize Textual/Rich SVG export to fix typography, character spacing, and full TrueColor colors."""
+    # 1. Remove font-variant-east-asian: full-width (which forces double spacing)
     svg = re.sub(r"font-variant-east-asian:\s*full-width;?", "", svg_content)
 
-    # 2. Embed JetBrains Mono webfont and fallbacks
-    jb_font = """
-    @font-face {
+    # 2. Embed JetBrains Mono webfont & vibrant TrueColor styling
+    jb_font = f"""
+    @font-face {{
         font-family: "JetBrains Mono";
         src: local("JetBrainsMono-Regular"), local("JetBrains Mono"),
              url("https://cdn.jsdelivr.net/gh/JetBrains/JetBrainsMono/web/woff2/JetBrainsMono-Regular.woff2") format("woff2");
         font-style: normal;
         font-weight: 400;
-    }
-    @font-face {
+    }}
+    @font-face {{
         font-family: "JetBrains Mono";
         src: local("JetBrainsMono-Bold"), local("JetBrains Mono-Bold"),
              url("https://cdn.jsdelivr.net/gh/JetBrains/JetBrainsMono/web/woff2/JetBrainsMono-Bold.woff2") format("woff2");
         font-style: bold;
         font-weight: 700;
-    }
+    }}
+{EXTRA_SVG_STYLES}
 """
     if "<style>" in svg and "JetBrains Mono" not in svg:
         svg = svg.replace("<style>", f"<style>{jb_font}")
 
-    # 3. Update font-family rule in matrix classes to use JetBrains Mono and normal letter spacing
+    # 3. Update font-family rule in matrix classes
     svg = re.sub(
         r"font-family:\s*Fira Code,\s*monospace;",
         'font-family: "JetBrains Mono", "Fira Code", Menlo, Monaco, "Courier New", monospace; letter-spacing: normal;',
         svg,
     )
+
+    # 4. Standardize dark panel & container background fills
+    svg = re.sub(r'fill="#121212"', 'fill="#181825"', svg)
+    svg = re.sub(r'fill="#191919"', 'fill="#1e1e2e"', svg)
+    svg = re.sub(r'fill="#000000"', 'fill="#11111b"', svg)
+    svg = re.sub(r'fill="#282828"', 'fill="#313244"', svg)
+
+    # 5. Semantic text colorization for rich visual elements
+    def colorize_text_element(match):
+        full_tag = match.group(0)
+        attrs = match.group(1)
+        content = match.group(2)
+
+        def replace_class(target_class):
+            if 'class="' in attrs:
+                new_attrs = re.sub(r'class="[^"]*"', f'class="{target_class}"', attrs)
+            else:
+                new_attrs = f'class="{target_class}" {attrs}'
+            return f'<text {new_attrs}>{content}</text>'
+
+        clean_content = content.replace("&#160;", " ").strip()
+
+        # Check box drawing border
+        if clean_content and all(c in BOX_CHARS or c == " " for c in clean_content):
+            return replace_class("term-border")
+
+        # Check Header / Egeria title
+        if clean_content == "Egeria":
+            return replace_class("term-header-title")
+
+        # Check section headings
+        if any(sec in clean_content for sec in KNOWN_SECTIONS):
+            return replace_class("term-section-title")
+
+        # Check Karma points, clocks, numbers
+        if "Karma Points" in clean_content or re.search(r"\b\d{2}:\d{2}:\d{2}\b", clean_content):
+            return replace_class("term-gold")
+
+        # Check badges / status indicators
+        if "●" in clean_content or clean_content in ["Active", "Done", "Approved", "Valid"]:
+            return replace_class("term-green")
+        if "⭘" in clean_content or clean_content in ["Pending", "In Progress", "Draft"]:
+            return replace_class("term-gold")
+        if clean_content in ["Restricted", "Confidential", "High", "Critical", "Error"]:
+            return replace_class("term-red")
+
+        # Check hotkeys
+        if re.search(r"\[(Ctrl\+[A-Z]|Enter|Esc|Space)\]", clean_content):
+            return replace_class("term-peach")
+
+        # Check buttons
+        if clean_content in ["Continue", "Change User", "Close", "Cancel", "Submit", "Edit"]:
+            return replace_class("term-green")
+
+        # Check table headers
+        if clean_content in ["Role Name", "Team Name", "Project Name", "Association", "Collection", "User Name", "Action", "Target", "Status", "Date", "Type", "Scope", "Access"]:
+            return replace_class("term-table-header")
+
+        return full_tag
+
+    svg = re.sub(r"<text([^>]*)>(.*?)</text>", colorize_text_element, svg)
+
+    # 6. Apply fallback palette translations
+    for pattern, replacement in CATPPUCCIN_MOCHA_MAP.items():
+        svg = re.sub(pattern, replacement, svg, flags=re.IGNORECASE)
 
     return svg
 
