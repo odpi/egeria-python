@@ -6707,7 +6707,7 @@ class CollectionManager(ServerClient):
         collection_guid: str
             The guid of the collection to delete.
 
-        cascade: bool, optional, defaults to True
+        cascade: bool, optional, defaults to False
             If true, a cascade delete is performed.
 
         body: dict | DeleteElementRequestBody, optional, default = None
@@ -6757,7 +6757,7 @@ class CollectionManager(ServerClient):
         collection_guid: str
             The guid of the collection to delete.
 
-        cascade: bool, optional, defaults to True
+        cascade: bool, optional, defaults to False
             If true, a cascade delete is performed.
 
         body: dict | DeleteElementRequestBody, optional, default = None
