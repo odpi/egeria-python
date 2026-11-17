@@ -5015,10 +5015,10 @@ class ServerClient(BaseServerClient):
         """
 
         if body is None and emoji:
-            # The like carries the caller's emoji. No zone is set here: a caller that wants the like in a
-            # zone passes its own body with initialClassifications.ZoneMembership.
+            # The like carries the caller's emoji. No zone is set: Egeria anchors a Like to the liked element,
+            # so it is exactly as visible as that element (this endpoint ignores initialClassifications).
             body = {
-              "class" : "NewAttachmentRequestBody",
+              "class" : "UpdateElementRequestBody",
               "properties" : {
                 "class" : "LikeProperties",
                 "emoji" : emoji
