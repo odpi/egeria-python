@@ -31,8 +31,9 @@ All source files named here are in `my_egeria/my_egeria/`.
 | `team_roles_handler.py`, `MyTeamScreen.py` | `TeamRolesMixin` and the team roster screen |
 | `bookmarks_handler.py`, `MyBookMarksScreen.py` | `BookmarksMixin` (bookmarks kept in a personal collection) and the bookmarks screen |
 | `network_handler.py`, `MyNetworkScreen.py` | `NetworkMixin` (peers linked by `Peer` relationships), `MyNetworkScreen` and `ConfirmRemovePeerScreen` |
-| `community_handler.py`, `CommunitiesScreen.py` | `CommunitiesMixin` (community membership through `AssignmentScope` relationships), `CommunitiesScreen`, `CreateCommunityScreen` and `ConfirmLeaveCommunityScreen` |
-| `CommunityScreen.py` | `CommunityScreen` (one community's members, blog and comments), `NewBlogPostScreen` and `AddCommunityCommentScreen` |
+| `community_handler.py`, `CommunitiesScreen.py` | `CommunitiesMixin` (community membership through `AssignmentScope` relationships, resources, feedback on posts and resources), `CommunitiesScreen`, `CreateCommunityScreen` and `ConfirmLeaveCommunityScreen` |
+| `CommunityScreen.py` | `CommunityScreen` (one community's members, blog, resources and comments, and joining it), `NewBlogPostScreen`, `AddCommunityCommentScreen`, `ElementFeedbackScreen` (likes, ratings and comments on a blog post or resource) and `RateElementScreen` |
+| `paging_support.py` | Egeria's paging contract as the handlers use it: `read_all`/`PagedRows`, the "at least" and "none" words, and the found / absent / unknown guards that writes check first (see [Paging and write guards](#paging-and-write-guards)) |
 | `UserIdentitiesScreen.py` | Read-only user identity table |
 | `StatusScreen.py` | Result message with copy-GUID |
 | `profile_utils.py` | Environment check, Egeria access check (`check_egeria_access`), the shared screen heading (`set_screen_heading`) and data clean-up helpers |
@@ -48,7 +49,7 @@ classDiagram
     class App
     class MyProfileApp {
         SCREENS
-        BINDINGS: q, r, ctrl+f, f3
+        BINDINGS: q, ctrl+r, ctrl+f, f3
         on_mount()
         mainline(splash_return)
         change_user() / change_user_callback()
@@ -80,14 +81,18 @@ classDiagram
         get_peer_details()
     }
     class CommunitiesMixin {
-        show_communities()
+        show_communities(find)
+        open_community_row()
         list_my_communities()
         search_communities()
         get_community_members()
+        get_community_resources()
         create_community()
         join_community() / leave_community()
         get_community_blog_posts() / add_community_blog_post()
         get_community_comments() / add_community_comment()
+        get_element_feedback() / add_element_comment()
+        like_element() / unlike_element() / rate_element()
     }
     App <|-- MyProfileApp
     TechTypesMixin <|-- MyProfileApp
@@ -102,14 +107,25 @@ classDiagram
 
 - **App bindings:**
   - `q` quits with `200`.
-  - `r` re-runs the profile load and table population.
+  - `ctrl+r` re-runs the profile load and table population.
   - `ctrl+f` (feedback) and `f3` (feedback log) are *priority* bindings. Textual ignores ordinary App bindings while a modal screen is active, and priority bindings get round that.
 - **`check_action`** hides and disables `view_feedback_log` unless the current user is the feedback owner (`garygeeke`).
 - **Screen registration:** most screens are registered by name in `SCREENS`. `EditCollectionsScreen`, `AddCollectionScreen`, `AddUserIdentityScreen`, `FeedbackScreen`, `FeedbackLogScreen` and `ConfirmDeleteScreen` are pushed as instances instead.
-- **Mixins and `@on`:** the mixins are plain Python classes, not Textual message pumps. Textual only collects `@on(...)`-decorated handlers from classes built with its own metaclass, so an `@on` handler defined on a mixin is never dispatched. Put any `@on` handler on `MyProfileApp` itself and have it delegate to the mixin, as `_on_roles_row_selected` does. Handlers found by name (`on_worker_state_changed`, `action_*`) and callbacks passed to `push_screen` work on mixins.
+- **Mixins and `@on`:** the mixins are plain Python classes, not Textual message pumps. Textual only collects `@on(...)`-decorated handlers from classes built with its own metaclass, so an `@on` handler defined on a mixin is never dispatched. Put any `@on` handler on `MyProfileApp` itself and have it delegate to the mixin, as `_on_roles_row_selected` and `_on_associations_row_selected` do. Handlers found by name (`on_worker_state_changed`, `action_*`) and callbacks passed to `push_screen` work on mixins.
 - **Screen headings:** every screen with a header calls `set_screen_heading(screen, context)` from `on_mount`. It sets the title to `Egeria - <context>` (just `Egeria` on the main screen) and the sub-title to `User: <user>, Karma Points: <points>`, read from the app's `user_name` and `karma_points`. The app passes `app=self` when it sets the main screen's heading itself, because `screen.app` isn't always available then. It does that in `_process_profile_data`, once the Karma Points are known, and in `change_user`. Screens opened later read the current values when they mount.
 - **Diagnostic logging is off.** The app's `self.log(...)` calls are commented out across every module, so the Textual developer console shows only Textual's own messages. Uncomment the ones you need to trace a problem. Where commenting one out would have left a block empty, a `pass` was added. The two "Unexpected table name" messages in `elements_crud_handler.py` are still logged, and also shown to the user with `notify`.
 - **Entry point:** `main()` runs the app. It is the target of the `my_profile` console script.
+
+---
+
+## Paging and write guards
+
+Egeria returns a list one page at a time. An empty page can mean the page was filtered empty rather than the end, and on some paths even a null page isn't reliably the end. `paging_support.py` (from pyegeria 6.2.42) wraps pyegeria's pager (`pyegeria.core.paging`) so the handlers follow one rule: never treat one page as the whole set, and never show a total or "none" unless Egeria confirmed the end.
+
+- **Reading a list.** `read_all(fetch, method=...)` pages `fetch(start, size)` (up to `DISPLAY_MAX_PAGES`, 20) and returns a `PageResult`. `paged_rows(rows, read, what)` wraps the rows a handler builds as `PagedRows`, a plain list that also carries `complete` and, when the end wasn't confirmed, a `note` ("Showing at least N ..."). Screens show `count_text(rows)` ("N" or "at least N") and `none_words(...)` ("No X found", or "No X found in what Egeria returned; Egeria didn't confirm there are no more").
+- **Which reads can be confirmed.** pyegeria's pager decides per method (`TRUSTED_END_METHODS`, `GATED_TRUSTED_METHODS` in `pyegeria.core.paging`). A method in neither pages as "suspect", which is never confirmed. Of the reads My Profile makes, only My Network's `get_related_elements` can be confirmed, and only on a platform carrying odpi/egeria #9454 (Egeria 6.3.0 or later). Everything else is suspect: `find_communities`, `find_collections`, `find_actor_profiles`, `get_collection_members`, and the attached-element reads (comments, likes, ratings, note logs, blog notes). So on most screens the list carries an "at least" note, which the screen shows as a warning, and an empty list says "none found in what Egeria returned" rather than "none".
+- **Guards before a write, by qualified name.** Before creating something that must be unique (the bookmarks collection, the feedback log, a community, a community's blog), the handler asks Egeria's exact unique-name read through `by_unique_name` / `async_by_unique_name`. **found** reuses the element; **absent** (Egeria's specific not-found) lets the create go ahead; **unknown** (any other answer or error) refuses with `unique_refusal(...)` words ("Couldn't confirm whether Egeria already holds ... Nothing was created; try again later.") and writes nothing. A handler that refuses inside a write raises `LookupUnconfirmed` and reports its message as a warning.
+- **Guards before a write, by GUID.** "Is this already a member/peer?" checks (adding a bookmark, adding someone to My Network) page with `lookup(...)`, which also answers found / absent / unknown; only absent goes on to write, and unknown is refused with `refusal(...)` words.
 
 ---
 
@@ -173,8 +189,8 @@ It returns `200` on success and `401` on failure.
 
 | Table id | Source | Notes |
 | :--- | :--- | :--- |
-| `associations_table` | Communities from `My-User-MD` | |
-| `my_collections_table` | `Egeria.find_collections("*", JSON)`, keeping those whose `elementHeader.versions.createdBy` is the current user, minus the bookmarks collection (`_load_my_collections`) | |
+| `associations_table` | Communities from `My-User-MD` | `Enter` on a row opens that community: `_on_associations_row_selected` → `open_community_row` → `CommunityScreen` |
+| `my_collections_table` | `Egeria.find_collections("*", JSON)`, paged with `read_all`, keeping those whose `elementHeader.versions.createdBy` is the current user, minus the bookmarks collection (`_load_my_collections`) | |
 | `roles_table` | Roles from `My-User-MD` | |
 | `teams_table` | Teams from `My-User-MD` | |
 | `blogs_table`, `journal_table` | Note Logs from `My-User-MD` | |
@@ -185,7 +201,7 @@ It returns `200` on success and `401` on failure.
 
 `communities_table` is not on the main screen (communities show in User Associations); `_populate_tables_sync` skips any table that isn't composed.
 
-`MainScreen` tracks the selected table and row through focus, highlight, select and cell events. It uses them for `ctrl+t` (edit table), `ctrl+a` (add comment) and `ctrl+s` (show comments).
+`MainScreen` tracks the selected table and row through focus, highlight, select and cell events. It uses them for `ctrl+t` (edit table), `ctrl+n` (add comment), `ctrl+o` (show comments), `ctrl+k` (bookmark the row) and `ctrl+b` (bookmarks), and `Enter` on a User Associations row opens that community.
 
 ### Other Functions menu dispatch (`handle_option_selected`)
 
@@ -199,6 +215,7 @@ It returns `200` on success and `401` on failure.
 | User Bookmarks | `show_my_bookmarks()` |
 | My Network | `show_my_network()` |
 | Work with Communities | `show_communities()` |
+| Find Community | `show_communities(find=True)`: the same screen, with focus on the search input |
 | Change User | `ChangeUserScreen()`, callback `change_user_callback` |
 | Leave Feedback | `action_feedback()` |
 | Feedback Log | `action_view_feedback_log()` (owner only) |
@@ -227,8 +244,8 @@ These are `EDIT_TABLE_ROUTES`, `ADD_TABLE_ROUTES` and `DELETE_METHODS`. Blogs, j
 ### Edit screens (`BaseEditScreen`)
 
 - **On mount:** each subclass names its `SOURCE_TABLE`, and the screen copies that table's columns and rows from the main screen.
-- **`a` (add row):** calls `app.add_to_tables(SOURCE_TABLE, row)`, which pushes the Add screen from `ADD_TABLE_ROUTES`.
-- **`d` (delete row):** takes the GUID from the row's last column and pushes `ConfirmDeleteScreen`. If the user confirms, it calls `app.delete_element(SOURCE_TABLE, guid)`, which looks up `DELETE_METHODS` and calls Egeria. The row is removed only if that returns `True`.
+- **`ctrl+n` (add row):** calls `app.add_to_tables(SOURCE_TABLE, row)`, which pushes the Add screen from `ADD_TABLE_ROUTES`.
+- **`ctrl+d` (delete row):** takes the GUID from the row's last column and pushes `ConfirmDeleteScreen`. If the user confirms, it calls `app.delete_element(SOURCE_TABLE, guid)`, which looks up `DELETE_METHODS` and calls Egeria. The row is removed only if that returns `True`.
 - **`Escape`:** dismisses with `[(row_key, row_values), ...]`. The table's edit callback then writes those rows back to the main table through `_write_back_rows()`.
 
 ### Add screens
@@ -253,7 +270,7 @@ class AddCollectionScreen(BaseAddScreen):
 - the `Egeria` client lifecycle, including bearer token, session close and error notices;
 - the optional link to the user's profile, skipped with a warning if the profile GUID is unknown;
 - clearing the form after a successful add (a failed add keeps the input so it can be corrected);
-- the Add, Quit and `ctrl+a` controls.
+- the Add button (`ctrl+s`) and `Escape` to go back.
 
 The screen stays open for repeated adds and dismisses with `200`.
 
@@ -315,7 +332,7 @@ sequenceDiagram
 
 `EditProfileScreen` pre-fills the person properties and calls `Egeria.update_actor_profile(user_GUID, UpdateElementRequestBody{PersonProperties})`. It returns `200` on success and `401` on failure.
 
-Its `ctrl+c`, `ctrl+i`, `ctrl+r` and `ctrl+t` keys return `"community"`, `"identity"`, `"role"` or `"team"`. `edit_profile_callback` then opens the matching edit screen.
+Its `ctrl+g`, `ctrl+l`, `ctrl+r` and `ctrl+t` keys return `"community"`, `"identity"`, `"role"` or `"team"`. `edit_profile_callback` then opens the matching edit screen.
 
 ---
 
@@ -323,29 +340,29 @@ Its `ctrl+c`, `ctrl+i`, `ctrl+r` and `ctrl+t` keys return `"community"`, `"ident
 
 There are two ways to comment.
 
-**1. From the main screen (`ctrl+a`).**
+**1. From the main screen (`ctrl+n`).**
 1. `app.add_comment(table, row)` finds the row's GUID column, falling back to a "Qualified Name" column.
 2. It pushes `AddCommentScreen`, which dismisses with `[comment, type, guid]`.
 3. `add_comment_callback` calls `Egeria.add_comment_to_element(guid, comment, TYPE)`.
 
-**2. From the comments screen (`ctrl+s`).** `ShowCommentsScreen` handles both viewing comments and replying to them:
+**2. From the comments screen (`ctrl+o`).** `ShowCommentsScreen` handles both viewing comments and replying to them:
 
 ```mermaid
 flowchart TD
-    MAIN["MainScreen: select row, ctrl+s"] --> SHOW["show_comments(table, row)"]
+    MAIN["MainScreen: select row, ctrl+o"] --> SHOW["show_comments(table, row)"]
     SHOW --> SCS["ShowCommentsScreen(table, row,<br/>selected_comment_guid=None)"]
     SCS --> LOAD["exec_report_spec('Comment-by-Element',<br/>element_guid = row GUID or comment GUID)"]
     LOAD --> LIST["Comment table: Comment, GUID, Qualified Name, Name"]
-    LIST -- "ctrl+a" --> ADD["inline comment + type inputs →<br/>EgeriaTech.add_comment_to_element()"]
+    LIST -- "ctrl+n" --> ADD["inline comment + type inputs →<br/>EgeriaTech.add_comment_to_element()"]
     ADD -- "dismiss(200)" --> CB
-    LIST -- "ctrl+r on a comment" --> RESP["dismiss([250, comment_guid])"]
+    LIST -- "ctrl+o on a comment" --> RESP["dismiss([250, comment_guid])"]
     RESP --> CB["show_comments_callback"]
     CB -- "[250, guid]" --> SHOW2["show_comments(selected_comment_guid=guid)"]
     SHOW2 --> SCS
     CB -- "200 / None" --> MAIN
 ```
 
-A response is a comment whose anchor is another comment. Each `ctrl+r` re-opens the screen with the selected comment as its target, so threads can nest to any depth. `q` on the comments screen calls `app.pop_screen`.
+A response is a comment whose anchor is another comment. Each `ctrl+o` re-opens the screen with the highlighted comment as its target, and `ctrl+n` there adds a response, so threads can nest to any depth. `q` and `Escape` on the comments screen call `app.pop_screen`.
 
 ---
 
@@ -366,9 +383,11 @@ sequenceDiagram
     App->>FS: push_screen(FeedbackScreen(screen, title))
     User->>FS: category + text, Submit (ctrl+s)
     FS-->>App: {screen, screen_title, category, text}
-    App->>Egeria: _async_get_note_logs_by_name("NoteLog::garygeeke::My-Profile-App-Feedback")
-    alt log missing
+    App->>Egeria: unique-name read of "NoteLog::garygeeke::My-Profile-App-Feedback"
+    alt absent (Egeria's not-found)
         App->>Egeria: _async_create_note_log(...)
+    else unknown
+        App-->>User: warning, nothing written
     end
     App->>Egeria: _async_create_note(log_guid, note body)
 ```
@@ -379,7 +398,9 @@ Each note records:
 - `description`: the feedback text
 - `additionalProperties`: `category`, `screen`, `screenTitle`, `submittedBy` and `submittedAt`
 
-**Viewing the log.** `F3` or "Feedback Log" reads the notes with `_async_get_notes_for_note_log`, sorts them newest first and shows them in `FeedbackLogScreen`.
+**Finding the log.** The log is found by Egeria's exact unique-name read (`async_by_unique_name`) and created only when that read says not-found. On any other answer the feedback isn't saved, and the user gets the "Couldn't confirm ..." warning, because a second log would split the feedback.
+
+**Viewing the log.** `F3` or "Feedback Log" pages the notes with `_async_get_notes_for_note_log` (`async_read_all`), sorts them newest first and shows them in `FeedbackLogScreen`. The heading shows the count as "N entries", or "at least N entries" when Egeria didn't confirm the end.
 
 **Privacy.** Only the owner (`FEEDBACK_LOG_OWNER = "garygeeke"`) can open the log. The app enforces this, not Egeria.
 
@@ -454,11 +475,11 @@ Only digital products have real sample data. For other rows the sample view show
   2. calls `link_agreement_item(subscription, item)` to link the subscription to the chosen item;
   3. calls `link_subscriber(profile, subscription)` to link the user's profile as subscriber.
   If a link fails, the subscription is kept and the user gets a warning naming what couldn't be linked.
-- **Viewing subscriptions.** `ViewSubscriptionsScreen` calls `Egeria.find_collections(search_string="*", metadata_element_type_name="DigitalSubscription", JSON)`. It lists those the user created: name, status, description and GUID.
+- **Viewing subscriptions.** `ViewSubscriptionsScreen` pages `Egeria.find_collections(search_string="*", metadata_element_type_name="DigitalSubscription", JSON)` with `read_all`. It lists those the user created: name, status, description and GUID.
 
 ### Glossary term search
 
-`SearchForTermScreen` runs `exec_report_spec("Glossary-Terms", output_format="MD", search_string=term)` and renders the Markdown. `t` on `ShopForDataScreen` returns `[201]`, which opens it. Going back from it (`g`, result `201`) re-runs `handle_shop_for_data_option()`, so the catalog tables are reloaded rather than shown empty.
+`SearchForTermScreen` runs `exec_report_spec("Glossary-Terms", output_format="MD", search_string=term)` and renders the Markdown. `ctrl+g` on `ShopForDataScreen` returns `[201]`, which opens it. Going back from it (`g`, result `201`) re-runs `handle_shop_for_data_option()`, so the catalog tables are reloaded rather than shown empty.
 
 ---
 
@@ -510,18 +531,18 @@ pyegeria has no favourites API, so `BookmarksMixin` (`bookmarks_handler.py`) kee
 
 | Function | What it does |
 | :--- | :--- |
-| `list_my_bookmarks()` | `get_collections_by_name(qualified name)` → `get_collection_members(guid, JSON)` → `(name, type, GUID)` rows; `[]` if the collection doesn't exist yet, `None` if Egeria can't be reached |
+| `list_my_bookmarks()` | Finds the collection with Egeria's unique-name read (`by_unique_name`), then pages `get_collection_members(guid, JSON, graph_query_depth=0)` → `(name, type, GUID)` rows as `PagedRows`; `[]` if the collection doesn't exist yet, `None` if Egeria can't be reached |
 | `show_my_bookmarks()` | Pushes `MyBookMarksScreen(rows)` |
-| `add_my_bookmark(guid)` | Creates the collection on first use (`create_collection`), then `add_to_collection(collection, guid)` |
-| `delete_my_bookmark(guid)` | `remove_from_collection(collection, guid)` |
-| `bookmark_table_row(table, row_key)` | Reads the row's GUID column (labelled `GUID` or ending ` GUID`) with `profile_utils.row_identity()`. If there's no GUID, it resolves the row's `Qualified Name` with `get_guid_for_name`. Then it calls `add_my_bookmark`. Used by `ctrl+k` on `MainScreen` and `k` on `ShopForDataScreen`. |
+| `add_my_bookmark(guid)` | Creates the collection on first use (`create_collection`), only when the unique-name read says not-found. Checks with `lookup` that the element isn't already a member: found is a "already bookmarked" warning, unknown is refused, and only absent goes on to `add_to_collection(collection, guid)` |
+| `delete_my_bookmark(guid)` | `remove_from_collection(collection, guid)`; if the collection's unique-name read is neither found nor not-found, nothing is removed and the user is told why |
+| `bookmark_table_row(table, row_key)` | Reads the row's GUID column (labelled `GUID` or ending ` GUID`) with `profile_utils.row_identity()`. If there's no GUID, it resolves the row's `Qualified Name` with `get_guid_for_name`. Then it calls `add_my_bookmark`. Used by `ctrl+k` on `MainScreen` and on `ShopForDataScreen`. |
 
 `MyBookMarksScreen` lists the rows:
 - `ctrl+n` adds a bookmark by GUID;
-- `d` removes the highlighted bookmark;
+- `ctrl+d` removes the highlighted bookmark;
 - `q` closes the screen.
 
-After each change it re-reads the list through the app. The lookup matches on the exact qualified name, so another user's "My Bookmarks" collection is never used. `profile_utils.element_summary()` flattens raw JSON elements for both bookmarks and My Collections, including member results wrapped in `relatedElement`.
+After each change it re-reads the list through the app. The lookup is Egeria's exact unique-name read, so another user's "My Bookmarks" collection is never used. `profile_utils.element_summary()` flattens raw JSON elements for both bookmarks and My Collections, including member results wrapped in `relatedElement`.
 
 ---
 
@@ -539,9 +560,9 @@ sequenceDiagram
     participant EG as Egeria
 
     User->>App: Other Functions → My Network
-    App->>EG: get_related_elements(user_GUID, "Peer")
+    App->>EG: get_related_elements(user_GUID, "Peer"), paged
     App->>MNS: push(peer rows)
-    opt view details (v)
+    opt view details (ctrl+o)
         MNS->>App: get_peer_details(peer GUID)
         App->>EG: get_actor_profile_by_guid(JSON)
         App->>App: _generate_my_profile_output(DICT, "My-User")
@@ -549,13 +570,14 @@ sequenceDiagram
     end
     opt add (search, select, Add to Network)
         MNS->>App: search_people(name)
-        App->>EG: find_actor_profiles(DICT, "User-Identities", page_size=10)
+        App->>EG: find_actor_profiles(DICT, "User-Identities"), paged 25 at a time
         App-->>MNS: (name, GUID, qualified name) rows
         MNS->>App: link_peer(GUID, nickname, description)
-        App->>EG: link_peer_person(user_GUID, GUID, PeerProperties)
+        App->>EG: get_related_elements(user_GUID, "Peer"): is GUID already a peer?
+        App->>EG: link_peer_person(user_GUID, GUID, PeerProperties) only if not
         MNS->>App: list_my_peers()
     end
-    opt remove (d)
+    opt remove (ctrl+d)
         MNS->>Confirm: push(peer name)
         Confirm-->>MNS: True / False
         MNS->>App: unlink_peer(GUID)
@@ -567,9 +589,9 @@ sequenceDiagram
 | Function | What it does |
 | :--- | :--- |
 | `show_my_network()` | Refuses (with a notice) if `user_GUID` isn't set yet, i.e. the profile hasn't loaded; otherwise pushes `MyNetworkScreen(list_my_peers())` |
-| `list_my_peers()` | `get_related_elements(user_GUID, "Peer")`, keeping only elements whose properties are `PersonProperties`. Returns `(qualified name, display name, full name, pronouns, GUID, description)` rows; the GUID comes from the peer's `elementHeader` and the description from `relationshipProperties`. `[]` when Egeria answers "No elements found", `None` if Egeria can't be reached |
-| `search_people(search_string)` | `find_actor_profiles(..., ignore_case=True, report_spec="User-Identities", page_size=10)` → `(display name, GUID, qualified name)` rows, excluding the current user. The screen also drops anyone already in the network |
-| `link_peer(guid, nickname, description)` | `link_peer_person(user_GUID, guid, NewRelationshipRequestBody)` with `PeerProperties` (`peer_relationship_name` = nickname, `description`) |
+| `list_my_peers()` | `get_related_elements(user_GUID, "Peer")`, paged with `read_all` (confirmable on Egeria 6.3.0 or later), keeping only elements whose properties are `PersonProperties`. Returns `(qualified name, display name, full name, pronouns, GUID, description)` rows; the GUID comes from the peer's `elementHeader` and the description from `relationshipProperties`. `[]` when Egeria finds none, `None` if Egeria can't be reached |
+| `search_people(search_string)` | `find_actor_profiles(..., ignore_case=True, report_spec="User-Identities", query_depth=0)`, paged `PEOPLE_PAGE` (25) at a time with `read_all` → `(display name, GUID, qualified name)` rows, excluding the current user. The screen also drops anyone already in the network |
+| `link_peer(guid, nickname, description)` | First checks with `lookup` over the user's `Peer` links that the person isn't already a peer, because the search only hides peers as far as the network list was read. Found is a warning and unknown is refused; only absent goes on to `link_peer_person(user_GUID, guid, NewRelationshipRequestBody)` with `PeerProperties` (`peer_relationship_name` = nickname, `description`) |
 | `unlink_peer(guid)` | `unlink_peer_person(user_GUID, guid, DeleteRelationshipRequestBody)`, using the same GUID order as `link_peer_person` |
 | `get_peer_details(guid)` | `get_actor_profile_by_guid(guid, JSON)`, then `_generate_my_profile_output(..., report_spec="My-User")`. Returns the `Contact Methods` and `Communities` lists, or `None` with a notice if there are no details |
 
@@ -582,7 +604,12 @@ sequenceDiagram
 
 ## Work with Communities
 
-A user belongs to a community when an actor is linked to it by an `AssignmentScope` relationship, whose `assignmentType` says how they take part. The actor is either the user's own profile or a role they are appointed to. A community's blog is a `NoteLog` attached to it holding `BlogEntry` notes, and comments are attached to the community directly. `CommunitiesMixin` (`community_handler.py`) makes the Egeria calls; `CommunitiesScreen` and `CommunityScreen` only drive it through `self.app`. Each call builds a fresh `Egeria` client with a bearer token (`_community_client()`) and closes its session afterwards.
+A user belongs to a community when an actor is linked to it by an `AssignmentScope` relationship, whose `assignmentType` says how they take part. The actor is either the user's own profile or a role they are appointed to. A community's blog is a `NoteLog` attached to it holding `BlogEntry` notes, and comments are attached to the community directly. Its resources are the elements it lists with `ResourceList` relationships and the elements `ScopedBy` it. `CommunitiesMixin` (`community_handler.py`) makes the Egeria calls; `CommunitiesScreen`, `CommunityScreen` and `ElementFeedbackScreen` only drive it through `self.app`. Each call builds a fresh `Egeria` client with a bearer token (`_community_client()`) and closes its session afterwards.
+
+There are three ways in:
+- **Work with Communities** on the Other Functions menu: `show_communities()`.
+- **Find Community** on the same menu: `show_communities(find=True)`, which opens the same screen with focus on the search input (`CommunitiesScreen(..., focus_search=True)`).
+- **`Enter` on a User Associations row** on the main screen: `_on_associations_row_selected` → `open_community_row(table, row_key)`, which reads the row's name and GUID columns and pushes `CommunityScreen` directly, with `community_callback`.
 
 ```mermaid
 sequenceDiagram
@@ -594,13 +621,14 @@ sequenceDiagram
     participant Confirm as ConfirmLeaveCommunityScreen
     participant EG as Egeria
 
-    User->>App: Other Functions → Work with Communities
+    User->>App: Other Functions → Work with Communities / Find Community
     App->>EG: get_my_profile(JSON)
-    App->>CS: push(my community rows)
+    App->>CS: push(my community rows, focus_search)
     CS->>App: search_communities("*")
-    App->>EG: find_communities(JSON, graph_query_depth=0)
+    App->>EG: find_communities(JSON, graph_query_depth=0), paged
     opt open a community (Enter / ctrl+o) — see the next diagram
         CS->>CS: push CommunityScreen(GUID, name)
+        Note over CS: on return, re-read both lists if the user joined from inside it
     end
     opt join (ctrl+n)
         CS->>App: join_community(GUID, assignment type)
@@ -611,8 +639,8 @@ sequenceDiagram
         CS->>Create: push
         Create-->>CS: {name, description, mission, assignment type} / None
         CS->>App: create_community(name, description, mission, assignment type)
-        App->>EG: get_communities_by_name(qualified name)
-        App->>EG: create_community(NewElementRequestBody, CommunityProperties)
+        App->>EG: unique-name read of the qualified name
+        App->>EG: create_community(NewElementRequestBody, CommunityProperties) only on not-found
         App->>EG: link_assignment_scope(new GUID, user_GUID, AssignmentScopeProperties) unless "Don't join"
         CS->>App: list_my_communities() and search again, then highlight the new community
     end
@@ -627,22 +655,24 @@ sequenceDiagram
 
 | Function | What it does |
 | :--- | :--- |
-| `show_communities()` | Refuses (with a notice) if `user_GUID` isn't set yet; otherwise pushes `CommunitiesScreen(list_my_communities())` |
+| `show_communities(find=False)` | Refuses (with a notice) if `user_GUID` isn't set yet; otherwise pushes `CommunitiesScreen(list_my_communities(), focus_search=find)` |
+| `open_community_row(table, row_key)` | Opens the community in a main-screen User Associations row `(type, name, description, GUID)`; warns and does nothing if the row has no GUID |
 | `list_my_communities()` | `get_my_profile(JSON)`, then reads the profile's own `assignmentScope` links and each `performsRoles` appointment's `nestedElements`, keeping only `Community` elements. Returns one `(name, assignment types, linked through, description, GUID)` row per community; "linked through" is `Your profile` and/or `Role: <name>`. `None` if Egeria can't be reached |
-| `search_communities(search_string)` | `find_communities(..., ignore_case=True, graph_query_depth=0)` → `(name, description, qualified name, GUID)` rows. The screen drops communities the user already belongs to |
-| `join_community(guid, assignment_type)` | `link_assignment_scope(guid, user_GUID, NewRelationshipRequestBody)` with `AssignmentScopeProperties`. The screen offers only `Contributor` and `Observer` |
-| `create_community(name, description, mission, assignment_type)` | Builds the qualified name with `__create_qualified_name__("Community", name)` and refuses (a warning, returning `None`) if `get_communities_by_name` already finds it, because Egeria answers a duplicate qualified name only with a server error. Otherwise `create_community(NewElementRequestBody)` with `CommunityProperties` (`mission` only when given), then, unless `assignment_type` is empty, links the user's profile exactly as `join_community` does. Returns the new GUID; a failed link is a warning and still returns the GUID, because the community exists. The form offers `Leader` (the default), `Contributor`, `Observer` and "Don't join" (`NOT_JOINING`, an empty string) |
+| `search_communities(search_string)` | Pages `find_communities(..., ignore_case=True, graph_query_depth=0)` with `read_all` → `(name, description, qualified name, GUID)` rows as `PagedRows`. The screen drops communities the user already belongs to, and shows the "at least" note, or "none found in what Egeria returned", when the end wasn't confirmed |
+| `join_community(guid, assignment_type)` | `link_assignment_scope(guid, user_GUID, NewRelationshipRequestBody)` with `AssignmentScopeProperties`. Both screens offer only `Contributor` and `Observer` (`JOIN_ASSIGNMENT_TYPES`) |
+| `create_community(name, description, mission, assignment_type)` | Builds the qualified name with `__create_qualified_name__("Community", name)` and asks Egeria's unique-name read (`by_unique_name`) whether it exists, because Egeria answers a duplicate qualified name only with a server error. Found is a "find it below to join it" warning; an unclear answer is refused with the "Couldn't confirm ..." words. Both return `None` and create nothing. On not-found it calls `create_community(NewElementRequestBody)` with `CommunityProperties` (`mission` only when given), then, unless `assignment_type` is empty, links the user's profile exactly as `join_community` does. Returns the new GUID; a failed link is a warning and still returns the GUID, because the community exists. The form offers `Leader` (the default), `Contributor`, `Observer` and "Don't join" (`NOT_JOINING`, an empty string) |
 | `leave_community(guid)` | `detach_assignment_scope(guid, user_GUID, DeleteRelationshipRequestBody)`, using the same GUID order as `link_assignment_scope` (scope first, actor second) |
 
 - **Leaving only unlinks the profile.** The screen refuses to leave a community reached only through a role, because the role may be shared and belongs to whoever manages it.
 - **Refresh.** After a successful create, join or leave the screen re-reads the user's communities and repeats the last search. After a create it also moves the cursor to the new community, in whichever list it appears.
+- **The main screen.** A successful join, leave, or create-and-join sets `communities_changed`. When the user returns to the main screen, `communities_callback` or `community_callback` sees the flag, clears it and calls `call_later(action_refresh)`, so User Associations is current. Nothing is refreshed if no membership changed.
 - **Two ways to create a community.** The User Associations edit screen's `AddCommunityScreen` also creates communities, but doesn't check for a duplicate name or link the user. Work with Communities' **Create Community** does both.
 - **Errors.** Every Egeria failure is reported with `notify(...)` and the screen stays open; none of them exit the app.
-- **Return code.** `CommunitiesScreen` dismisses with `200` on `q`; `communities_callback` just logs it.
+- **Return code.** `CommunitiesScreen` dismisses with `200` on `q`.
 
-### A community: members, blog and comments
+### A community: members, blog, resources and comments
 
-`CommunityScreen(guid, name)` loads the three lists when it mounts and reloads a list after a successful add. `ctrl+n` opens `AddCommunityCommentScreen` when the comments table has focus, otherwise `NewBlogPostScreen`; each form dismisses with a dict, or `None` on cancel.
+`CommunityScreen(guid, name)` loads its four lists when it mounts and reloads a list after a successful add. `ctrl+n` opens `AddCommunityCommentScreen` when the comments table has focus, otherwise `NewBlogPostScreen`; each form dismisses with a dict, or `None` on cancel. `Enter` on a blog post or resource, or `ctrl+o` (the resources table when it has focus, otherwise the highlighted post), opens [`ElementFeedbackScreen`](#feedback-on-a-blog-post-or-resource) for it.
 
 ```mermaid
 sequenceDiagram
@@ -656,14 +686,20 @@ sequenceDiagram
     App->>EG: get_community_by_guid(JSON, graph_query_depth=1)
     App->>EG: get_actor_role_by_guid(role, include_only_relationships=[PersonRoleAppointment]) for each role
     CoS->>App: get_community_blog_posts(GUID)
-    App->>EG: get_attached_note_logs(GUID)
-    App->>EG: get_notes_for_note_log(log, "BlogEntry") for each log
+    App->>EG: get_attached_note_logs(GUID), paged
+    App->>EG: get_notes_for_note_log(log, "BlogEntry") for each log, paged
+    CoS->>App: get_community_resources(GUID)
+    App->>EG: get_community_by_guid(JSON, graph_query_depth=1, include_only_relationships=[ResourceList, ScopedBy])
     CoS->>App: get_community_comments(GUID)
-    App->>EG: get_attached_comments(GUID)
+    App->>EG: get_attached_comments(GUID), paged
+    opt join (ctrl+w), shown only when the user isn't a member
+        CoS->>App: join_community(GUID, assignment type)
+        CoS->>App: get_community_members(GUID)
+    end
     opt new blog post (NewBlogPostScreen)
         CoS->>App: add_community_blog_post(GUID, name, title, text)
-        App->>EG: get_attached_note_logs(GUID)
-        App->>EG: create_note_log(GUID, NewAttachmentRequestBody) if the blog doesn't exist
+        App->>EG: unique-name read of NoteLog::<GUID>::CommunityBlog
+        App->>EG: create_note_log(GUID, NewAttachmentRequestBody) only on not-found
         App->>EG: create_note(log, BlogEntryProperties)
     end
     opt add comment (AddCommunityCommentScreen)
@@ -675,24 +711,44 @@ sequenceDiagram
 | Function | What it does |
 | :--- | :--- |
 | `get_community_members(guid)` | People only. Reads `assignedActors` from `get_community_by_guid(guid, JSON, graph_query_depth=1)`. A `Person` actor is a direct member. For an actor whose type is or inherits `ActorRole` (checked through `superTypeNames`), it calls `get_actor_role_by_guid(..., graph_query_depth=1, include_only_relationships=["PersonRoleAppointment"])` and takes the `Person` elements in `rolePerformers`. Other actors, such as teams, are skipped. Returns one `(name, assignment types, member through, qualified name, GUID)` row per person, sorted by name; "member through" is `Direct` and/or `Role: <name>`. A role that can't be read is skipped and reported with one warning; `None` if the community itself can't be read |
-| `get_community_blog_posts(guid)` | Reads the `BlogEntry` notes from every note log attached to the community, so posts written by other tools are included and the notifications some sample communities' logs hold are not. Returns the `LATEST_POSTS` (20) newest as `(title, author, posted, text, GUID)` rows; author and time come from the element header's `versions` |
-| `add_community_blog_post(guid, name, title, text)` | Finds the note log with qualified name `NoteLog::<guid>::CommunityBlog` among those attached to the community, creating it (attached, display name "_name_ Blog") on the first post, then `create_note(log, BlogEntryProperties)` |
-| `get_community_comments(guid)` | `get_attached_comments(guid, graph_query_depth=0)` → `(comment, type, author, posted, GUID)` rows, newest first |
-| `add_community_comment(guid, text, type)` | `add_comment_to_element(guid, text, type)`; the form offers pyegeria's `COMMENT_TYPES` |
+| `get_community_blog_posts(guid)` | Pages the `BlogEntry` notes from every note log attached to the community, so posts written by other tools are included and the notifications some sample communities' logs hold are not. Returns the `LATEST_POSTS` (20) newest as `(title, author, posted, text, GUID)` rows; author and time come from the element header's `versions`. When any read wasn't confirmed complete it warns that newer posts may be missing, and an empty blog says "none found in what Egeria returned" rather than "No posts yet" |
+| `add_community_blog_post(guid, name, title, text)` | Finds the blog note log, qualified name `NoteLog::<guid>::CommunityBlog`, with Egeria's unique-name read. It creates the log (attached, display name "_name_ Blog") only when that read says not-found, then `create_note(log, BlogEntryProperties)`. On any other answer nothing is created or posted (`LookupUnconfirmed`, a warning), because a second blog would split the posts |
+| `get_community_resources(guid)` | `get_community_by_guid(guid, JSON, graph_query_depth=1, include_only_relationships=["ResourceList", "ScopedBy"])`. Takes `resourceList` (linked as `Resource`, or `Resource: <resourceUse or label>`) and `relevantToScopes` (linked as `In scope`); `resourceListUsers`, the other end of a `ResourceList` where the community is itself someone's resource, is left out. Returns one `(name, type, linked as, description, GUID)` row per element, sorted by name; `None` if the read fails |
+| `get_community_comments(guid)` | Pages `get_attached_comments(guid, graph_query_depth=0)` → `(comment, type, author, posted, GUID)` rows, newest first, as `PagedRows` (via the shared `_comment_rows`); warns with the "at least" note when the end wasn't confirmed |
+| `add_community_comment(guid, text, type)` | `add_element_comment(guid, text, type)`; the form offers pyegeria's `COMMENT_TYPES` |
 
-- **Return codes.** `CommunityScreen` dismisses with `200` on `Escape` (back to the communities list) and `210` on `q`; on `210` `CommunitiesScreen` dismisses itself too, so `q` reaches the main screen.
-- **Why the role lookups are filtered.** Without `include_only_relationships`, one role can return hundreds of unrelated links. One sample role had 284 `assignmentScope` entries. With the filter, the Sustainability Community's 40 roles resolve in under a second. Asking `get_community_by_guid` for `graph_query_depth=2` instead, to get the appointments in one call, timed out after 30 seconds on the sample data.
-- **Names.** People, roles and communities are named by `displayName`, then `fullName`, then `identifier`, then `qualifiedName`. Some sample community roles have only an `identifier`, such as "Community Leader of Data Science special interest group".
-- **Membership isn't checked.** Anyone can read and add to a community's blog and comments; Egeria's quickstart deployment enforces no access rules here either.
+- **Joining from here.** `_load_members` sets `is_member` when the app's `user_GUID` is among the members (directly or through a role) and shows the join controls (`community_join_controls`: `Contributor`/`Observer` and **Join Community**, `ctrl+w`) only when it is `False`. If the members can't be read, `is_member` stays `None` and joining isn't offered. After a successful join the screen sets `joined`, so `CommunitiesScreen` re-reads both lists when it comes back.
+- **Return codes.** `CommunityScreen` dismisses with `200` on `Escape` (back to the communities list, or the main screen if opened from there) and `210` on `q`; on `210` `CommunitiesScreen` dismisses itself too, so `q` reaches the main screen.
+- **Why the role lookups are filtered.** Without `include_only_relationships`, one role can return hundreds of unrelated links. One sample role had 284 `assignmentScope` entries. With the filter, the Sustainability Community's 40 roles resolve in under a second. Asking `get_community_by_guid` for `graph_query_depth=2` instead, to get the appointments in one call, timed out after 30 seconds on the sample data. The resources read is filtered to its two relationship types for the same reason.
+- **Names.** People, roles, resources and communities are named by `displayName`, then `fullName`, then `identifier`, then `qualifiedName`. Some sample community roles have only an `identifier`, such as "Community Leader of Data Science special interest group".
+- **Membership isn't checked.** Anyone can read and add to a community's blog, comments and feedback; Egeria's quickstart deployment enforces no access rules here either.
+- **Sample data.** Several of the sample special interest groups (Observability, for example) have only `PersonRole` actors with nobody appointed, so their members list is empty even though they have many roles.
+
+### Feedback on a blog post or resource
+
+`ElementFeedbackScreen(guid, name, kind)` shows the feedback on one element: a summary (how many people like it and whether the user does, the average star rating, the comment count), a ratings table `(stars, review, rated by, rated)` and a comments table `(comment, type, author, posted, GUID)`. `kind` ("Blog post" or "Resource") is only for the heading. It reloads after every successful action.
+
+| Function | What it does |
+| :--- | :--- |
+| `get_element_feedback(guid)` | Pages `get_attached_comments`, `get_attached_likes` and `get_attached_ratings` (all `graph_query_depth=0`, through `_read_attached`). Returns `comments`, `likes` (count), `i_like` (a like whose `createdBy` is the user), `ratings` (newest first), `average` (mean stars, leaving out `NO_RECOMMENDATION`; `None` if none), `my_rating` (the user's own `(StarRating, review)`), and `complete`/`note`. `complete` is `True` only when all three reads reached a confirmed end; otherwise the screen shows each count as "at least N" and the note underneath. `None` if any read fails |
+| `like_element(guid)` | `add_like_to_element(guid, body=...)` with an explicit `NewAttachmentRequestBody`/`LikeProperties` (`emoji` = `LIKE_EMOJI`), because pyegeria's `add_like_to_element`, given an emoji, sent a placeholder emoji and a fixed `ZoneMembership` instead (reported upstream) |
+| `unlike_element(guid)` | `remove_like_from_element(guid)` |
+| `rate_element(guid, star_rating, review)` | `add_rating_to_element(guid, True, NewAttachmentRequestBody)` with `RatingProperties` (`starRating`, and `review` only when given). Egeria keeps one rating per user, so this replaces any earlier one |
+| `add_element_comment(guid, text, type)` | `add_comment_to_element(guid, text, type)`, for any element |
+
+- **Keys.** `ctrl+l` like/unlike (the button reads **Unlike** when `i_like`), `ctrl+r` rate (`RateElementScreen`, which starts from `my_rating` and dismisses with `{star_rating, review}` or `None`; the button reads **Change Rating** once the user has rated), `ctrl+n` comment (`AddCommunityCommentScreen`).
+- **One like and one rating per user.** Confirmed against a live server: liking twice leaves one like, and rating again updates the user's rating in place (its create time is kept).
+- **Stars.** `STAR_VALUES` maps Egeria's `StarRating` names (`FIVE_STARS` … `ONE_STAR`, `NO_RECOMMENDATION`) to 5…0; `star_label` shows them as `★★★★☆`, or "No recommendation".
+- **Return codes.** `200` on `Escape` (back to the community) and `210` on `q`, which `CommunityScreen` passes on as `210` so `q` reaches the main screen.
 
 ---
 
 ## Status Screen
 
 `StatusScreen(message)` shows a read-only message:
-- `c` copies the first `'...'`-quoted substring (normally a GUID) to the clipboard with pyegeria's `copy_to_clipboard`;
-- `q` and `Enter` return `200`;
-- `b` returns `400`.
+- `ctrl+y` copies the first `'...'`-quoted substring (normally a GUID) to the clipboard with pyegeria's `copy_to_clipboard`;
+- `Enter`, `Escape` and `q` return `200`;
+- `ctrl+x` (Bad Result) returns `400`.
 
 The app's `status_callback` then returns to the main screen.
 
@@ -757,14 +813,20 @@ The suite in `tests/micro-tests/my_profile/` has one module per handler and scre
 
 **My Network.** `test_network_handler.py` covers `NetworkMixin` and `MyNetworkScreen`, including the remove confirmation; `test_my_egeria.py` checks the menu routing. The feature has also been tested by hand against a live server.
 
-**Work with Communities.** `test_community_handler.py` covers `CommunitiesMixin`, `CommunitiesScreen` and `CommunityScreen`. That includes:
+**Work with Communities.** `test_community_handler.py` covers `CommunitiesMixin`, `CommunitiesScreen`, `CommunityScreen` and `ElementFeedbackScreen`. That includes:
 - memberships through roles, the leave confirmation, and refusing to leave a role membership;
-- creating a community: leading it by default, not joining, a duplicate name, a failed create and a failed link;
+- creating a community: leading it by default, not joining, a duplicate name (found by the unique-name read), a failed create and a failed link;
 - the Create Community form: validation, cancel, and highlighting the new community;
 - members as people only, direct and through roles, merged per person, with an unreadable role skipped;
-- creating the blog on the first post and reusing it afterwards, and the post and comment forms.
+- creating the blog on the first post and reusing it afterwards, and the post and comment forms;
+- resources: `ResourceList` and `ScopedBy` merged per element, the reverse `ResourceList` end left out;
+- joining from the community screen (offered only to non-members, not offered when the members can't be read), and the found list moving the community to the user's own list afterwards;
+- feedback: paged comment/like/rating reads, "at least" counts, the explicit like body, rating with and without a review, like/unlike, rate (starting from the user's rating), comment, and `Escape`/`q` navigation;
+- opening a community from a main-screen row, Find Community starting in the search box, and the main-screen refresh after a membership change (and not otherwise).
 
-`test_my_egeria.py` checks the menu routing. The blog and comment functions were run against a live server on 2026-10-28. Listing and finding communities, `create_community` (with and without joining, and the duplicate check) and `get_community_members` were run there on 2026-10-30. The screens themselves have not been tried by hand there yet.
+`test_my_egeria.py` checks the menu routing, including **Find Community**. The blog and comment functions were run against a live server on 2026-10-28. Listing and finding communities, `create_community` (with and without joining, and the duplicate check) and `get_community_members` were run there on 2026-10-30. Joining and leaving, `get_community_resources`, and liking, unliking, rating and commenting on a blog post and a resource were run there on 2026-11-17, and the community and feedback screens were rendered against live data. The screens haven't yet been driven by hand end to end on a live server.
+
+**Paging.** `test_paging_contract.py` checks the handlers against Egeria's paging contract: no total or "none" without a confirmed end, and no write when a guard's answer is unknown.
 
 **Screen headings.** `test_profile_utils.py::TestSetScreenHeading` covers `set_screen_heading`. `test_my_egeria.py` checks that the main screen's heading shows the Karma Points once the profile has loaded, and resets them to 0 on `change_user`.
 
@@ -782,7 +844,7 @@ The user-visible limitations are listed in the [user manual](my_egeria_manual.md
 
 - `get_data_product_catalog_table`, `get_guid_for_qualified_name`, `display_glossary_term_details`, `tech_type_processes_details`, `unpack_egeria_data` and `display_selected_data_specification` are defined but never called.
 - Bookmarks, My Collections, team joining, subscription links and starting processes have only been tested against fakes; they haven't yet been run against a live Egeria server.
-- Work with Communities: `join_community` (from the found list), `leave_community` and the screens have only been tested against fakes. The other functions have been run against a live server.
+- Work with Communities: every handler function has been run against a live server; the screens have been rendered against live data but only driven end to end against fakes.
 - Two Add paths create communities: `AddCommunityScreen` on the User Associations edit screen, and `CreateCommunityScreen` in Work with Communities. Only the second checks for a duplicate name and links the user.
 
 ---

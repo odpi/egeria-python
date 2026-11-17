@@ -295,8 +295,8 @@ The screen lists the communities you belong to (name, assignment type, what link
 
 - **Linked Through** is **Your profile** if you joined the community yourself, or **Role: _name_** if you belong through a role you hold. A community you reach both ways is listed once.
 - **Open a community:** highlight a community in either list and press `Enter`, `ctrl+o` or **Open Community**. See [A community](#a-community) below.
-- **Create a community:** press `ctrl+t` (or **Create Community**). Enter a **Name\*** and **Description\***, and optionally a **Mission**, then choose **Your part in it**: **Leader** (the default, since you created it), **Contributor**, **Observer** or **Don't join**. Press `ctrl+s` (or **Create**); **Cancel** or `Escape` discards it. The lists reload and the new community is highlighted: in your communities if you joined it, otherwise in the found list. If a community with that name already exists, you are told to find it and join it instead.
-- **Find and join:** type a search term in the search field (`*` for all) and press `Enter`. Communities you already belong to are left out. Choose **Contributor** or **Observer**, highlight a community and press `ctrl+n` (or **Join Community**). Leaders and administrators are assigned by the people who manage the community, not chosen here.
+- **Create a community:** press `ctrl+t` (or **Create Community**). Enter a **Name\*** and **Description\***, and optionally a **Mission**, then choose **Your part in it**: **Leader** (the default, since you created it), **Contributor**, **Observer** or **Don't join**. Press `ctrl+s` (or **Create**); **Cancel** or `Escape` discards it. The lists reload and the new community is highlighted: in your communities if you joined it, otherwise in the found list. If a community with that name already exists, you are told to find it and join it instead. If Egeria can't say either way, nothing is created and you are asked to try again later.
+- **Find and join:** type a search term in the search field (`*` for all) and press `Enter`. Communities you already belong to are left out. If Egeria doesn't confirm it sent every match, a warning says the list may be incomplete (see [Troubleshooting](#troubleshooting)). Choose **Contributor** or **Observer**, highlight a community and press `ctrl+n` (or **Join Community**). Leaders and administrators are assigned by the people who manage the community, not chosen here.
 - **Leave:** highlight one of your communities and press `ctrl+d` (or **Leave Community**), then confirm with **Leave**. **Cancel** or `Escape` keeps you in it. Only the link between you and the community is removed. You can't leave a community you belong to through a role; ask whoever manages that role.
 - `Escape` or `q` returns to the main screen.
 
@@ -315,10 +315,10 @@ The resources list shows the elements the community lists as its resources (**Li
 - **Feedback on a post or resource:** press `Enter` on a blog post or resource, or highlight one and press `ctrl+o` (or **Feedback on Post** / **Feedback on Resource**). See below.
 - `Escape` returns to the communities list (or the main screen, if you opened the community from there); `q` returns to the main screen.
 
-The community's blog is a note log attached to the community, created when the first post is made; each post is a `BlogEntry` in it. Comments are attached to the community itself. Resources are `ResourceList` relationships from the community and `ScopedBy` relationships to it; a `ResourceList` that makes the community someone else's resource is not shown.
+The community's blog is a note log attached to the community, created when the first post is made (if Egeria can't say whether the blog already exists, nothing is posted and you are asked to try again); each post is a `BlogEntry` in it. Comments are attached to the community itself. Resources are `ResourceList` relationships from the community and `ScopedBy` relationships to it; a `ResourceList` that makes the community someone else's resource is not shown.
 
 #### Feedback on a blog post or resource
-The feedback screen shows how many people like the item (and whether you do), its average star rating, its **ratings** (stars, review, who rated it and when) and its **comments**, newest first.
+The feedback screen shows how many people like the item (and whether you do), its average star rating, its **ratings** (stars, review, who rated it and when) and its **comments**, newest first. When Egeria doesn't confirm it sent all the likes, ratings and comments, the counts read "at least N" and a note says there may be more (see [Troubleshooting](#troubleshooting)).
 
 - **Like / Unlike:** press `ctrl+l` (or the **Like** button, which reads **Unlike** once you like it).
 - **Rate:** press `ctrl+r` (or **Rate**), choose from one to five stars or **No recommendation**, optionally write a review, and press `ctrl+s` (or **Rate**). Egeria keeps one rating per person, so rating again (the button then reads **Change Rating**) replaces your earlier one; the form starts from it. **No recommendation** is not counted in the average.
@@ -401,15 +401,20 @@ The full list is in `RETURN_CODES.md` in the app folder.
 
 **Something I added doesn't appear.** Press `ctrl+r` on the main screen. A community added from the User Associations edit screen is not linked to you (see Known Limitations), so it doesn't appear in User Associations until you join it from **Work with Communities**. One made with **Create Community** there, with yourself as a member, appears when you return to the main screen.
 
+**A list says "at least N", or "none found in what Egeria returned".** Egeria sends lists a page at a time, and for most of the lists this app reads it doesn't confirm when it has sent the last page. So when the app can't be sure it has everything, it says so instead of giving a total or saying "none". You may see a warning such as "Showing at least 12 ...", a Feedback Log heading of "at least N entries", or, on a community, "newer posts may be missing" and counts like "at least 2 people like this". The rows shown are real. There may just be more. On Egeria 6.3.0 or later, My Network's list can be confirmed complete.
+
+**"Couldn't confirm whether Egeria already holds ... Nothing was created; try again later."** Before creating something that must exist only once (your bookmarks collection, the feedback log, a community, a community's blog) or adding a bookmark or a person to your network, the app asks Egeria whether it already exists. If Egeria's answer is anything other than a clear yes or a clear "not found", the app writes nothing rather than risk a duplicate. Try again; if it keeps happening, check that Egeria is healthy.
+
 **The app quit unexpectedly.** The app only exits by itself in a few cases: a startup problem (codes `403`, `430`; `402` only when you press Quit on the connection error screen), a failure fetching technology types (`416`), or an error looking up a glossary term (`440`). A failed team lookup is reported as a message instead.
 
 ## Known Limitations
 
-As of 2026-10-30, these features are incomplete or don't work as described elsewhere:
+As of 2026-11-17, these features are incomplete or don't work as described elsewhere:
 
 - **Communities added from the User Associations edit screen** are not linked to you. The community is created but won't appear in User Associations until you join it from **Work with Communities**. **Create Community** in Work with Communities does link you.
 - **Not yet verified against a live Egeria server:** bookmarks, My Collections, joining a team, subscription links and starting processes. The test server was unavailable when they were added, so they have only been tested against fakes.
 - **Work with Communities** has been tried against a live server: listing your communities, finding communities, creating a community (and joining it as part of that), joining and leaving, the members and resources lists, reading and adding blog posts and comments, and liking, rating and commenting on blog posts and resources all work there (as of 2026-11-17). The screens themselves have been rendered against live data, but driven end-to-end only against fakes.
+- **Most lists can't be confirmed complete.** Egeria doesn't yet confirm the last page for most of the lists the app reads, so they show "at least" counts and warnings (see [Troubleshooting](#troubleshooting)). This should improve as Egeria's paging fixes reach more of its APIs.
 - **A community's members** are the people linked to it or appointed to its roles. A community whose roles have nobody appointed (several of the sample special interest groups) shows no members. If the people in one of its roles can't be read, you may be offered **Join** for a community you already belong to through that role.
 
 ## Running the Tests

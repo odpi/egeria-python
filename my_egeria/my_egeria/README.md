@@ -11,8 +11,9 @@ The `my-egeria` Textual TUI application's package root — see the parent
 | `my_profile.py` | Production My Profile & Catalog TUI Application (`MyProfileApp` / `MyEgeriaApp`, entry point `uv run my_profile` / `python -m my_egeria.my_profile`). |
 | `main.py` | Entry point for MyEgeria app (`uv run my-egeria` / `python -m my_egeria.main`). |
 | `my_egeria_app.py` | The MyEgeria browser/navigation Textual `App` class. |
-| `*Screen.py` / `*Screens.py` | Production Textual screens (Main, Splash, Profile Creation/Edit, Data Shopping, Bookmarks, Network, Teams, Communities, Feedback, Tech Types, Subscriptions). |
+| `*Screen.py` / `*Screens.py` | Production Textual screens (Main, Splash, Profile Creation/Edit, Data Shopping, Bookmarks, Network, Teams, Communities and a single community with feedback on its posts and resources, Feedback, Tech Types, Subscriptions). |
 | `*_handler.py` | Domain mixins for bookmarks, communities, CRUD operations, feedback, networks, shopping, team roles, and tech types. |
+| `paging_support.py` | Egeria's paging contract for the handlers: paged reads (`read_all`/`PagedRows`), "at least" / "none" wording, and the found / absent / unknown checks made before a write. |
 | `profile_utils.py` | Profile formatting, Mermaid graph sanitization, data structures, and connection utilities. |
 | `screens/` | Feature screens (`GovernanceOfficer`, `ProductManager`, `ProjectManager`, `collections`, `glossary`, `platform`). |
 | `widgets/` | Reusable Textual widgets shared across screens. |
