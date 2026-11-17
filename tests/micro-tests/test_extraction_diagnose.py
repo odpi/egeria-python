@@ -47,3 +47,25 @@ def test_real_specs_load_and_carry_attribute_labels():
     attrs = _load_command_attributes()
     assert "Delete Method" in attrs.get("Delete Instance", [])
     assert "name" not in attrs.get("Delete Instance", [])
+
+
+def test_a_shell_comment_in_a_code_fence_is_not_a_heading():
+    text = "Set up:\n\n```bash\n# Create a virtual environment\npython -m venv .venv\n```\n\n## Create Glossary\n### Display Name\nG\n"
+    attrs = {"Create Glossary": ["Display Name"]}
+    assert UniversalExtractor(text).diagnose(attrs) == []
+
+
+def test_tilde_fence_is_skipped_too():
+    text = "~~~\n# Delete Instance\n~~~\n\n## Create Glossary\n### Display Name\nG\n"
+    assert UniversalExtractor(text).diagnose({"Create Glossary": ["Display Name"], "Delete Instance": []}) == []
+
+
+def test_h1_that_is_not_a_known_command_gets_no_hint_when_specs_are_loaded():
+    text = "# Create Fantasy Thing\n\n## Create Glossary\n### Display Name\nG\n"
+    assert UniversalExtractor(text).diagnose({"Create Glossary": ["Display Name"]}) == []
+
+
+def test_real_specs_do_not_flag_a_tutorial_comment():
+    text = "```bash\n# Create a virtual environment\n```\n# Create a virtual environment\n"
+    hints = UniversalExtractor(text).diagnose()
+    assert not any("Create a virtual environment" in h for h in hints)

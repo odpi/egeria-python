@@ -169,20 +169,36 @@ class UniversalExtractor:
         Returns hint strings (empty when nothing looks wrong).
         """
         hints: List[str] = []
-        for number, line in enumerate(self.text.splitlines(), 1):
-            h1 = re.match(r"^#\s+(?P<rest>[^#].*?)\s*$", line)
-            if h1 and self.cmd_header_rx.match(h1.group("rest")):
-                rest = h1.group("rest")
-                hints.append(
-                    f"line {number}: '# {rest}' is an H1 heading, so it is read as a title, not a command. "
-                    f"Write the command as '## {rest}' and its attributes as '### <Attribute>'."
-                )
-
-        commands = [c for c in self.extract_commands() if c.is_command]
         if command_attributes is None:
             command_attributes = _load_command_attributes()
-        if command_attributes:
-            known = {name.lower(): {a.lower() for a in attrs} for name, attrs in command_attributes.items()}
+        known = {name.lower(): {a.lower() for a in attrs} for name, attrs in (command_attributes or {}).items()}
+
+        in_fence = False
+        for number, line in enumerate(self.text.splitlines(), 1):
+            # Lines inside ``` or ~~~ code fences are code (e.g. a shell comment "# Create a venv"), never headings.
+            if re.match(r"^\s*(```|~~~)", line):
+                in_fence = not in_fence
+                continue
+            if in_fence:
+                continue
+            h1 = re.match(r"^#\s+(?P<rest>[^#].*?)\s*$", line)
+            if not h1:
+                continue
+            m = self.cmd_header_rx.match(h1.group("rest"))
+            if not m:
+                continue
+            rest = h1.group("rest")
+            name = f"{m.group('verb').strip().capitalize()} {re.sub(r'[\s_*-]+$', '', m.group('object').strip())}"
+            # With the specs at hand, only a real command name earns the hint ("# Create Fantasy Thing" doesn't).
+            if known and name.lower() not in known:
+                continue
+            hints.append(
+                f"line {number}: '# {rest}' is an H1 heading, so it is read as a title, not a command. "
+                f"Write the command as '## {rest}' and its attributes as '### <Attribute>'."
+            )
+
+        commands = [c for c in self.extract_commands() if c.is_command]
+        if known:
             previous: Optional[str] = None
             for cmd in commands:
                 name = f"{cmd.verb} {cmd.object_type}".strip()
