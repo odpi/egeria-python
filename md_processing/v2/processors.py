@@ -17,6 +17,10 @@ from pyegeria.view.output_formatter import generate_output, format_for_markdown_
 
 from md_processing.v2.extraction import DrECommand
 from md_processing.v2.parsing import AttributeFirstParser
+from md_processing.v2.additional_properties import (
+    AdditionalPropertiesUnreadable, merge_additional_properties, replace_note, stored_additional_properties,
+    unreadable_message,
+)
 from md_processing.md_processing_utils.typed_properties import (_as_dict, classification_map,
                                                                   new_element_properties, not_applied_notes,
                                                                   parent_relationship_properties,
@@ -37,6 +41,12 @@ _AMBIGUOUS = object()
 # silently (no error on the command) -- it has always been non-fatal, and a
 # display name shared by many elements is legitimate for most Creates.
 _AMBIGUOUS_SILENT = object()
+
+
+def _is_not_found_error(exc: BaseException) -> bool:
+    """Egeria's specific not-found (pager step 5): an answer ("absent"), unlike any other lookup error."""
+    from pyegeria.core._exceptions import PyegeriaNotFoundException
+    return isinstance(exc, PyegeriaNotFoundException)
 
 
 def _is_egeria_multiple_entities_error(exc: BaseException) -> bool:
@@ -81,6 +91,15 @@ def describe_exception(e: BaseException) -> str:
 
 class _ParentLinksIncomplete(Exception):
     """The parent-end links could not all be read within the page bound (ISSUE-181)."""
+
+
+def _read_words(read: Optional[dict]) -> str:
+    """A paged read's trace in the run result (pager step 4): positions read, end and why."""
+    if not read:
+        return "not read"
+    return (f"{read.get('positions_read')} positions, end {read.get('end')} "
+            f"({read.get('end_reason')}); Egeria didn't confirm there were no more"
+            if read.get("end") != "confirmed" else f"{read.get('positions_read')} positions, end confirmed")
 
 
 class AsyncBaseCommandProcessor(ABC):
@@ -672,7 +691,8 @@ class AsyncBaseCommandProcessor(ABC):
             except _ParentLinksIncomplete:
                 # Adding without seeing every link could duplicate the parent link.
                 self.add_related_result("Parent Relationship", guid=parent_guid, status="failure",
-                                        message=f"could not read every {rel_type} link; not added")
+                                        message=f"could not read every {rel_type} link; not added "
+                                                f"(read: {_read_words(self._parent_link_read)})")
                 return
 
             body = {
@@ -686,6 +706,8 @@ class AsyncBaseCommandProcessor(ABC):
                 body["properties"] = new_element_properties(rel_props)
             await self.client.metadata_expert._async_create_related_elements(body)
             message = f"Linked via {rel_type}"
+            if (read := getattr(self, "_parent_link_read", None)) and read.get("end") != "confirmed":
+                message += f" (the existing links were read: {_read_words(read)})"
             if other_parents:
                 message += (f"; existing {rel_type} link(s) to {', '.join(other_parents)} left in place"
                             " (remove them explicitly to move the element)")
@@ -703,7 +725,8 @@ class AsyncBaseCommandProcessor(ABC):
         Only relationships with `guid` at the child end count: end 2 when the
         parent is at end 1, and the other way round. Egeria filters by
         `startingAtEnd`, and each entry's `elementAtEnd1`, when present, is
-        checked as well. Pages until an empty page (a short page is not the last).
+        checked as well. Read through the pager (pager step 4; a suspect path): acted on when the read
+        reached the end; a limit (capped, stalled, the empty-run cap) raises _ParentLinksIncomplete.
 
         `_async_get_all_related_elements` returns a dict - {"startingElement",
         "elementList", "mermaidGraph"} - whose entries are the low-level
@@ -711,28 +734,34 @@ class AsyncBaseCommandProcessor(ABC):
         element.elementGUID), not the relationshipHeader/relatedElement shape of
         the domain get-by-guid calls.
         """
+        from pyegeria.core.paging import async_page_all, log_end, paging_for
         child_end = 2 if parent_at_end1 else 1
-        start = 0
-        for _ in range(self._PARENT_LINK_MAX_PAGES):
+
+        async def fetch(start, size):
             page = await self.client.metadata_expert._async_get_all_related_elements(
-                guid, starting_at_end=child_end, start_from=start,
-                page_size=self._PARENT_LINK_PAGE_SIZE)
+                guid, starting_at_end=child_end, start_from=start, page_size=size)
             element_list = page.get("elementList") if isinstance(page, dict) else None
-            if not element_list:
-                return
-            for rel in element_list:
-                try:
-                    if rel["type"]["typeName"] != rel_type:
-                        continue
-                    related_guid = rel["element"]["elementGUID"]
-                except (KeyError, TypeError):
+            return element_list if isinstance(element_list, list) else None   # absent: null
+
+        # Pager step 4, ruling (A) 3: a write path acts on a null-then-empty-probes end, logs and keeps the
+        # read's trace (method, positions_read, end, end_reason), and stops only on a limit.
+        paged = await async_page_all(fetch, fetch_page_size=self._PARENT_LINK_PAGE_SIZE,
+                                     max_pages=self._PARENT_LINK_MAX_PAGES,
+                                     **paging_for("get_all_related_elements"))
+        self._parent_link_read = log_end("processors._parent_links_of_type", paged)
+        if not paged.reached_end:
+            raise _ParentLinksIncomplete(rel_type)
+        for rel in paged.items:
+            try:
+                if rel["type"]["typeName"] != rel_type:
                     continue
-                at_end1 = rel.get("elementAtEnd1")
-                if at_end1 is not None and bool(at_end1) != bool(parent_at_end1):
-                    continue  # the related element is at the child end: not a parent link
-                yield related_guid
-            start += len(element_list)
-        raise _ParentLinksIncomplete(rel_type)
+                related_guid = rel["element"]["elementGUID"]
+            except (KeyError, TypeError):
+                continue
+            at_end1 = rel.get("elementAtEnd1")
+            if at_end1 is not None and bool(at_end1) != bool(parent_at_end1):
+                continue  # the related element is at the child end: not a parent link
+            yield related_guid
 
     def effective_for_lineage(self) -> bool:
         """Whether this command's requests are sent with forLineage=true.
@@ -1092,7 +1121,15 @@ class AsyncBaseCommandProcessor(ABC):
                                 # the attribute appeared to succeed while quietly doing nothing.
                                 attr_data["exists"] = False
                                 attr_data["valid"] = False  # Treat as invalid to block execution
-                                msg = f"Referenced element(s) {genuinely_failed} for attribute '{attr_name}' not found."
+                                unknown_items = [i for i in genuinely_failed if self._lookup_was_unknown(i)]
+                                if unknown_items:   # pager step 6: unknown is never "not found"
+                                    msg = (f"Couldn't tell whether referenced element(s) {unknown_items} for attribute "
+                                           f"'{attr_name}' exist in Egeria (the lookup failed); nothing was written.")
+                                    others = [i for i in genuinely_failed if i not in unknown_items]
+                                    if others:
+                                        msg += f" Referenced element(s) {others} not found."
+                                else:
+                                    msg = f"Referenced element(s) {genuinely_failed} for attribute '{attr_name}' not found."
                                 if attr_data.get("errors") is None: attr_data["errors"] = []
                                 attr_data["errors"].append(msg)
                                 logger.error(msg)
@@ -1122,7 +1159,11 @@ class AsyncBaseCommandProcessor(ABC):
                             # If it's a candidate ref and we couldn't resolve it, mark as not found
                             attr_data["exists"] = False
                             attr_data["valid"] = False # Treat as invalid to block execution
-                            msg = f"Referenced element '{val}' for attribute '{attr_name}' not found."
+                            if self._lookup_was_unknown(val):   # pager step 6: unknown is never "not found"
+                                msg = (f"Couldn't tell whether referenced element '{val}' for attribute '{attr_name}' "
+                                       f"exists in Egeria (the lookup failed); nothing was written.")
+                            else:
+                                msg = f"Referenced element '{val}' for attribute '{attr_name}' not found."
                             if attr_data.get("errors") is None: attr_data["errors"] = []
                             attr_data["errors"].append(msg)
                             logger.error(msg)
@@ -1348,6 +1389,27 @@ class AsyncBaseCommandProcessor(ABC):
                 "found": self.parsed_output.get("exists", False)
             }
 
+        # Pager step 5 (the exists-lookups ruling, 6): a lookup that failed with an error other than Egeria's
+        # not-found can't say the target is absent, so a command whose target wasn't found doesn't write: a
+        # transport, auth or timeout error must never make Create-or-Update create a duplicate.
+        unknown = self.__dict__.get("_lookups_unknown") or []
+        if unknown and self.supports_target_element_lookup() and not self.as_is_element:
+            msg = f"{'; '.join(unknown)}, so nothing was created or changed. Try again."
+            logger.error(f"Execution blocked for {self.command.verb} {self.command.object_type}: {msg}")
+            return {
+                "output": f"{self.command.raw_block}\n\n> ❌ **Execution Blocked**\n> - {msg}",
+                "analysis": analysis,
+                "status": "failure",
+                "message": f"Execution blocked: {msg}",
+                "verb": self.command.verb,
+                "object_type": self.canonical_object_type,
+                "markdown_object_type": self.markdown_object_type,
+                "display_name": self.parsed_output.get("display_name"),
+                "qualified_name": self.parsed_output.get("qualified_name"),
+                "found": False,
+                "errors": unknown,
+            }
+
         try:
             if self.context.get("debug"):
                 print(
@@ -1356,6 +1418,7 @@ class AsyncBaseCommandProcessor(ABC):
                     f" | GUID={self.parsed_output.get('guid', 'new')} ══\033[0m"
                 )
             try:
+                await self._prepare_additional_properties()
                 output = await self.apply_changes()
             finally:
                 self._report_unapplied()
@@ -1639,7 +1702,12 @@ class AsyncBaseCommandProcessor(ABC):
             # Reordered subclients in EgeriaTech ensure this hits metadata-expert first
             res = await self.client._async_get_metadata_element_by_guid(guid)
             if res and isinstance(res, dict):
-                return res
+                # metadata-expert answers in the raw OpenMetadataElement shape (elementGUID,
+                # elementProperties.propertyValueMap); every caller reads the view-bean shape
+                # (elementHeader, properties), so convert it, or the guid, qualifiedName and
+                # Memento check silently read as absent.
+                from pyegeria.core.element_shape import as_view_element
+                return as_view_element(res)
         except Exception as e:
             logger.debug(f"MetadataExpert/Explorer fetch failed: {e}")
 
@@ -1757,11 +1825,13 @@ class AsyncBaseCommandProcessor(ABC):
                 res = cached1
             else:
                 try:
-                    res = await self.client.__async_get_guid__(qualified_name=name_or_guid, display_name=name_or_guid, property_name="displayName", tech_type=tech_type or None)
+                    res = await self.client.__async_get_guid__(qualified_name=name_or_guid, display_name=name_or_guid, property_name="displayName", tech_type=tech_type or None, strict_errors=True)
                     _cache_if_not_found(pass1_key, res)
                 except PyegeriaException as e:
+                    if _is_not_found_error(e):
+                        res = None   # Egeria's not-found: absent
                     # Catch multiple matches error
-                    if "Multiple elements found" in str(e):
+                    elif "Multiple elements found" in str(e):
                         query_cache[pass1_key] = _AMBIGUOUS
                         _report_ambiguous("Pass 1")
                         return None
@@ -1784,7 +1854,9 @@ class AsyncBaseCommandProcessor(ABC):
                         logger.debug(f"SDK strict lookup (Pass 1) failed for '{name_or_guid}': {e}")
                         if self.context.get("directive") == "validate":
                             print_basic_exception(e)
-                        # Not cached -- unexpected error, not a real answer.
+                        # Not cached -- unexpected error, not a real answer. Pager step 5: nor "absent" --
+                        # recorded as unknown, so a Create-or-Update never creates on it.
+                        self._note_lookup_unknown(name_or_guid, e)
 
             # Pass 2: If no result (or if type was invalid), try WITHOUT type constraint
             is_not_found = not res or (isinstance(res, str) and (res.startswith("No ") or " found" in res))
@@ -1803,10 +1875,12 @@ class AsyncBaseCommandProcessor(ABC):
                     res = cached2
                 else:
                     try:
-                        res = await self.client.__async_get_guid__(qualified_name=name_or_guid, display_name=name_or_guid, property_name="displayName")
+                        res = await self.client.__async_get_guid__(qualified_name=name_or_guid, display_name=name_or_guid, property_name="displayName", strict_errors=True)
                         _cache_if_not_found(pass2_key, res)
                     except PyegeriaException as e:
-                        if "Multiple elements found" in str(e):
+                        if _is_not_found_error(e):
+                            res = None   # Egeria's not-found: absent
+                        elif "Multiple elements found" in str(e):
                             query_cache[pass2_key] = _AMBIGUOUS
                             _report_ambiguous("Pass 2")
                             return None
@@ -1814,9 +1888,11 @@ class AsyncBaseCommandProcessor(ABC):
                             query_cache[pass2_key] = _AMBIGUOUS_SILENT
                             logger.debug(f"resolve_element_guid: '{name_or_guid}' is ambiguous (Pass 2): {e}")
                             return None
-                        logger.debug(f"SDK strict lookup (Pass 2) failed for '{name_or_guid}': {e}")
-                        if self.context.get("directive") == "validate":
-                            print_basic_exception(e)
+                        else:
+                            logger.debug(f"SDK strict lookup (Pass 2) failed for '{name_or_guid}': {e}")
+                            if self.context.get("directive") == "validate":
+                                print_basic_exception(e)
+                            self._note_lookup_unknown(name_or_guid, e)   # pager step 5: unknown, never absent
 
             # Ensure it's not a "not found" indicator string
             if res and isinstance(res, str) and not res.startswith("No ") and " found" not in res and not res.startswith("(Planned:"):
@@ -1825,8 +1901,29 @@ class AsyncBaseCommandProcessor(ABC):
 
         except Exception as e:
             logger.debug(f"resolve_element_guid: Unexpected error resolving '{name_or_guid}': {e}")
-            
+            self._note_lookup_unknown(name_or_guid, e)   # pager step 5: unknown, never absent
+
         return None
+
+    def _lookup_was_unknown(self, name: str) -> bool:
+        """Whether a lookup of `name` failed with an error other than Egeria's not-found (pager step 6: then a
+        reference is "couldn't tell", never "not found")."""
+        prefix = f"couldn't tell whether '{name}' exists"
+        return any(w.startswith(prefix) for w in self.__dict__.get("_lookups_unknown") or [])
+
+    def _note_lookup_unknown(self, name: str, exc: BaseException) -> None:
+        """Pager step 5 (the exists-lookups ruling, 6): a lookup that failed with an error that isn't Egeria's
+        not-found can't tell whether `name` exists. It's recorded, and execute() blocks a write whose target
+        wasn't found while any lookup is unknown, so a transport, auth or timeout error never becomes a create."""
+        if _is_not_found_error(exc):
+            return   # Egeria's not-found is an answer: absent
+        if getattr(self, "client", None) is None:
+            return   # no Egeria connection (a local-only store): there is no Egeria lookup to be unknown
+        words = f"couldn't tell whether '{name}' exists in Egeria ({type(exc).__name__})"
+        unknown = self.__dict__.setdefault("_lookups_unknown", [])
+        if words not in unknown:
+            unknown.append(words)
+            logger.warning(f"resolve_element_guid: {words}")
 
     async def _extract_memberships_async(self, async_get_fn, guid: str) -> dict:
         """
@@ -2072,6 +2169,10 @@ class AsyncBaseCommandProcessor(ABC):
                 status = "❌ Not Found"
             elif details.get("is_planned"):
                 status = "🕒 Planned"
+            elif details.get("valid") and details.get("status") == "WARNING":
+                # Parsed, but with a warning -- e.g. a value outside valid_values that was
+                # dropped. "✅ Valid" next to "was ignored" in Warnings read as a contradiction.
+                status = "⚠️ Warning"
             else:
                 status = "✅ Valid" if details.get("valid") else "❌ Invalid"
                 
@@ -2191,6 +2292,73 @@ class AsyncBaseCommandProcessor(ABC):
 
     # Control flags rather than element properties: keep their defaults on an update.
     _KEEP_DEFAULTS_ON_UPDATE = {"Merge Update"}
+
+    #: True for a processor that writes additionalProperties keys of its own beside the document's
+    #: "Additional Properties" (ReportProcessor's report parameters), so an update always sends the map.
+    WRITES_ADDITIONAL_PROPERTIES = False
+
+    def _is_merge_update(self) -> bool:
+        value = ((self.parsed_output.get("attributes") or {}).get("Merge Update") or {}).get("value", True)
+        return not (value is False or (isinstance(value, str) and value.strip().lower() == "false"))
+
+    async def _prepare_additional_properties(self) -> None:
+        """Keep the stored additionalProperties keys the document doesn't write (md_processing/v2/additional_properties.py).
+
+        Runs once, just before apply_changes(), for an update of an existing element (a Create that found
+        its element, or an Update). When the update sends additionalProperties -- the document gives
+        "Additional Properties", or the processor writes keys of its own -- the element's stored map is
+        read and the document's keys are laid over it, and the merged map becomes the "Additional
+        Properties" value every body builder reads. A replace update (Merge Update false) replaces, and
+        a warning names the stored keys it removes. A merge update whose stored map can't be read is
+        refused (AdditionalPropertiesUnreadable), never sent as a replacement.
+        """
+        if not self.supports_target_element_lookup():
+            return
+        is_update = bool(self.as_is_element) or (
+            self.command.verb in ("Update", "Modify", "Upsert")
+            and bool(self.parsed_output.get("exists") or self.parsed_output.get("guid")))
+        if not is_update:
+            return
+        attributes = self.parsed_output.get("attributes")
+        if attributes is None:
+            return
+        entry = attributes.get("Additional Properties")
+        document = entry.get("value") if isinstance(entry, dict) else None
+        if document in (None, "", {}):
+            document = None
+        elif not isinstance(document, dict):
+            return  # not a parsed Dictionary: leave it to the processor
+        if document is None and not self.WRITES_ADDITIONAL_PROPERTIES:
+            return  # nothing sent: Egeria keeps the stored map
+
+        stored = stored_additional_properties(self.as_is_element)
+        if stored is None and self.as_is_element:
+            guid = (self.as_is_element.get("elementHeader") or {}).get("guid")
+            if guid:
+                try:
+                    stored = stored_additional_properties(await self.fetch_element(guid))
+                except Exception as e:  # reported below as unreadable
+                    logger.debug(f"_prepare_additional_properties: re-read of {guid} failed: {e}")
+
+        if not self._is_merge_update():
+            note = replace_note(stored, (document or {}).keys())
+            if note:
+                self._add_warning(note)
+            return
+        if stored is None:
+            what = self.parsed_output.get("qualified_name") or self.parsed_output.get("guid") or "this element"
+            raise AdditionalPropertiesUnreadable(unreadable_message(f"'{what}'"))
+
+        merged = merge_additional_properties(stored, document)
+        kept = sorted(set(stored) - set(document or {}))
+        if isinstance(entry, dict):
+            entry["document_value"] = document
+            entry["value"] = merged
+        else:
+            attributes["Additional Properties"] = {"value": merged, "style": "Dictionary",
+                                                   "document_value": None, "kept_from_element": True}
+        if kept:
+            logger.info(f"Merge update keeps stored additionalProperties keys: {', '.join(kept)}")
 
     def _drop_create_defaults(self) -> None:
         """Remove spec defaults the parser filled in for a Create that has become an Update.

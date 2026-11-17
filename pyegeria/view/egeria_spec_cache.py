@@ -26,12 +26,17 @@ replaces it, and files it no longer names are deleted after that.
 
 from __future__ import annotations
 
+from pyegeria.core._no_password import NO_PASSWORD, carried_password, password_as_given, resolve_password
 import json
 import os
 import re
 import tempfile
+import threading
 import time
-from dataclasses import dataclass, field
+from collections import OrderedDict
+from contextlib import contextmanager, nullcontext
+from contextvars import ContextVar
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
@@ -66,6 +71,9 @@ __all__ = [
     "async_fetch_spec_for_call",
     "egeria_tier",
     "egeria_tier_info",
+    "as_client",
+    "declare_multi_user",
+    "is_multi_user",
     "spec_footer",
     "fetched_spec",
     "fetched_spec_source",
@@ -144,6 +152,150 @@ def _settings_env():
         return settings.Environment
     except Exception:  # noqa: BLE001 -- settings may not load in every context
         return None
+
+
+# ── Whose cache: the credential identity (spec-cache identity ruling, item 3) ──
+# A private manifest is bound to the credential identity that synced it, and the tier loads it only for that
+# identity. The identity is the Egeria user on a platform and view server, never the OS user. It is the user id,
+# not a token hash, because a manifest outlives every token: a CLI mints a new token on each run.
+
+from pyegeria.core._client_identities import declare_multi_user, is_multi_user  # noqa: E402 -- re-exported
+
+class _Unset:
+    __slots__ = ()
+
+    def __repr__(self) -> str:
+        return "UNSET"
+
+
+#: The ContextVar's default: no spec_identity block is active. Distinct from None, which a block sets to mean
+#: "explicitly no one" (T4 (3)): None is never read as unset, so it never falls back to a process identity.
+_UNSET: Any = _Unset()
+_SPEC_IDENTITY: "ContextVar[Any]" = ContextVar("pyegeria_spec_identity", default=_UNSET)
+_REFUSED_LOGGED: set = set()
+
+
+def credential_identity(user_id: Any, platform_url: Optional[str] = None,
+                        view_server: Optional[str] = None) -> Optional[str]:
+    """"<user>@<platform host_port>/<view server>", or None when there is no user."""
+    user = user_id.strip() if isinstance(user_id, str) else ""
+    if not user or user == "?":
+        return None
+    env = _settings_env()
+    url = platform_url if isinstance(platform_url, str) and platform_url else (
+        getattr(env, "egeria_view_server_url", None) if env else None)
+    server = view_server if isinstance(view_server, str) and view_server else (
+        getattr(env, "egeria_view_server", None) if env else None)
+    url = url if isinstance(url, str) else None
+    server = server if isinstance(server, str) else None
+    return f"{user}@{_host_port(url)}/{_safe(server or 'unknown-view-server')}"
+
+
+def client_credential_identity(client: Any) -> Optional[str]:
+    """The credential identity of the Egeria client a read is made with."""
+    return credential_identity(getattr(client, "user_id", None), getattr(client, "platform_url", None),
+                               getattr(client, "view_server", None) or getattr(client, "server_name", None))
+
+
+@contextmanager
+def spec_identity(identity: Optional[str]):
+    """Run the block as `identity` for the EGERIA tier (exec_report_spec and the async runner set it).
+    ``spec_identity(None)`` (or an empty identity) runs it as explicitly NO ONE: no private cache loads and no
+    fetched copy is served, whether or not the process is declared multi-user; it never falls back."""
+    token = _SPEC_IDENTITY.set(identity if identity else None)
+    try:
+        yield
+    finally:
+        _SPEC_IDENTITY.reset(token)
+
+
+_MULTI_LOGGED: set = set()
+
+
+def as_client(client: Any):
+    """`spec_identity(client_credential_identity(client))`: every EGERIA-tier read a path makes with a client in
+    hand is for that client's credential, never for the process fallback. A client with no readable identity
+    (a bare object) leaves the current identity as it is."""
+    identity = client_credential_identity(client) if client is not None else None
+    if identity:
+        _note_client(client)   # its current identity (after any user_id swap) counts towards "more than one"
+    return spec_identity(identity) if identity else nullcontext()
+
+
+def current_spec_identity() -> Optional[str]:
+    """The identity the EGERIA tier is read for:
+    1. the one set by `spec_identity` (exec_report_spec, the async runner and the dashboard resolver set it
+       from the request's client). Inside ``spec_identity(None)`` that is None, explicitly no one, with no
+       fallback below;
+    In a process DECLARED multi-user (`pyegeria.core._client_identities.declare_multi_user()` or
+    PYEGERIA_MULTI_USER=1: the Portal, EA, Studio, the MCP HTTP server), nothing else: None, so no private cache
+    loads and no fetched copy is served outside a request's own identity. Otherwise:
+    2. the credentials of this process's Egeria clients (`pyegeria.core._client_identities`), when it has seen
+       exactly one: a single-user process (a CLI, the stdio MCP server) reads as the user its client signs in
+       as, whatever the settings say;
+    3. when it has seen more than one, None (logged once). This is only a BACKSTOP for an undeclared server:
+       it can be skipped, because a server that builds clients as its service user and then swaps user_id
+       (the Portal's use_token) records the service user first, and reads as it until a second identity is
+       seen. A multi-user process must declare itself;
+    4. else, with no client yet, this process's configured Egeria user, resolved exactly as a CLI's client is
+       (`pyegeria.core.config.configured_user_id`: EGERIA_USER, the settings' user, the quickstart default).
+    A path that holds a client binds to it instead (`as_client`), whatever this fallback says."""
+    identity = _SPEC_IDENTITY.get()
+    if identity is not _UNSET:
+        return identity   # set by a spec_identity block: a credential identity, or None for explicitly no one
+    try:
+        from pyegeria.core._client_identities import is_multi_user
+        if is_multi_user():
+            return None
+    except Exception:  # noqa: BLE001
+        return None   # can't tell: fail safe
+    try:
+        from pyegeria.core._client_identities import seen_credentials
+        seen = {credential_identity(*entry) for entry in seen_credentials()} - {None}
+    except Exception:  # noqa: BLE001
+        seen = set()
+    if len(seen) == 1:
+        return next(iter(seen))
+    if seen:
+        key = frozenset(seen)
+        if key not in _MULTI_LOGGED:
+            _MULTI_LOGGED.add(key)
+            logger.info(f"Report spec cache: this process has Egeria clients for {len(seen)} identities; a read "
+                        f"outside a request's own identity (spec_identity) loads no private cache")
+        return None
+    try:
+        from pyegeria.core.config import configured_user_id
+        return credential_identity(configured_user_id())
+    except Exception:  # noqa: BLE001 -- no settings: no identity, so no private manifest loads (fail safe)
+        return None
+
+
+def _manifest_loads_for(directory: Path, manifest: Dict[str, Any], identity: Optional[str]) -> bool:
+    """Whether a manifest may load into the tier for `identity`. A shared one loads for anyone; a private one
+    only for the identity it is bound to (one without a binding, e.g. from before this rule, for no one).
+    A refusal is logged once per (directory, bound identity, identity)."""
+    if manifest.get("shared") or not manifest.get("entries"):
+        return True
+    bound = manifest.get("bound_identity")
+    if bound and bound == identity:
+        return True
+    key = (str(directory), bound, identity)
+    if key not in _REFUSED_LOGGED:
+        _REFUSED_LOGGED.add(key)
+        why = (f"it is bound to {bound}" if bound else
+               "it records no bound identity (synced before private caches were bound); re-sync to bind it")
+        logger.warning(f"Report spec cache {directory}: a private cache, not loaded for {identity or 'no identity'}: "
+                       f"{why}")
+    return False
+
+
+def _note_client(client: Any) -> None:
+    """Record a sync's or fetch's client as one of this process's identities (see current_spec_identity)."""
+    try:
+        from pyegeria.core._client_identities import note_client
+        note_client(client)
+    except Exception:  # noqa: BLE001
+        pass
 
 
 def _host_port(url: Optional[str]) -> str:
@@ -335,6 +487,28 @@ def _zones(el: Dict[str, Any]) -> List[str]:
     return sorted(set(found))
 
 
+def _zone_state(el: Dict[str, Any]) -> Tuple[str, List[str]]:
+    """("public", []), ("zoned", zones) or ("unknown", []) for an element's visibility. Unknown: there is no
+    element header to read, or a ZoneMembership is present whose zones can't be read (neither a list nor a
+    string). No zones means open (Egeria's zone rule)."""
+    header = _header(el)
+    if not isinstance(header, dict) or not header:
+        return "unknown", []
+    candidates = [header.get("zoneMembership")] + [c for c in (header.get("classifications") or [])
+                                                   if isinstance(c, dict)
+                                                   and c.get("classificationName") == "ZoneMembership"]
+    for c in candidates:
+        if c is None:
+            continue
+        if not isinstance(c, dict):
+            return "unknown", []
+        z = (c.get("classificationProperties") or {}).get("zoneMembership")
+        if z is not None and not isinstance(z, (list, str)):
+            return "unknown", []
+    zones = _zones(el)
+    return ("zoned", zones) if zones else ("public", [])
+
+
 ZONED_REASON = "zoned: not synced into a shared cache (until B6's public-only read)"
 
 
@@ -477,7 +651,8 @@ def _known_names() -> set:
     from pyegeria.view import base_report_formats as brf
     names = set(brf._builtin_tier().keys())
     names |= set(brf._CONFIG_REPORT_FORMATS.keys()) | set(brf._RUNTIME_REPORT_FORMATS.keys())
-    names |= set(_TIER.get("specs", {}).keys())
+    entry = _peek_tier_entry()   # the caller's own entry, never another identity's; peeked: this never loads
+    names |= set(entry.specs.keys()) if entry is not None else set()
     return names
 
 
@@ -556,20 +731,104 @@ def _find_folder(client, qn: str) -> Optional[Dict[str, Any]]:
     return _folders.find_folder(client, qn)
 
 
+#: The label lookup pages each by-name search through the pager (findMetadataElements underneath: NULL_NOT_END
+#: before #9453, trusted on a gated platform), up to this many requests of SPEC_LOOKUP_PAGE per name.
+SPEC_LOOKUP_PAGE = 100
+SPEC_LOOKUP_MAX_PAGES = 10
+
+
+class SpecLookupUnconfirmed(RuntimeError):
+    """Egeria returned no ReportSpec for a label, but didn't confirm there is none (or a lookup failed): the
+    words say "couldn't tell", never "not found"."""
+
+
+def _spec_label_names(label: str) -> Tuple[str, str, str]:
+    return label, f"ReportSpec::{label}", f"ReportType::{label}"
+
+
+def _spec_matches(read_items: Iterable[Any], label: str, seen: Dict[str, Dict[str, Any]]) -> None:
+    for e in read_items:
+        if isinstance(e, dict) and label_from_qualified_name(_props(e).get("qualifiedName") or "") == label \
+                and _guid(e):
+            seen[_guid(e)] = e
+
+
+def _spec_lookup_result(label: str, seen: Dict[str, Dict[str, Any]], unconfirmed: List[str]) -> List[Dict[str, Any]]:
+    """The matches; with none, "not found" only when every read reached a confirmed end."""
+    if not seen and unconfirmed:
+        raise SpecLookupUnconfirmed(f"couldn't tell whether Egeria holds report spec '{label}': none was found in "
+                                    f"what Egeria returned, but it didn't confirm there are no more "
+                                    f"({'; '.join(unconfirmed)})")
+    return list(seen.values())
+
+
 def _find_specs_by_label(client, label: str) -> List[Dict[str, Any]]:
-    """Every ReportSpec element whose label is `label`, under either qualified-name marker."""
+    """Every ReportSpec element whose label is `label`, under either qualified-name marker.
+
+    A label isn't an exact qualified name (a local qualifier may precede the marker), so each by-name search is
+    paged with `paging_for` rather than read as one page. [] only when every read reached a confirmed end;
+    otherwise, with no match, SpecLookupUnconfirmed (never "not found")."""
+    from pyegeria.core.paging import page_all, paging_for
     seen: Dict[str, Dict[str, Any]] = {}
-    for name in (label, f"ReportSpec::{label}", f"ReportType::{label}"):
+    unconfirmed: List[str] = []
+    paging = paging_for("get_collections_by_name", client)
+    for name in _spec_label_names(label):
+        def fetch(start: int, size: int, name: str = name):
+            return client.get_collections_by_name(name, metadata_element_type="ReportSpec", output_format="JSON",
+                                                  start_from=start, page_size=size)
         try:
-            found = _call(client.get_collections_by_name, name, metadata_element_type="ReportSpec",
-                          output_format="JSON")
+            read = page_all(fetch, fetch_page_size=SPEC_LOOKUP_PAGE, max_pages=SPEC_LOOKUP_MAX_PAGES, **paging)
         except Exception as exc:  # noqa: BLE001 -- one failing lookup must not hide the others
             logger.debug(f"report spec lookup by name {name!r} failed: {exc}")
+            unconfirmed.append(f"{name!r}: the read failed ({type(exc).__name__})")
             continue
-        for e in found:
-            if label_from_qualified_name(_props(e).get("qualifiedName") or "") == label and _guid(e):
-                seen[_guid(e)] = e
-    return list(seen.values())
+        if not read.complete:
+            unconfirmed.append(f"{name!r}: {read.end_reason}")
+        _spec_matches(read.items, label, seen)
+    return _spec_lookup_result(label, seen, unconfirmed)
+
+
+async def _async_find_specs_by_label(client, label: str) -> List[Dict[str, Any]]:
+    """`_find_specs_by_label` for async code."""
+    from pyegeria.core.paging import async_page_all, async_paging_for
+    seen: Dict[str, Dict[str, Any]] = {}
+    unconfirmed: List[str] = []
+    paging = await async_paging_for("_async_get_collections_by_name", client)
+    for name in _spec_label_names(label):
+        async def fetch(start: int, size: int, name: str = name):
+            return await client._async_get_collections_by_name(name, metadata_element_type="ReportSpec",
+                                                               output_format="JSON", start_from=start,
+                                                               page_size=size)
+        try:
+            read = await async_page_all(fetch, fetch_page_size=SPEC_LOOKUP_PAGE, max_pages=SPEC_LOOKUP_MAX_PAGES,
+                                        **paging)
+        except Exception as exc:  # noqa: BLE001
+            logger.debug(f"report spec lookup by name {name!r} failed: {exc}")
+            unconfirmed.append(f"{name!r}: the read failed ({type(exc).__name__})")
+            continue
+        if not read.complete:
+            unconfirmed.append(f"{name!r}: {read.end_reason}")
+        _spec_matches(read.items, label, seen)
+    return _spec_lookup_result(label, seen, unconfirmed)
+
+
+def _pinned_element_state(client, guid: str) -> Tuple[str, str]:
+    """Whether a pinned spec's element is still there, by GUID, three ways: ("found", ""), ("gone", why)
+    (Egeria's specific element not-found, or the element is no longer visible to the syncing identity: the
+    only answers that prune), or ("unknown", the error class): any other error, OMAG-MULTI-TENANT-404 (the
+    server or service isn't available) included, which keeps the entry."""
+    if not guid:
+        return "unknown", "no GUID recorded"
+    try:
+        el = _get_full(client, guid)
+    except Exception as exc:  # noqa: BLE001 -- classified below; only an element's absence prunes
+        if _folders.is_gone_error(exc):
+            from pyegeria.view.dashboard_resolver import is_not_visible_error
+            if is_not_visible_error(exc):
+                return "gone", f"is no longer visible to {_client_identity(client)}"
+            return "gone", "no longer exists"
+        return "unknown", type(exc).__name__
+    return ("found", "") if el else ("gone", "no longer exists")   # NO_ELEMENTS_FOUND: Egeria's not-found
 
 
 def _get_full(client, guid: str) -> Optional[Dict[str, Any]]:
@@ -630,7 +889,8 @@ def sync_report_specs(client, *, folders: Optional[Iterable[str]] = None, specs:
         report.notes.append(f"no report spec folders are configured (set {FOLDERS_ENV} or config.json's "
                             f"\"Pyegeria Report Spec Folders\", or pass --folder/--spec); nothing synced")
         return report
-    with _SyncLock(directory):
+    _note_client(client)
+    with as_client(client), _SyncLock(directory):
         identity = _client_identity(client)
         # Gather candidates: guid -> (member element, [folders])
         members: Dict[str, Tuple[Dict[str, Any], List[str]]] = {}
@@ -688,9 +948,10 @@ def sync_report_specs(client, *, folders: Optional[Iterable[str]] = None, specs:
 
         main_dir, drafts_dir = directory, directory / DRAFTS_DIR
         main_old, drafts_old = _read_manifest(main_dir), _read_manifest(drafts_dir)
-        main_new = _new_manifest(main_old, identity, shared)
+        bound = client_credential_identity(client)
+        main_new = _new_manifest(main_old, identity, shared, bound)
         shared_cache = bool(main_new.get("shared"))  # §9: a shared cache never holds a zoned spec
-        drafts_new = _new_manifest(drafts_old, identity, shared)
+        drafts_new = _new_manifest(drafts_old, identity, shared, bound)
         drafts_report = SyncReport(cache_dir=str(drafts_dir), folders=folder_qns) if include_drafts else None
 
         # Identify every candidate; duplicate labels are skipped (both), with both GUIDs.
@@ -785,15 +1046,17 @@ def sync_report_specs(client, *, folders: Optional[Iterable[str]] = None, specs:
                     rep.pruned.append(label)  # seen but skipped this time; the skip names the reason
                     continue
                 if old.get("pinned"):
-                    try:
-                        still = _get_full(client, old.get("guid", ""))
-                    except Exception:  # noqa: BLE001
-                        still = None
-                    if still:
+                    state, why = _pinned_element_state(client, old.get("guid", ""))
+                    if state == "found":
                         tgt_new["entries"][label] = old
                         continue
+                    if state == "unknown":   # a transient fault never drops what the user pinned
+                        tgt_new["entries"][label] = old
+                        rep.notes.append(f"{label}: kept; couldn't confirm whether its element {old.get('guid')} "
+                                         f"still exists ({why})")
+                        continue
                     rep.pruned.append(label)
-                    rep.notes.append(f"{label}: pruned, its element {old.get('guid')} no longer exists")
+                    rep.notes.append(f"{label}: pruned, its element {old.get('guid')} {why}")
                     continue
                 rep.pruned.append(label)
                 rep.notes.append(f"{label}: pruned, no longer a member of any synced folder")
@@ -821,10 +1084,12 @@ def sync_report_specs(client, *, folders: Optional[Iterable[str]] = None, specs:
     return report
 
 
-def _new_manifest(old: Dict[str, Any], identity: str, shared: Optional[bool]) -> Dict[str, Any]:
+def _new_manifest(old: Dict[str, Any], identity: str, shared: Optional[bool],
+                  bound: Optional[str] = None) -> Dict[str, Any]:
+    """`bound`: the credential identity that synced it; a private manifest loads only for it."""
     return {"format": MANIFEST_FORMAT,
             "shared": bool(old.get("shared")) if shared is None else bool(shared),
-            "sync_identity": identity, "synced_at": _now(), "entries": {}, "skipped": []}
+            "sync_identity": identity, "bound_identity": bound, "synced_at": _now(), "entries": {}, "skipped": []}
 
 
 def _resolve_cache_dir(client, override: Optional[str]) -> Path:
@@ -1018,12 +1283,70 @@ def read_consumer_index(*, cache_dir: Optional[str] = None, client=None) -> Dict
 
 # ── The EGERIA tier: what the registry reads ──
 
-_TIER: Dict[str, Any] = {"key": None, "checked": 0.0, "stamp": None, "specs": {}, "meta": {}, "aliases_dropped": {}}
+@dataclass(frozen=True)
+class _TierEntry:
+    """One identity's EGERIA tier, built whole and never changed after (T4): a reload builds a new entry and
+    swaps it in with one assignment under _TIER_LOCK, so no reader sees one identity's key with another's specs.
+
+    Every reader with the same identity (and cache settings) gets THIS entry's `specs` and `meta` objects, not
+    copies: the entry is frozen, but the FormatSetDict and dicts inside it are ordinary mutable objects. Treat
+    them as read-only; a caller that wants to change a spec copies it first. A mutation would be seen by every
+    concurrent reader of that identity (never by another identity, which has its own entry)."""
+    raw_key: Tuple
+    key: Any
+    stamp: Any
+    checked: float
+    specs: Any
+    meta: Dict[str, Any]
+    skipped: Tuple = ()
+    dir: Optional[str] = None
+
+
+#: Per-identity tier entries, keyed by the full raw key (cache dir and settings, drafts, identity), LRU-bounded.
+#: Never one shared slot: a reload for one identity can't hand its half-loaded state, or the previous
+#: identity's specs, to a concurrent read for another (the Portal's threaded routes, per-request identities).
+TIER_CACHE_SIZE = 64
+_TIERS: "OrderedDict[Tuple, _TierEntry]" = OrderedDict()
+_TIER_LOCK = threading.Lock()
 
 
 def _invalidate_tier() -> None:
-    _TIER["checked"] = 0.0
-    _TIER["stamp"] = None
+    with _TIER_LOCK:
+        _TIERS.clear()
+
+
+def _tier_raw_key(identity: Optional[str]) -> Tuple:
+    with_drafts = os.getenv(DRAFTS_ENV, "").strip().lower() in ("1", "true", "yes")
+    env = _settings_env()
+    return (os.getenv(CACHE_DIR_ENV), getattr(env, "egeria_view_server_url", None),
+            getattr(env, "egeria_view_server", None), getattr(env, "pyegeria_user_report_specs_dir", None),
+            os.getenv("PYEGERIA_USER_REPORT_SPECS_DIR"), os.getenv("PYEGERIA_USER_FORMAT_SETS_DIR"),
+            with_drafts, identity)
+
+
+def _get_entry(raw_key: Tuple) -> Optional[_TierEntry]:
+    with _TIER_LOCK:
+        entry = _TIERS.get(raw_key)
+        if entry is not None:
+            _TIERS.move_to_end(raw_key)
+        return entry
+
+
+def _put_entry(entry: _TierEntry) -> _TierEntry:
+    with _TIER_LOCK:
+        _TIERS[entry.raw_key] = entry
+        _TIERS.move_to_end(entry.raw_key)
+        while len(_TIERS) > TIER_CACHE_SIZE:
+            _TIERS.popitem(last=False)
+    return entry
+
+
+def _peek_tier_entry() -> Optional[_TierEntry]:
+    """The current identity's entry if one is loaded, without loading (for reads made during a load)."""
+    try:
+        return _get_entry(_tier_raw_key(current_spec_identity()))
+    except Exception:  # noqa: BLE001
+        return None
 
 
 def _stamp(directory: Path, with_drafts: bool) -> Tuple:
@@ -1065,37 +1388,44 @@ def _load_dir(directory: Path, tier_label: str, specs, meta: Dict[str, Any], ski
 
 
 def egeria_tier(*, force: bool = False):
-    """The EGERIA tier as a FormatSetDict, loaded from the cache manifest(s). Reloaded when a
-    manifest changes, checked at most once per second. Never raises: a broken cache is an empty
-    tier, logged."""
+    """The EGERIA tier as a FormatSetDict, loaded from the cache manifest(s), for the current spec identity.
+    Reloaded when a manifest changes, checked at most once per second. Never raises: a broken cache is an empty
+    tier, logged.
+
+    The returned FormatSetDict is the identity's own entry, shared by every reader with that identity (see
+    `_TierEntry`): treat it as read-only; copy a spec before editing."""
+    return _tier_entry(force=force).specs
+
+
+def _tier_entry(*, force: bool = False) -> _TierEntry:
+    """The current identity's tier entry: its own, never another identity's (T4). The identity is resolved once,
+    so the entry, its specs and its meta all belong to it."""
     from pyegeria.view._output_format_models import FormatSetDict
-    with_drafts = os.getenv(DRAFTS_ENV, "").strip().lower() in ("1", "true", "yes")
-    env = _settings_env()
-    raw_key = (os.getenv(CACHE_DIR_ENV), getattr(env, "egeria_view_server_url", None),
-               getattr(env, "egeria_view_server", None), getattr(env, "pyegeria_user_report_specs_dir", None),
-               os.getenv("PYEGERIA_USER_REPORT_SPECS_DIR"), os.getenv("PYEGERIA_USER_FORMAT_SETS_DIR"),
-               with_drafts)
+    identity = current_spec_identity()
+    raw_key = _tier_raw_key(identity)
+    with_drafts = raw_key[6]
     now = time.monotonic()
-    if not force and _TIER.get("raw_key") == raw_key and now - _TIER["checked"] < _RELOAD_INTERVAL_S:
-        return _TIER["specs"]
+    entry = _get_entry(raw_key)
+    if not force and entry is not None and now - entry.checked < _RELOAD_INTERVAL_S:
+        return entry
     try:
         directory = cache_dir()
     except Exception as exc:  # noqa: BLE001
-        if _TIER.get("key") != ("error", str(exc)):
+        if entry is None or entry.key != ("error", str(exc)):
             logger.warning(f"Report spec cache unavailable: {exc}")
-        _TIER.update(key=("error", str(exc)), raw_key=raw_key, checked=now, specs=FormatSetDict(), meta={})
-        return _TIER["specs"]
-    key = (str(directory), with_drafts)
-    _TIER["raw_key"] = raw_key
+        return _put_entry(_TierEntry(raw_key=raw_key, key=("error", str(exc)), stamp=None, checked=now,
+                                     specs=FormatSetDict(), meta={}))
+    key = (str(directory), with_drafts, identity)
     stamp = _stamp(directory, with_drafts)
-    _TIER["checked"] = now
-    if not force and _TIER.get("key") == key and _TIER.get("stamp") == stamp:
-        return _TIER["specs"]
+    if not force and entry is not None and entry.key == key and entry.stamp == stamp:
+        return _put_entry(replace(entry, checked=now))
     specs, meta, skipped = FormatSetDict(), {}, []
     if stamp[0] is not None:
-        shared = bool(_read_manifest(directory).get("shared"))
-        _load_dir(directory, "main", specs, meta, skipped, shared)
-    if with_drafts and stamp[1] is not None:
+        main_manifest = _read_manifest(directory)
+        if _manifest_loads_for(directory, main_manifest, identity):
+            _load_dir(directory, "main", specs, meta, skipped, bool(main_manifest.get("shared")))
+    if with_drafts and stamp[1] is not None and _manifest_loads_for(
+            directory / DRAFTS_DIR, _read_manifest(directory / DRAFTS_DIR), identity):
         dspecs, dmeta = FormatSetDict(), {}
         _load_dir(directory / DRAFTS_DIR, "drafts", dspecs, dmeta, skipped, False)
         for label, fs in dspecs.items():
@@ -1106,17 +1436,18 @@ def egeria_tier(*, force: bool = False):
             meta[label] = dict(dmeta[label], draft=True)
     for who, why in skipped:
         logger.warning(f"Report spec cache {directory}: skipping {who}: {why}")
-    _TIER.update(key=key, stamp=stamp, specs=specs, meta=meta, skipped=skipped, dir=str(directory))
-    return specs
+    return _put_entry(_TierEntry(raw_key=raw_key, key=key, stamp=stamp, checked=now, specs=specs, meta=meta,
+                                 skipped=tuple(skipped), dir=str(directory)))
 
 
 def egeria_tier_info(label: str) -> Optional[Dict[str, Any]]:
-    """Provenance for a label in the EGERIA tier (or a fetched `label@vN`), else None."""
+    """Provenance for a label in the EGERIA tier (or a fetched `label@vN`), else None. Read from the caller's own
+    tier entry, the one its specs came from (T4)."""
     m = _FETCHED_SUFFIX.match(label or "")
-    if m and (m.group("label"), int(m.group("version"))) in _FETCHED:
-        return dict(_FETCHED[(m.group("label"), int(m.group("version")))][1])
-    egeria_tier()
-    info = _TIER.get("meta", {}).get(label)
+    hit = _fetched_hit(m.group("label"), int(m.group("version"))) if m else None
+    if hit:
+        return dict(hit[1])
+    info = _tier_entry().meta.get(label)
     return dict(info) if info else None
 
 
@@ -1151,17 +1482,59 @@ def spec_footer(info: Optional[Dict[str, Any]]) -> Optional[str]:
 
 # ── Fetch on a call (§7a "Fetch on a call") ──
 
-#: Specs fetched with refresh_spec=True, kept for the life of the process, keyed by (label, header
-#: version). Addressed internally as "egeria:<label>@v<version>".
-_FETCHED: Dict[Tuple[str, int], Tuple[Any, Dict[str, Any]]] = {}
+#: Specs fetched with refresh_spec=True, kept for the life of the process, keyed by (credential identity, label,
+#: header version): served only to the identity that fetched them (spec-cache identity ruling, item 4), never to
+#: another identity, with no fallback to its copy. Addressed internally as "egeria:<label>@v<version>".
+_FETCHED: Dict[Tuple[Optional[str], str, int], Tuple[Any, Dict[str, Any]]] = {}
+NOT_FETCHED_FOR_YOU = "not fetched for you; fetch it as yourself"
+_REFUSAL_LOGGED: set = set()
 
 
-def fetched_spec(name: str):
-    """The FormatSet for an internal "<label>@v<N>" name, or None."""
+def _fetched_hit(label: str, version: int, identity: Optional[str] = None):
+    """The fetched copy for (`identity` or the current spec identity, label, version), or None. Never another
+    identity's copy."""
+    who = identity if identity is not None else current_spec_identity()
+    if who is None:
+        return None   # no identity (a declared multi-user process outside a request): served to no one
+    return _FETCHED.get((who, label, version))
+
+
+def fetched_refusal(name: str, identity: Optional[str] = None) -> Optional[str]:
+    """The words when `name` ("[egeria:]<label>@v<N>") was fetched in this process, but only by other identities:
+    "... not fetched for you; fetch it as yourself". None when it is this identity's, or never fetched.
+
+    None too when there is no identity to say it to (`identity`, else the current spec identity, is None: a
+    declared multi-user process outside a request, or inside ``spec_identity(None)``): the same guard as
+    `_fetched_hit`, which serves that reader nothing. "Fetch it as yourself" has no one to speak to, so no words
+    are made and none are logged."""
+    who = identity if identity is not None else current_spec_identity()
+    if who is None:
+        return None
+    _tier, rest = split_tier_prefix(name)
+    m = _FETCHED_SUFFIX.match(rest or "") if isinstance(rest, str) else None
+    if not m:
+        return None
+    label, version = m.group("label"), int(m.group("version"))
+    if _fetched_hit(label, version, who):
+        return None
+    if any(k[1] == label and k[2] == version for k in _FETCHED):
+        return f"Report spec '{label}' v{version}: {NOT_FETCHED_FOR_YOU}"
+    return None
+
+
+def fetched_spec(name: str, identity: Optional[str] = None):
+    """The FormatSet for an internal "<label>@v<N>" name fetched by this identity (`identity`, else the current
+    spec identity), or None. Another identity's copy is never returned (see `fetched_refusal`)."""
     m = _FETCHED_SUFFIX.match(name or "")
     if not m:
         return None
-    hit = _FETCHED.get((m.group("label"), int(m.group("version"))))
+    who = identity if identity is not None else current_spec_identity()   # resolved once for the hit and the words
+    hit = _fetched_hit(m.group("label"), int(m.group("version")), who)
+    if hit is None and who is not None and (words := fetched_refusal(name, who)):
+        key = (who, name)
+        if key not in _REFUSAL_LOGGED:
+            _REFUSAL_LOGGED.add(key)
+            logger.warning(f"{words} (asked for as {who})")
     return hit[0] if hit else None
 
 
@@ -1172,7 +1545,7 @@ def fetched_spec_source(name: str) -> Optional[Dict[str, Any]]:
     m = _FETCHED_SUFFIX.match(rest or "") if isinstance(rest, str) else None
     if not m:
         return None
-    hit = _FETCHED.get((m.group("label"), int(m.group("version"))))
+    hit = _fetched_hit(m.group("label"), int(m.group("version")))
     return dict(hit[1]) if hit else None
 
 
@@ -1185,7 +1558,8 @@ def _fetch_target(name: str) -> str:
     return label
 
 
-def _finish_fetch(directory: Path, el: Dict[str, Any], label: str, identity: str) -> str:
+def _finish_fetch(directory: Path, el: Dict[str, Any], label: str, identity: str,
+                  bound: Optional[str] = None) -> str:
     try:
         built = _build(el, folders=[], identity=identity)
     except _Skip as s:
@@ -1198,14 +1572,27 @@ def _finish_fetch(directory: Path, el: Dict[str, Any], label: str, identity: str
     manifest = _read_manifest(directory)
     shared = bool(manifest.get("shared"))
     version = built.provenance["header_version"]
+    visibility, zones = _zone_state(el)
     info = {"tier": "egeria", "label": label, "guid": built.guid,
             "version": built.provenance["version_identifier"], "header_version": version,
             "fetched_at": built.provenance["fetched_at"], "fetched": True, "shared": shared,
-            "qualified_name": built.provenance["qualified_name"]}
-    _FETCHED[(label, version)] = (built.format_set, info)
-    if shared:
+            "qualified_name": built.provenance["qualified_name"], "visibility": visibility}
+    if bound is not None:   # a fetcher with no identity keeps no copy anyone could be served
+        _FETCHED[(bound, label, version)] = (built.format_set, info)   # served only to the identity that fetched it
+    owner = manifest.get("bound_identity")
+    if visibility != "public":
+        # The spec-cache identity ruling, item 2: a zoned spec (or one whose visibility can't be read) is never
+        # written to ANY disk manifest, shared or private; it lives only in this process, for this fetch.
+        what = f"carries zones {', '.join(zones)}" if visibility == "zoned" else "has a visibility that can't be read"
+        logger.info(f"Report spec '{label}' v{version} fetched from Egeria {what}, so the copy is kept in this "
+                    f"process only; it is never written to the cache {directory}")
+    elif shared:
         logger.info(f"Report spec '{label}' v{version} fetched from Egeria; the cache {directory} is shared, so "
                     f"the copy is kept in this process only")
+    elif not bound or (manifest.get("entries") and owner != bound):
+        # a private cache is written only by the identity it is bound to (a new one is bound to this fetcher)
+        logger.info(f"Report spec '{label}' v{version} fetched from Egeria as {bound or 'no identity'}; the private "
+                    f"cache {directory} is bound to {owner or 'no identity'}, so the copy is kept in this process only")
     else:
         try:
             with _SyncLock(directory):
@@ -1215,6 +1602,7 @@ def _finish_fetch(directory: Path, el: Dict[str, Any], label: str, identity: str
                 entry["pinned"] = bool(old.get("pinned")) or not old.get("folders")
                 manifest["entries"][label] = entry
                 manifest.setdefault("format", MANIFEST_FORMAT)
+                manifest["bound_identity"] = bound
                 manifest["synced_at"] = manifest.get("synced_at") or _now()
                 _write_manifest(directory, manifest)
                 _prune_unnamed(directory, manifest)
@@ -1229,6 +1617,12 @@ def _lookup_guid(directory: Path, label: str) -> Optional[str]:
 
 
 def fetch_spec_for_call(client, name: str, *, cache_dir_override: Optional[str] = None) -> str:
+    """Fetch `name` from Egeria for one call, as `client` (see `_fetch_spec_for_call`)."""
+    with as_client(client):
+        return _fetch_spec_for_call(client, name, cache_dir_override=cache_dir_override)
+
+
+def _fetch_spec_for_call(client, name: str, *, cache_dir_override: Optional[str] = None) -> str:
     """Fetch `name` from Egeria for this call (sync client methods). Returns the internal name
     ("egeria:<label>@v<N>") the call should use. Writes through to a per-user cache; never to a
     shared one. Raises SpecFetchError with words; never falls back to the cached copy."""
@@ -1248,14 +1642,22 @@ def fetch_spec_for_call(client, name: str, *, cache_dir_override: Optional[str] 
     except SpecFetchError:
         raise
     except Exception as exc:  # noqa: BLE001
-        raise SpecFetchError(f"Report spec '{label}' could not be fetched from Egeria: {exc}") from exc
+        raise SpecFetchError(f"Report spec '{label}' could not be fetched from Egeria: {exc} (refresh_spec=True "
+                             f"never falls back to the cached copy)") from exc
     if el is None:
         raise SpecFetchError(f"Report spec '{label}' was not found in Egeria (refresh_spec=True never falls back "
                              f"to the cached copy)")
-    return _finish_fetch(directory, el, label, _client_identity(client))
+    _note_client(client)
+    return _finish_fetch(directory, el, label, _client_identity(client), client_credential_identity(client))
 
 
 async def async_fetch_spec_for_call(client, name: str) -> str:
+    """The async `fetch_spec_for_call`, as `client`."""
+    with as_client(client):
+        return await _async_fetch_spec_for_call(client, name)
+
+
+async def _async_fetch_spec_for_call(client, name: str) -> str:
     """The async twin of `fetch_spec_for_call`, for the request helpers of an async find method."""
     from pyegeria.omvs.collection_manager import CollectionManager
     label = _fetch_target(name)
@@ -1268,37 +1670,27 @@ async def async_fetch_spec_for_call(client, name: str) -> str:
         if guid:
             el = (_elements(await getter._async_get_collection_by_guid(guid, output_format="JSON")) or [None])[0]
         if el is None:
-            seen: Dict[str, Dict[str, Any]] = {}
-            for nm in (label, f"ReportSpec::{label}", f"ReportType::{label}"):
-                res = _elements(await getter._async_get_collections_by_name(
-                    nm, metadata_element_type="ReportSpec", output_format="JSON"))
-                for e in res:
-                    if label_from_qualified_name(_props(e).get("qualifiedName") or "") == label and _guid(e):
-                        seen[_guid(e)] = e
-            if len(seen) > 1:
-                raise SpecFetchError(f"Report spec '{label}' is held by {len(seen)} elements in Egeria: "
-                                     f"{', '.join(sorted(seen))}")
-            if seen:
-                g = next(iter(seen))
-                el = (_elements(await getter._async_get_collection_by_guid(g, output_format="JSON")) or [None])[0]
+            found = await _async_find_specs_by_label(getter, label)
+            if len(found) > 1:
+                raise SpecFetchError(f"Report spec '{label}' is held by {len(found)} elements in Egeria: "
+                                     f"{', '.join(sorted(_guid(e) for e in found))}")
+            if found:
+                el = (_elements(await getter._async_get_collection_by_guid(_guid(found[0]), output_format="JSON"))
+                      or [None])[0]
     except SpecFetchError:
         raise
     except Exception as exc:  # noqa: BLE001
-        raise SpecFetchError(f"Report spec '{label}' could not be fetched from Egeria: {exc}") from exc
+        raise SpecFetchError(f"Report spec '{label}' could not be fetched from Egeria: {exc} (refresh_spec=True "
+                             f"never falls back to the cached copy)") from exc
     if el is None:
         raise SpecFetchError(f"Report spec '{label}' was not found in Egeria (refresh_spec=True never falls back "
                              f"to the cached copy)")
-    return _finish_fetch(directory, el, label, _client_identity(client))
+    _note_client(client)
+    return _finish_fetch(directory, el, label, _client_identity(client), client_credential_identity(client))
 
 
 def _collection_client(client, cls):
-    """A CollectionManager on the caller's platform, as the caller (their token)."""
-    cm = cls(client.view_server, client.platform_url, user_id=client.user_id, user_pwd=getattr(client, "user_pwd", None))
-    token = None
-    try:
-        token = client.get_token()
-    except Exception:  # noqa: BLE001
-        token = None
-    if token:
-        cm.set_bearer_token(token)
-    return cm
+    """A CollectionManager acting for the caller (`pyegeria.core._helper_client.helper_client`): their bare
+    token set once, and their own password or none, never the configured default."""
+    from pyegeria.core._helper_client import helper_client
+    return helper_client(cls, client)

@@ -58,17 +58,22 @@ class _Client:
 def test_every_smart_query_link_is_detached_before_the_saved_query_is_deleted():
     client = _Client(linked=["rs-1", "rs-2"])
     out = delete_saved_query(client, SQ)
-    assert client.calls == [("read", SQ),
-                            ("related", SQ, "SmartQuery", 2, 0), ("related", SQ, "SmartQuery", 2, 50),
+    # pager step 4: the link read advances by its page size and probes 3 pages past Egeria's null (a suspect
+    # path), then acts on it as the end, saying it wasn't confirmed (ruling (A) 5)
+    assert client.calls == [("read", SQ)] + [("related", SQ, "SmartQuery", 2, s) for s in (0, 50, 100, 150, 200)] + [
                             ("detach", "rs-1", SQ), ("detach", "rs-2", SQ),
                             ("delete", SQ)]
-    assert out == {"deleted": SQ, "detached": ["rs-1", "rs-2"], "results_sets_kept": ["rs-1", "rs-2"]}
+    assert out == {"deleted": SQ, "detached": ["rs-1", "rs-2"], "results_sets_kept": ["rs-1", "rs-2"],
+                   "links_read": {"positions_read": 250, "end": "not_confirmed",
+                                  "end_reason": "null_then_empty_probes"},
+                   "note": "removed 2 SmartQuery link(s); Egeria didn't confirm there were no more"}
 
 
 def test_a_saved_query_with_no_results_set_is_just_deleted():
     client = _Client()
     out = delete_saved_query(client, SQ)
-    assert [c[0] for c in client.calls] == ["read", "related", "delete"] and out["detached"] == []
+    assert [c[0] for c in client.calls] == ["read"] + ["related"] * 4 + ["delete"] and out["detached"] == []
+    assert out["note"] == "removed 0 SmartQuery link(s); Egeria didn't confirm there were no more"
 
 
 def test_a_link_egeria_will_not_detach_stops_the_delete_and_says_why():
@@ -106,7 +111,7 @@ def test_links_are_read_until_an_empty_page_not_a_short_one():
     rs = [f"rs-{i}" for i in range(120)]           # a full page, a full page, a short page, then the empty one
     client = _Client(linked=rs)
     out = delete_saved_query(client, SQ)
-    assert [c[4] for c in client.calls if c[0] == "related"] == [0, 50, 100, 150]
+    assert [c[4] for c in client.calls if c[0] == "related"] == [0, 50, 100, 150, 200, 250, 300]
     assert out["detached"] == rs and client.calls[-1] == ("delete", SQ)
 
 
@@ -116,4 +121,21 @@ def test_more_links_than_the_bound_is_refused_with_nothing_detached(monkeypatch)
     client = _Client(linked=[f"rs-{i}" for i in range(100)])
     with pytest.raises(RuntimeError, match="more than 100 SmartQuery links; refused"):
         delete_saved_query(client, SQ)
+    assert not [c for c in client.calls if c[0] in ("detach", "delete")]
+
+
+def test_an_empty_run_cap_refuses_the_delete():
+    # pager step 4, ruling (A) 1: the empty-run cap (2000 positions = 40 filtered pages of 50) is a limit, not
+    # the end, so a write path refuses
+
+    class _Filtered(_Client):
+        def get_related_elements(self, guid, relationship_type=None, start_at_end=1, start_from=0, page_size=0,
+                                 **kw):
+            self.calls.append(("related", guid, relationship_type, start_at_end, start_from))
+            return []   # every page filtered
+
+    client = _Filtered()
+    with pytest.raises(RuntimeError, match="weren't read whole .*2000 consecutive positions"):
+        delete_saved_query(client, SQ)
+    assert len([c for c in client.calls if c[0] == "related"]) == 40
     assert not [c for c in client.calls if c[0] in ("detach", "delete")]

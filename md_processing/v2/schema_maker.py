@@ -12,7 +12,7 @@ from loguru import logger
 
 from md_processing.v2.processors import AsyncBaseCommandProcessor
 from md_processing.md_processing_utils.common_md_utils import complete_bundle_properties, update_element_dictionary
-from md_processing.md_processing_utils.typed_properties import (classification_map, entity_properties, long_value,
+from md_processing.md_processing_utils.typed_properties import (type_declares_property, classification_map, entity_properties, long_value,
                                                                   parent_relationship_properties,
                                                                   record_not_applied)
 
@@ -128,13 +128,19 @@ class SchemaElementProcessor(AsyncBaseCommandProcessor):
                 "allowsDuplicateValues": _v(attributes, "Allows Duplicate Values"),
                 "orderedValues": _v(attributes, "Is Ordered Values"),
             })
-            # Egeria's SchemaAttributeProperties declares defaultValueOverride (SchemaAttributeProperties.java:52)
-            # and its builder writes it (OpenMetadataElementBuilder.java:2225), but the repository's TypeDef
-            # (757a5df0) doesn't have it: sending it fails the whole create with OMRS-REPOSITORY-400-028
-            # (Egeria issue addendum section 4). Not sent until Egeria declares it.
+            # defaultValueOverride is sent only when this Egeria's type system declares it for the target type
+            # (it didn't in 757a5df0, where sending it failed the whole create with OMRS-REPOSITORY-400-028; main
+            # c61bad65 declares it, OpenMetadataTypesArchive.java:1095). Otherwise it is reported as not applied.
             if _v(attributes, "Default Value Override") not in (None, ""):
-                record_not_applied(attributes, "Default Value Override",
-                                   ["not applied: Default Value Override: not in this Egeria's type system"])
+                declared = await type_declares_property(self.client, om_type, "defaultValueOverride")
+                if declared:
+                    props["defaultValueOverride"] = _v(attributes, "Default Value Override")
+                elif declared is None:
+                    record_not_applied(attributes, "Default Value Override", [
+                        f"not applied: Default Value Override: couldn't read {om_type}'s type definition to check it"])
+                else:
+                    record_not_applied(attributes, "Default Value Override",
+                                       ["not applied: Default Value Override: not in this Egeria's type system"])
             if is_display:
                 # Egeria 6.3 placement attributes (odpi/egeria#9432): a leaf placement is a
                 # DisplayDataField, a sheet or nested sheet a DisplayDataContainer.

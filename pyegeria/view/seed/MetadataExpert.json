@@ -1,0 +1,236 @@
+{
+ "format": "pyegeria-seed/1",
+ "family": "MetadataExpert",
+ "specs": [
+  {
+   "label": "Enum-Def-DrE-Advanced",
+   "envelope": {
+    "heading": "Enum-Def-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Enum Def (Create, Advanced).",
+    "family": "MetadataExpert",
+    "target_type_name": "Enum Def",
+    "aliases": ["Enum Def DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "enum_def_name", "label": "Enum Def Name"},
+       {"field": "enum_def_description", "label": "Enum Def Description"},
+       {"field": "enum_values", "label": "Enum Values"},
+       {"field": "enum_default_value", "label": "Enum Default Value"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "enum_def_name", "label": "Enum Def Name"},
+       {"field": "enum_def_description", "label": "Enum Def Description"},
+       {"field": "enum_values", "label": "Enum Values"},
+       {"field": "enum_default_value", "label": "Enum Default Value"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Enum-Def-DrE-Basic",
+   "envelope": {
+    "heading": "Enum-Def-DrE-Basic Attributes",
+    "description": "Auto-generated format for Enum Def (Create, Basic).",
+    "family": "MetadataExpert",
+    "target_type_name": "Enum Def",
+    "aliases": ["Enum Def DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "enum_def_name", "label": "Enum Def Name"},
+       {"field": "enum_def_description", "label": "Enum Def Description"},
+       {"field": "enum_values", "label": "Enum Values"},
+       {"field": "enum_default_value", "label": "Enum Default Value"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "enum_def_name", "label": "Enum Def Name"},
+       {"field": "enum_def_description", "label": "Enum Def Description"},
+       {"field": "enum_values", "label": "Enum Values"},
+       {"field": "enum_default_value", "label": "Enum Default Value"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Instance-DrE-Advanced",
+   "envelope": {
+    "heading": "Instance-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Instance (Create, Advanced).",
+    "family": "MetadataExpert",
+    "target_type_name": "Instance",
+    "aliases": ["Instance DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "instance_type_name", "label": "Instance Type Name"},
+       {"field": "instance_properties", "label": "Instance Properties"},
+       {"field": "anchor_guid", "label": "Anchor GUID"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "parent_guid", "label": "Parent GUID"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "instance_type_name", "label": "Instance Type Name"},
+       {"field": "instance_properties", "label": "Instance Properties"},
+       {"field": "anchor_guid", "label": "Anchor GUID"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "parent_guid", "label": "Parent GUID"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Instance-DrE-Basic",
+   "envelope": {
+    "heading": "Instance-DrE-Basic Attributes",
+    "description": "Auto-generated format for Instance (Create, Basic).",
+    "family": "MetadataExpert",
+    "target_type_name": "Instance",
+    "aliases": ["Instance DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "instance_type_name", "label": "Instance Type Name"},
+       {"field": "instance_properties", "label": "Instance Properties"},
+       {"field": "anchor_guid", "label": "Anchor GUID"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "parent_guid", "label": "Parent GUID"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "instance_type_name", "label": "Instance Type Name"},
+       {"field": "instance_properties", "label": "Instance Properties"},
+       {"field": "anchor_guid", "label": "Anchor GUID"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "parent_guid", "label": "Parent GUID"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Type-Def-DrE-Advanced",
+   "envelope": {
+    "heading": "Type-Def-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Type Def (Create, Advanced).",
+    "family": "MetadataExpert",
+    "target_type_name": "Type Def",
+    "aliases": ["Type Def DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "type_def_name", "label": "Type Def Name"},
+       {"field": "type_def_category", "label": "Type Def Category", "valid_values": ["Entity", "Relationship", "Classification"]},
+       {"field": "super_type", "label": "Super Type"},
+       {"field": "type_def_description", "label": "Type Def Description"},
+       {"field": "type_def_attributes", "label": "Type Def Attributes"},
+       {"field": "valid_entity_types", "label": "Valid Entity Types"},
+       {"field": "propagatable", "label": "Propagatable"},
+       {"field": "end1_entity_type", "label": "End1 Entity Type"},
+       {"field": "end1_attribute_name", "label": "End1 Attribute Name"},
+       {"field": "end2_entity_type", "label": "End2 Entity Type"},
+       {"field": "end2_attribute_name", "label": "End2 Attribute Name"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "type_def_name", "label": "Type Def Name"},
+       {"field": "type_def_category", "label": "Type Def Category", "valid_values": ["Entity", "Relationship", "Classification"]},
+       {"field": "super_type", "label": "Super Type"},
+       {"field": "type_def_description", "label": "Type Def Description"},
+       {"field": "type_def_attributes", "label": "Type Def Attributes"},
+       {"field": "valid_entity_types", "label": "Valid Entity Types"},
+       {"field": "propagatable", "label": "Propagatable"},
+       {"field": "end1_entity_type", "label": "End1 Entity Type"},
+       {"field": "end1_attribute_name", "label": "End1 Attribute Name"},
+       {"field": "end2_entity_type", "label": "End2 Entity Type"},
+       {"field": "end2_attribute_name", "label": "End2 Attribute Name"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Type-Def-DrE-Basic",
+   "envelope": {
+    "heading": "Type-Def-DrE-Basic Attributes",
+    "description": "Auto-generated format for Type Def (Create, Basic).",
+    "family": "MetadataExpert",
+    "target_type_name": "Type Def",
+    "aliases": ["Type Def DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "type_def_name", "label": "Type Def Name"},
+       {"field": "type_def_category", "label": "Type Def Category", "valid_values": ["Entity", "Relationship", "Classification"]},
+       {"field": "super_type", "label": "Super Type"},
+       {"field": "type_def_description", "label": "Type Def Description"},
+       {"field": "type_def_attributes", "label": "Type Def Attributes"},
+       {"field": "valid_entity_types", "label": "Valid Entity Types"},
+       {"field": "propagatable", "label": "Propagatable"},
+       {"field": "end1_entity_type", "label": "End1 Entity Type"},
+       {"field": "end1_attribute_name", "label": "End1 Attribute Name"},
+       {"field": "end2_entity_type", "label": "End2 Entity Type"},
+       {"field": "end2_attribute_name", "label": "End2 Attribute Name"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "type_def_name", "label": "Type Def Name"},
+       {"field": "type_def_category", "label": "Type Def Category", "valid_values": ["Entity", "Relationship", "Classification"]},
+       {"field": "super_type", "label": "Super Type"},
+       {"field": "type_def_description", "label": "Type Def Description"},
+       {"field": "type_def_attributes", "label": "Type Def Attributes"},
+       {"field": "valid_entity_types", "label": "Valid Entity Types"},
+       {"field": "propagatable", "label": "Propagatable"},
+       {"field": "end1_entity_type", "label": "End1 Entity Type"},
+       {"field": "end1_attribute_name", "label": "End1 Attribute Name"},
+       {"field": "end2_entity_type", "label": "End2 Entity Type"},
+       {"field": "end2_attribute_name", "label": "End2 Attribute Name"}
+      ]
+     }
+    }
+   }
+  }
+ ]
+}

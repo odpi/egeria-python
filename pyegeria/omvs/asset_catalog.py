@@ -9,6 +9,7 @@ Copyright Contributors to the ODPi Egeria project.
 
 """
 
+from pyegeria.core._no_password import NO_PASSWORD, carried_password, password_as_given, resolve_password
 import asyncio
 
 from loguru import logger
@@ -120,7 +121,7 @@ class AssetCatalog(ServerClient):
         self.view_server = view_server
         self.platform_url = platform_url
         self.user_id = user_id
-        self.user_pwd = user_pwd
+        self.user_pwd = password_as_given(user_pwd)
 
     #
     # Output helpers
@@ -260,6 +261,10 @@ class AssetCatalog(ServerClient):
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/asset-catalog/assets/in-domain/by-search-string"
         
         metadata_element_type = kwargs.pop("metadata_element_type", metadata_element_type)
+        # findAssetsInDomain requires a searchString (OPEN-METADATA-400-022 "... is null"), and the shared find
+        # helper turns "*" into null. Match-all is sent as the regex ".*" instead (checked live on 002a3ef1).
+        if search_string is None or str(search_string).strip() in ("", "*"):
+            search_string = ".*"
 
         # Merge explicit parameters with kwargs
         params = {

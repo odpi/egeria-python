@@ -61,9 +61,16 @@ def test_strict_returns_none_when_native_and_fallback_both_fail():
 
 
 def test_strict_real_zero_is_zero():
-    # pyegeria answers a miss with its sentinel string, not an empty list.
-    assert om.count_elements(_mgr(find_result="No elements found"), "Asset", strict=True, population="viewer") == 0
-    assert om.count_elements(_mgr(find_result=[]), "Asset", strict=True, population="viewer") == 0
+    # pyegeria answers a miss with its sentinel string, not an empty list. Pager step 5: the viewer fallback
+    # pages find_metadata_elements (NULL_NOT_END), so its 0 is "at least 0" (recorded unconfirmed), and a server
+    # that answers [] on every page (every page filtered) is not a zero at all: the empty-run cap, not measured.
+    with om.recording_unconfirmed() as scans:
+        assert om.count_elements(_mgr(find_result="No elements found"), "Asset", strict=True,
+                                 population="viewer") == 0
+    assert scans and scans[0]["read"] == 0
+    with om.recording_unmeasured() as notes:
+        assert om.count_elements(_mgr(find_result=[]), "Asset", strict=True, population="viewer") is None
+    assert notes[0]["at_least"] == 0 and "stopped before the end" in notes[0]["reason"]
     om._count_caps.clear()  # the seam caches native support per client class; these mocks share one
     assert om.count_elements(_mgr(native=MagicMock(return_value={"count": 0})), "Asset", strict=True) == 0
 

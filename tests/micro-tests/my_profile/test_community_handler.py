@@ -101,6 +101,8 @@ def client():
         # MagicMock doesn't create dunder-named attributes on demand
         mock_egeria.return_value.__create_qualified_name__ = MagicMock(
             side_effect=lambda type_name, name: f"{type_name}::{name.replace(' ', '-')}")
+        # Egeria's exact unique-name read: not-found unless a test says otherwise (only then may a create run)
+        mock_egeria.return_value.get_element_by_unique_name.return_value = "No elements found"
         yield mock_egeria.return_value
 
 
@@ -233,10 +235,11 @@ class TestCommunitiesMixin:
         client.link_assignment_scope.assert_not_called()
 
     def test_create_refuses_an_existing_name(self, client):
-        client.get_communities_by_name.return_value = [DATA_SCI]
+        existing = {**DATA_SCI, "properties": {**DATA_SCI["properties"], "qualifiedName": "Community::Data-Science-SIG"}}
+        client.get_element_by_unique_name.return_value = existing
         app = DummyApp()
         assert app.create_community("Data Science SIG", "Again") is None
-        assert client.get_communities_by_name.call_args.kwargs["filter_string"] == "Community::Data-Science-SIG"
+        client.get_element_by_unique_name.assert_called_once_with("Community::Data-Science-SIG")
         client.create_community.assert_not_called()
         assert app.notices[-1] == ("A community called Data Science SIG already exists - find it below to join it",
                                    "warning")
@@ -274,7 +277,9 @@ class TestCommunitiesMixin:
                                                       _element("other-log", "NoteLog", "Notifications")]
         old = _created(_element("p1", "BlogEntry", "First", "Hello"), "gary", "2026-10-01T09:00:00.000+00:00")
         new = _created(_element("p2", "BlogEntry", "Second", "Again"), "erin", "2026-10-20T13:27:27.750+00:00")
-        client.get_notes_for_note_log.side_effect = [[old], [new]]
+        by_log = {"blog-log": [old], "other-log": [new]}
+        client.get_notes_for_note_log.side_effect = (   # each log's notes on page 0, null after
+            lambda log_guid, start_from=0, **k: by_log[log_guid] if start_from == 0 else "No elements found")
         rows = DummyApp().get_community_blog_posts("ds-guid")
         assert client.get_attached_note_logs.call_args.args == ("ds-guid",)
         # only blog entries are asked for, so notifications in other logs are skipped
@@ -321,8 +326,9 @@ class TestCommunitiesMixin:
     def test_later_posts_reuse_the_blog(self, client):
         blog = _element("blog-log", "NoteLog", "Blog")
         blog["properties"]["qualifiedName"] = "NoteLog::ds-guid::CommunityBlog"
-        client.get_attached_note_logs.return_value = [_element("other-log", "NoteLog", "Notifications"), blog]
+        client.get_element_by_unique_name.return_value = blog
         assert DummyApp().add_community_blog_post("ds-guid", "Data Science SIG", "Hi", "Hello") is True
+        client.get_element_by_unique_name.assert_called_once_with("NoteLog::ds-guid::CommunityBlog")
         client.create_note_log.assert_not_called()
         assert client.create_note.call_args.args[0] == "blog-log"
 
@@ -880,8 +886,18 @@ class TestResourcesAndFeedbackMixin:
         for method in (client.get_attached_comments, client.get_attached_likes, client.get_attached_ratings):
             method.return_value = "No elements found"
         feedback = DummyApp().get_element_feedback("post-guid")
-        assert feedback == {"comments": [], "likes": 0, "i_like": False, "ratings": [], "average": None,
-                            "my_rating": None}
+        assert {k: v for k, v in feedback.items() if k not in ("complete", "note")} == {
+            "comments": [], "likes": 0, "i_like": False, "ratings": [], "average": None, "my_rating": None}
+        # attached reads page as "suspect": a null is never a confirmed end, so the counts are "at least"
+        assert feedback["complete"] is False and "may be more" in feedback["note"]
+
+    def test_feedback_reads_are_paged(self, client):
+        for method in (client.get_attached_comments, client.get_attached_likes, client.get_attached_ratings):
+            method.return_value = "No elements found"
+        DummyApp().get_element_feedback("post-guid")
+        for method in (client.get_attached_comments, client.get_attached_likes, client.get_attached_ratings):
+            assert method.call_args.args == ("post-guid",)
+            assert {"start_from", "page_size"} <= set(method.call_args.kwargs)
 
     def test_feedback_error_returns_none(self, client):
         client.get_attached_likes.side_effect = PyegeriaException("boom")
@@ -1073,6 +1089,17 @@ class TestElementFeedbackScreen:
             assert screen.query_one("#element_ratings_table", DataTable).row_count == 1
             assert screen.query_one("#element_comments_table", DataTable).row_count == 1
             assert str(screen.query_one("#toggle_like_btn", Button).label) == "Like"
+
+    @pytest.mark.asyncio
+    async def test_unconfirmed_counts_say_at_least(self):
+        app = CommunitiesHostApp(MY_ROWS)
+        app.feedback.update(complete=False, note="there may be more than shown")
+        async with app.run_test() as pilot:
+            screen = await _open_post_feedback(app, pilot)
+            summary = str(screen.query_one("#feedback_summary", Static).render())
+            assert "at least 2 people like this" in summary
+            assert "from at least 1 rating(s)" in summary and "at least 1 comment(s)" in summary
+            assert "there may be more than shown" in summary
 
     @pytest.mark.asyncio
     async def test_feedback_on_a_resource(self):

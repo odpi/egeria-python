@@ -12,6 +12,7 @@ from textual.screen import ModalScreen
 from textual.widgets import DataTable, Header, Static, Footer, Input, Button, Select, TextArea
 
 from CommunityScreen import CommunityScreen, JOIN_ASSIGNMENT_TYPES
+from paging_support import is_complete, none_words
 from profile_utils import set_screen_heading
 
 # The "Linked Through" value of a membership held by the user's own profile, which they can leave
@@ -226,8 +227,14 @@ class CommunitiesScreen(ModalScreen):
             if row[3] not in mine:
                 table.add_row(*row, key=row[3])
         if table.row_count == 0:
-            self.notify(f"No other communities found matching {self.search_string}", timeout=5,
-                        severity="warning")
+            if is_complete(found):
+                self.notify(f"No other communities found matching {self.search_string}", timeout=5,
+                            severity="warning")
+            else:
+                self.notify(none_words("other communities", complete=False, matching=self.search_string),
+                            timeout=10, severity="warning")
+        elif getattr(found, "note", None):
+            self.notify(found.note, timeout=10, severity="warning")
 
     def _reload(self) -> None:
         rows = self.app.list_my_communities()

@@ -10,7 +10,9 @@ from datetime import datetime
 from enum import Enum, StrEnum
 from typing import Literal, Annotated, Any, Optional, Dict
 
-from pydantic import BaseModel, Field, ConfigDict, root_validator, model_validator, AliasChoices, model_serializer
+from pydantic import BaseModel, Field, ConfigDict, root_validator, model_validator, AliasChoices, model_serializer, field_validator
+
+from pyegeria.models.element_status import check_element_statuses
 
 
 
@@ -909,11 +911,17 @@ class ResultsRequestBody(GetRequestBody):
     anchor_guid: str | None = None
     anchor_domain_name: str | None = None
     anchor_scope_guid: str | None = None
-    limit_results_by_status: list[str] | None = None  # header status
+    limit_results_by_status: list[str] | None = None  # header status (Egeria's ElementStatus)
     sequencing_order: SequencingOrder | None = None
     sequencing_property: str | None = None
     start_from: int = 0
     page_size: int = 0
+
+    @field_validator("limit_results_by_status", mode="before")
+    @classmethod
+    def _element_statuses_only(cls, value):
+        """Refuse a value that isn't an element status (e.g. DRAFT, a content status) before Egeria 400s on it."""
+        return check_element_statuses(value)
 
 class LevelIdentifierQueryBody(ResultsRequestBody):
     class_: Annotated[Literal["LevelIdentifierQueryProperties"], Field(alias="class")]

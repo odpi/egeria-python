@@ -14,6 +14,7 @@ from textual.app import ComposeResult
 from textual.containers import ScrollableContainer, Horizontal
 from textual.screen import ModalScreen
 from textual.widgets import Header, Static, Footer, Button, DataTable, Select, TextArea
+from paging_support import count_text, is_complete, none_words
 from profile_utils import set_screen_heading
 
 FEEDBACK_CATEGORIES = ["Bug", "Suggestion", "Question", "Praise", "Other"]
@@ -107,15 +108,19 @@ class FeedbackLogScreen(ModalScreen):
     def __init__(self, feedback_entries: list[dict[str, Any]], *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.feedback_entries = feedback_entries or []
+        # False when Egeria didn't confirm these are all the entries (paging_support.PagedRows)
+        self.complete = is_complete(feedback_entries)
+        self.count_text = count_text(feedback_entries if feedback_entries is not None else [])
 
     def on_mount(self):
-        set_screen_heading(self, f"Feedback Log ({len(self.feedback_entries)} entries)")
+        set_screen_heading(self, f"Feedback Log ({self.count_text} entries)")
         table = self.query_one("#feedback_log_table", DataTable)
         table.add_columns("Date", "Submitted By", "Category", "Screen", "Feedback")
         table.zebra_stripes = True
         table.cursor_type = "row"
         if not self.feedback_entries:
-            table.add_row("", "", "", "", "No feedback has been recorded yet")
+            table.add_row("", "", "", "", "No feedback has been recorded yet" if self.complete
+                          else none_words("feedback entries", complete=False))
         for entry in self.feedback_entries:
             table.add_row(
                 str(entry.get("date", "")),

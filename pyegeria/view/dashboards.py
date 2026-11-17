@@ -275,34 +275,30 @@ async def async_load_dashboard_sheet(client: Any, name: str) -> Optional[EgeriaD
     return await read_sheet_from_chain(client, name)
 
 
-async def _dashboard_elements(client: Any) -> List[Dict[str, Any]]:
-    """Every Dashboard whose qualifiedName starts `Dashboard::`. Read by type in pages of 25 (Dashboard is a
-    small type; only an empty page ends the read) and filtered here: a starts-with search on qualifiedName
-    took 21 s on the live platform with no Dashboards at all, the type read 2.8 s."""
-    out: List[Dict[str, Any]] = []
-    seen: set = set()
-    start = 0
-    while True:
-        page = await client.classification_manager._async_get_elements(
-            "Dashboard", start_from=start, page_size=PAGE_SIZE, graph_query_depth=0)
-        items = [e for e in page if isinstance(e, dict) and e.get("elementHeader")] if isinstance(page, list) else []
-        if not items:
-            return out
-        fresh = [e for e in items if (e.get("elementHeader") or {}).get("guid") not in seen]
-        if not fresh:   # a page of elements already read: paging did not advance, and would never end (6.2.36)
-            logger.warning(f"dashboards: paging did not advance at position {start}; stopped with {len(seen)} read")
-            return out
-        seen.update((e.get("elementHeader") or {}).get("guid") for e in fresh)
-        items = fresh
-        out.extend(e for e in items
-                   if ((e.get("properties") or {}).get("qualifiedName") or "").startswith(DASHBOARD_QN_PREFIX))
-        start += len(items)
+async def _dashboard_elements(client: Any, notes: Optional[List[str]] = None) -> List[Dict[str, Any]]:
+    """Every Dashboard whose qualifiedName starts `Dashboard::`. Read by type through the pager at PAGE_SIZE
+    (pager step 4; Dashboard is a small type) and filtered here: a starts-with search on qualifiedName
+    took 21 s on the live platform with no Dashboards at all, the type read 2.8 s. When the read isn't
+    confirmed complete, `notes` (if given) gets "Showing at least N Dashboards: ..."."""
+    from pyegeria.core.paging import async_page_all, async_paging_for, at_least_note, log_end
+
+    async def fetch(start, size):
+        return await client.classification_manager._async_get_elements(
+            "Dashboard", start_from=start, page_size=size, graph_query_depth=0)
+
+    paged = await async_page_all(fetch, fetch_page_size=PAGE_SIZE, **await async_paging_for("get_elements", client))
+    log_end("dashboards._dashboard_elements", paged)
+    out = [e for e in paged.items if isinstance(e, dict) and e.get("elementHeader")
+           and ((e.get("properties") or {}).get("qualifiedName") or "").startswith(DASHBOARD_QN_PREFIX)]
+    if notes is not None and (words := at_least_note(paged, "dashboard sheets", len(out))):
+        notes.append(words)
+    return out
 
 
-async def _all_sheets(client: Any) -> List[EgeriaDashboardSheet]:
+async def _all_sheets(client: Any, notes: Optional[List[str]] = None) -> List[EgeriaDashboardSheet]:
     sheets: List[EgeriaDashboardSheet] = []
     seen = set()
-    for element in await _dashboard_elements(client):
+    for element in await _dashboard_elements(client, notes):
         name = sheet_name_from_dashboard_qn((element.get("properties") or {}).get("qualifiedName") or "")
         if not name or name in seen:
             continue
@@ -410,7 +406,8 @@ async def async_list_dashboard_sheets(client: Any, folders: Optional[List[str]] 
     (for example one made with plain `Create Dashboard`) is listed with its `breaks`, not dropped."""
     chosen = configured_dashboard_folders() if folders is None else [f for f in folders if f]
     if not chosen:
-        return DashboardSheetListing(await _all_sheets(client), notes=[NO_FOLDERS_NOTE])
+        listing_notes = [NO_FOLDERS_NOTE]
+        return DashboardSheetListing(await _all_sheets(client, listing_notes), notes=listing_notes)
     found, notes, status = await asyncio.to_thread(_walk_dashboard_folders, client, chosen, depth_cap)
     sheets: List[EgeriaDashboardSheet] = []
     for name in sorted(found, key=str.lower):

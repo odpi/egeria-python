@@ -13,7 +13,9 @@ Notes
 """
 from __future__ import annotations
 
+from pyegeria.core._no_password import NO_PASSWORD, carried_password, password_as_given, resolve_password
 import asyncio
+import contextvars
 import inspect
 import json
 import os
@@ -40,10 +42,11 @@ from pyegeria.view.analytic_registry import ABSENCE_STATES, AnalyticActionSpec, 
 from pyegeria.view.analytic_registry import get_analytic_registry as get_analytic_registry_functions
 from pyegeria.egeria_tech_client import EgeriaTech
 from pyegeria.view.role_supply import PlainSupply, RoleRefused, RoleSupply, supply_inputs
-from pyegeria.view.overview_metrics import recording_unmeasured
+from pyegeria.view.overview_metrics import UNCONFIRMED_REASON, recording_unconfirmed, recording_unmeasured
 from pyegeria.view._output_format_models import DOCUMENT_OUTPUT_TYPE, check_document_file_name
 from pyegeria.view.document_validators import run_document_validator
 from pyegeria.core._server_client import recording_list_requests
+from pyegeria.core.paging import (DEFAULT_FETCH_PAGE_SIZE, PageResult, async_page_all, async_paging_for, end_policy_for, page_all, paging_for)
 from pyegeria.view.output_formatter import check_dict_shape, dict_shape_for_call
 from pyegeria.view.structured_table import build_structured_table, check_table_shape, mark_relationship_absence
 
@@ -385,13 +388,34 @@ def _run_recording_unmeasured(action: dict, **kwargs: Any) -> Tuple[Any, List[Di
     """Run the analytic routine and collect a note for every count in it that was not measured
     (a failed or timed-out count, or a find fallback that stopped at its page cap -- a lower
     bound, never a total). See overview_metrics.recording_unmeasured."""
-    with recording_unmeasured() as notes:
+    with recording_unmeasured() as notes, recording_unconfirmed() as unconfirmed:
         result = _run_analytic_function(action, **kwargs)
     unique: List[Dict[str, Any]] = []  # a series repeats the same note once per point
     for note in notes:
         if note not in unique:
             unique.append(note)
+    _LAST_UNCONFIRMED.set(_unique(unconfirmed))
     return result, unique
+
+
+#: The unconfirmed scans of the last analytic run in this context (pager step 4, overview_metrics ruling (ii)):
+#: read by the two analytic output paths, so a result computed from a scan Egeria didn't confirm carries
+#: `unconfirmed` (and a chart says so), never just its numbers.
+_LAST_UNCONFIRMED: "contextvars.ContextVar[List[Dict[str, Any]]]" = contextvars.ContextVar(
+    "pyegeria_last_unconfirmed", default=[])
+
+
+def _unique(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    out: List[Dict[str, Any]] = []
+    for item in items:
+        if item not in out:
+            out.append(item)
+    return out
+
+
+def _unconfirmed_extra() -> Dict[str, Any]:
+    scans = _LAST_UNCONFIRMED.get()
+    return {"unconfirmed": scans} if scans else {}
 
 
 def _unmeasured_envelope(notes: List[Dict[str, Any]]) -> Dict[str, str]:
@@ -485,15 +509,8 @@ def _resolve_action_target_client(egeria_client: EgeriaTech, client_class: type)
                 return egeria_client._get_subclient(attr_name)
 
     # Fallback for non-standard clients outside EgeriaTech's map.
-    client = client_class(
-        egeria_client.view_server,
-        egeria_client.platform_url,
-        user_id=egeria_client.user_id,
-        user_pwd=egeria_client.user_pwd,
-        token=egeria_client.token,
-    )
-    client._token_minted_for = getattr(egeria_client, "_token_minted_for", None)
-    return client
+    from pyegeria.core._helper_client import helper_client
+    return helper_client(client_class, egeria_client)
 
 
 def _normalize_report_params(params: Dict[str, Any], action_mode: str = "generic") -> Dict[str, Any]:
@@ -509,6 +526,7 @@ def _normalize_report_params(params: Dict[str, Any], action_mode: str = "generic
         "sequencing_order": ["sort_order", "output_sort_order"],
         "sequencing_property": ["order_property_name"],
         "anchor_scope_guid": ["anchor_scope_id"],
+        **{canonical: [alias] for canonical, alias in LIFECYCLE_FILTERS.items()},
     }
 
     for canonical_key, alias_keys in aliases.items():
@@ -533,7 +551,12 @@ def _normalize_report_params(params: Dict[str, Any], action_mode: str = "generic
         "include_only_classified_elements",
         "governance_zone_filter",
         "classification_names",
+        *LIFECYCLE_FILTERS,
+        *LIFECYCLE_FILTERS.values(),
     }
+    # Status values are enum names: "active" and "in progress" mean ACTIVE and IN_PROGRESS.
+    status_keys = {"limit_results_by_status", "limit_result_by_status", *LIFECYCLE_FILTERS,
+                   *LIFECYCLE_FILTERS.values()}
 
     def _to_string_list(raw_value: Any) -> Any:
         if isinstance(raw_value, str):
@@ -553,6 +576,16 @@ def _normalize_report_params(params: Dict[str, Any], action_mode: str = "generic
     for list_key in list_like_keys:
         if list_key in normalized:
             normalized[list_key] = _to_string_list(normalized.get(list_key))
+            if list_key in status_keys and isinstance(normalized[list_key], list):
+                normalized[list_key] = [re.sub(r"[\s\-]+", "_", str(v).strip()).upper()
+                                        for v in normalized[list_key] if str(v).strip()]
+
+    # The header-status filter takes Egeria's ElementStatus only: refuse DRAFT, APPROVED, ... (content,
+    # activity or deployment statuses) in words here, before a client is built, rather than letting Egeria 400.
+    from pyegeria.models.element_status import check_element_statuses
+    for status_key in ("limit_results_by_status", "limit_result_by_status"):
+        if normalized.get(status_key) not in (None, "", []):
+            normalized[status_key] = check_element_statuses(normalized[status_key], field=status_key)
 
     cleaned: Dict[str, Any] = {}
     for key, value in normalized.items():
@@ -571,13 +604,63 @@ def _normalize_report_params(params: Dict[str, Any], action_mode: str = "generic
     return _canonical_param_names(cleaned)
 
 
+# Lifecycle filters (Create Report / View Report's Limit Result by Content / Deployment / Activity Status):
+# the find-method parameter -> the Dr.Egeria variable name. Element status (limit_results_by_status) is Egeria's
+# ElementStatus (pyegeria.models.element_status); lifecycle lives in typed properties that only the
+# *_status_list-taking finds can filter on (they send ContentStatusSearchString, DeploymentStatusFilter-
+# RequestBody, ActivityStatusRequestBody, ...). These are passed only to a method that names the parameter
+# in its signature -- never through **kwargs, where the standard-filter helpers would reject them -- and
+# dropped with a warning otherwise (_add_lifecycle_filters).
+LIFECYCLE_FILTERS: Dict[str, str] = {
+    "content_status_list": "limit_result_by_content_status",
+    "deployment_status_list": "limit_result_by_deployment_status",
+    "activity_status_list": "limit_result_by_activity_status",
+}
+_LIFECYCLE_KEYS = frozenset(LIFECYCLE_FILTERS) | frozenset(LIFECYCLE_FILTERS.values())
+
+
+def _add_lifecycle_filters(report_name: str, func: Any, params: Dict[str, Any],
+                           call_params: Dict[str, Any]) -> Dict[str, Any]:
+    """Pass each lifecycle filter the caller gave to a method whose signature names it; warn and drop the rest.
+
+    A report spec that declares one in required/optional params already has it in call_params."""
+    import warnings
+    from pyegeria.core.request_filters import UnknownFilterWarning, _SKIP_PREFIXES
+
+    given = {k: params[k] for k in LIFECYCLE_FILTERS if (params or {}).get(k) not in (None, "", [])}
+    if not given:
+        return call_params
+    try:
+        names = set(inspect.signature(func).parameters)
+    except (TypeError, ValueError):
+        names = set()
+    out = dict(call_params)
+    dropped = []
+    for key, value in given.items():
+        if key in out:
+            continue
+        if key in names:
+            out[key] = value
+        else:
+            dropped.append(key)
+    if dropped:
+        method = getattr(func, "__qualname__", None) or getattr(func, "__name__", "its find method")
+        msg = (f"report '{report_name}': lifecycle filter(s) "
+               f"{', '.join(f'{k!r} ({LIFECYCLE_FILTERS[k]})' for k in dropped)} ignored -- "
+               f"{str(method).replace('_async_', '')} does not filter by that status.")
+        logger.warning(msg)
+        warnings.warn(msg, UnknownFilterWarning, skip_file_prefixes=_SKIP_PREFIXES)
+    return out
+
+
 # Run-parameter names that are aliases or rendering options rather than parameters of the report:
-# consumed under another name, so never reported as dropped.
+# consumed under another name, so never reported as dropped. The lifecycle filters are reported by
+# _add_lifecycle_filters instead, with their own words.
 _RUN_PARAM_ALIASES = frozenset({
     "search_string", "filter_string", "property_value", "filter", "output_format", "report_spec",
     "graph_query_depth", "metadata_element_name", "limit_result_by_status", "sort_order",
     "output_sort_order", "order_property_name", "anchor_scope_id",
-})
+}) | _LIFECYCLE_KEYS
 
 
 def _warn_dropped_params(report_name: str, params: Dict[str, Any], call_params: Dict[str, Any],
@@ -654,6 +737,7 @@ def _extract_param_value(params: Dict[str, Any], param_name: str, action_mode: s
         "sequencing_order": ["sort_order", "output_sort_order"],
         "sequencing_property": ["order_property_name"],
         "anchor_scope_guid": ["anchor_scope_id"],
+        **{canonical: [alias] for canonical, alias in LIFECYCLE_FILTERS.items()},
     }
     for alias in alias_lookup.get(param_name, []):
         if alias in params:
@@ -684,6 +768,8 @@ def _merge_signature_params(func: Any, params: Dict[str, Any], call_params: Dict
     for key, value in (params or {}).items():
         if key in {"output_format", "report_spec"}:
             continue
+        if key in _LIFECYCLE_KEYS:
+            continue  # only to a method that names it: _add_lifecycle_filters
         if key in merged:
             continue
         if key in accepted or has_var_kw:
@@ -772,18 +858,21 @@ async def _async_run_report(
     *,
     table_shape: Optional[str] = None,
     dict_shape: Optional[str] = None,
+    page_to: Optional[int] = None,
 ) -> Dict[str, Any]:
     """Run a report spec with an async EgeriaTech client (see `_async_run_report_impl`).
 
     `refresh_spec=True` fetches the spec from Egeria for this call (RS-EGERIA-TIER §7a); a failed
     fetch raises with words and never falls back to the cached copy. The result carries
     `spec_source` beside `kind`."""
-    if refresh_spec:
-        from pyegeria.view.egeria_spec_cache import async_fetch_spec_for_call
-        report_name = await async_fetch_spec_for_call(egeria_client, report_name)
-    result = await _async_run_report_impl(report_name, egeria_client, output_format=output_format, params=params,
-                                          table_shape=table_shape, dict_shape=dict_shape)
-    return _with_spec_source(result, report_name, output_format)
+    from pyegeria.view.egeria_spec_cache import async_fetch_spec_for_call, client_credential_identity, spec_identity
+    with spec_identity(client_credential_identity(egeria_client)):
+        if refresh_spec:
+            report_name = await async_fetch_spec_for_call(egeria_client, report_name)
+        result = await _async_run_report_impl(report_name, egeria_client, output_format=output_format,
+                                              params=params, table_shape=table_shape, dict_shape=dict_shape,
+                                              page_to=page_to)
+        return _with_spec_source(result, report_name, output_format)
 
 
 async def _async_run_report_impl(
@@ -794,6 +883,7 @@ async def _async_run_report_impl(
     *,
     table_shape: Optional[str] = None,
     dict_shape: Optional[str] = None,
+    page_to: Optional[int] = None,
 ) -> Dict[str, Any]:
     """
         Execute the action for a given format set and return a normalized result structure.
@@ -926,6 +1016,7 @@ async def _async_run_report_impl(
             )
 
         call_params = _merge_signature_params(func, params, call_params)
+        call_params = _add_lifecycle_filters(report_name, func, params, call_params)
         call_params = _bind_search_parameter(func, call_params)
         _warn_dropped_params(report_name, params, call_params,
                              [*required_params, *optional_params, *spec_params])
@@ -945,23 +1036,34 @@ async def _async_run_report_impl(
         except Exception as auth_err:
             # Do not fail the entire call if token refresh fails; downstream call may still work
             logger.debug(f"Token creation/lookup issue: {auth_err}")
+        plan = _find_plan(func, call_params, output_format, method_name, page_to,
+                          paging=await async_paging_for(method_name, getattr(func, "__self__", None)))
+        paged = result = None
         with recording_list_requests() as list_record, dict_shape_for_call(row_shape):
-            result = await func(**call_params)
+            if (full := _full_read(plan)) is not None:
+                paged = await async_page_all(_async_fetcher(func, call_params), **full)
+            else:
+                result = await func(**call_params)
+                if (more := _after_first_page(plan, list_record, result)) is not None:
+                    paged = await async_page_all(_async_fetcher(func, call_params), **more)
+        result, end, positions = _settle(plan, list_record, result, paged)
 
-        if not result or result == NO_ELEMENTS_FOUND:
-            return {"kind": "empty"}
-        cap_notes = page_cap_notes(func, call_params, result, list_record)
+        if _is_nothing(result):
+            return _nothing_result(end, positions)
+        cap_notes = _paged_notes(paged) if paged is not None else page_cap_notes(func, call_params, result,
+                                                                                 list_record)
 
         if output_format == "TABLE" and table_shape == "structured":
-            return build_structured_table(result, (fmt.get("formats") or {}).get("attributes") or [],
-                                          notes=cap_notes, capped=bool(cap_notes), record=list_record)
+            return {**build_structured_table(result, (fmt.get("formats") or {}).get("attributes") or [],
+                                             notes=cap_notes, capped=bool(cap_notes), record=list_record),
+                    "end": end}
         if output_format == "DICT" and row_shape == "native" and isinstance(result, list):
             cap_notes = cap_notes + mark_relationship_absence(  # "none" / "not read" (R1 follow-up)
                 result, [c if isinstance(c, dict) else c.model_dump()
                          for c in (fmt.get("formats") or {}).get("attributes") or []], list_record, keyed_by="name")
         if output_format in {"DICT", "JSON", "ALL", "TABLE"}:
             # Return raw data (list/dict/any) — do not stringify here; include TABLE to enable Rich rendering upstream
-            return {"kind": "json", "data": result, **({"notes": cap_notes} if cap_notes else {})}
+            return {"kind": "json", "data": result, **({"notes": cap_notes} if cap_notes else {}), "end": end}
 
         # For narrative formats, try to use generate_output if the result is structured
         if output_format in {"REPORT", "REPORT-GRAPH", "MD", "FORM", "LIST", "HTML", "MERMAID", "GRAPH"}:
@@ -991,9 +1093,9 @@ async def _async_run_report_impl(
                 content = content.rstrip("\n") + "\n\n" + "\n".join(
                     (f"<p><em>{n}</em></p>" if mime == "text/html" else f"_{n}_") for n in cap_notes) + "\n"
             return {"kind": "text", "mime": mime, "content": content,
-                    **({"notes": cap_notes} if cap_notes else {})}
+                    **({"notes": cap_notes} if cap_notes else {}), "end": end}
 
-        return {"kind": "unknown", "raw": result}
+        return {"kind": "unknown", "raw": result, "end": end}
 
     except PyegeriaException as e:
         # Re-raise with a simpler message for upstream mapping
@@ -1076,11 +1178,14 @@ def _exec_analytic_chart(
 
     def _chart_out(chart):
         if not chart:
-            return _with_envelope({"kind": "json", "data": result}, envelope)
+            return _with_envelope({"kind": "json", "data": result, **_unconfirmed_extra()}, envelope)
         if envelope:  # the state rides on the chart itself (ISSUE-139)
             subtitle = absence["sentence"] if absence and absence["declared"] else envelope["subtitle"]
             chart["title"] = {"text": chart.get("title") or heading, "subtitle": subtitle}
-        out = {"kind": "json", "data": chart, **({"absence": absence} if absence else {})}
+        elif _unconfirmed_extra():   # ruling (ii) 4: an unconfirmed figure never looks like a confirmed one
+            chart["title"] = {"text": chart.get("title") or heading,
+                              "subtitle": f"at least what was read: {UNCONFIRMED_REASON}"}
+        out = {"kind": "json", "data": chart, **({"absence": absence} if absence else {}), **_unconfirmed_extra()}
         return _with_envelope(out, envelope)
 
     if chart_kind == "line" and bounded is not None:
@@ -1231,6 +1336,151 @@ def page_cap_notes(func: Any, call_params: Dict[str, Any], result: Any,
     if isinstance(result, list) and size and len(result) >= size:
         return [_cap_words(len(result), size, call_params.get("start_from") or 0)]
     return []
+
+
+# ── Pager step 3: the end of a find run (BRIEF-PYEGERIA-PAGER-NULL-VS-EMPTY-2026-11-14, ruling (A)) ──
+# Every find run carries result["end"]: "confirmed" only after a null on a trusted path; "first_page" when
+# the first page had rows and was not paged on (structured only: no words are added to rendered output);
+# otherwise what the pager found. A first page that shows NOTHING is paged on for list formats, so a
+# filtered first page no longer reads as "found nothing"; text formats say NOTHING_IN_FIRST instead.
+
+LIST_FORMATS = {"DICT", "JSON", "ALL", "TABLE"}
+NOTHING_IN_FIRST = "nothing in the first {n} positions; can't rule out more"
+#: Pages read after a first page that showed nothing, at most (step-3 read-back, REQUIRED 1).
+AFTER_EMPTY_MAX_PAGES = 10
+
+
+def _is_nothing(result: Any) -> bool:
+    return not result or result == NO_ELEMENTS_FOUND
+
+
+def _pageable(func: Any) -> bool:
+    """Whether the find function takes start_from and page_size, so the executor can page it."""
+    try:
+        names = inspect.signature(func).parameters
+    except (TypeError, ValueError):
+        return False
+    return "start_from" in names and "page_size" in names
+
+
+def _null_is_end(record: Dict[str, Any], result: Any, policy: str) -> bool:
+    """The first page's nothing is the end: Egeria sent null (not an empty, filtered page) on a trusted path."""
+    if policy != "trusted":
+        return False
+    sent = record.get("page")
+    return sent == "null" or (sent is None and not isinstance(result, list))
+
+
+def _fetcher(func: Any, call_params: Dict[str, Any]):
+    """One page of the find, as the pager asks for it. One list request per call: the record (and so the
+    pager's end signal) describes the last list request a fetch makes."""
+    return lambda start, size: func(**{**call_params, "start_from": start, "page_size": size})
+
+
+def _async_fetcher(func: Any, call_params: Dict[str, Any]):
+    async def fetch(start, size):
+        return await func(**{**call_params, "start_from": start, "page_size": size})
+    return fetch
+
+
+#: Why a find run's count isn't a total, by its `end` (PY-17). "confirmed" is the only end that may be a total.
+END_REASONS_WORDS = {
+    "first_page": "only the first page was read",
+    "not_confirmed": "Egeria didn't confirm there are no more",
+    "capped": "the read stopped at its row limit; there may be more",
+    "stalled": "the server repeated rows it had already sent, so reading stopped",
+}
+
+
+def result_count(result: Any) -> Optional[Dict[str, Any]]:
+    """How many rows a find run's result holds, and how that may be said (PY-17).
+
+    ``{"count": N, "count_text": "N" | "at least N", "complete": bool, "end": <end>, "reason": str | None}``
+    for a find result (``kind`` "table", "json" with a list, or "empty", carrying ``end``). Only a
+    ``"confirmed"`` end is a total; any other end is "at least N", with the reason (the result's own notes
+    when it has them). None for a result that isn't a counted find (an analytic, a chart, text, or no
+    ``end``): no count is claimed for it. Portal and EA consumers can use this instead of reading ``end``
+    themselves."""
+    if not isinstance(result, dict) or "end" not in result:
+        return None
+    kind, end = result.get("kind"), result.get("end")
+    if kind == "table":
+        rows = result.get("rows")
+    elif kind == "json":
+        rows = result.get("data")
+    elif kind == "empty":
+        rows = []
+    else:
+        return None
+    if not isinstance(rows, list):
+        return None
+    n = len(rows)
+    complete = end == "confirmed"
+    reason = None
+    if not complete:
+        notes = [str(x) for x in (result.get("notes") or []) if x]
+        reason = "; ".join(notes) if notes else END_REASONS_WORDS.get(end, f"the read ended {end!r}")
+    return {"count": n, "count_text": str(n) if complete else f"at least {n}", "complete": complete,
+            "end": end, "reason": reason}
+
+
+def _paged_notes(paged: PageResult) -> List[str]:
+    if paged.complete:
+        return []
+    return [f"Showing {paged.count_text()} rows: {paged.note or 'there may be more'}."]
+
+
+def _nothing_result(end: str, positions: Optional[int]) -> Dict[str, Any]:
+    """A find run that found nothing. Only a confirmed end may read as plain "empty"."""
+    if end == "confirmed":
+        return {"kind": "empty", "end": end}
+    words = NOTHING_IN_FIRST.format(n=positions) if positions else "nothing in the first page; can't rule out more"
+    return {"kind": "empty", "end": end, "notes": [words]}
+
+
+def _find_plan(func: Any, call_params: Dict[str, Any], output_format: str, method_name: Optional[str],
+               page_to: Optional[int], paging: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    if page_to is not None and (not isinstance(page_to, int) or isinstance(page_to, bool) or page_to < 1):
+        raise ValueError(f"page_to must be None or a whole number of at least 1, not {page_to!r}")
+    size = _effective_page_size(func, call_params)
+    # step 5: NULL_NOT_END methods get 6 probes and null_not_end; step 6: a gated method on a platform with the
+    # #9453 fix is trusted (the async path passes `paging`, read without blocking the event loop)
+    if paging is None:
+        paging = paging_for(method_name, getattr(func, "__self__", None))
+    return {"policy": paging["end_policy"], "paging": paging, "size": size,
+            "start": call_params.get("start_from") or 0,
+            "list": output_format in LIST_FORMATS and _pageable(func), "page_to": page_to}
+
+
+def _after_first_page(plan: Dict[str, Any], record: Dict[str, Any], result: Any) -> Optional[Dict[str, Any]]:
+    """Pager arguments to page on after a first page that showed nothing, or None to stop at it."""
+    if not _is_nothing(result) or not plan["list"] or not plan["size"]:
+        return None
+    if _null_is_end(record, result, plan["policy"]):
+        return None
+    # Bound the cost (step-3 read-back, REQUIRED 1): page on at no less than the default fetch size, and for
+    # at most AFTER_EMPTY_MAX_PAGES pages, so one empty tile costs at most 1 + 10 requests, not 80 at size 25.
+    # When that stops it the end is "capped", which still reads as "nothing in the first N positions".
+    return dict(want=plan["size"], fetch_page_size=max(plan["size"], DEFAULT_FETCH_PAGE_SIZE),
+                start_from=plan["start"] + plan["size"], max_pages=AFTER_EMPTY_MAX_PAGES, **plan["paging"])
+
+
+def _full_read(plan: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """Pager arguments for a run asked to page fully up to page_to rows (preview), or None."""
+    if not plan["page_to"] or not plan["list"]:
+        return None
+    return dict(want=plan["page_to"], fetch_page_size=DEFAULT_FETCH_PAGE_SIZE, start_from=plan["start"],
+                **plan["paging"])
+
+
+def _settle(plan: Dict[str, Any], record: Dict[str, Any], result: Any, paged: Optional[PageResult]):
+    """(result, end, positions read) for a find run."""
+    if paged is not None:
+        return (paged.items or NO_ELEMENTS_FOUND), paged.end, paged.positions_read
+    positions = plan["start"] + plan["size"] if plan["size"] else None
+    if _is_nothing(result):
+        return result, ("confirmed" if _null_is_end(record, result, plan["policy"]) else "not_confirmed"), positions
+    return result, "first_page", positions
 
 
 _PAGING_PARAMS = ("page_size", "start_from")
@@ -1393,6 +1643,7 @@ def exec_report_spec(
     refresh_spec: bool = False,
     table_shape: Optional[str] = None,
     dict_shape: Optional[str] = None,
+    page_to: Optional[int] = None,
 ) -> Dict[str, Any]:
     """
     Execute the action for a given report spec (see `_exec_report_spec_impl` for the result
@@ -1404,6 +1655,12 @@ def exec_report_spec(
     any other value is refused with a sentence. They apply to a find-method spec only: DOCUMENT, chart
     and analytic results ignore them.
 
+    Paging (pager step 3): a find result carries `end` ("confirmed" only after a null on a trusted path;
+    "first_page" when the first page had rows and was not paged on; else the pager's end, all of which
+    mean "at least N"). A first page that shows nothing is paged on for list formats (DICT/JSON/ALL/TABLE),
+    and a text format says "nothing in the first N positions; can't rule out more". `page_to=N` (preview)
+    pages a list format fully, up to N rows.
+
     RS-EGERIA-TIER: the name may be tier-addressed (`egeria:<label>`, `builtin:<label>`,
     `seed:<label>`). The result carries `spec_source` (`{"tier", "label", "version", "guid"?,
     "synced_at"?}`) beside `kind`, never inside `data`; REPORT/MD/HTML text of an Egeria-held spec
@@ -1411,13 +1668,17 @@ def exec_report_spec(
     this call: written through to a per-user cache, kept in-process for a shared one. A failed
     fetch raises with words; it never falls back to the cached copy.
     """
-    if refresh_spec and isinstance(format_set_name, str):
-        format_set_name = _fetch_for_exec(format_set_name, view_server=view_server, view_url=view_url,
-                                          user=user, user_pass=user_pass, token=token)
-    result = _exec_report_spec_impl(format_set_name, output_format=output_format, params=params,
-                                    view_server=view_server, view_url=view_url, user=user, user_pass=user_pass,
-                                    token=token, supply=supply, table_shape=table_shape, dict_shape=dict_shape)
-    return _with_spec_source(result, format_set_name, (output_format or "DICT").upper())
+    from pyegeria.view.egeria_spec_cache import credential_identity, spec_identity
+    # the EGERIA tier is read for this caller's credential identity: a private cache bound to another isn't loaded
+    with spec_identity(credential_identity(user, view_url, view_server)):
+        if refresh_spec and isinstance(format_set_name, str):
+            format_set_name = _fetch_for_exec(format_set_name, view_server=view_server, view_url=view_url,
+                                              user=user, user_pass=user_pass, token=token)
+        result = _exec_report_spec_impl(format_set_name, output_format=output_format, params=params,
+                                        view_server=view_server, view_url=view_url, user=user, user_pass=user_pass,
+                                        token=token, supply=supply, table_shape=table_shape, dict_shape=dict_shape,
+                                        page_to=page_to)
+        return _with_spec_source(result, format_set_name, (output_format or "DICT").upper())
 
 
 def _fetch_for_exec(name: str, *, view_server: str, view_url: str, user: str, user_pass: str,
@@ -1451,6 +1712,7 @@ def _exec_report_spec_impl(
     supply: Optional[RoleSupply] = None,
     table_shape: Optional[str] = None,
     dict_shape: Optional[str] = None,
+    page_to: Optional[int] = None,
 ) -> Dict[str, Any]:
     """
     Execute the action for a given format set and return a normalized result structure.
@@ -1599,6 +1861,9 @@ def _exec_report_spec_impl(
         if envelope and envelope["state"] not in CHARTABLE_STATES:
             return _absent_output(result, envelope, absence, notes)  # ISSUE-171
         extra = {"absence": absence} if absence else {}
+        extra.update(_unconfirmed_extra())   # pager step 4: the scans Egeria didn't confirm, if any
+        if extra.get("unconfirmed") and isinstance(result, int) and not isinstance(result, bool):
+            extra["display"] = f"\u2265{result}"   # step 5: a scalar lower bound is never shown bare
         if result is None or result == [] or result == {}:
             return _with_envelope({"kind": "empty", **extra, **unmeasured}, envelope)
         return _with_envelope({"kind": "json", "data": result, **extra, **unmeasured}, envelope)
@@ -1646,26 +1911,37 @@ def _exec_report_spec_impl(
             )
 
         call_params = _add_request_options(func, params, call_params)
+        call_params = _add_lifecycle_filters(format_set_name, func, params, call_params)
         call_params = _bind_search_parameter(func, call_params)
         _warn_dropped_params(format_set_name, params, call_params,
                              [*required_params, *optional_params, *spec_params])
+        plan = _find_plan(func, call_params, output_format, method_name, page_to)
+        paged = result = None
         with recording_list_requests() as list_record, dict_shape_for_call(row_shape):
-            result = func(**call_params)
+            if (full := _full_read(plan)) is not None:
+                paged = page_all(_fetcher(func, call_params), **full)
+            else:
+                result = func(**call_params)
+                if (more := _after_first_page(plan, list_record, result)) is not None:
+                    paged = page_all(_fetcher(func, call_params), **more)
+        result, end, positions = _settle(plan, list_record, result, paged)
 
-        if not result or result == NO_ELEMENTS_FOUND:
-            return {"kind": "empty"}
-        cap_notes = page_cap_notes(func, call_params, result, list_record)
+        if _is_nothing(result):
+            return _nothing_result(end, positions)
+        cap_notes = _paged_notes(paged) if paged is not None else page_cap_notes(func, call_params, result,
+                                                                                 list_record)
 
         if output_format == "TABLE" and table_shape == "structured":
-            return build_structured_table(result, (fmt.get("formats") or {}).get("attributes") or [],
-                                          notes=cap_notes, capped=bool(cap_notes), record=list_record)
+            return {**build_structured_table(result, (fmt.get("formats") or {}).get("attributes") or [],
+                                             notes=cap_notes, capped=bool(cap_notes), record=list_record),
+                    "end": end}
         if output_format == "DICT" and row_shape == "native" and isinstance(result, list):
             cap_notes = cap_notes + mark_relationship_absence(  # "none" / "not read" (R1 follow-up)
                 result, [c if isinstance(c, dict) else c.model_dump()
                          for c in (fmt.get("formats") or {}).get("attributes") or []], list_record, keyed_by="name")
         if output_format in {"DICT", "JSON", "ALL", "TABLE"}:
             # Return raw data (list/dict/any) — do not stringify here
-            return {"kind": "json", "data": result, **({"notes": cap_notes} if cap_notes else {})}
+            return {"kind": "json", "data": result, **({"notes": cap_notes} if cap_notes else {}), "end": end}
 
         # For narrative formats, try to use generate_output if the result is structured
         if output_format in {"REPORT", "REPORT-GRAPH", "MD", "FORM", "LIST", "HTML", "MERMAID", "GRAPH"}:
@@ -1695,9 +1971,9 @@ def _exec_report_spec_impl(
                 content = content.rstrip("\n") + "\n\n" + "\n".join(
                     (f"<p><em>{n}</em></p>" if mime == "text/html" else f"_{n}_") for n in cap_notes) + "\n"
             return {"kind": "text", "mime": mime, "content": content,
-                    **({"notes": cap_notes} if cap_notes else {})}
+                    **({"notes": cap_notes} if cap_notes else {}), "end": end}
 
-        return {"kind": "unknown", "raw": result}
+        return {"kind": "unknown", "raw": result, "end": end}
 
     except PyegeriaException as e:
         # Re-raise with a simpler message for upstream mapping

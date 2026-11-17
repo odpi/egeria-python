@@ -194,7 +194,7 @@ class ClassificationExplorer(ServerClient):
             "forLineage": false,
             "forDuplicateProcessing": false,
             "metadataElementTypeName": "GlossaryTerm",
-            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "limitResultsByStatus": ["ACTIVE"],
             "sequencingProperty": "???",
             "sequencingOrder": "LAST_UPDATE_RECENT",
             "returnSpecificLevel": true,
@@ -257,7 +257,7 @@ class ClassificationExplorer(ServerClient):
             "forLineage": false,
             "forDuplicateProcessing": false,
             "metadataElementTypeName": "GlossaryTerm",
-            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "limitResultsByStatus": ["ACTIVE"],
             "sequencingProperty": "???",
             "sequencingOrder": "LAST_UPDATE_RECENT",
             "returnSpecificLevel": true,
@@ -313,7 +313,7 @@ class ClassificationExplorer(ServerClient):
             "forLineage" : false,
             "forDuplicateProcessing" : false,
             "metadataElementTypeName" : "GlossaryTerm",
-            "limitResultsByStatus" : [ "ACTIVE", "DRAFT"],
+            "limitResultsByStatus" : ["ACTIVE"],
             "sequencingProperty" : "???",
             "sequencingOrder" : "LAST_UPDATE_RECENT",
             "securityLabels" : [ "???" ],
@@ -385,7 +385,7 @@ class ClassificationExplorer(ServerClient):
             "forLineage" : false,
             "forDuplicateProcessing" : false,
             "metadataElementTypeName" : "GlossaryTerm",
-            "limitResultsByStatus" : [ "ACTIVE", "DRAFT"],
+            "limitResultsByStatus" : ["ACTIVE"],
             "sequencingProperty" : "???",
             "sequencingOrder" : "LAST_UPDATE_RECENT",
             "securityLabels" : [ "???" ],
@@ -453,7 +453,7 @@ class ClassificationExplorer(ServerClient):
             "forLineage": false,
             "forDuplicateProcessing": false,
             "metadataElementTypeName": "GlossaryTerm",
-            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "limitResultsByStatus": ["ACTIVE"],
             "sequencingProperty": "???",
             "sequencingOrder": "LAST_UPDATE_RECENT"
         }
@@ -521,7 +521,7 @@ class ClassificationExplorer(ServerClient):
             "forLineage": false,
             "forDuplicateProcessing": false,
             "metadataElementTypeName": "GlossaryTerm",
-            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "limitResultsByStatus": ["ACTIVE"],
             "sequencingProperty": "???",
             "sequencingOrder": "LAST_UPDATE_RECENT"
         }
@@ -705,7 +705,7 @@ class ClassificationExplorer(ServerClient):
             "forLineage": false,
             "forDuplicateProcessing": false,
             "metadataElementTypeName": "GlossaryTerm",
-            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "limitResultsByStatus": ["ACTIVE"],
             "sequencingProperty": "???",
             "sequencingOrder": "LAST_UPDATE_RECENT"
         }
@@ -774,7 +774,7 @@ class ClassificationExplorer(ServerClient):
             "forLineage": false,
             "forDuplicateProcessing": false,
             "metadataElementTypeName": "GlossaryTerm",
-            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "limitResultsByStatus": ["ACTIVE"],
             "sequencingProperty": "???",
             "sequencingOrder": "LAST_UPDATE_RECENT"
         }
@@ -832,7 +832,7 @@ class ClassificationExplorer(ServerClient):
             "forLineage" : false,
             "forDuplicateProcessing" : false,
             "metadataElementTypeName" : "GlossaryTerm",
-            "limitResultsByStatus" : [ "ACTIVE", "DRAFT"],
+            "limitResultsByStatus" : ["ACTIVE"],
             "sequencingProperty" : "???",
             "sequencingOrder" : "LAST_UPDATE_RECENT",
             "organizationGUID" : "????",
@@ -903,7 +903,7 @@ class ClassificationExplorer(ServerClient):
             "forLineage" : false,
             "forDuplicateProcessing" : false,
             "metadataElementTypeName" : "GlossaryTerm",
-            "limitResultsByStatus" : [ "ACTIVE", "DRAFT"],
+            "limitResultsByStatus" : ["ACTIVE"],
             "sequencingProperty" : "???",
             "sequencingOrder" : "LAST_UPDATE_RECENT",
             "organizationGUID" : "????",
@@ -964,7 +964,7 @@ class ClassificationExplorer(ServerClient):
             "forLineage" : false,
             "forDuplicateProcessing" : false,
             "metadataElementTypeName" : "GlossaryTerm",
-            "limitResultsByStatus" : [ "ACTIVE", "DRAFT"],
+            "limitResultsByStatus" : ["ACTIVE"],
             "sequencingProperty" : "???",
             "sequencingOrder" : "LAST_UPDATE_RECENT",
             "expression" : "????",
@@ -1040,7 +1040,7 @@ class ClassificationExplorer(ServerClient):
             "forLineage" : false,
             "forDuplicateProcessing" : false,
             "metadataElementTypeName" : "GlossaryTerm",
-            "limitResultsByStatus" : [ "ACTIVE", "DRAFT"],
+            "limitResultsByStatus" : ["ACTIVE"],
             "sequencingProperty" : "???",
             "sequencingOrder" : "LAST_UPDATE_RECENT",
             "expression" : "????",
@@ -1105,7 +1105,7 @@ class ClassificationExplorer(ServerClient):
             "forLineage" : false,
             "forDuplicateProcessing" : false,
             "metadataElementTypeName" : "GlossaryTerm",
-            "limitResultsByStatus" : [ "ACTIVE", "DRAFT"],
+            "limitResultsByStatus" : ["ACTIVE"],
             "sequencingProperty" : "???",
             "sequencingOrder" : "LAST_UPDATE_RECENT",
             "expression" : "????",
@@ -1181,7 +1181,7 @@ class ClassificationExplorer(ServerClient):
             "forLineage" : false,
             "forDuplicateProcessing" : false,
             "metadataElementTypeName" : "GlossaryTerm",
-            "limitResultsByStatus" : [ "ACTIVE", "DRAFT"],
+            "limitResultsByStatus" : ["ACTIVE"],
             "sequencingProperty" : "???",
             "sequencingOrder" : "LAST_UPDATE_RECENT",
             "expression" : "????",
@@ -1256,7 +1256,7 @@ class ClassificationExplorer(ServerClient):
             "forLineage": false,
             "forDuplicateProcessing": false,
             "metadataElementTypeName": "GlossaryTerm",
-            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "limitResultsByStatus": ["ACTIVE"],
             "sequencingProperty": "???",
             "sequencingOrder": "LAST_UPDATE_RECENT"
         }
@@ -1324,7 +1324,7 @@ class ClassificationExplorer(ServerClient):
             "forLineage": false,
             "forDuplicateProcessing": false,
             "metadataElementTypeName": "GlossaryTerm",
-            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "limitResultsByStatus": ["ACTIVE"],
             "sequencingProperty": "???",
             "sequencingOrder": "LAST_UPDATE_RECENT"
         }
@@ -1390,7 +1390,7 @@ class ClassificationExplorer(ServerClient):
             "forLineage": false,
             "forDuplicateProcessing": false,
             "metadataElementTypeName": "GlossaryTerm",
-            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "limitResultsByStatus": ["ACTIVE"],
             "sequencingProperty": "???",
             "sequencingOrder": "LAST_UPDATE_RECENT"
         }
@@ -1458,7 +1458,7 @@ class ClassificationExplorer(ServerClient):
             "forLineage": false,
             "forDuplicateProcessing": false,
             "metadataElementTypeName": "GlossaryTerm",
-            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "limitResultsByStatus": ["ACTIVE"],
             "sequencingProperty": "???",
             "sequencingOrder": "LAST_UPDATE_RECENT"
         }
@@ -1527,7 +1527,7 @@ class ClassificationExplorer(ServerClient):
             "forLineage": false,
             "forDuplicateProcessing": false,
             "metadataElementTypeName": "GlossaryTerm",
-            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "limitResultsByStatus": ["ACTIVE"],
             "sequencingProperty": "???",
             "sequencingOrder": "LAST_UPDATE_RECENT"
         }
@@ -1598,7 +1598,7 @@ class ClassificationExplorer(ServerClient):
             "forLineage": false,
             "forDuplicateProcessing": false,
             "metadataElementTypeName": "GlossaryTerm",
-            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "limitResultsByStatus": ["ACTIVE"],
             "sequencingProperty": "???",
             "sequencingOrder": "LAST_UPDATE_RECENT"
         }
@@ -1666,7 +1666,7 @@ class ClassificationExplorer(ServerClient):
             "forLineage": false,
             "forDuplicateProcessing": false,
             "metadataElementTypeName": "GlossaryTerm",
-            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "limitResultsByStatus": ["ACTIVE"],
             "sequencingProperty": "???",
             "sequencingOrder": "LAST_UPDATE_RECENT"
         }
@@ -1736,7 +1736,7 @@ class ClassificationExplorer(ServerClient):
             "forLineage": false,
             "forDuplicateProcessing": false,
             "metadataElementTypeName": "GlossaryTerm",
-            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "limitResultsByStatus": ["ACTIVE"],
             "sequencingProperty": "???",
             "sequencingOrder": "LAST_UPDATE_RECENT"
         }
@@ -1802,7 +1802,7 @@ class ClassificationExplorer(ServerClient):
             "forLineage": false,
             "forDuplicateProcessing": false,
             "metadataElementTypeName": "GlossaryTerm",
-            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "limitResultsByStatus": ["ACTIVE"],
             "sequencingProperty": "???",
             "sequencingOrder": "LAST_UPDATE_RECENT"
         }
@@ -1870,7 +1870,7 @@ class ClassificationExplorer(ServerClient):
             "forLineage": false,
             "forDuplicateProcessing": false,
             "metadataElementTypeName": "GlossaryTerm",
-            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "limitResultsByStatus": ["ACTIVE"],
             "sequencingProperty": "???",
             "sequencingOrder": "LAST_UPDATE_RECENT"
         }
@@ -1936,7 +1936,7 @@ class ClassificationExplorer(ServerClient):
             "forLineage": false,
             "forDuplicateProcessing": false,
             "metadataElementTypeName": "GlossaryTerm",
-            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "limitResultsByStatus": ["ACTIVE"],
             "sequencingProperty": "???",
             "sequencingOrder": "LAST_UPDATE_RECENT"
         }
@@ -2009,7 +2009,7 @@ class ClassificationExplorer(ServerClient):
             "forLineage": false,
             "forDuplicateProcessing": false,
             "metadataElementTypeName": "GlossaryTerm",
-            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "limitResultsByStatus": ["ACTIVE"],
             "sequencingProperty": "???",
             "sequencingOrder": "LAST_UPDATE_RECENT"
         }
@@ -2073,7 +2073,7 @@ class ClassificationExplorer(ServerClient):
             "forLineage": false,
             "forDuplicateProcessing": false,
             "metadataElementTypeName": "GlossaryTerm",
-            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "limitResultsByStatus": ["ACTIVE"],
             "sequencingProperty": "???",
             "sequencingOrder": "LAST_UPDATE_RECENT"
         }
@@ -2141,7 +2141,7 @@ class ClassificationExplorer(ServerClient):
             "forLineage": false,
             "forDuplicateProcessing": false,
             "metadataElementTypeName": "GlossaryTerm",
-            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "limitResultsByStatus": ["ACTIVE"],
             "sequencingProperty": "???",
             "sequencingOrder": "LAST_UPDATE_RECENT"
         }
@@ -2207,7 +2207,7 @@ class ClassificationExplorer(ServerClient):
             "forLineage": false,
             "forDuplicateProcessing": false,
             "metadataElementTypeName": "GlossaryTerm",
-            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "limitResultsByStatus": ["ACTIVE"],
             "sequencingProperty": "???",
             "sequencingOrder": "LAST_UPDATE_RECENT"
         }
@@ -2275,7 +2275,7 @@ class ClassificationExplorer(ServerClient):
             "forLineage": false,
             "forDuplicateProcessing": false,
             "metadataElementTypeName": "GlossaryTerm",
-            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "limitResultsByStatus": ["ACTIVE"],
             "sequencingProperty": "???",
             "sequencingOrder": "LAST_UPDATE_RECENT"
         }
@@ -2341,7 +2341,7 @@ class ClassificationExplorer(ServerClient):
             "forLineage": false,
             "forDuplicateProcessing": false,
             "metadataElementTypeName": "GlossaryTerm",
-            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "limitResultsByStatus": ["ACTIVE"],
             "sequencingProperty": "???",
             "sequencingOrder": "LAST_UPDATE_RECENT"
         }
@@ -2409,7 +2409,7 @@ class ClassificationExplorer(ServerClient):
             "forLineage": false,
             "forDuplicateProcessing": false,
             "metadataElementTypeName": "GlossaryTerm",
-            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "limitResultsByStatus": ["ACTIVE"],
             "sequencingProperty": "???",
             "sequencingOrder": "LAST_UPDATE_RECENT"
         }
@@ -2476,7 +2476,7 @@ class ClassificationExplorer(ServerClient):
             "forLineage": false,
             "forDuplicateProcessing": false,
             "metadataElementTypeName": "GlossaryTerm",
-            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "limitResultsByStatus": ["ACTIVE"],
             "sequencingProperty": "???",
             "sequencingOrder": "LAST_UPDATE_RECENT"
         }
@@ -2544,7 +2544,7 @@ class ClassificationExplorer(ServerClient):
             "forLineage": false,
             "forDuplicateProcessing": false,
             "metadataElementTypeName": "GlossaryTerm",
-            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "limitResultsByStatus": ["ACTIVE"],
             "sequencingProperty": "???",
             "sequencingOrder": "LAST_UPDATE_RECENT"
         }
@@ -5050,7 +5050,7 @@ class ClassificationExplorer(ServerClient):
         response: Response = await self._async_make_request(
             "POST", url, body_slimmer(body), **kwargs
         )
-        rels = response.json().get("relationships", "No relationships found")
+        rels = self._elements_noting_page_cap(response, "No relationships found", key="relationships")
 
         if type(rels) is list and len(rels) == 0:
             return NO_ELEMENTS_FOUND
@@ -5198,7 +5198,7 @@ class ClassificationExplorer(ServerClient):
         response: Response = await self._async_make_request(
             "POST", url, body_slimmer(body), timeout=timeout, **kwargs
         )
-        rels = response.json().get("relationships", NO_ELEMENTS_FOUND)
+        rels = self._elements_noting_page_cap(response, NO_ELEMENTS_FOUND, key="relationships")
         if type(rels) is list and len(rels) == 0:
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return a simplified markdown representation
@@ -7265,7 +7265,7 @@ class ClassificationExplorer(ServerClient):
             "forLineage": false,
             "forDuplicateProcessing": false,
             "metadataElementTypeName": "Referenceable",
-            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "limitResultsByStatus": ["ACTIVE"],
             "sequencingProperty": "???",
             "sequencingOrder": "LAST_UPDATE_RECENT"
         }
@@ -7334,7 +7334,7 @@ class ClassificationExplorer(ServerClient):
             "forLineage": false,
             "forDuplicateProcessing": false,
             "metadataElementTypeName": "Referenceable",
-            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "limitResultsByStatus": ["ACTIVE"],
             "sequencingProperty": "???",
             "sequencingOrder": "LAST_UPDATE_RECENT"
         }
@@ -7402,7 +7402,7 @@ class ClassificationExplorer(ServerClient):
             "forLineage": false,
             "forDuplicateProcessing": false,
             "metadataElementTypeName": "Referenceable",
-            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "limitResultsByStatus": ["ACTIVE"],
             "sequencingProperty": "???",
             "sequencingOrder": "LAST_UPDATE_RECENT"
         }
@@ -7472,7 +7472,7 @@ class ClassificationExplorer(ServerClient):
             "forLineage": false,
             "forDuplicateProcessing": false,
             "metadataElementTypeName": "Referenceable",
-            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "limitResultsByStatus": ["ACTIVE"],
             "sequencingProperty": "???",
             "sequencingOrder": "LAST_UPDATE_RECENT"
         }
@@ -12496,9 +12496,8 @@ class ClassificationExplorer(ServerClient):
         from pyegeria.omvs.collection_manager import CollectionManager
         client = getattr(self, "_collection_mgr", None)
         if client is None:
-            client = CollectionManager(self.view_server, self.platform_url, self.user_id, self.user_pwd,
-                                       token=self.token, timeout=getattr(self, "timeout", None))
-            client._token_minted_for = self._token_minted_for
+            from pyegeria.core._helper_client import helper_client
+            client = helper_client(CollectionManager, self, timeout=getattr(self, "timeout", None))
             self._collection_mgr = client
         return client
 
@@ -12827,7 +12826,7 @@ class ClassificationExplorer(ServerClient):
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True, by_alias=True)
 
         response = await self._async_make_request("POST", url, json_body, timeout=timeout)
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        elements = self._elements_noting_page_cap(response, NO_ELEMENTS_FOUND)
 
         if type(elements) is str or len(elements) == 0:
             logger.info(NO_ELEMENTS_FOUND)

@@ -140,7 +140,7 @@ class ListFilters(GetFilters, total=False):
     anchor_scope_guid: str
     """Only return elements whose anchor scope is the element with this GUID."""
     limit_results_by_status: list[str]
-    """Only return elements whose status is one of these, e.g. ``["ACTIVE", "DRAFT"]``."""
+    """Only return elements whose status is one of these, e.g. ``["ACTIVE"]``; Egeria's ElementStatus: UNKNOWN, ACTIVE, INVALID, DELETED, OTHER (a content status such as DRAFT is refused)."""
     sequencing_order: Literal[
         "ANY", "CREATION_DATE_RECENT", "CREATION_DATE_OLDEST", "LAST_UPDATE_RECENT",
         "LAST_UPDATE_OLDEST", "PROPERTY_ASCENDING", "PROPERTY_DESCENDING",

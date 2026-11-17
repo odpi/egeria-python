@@ -3,11 +3,10 @@
 SPDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 
-Refresh the in-process report-spec registry from Egeria.
-
-Reads ReportType collections and their QuestionSpec folders from Egeria and
-merges question_specs into the runtime registry so that find_report_specs_by_*
-and the MCP find_report_specs tool return Egeria-aware results.
+DEPRECATED command name, kept until pyegeria 6.4 or the next release: it now runs the spec cache's sync
+(pyegeria.view.egeria_spec_cache.sync_report_specs, the same as `pyegeria report-specs sync`), which
+loads the report specs held in Egeria into the cache the registry's EGERIA tier reads. It used to run
+the legacy ReportType:: loader (load_egeria_report_specs), deprecated and removed in pyegeria 6.4 or the next release.
 
 Usage (standalone):
     load_report_specs [--force] [--ttl <seconds>]
@@ -28,12 +27,6 @@ from rich.console import Console
 
 from pyegeria.core.config import settings
 from pyegeria.egeria_tech_client import EgeriaTech
-from pyegeria.view.base_report_formats import (
-    load_egeria_report_specs,
-    report_spec_list,
-    _EGERIA_SPECS_LOADED_AT,
-    _EGERIA_SPECS_CACHE_TTL,
-)
 
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
@@ -52,60 +45,76 @@ def _run(
     jupyter: bool = settings.Environment.egeria_jupyter,
 ) -> None:
     console = Console(width=width, force_terminal=not jupyter)
-
-    from pyegeria.view import base_report_formats as _brf
-    last = getattr(_brf, "_EGERIA_SPECS_LOADED_AT", None)
-    effective_ttl = ttl_seconds if ttl_seconds is not None else _EGERIA_SPECS_CACHE_TTL
-
-    if not force and last is not None:
-        from datetime import datetime, timezone
-        age = (datetime.now(timezone.utc) - last).total_seconds()
-        if age < effective_ttl:
-            console.print(
-                f"[green]Registry is fresh[/green] (loaded {age:.0f}s ago, TTL={effective_ttl}s). "
-                f"Use --force to reload anyway."
-            )
-            return
-
+    # The owner's direction (2026-11-14): our own callers move off the deprecated legacy ReportType:: loader
+    # (load_egeria_report_specs, removed in pyegeria 6.4 or the next release). This command now runs the spec cache's sync, the
+    # system of record for Egeria-held report specs, exactly as `pyegeria report-specs sync` does.
+    console.print(DEPRECATION_WORDS)
+    if force or ttl_seconds is not None:
+        console.print("[dim]--force and --ttl applied to the legacy loader's cache and are ignored now: a sync "
+                      "reads Egeria each time.[/dim]")
+    from pyegeria.view.egeria_spec_cache import SyncAlreadyRunning, sync_report_specs
     client = EgeriaTech(view_server, view_url, user_id=user, user_pwd=user_pass)
-    client.create_egeria_bearer_token(user, user_pass)
-
-    before = set(report_spec_list())
     start = time.perf_counter()
-    updated = load_egeria_report_specs(client, force=force, ttl_seconds=ttl_seconds)
-    elapsed = time.perf_counter() - start
+    try:
+        client.create_egeria_bearer_token(user, user_pass)
+        report = sync_report_specs(client)
+    except SyncAlreadyRunning as exc:
+        console.print(f"[yellow]{exc}[/yellow]")
+        return
+    finally:
+        try:
+            client.close_session()
+        except Exception:  # noqa: BLE001
+            pass
+    console.print(report.render())
+    console.print(f"[dim]({time.perf_counter() - start:.2f}s)[/dim]")
 
-    client.close_session()
 
-    after = set(report_spec_list())
-    new_specs = sorted(after - before)
+#: Printed by load-report-specs / load_report_specs since it moved to the spec cache.
+DEPRECATION_WORDS = ("[yellow]load-report-specs is deprecated[/yellow]: it ran the legacy ReportType:: loader, "
+                     "which will be removed in pyegeria 6.4 or the next release. It now runs the spec "
+                     "cache's sync (`pyegeria report-specs sync`), which loads Egeria-held report specs.")
 
-    if updated:
-        console.print(
-            f"[green]Registry updated[/green] from Egeria in {elapsed:.2f}s. "
-            f"{len(new_specs)} new spec(s) added."
-        )
-        if new_specs:
-            for s in new_specs:
-                console.print(f"  + {s}")
-    else:
-        console.print(
-            f"[yellow]No update performed[/yellow] — Egeria returned no ReportType collections "
-            f"(or registry was already fresh)."
-        )
+
+#: An empty result from the legacy ReportType:: loader, confirmed or not (the legacy-loader ruling, 2026-11-14).
+NO_LEGACY_WORDS = "No legacy ReportType collections found (Egeria-held specs load through the spec cache)."
+
+
+def load_status_words(status: dict, elapsed: float, new_specs: list) -> str:
+    """Words for how the deprecated load_egeria_report_specs ended (85f5bc15 read-back R1): one sentence per
+    status, never "no ReportType collections" unless Egeria confirmed the end. Kept for anyone still calling the
+    legacy loader until pyegeria 6.4 or the next release; this command itself now runs the spec cache's sync."""
+    kind, count = status.get("status"), status.get("count") or 0
+    retry_at, error = status.get("retry_at"), status.get("error")
+    if kind in ("loaded", "registered_unconfirmed") and not count:
+        # the legacy-loader ruling: never imply specs are missing (they load through the spec cache)
+        return NO_LEGACY_WORDS
+    if kind == "loaded":
+        return (f"[green]Registry updated[/green] from Egeria in {elapsed:.2f}s: {count} ReportType(s) read, "
+                f"{len(new_specs)} new spec(s) added.")
+    if kind == "registered_unconfirmed":
+        return (f"[yellow]Registered {count} spec(s)[/yellow] in {elapsed:.2f}s; Egeria didn't confirm there "
+                f"are no more; will re-read after {retry_at}.")
+    if kind == "retry_window":
+        return (f"[yellow]Not re-read[/yellow]: the last read wasn't confirmed complete; next read after {retry_at} "
+                f"(use --force).")
+    if kind == "fresh":
+        return "[green]Registry is fresh[/green]: the last confirmed load is within its TTL (use --force)."
+    if kind == "failed":
+        return f"[red]Not loaded[/red]: Egeria couldn't be queried ({error}); nothing was marked loaded."
+    return f"[yellow]Load ended without a status[/yellow] ({elapsed:.2f}s)."
 
 
 # ── Click command (for hey_egeria) ────────────────────────────────────────────
 
 @click.command("load-report-specs")
 @click.option("--force", is_flag=True, default=False,
-              help="Bypass the TTL cache and reload from Egeria unconditionally.")
+              help="Ignored (it applied to the legacy loader's cache); a sync reads Egeria each time.")
 @click.option("--ttl", "ttl_seconds", default=None, type=int,
-              help="Override cache TTL for this call only (seconds). "
-                   f"Default: PYEGERIA_REPORT_SPECS_CACHE_TTL env var or {_EGERIA_SPECS_CACHE_TTL}s.")
+              help="Ignored (it applied to the legacy loader's cache).")
 @click.pass_context
 def load_report_specs_cmd(ctx, force: bool, ttl_seconds: int | None) -> None:
-    """Refresh the report-spec registry from Egeria (ReportTypes and QuestionSpecs)."""
+    """DEPRECATED: syncs the report specs held in Egeria into the spec cache (use `pyegeria report-specs sync`)."""
     c = ctx.obj
     _run(
         view_server=c.view_server,
@@ -121,13 +130,13 @@ def load_report_specs_cmd(ctx, force: bool, ttl_seconds: int | None) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Refresh the report-spec registry from Egeria."
+        description="DEPRECATED: sync the report specs held in Egeria into the spec cache "
+                    "(use `pyegeria report-specs sync`)."
     )
     parser.add_argument("--force", action="store_true",
-                        help="Bypass the TTL cache and reload unconditionally.")
+                        help="Ignored (it applied to the legacy loader's cache).")
     parser.add_argument("--ttl", dest="ttl_seconds", type=int, default=None,
-                        help=f"Override cache TTL (seconds). "
-                             f"Default: PYEGERIA_REPORT_SPECS_CACHE_TTL env var or {_EGERIA_SPECS_CACHE_TTL}s.")
+                        help="Ignored (it applied to the legacy loader's cache).")
     parser.add_argument("--server", dest="server",
                         default=app_config.egeria_view_server,
                         help="Egeria view server name")

@@ -11,10 +11,18 @@ raises the recorded Egeria error. The fixtures and what they cover:
   (publisher; no access path, licence, keywords or themes).
 - org_structure_products: DigitalProductFamily Organization Structure, whose DigitalProduct members
   are Bitol's (the exclusion).
-- clinical_trial_files: a search over zoned (NON_PUBLIC), licensed CSVFiles with a path and an
-  endpoint (distribution, licence, access rights).
+- clinical_trial_files: a search ("PROJ-CT-TBDF_00002") for 10 CSVFiles and their FileFolder, re-captured
+  2026-11-14 on laz 5deda38d with the pager's probe pages. The scope string changed: laz's 11-11 20:27Z DB
+  reset re-catalogued the files under new qualified names, so the old exact DataLake::PROJ-CT-TBDF::...
+  search was stale. Since the reset the files are neither zoned nor licensed, and have no description.
+- clinical_trial_files_licensed_2026_11_11: the pre-reset capture of 5 zoned (NON_PUBLIC), licensed CSVFiles
+  with a path and an endpoint (distribution, licence, access rights): no such shape is on laz now. Its
+  element reads are replayed as captured; its search predates the probe pages, so the one test using it
+  answers the search with an explicit, labelled fake (the recorded page, then null), not a replay rule.
 - coco_data_hub: a search for a RelationalDatabase with no connection (no access path).
-- not_visible_report: a real OPEN-METADATA-SECURITY-403-020 answer (a Report zoned to another user).
+- not_visible_report: a real OPEN-METADATA-SECURITY-403-020 answer (a Report zoned to another user),
+  captured 2026-11-11. Kept: the 2026-11-14 re-capture got a 404, because that Report's GUID is gone since
+  the reset, so it no longer records a 403. One unpaged read, so the old capture is still exactly what it was.
 
 Gaps (no real shape on laz to capture): no Asset with SearchKeywords, a SemanticAssignment, a url
 or ExternalReference, and no non-template DataStore/Database or DeployedAPI with an endpoint. Those
@@ -64,9 +72,22 @@ class Replay:
         self.overrides = overrides or {}
         self.made = []
 
+    def _unique_name(self, qn):
+        """Egeria's exact unique-name read, answered from the capture: the recorded by-name read of `qn` holds
+        the element (matched on exact qualifiedName equality), or there is none."""
+        for c in self.calls:
+            if c["method"] == "get_collections_by_name" and c["args"][:1] == [qn] and isinstance(c.get("result"), list):
+                for el in c["result"]:
+                    if ((el.get("properties") or {}).get("qualifiedName")) == qn:
+                        return copy.deepcopy(el)
+        return "No elements found"
+
     def __getattr__(self, name):
         def call(*args, **kwargs):
             self.made.append((name, args, kwargs))
+            if name == "get_element_by_unique_name" and (name, args[0] if args else None) not in self.overrides \
+                    and (name, None) not in self.overrides:
+                return self._unique_name(args[0])
             for key in ((name, args[0] if args else None), (name, None)):   # (method, None): every call
                 if key in self.overrides:
                     return self.overrides[key](*args, **kwargs)
@@ -78,6 +99,7 @@ class Replay:
                     return copy.deepcopy(c["result"])
             raise AssertionError(f"no recorded answer for {name}{args} {kwargs}")
         return call
+
 
 
 def _export(name, **kw):
@@ -132,7 +154,15 @@ def test_datasets_are_assets_with_identity_dates_and_publisher():
 
 
 def test_distribution_licence_and_non_public_for_zoned_files():
-    out = _export("clinical_trial_files")
+    # The pre-reset shape (see the module docstring): its element reads replay as captured, and the search is
+    # answered by an explicit fake, the recorded first page then null, since the capture predates the probes.
+    fx = _fixture("clinical_trial_files_licensed_2026_11_11")
+    first = next(c["result"] for c in fx["calls"] if c["method"] == "find_in_asset_domain")
+
+    def search(*a, start_from=0, **k):
+        return copy.deepcopy(first) if start_from == 0 else "No elements found"
+
+    out = ed.export_dcat(Replay(fx, overrides={("find_in_asset_domain", None): search}), **fx["params"])
     g = _graph(out["text"])
     ds = _datasets(g)
     assert len(ds) == 5
@@ -166,7 +196,7 @@ def test_keywords_themes_landing_and_data_service_say_why_they_are_absent():
     notes = _export("clinical_trial_files")["notes"]
     for reason in ("dcat:keyword omitted: no SearchKeywords", "dcat:theme omitted: no glossary term",
                    "dcat:landingPage omitted"):
-        assert any(n.startswith(reason) and "for 5 datasets" in n for n in notes), reason
+        assert any(n.startswith(reason) and "for 11 datasets" in n for n in notes), reason
     assert "dcat:DataService omitted: no DeployedAPI with an endpoint in scope." in notes
     assert "dcat:contactPoint omitted: this exporter does not read owners' contact details." in notes
 
@@ -209,16 +239,16 @@ def test_a_403_member_is_noted_as_not_visible_never_absent():
 def test_members_are_read_until_an_empty_page():
     fx = _fixture("portal_dashboards")
     members = next(c["result"] for c in fx["calls"] if c["method"] == "get_collection_members")
-    pages = [members[:2], members[2:3], members[3:], []]          # a short page is not the last
+    pages = [members[:2], members[2:3], members[3:]]              # a short page is not the last
     seen = []
 
     def page(*a, start_from=0, page_size=0, **k):
         seen.append(start_from)
-        return pages[len(seen) - 1]
+        return pages[len(seen) - 1] if len(seen) <= len(pages) else "No elements found"   # then null
 
     client = Replay(fx, overrides={("get_collection_members", None): page})
     out = ed.export_dcat(client, scope=fx["params"]["scope"], page_size=2)
-    assert seen == [0, 2, 4, 6]                                    # startFrom advances by the page size
+    assert seen == [0, 2, 4, 6, 8, 10, 12]   # startFrom advances by the page size; the null, then 3 probes
     assert len(_datasets(_graph(out["text"]))) == 5
 
 
@@ -236,9 +266,10 @@ def test_a_repeated_page_ends_the_reading_with_a_note():
     out = ed.export_dcat(Replay(fx, overrides={("find_in_asset_domain", None): search}),
                          search_string=fx["params"]["search_string"], page_size=2)
     assert calls == [0, 2]
-    assert any(n.startswith("Stopped reading the assets matching") and "exactly the page before" in n
+    assert any(n.startswith("Stopped reading the assets matching") and "at startFrom 2" in n
+               and "exactly the page before" in n
                for n in out["notes"])
-    assert len(_datasets(_graph(out["text"]))) == 5
+    assert len(_datasets(_graph(out["text"]))) == len(first)   # the page once, the repeat never counted
 
 
 def _paged_members(pages):
@@ -251,7 +282,7 @@ def _paged_members(pages):
     def listing(*a, start_from=0, **k):
         log.append(start_from)
         i = len(log) - 1
-        return copy.deepcopy([members[j] for j in pages[i]]) if i < len(pages) else []
+        return copy.deepcopy([members[j] for j in pages[i]]) if i < len(pages) else "No elements found"
 
     return fx, listing, log
 
@@ -259,10 +290,10 @@ def _paged_members(pages):
 def test_overlapping_short_pages_are_all_read():
     """Like laz's 'Clinical' search: pages are short AND overlap (one element on page 0 and page 5).
     A page with something new keeps the reading going; the shared element is exported once."""
-    fx, listing, log = _paged_members([[0, 1], [1, 2], [2], [3, 4], []])
+    fx, listing, log = _paged_members([[0, 1], [1, 2], [2], [3, 4]])
     out = ed.export_dcat(Replay(fx, overrides={("get_collection_members", None): listing}),
                          scope=fx["params"]["scope"], page_size=2)
-    assert log == [0, 2, 4, 6, 8]                                   # [2] brought nothing new: not a stop
+    assert log == [0, 2, 4, 6, 8, 10, 12, 14]          # [2] brought nothing new: not a stop; null, 3 probes
     assert len(_datasets(_graph(out["text"]))) == 5
     assert not any(n.startswith("Stopped reading") for n in out["notes"])
 
@@ -273,7 +304,7 @@ def test_two_pages_in_a_row_with_nothing_new_end_the_reading_with_a_note():
                          scope=fx["params"]["scope"], page_size=2)
     assert log == [0, 2, 4]
     assert len(_datasets(_graph(out["text"]))) == 2
-    assert any("two pages in a row held only elements already read" in n for n in out["notes"])
+    assert any("two pages in a row with nothing new" in n for n in out["notes"])
 
 
 # ── Why a catalog has no dataset (read-back C2) ──
@@ -284,11 +315,13 @@ def _no_dataset_note(out):
     return note
 
 
-def test_empty_scope_says_it_has_no_members():
+def test_empty_scope_never_says_it_has_no_members_unconfirmed():
     fx = _fixture("portal_dashboards")
     out = ed.export_dcat(Replay(fx, overrides={("get_collection_members", None): lambda *a, **k: []}),
                          **fx["params"])
-    assert _no_dataset_note(out) == "No dataset exported: the scope has no members that erinoverview can see."
+    # pager step 4: [] is a filtered page, so the read ends at the empty-run cap, unconfirmed: never "has no members"
+    assert _no_dataset_note(out) == ("No dataset exported: the scope showed no members that erinoverview can see in "
+                                     "what was read; Egeria didn't confirm there are no more.")
 
 
 def test_a_scope_of_bitol_types_and_non_assets_says_so():
@@ -318,7 +351,9 @@ def test_a_search_that_matches_nothing_says_so():
     fx = _fixture("coco_data_hub")
     out = ed.export_dcat(Replay(fx, overrides={("find_in_asset_domain", None): lambda *a, **k: "No elements found"}),
                          **fx["params"])
-    assert _no_dataset_note(out) == "No dataset exported: the search matched nothing that erinoverview can see."
+    # pager step 4: a suspect null, then empty probes: acted on as the end, but never said as a confirmed "nothing"
+    assert _no_dataset_note(out) == ("No dataset exported: the search matched nothing that erinoverview can see in "
+                                     "what was read; Egeria didn't confirm there are no more.")
 
 
 # ── Output ──
@@ -350,15 +385,17 @@ EXPECTED_FINDINGS = {
     "org_structure_products": [
         "Catalog DigitalProductFamily::Jacquard::ORGANIZATION-STRUCTURE-FAMILY::Organization Structure: missing "
         "dct:publisher"],
-    "clinical_trial_files": [
-        "Catalog search:DataLake::PROJ-CT-TBDF::WeeklyMeasurements::Oak Dene Hospital::PROJ-CT-TBDF_00002: "
-        "missing dct:publisher"],
+    # Since the 11-11 reset these CSVFiles carry no description: a real DCAT-AP gap, named per dataset.
+    "clinical_trial_files": ["Catalog search:PROJ-CT-TBDF_00002: missing dct:publisher"] + [
+        f"Dataset CSVFile::egeria-workspaces:/deployments/coco-data-lake/research/clinical-trials/teddy-bear-drop-"
+        f"foot/weekly-measurements/PROJ-CT-TBDF_0000{i}.csv: missing dct:description" for i in range(20, 30)],
     "coco_data_hub": [
         "Catalog search:PostgreSQL Relational Database::Coco PostgreSQL Server 1::coco_data_hub: missing "
         "dct:publisher"],
 }
-#: The one documented gap: none of the real scope collections carries an Ownership classification, and a
-#: search has no owner, while DCAT-AP requires a Catalog publisher. The exporter omits it and says so.
+#: The documented gaps: none of the real scope collections carries an Ownership classification, and a
+#: search has no owner, while DCAT-AP requires a Catalog publisher (the exporter omits it and says so); and
+#: since laz's 11-11 reset the clinical-trial CSVFiles have no description, which DCAT-AP requires per Dataset.
 
 
 @pytest.mark.parametrize("name", sorted(EXPECTED_FINDINGS))
@@ -464,7 +501,7 @@ def test_seed_spec_runs_with_a_search_string(spec_name, ext):
                                supply=PlainSupply(Replay(fx)), view_server="vs", view_url="https://x",
                                user="u", user_pass="p")
     assert out["kind"] == "document"
-    assert out["file_name"] == f"DataLake_PROJ-CT-TBDF_WeeklyMeasurements_Oak_Dene_Hospital_PROJ-CT-TBDF_00002-dcat.{ext}"
+    assert out["file_name"] == f"PROJ-CT-TBDF_00002-dcat.{ext}"
     assert len(_graph(out["text"], "json-ld" if ext == "jsonld" else "turtle")) > 0
     assert out["validation"]["findings"] == EXPECTED_FINDINGS["clinical_trial_files"]
 

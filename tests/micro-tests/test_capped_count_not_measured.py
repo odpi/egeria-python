@@ -48,8 +48,9 @@ def _mgr(native=None, find_result=None, find_error=None):
         m.count_metadata_elements = native
     if find_error is not None:
         m.find_metadata_elements.side_effect = find_error
-    else:
-        m.find_metadata_elements.return_value = find_result
+    else:   # pages like Egeria: the rows at startFrom 0, then null (pager step 5: the fallback pages)
+        m.find_metadata_elements.side_effect = lambda body, *a, **kw: (
+            find_result if not body.get("startFrom") else "No elements found")
     return m
 
 
@@ -59,14 +60,24 @@ def _page(n):
 
 # ── the count seam ──
 
-def test_a_timeout_whose_fallback_hits_the_cap_is_not_measured_with_its_lower_bound():
+def test_a_timeout_whose_fallback_fills_a_page_reads_on_and_is_at_least_what_it_read():
+    # Pager step 5: the fallback pages (it used to be one page), so a full page is no longer a stop. On
+    # find_metadata_elements (NULL_NOT_END) the count is a lower bound: recorded as unconfirmed, never a total.
     mgr = _mgr(native=MagicMock(side_effect=TIMEOUT), find_result=_page(CAP))
-    with om.recording_unmeasured() as notes:
+    with om.recording_unmeasured() as notes, om.recording_unconfirmed() as scans:
         for strict in (True, False):
-            assert om.count_elements(mgr, "Asset", strict=strict, population="viewer") is None  # never CAP
+            assert om.count_elements(mgr, "Asset", strict=strict, population="viewer") == CAP
+    assert notes == [] and len(scans) == 2 and all(s["read"] == CAP and s["unconfirmed"] for s in scans)
+
+
+def test_a_fallback_a_limit_stops_is_not_measured_with_its_lower_bound():
+    mgr = _mgr(native=MagicMock(side_effect=TIMEOUT))
+    mgr.find_metadata_elements.side_effect = lambda body, *a, **kw: _page(CAP)   # ignores startFrom: a stall
+    with om.recording_unmeasured() as notes:
+        assert om.count_elements(mgr, "Asset", population="viewer") is None   # never CAP
     assert notes == [{"count": "Asset", "at_least": CAP,
-                      "reason": f"the native count timed out, and the find fallback stopped at its "
-                                f"{CAP}-element page cap, so there are at least {CAP}"}] * 2
+                      "reason": f"the native count timed out, and the find fallback stopped before the end, "
+                                f"so there are at least {CAP}"}]
 
 
 def test_a_timeout_whose_fallback_fails_is_not_measured_strict():
@@ -95,10 +106,11 @@ def test_the_timeout_leaves_native_enabled_for_the_next_count():
 
 def test_a_short_fallback_page_is_a_measured_count_and_records_nothing():
     mgr = _mgr(native=MagicMock(side_effect=TIMEOUT), find_result=_page(CAP - 1))
-    with om.recording_unmeasured() as notes:
+    with om.recording_unmeasured() as notes, om.recording_unconfirmed() as scans:
         assert om.count_elements(mgr, "Asset", population="viewer") == CAP - 1
         assert om.count_elements(mgr, "Asset", strict=True, population="viewer") == CAP - 1
     assert notes == []
+    assert scans and scans[0]["read"] == CAP - 1   # a lower bound ("at least"), not a total (pager step 5)
 
 
 def test_a_native_count_above_the_cap_is_trusted():
@@ -137,10 +149,11 @@ def test_notes_are_only_kept_inside_a_recording_block():
 
 
 def _rel_pages(rows):
-    """get_relationships paging like Egeria: rows from the body's startFrom, then an empty page."""
+    """get_relationships paging like Egeria: rows from the body's startFrom, then null ([] would be a
+    filtered page; pager step 4)."""
     def fake(*a, body=None, **kw):
         start, size = body["startFrom"], body["pageSize"]
-        return rows[start:start + size]
+        return rows[start:start + size] or "No elements found"
     return fake
 
 
@@ -149,10 +162,13 @@ def test_a_viewer_relationship_count_reads_every_page():
     ce = MagicMock()
     ce.get_relationships.side_effect = _rel_pages([{"relationshipHeader": {"guid": f"r{i}"}}
                                                    for i in range(CAP + 247)])
-    with om.recording_unmeasured() as notes:
+    with om.recording_unmeasured() as notes, om.recording_unconfirmed() as scans:
         assert om.count_relationships(ce, "SemanticAssignment", population="viewer") == CAP + 247
     assert notes == []
-    assert [c.kwargs["body"]["startFrom"] for c in ce.get_relationships.call_args_list] == [0, CAP, 2 * CAP]
+    # NULL_NOT_END: the null at 2*CAP, then 6 probes; the count is recorded as unconfirmed ("at least")
+    assert [c.kwargs["body"]["startFrom"] for c in ce.get_relationships.call_args_list] == [
+        k * CAP for k in range(9)]
+    assert scans[0]["read"] == CAP + 247 and scans[0]["unconfirmed"] is True
 
 
 def test_a_relationship_scan_that_cannot_finish_is_not_a_count():
@@ -184,7 +200,10 @@ def test_semantic_grounding_no_longer_reports_500_links_100_percent():
     with om.recording_unmeasured() as notes:
         r = om.semantic_grounding(mgr, ce)
         assert r.pop("groundedAssetNote").startswith("Grounded Assets were not measured")
-        assert r == {"groundedAssets": None, "groundedAssetTotal": None, "groundedAssetPct": None, "groundingLinksScanned": None, "groundingLinksNotOnAsset": None, "groundingLinks": None, "groundingPct": None}
+        marks = r.pop("unconfirmed")   # pager step 5: the viewer Asset total pages; a lower bound, marked
+        assert r == {"groundedAssets": None, "groundedAssetTotal": CAP, "groundedAssetPct": None, "groundingLinksScanned": None, "groundingLinksNotOnAsset": None, "groundingLinks": None, "groundingPct": None}
+        assert marks == {"groundedAssetTotal": {"unconfirmed": True, "positions_read": 4000,
+                                                "reason": om.UNCONFIRMED_REASON, "words": f"at least {CAP}"}}
     # the native link count and Asset counts, and the distinct-Asset scan (which saw one page again)
     assert {n["count"] for n in notes} == {"Asset", "SemanticAssignment", "SemanticAssignment relationships"}
 
@@ -203,8 +222,11 @@ def test_counts_by_type_and_its_sum_never_add_a_lower_bound_into_a_total():
 def test_an_asset_composition_cell_carries_the_lower_bound_in_its_reason():
     mgr = _mgr(native=MagicMock(side_effect=TIMEOUT), find_result=_page(CAP))
     cell = om._count_cell(mgr, "Asset", None, "viewer", "now")
-    assert cell["value"] is None and cell["state"] == om.CELL_NOT_MEASURED
-    assert f"so there are at least {CAP}" in cell["reason"]
+    # pager step 5: the fallback pages; its count is a lower bound, never "nothing found", and carries it
+    assert cell["value"] == CAP and cell["state"] == om.CELL_MEASURED and cell["unconfirmed"] is True
+    assert cell["reason"] == f"at least {CAP}: {om.UNCONFIRMED_REASON}"
+    other = om._other_cell(cell, [], "viewer", "now")   # parent minus children needs every count whole
+    assert other["value"] is None and "needs every count whole" in other["reason"]
 
 
 # ── what a reader sees through exec_report_spec ──
@@ -268,8 +290,8 @@ def test_a_viewer_tile_still_says_at_least_500():
     out = _exec("Analytic Demo - Element Count by Type", type_name="Asset", population="viewer")
     assert out["kind"] == "absent"
     assert out["unmeasured"] == [{"count": "Asset", "at_least": CAP, "reason": (
-        f"the native count timed out, and the find fallback stopped at its {CAP}-element page cap, "
-        f"so there are at least {CAP}")}]
+        f"the native count timed out, and the find fallback stopped before the end, so there are at least "
+        f"{CAP}")}]
     assert f"at least {CAP}" in out["content"]
 
 

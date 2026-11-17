@@ -5,6 +5,7 @@ Copyright Contributors to the ODPi Egeria project.
     Merged Metadata Expert and Explorer OMVS client.
 """
 
+from pyegeria.core._no_password import NO_PASSWORD, carried_password, password_as_given, resolve_password
 import asyncio
 from loguru import logger
 from typing import Any, Optional, Union, Dict, List
@@ -102,7 +103,7 @@ class MetadataExpert(ServerClient):
         self.view_server = view_server
         self.platform_url = platform_url
         self.user_id = user_id
-        self.user_pwd = user_pwd
+        self.user_pwd = password_as_given(user_pwd)
         ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token, timeout=timeout, **kwargs)
         logger.debug(f"{self.__class__.__name__} initialized")
         self.command_root: str = (
@@ -3757,7 +3758,7 @@ class MetadataExpert(ServerClient):
             "POST", url, body_slimmer(body), timeout=timeout
         )
 
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        elements = self._elements_noting_page_cap(response, NO_ELEMENTS_FOUND)
         if type(elements) is list:
             if len(elements) == 0:
                 return NO_ELEMENTS_FOUND

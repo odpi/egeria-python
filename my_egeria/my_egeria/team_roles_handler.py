@@ -23,6 +23,7 @@ from textual.containers import ScrollableContainer
 from pyegeria import exec_report_spec, PyegeriaException, print_basic_exception, load_app_config, settings
 from MyTeamScreen import MyTeam
 from StatusScreen import StatusScreen
+from paging_support import report_empty_words
 
 
 class TeamRolesMixin:
@@ -150,7 +151,7 @@ class TeamRolesMixin:
         else:
             # self.log(f"No team members found for role: {role_search_key}")
             error_category = "Team Members"
-            error_message = "No team members found"
+            error_message = report_empty_words("team members", team_member_data)
             # self.log(f"Error retrieving team members: {error_category}, {error_message}")
             self.push_screen(StatusScreen(f"{error_category}: {error_message}"), callback=self.status_callback)
             return [[], None, None, None, None]
@@ -236,7 +237,7 @@ class TeamRolesMixin:
         elif self.term_details.get("kind") == "empty":
             # self.log(f"No glossary term details found for qualified name: {self.target_term}")
             error_category = "Glossary Term Details"
-            error_message = "No glossary term details found"
+            error_message = report_empty_words("glossary term details", self.term_details)
             # self.log(f"Error retrieving glossary term details: {error_category}, {error_message}")
             self.push_screen(StatusScreen(f"{error_category}: {error_message}"), callback=self.status_callback)
             return 440

@@ -46,15 +46,23 @@ class DummyFeedbackApp(FeedbackMixin):
         self.pushed_screens.append((screen, callback))
 
 
+def _first_page(rows):
+    """An AsyncMock side_effect that pages like Egeria: rows at start_from 0, null ("No elements found") after."""
+    async def fetch(*args, start_from=0, **kwargs):
+        return rows if start_from == 0 and rows is not None else "No elements found"
+    return fetch
+
+
 def fake_client(existing_log_guid=None, notes=None):
-    """An Egeria client stand-in whose feedback calls are AsyncMocks."""
+    """An Egeria client stand-in whose feedback calls are AsyncMocks, paged like Egeria."""
     client = MagicMock()
-    client._async_get_note_logs_by_name = AsyncMock(
-        return_value=[{"elementHeader": {"guid": existing_log_guid}}] if existing_log_guid else "No elements found"
-    )
+    log = {"elementHeader": {"guid": existing_log_guid, "type": {"typeName": "NoteLog"}},
+           "properties": {"qualifiedName": FEEDBACK_LOG_QN}}
+    # Egeria's exact unique-name read of FEEDBACK_LOG_QN: the log, or its specific not-found
+    client._async_get_element_by_unique_name = AsyncMock(return_value=log if existing_log_guid else "No elements found")
     client._async_create_note_log = AsyncMock(return_value="new-log-guid")
     client._async_create_note = AsyncMock(return_value="note-guid")
-    client._async_get_notes_for_note_log = AsyncMock(return_value=notes if notes is not None else "No elements found")
+    client._async_get_notes_for_note_log = AsyncMock(side_effect=_first_page(notes))
     return client
 
 
@@ -76,8 +84,8 @@ class TestFeedbackCallback:
 
         await app.feedback_callback(FEEDBACK)
 
-        client._async_get_note_logs_by_name.assert_awaited_once()
-        assert client._async_get_note_logs_by_name.await_args.args[0] == FEEDBACK_LOG_QN
+        client._async_get_element_by_unique_name.assert_awaited_once_with(FEEDBACK_LOG_QN)
+        client._async_create_note_log.assert_awaited_once()
         create_kwargs = client._async_create_note_log.await_args.kwargs
         assert create_kwargs["element_guid"] == "profile-guid-123"
         assert create_kwargs["body"]["class"] == "NewAttachmentRequestBody"

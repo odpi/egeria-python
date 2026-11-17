@@ -1,0 +1,9 @@
+{
+  "about": "Rows accepted as not fixable in pyegeria. Keys are 'command|attribute', or '*|attribute' / 'command|*'. They never fail the gate; when one comes back MATCH the gate says 'remove from known gaps'. Each entry needs a reason and a reference. An entry with a 'verdict' covers that verdict only: the same row failing another way is not hidden.",
+  "gaps": {
+    "*|Project Scope": {
+      "reason": "owner decided 2026-11-12: Project gets no scope property (use relationships such as governedBy or assignedTo); F-B stops sending projectScope and reports it not applied, F-C removes the attribute Egeria 002a3ef1 (odpi/egeria#9448) adds ProjectProperties.scope: mapping Dr.Egeria's Project Scope to it is the follow-up (IMPLICATIONS-EGERIA-9448-2026-11-13 §1.3); until then pyegeria reports it not applied.",
+      "ref": "BRIEF-PYEGERIA-FB-UNAPPLIED-ATTRIBUTES-2026-11-12.md group 7; Coordinator relay 2026-11-12"
+    }
+  }
+}

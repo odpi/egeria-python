@@ -114,8 +114,9 @@ def test_drl_lineage_failure_keeps_the_asset_population():
 
     from pyegeria.view import overview_metrics as om
     mgr, _ = _failing_clients()
-    mgr.find_metadata_elements.side_effect = None
-    mgr.find_metadata_elements.return_value = [{"elementGUID": "a1", "type": {"typeName": "CSVFile"}}]
+    # pages like Egeria (pager step 6: the Asset find is paged): one Asset, then null
+    mgr.find_metadata_elements.side_effect = lambda body, *a, **kw: (
+        [{"elementGUID": "a1", "type": {"typeName": "CSVFile"}}] if not body.get("startFrom") else "No elements found")
     ce = MagicMock(spec=["get_relationships"])
     ce.get_relationships.side_effect = RuntimeError("boom")
     result = om.drl_readiness_gates(mgr, ce)
@@ -240,13 +241,14 @@ def _clients():
     mgr.platform_url, mgr.view_server = "https://localhost:9443", "test-server"
     assets = [_asset("a1", "d", ["Confidentiality", "ZoneMembership"]),
               _asset("a2"), _asset("a3", "d", upd="2025-01-01T00:00:00+00:00")]
-    # Both fakes page like Egeria (rows from startFrom, then an empty page): the scans read to an empty page.
+    # Both fakes page like Egeria (rows from startFrom, then null; [] would be a filtered page, pager step 4).
     mgr.find_metadata_elements.side_effect = lambda body, *a, **k: assets[body.get("startFrom", 0):][:body.get(
-        "pageSize") or len(assets)]
+        "pageSize") or len(assets)] or "No elements found"
     mgr.get_control_implementation_summary.return_value = {"byStatus": {
         "NOT_STARTED": 1, "PLANNED": 0, "PARTIALLY_IMPLEMENTED": 0, "IMPLEMENTED": 2, "OTHER": 0}}
     ce = MagicMock(spec=["get_relationships"])
-    ce.get_relationships.side_effect = lambda *a, body=None, **k: [_REL][(body or {}).get("startFrom", 0):]
+    ce.get_relationships.side_effect = lambda *a, body=None, **k: (
+        [_REL][(body or {}).get("startFrom", 0):] or "No elements found")
     return mgr, ce
 
 

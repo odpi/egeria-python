@@ -13,6 +13,7 @@ make sure the companion service is also configured and running.
 
 from typing import Optional
 
+from pyegeria.core._no_password import NO_PASSWORD, carried_password, password_as_given, resolve_password
 from pyegeria.core._server_client import ServerClient
 from pyegeria.view.base_report_formats import select_report_spec, get_report_spec_match
 from pyegeria.view.output_formatter import (
@@ -65,7 +66,7 @@ class RegisteredInfo(ServerClient):
         self.view_server = view_server
         self.platform_url = platform_url
         self.user_id = user_id
-        self.user_pwd = user_pwd
+        self.user_pwd = password_as_given(user_pwd)
         self.reg_command_root = (
             f"{self.platform_url}/open-metadata/platform-services/"
             f"server-platform/registered-services"
@@ -125,14 +126,15 @@ class RegisteredInfo(ServerClient):
 
         # Choose a report spec
         columns_struct = None
-        if isinstance(report_spec, str):
-            columns_struct = select_report_spec(report_spec, output_format)
-        elif isinstance(report_spec, dict):
-            columns_struct = get_report_spec_match(report_spec, output_format)
-        else:
-            columns_struct = select_report_spec("Registered-Services", output_format)
-        if columns_struct is None:
-            columns_struct = select_report_spec("Default", output_format)
+        with self._spec_identity():  # EGERIA-tier reads as this client (spec-cache T2)
+            if isinstance(report_spec, str):
+                columns_struct = select_report_spec(report_spec, output_format)
+            elif isinstance(report_spec, dict):
+                columns_struct = get_report_spec_match(report_spec, output_format)
+            else:
+                columns_struct = select_report_spec("Registered-Services", output_format)
+            if columns_struct is None:
+                columns_struct = select_report_spec("Default", output_format)
 
         return self._generate_registered_info_output(
             elements=elements,
@@ -179,14 +181,15 @@ class RegisteredInfo(ServerClient):
             return elements or "No severities found"
 
         columns_struct = None
-        if isinstance(report_spec, str):
-            columns_struct = select_report_spec(report_spec, output_format)
-        elif isinstance(report_spec, dict):
-            columns_struct = get_report_spec_match(report_spec, output_format)
-        else:
-            columns_struct = select_report_spec("Severity-Definitions", output_format)
-        if columns_struct is None:
-            columns_struct = select_report_spec("Default", output_format)
+        with self._spec_identity():  # EGERIA-tier reads as this client (spec-cache T2)
+            if isinstance(report_spec, str):
+                columns_struct = select_report_spec(report_spec, output_format)
+            elif isinstance(report_spec, dict):
+                columns_struct = get_report_spec_match(report_spec, output_format)
+            else:
+                columns_struct = select_report_spec("Severity-Definitions", output_format)
+            if columns_struct is None:
+                columns_struct = select_report_spec("Default", output_format)
 
         return self._generate_registered_info_output(
             elements=elements,
@@ -232,14 +235,15 @@ class RegisteredInfo(ServerClient):
             return elements or "no types found"
 
         columns_struct = None
-        if isinstance(report_spec, str):
-            columns_struct = select_report_spec(report_spec, output_format)
-        elif isinstance(report_spec, dict):
-            columns_struct = get_report_spec_match(report_spec, output_format)
-        else:
-            columns_struct = select_report_spec("Asset-Types", output_format)
-        if columns_struct is None:
-            columns_struct = select_report_spec("Default", output_format)
+        with self._spec_identity():  # EGERIA-tier reads as this client (spec-cache T2)
+            if isinstance(report_spec, str):
+                columns_struct = select_report_spec(report_spec, output_format)
+            elif isinstance(report_spec, dict):
+                columns_struct = get_report_spec_match(report_spec, output_format)
+            else:
+                columns_struct = select_report_spec("Asset-Types", output_format)
+            if columns_struct is None:
+                columns_struct = select_report_spec("Default", output_format)
 
         return self._generate_registered_info_output(
             elements=elements,

@@ -27,12 +27,14 @@ def _mgr(**attrs):
 
 def _pages(rows):
     """A get_relationships / find_metadata_elements fake that pages like Egeria: the rows from the
-    body's startFrom (where the scans put it), then an empty page -- the only end-of-scan signal."""
+    body's startFrom (where the scans put it), then null ("No elements found": the elements key absent) --
+    the end-of-scan signal. [] would be a filtered page (pager step 4). On these suspect paths the pager
+    probes past the null, finds nothing, and the figures come back marked unconfirmed (ruling (ii))."""
     def fake(*args, **kw):
         body = kw.get("body") or next((a for a in args if isinstance(a, dict)), None) or {}
         start = body.get("startFrom", kw.get("start_from", 0)) or 0
         size = body.get("pageSize", kw.get("page_size", 0)) or om.DEFAULT_CAP
-        return list(rows[start:start + size])
+        return list(rows[start:start + size]) or "No elements found"
     return fake
 
 
@@ -89,9 +91,12 @@ def test_count_elements_native_returns_plain_int():
 def test_count_elements_falls_back_when_no_native_method():
     mgr = _mgr()
     mgr.find_metadata_elements.side_effect = _pages([{"a": 1}, {"b": 2}, {"c": 3}])
-    n = om.count_elements(mgr, type_name="Asset", population="viewer")
+    with om.recording_unconfirmed() as scans:
+        n = om.count_elements(mgr, type_name="Asset", population="viewer")
     assert n == 3
-    mgr.find_metadata_elements.assert_called_once()
+    # pager step 5: the fallback pages (one short page is not the total): the null at 500, then 6 probes,
+    # and the count is a lower bound (find_metadata_elements is NULL_NOT_END)
+    assert mgr.find_metadata_elements.call_count == 8 and scans[0]["read"] == 3
 
 
 def test_count_elements_falls_back_when_native_raises():
@@ -122,8 +127,12 @@ def test_count_elements_passes_as_of_and_classifications():
 def test_count_relationships_viewer_path_without_expert():
     ce = MagicMock()
     ce.get_relationships.side_effect = _pages([{"a": 1}, {"b": 2}])
-    n = om.count_relationships(ce, "Certification", population="viewer")
+    with om.recording_unconfirmed() as scans:
+        n = om.count_relationships(ce, "Certification", population="viewer")
     assert n == 2
+    # a bare int can't carry the mark: the scan is recorded, and the executor puts it on the output
+    assert scans == [{"count": "Certification relationships", "unconfirmed": True, "positions_read": 4000,
+                      "read": 2, "reason": "Egeria didn't confirm there are no more"}]
 
 
 def test_count_relationships_none_on_failure():
@@ -212,6 +221,9 @@ def test_governed_coverage_extracts_classifications_and_zones():
     assert result["governedCount"] == 2
     assert result["byClassification"] == {"Confidentiality": 1, "ZoneMembership": 1}
     assert result["topZones"] == [{"zone": "clinical-trial", "count": 1}]
+    assert result["unconfirmed"]["governedCount"]["words"] == "at least 2"   # find_metadata_elements: B5, suspect
+    assert set(result["unconfirmed"]) == {"governedCount", "fullyGoverned", "partialZoneOnly", "byClassification",
+                                          "topZones"}
 
 
 def test_governed_coverage_pages_past_the_first_page():
@@ -223,7 +235,12 @@ def test_governed_coverage_pages_past_the_first_page():
     r = om.governed_coverage(mgr)
     assert r["governedCount"] == om.DEFAULT_CAP + 1 and r["governedCapped"] is False
     assert r["byClassification"] == {"Confidentiality": om.DEFAULT_CAP + 1}
-    assert [c.args[0]["startFrom"] for c in mgr.find_metadata_elements.call_args_list] == [0, 500, 1000]
+    # pager step 4: to Egeria's null at 1000, then 6 probes (NULL_NOT_END); the figures are marked unconfirmed
+    assert [c.args[0]["startFrom"] for c in mgr.find_metadata_elements.call_args_list] == [
+        k * 500 for k in range(9)]
+    assert r["unconfirmed"]["governedCount"] == {"unconfirmed": True, "positions_read": 4500,
+                                                 "reason": "Egeria didn't confirm there are no more", "words": "at least 501"}
+    assert r["unconfirmed"]["byClassification"]["words"].startswith("each count is at least what is shown")
 
 
 def test_governed_coverage_incomplete_scan_is_not_measured():
@@ -257,6 +274,9 @@ def test_certifications_summary_shape_and_expiry():
     assert result["soon"][0]["name"] == "cert-A"
     assert result["licenses"] == 1
     assert result["exceptions"] == 0
+    assert {k: m["words"] for k, m in result["unconfirmed"].items()} == {
+        "active": "at least 2", "expiring90": "at least 1", "licenses": "at least 1", "exceptions": "at least 0",
+        "soon": "each count is at least what is shown; Egeria didn't confirm there are no more"}
 
 
 def test_certifications_summary_degrades_on_failure():
@@ -302,8 +322,11 @@ def test_semantic_grounding_counts_distinct_assets_not_links():
     assert result["groundedAssets"] == 2          # distinct Assets, not 6 links
     assert result["groundingLinksNotOnAsset"] == 1  # the glossary-category link
     assert result["groundedAssetTotal"] == 40         # the viewer Asset total
-    assert result["groundedAssetPct"] == 5            # 2 / 40
-    assert result["groundingLinks"] == 6 and result["groundingPct"] == 15   # links per hundred Assets
+    # pager step 4, ruling (ii): the scan ended unconfirmed, so 2 is "found", and 2/40 is NOT stated: 40 is a
+    # separate count, not the same read
+    assert result["unconfirmed"]["groundedAssets"]["words"] == "2 found; Egeria didn't confirm there are no more"
+    assert result["groundedAssetPct"] is None and result["groundedAssetNote"] == "The share was not measured: its numerator was read without Egeria confirming there are no more, and its denominator is a separate count, so the share isn't from one read."
+    assert result["groundingLinks"] == 6 and result["groundingPct"] == 15   # native: unchanged
 
 
 def _column_assignment(i, column, asset, memento=False):
@@ -336,8 +359,8 @@ def test_semantic_grounding_counts_the_asset_a_columns_term_grounds():
     ce = MagicMock()
     ce.get_relationships.side_effect = _pages(rels)
     result = om.semantic_grounding(mgr, ce)
-    assert result["groundedAssets"] == 2 and result["groundedAssetPct"] == 10
-    assert result["groundedAssetNote"] is None
+    assert result["groundedAssets"] == 2 and result["groundedAssetPct"] is None   # unconfirmed: not a share
+    assert result["groundedAssetNote"] == "The share was not measured: its numerator was read without Egeria confirming there are no more, and its denominator is a separate count, so the share isn't from one read."
     assert result["groundingLinksNotOnAsset"] == 2   # the memento column and the process: shown, not dropped
 
 
@@ -356,8 +379,9 @@ def test_semantic_grounding_on_live_relationship_ends():
     ce = MagicMock()
     ce.get_relationships.side_effect = _pages(rels)
     result = om.semantic_grounding(mgr, ce)
-    assert result["groundedAssets"] == 1 and result["groundedAssetPct"] == 2
+    assert result["groundedAssets"] == 1 and result["groundedAssetPct"] is None   # unconfirmed: not a share
     assert result["groundingLinksNotOnAsset"] == 1 and result["groundingLinksScanned"] == 2
+    assert result["unconfirmed"]["groundingLinksScanned"]["words"] == "at least 2"
 
 
 def test_semantic_grounding_asset_itself_and_its_columns_count_once():
@@ -368,7 +392,7 @@ def test_semantic_grounding_asset_itself_and_its_columns_count_once():
     ce = MagicMock()
     ce.get_relationships.side_effect = _pages(rels)
     result = om.semantic_grounding(mgr, ce)
-    assert result["groundedAssets"] == 1 and result["groundedAssetPct"] == 10
+    assert result["groundedAssets"] == 1 and result["groundedAssetPct"] is None   # unconfirmed: not a share
     assert result["groundingLinksNotOnAsset"] == 0
 
 
@@ -388,6 +412,7 @@ def test_semantic_grounding_share_is_not_measured_when_the_viewer_asset_total_is
     with om.recording_unmeasured() as notes:
         result = om.semantic_grounding(mgr, ce)
     assert result["groundedAssets"] == 2           # the count always shows
+    assert result["unconfirmed"]["groundedAssets"]["words"] == "2 found; Egeria didn't confirm there are no more"
     assert result["groundedAssetTotal"] is None and result["groundedAssetPct"] is None   # never mixed populations
     assert result["groundedAssetNote"].startswith("The share of Assets grounded was not measured")
     assert any(n["count"] == "Asset" for n in notes)
@@ -476,7 +501,9 @@ def test_ai_ready_assets_requires_all_three_criteria():
         {"end1": {"guid": "a4"}, "end2": {"guid": "other-asset"}},
     ])
     result = om.ai_ready_assets(mgr, ce)
+    marks = result.pop("unconfirmed")   # the DataFlow scan ended unconfirmed (ruling (ii))
     assert result == {"aiReadyCount": 1, "total": 4, "capped": False}
+    assert marks["aiReadyCount"]["words"] == "at least 1"
 
 
 def test_ai_ready_assets_empty_catalog():
@@ -485,7 +512,9 @@ def test_ai_ready_assets_empty_catalog():
     ce = MagicMock()
     ce.get_relationships.side_effect = _pages([])
     result = om.ai_ready_assets(mgr, ce)
+    marks = result.pop("unconfirmed")
     assert result == {"aiReadyCount": 0, "total": 0, "capped": False}
+    assert marks["aiReadyCount"]["words"] == "at least 0"   # never a bare 0 from an unconfirmed scan
 
 
 def test_ai_ready_assets_lineage_query_failure_is_unmeasured():
@@ -558,6 +587,10 @@ def test_drl_readiness_gates_narrows_ai_ready_by_recency():
     assert result["total"] == 3
     assert result["aiReadyCount"] == 2
     assert result["aiReadyRecentCount"] == 1
+    assert result["unconfirmed"]["aiReadyCount"]["words"] == "at least 2"
+    assert result["unconfirmed"]["aiReadyRecentCount"]["words"] == "at least 1"
+    # the Portal B1 read-back: byModality is marked from pyegeria (one source), as "counts"
+    assert result["unconfirmed"]["byModality"]["words"].startswith("each count is at least what is shown")
     assert result["byModality"] == {"tabular": 1, "text_media": 1, "other": 1}
 
 
@@ -570,6 +603,7 @@ def test_drl_readiness_gates_empty_catalog():
     assert result["total"] == 0
     assert result["aiReadyCount"] == 0
     assert result["aiReadyRecentCount"] == 0
+    assert result["unconfirmed"]["aiReadyCount"]["words"] == "at least 0"   # never a bare 0 from the scan
     assert result["byModality"] == {"tabular": 0, "text_media": 0, "other": 0}
 
 
@@ -583,6 +617,7 @@ def test_drl_readiness_gates_missing_update_time_not_counted_recent():
     result = om.drl_readiness_gates(mgr, ce)
     assert result["aiReadyCount"] == 1
     assert result["aiReadyRecentCount"] == 0
+    assert result["unconfirmed"]["aiReadyRecentCount"]["words"] == "at least 0"
 
 
 def _bv_mgr(asset=4, confidential=2, described=2, duplicate=0):
@@ -656,6 +691,9 @@ def test_feedback_summary_sums_by_type():
     result = om.feedback_summary(ce, population="viewer")
     assert result["byType"] == {"ratings": 3, "comments": 1, "likes": 0, "tags": 2, "noteLogs": 0}
     assert result["total"] == 6
+    marks = result["unconfirmed"]
+    assert marks["total"]["words"] == "at least 6" and marks["byType.likes"]["words"] == "at least 0"
+    assert all(m["unconfirmed"] and m["reason"] == "Egeria didn't confirm there are no more" for m in marks.values())
 
 
 def test_feedback_summary_counts_the_repository_through_a_client_with_the_native_count():
@@ -748,6 +786,8 @@ def test_active_contributors_dedupes_by_username_across_types():
     result = om.active_contributors(ce)
     assert result["contributors"] == 2  # alice, bob
     assert result["byType"] == {"ratings": 1, "comments": 1, "likes": 0, "tags": 0, "noteLogs": 1}
+    assert result["unconfirmed"]["contributors"]["words"] == "2 found; Egeria didn't confirm there are no more"   # a distinct count
+    assert result["unconfirmed"]["byType.likes"]["words"] == "0 found; Egeria didn't confirm there are no more"
 
 
 def test_active_contributors_degrades_per_type_on_failure():
@@ -761,6 +801,8 @@ def test_active_contributors_degrades_per_type_on_failure():
     assert result["byType"]["ratings"] is None
     assert result["byType"]["comments"] == 1
     assert result["contributors"] is None
+    assert set(result["unconfirmed"]) == {"byType.comments", "byType.likes", "byType.tags",
+                                          "byType.noteLogs"}   # a None figure carries no mark
 
 
 # ── metric_trend ──────────────────────────────────────────────────────────
@@ -865,8 +907,9 @@ def test_contextualised_coverage_counts_only_asset_subtype_ends():
     ])
     result = om.contextualised_coverage(mgr, ce)
     assert result["contextualisedCount"] == 2
+    assert result["unconfirmed"]["contextualisedCount"]["words"] == "2 found; Egeria didn't confirm there are no more"
     assert result["assetTotal"] == 384
-    assert result["contextualisedPct"] == round(100.0 * 2 / 384, 1)
+    assert result["contextualisedPct"] is None   # 384 is a separate count: not a share of one read
 
 
 def test_contextualised_coverage_dedupes_by_guid():
@@ -878,6 +921,7 @@ def test_contextualised_coverage_dedupes_by_guid():
     ])
     result = om.contextualised_coverage(mgr, ce)
     assert result["contextualisedCount"] == 1
+    assert result["unconfirmed"]["contextualisedCount"]["words"] == "1 found; Egeria didn't confirm there are no more"
 
 
 def test_contextualised_coverage_matches_asset_typename_directly_too():
@@ -889,6 +933,7 @@ def test_contextualised_coverage_matches_asset_typename_directly_too():
     ])
     result = om.contextualised_coverage(mgr, ce)
     assert result["contextualisedCount"] == 1
+    assert result["unconfirmed"]["contextualisedCount"]["unconfirmed"] is True
 
 
 def test_contextualised_coverage_relationship_fetch_failure_yields_none_count():
@@ -907,6 +952,7 @@ def test_contextualised_coverage_zero_asset_total_yields_none_pct_not_zero_divis
     ce.get_relationships.side_effect = _pages([])
     result = om.contextualised_coverage(mgr, ce)
     assert result["contextualisedCount"] == 0
+    assert result["unconfirmed"]["contextualisedCount"]["words"] == "0 found; Egeria didn't confirm there are no more"   # never a bare 0
     assert result["assetTotal"] is None
     assert result["contextualisedPct"] is None
 
@@ -934,6 +980,7 @@ def test_feedback_summary_total_none_unless_all_measured():
     r = om.feedback_summary(ce, population="viewer")
     assert r["byType"]["comments"] is None and r["byType"]["ratings"] == 3
     assert r["total"] is None
+    assert r["unconfirmed"]["byType.ratings"]["words"] == "at least 3" and "total" not in r["unconfirmed"]
 
 
 def test_governed_coverage_and_business_value_none_on_failed_find():
@@ -1336,4 +1383,6 @@ def test_scope_none_reaches_the_server_default_through_every_composite():
     assert len(calls) == 1 + 5 + 2 + 4 + 2 * 4 and all(c.kwargs == {} for c in calls)
     ce = MagicMock()
     ce.get_relationships.side_effect = _pages([{}] * 2)
-    assert om.feedback_summary(ce, scope=None)["total"] == 10   # the get_relationships path, not None
+    viewer = om.feedback_summary(ce, scope=None)
+    assert viewer["total"] == 10   # the get_relationships path, not None
+    assert viewer["unconfirmed"]["total"]["words"] == "at least 10"   # a suspect scan: never a bare total

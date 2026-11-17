@@ -6,6 +6,7 @@ Copyright Contributors to the ODPi Egeria project.
 
 """
 
+from pyegeria.core._no_password import NO_PASSWORD, carried_password, password_as_given, resolve_password
 import asyncio
 import re
 from typing import Any, Optional
@@ -58,7 +59,7 @@ class ValidMetadataManager(ServerClient):
         self.view_server = view_server
         self.platform_url = platform_url
         self.user_id = user_id
-        self.user_pwd = user_pwd
+        self.user_pwd = password_as_given(user_pwd)
 
         self.valid_m_command_base: str = f"/api/open-metadata/valid-metadata"
         self.page_size = max_paging_size

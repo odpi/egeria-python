@@ -15,6 +15,7 @@ from textual.screen import ModalScreen
 from textual.widgets import DataTable, Header, Static, Footer, Input, Button, Select, TextArea
 
 from pyegeria import COMMENT_TYPES
+from paging_support import is_complete, none_words
 from profile_utils import set_screen_heading
 
 
@@ -290,18 +291,24 @@ class ElementFeedbackScreen(ModalScreen):
         for row in feedback["comments"]:
             comments.add_row(*row, key=row[4])
 
+        # Counts are "at least" unless Egeria confirmed every comment, like and rating was read
+        complete = feedback.get("complete", True)
+        at_least = "" if complete else "at least "
         likes = feedback["likes"]
-        like_text = f"{likes} {'person likes' if likes == 1 else 'people like'} this"
+        like_text = f"{at_least}{likes} {'person likes' if likes == 1 and complete else 'people like'} this"
         if feedback["i_like"]:
             like_text += " [dim](including you)[/dim]"
         average = feedback["average"]
         rating_count = len(feedback["ratings"])
         if average is None:
-            rating_text = "No star ratings yet" if not rating_count else f"{rating_count} rating(s), no stars given"
+            rating_text = ("No star ratings yet" if complete else "No star ratings in what Egeria returned") \
+                if not rating_count else f"{at_least}{rating_count} rating(s), no stars given"
         else:
-            rating_text = f"Average rating {average:.1f} of 5 from {rating_count} rating(s)"
-        self.query_one("#feedback_summary", Static).update(
-            f"{like_text}\n{rating_text}\n{len(feedback['comments'])} comment(s)")
+            rating_text = f"Average rating {average:.1f} of 5 from {at_least}{rating_count} rating(s)"
+        summary = f"{like_text}\n{rating_text}\n{at_least}{len(feedback['comments'])} comment(s)"
+        if feedback.get("note"):
+            summary += f"\n[dim]{feedback['note']}[/dim]"
+        self.query_one("#feedback_summary", Static).update(summary)
         self.query_one("#toggle_like_btn", Button).label = "Unlike" if feedback["i_like"] else "Like"
         self.query_one("#rate_element_btn", Button).label = "Change Rating" if feedback["my_rating"] else "Rate"
 
@@ -470,6 +477,7 @@ class CommunityScreen(ModalScreen):
             return
         table = self.query_one("#community_posts_table", DataTable)
         table.clear()
+        self.posts_complete = is_complete(posts)
         self.post_text = {}
         for title, author, posted, text, guid in posts:
             table.add_row(title, author, posted, guid, key=guid)
@@ -499,8 +507,10 @@ class CommunityScreen(ModalScreen):
         if table.row_count:
             guid = table.get_row_at(table.cursor_row)[3]
             text = self.post_text.get(guid, "")
-        else:
+        elif getattr(self, "posts_complete", True):
             text = "[dim]No posts yet - be the first to post[/dim]"
+        else:
+            text = f"[dim]{none_words('posts', complete=False)}[/dim]"
         self.query_one("#community_post_text", Static).update(text)
 
     @on(DataTable.RowHighlighted, "#community_posts_table")

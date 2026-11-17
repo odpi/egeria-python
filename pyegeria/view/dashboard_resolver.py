@@ -141,9 +141,29 @@ def is_not_visible_error(exc: BaseException) -> bool:
     return isinstance(exc, PyegeriaUnauthorizedException) and getattr(exc, "related_http_code", None) == 403
 
 
+def is_server_not_available_error(exc: BaseException) -> bool:
+    """Egeria's OMAG-MULTI-TENANT-404-*: the server (or a service on it) isn't available. A 404 by number, but
+    a fact about the platform, never about the element (pyegeria raises it as an API error, not not-found)."""
+    info = getattr(exc, "additional_info", None)
+    message_id = str(info.get("exceptionErrorMessageId") or "") if isinstance(info, dict) else ""
+    try:
+        text = str(exc)
+    except Exception:  # noqa: BLE001
+        text = ""
+    return message_id.startswith("OMAG-MULTI-TENANT-404") or "OMAG-MULTI-TENANT-404" in text
+
+
 def _is_not_found_error(exc: BaseException) -> bool:
+    """Egeria's specific element not-found. Never OMAG-MULTI-TENANT-404 (server not available), whose text also
+    carries "-404-"."""
     from pyegeria.core._exceptions import PyegeriaNotFoundException
-    return isinstance(exc, PyegeriaNotFoundException) or "-404-" in str(exc)
+    if is_server_not_available_error(exc):
+        return False
+    try:
+        text = str(exc)
+    except Exception:  # noqa: BLE001
+        text = ""
+    return isinstance(exc, PyegeriaNotFoundException) or "-404-" in text
 
 
 def placements_for_perspective(placements: List[Any], perspective: Optional[str]) -> List[Any]:
@@ -152,6 +172,11 @@ def placements_for_perspective(placements: List[Any], perspective: Optional[str]
     if not perspective:
         return list(placements)
     return [p for p in placements if not (getattr(p, "perspectives", None) or []) or perspective in p.perspectives]
+
+
+def _authoring_keys():
+    from pyegeria.authoring.publication import AUTHORING_KEYS
+    return AUTHORING_KEYS
 
 
 def report_from_element(element: Dict[str, Any], fallback_name: str = "") -> ResolvedReport:
@@ -174,7 +199,9 @@ def report_from_element(element: Dict[str, Any], fallback_name: str = "") -> Res
         description=props.get("description") or "",
         report_spec=extra.get("reportSpec"),
         output_format=extra.get("outputFormat"),
-        params={k: v for k, v in extra.items() if k not in ("reportSpec", "outputFormat", "analyticParams")},
+        # The authoring API's bookkeeping keys (publication stamp, draft marker, pin) aren't parameters.
+        params={k: v for k, v in extra.items()
+                if k not in ("reportSpec", "outputFormat", "analyticParams") and k not in _authoring_keys()},
         analytic_params=analytic,
     )
 
@@ -410,7 +437,19 @@ async def async_resolve_sheet(client: Any, sheet: Any, *, perspective: Optional[
                               check_spec_visibility: bool = True, fetch_missing: bool = True) -> ResolvedSheet:
     """Resolve a sheet the caller has ALREADY read from Egeria (an EgeriaDashboardSheet, e.g. from its own
     cache of load_dashboard_sheet), so an app that caches sheet reads does not walk the chain twice. The
-    sheet must have been read as the same viewer as `client`. Otherwise as async_resolve_dashboard_sheet."""
+    sheet must have been read as the same viewer as `client`. Otherwise as async_resolve_dashboard_sheet.
+
+    The EGERIA tier is read for the viewer's credential identity (spec-cache identity ruling, item 3): a private
+    cache bound to someone else isn't loaded."""
+    from pyegeria.view.egeria_spec_cache import client_credential_identity, spec_identity
+    with spec_identity(client_credential_identity(client)):
+        return await _async_resolve_sheet(client, sheet, perspective=perspective, run=run, spec_lookup=spec_lookup,
+                                          check_spec_visibility=check_spec_visibility, fetch_missing=fetch_missing)
+
+
+async def _async_resolve_sheet(client: Any, sheet: Any, *, perspective: Optional[str], run: bool,
+                               spec_lookup: Optional[Callable], check_spec_visibility: bool,
+                               fetch_missing: bool) -> ResolvedSheet:
     resolved = ResolvedSheet(name=sheet.name, heading=sheet.heading, description=sheet.description or "",
                              family=sheet.family, aliases=list(sheet.aliases or []), guid=getattr(sheet, "guid", None),
                              breaks=list(getattr(sheet, "breaks", None) or []), perspective=perspective,
