@@ -5015,17 +5015,13 @@ class ServerClient(BaseServerClient):
         """
 
         if body is None and emoji:
+            # The like carries the caller's emoji. No zone is set: Egeria anchors a Like to the liked element,
+            # so it is exactly as visible as that element (this endpoint ignores initialClassifications).
             body = {
-              "class" : "NewAttachmentRequestBody",
-              "initialClassifications" : {
-                "ZoneMembership" : {
-                  "class" : "ZoneMembershipProperties",
-                  "zoneMembership" : "erinoverview"
-                }
-              },
+              "class" : "UpdateElementRequestBody",
               "properties" : {
                 "class" : "LikeProperties",
-                "emoji" : "Add characters here as text"
+                "emoji" : emoji
                 }
             }
         url = f"{self.command_root}feedback-manager/elements/{element_guid}/likes"
