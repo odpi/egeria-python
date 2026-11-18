@@ -562,8 +562,8 @@ All files are in
 |---|---|
 | `my_profile.py` | The `App` subclass, `MyProfileApp`: startup, loading the profile, filling the main tables, and shared actions such as comments. |
 | `MainScreen.py` | The main dashboard screen: its layout, and keeping track of which table and row are selected. |
-| `*Screen.py`, `*Screens.py` | One class per screen or dialog: `SplashScreen`, `ShopForDataScreen`, `MyBookMarksScreen`, `AddCommentScreen`, the `Edit*`/`Add*` screens, and so on. |
-| `*_handler.py` | **Mixins**, each holding one feature area's logic: `shop_for_data_handler.py`, `tech_types_handler.py`, `team_roles_handler.py`, `elements_crud_handler.py`, `feedback_handler.py`, `bookmarks_handler.py`. |
+| `*Screen.py`, `*Screens.py` | One class per screen or dialog: `SplashScreen`, `ShopForDataScreen`, `MyBookMarksScreen`, `AddCommentScreen`, `CommunitiesScreen`, `CommunityScreen`, `ProjectsScreen`, `ProjectScreen`, the `Edit*`/`Add*` screens, and so on. |
+| `*_handler.py` | **Mixins**, each holding one feature area's logic: `shop_for_data_handler.py`, `tech_types_handler.py`, `team_roles_handler.py`, `elements_crud_handler.py`, `feedback_handler.py`, `bookmarks_handler.py`, `network_handler.py`, `community_handler.py`, `project_handler.py`. |
 | `profile_utils.py` | Plain functions with no UI code: data clean-up, flattening Egeria elements (`element_summary`), reading a row's GUID and qualified name (`row_identity`), and the environment check. |
 | `my_profile.tcss` | All the Textual CSS for the app. |
 | `RETURN_CODES.md` | The catalogue of numeric codes that screens pass back through `dismiss()`. |
@@ -574,7 +574,7 @@ Two design choices keep `my_profile.py` manageable.
 
 ```python
 class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, ElementsCrudMixin, FeedbackMixin,
-                   BookmarksMixin):
+                   BookmarksMixin, NetworkMixin, CommunitiesMixin, ProjectsMixin):
 ```
 
 Each mixin adds the methods for one feature. For example, `ShopForDataMixin` adds

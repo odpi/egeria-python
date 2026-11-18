@@ -125,7 +125,19 @@ CommunitiesScreen {
     background: $background;
 }
 
+/* Title row, then my projects + find side by side */
+ProjectsScreen {
+    grid-rows: auto 1fr;
+    background: $background;
+}
+
 #my_communities_container {
+    column-span: 2;
+    width: 100%;
+    height: 100%;
+}
+
+#my_projects_container {
     column-span: 2;
     width: 100%;
     height: 100%;
@@ -136,21 +148,35 @@ CommunitiesScreen {
     height: 100%;
 }
 
+#find_projects_container {
+    width: 100%;
+    height: 100%;
+}
+
 #my_communities_table {
     width: 100%;
     height: 1fr;
 }
 
+#my_projects_table {
+    width: 100%;
+    height: 1fr;
+}
+
 #my_communities_buttons,
-#found_communities_buttons {
+#found_communities_buttons,
+#my_projects_buttons,
+#found_projects_buttons {
     height: auto;
 }
 
-#join_assignment_type, #creator_assignment_type {
+#join_assignment_type, #creator_assignment_type,
+#project_join_assignment_type, #project_creator_assignment_type, #project_type_select {
     width: 20;
 }
 
-#communities_found_table {
+#communities_found_table,
+#projects_found_table {
     height: auto;
     max-height: 12;
 }
@@ -161,24 +187,33 @@ CommunityScreen {
     background: $background;
 }
 
-#community_blog_container {
+ProjectScreen {
+    grid-rows: auto 1fr 1fr;
+    background: $background;
+}
+
+#community_blog_container,
+#project_blog_container {
     column-span: 2;
     width: 100%;
     height: 100%;
 }
 
-#community_members_container {
+#community_members_container,
+#project_members_container {
     width: 100%;
     height: 100%;
 }
 
-#community_resources_container {
+#community_resources_container,
+#project_resources_container {
     column-span: 2;
     width: 100%;
     height: 100%;
 }
 
-#community_comments_container {
+#community_comments_container,
+#project_comments_container {
     width: 100%;
     height: 100%;
 }
@@ -186,13 +221,19 @@ CommunityScreen {
 #community_posts_table,
 #community_members_table,
 #community_resources_table,
-#community_comments_table {
+#community_comments_table,
+#project_posts_table,
+#project_members_table,
+#project_resources_table,
+#project_comments_table {
     height: auto;
     max-height: 12;
 }
 
 #community_blog_buttons,
-#community_join_controls {
+#community_join_controls,
+#project_blog_buttons,
+#project_join_controls {
     height: auto;
 }
 
@@ -232,20 +273,23 @@ ElementFeedbackScreen {
     max-height: 16;
 }
 
-#community_post_text {
+#community_post_text, #project_post_text {
     padding: 1 0;
 }
 
-NewBlogPostScreen, AddCommunityCommentScreen, RateElementScreen {
+NewBlogPostScreen, AddCommunityCommentScreen, RateElementScreen,
+NewProjectBlogPostScreen, AddProjectCommentScreen, CreateProjectScreen, ConfirmLeaveProjectScreen {
     grid-rows: auto 1fr;
     background: $background;
 }
 
-#new_blog_post_container, #add_community_comment_container, #create_community_container, #rate_element_container {
+#new_blog_post_container, #add_community_comment_container, #create_community_container, #rate_element_container,
+#new_project_blog_post_container, #add_project_comment_container, #create_project_container, #confirm_leave_project_container {
     column-span: 3;
 }
 
-#new_blog_post_container Horizontal, #add_community_comment_container Horizontal, #create_community_container Horizontal, #rate_element_container Horizontal {
+#new_blog_post_container Horizontal, #add_community_comment_container Horizontal, #create_community_container Horizontal, #rate_element_container Horizontal,
+#new_project_blog_post_container Horizontal, #add_project_comment_container Horizontal, #create_project_container Horizontal, #confirm_leave_project_container Horizontal {
     height: auto;
 }
 
@@ -253,7 +297,8 @@ NewBlogPostScreen, AddCommunityCommentScreen, RateElementScreen {
     width: 30;
 }
 
-#blog_post_text, #community_comment_text, #community_mission_text, #rating_review_text {
+#blog_post_text, #community_comment_text, #community_mission_text, #rating_review_text,
+#project_blog_post_text, #project_comment_text, #project_mission_text {
     height: 10;
 }
 
@@ -261,7 +306,7 @@ ModalScreen > Header, ModalScreen > Footer {
     column-span: 3;
 }
 
-#communities_title, #community_title, #element_feedback_title, #rate_element_title, #new_blog_post_title, #add_community_comment_title, #create_community_title, #confirm_leave_community_title, #my_network_title, #confirm_remove_peer_title, #edit_profile_title, #create_profile_title, #edit_teams_title, #edit_roles_title, #edit_communities_title, #edit_identities_title, #status_title, #generic_data_view_title, #feedback_title, #feedback_log_title, .span-3 {
+#communities_title, #community_title, #projects_title, #project_title, #element_feedback_title, #rate_element_title, #new_blog_post_title, #new_project_blog_post_title, #add_community_comment_title, #add_project_comment_title, #create_community_title, #create_project_title, #confirm_leave_community_title, #confirm_leave_project_title, #my_network_title, #confirm_remove_peer_title, #edit_profile_title, #create_profile_title, #edit_teams_title, #edit_roles_title, #edit_communities_title, #edit_identities_title, #status_title, #generic_data_view_title, #feedback_title, #feedback_log_title, .span-3 {
     column-span: 3;
     text-align: center;
     background: #89b4fa;

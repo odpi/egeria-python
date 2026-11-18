@@ -33,6 +33,8 @@ All source files named here are in `my_egeria/my_egeria/`.
 | `network_handler.py`, `MyNetworkScreen.py` | `NetworkMixin` (peers linked by `Peer` relationships), `MyNetworkScreen` and `ConfirmRemovePeerScreen` |
 | `community_handler.py`, `CommunitiesScreen.py` | `CommunitiesMixin` (community membership through `AssignmentScope` relationships, resources, feedback on posts and resources), `CommunitiesScreen`, `CreateCommunityScreen` and `ConfirmLeaveCommunityScreen` |
 | `CommunityScreen.py` | `CommunityScreen` (one community's members, blog, resources and comments, and joining it), `NewBlogPostScreen`, `AddCommunityCommentScreen`, `ElementFeedbackScreen` (likes, ratings and comments on a blog post or resource) and `RateElementScreen` |
+| `project_handler.py`, `ProjectsScreen.py` | `ProjectsMixin` (project membership through `AssignmentScope` relationships, team members, resources & dependencies, blog notes, comments), `ProjectsScreen`, `CreateProjectScreen` and `ConfirmLeaveProjectScreen` |
+| `ProjectScreen.py` | `ProjectScreen` (one project's members, blog, resources & dependencies, and comments, and joining it), `NewProjectBlogPostScreen` and `AddProjectCommentScreen` |
 | `paging_support.py` | Egeria's paging contract as the handlers use it: `read_all`/`PagedRows`, the "at least" and "none" words, and the found / absent / unknown guards that writes check first (see [Paging and write guards](#paging-and-write-guards)) |
 | `UserIdentitiesScreen.py` | Read-only user identity table |
 | `StatusScreen.py` | Result message with copy-GUID |
@@ -94,6 +96,18 @@ classDiagram
         get_element_feedback() / add_element_comment()
         like_element() / unlike_element() / rate_element()
     }
+    class ProjectsMixin {
+        show_projects(find)
+        open_project_row()
+        list_my_projects()
+        search_projects()
+        get_project_members()
+        get_project_resources()
+        create_project()
+        join_project() / leave_project()
+        get_project_blog_posts() / add_project_blog_post()
+        get_project_comments() / add_project_comment()
+    }
     App <|-- MyProfileApp
     TechTypesMixin <|-- MyProfileApp
     ShopForDataMixin <|-- MyProfileApp
@@ -103,6 +117,7 @@ classDiagram
     BookmarksMixin <|-- MyProfileApp
     NetworkMixin <|-- MyProfileApp
     CommunitiesMixin <|-- MyProfileApp
+    ProjectsMixin <|-- MyProfileApp
 ```
 
 - **App bindings:**
@@ -196,12 +211,11 @@ It returns `200` on success and `401` on failure.
 | `blogs_table`, `journal_table` | Note Logs from `My-User-MD` | |
 | `todos_table` | `MyProfile.get_my_to_dos(report_spec="My-User-ToDos")` | |
 | `user_identity_table` | `MyProfile.get_my_profile(report_spec="User-Identities")` | |
-
-| `projects_table` | Projects from `My-User-MD` | |
+| `projects_table` | Projects from `My-User-MD` | `Enter` on a row opens that project: `_on_projects_row_selected` → `open_project_row` → `ProjectScreen` |
 
 `communities_table` is not on the main screen (communities show in User Associations); `_populate_tables_sync` skips any table that isn't composed.
 
-`MainScreen` tracks the selected table and row through focus, highlight, select and cell events. It uses them for `ctrl+t` (edit table), `ctrl+n` (add comment), `ctrl+o` (show comments), `ctrl+k` (bookmark the row) and `ctrl+b` (bookmarks), and `Enter` on a User Associations row opens that community.
+`MainScreen` tracks the selected table and row through focus, highlight, select and cell events. It uses them for `ctrl+t` (edit table), `ctrl+n` (add comment), `ctrl+o` (show comments), `ctrl+k` (bookmark the row) and `ctrl+b` (bookmarks), and `Enter` on a User Associations or Projects row opens that community or project.
 
 ### Other Functions menu dispatch (`handle_option_selected`)
 
@@ -216,6 +230,8 @@ It returns `200` on success and `401` on failure.
 | My Network | `show_my_network()` |
 | Work with Communities | `show_communities()` |
 | Find Community | `show_communities(find=True)`: the same screen, with focus on the search input |
+| Work with Projects | `show_projects()` |
+| Find Project | `show_projects(find=True)`: the same screen, with focus on the search input |
 | Change User | `ChangeUserScreen()`, callback `change_user_callback` |
 | Leave Feedback | `action_feedback()` |
 | Feedback Log | `action_view_feedback_log()` (owner only) |
@@ -743,6 +759,124 @@ sequenceDiagram
 
 ---
 
+## Work with Projects
+
+A user belongs to a project when an actor is linked to it by an `AssignmentScope` relationship, whose `assignmentType` says how they take part. The actor is either the user's own profile or a role they are appointed to. A project's blog is a `NoteLog` attached to it holding `BlogEntry` notes, and comments are attached to the project directly. Its resources are the elements it lists with `ResourceList` relationships, elements `ScopedBy` it, `ProjectDependency` links, and `SupportedProject` relationships. `ProjectsMixin` (`project_handler.py`) makes the Egeria calls; `ProjectsScreen` and `ProjectScreen` drive it through `self.app`. Each call builds a fresh `Egeria` client with a bearer token (`_project_client()`) and closes its session afterwards.
+
+There are three ways in:
+- **Work with Projects** on the Other Functions menu: `show_projects()`.
+- **Find Project** on the same menu: `show_projects(find=True)`, which opens the same screen with focus on the search input (`ProjectsScreen(..., focus_search=True)`).
+- **`Enter` on a Projects row** on the main screen: `_on_projects_row_selected` → `open_project_row(table, row_key)`, which reads the row's name and GUID columns and pushes `ProjectScreen` directly, with `project_callback`.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    participant App as ProjectsMixin
+    participant PS as ProjectsScreen
+    participant Create as CreateProjectScreen
+    participant Confirm as ConfirmLeaveProjectScreen
+    participant EG as Egeria
+
+    User->>App: Other Functions → Work with Projects / Find Project
+    App->>EG: get_my_profile(JSON)
+    App->>PS: push(my project rows, focus_search)
+    PS->>App: search_projects("*")
+    App->>EG: find_projects(JSON, graph_query_depth=0), paged
+    opt open a project (Enter / ctrl+o) — see the next diagram
+        PS->>PS: push ProjectScreen(GUID, name)
+        Note over PS: on return, re-read both lists if the user joined from inside it
+    end
+    opt join (ctrl+n)
+        PS->>App: join_project(GUID, assignment type)
+        App->>EG: link_assignment_scope(GUID, user_GUID, AssignmentScopeProperties)
+        PS->>App: list_my_projects() and search again
+    end
+    opt create (ctrl+t)
+        PS->>Create: push
+        Create-->>PS: {name, description, mission, project_type, assignment type} / None
+        PS->>App: create_project(name, description, mission, project_type, assignment type)
+        App->>EG: unique-name read of the qualified name
+        App->>EG: create_project(NewElementRequestBody, ProjectProperties) only on not-found
+        App->>EG: link_assignment_scope(new GUID, user_GUID, AssignmentScopeProperties) unless "Don't join"
+        PS->>App: list_my_projects() and search again, then highlight the new project
+    end
+    opt leave (ctrl+d)
+        PS->>Confirm: push(project name)
+        Confirm-->>PS: True / False
+        PS->>App: leave_project(GUID)
+        App->>EG: detach_assignment_scope(GUID, user_GUID)
+        PS->>App: list_my_projects() and search again
+    end
+```
+
+| Function | What it does |
+| :--- | :--- |
+| `show_projects(find=False)` | Refuses (with a notice) if `user_GUID` isn't set yet; otherwise pushes `ProjectsScreen(list_my_projects(), focus_search=find)` |
+| `open_project_row(table, row_key)` | Opens the project in a main-screen Projects row `(type, name, description, GUID)`; warns and does nothing if the row has no GUID |
+| `list_my_projects()` | `get_my_profile(JSON)`, then reads the profile's own `assignmentScope` links and each `performsRoles` appointment's `nestedElements`, keeping only `Project` and subtype elements. Returns one `(name, assignment types, linked through, description, GUID)` row per project; "linked through" is `Your profile` and/or `Role: <name>`. `None` if Egeria can't be reached |
+| `search_projects(search_string)` | Pages `find_projects(..., ignore_case=True, graph_query_depth=0)` with `read_all` → `(name, description, qualified name, GUID)` rows as `PagedRows`. The screen drops projects the user already belongs to, and shows the "at least" note, or "none found in what Egeria returned", when the end wasn't confirmed |
+| `join_project(guid, assignment_type)` | `link_assignment_scope(guid, user_GUID, NewRelationshipRequestBody)` with `AssignmentScopeProperties`. Offers `Leader`, `Contributor` and `Observer` (`JOIN_ASSIGNMENT_TYPES`) |
+| `create_project(name, description, mission, project_type, assignment_type)` | Builds the qualified name with `__create_qualified_name__(project_type, name)` and asks Egeria's unique-name read (`by_unique_name`) whether it exists. Found is a "find it below to join it" warning; an unclear answer is refused with the "Couldn't confirm ..." words. Both return `None` and create nothing. On not-found it calls `create_project(NewElementRequestBody)` with `ProjectProperties` (`mission` only when given), then, unless `assignment_type` is empty, links the user's profile. Returns the new GUID. The form offers `Project`, `Campaign`, `Task`, `StudyProject`, `PersonalProject` types and `Leader` (the default), `Contributor`, `Observer` and "Don't join" |
+| `leave_project(guid)` | `detach_assignment_scope(guid, user_GUID, DeleteRelationshipRequestBody)`, using the same GUID order as `link_assignment_scope` (scope first, actor second) |
+
+- **Leaving only unlinks the profile.** The screen refuses to leave a project reached only through a role, because the role may be shared and belongs to whoever manages it.
+- **Refresh.** After a successful create, join or leave the screen re-reads the user's projects and repeats the last search. After a create it also moves the cursor to the new project, in whichever list it appears.
+- **The main screen.** A successful join, leave, or create-and-join sets `projects_changed`. When the user returns to the main screen, `projects_callback` or `project_callback` sees the flag, clears it and calls `call_later(action_refresh)`, so Projects is current. Nothing is refreshed if no membership changed.
+- **Return code.** `ProjectsScreen` dismisses with `200` on `q`.
+
+### A project: team members, blog, resources & dependencies, and comments
+
+`ProjectScreen(guid, name)` loads its four lists when it mounts and reloads a list after a successful add. `ctrl+n` opens `AddProjectCommentScreen` when the comments table has focus, otherwise `NewProjectBlogPostScreen`; each form dismisses with a dict, or `None` on cancel. `Enter` on a blog post or resource, or `ctrl+o` (the resources table when it has focus, otherwise the highlighted post), opens [`ElementFeedbackScreen`](#feedback-on-a-blog-post-or-resource) for it.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    participant PrS as ProjectScreen
+    participant App as ProjectsMixin
+    participant EG as Egeria
+
+    PrS->>App: get_project_members(GUID)
+    App->>EG: get_project_by_guid(JSON, graph_query_depth=1)
+    App->>EG: get_actor_role_by_guid(role, include_only_relationships=[PersonRoleAppointment]) for each role
+    PrS->>App: get_project_blog_posts(GUID)
+    App->>EG: get_attached_note_logs(GUID), paged
+    App->>EG: get_notes_for_note_log(log, "BlogEntry") for each log, paged
+    PrS->>App: get_project_resources(GUID)
+    App->>EG: get_project_by_guid(JSON, graph_query_depth=1, include_only_relationships=[ResourceList, ScopedBy, ProjectDependency, SupportedProject])
+    PrS->>App: get_project_comments(GUID)
+    App->>EG: get_attached_comments(GUID), paged
+    opt join (ctrl+w), shown only when the user isn't a member
+        PrS->>App: join_project(GUID, assignment type)
+        PrS->>App: get_project_members(GUID)
+    end
+    opt new blog post (NewProjectBlogPostScreen)
+        PrS->>App: add_project_blog_post(GUID, name, title, text)
+        App->>EG: unique-name read of NoteLog::<GUID>::ProjectBlog
+        App->>EG: create_note_log(GUID, NewAttachmentRequestBody) only on not-found
+        App->>EG: create_note(log, BlogEntryProperties)
+    end
+    opt add comment (AddProjectCommentScreen)
+        PrS->>App: add_project_comment(GUID, text, type)
+        App->>EG: add_comment_to_element(GUID, text, type)
+    end
+```
+
+| Function | What it does |
+| :--- | :--- |
+| `get_project_members(guid)` | People only. Reads `assignedActors`, `projectTeam`, and `resourceListUsers` from `get_project_by_guid(guid, JSON, graph_query_depth=1)`. A `Person` actor is a direct member. For an actor whose type is or inherits `ActorRole`, it calls `get_actor_role_by_guid(..., graph_query_depth=1, include_only_relationships=["PersonRoleAppointment"])` and takes the `Person` elements in `rolePerformers`. Other actors are skipped. Returns one `(name, assignment types, member through, qualified name, GUID)` row per person, sorted by name; "member through" is `Direct` and/or `Role: <name>`. A role that can't be read is skipped and reported with one warning; `None` if the project itself can't be read |
+| `get_project_blog_posts(guid)` | Pages the `BlogEntry` notes from every note log attached to the project, so posts written by other tools are included. Returns the `LATEST_POSTS` (20) newest as `(title, author, posted, text, GUID)` rows; author and time come from the element header's `versions`. When any read wasn't confirmed complete it warns that newer posts may be missing |
+| `add_project_blog_post(guid, name, title, text)` | Finds the blog note log, qualified name `NoteLog::<guid>::ProjectBlog`, with Egeria's unique-name read. It creates the log (attached, display name "_name_ Blog") only when that read says not-found, then `create_note(log, BlogEntryProperties)`. On any other answer nothing is created or posted (`LookupUnconfirmed`, a warning) |
+| `get_project_resources(guid)` | `get_project_by_guid(guid, JSON, graph_query_depth=1, include_only_relationships=["ResourceList", "ScopedBy", "ProjectDependency", "SupportedProject"])`. Takes `resourceList` (linked as `Resource`, or `Resource: <use>`), `relevantToScopes` (`In scope`), `projectDependencies` (`Dependency`), and `supportedProjects` (`Supported Project`). Returns one `(name, type, linked as, description, GUID)` row per element, sorted by name; `None` if the read fails |
+| `get_project_comments(guid)` | Pages `get_attached_comments(guid, graph_query_depth=0)` → `(comment, type, author, posted, GUID)` rows, newest first, as `PagedRows` (via the shared `_comment_rows`); warns with the "at least" note when the end wasn't confirmed |
+| `add_project_comment(guid, text, type)` | `add_element_comment(guid, text, type)`; the form offers pyegeria's `COMMENT_TYPES` |
+
+- **Joining from here.** `_load_members` sets `is_member` when the app's `user_GUID` is among the members (directly or through a role) and shows the join controls (`project_join_controls`: `Leader`/`Contributor`/`Observer` and **Join Project**, `ctrl+w`) only when it is `False`.
+- **Return codes.** `ProjectScreen` dismisses with `200` on `Escape` (back to the projects list, or the main screen if opened from there) and `210` on `q`; on `210` `ProjectsScreen` dismisses itself too, so `q` reaches the main screen.
+
+---
+
 ## Status Screen
 
 `StatusScreen(message)` shows a read-only message:
@@ -825,6 +959,16 @@ The suite in `tests/micro-tests/my_profile/` has one module per handler and scre
 - opening a community from a main-screen row, Find Community starting in the search box, and the main-screen refresh after a membership change (and not otherwise).
 
 `test_my_egeria.py` checks the menu routing, including **Find Community**. The blog and comment functions were run against a live server on 2026-10-28. Listing and finding communities, `create_community` (with and without joining, and the duplicate check) and `get_community_members` were run there on 2026-10-30. Joining and leaving, `get_community_resources`, and liking, unliking, rating and commenting on a blog post and a resource were run there on 2026-11-17, and the community and feedback screens were rendered against live data. The screens haven't yet been driven by hand end to end on a live server.
+
+**Work with Projects.** `test_project_handler.py` covers `ProjectsMixin`, `ProjectsScreen`, `ProjectScreen`, and dialogs. That includes:
+- memberships direct and through roles, the leave confirmation, and refusing to leave a role membership;
+- creating a project: subtypes (`Project`, `Campaign`, `Task`, `StudyProject`, `PersonalProject`), creator assignment types (`Leader`, `Contributor`, `Observer`, "Don't join"), duplicate name checks via unique-name reads, failed create, and failed link handling;
+- the Create Project form: validation, cancellation, and highlighting the newly created project;
+- members as people only, direct and through roles, merged per person;
+- creating the project blog note log on the first post and reusing it on subsequent posts, and the blog post and comment forms;
+- resources: `ResourceList`, `ScopedBy`, `ProjectDependency`, and `SupportedProject` relationships merged per element;
+- joining from the project screen, and moving the project from the found list to the user's project list;
+- opening a project from a main-screen `projects_table` row, Find Project starting with search focus, and main-screen auto-refresh on return after membership changes.
 
 **Paging.** `test_paging_contract.py` checks the handlers against Egeria's paging contract: no total or "none" without a confirmed end, and no write when a guard's answer is unknown.
 
