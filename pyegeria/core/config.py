@@ -188,7 +188,7 @@ class UserProfileConfig(BaseModel):
     egeria_local_qualifier: str = Field(default="Coco Pharmaceuticals", alias="Egeria Local Qualifier")
     egeria_usage_level: str = Field(default="Advanced", alias="Egeria Usage Level")
     user_name: Optional[str] = "erinoverview"
-    user_pwd: Optional[str] = "secret"
+    user_pwd: Optional[str] = None   # PY-35 W2: no built-in password (load_app_config sets it explicitly)
     
     model_config = ConfigDict(populate_by_name=True, extra='allow')
 

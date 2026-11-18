@@ -8,6 +8,7 @@ These GUIDS should be copied into the pyegeria/__init__.py.
 """
 
 from datetime import datetime
+from typing import Optional
 from rich.console import Console
 from pyegeria.egeria_tech_client import EgeriaTech
 
@@ -18,7 +19,7 @@ def build_global_guid_lists(
     server: str = "qs-view-server",
     url: str = "https://localhost:9443",
     user_id: str = "garygeeke",
-    user_pwd: str = "secret",
+    user_pwd: Optional[str] = None,   # PY-35: no built-in password; sign-in refuses in words without one
 ) -> None:
     """This is a utility function that builds arrays of guid lists for Templates & Connectors"""
 
