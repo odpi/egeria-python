@@ -40,7 +40,7 @@ Once loaded, the configuration is cached for the lifetime of the process — sub
 | `EGERIA_PLATFORM_URL` | The base URL of your Egeria platform. |
 | `EGERIA_VIEW_SERVER` | The name of the View Server to use. |
 | `EGERIA_USER` | The default user ID for authentication. |
-| `EGERIA_USER_PASSWORD` | The password for the default user. |
+| `EGERIA_USER_PASSWORD` | The password for the default user. No built-in default: see [Setting your Egeria password](setting-your-egeria-password.md). |
 | `EGERIA_LOCAL_QUALIFIER` | A prefix used when generating `qualifiedNames`. |
 | `PYEGERIA_ROOT_PATH` | Directory where `config.json` and `.env` are located. |
 | `PYEGERIA_CONFIG_FILE` | Override the config filename (default: `config.json`). |

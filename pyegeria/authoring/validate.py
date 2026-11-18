@@ -182,6 +182,15 @@ FIND_ELEMENT_TYPES: Dict[str, Optional[str]] = {
 }
 
 
+#: Generic finders (PY-34): the element type they return is whatever one of their own parameters asks for, so the
+#: fit is checked against the value the spec FIXES for that parameter (`action.spec_params`). A spec that doesn't
+#: fix it can get any type back, and says so. Keys are the spec's `action.function`; values are the parameter
+#: names that carry the type, in the order they're read.
+GENERIC_FIND_TYPE_PARAMS: Dict[str, tuple] = {
+    "ClassificationExplorer.find_authored_elements": ("metadata_element_type", "metadata_element_type_name"),
+}
+
+
 def _type_key(name: Optional[str]) -> str:
     """'Actor Profile', 'User-Identity' and 'ActorProfile' are the same type."""
     return "".join(ch for ch in (name or "") if ch.isalnum()).lower()
@@ -206,12 +215,23 @@ async def _check_find_fit(fs: Any, client: Any, result: ValidationResult) -> Non
     target = fs.target_type
     if not function or getattr(action, "analytic_function", None) or not target:
         return
-    if function not in FIND_ELEMENT_TYPES:
+    if function in GENERIC_FIND_TYPE_PARAMS:
+        params = GENERIC_FIND_TYPE_PARAMS[function]
+        fixed = getattr(action, "spec_params", None) or {}
+        expected = next((fixed[p] for p in params if fixed.get(p)), None)
+        if not expected:
+            result.warn(f"Find method {function} returns whatever {params[0]} it's asked for, and this spec doesn't "
+                        f"fix one, so it can return elements of any type, not only {target}. Fix "
+                        f"{params[0]} = {target} in the spec's parameters to make the fit checkable.")
+            result.not_checked.append(f"find method {function} fits target type {target}: {params[0]} not fixed")
+            return
+    elif function not in FIND_ELEMENT_TYPES:
         result.warn(f"Can't tell whether find method {function} returns {target} elements: pyegeria has no "
                     f"record of its element type.")
         result.not_checked.append(f"find method {function} fits target type {target}: element type unknown")
         return
-    expected = FIND_ELEMENT_TYPES[function]
+    else:
+        expected = FIND_ELEMENT_TYPES[function]
     if expected is None or _type_key(expected) == _type_key(target) or (function, _type_key(target)) in _registry_pairs():
         result.checked.append("find method fits the target type")
         return

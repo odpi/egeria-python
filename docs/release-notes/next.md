@@ -60,10 +60,24 @@ notes and are not repeated here.
 - **No default password, and no built-in identity outside a named demo profile.** pyegeria 6.4 or the next release drops the quickstart
   defaults (`erinoverview` / `secret`): a client gets credentials only from its arguments, the environment,
   config.json, or a demo profile named explicitly.
+  - **The command-line tools lose their demo-password fallback.** Until 6.4, `hey_egeria` and the other CLIs read the
+    password only from `--password` / `--user_pass` and the `EGERIA_USER_PASSWORD` environment variable, and fall back
+    to the QuickStart demo password otherwise. They don't read `config.json` or `.env` for it, so a password set only
+    there isn't used. From 6.4 they read it the same way as the library, and a command with no password set fails with
+    "No password to sign in to Egeria…". **Set the `EGERIA_USER_PASSWORD` environment variable now**: see
+    [Setting your Egeria password](../setting-your-egeria-password.md).
 
 
 ## Changed
 
+- **No built-in password or admin credential in the library, from this release** (PY-33, PY-35; 6.3.0 still had the
+  demo-password fallback). `resolve_egeria_credentials` no longer
+  falls back to a built-in password, and the library's `ADMIN_USER` / `ADMIN_PASSWORD` reads and its settings model
+  have no literal defaults either. With no password set, `create_egeria_bearer_token` raises
+  `PyegeriaInvalidParameterException` ("No password to sign in to Egeria as '<user>' …") before any request is sent.
+  **A behaviour change:** before, the request went to Egeria and came back as a 401, so code that catches that 401 for
+  a missing password should catch the new exception. The CLIs keep their demo-password fallback until 6.4 (above).
+  See [Setting your Egeria password](../setting-your-egeria-password.md).
 - `md_processing/md_processing_utils/properties_class_fields.py` is now regenerated from Egeria c61bad65.
 - `ProjectProperties` gains `scope`; 25 SchemaType-family classes drop `queries`, matching #9448's `SchemaTypeProperties`
   change.
