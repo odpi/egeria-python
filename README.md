@@ -97,6 +97,9 @@ For more details on setting up your configuration and available variables, see [
 # EGERIA_USER_PASSWORD=mypassword
 # EGERIA_WIDTH=280
 
+Your password: where pyegeria looks for it, how to set it, and the change coming in 6.4 (the CLIs' demo-password
+fallback goes) are in [docs/setting-your-egeria-password.md](docs/setting-your-egeria-password.md).
+
 Lines starting with # are comments. Quotes are optional; python-dotenv/pydantic-settings handle both.
 
 ### Example config.json (minimal)
