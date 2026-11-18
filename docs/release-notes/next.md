@@ -60,16 +60,18 @@ notes and are not repeated here.
 - **No default password, and no built-in identity outside a named demo profile.** pyegeria 6.4 or the next release drops the quickstart
   defaults (`erinoverview` / `secret`): a client gets credentials only from its arguments, the environment,
   config.json, or a demo profile named explicitly.
-  - **The command-line tools lose their demo-password fallback.** Today `hey_egeria` and the other CLIs fall back to the
-    QuickStart demo password when `EGERIA_USER_PASSWORD` isn't set. From 6.4 a command with no password set fails with
-    "No password to sign in to Egeria…". **Set your password now** (the `EGERIA_USER_PASSWORD` environment variable, a
-    `.env` file, `config.json`'s `user_pwd`, or `--password`): see
+  - **The command-line tools lose their demo-password fallback.** Until 6.4, `hey_egeria` and the other CLIs read the
+    password only from `--password` / `--user_pass` and the `EGERIA_USER_PASSWORD` environment variable, and fall back
+    to the QuickStart demo password otherwise. They don't read `config.json` or `.env` for it, so a password set only
+    there isn't used. From 6.4 they read it the same way as the library, and a command with no password set fails with
+    "No password to sign in to Egeria…". **Set the `EGERIA_USER_PASSWORD` environment variable now**: see
     [Setting your Egeria password](../setting-your-egeria-password.md).
 
 
 ## Changed
 
-- **No built-in password or admin credential in the library** (PY-33, PY-35). `resolve_egeria_credentials` no longer
+- **No built-in password or admin credential in the library, from this release** (PY-33, PY-35; 6.3.0 still had the
+  demo-password fallback). `resolve_egeria_credentials` no longer
   falls back to a built-in password, and the library's `ADMIN_USER` / `ADMIN_PASSWORD` reads and its settings model
   have no literal defaults either. With no password set, `create_egeria_bearer_token` raises
   `PyegeriaInvalidParameterException` ("No password to sign in to Egeria as '<user>' …") before any request is sent.
