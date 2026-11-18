@@ -1632,8 +1632,9 @@ def _exec_document(
 def _caller_identity(user: Any, user_pass: Any, token: Optional[str]) -> Tuple[str, Any]:
     """Who `exec_report_spec` runs as (PY-33's twin, PY-32).
 
-    - In a process DECLARED multi-user (the Portal, EA, Studio, the MCP HTTP server: see
-      `pyegeria.core._client_identities`), a run with no user is refused in words. It never falls back to the
+    - In a process DECLARED multi-user (`declare_multi_user()` or PYEGERIA_MULTI_USER=1: see
+      `pyegeria.core._client_identities`; today EA, Studio and pyegeria's MCP HTTP server declare themselves
+      at startup; the Portal does not yet), a run with no user is refused in words. It never falls back to the
       configured user, which there is the app's own service account: a caller that lost its client's identity
       (EA's U3, 2026-11-17: a context manager handed over as the client) must fail, not run as the service user.
     - In a single-user process (a CLI, a notebook) an omitted user takes `configured_user_id()` and an omitted
@@ -1734,8 +1735,8 @@ def _exec_report_spec_impl(
     params: Optional[Dict[str, Any]] = None,
     view_server: str = settings.Environment.egeria_view_server,
     view_url: str = settings.Environment.egeria_view_server_url,
-    user: str = settings.User_Profile.user_name,
-    user_pass: str = settings.User_Profile.user_pwd,
+    user: Optional[str] = None,       # PY-32 R2: resolved by exec_report_spec (_caller_identity), never here
+    user_pass: Optional[str] = None,
     token: Optional[str] = None,
     supply: Optional[RoleSupply] = None,
     table_shape: Optional[str] = None,
