@@ -349,6 +349,13 @@ class BasePlatformClient:
             user_id = self.user_id
         if password is None:
             password = self.user_pwd
+        if not password:
+            # PY-33: no built-in default password. Refuse in words, before any call, instead of asking
+            # Egeria to sign in with an empty (or a guessed) password.
+            raise PyegeriaInvalidParameterException(additional_info={"reason": (
+                f"No password to sign in to Egeria as {user_id!r}: pass one, set EGERIA_USER_PASSWORD (or the "
+                f"settings' user_pwd), or set a bearer token with set_bearer_token(). pyegeria has no default "
+                f"password.")})
 
         url = f"{self.platform_url}/api/token"
         data = {"userId": user_id, "password": password}
