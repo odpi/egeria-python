@@ -1629,6 +1629,33 @@ def _exec_document(
             "file_name": file_name, "text": text, "validation": validation, "notes": notes}
 
 
+def _caller_identity(user: Any, user_pass: Any, token: Optional[str]) -> Tuple[str, Any]:
+    """Who `exec_report_spec` runs as (PY-33's twin, PY-32).
+
+    - In a process DECLARED multi-user (the Portal, EA, Studio, the MCP HTTP server: see
+      `pyegeria.core._client_identities`), a run with no user is refused in words. It never falls back to the
+      configured user, which there is the app's own service account: a caller that lost its client's identity
+      (EA's U3, 2026-11-17: a context manager handed over as the client) must fail, not run as the service user.
+    - In a single-user process (a CLI, a notebook) an omitted user takes `configured_user_id()` and an omitted
+      password the configured one, read now, not at import, so the 6.x CLI behaviour is unchanged.
+    """
+    from pyegeria.core._client_identities import is_multi_user
+    from pyegeria.core._exceptions import PyegeriaInvalidParameterException
+    if not user:
+        if is_multi_user():
+            raise PyegeriaInvalidParameterException(additional_info={"reason": (
+                "exec_report_spec was given no user, in a process declared multi-user: it won't run the report "
+                "as the configured user. Pass the request's identity (user and token), or build the call from the "
+                "caller's own Egeria client.")})
+        from pyegeria.core.config import configured_user_id
+        user = configured_user_id()   # as a CLI's client resolves it (ISSUE-161): EGERIA_USER, settings, default
+        if user_pass is None and not token:
+            user_pass = settings.User_Profile.user_pwd
+    elif user_pass is None and not token and not is_multi_user():
+        user_pass = settings.User_Profile.user_pwd   # 6.x: a CLI naming only the user signs in with the configured password
+    return user, user_pass
+
+
 def exec_report_spec(
     format_set_name: str | dict,
     *,
@@ -1636,8 +1663,8 @@ def exec_report_spec(
     params: Optional[Dict[str, Any]] = None,
     view_server: str = settings.Environment.egeria_view_server,
     view_url: str = settings.Environment.egeria_view_server_url,
-    user: str = settings.User_Profile.user_name,
-    user_pass: str = settings.User_Profile.user_pwd,
+    user: Any = None,
+    user_pass: Any = None,
     token: Optional[str] = None,
     supply: Optional[RoleSupply] = None,
     refresh_spec: bool = False,
@@ -1668,6 +1695,7 @@ def exec_report_spec(
     this call: written through to a per-user cache, kept in-process for a shared one. A failed
     fetch raises with words; it never falls back to the cached copy.
     """
+    user, user_pass = _caller_identity(user, user_pass, token)
     from pyegeria.view.egeria_spec_cache import credential_identity, spec_identity
     # the EGERIA tier is read for this caller's credential identity: a private cache bound to another isn't loaded
     with spec_identity(credential_identity(user, view_url, view_server)):
