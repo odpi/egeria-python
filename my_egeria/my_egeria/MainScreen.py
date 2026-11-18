@@ -70,6 +70,8 @@ class MainScreen(Screen):
                 Option("[] My Network"),
                 Option("[] Work with Communities"),
                 Option("[] Find Community"),
+                Option("[] Work with Projects"),
+                Option("[] Find Project"),
                 Option("[] User Bookmarks"),
                 Option("[] Leave Feedback"),
                 Option("[] Feedback Log"),
@@ -108,7 +110,7 @@ class MainScreen(Screen):
             id="main_identities_container"
         )
         yield ScrollableContainer(
-            Static("Projects"),
+            Static("Projects  [dim](Enter on a project: open it)[/dim]"),
             DataTable(id="projects_table"),
             id="main_projects_container"
         )

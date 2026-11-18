@@ -160,7 +160,7 @@ The header reads **Egeria — User: _your user ID_, Karma Points: _n_**. Karma P
 | **Journal** | Journal Entry, Date, Text, GUID | Your journal entries |
 | **To-Dos** | To-Do Name, Activity Status, Description, GUID | Your to-dos |
 | **User Identity** | Display Name, User ID, Distinguished Name, GUID | User identities linked to your profile |
-| **Projects** | Status or Type, Name, Description, GUID | Projects you are involved in |
+| **Projects** | Status or Type, Name, Description, GUID | Projects you are involved in. Press `Enter` on one (or click it a second time) to [open it](#a-project) |
 
 Click or move into a table to select it; the highlighted row is the "selected row" used by the shortcuts below. Press `ctrl+r` to reload everything from Egeria. The app also reloads automatically when you close an Add screen.
 
@@ -328,6 +328,36 @@ The feedback screen shows how many people like the item (and whether you do), it
 ### Find Community
 Opens [Work with Communities](#work-with-communities) with the cursor in the search field: type a search term (`*` for all) and press `Enter`, then join or open a community from the found list.
 
+### Work with Projects
+The screen lists the projects you belong to (name, assignment type, what links you to it, description and GUID), lets you find others to join, and opens a project to show its members, blog, resources and comments. **Find Project** opens the same screen with the cursor in the search field. If your profile has not finished loading, the app tells you to wait and does not open the screen. When you return to the main screen after joining, leaving or creating-and-joining a project, the main screen reloads so Projects is up to date.
+
+- **Linked Through** is **Your profile** if you joined the project directly, or **Role: _name_** if you belong through a role you hold. A project you reach both ways is listed once.
+- **Open a project:** highlight a project in either list and press `Enter`, `ctrl+o` or **Open Project**. See [A project](#a-project) below.
+- **Create a project:** press `ctrl+t` (or **Create Project**). Choose a **Project Type** (`Project`, `Campaign`, `Task`, `StudyProject`, `PersonalProject`), enter a **Name\*** and **Description\***, and optionally a **Mission**, then choose **Your part in it**: **Leader** (the default), **Contributor**, **Observer** or **Don't join**. Press `ctrl+s` (or **Create**); **Cancel** or `Escape` discards it. The lists reload and the new project is highlighted: in your projects if you joined it, otherwise in the found list. If a project with that name already exists, you are told to find it and join it instead. If Egeria can't say either way, nothing is created and you are asked to try again later.
+- **Find and join:** type a search term in the search field (`*` for all) and press `Enter`. Projects you already belong to are left out. If Egeria doesn't confirm it sent every match, a warning says the list may be incomplete (see [Troubleshooting](#troubleshooting)). Choose **Leader**, **Contributor** or **Observer**, highlight a project and press `ctrl+n` (or **Join Project**).
+- **Leave:** highlight one of your projects and press `ctrl+d` (or **Leave Project**), then confirm with **Leave**. **Cancel** or `Escape` keeps you in it. Only the link between you and the project is removed. You can't leave a project you belong to through a role; ask whoever manages that role.
+- `Escape` or `q` returns to the main screen.
+
+Membership is an `AssignmentScope` relationship from your profile (or a role) to the project, and the assignment type is stored on that relationship.
+
+#### A project
+Open a project from either list on the Projects screen, or with `Enter` on a row of the main screen's Projects table. It shows four lists: its **latest blog posts** (the 20 newest, with title, author and date; the highlighted post's text is shown underneath), its **team members**, its **resources & dependencies** and the **comments** on it, newest first. You don't have to be a member to read or add to them.
+
+The team members list shows **people only**, in name order, not roles. It includes everyone linked to the project directly and everyone appointed to a role that is. **Member Through** says how each person belongs: **Direct**, or **Role: _name_** for each role they hold there. A person who belongs in several ways is listed once. Other kinds of member, such as teams, are not shown. If the people in one of the project's roles can't be read, the rest are still listed and a warning says some members may be missing.
+
+The resources list shows the elements the project lists as its resources (**Linked As** is **Resource**, or **Resource: _use_** when the link says what the resource is for), elements scoped to it (**In scope**), **Dependency** links, and **Supported Project** relationships. An element linked multiple ways is listed once.
+
+- **Join:** if you are not a member, the members panel offers **Leader**, **Contributor** or **Observer** and a **Join Project** button (`ctrl+w`). Once you have joined, the members list reloads and the button disappears; back on the Projects screen, the project moves from the found list to yours. If the members can't be read, joining isn't offered.
+- **New blog post:** press `ctrl+n` (or **New Blog Post**), enter a title and the text, then press `ctrl+s` (or **Post**). **Cancel** or `Escape` discards it.
+- **Add a comment:** select the comments list and press `ctrl+n` (or press **Add Comment**), choose a comment type (Standard Comment, Question, Answer, Suggestion, Usage Experience, Requirement or Other), enter the comment and press `ctrl+s` (or **Add Comment**).
+- **Feedback on a post or resource:** press `Enter` on a blog post or resource, or highlight one and press `ctrl+o` (or **Feedback on Post** / **Feedback on Resource**).
+- `Escape` returns to the projects list (or the main screen, if you opened the project from there); `q` returns to the main screen.
+
+The project's blog is a note log attached to the project, created when the first post is made (if Egeria can't say whether the blog already exists, nothing is posted and you are asked to try again); each post is a `BlogEntry` in it. Comments are attached to the project itself. Resources are `ResourceList`, `ScopedBy`, `ProjectDependency`, and `SupportedProject` relationships from or to the project.
+
+### Find Project
+Opens [Work with Projects](#work-with-projects) with the cursor in the search field: type a search term (`*` for all) and press `Enter`, then join or open a project from the found list.
+
 ### Change User
 Log in as a different Egeria user and reload the app for them. See [The Change User screen](#the-change-user-screen).
 
@@ -348,12 +378,12 @@ Every screen follows the same rules:
 | `r` / `u` / `q` | Retry now / Change User / Quit | Connection error screen |
 | `q` | Main menu / quit the app | Every list screen / Main screen |
 | `Enter` | Select the highlighted row; continue | Tables and trees; Status screen |
-| `ctrl+s` | Save / submit the form | Add screens, Add Comment, Create Subscription, Create/Edit Profile, Feedback, New Blog Post, Create Community |
-| `ctrl+n` | Add a new item | Edit screens (row), Bookmarks, Comments, Main screen (comment), Communities (join), a community (blog post or comment), feedback on a post or resource (comment) |
-| `ctrl+d` | Delete / remove the highlighted item | Edit screens, Bookmarks, My Network, Communities (leave) |
-| `ctrl+o` | Open the highlighted item | Main screen (comments), Comments (responses), My Network (person details), Communities (open a community), a community (feedback on the highlighted post or resource) |
-| `ctrl+w` | Join the community | A community you are not a member of |
-| `ctrl+t` | Edit the selected table / create a community | Main screen / Communities |
+| `ctrl+s` | Save / submit the form | Add screens, Add Comment, Create Subscription, Create/Edit Profile, Feedback, New Blog Post, Create Community, Create Project |
+| `ctrl+n` | Add a new item | Edit screens (row), Bookmarks, Comments, Main screen (comment), Communities/Projects (join), a community/project (blog post or comment), feedback on a post or resource (comment) |
+| `ctrl+d` | Delete / remove the highlighted item | Edit screens, Bookmarks, My Network, Communities/Projects (leave) |
+| `ctrl+o` | Open the highlighted item | Main screen (comments), Comments (responses), My Network (person details), Communities/Projects (open), a community/project (feedback on the highlighted post or resource) |
+| `ctrl+w` | Join the community / project | A community or project you are not a member of |
+| `ctrl+t` | Edit the selected table / create a community or project | Main screen / Communities / Projects |
 | `ctrl+k` | Bookmark the highlighted row | Main screen, Shop for Data |
 | `ctrl+b` | Bookmarks, with the highlighted row's GUID ready to add | Main screen, Shop for Data |
 | `ctrl+u` | Subscribe | Shop for Data, Overview, sample-data view |

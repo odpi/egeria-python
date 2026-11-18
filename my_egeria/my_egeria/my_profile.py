@@ -97,10 +97,11 @@ from paging_support import paged_rows, read_all, report_empty_cells
 from MyBookMarksScreen import MyBookMarksScreen
 from network_handler import NetworkMixin
 from community_handler import CommunitiesMixin
+from project_handler import ProjectsMixin
 
 
 class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, ElementsCrudMixin, FeedbackMixin,
-                   BookmarksMixin, NetworkMixin, CommunitiesMixin):
+                   BookmarksMixin, NetworkMixin, CommunitiesMixin, ProjectsMixin):
     """My Profile / My Egeria App.
 
     Retrieves a user's profile from Egeria and displays current work items.
@@ -741,6 +742,10 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
             self.show_communities()
         elif selected_option == "Find Community":
             self.show_communities(find=True)
+        elif selected_option == "Work with Projects":
+            self.show_projects()
+        elif selected_option == "Find Project":
+            self.show_projects(find=True)
         elif selected_option == "Change User":
             await self.push_screen(ChangeUserScreen(), callback=self.change_user_callback)
         elif selected_option == "Subscriptions":
@@ -771,6 +776,14 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
         Registered here rather than on CommunitiesMixin, for the same reason as the roles handler.
         """
         self.open_community_row(event.data_table, event.row_key)
+
+    @on(DataTable.RowSelected, "#projects_table")
+    def _on_projects_row_selected(self, event: DataTable.RowSelected) -> None:
+        """Open the project in a Projects row: its team, blog/notes, resources and comments.
+
+        Registered here rather than on ProjectsMixin, for the same reason as the roles and associations handlers.
+        """
+        self.open_project_row(event.data_table, event.row_key)
 
     def show_main_screen(self) -> None:
         """Show or switch back to the main screen by unwinding the screen stack."""
