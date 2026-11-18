@@ -262,11 +262,15 @@ as many of our samples, labs and demos. These defaults can be easily changed; bo
 the values of the corresponding environment variables or in the TUI by over-riding defaults using the optional parameters.
 Here is a list of the variables and their defaults:
 
+> **Coming in pyegeria 6.4:** if `EGERIA_USER_PASSWORD` isn't set, the CLIs stop falling back to the QuickStart
+> demo password, and a command fails with "No password to sign in to Egeria…". Set your password now: see
+> [Setting your Egeria password](../../../docs/setting-your-egeria-password.md).
+
 | Environment Variable          | Default                | Command Option           | Description                                                |
 |-------------------------------|------------------------|--------------------------|------------------------------------------------------------|
 | EGERIA_JUPYTER                | True                   | --jupyter                | Set to True for better display in Jupyter notebooks        |
 | EGERIA_USER                   | erinoverview           | --userid                 | A typical Egeria user                                      |
-| EGERIA_USER_PASSWORD          | none (PY-33)           | --password               | User password; pyegeria has no built-in default           |
+| EGERIA_USER_PASSWORD          | demo password, until 6.4 | --password             | User password. Set it: pyegeria 6.4 removes the CLIs' demo-password fallback ([how](../../../docs/setting-your-egeria-password.md)) |
 | ADMIN_USER                    | none (PY-35)           | --admin_user             | A user that configures and operates Egeria platform        |
 | ADMIN_PASSWORD                | none (PY-35)           | --admin_user_password    | Admin password; pyegeria has no built-in default          |
 | EGERIA_ENGINE_HOST            | engine-host            | --engine_host            | Egeria Engine host to use for governance actions/processes |

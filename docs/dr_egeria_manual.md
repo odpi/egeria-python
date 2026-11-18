@@ -636,7 +636,7 @@ process_md_file(
     server=env.egeria_view_server,
     url=env.egeria_view_server_url,
     userid=os.environ.get("EGERIA_USER", "erinoverview"),
-    user_pass=os.environ.get("EGERIA_USER_PASSWORD", "secret"),
+    user_pass=os.environ["EGERIA_USER_PASSWORD"],
 )
 ```
 
@@ -657,7 +657,7 @@ process_md_file(
     server=env.egeria_view_server,
     url=env.egeria_view_server_url,
     userid=os.environ.get("EGERIA_USER", "erinoverview"),
-    user_pass=os.environ.get("EGERIA_USER_PASSWORD", "secret"),
+    user_pass=os.environ["EGERIA_USER_PASSWORD"],
     summary_only=True,
 )
 ```
@@ -705,7 +705,7 @@ env = settings.Environment
 client = EgeriaTech(env.egeria_view_server, env.egeria_view_server_url,
                     user_id=os.environ.get("EGERIA_USER", "erinoverview"))
 client.create_egeria_bearer_token(os.environ.get("EGERIA_USER", "erinoverview"),
-                                  os.environ.get("EGERIA_USER_PASSWORD", "secret"))
+                                  os.environ["EGERIA_USER_PASSWORD"])
 
 files = ["glossary.md", "projects.md", "data_structures.md"]
 
@@ -734,7 +734,7 @@ env = settings.Environment
 client = EgeriaTech(env.egeria_view_server, env.egeria_view_server_url,
                     user_id=os.environ.get("EGERIA_USER", "erinoverview"))
 client.create_egeria_bearer_token(os.environ.get("EGERIA_USER", "erinoverview"),
-                                  os.environ.get("EGERIA_USER_PASSWORD", "secret"))
+                                  os.environ["EGERIA_USER_PASSWORD"])
 
 # In a Jupyter cell, the event loop is already running — use await directly
 await process_md_file_v2(
