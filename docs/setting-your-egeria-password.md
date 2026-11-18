@@ -76,7 +76,10 @@ To have it in every shell, put those two `export` lines in your shell's startup 
 
   Keep it private: `chmod 600 .env`, and add `.env` to your `.gitignore` so it's never committed.
 
-- In `config.json`, if you already keep your pyegeria settings there:
+- In `config.json`, if you already keep your pyegeria settings there, **but only if that `config.json` is
+  git-ignored and readable only by you** (`chmod 600 config.json`). Never commit it: a `config.json` that is in a
+  repository is shared with everyone who can read the repository. If yours is tracked, use `.env` or the
+  environment variable instead.
 
   ```json
   {
