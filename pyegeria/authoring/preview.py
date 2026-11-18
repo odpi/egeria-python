@@ -151,6 +151,12 @@ async def async_preview(draft: Any, *, client: Any, max_rows: int = 25, output_f
     """A live sample of `draft`, run as `client`'s user. See the module docstring."""
     if client is None:
         raise AuthoringRefused("Preview runs as you against Egeria: a client signed in as you is needed.")
+    if not getattr(client, "user_id", None):
+        # PY-32: an object with no user_id (EA's U3, 2026-11-17: as_client(client), a context manager, handed over
+        # as the client) is refused here, so the run never falls back to the process's configured user.
+        raise AuthoringRefused(f"Preview runs as you against Egeria, but the {type(client).__name__} given has no "
+                               f"user_id: pass your Egeria client itself (bind spec reads with "
+                               f"`with as_client(client):`), not as_client(client).")
     if not isinstance(max_rows, int) or max_rows < 1:
         raise AuthoringRefused("max_rows must be a whole number of at least 1.")
     draft = as_draft(draft)

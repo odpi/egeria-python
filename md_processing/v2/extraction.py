@@ -154,6 +154,70 @@ class UniversalExtractor:
                     ))
         return commands
 
+    def diagnose(self, command_attributes: Optional[Dict[str, List[str]]] = None) -> List[str]:
+        """Explain, in words, heading mistakes that make a document run less than its author meant (PY-30).
+
+        A Dr.Egeria command is an H2 heading ``## <Verb> <Object>`` with its attributes as H3 ``### <Label>``.
+        Two mistakes otherwise pass silently:
+
+        - an H1 command heading (``# Delete Instance``) is kept as prose, so the document runs nothing;
+        - an attribute written as H2 (``## Delete Method``) can match the command pattern and be taken as a
+          command of its own.
+
+        ``command_attributes`` maps a command name ("Delete Instance") to its attribute labels. When it is None,
+        the compact command specs are loaded if available; without them the second check is skipped.
+        Returns hint strings (empty when nothing looks wrong).
+        """
+        hints: List[str] = []
+        if command_attributes is None:
+            command_attributes = _load_command_attributes()
+        known = {name.lower(): {a.lower() for a in attrs} for name, attrs in (command_attributes or {}).items()}
+
+        in_fence = False
+        for number, line in enumerate(self.text.splitlines(), 1):
+            # Lines inside ``` or ~~~ code fences are code (e.g. a shell comment "# Create a venv"), never headings.
+            if re.match(r"^\s*(```|~~~)", line):
+                in_fence = not in_fence
+                continue
+            if in_fence:
+                continue
+            h1 = re.match(r"^#\s+(?P<rest>[^#].*?)\s*$", line)
+            if not h1:
+                continue
+            m = self.cmd_header_rx.match(h1.group("rest"))
+            if not m:
+                continue
+            rest = h1.group("rest")
+            name = f"{m.group('verb').strip().capitalize()} {re.sub(r'[\s_*-]+$', '', m.group('object').strip())}"
+            # With the specs at hand, only a real command name earns the hint ("# Create Fantasy Thing" doesn't).
+            if known and name.lower() not in known:
+                continue
+            hints.append(
+                f"line {number}: '# {rest}' is an H1 heading, so it is read as a title, not a command. "
+                f"Write the command as '## {rest}' and its attributes as '### <Attribute>'."
+            )
+
+        commands = [c for c in self.extract_commands() if c.is_command]
+        if known:
+            previous: Optional[str] = None
+            for cmd in commands:
+                name = f"{cmd.verb} {cmd.object_type}".strip()
+                if name.lower() in known:
+                    previous = name
+                    continue
+                if previous and name.lower() in known.get(previous.lower(), set()):
+                    hints.append(
+                        f"line {cmd.start_line}: '## {name}' is an attribute of '{previous}' written as a command "
+                        f"heading. Write it as '### {name}'."
+                    )
+
+        if not commands:
+            hints.append(
+                "No Dr.Egeria command was found. A command is an H2 heading '## <Verb> <Object>' "
+                "followed by '### <Attribute>' lines."
+            )
+        return hints
+
     def _split_into_blocks(self) -> List[tuple[str, int]]:
         """Split text into potential command blocks based on H1/H2 headers or horizontal rules."""
         # Using a lookahead to split by '#' or '##' at start of line OR horizontal rules
@@ -196,3 +260,34 @@ class UniversalExtractor:
             attributes[label] = "\n".join(filtered_lines).strip()
             
         return attributes
+
+
+def _load_command_attributes() -> Dict[str, List[str]]:
+    """Command name -> attribute labels, from the compact command specs; {} if they can't be loaded."""
+    try:
+        from md_processing.md_processing_utils import md_processing_constants as mpc
+
+        if not mpc.COMMAND_DEFINITIONS.get("Command Specifications"):
+            mpc.load_commands()
+        specs = mpc.COMMAND_DEFINITIONS.get("Command Specifications", {})
+    except Exception as exc:  # the hints are advisory; never fail extraction over them
+        logger.debug(f"diagnose: command specs not available ({exc})")
+        return {}
+    out: Dict[str, List[str]] = {}
+    for name, spec in specs.items():
+        if not isinstance(spec, dict):
+            continue
+        labels = list(spec.get("custom_attributes") or [])
+        for attr in spec.get("Attributes") or []:
+            if isinstance(attr, dict):
+                if attr.get("name"):
+                    labels.append(str(attr["name"]))
+                alt = attr.get("attr_labels")
+                if isinstance(alt, str):
+                    labels.extend(a.strip() for a in alt.split(";") if a.strip())
+                elif isinstance(alt, list):
+                    labels.extend(str(a) for a in alt if a)
+            elif isinstance(attr, str):
+                labels.append(attr)
+        out[name] = labels
+    return out

@@ -262,13 +262,17 @@ as many of our samples, labs and demos. These defaults can be easily changed; bo
 the values of the corresponding environment variables or in the TUI by over-riding defaults using the optional parameters.
 Here is a list of the variables and their defaults:
 
+> **Coming in pyegeria 6.4:** if `EGERIA_USER_PASSWORD` isn't set, the CLIs stop falling back to the QuickStart
+> demo password, and a command fails with "No password to sign in to Egeria…". Set your password now: see
+> [Setting your Egeria password](../../../docs/setting-your-egeria-password.md).
+
 | Environment Variable          | Default                | Command Option           | Description                                                |
 |-------------------------------|------------------------|--------------------------|------------------------------------------------------------|
 | EGERIA_JUPYTER                | True                   | --jupyter                | Set to True for better display in Jupyter notebooks        |
 | EGERIA_USER                   | erinoverview           | --userid                 | A typical Egeria user                                      |
-| EGERIA_USER_PASSWORD          | secret                 | --password               | User password                                              |
-| EGERIA_ADMIN_USE              | garygeeke              | --admin_user             | A user that configures and operates Egeria platform        |
-| EGERIA_ADMIN_PASSWORD         | secret                 | --admin_user_password    | Admin password                                             |
+| EGERIA_USER_PASSWORD          | demo password, until 6.4 | --password             | User password. Set it: pyegeria 6.4 removes the CLIs' demo-password fallback ([how](../../../docs/setting-your-egeria-password.md)) |
+| ADMIN_USER                    | none (PY-35)           | --admin_user             | A user that configures and operates Egeria platform        |
+| ADMIN_PASSWORD                | none (PY-35)           | --admin_user_password    | Admin password; pyegeria has no built-in default          |
 | EGERIA_ENGINE_HOST            | engine-host            | --engine_host            | Egeria Engine host to use for governance actions/processes |
 | EGERIA_ENGINE_HOST_URL        | https://localhost:9443 | --engine_host_url        | Platform URL where Engine host is running                  |
 | EGERIA_INTEGRATION_DAEMON     | integration-daemon     | --integration_daemon     | Egeria integration daemon to use                           |
@@ -278,7 +282,7 @@ Here is a list of the variables and their defaults:
 | EGERIA_PLATFORM_URL           | https://localhost:9443 | --url                    | Platform URL where chosen Egeria metadata store is running |
 | EGERIA_METADATA_STORE         | active-metadata-store  | --server                 | Egeria metadata store to use                               |
 | EGERIA_WIDTH                  | 200                    | --width                  | Width of the terminal screen to use for displaying results |
-| EGERIA_TIMEOUT                | 60                     | --timeout                | Timeout for Egeria actions                                 |
+| PYEGERIA_TIMEOUT_SECONDS      | 30                     | --timeout                | Timeout for Egeria actions, in seconds                     |
 
 Egeria workspaces changes some of these defaults for the Docker environment it sets up. A kubernetes deployment may similarly alter the defaults
 to accommodate deployment. Note that this is a very simplistic use of user identity and password. This can be augmented by using the 

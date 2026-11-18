@@ -188,7 +188,7 @@ class UserProfileConfig(BaseModel):
     egeria_local_qualifier: str = Field(default="Coco Pharmaceuticals", alias="Egeria Local Qualifier")
     egeria_usage_level: str = Field(default="Advanced", alias="Egeria Usage Level")
     user_name: Optional[str] = "erinoverview"
-    user_pwd: Optional[str] = "secret"
+    user_pwd: Optional[str] = None   # PY-35 W2: no built-in password (load_app_config sets it explicitly)
     
     model_config = ConfigDict(populate_by_name=True, extra='allow')
 
@@ -563,11 +563,13 @@ def resolve_egeria_credentials(user_id: Optional[str] = None, user_pwd: Optional
 
     Precedence: an explicit value, then the EGERIA_USER / EGERIA_USER_PASSWORD environment
     variables as they are now, then the User Profile from pyegeria's settings (config.json /
-    .env), then the quickstart defaults. Call it when a command runs, not at import, so a
+    .env), then the quickstart default user. There is NO default password (PY-33): with none configured the
+    password is None, and signing in then fails in words (`create_egeria_bearer_token`) instead of trying a
+    built-in one. Call it when a command runs, not at import, so a
     variable set after import is still honoured.
     """
     user = user_id or configured_user_id()
-    pwd = user_pwd or os.environ.get("EGERIA_USER_PASSWORD") or settings.User_Profile.user_pwd or "secret"
+    pwd = user_pwd or os.environ.get("EGERIA_USER_PASSWORD") or settings.User_Profile.user_pwd or None
     return user, pwd
 
 

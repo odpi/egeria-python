@@ -244,7 +244,7 @@ Input:
 * userid (required) - default is "erinoverview", one of the fictitious Coco Pharmaceuticals employees.
 
 Note:
-Set the EGERIA_USER and EGERIA_USER_PASSWORD environment variables for your desired default user.
+Set the EGERIA_USER and EGERIA_USER_PASSWORD environment variables for your desired default user (see [Setting your Egeria password](../../../docs/setting-your-egeria-password.md); pyegeria 6.4 removes the demo-password fallback).
 
 ![my_profile  2024-12-14 at 16.29.27@2x.png](my/show/my_profile  2024-12-14 at 16.29.27@2x.png)
 
