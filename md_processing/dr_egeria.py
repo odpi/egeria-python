@@ -95,8 +95,8 @@ EGERIA_INBOX_PATH = app_config.dr_egeria_inbox
 EGERIA_OUTBOX_PATH = app_config.dr_egeria_outbox
 
 # User credentials and admin credentials are only from environment variables (not stored in config for security)
-EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
-EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
+EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER")  # PY-35: no built-in admin user
+EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")  # PY-35: no built-in admin password
 # Same precedence as the dr_egeria CLI: env, then config.json / .env, then defaults (ISSUE-161).
 EGERIA_USER, EGERIA_USER_PASSWORD = resolve_egeria_credentials()
 

@@ -27,8 +27,8 @@ EGERIA_VIEW_SERVER = os.environ.get("EGERIA_VIEW_SERVER", "view-server")
 EGERIA_VIEW_SERVER_URL = os.environ.get("EGERIA_VIEW_SERVER_URL", "https://localhost:9443")
 EGERIA_INTEGRATION_DAEMON = os.environ.get("EGERIA_INTEGRATION_DAEMON", "integration-daemon")
 EGERIA_INTEGRATION_DAEMON_URL = os.environ.get("EGERIA_INTEGRATION_DAEMON_URL", "https://localhost:9443")
-EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
-EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
+EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER")  # PY-35: no built-in admin user
+EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")  # PY-35: no built-in admin password
 # Same precedence as the dr_egeria CLI: env, then config.json / .env, then defaults (ISSUE-161).
 EGERIA_USER, EGERIA_USER_PASSWORD = resolve_egeria_credentials()
 EGERIA_WIDTH = settings.Environment.egeria_width
