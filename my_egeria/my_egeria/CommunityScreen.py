@@ -8,9 +8,9 @@
    a like, a star rating) on a blog post or resource.
 
 """
-from textual import on
+from textual import events, on
 from textual.app import ComposeResult
-from textual.containers import ScrollableContainer, Horizontal
+from textual.containers import ScrollableContainer, Horizontal, Vertical
 from textual.screen import ModalScreen
 from textual.widgets import DataTable, Header, Static, Footer, Input, Button, Select, TextArea
 
@@ -383,6 +383,7 @@ class CommunityScreen(ModalScreen):
         ("q", "quit", "Main Menu"),
         ("ctrl+n", "add_item", "New Post / Comment"),
         ("ctrl+o", "feedback", "Feedback on Post / Resource"),
+        ("enter", "feedback", "Feedback on Post / Resource"),
         ("ctrl+w", "join", "Join Community"),
     ]
 
@@ -397,6 +398,7 @@ class CommunityScreen(ModalScreen):
         # Whether the user is a member (directly or through a role); None until the members are read
         self.is_member: bool | None = None
         self.joined = False
+        self.last_active_table: str = "community_posts_table"
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
@@ -416,7 +418,7 @@ class CommunityScreen(ModalScreen):
             Static("[b]Members[/b]  [dim](people linked to the community, directly or through a role they hold)[/dim]"),
             DataTable(id="community_members_table", zebra_stripes=True, cursor_type="row"),
             Static("", id="community_membership_text"),
-            Horizontal(
+            Vertical(
                 Select([(t, t) for t in JOIN_ASSIGNMENT_TYPES], value=JOIN_ASSIGNMENT_TYPES[0],
                        allow_blank=False, id="community_join_assignment_type"),
                 Button("Join Community", id="community_join_btn", variant="primary"),
@@ -457,7 +459,7 @@ class CommunityScreen(ModalScreen):
         members = self.app.get_community_members(self.community_guid)
         if members is None:
             # Membership is unknown, so neither offer joining nor claim the user is a member
-            self.query_one("#community_join_controls", Horizontal).display = False
+            self.query_one("#community_join_controls", Vertical).display = False
             return
         table = self.query_one("#community_members_table", DataTable)
         table.clear()
@@ -465,7 +467,7 @@ class CommunityScreen(ModalScreen):
             table.add_row(*row)
         user_guid = getattr(self.app, "user_GUID", "")
         self.is_member = bool(user_guid) and any(row[4] == user_guid for row in members)
-        self.query_one("#community_join_controls", Horizontal).display = not self.is_member
+        self.query_one("#community_join_controls", Vertical).display = not self.is_member
         self.query_one("#community_membership_text", Static).update(
             "[dim]You are a member[/dim]" if self.is_member
             else "[dim]You are not a member - join as a contributor or an observer[/dim]")
@@ -513,6 +515,11 @@ class CommunityScreen(ModalScreen):
             text = f"[dim]{none_words('posts', complete=False)}[/dim]"
         self.query_one("#community_post_text", Static).update(text)
 
+    def on_descendant_focus(self, event: events.DescendantFocus) -> None:
+        """Track which DataTable was last focused."""
+        if isinstance(event.widget, DataTable):
+            self.last_active_table = event.widget.id or self.last_active_table
+
     @on(DataTable.RowHighlighted, "#community_posts_table")
     def handle_post_highlighted(self, event: DataTable.RowHighlighted) -> None:
         self._show_post_text()
@@ -526,8 +533,9 @@ class CommunityScreen(ModalScreen):
         self.dismiss(210)
 
     def action_add_item(self) -> None:
-        """ Add a comment if the comments list has focus, otherwise a blog post """
-        if self.focused is self.query_one("#community_comments_table", DataTable):
+        """ Add a comment if the comments list was last active, otherwise a blog post """
+        comments_table = self.query_one("#community_comments_table", DataTable)
+        if self.focused is comments_table or (self.focused is None and self.last_active_table == "community_comments_table"):
             self.action_add_comment()
         else:
             self.action_new_post()
@@ -575,8 +583,9 @@ class CommunityScreen(ModalScreen):
         self._open_feedback("#community_resources_table", 4, "Resource")
 
     def action_feedback(self) -> None:
-        """ Feedback on the highlighted resource if the resources list has focus, otherwise on the post """
-        if self.focused is self.query_one("#community_resources_table", DataTable):
+        """ Feedback on the highlighted resource if resources list was last active, otherwise on the post """
+        resources_table = self.query_one("#community_resources_table", DataTable)
+        if self.focused is resources_table or (self.focused is None and self.last_active_table == "community_resources_table"):
             self._open_resource_feedback()
         else:
             self._open_post_feedback()

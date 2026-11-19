@@ -21,7 +21,6 @@ Screen {
     layout: grid;
     grid-size: 3;
     grid-columns: 1fr 1fr 1fr;
-    /*grid-rows: 3 1fr 1fr 1fr 1;*/
     grid-rows: 1fr 1fr 1fr;
     grid-gutter: 1;
     background: #1e1e2e;
@@ -51,20 +50,20 @@ ModalScreen {
     grid-gutter: 2;
 }
 
-.EditProfileScreen {
+EditProfileScreen {
     grid-rows: auto auto 1fr auto;
 }
 
-.EditTeamsScreen {
+EditTeamsScreen {
     grid-rows: auto auto auto 1fr auto;
 }
 
-.EditRolesScreen, .EditCommunitiesScreen, .EditIdentitiesScreen,.StatusScreen, .GenericDataViewScreen {
+EditRolesScreen, EditCommunitiesScreen, EditIdentitiesScreen, StatusScreen, GenericDataViewScreen {
     grid-rows: auto auto 1fr auto;
 }
 
 /* Header and Footer are docked, so the grid holds only the title and the container */
-FeedbackScreen, FeedbackLogScreen {
+FeedbackScreen, FeedbackLogScreen, CreateProjectScreen, CreateCommunityScreen {
     grid-rows: auto 1fr;
     background: $background;
 }
@@ -153,32 +152,57 @@ ProjectsScreen {
     height: 100%;
 }
 
-#my_communities_table {
-    width: 100%;
-    height: 1fr;
-}
-
+#my_communities_table,
 #my_projects_table {
     width: 100%;
-    height: 1fr;
+    height: auto;
+    max-height: 6;
 }
 
 #my_communities_buttons,
+#my_projects_buttons {
+    height: auto;
+    margin-top: 1;
+}
+
 #found_communities_buttons,
-#my_projects_buttons,
 #found_projects_buttons {
+    height: auto;
+    margin-top: 1;
+    width: 100%;
+}
+
+#found_communities_buttons_row,
+#found_projects_buttons_row {
+    width: 100%;
     height: auto;
 }
 
-#join_assignment_type, #creator_assignment_type,
-#project_join_assignment_type, #project_creator_assignment_type, #project_type_select {
+#found_communities_buttons_row Button,
+#found_projects_buttons_row Button {
+    width: 1fr;
+    min-width: 8;
+    margin: 0;
+}
+
+#join_assignment_type,
+#project_join_assignment_type,
+#community_join_assignment_type {
+    width: 100%;
+    margin-bottom: 1;
+}
+
+#creator_assignment_type,
+#project_creator_assignment_type,
+#project_type_select {
     width: 20;
 }
 
 #communities_found_table,
 #projects_found_table {
+    width: 100%;
     height: auto;
-    max-height: 12;
+    max-height: 4;
 }
 
 /* Title row, then the blog + members side by side, then the resources + comments */
@@ -227,18 +251,25 @@ ProjectScreen {
 #project_resources_table,
 #project_comments_table {
     height: auto;
-    max-height: 12;
+    max-height: 4;
 }
 
 #community_blog_buttons,
-#community_join_controls,
-#project_blog_buttons,
-#project_join_controls {
+#project_blog_buttons {
     height: auto;
+    margin-top: 1;
 }
 
-#community_join_assignment_type {
-    width: 20;
+#community_join_controls,
+#project_join_controls {
+    height: auto;
+    margin-top: 1;
+    width: 100%;
+}
+
+#community_join_controls Button,
+#project_join_controls Button {
+    width: 100%;
 }
 
 /* Title row, the like/rating summary, then the ratings + comments side by side */
@@ -319,7 +350,6 @@ ModalScreen > Header, ModalScreen > Footer {
 #main_roles_container,
 #main_teams_container,
 #other_function_container,
-#other_function_list,
 #main_associations_container,
 #my_collections_container {
     width: 100%;
@@ -328,10 +358,23 @@ ModalScreen > Header, ModalScreen > Footer {
     background: #181825;
 }
 
+#other_function_list {
+    width: 100%;
+    height: 1fr;
+    border: none;
+    background: #181825;
+}
+
 #main_activities_container {
     width: 100%;
     height: 100%;
+    border: round #89b4fa;
     background: #181825;
+}
+
+#main_activities_container DataTable {
+    height: 1fr;
+    width: 100%;
 }
 
 #main_identities_container {
@@ -342,6 +385,7 @@ ModalScreen > Header, ModalScreen > Footer {
     background: #181825;
 }
 
+#main_screen Vertical > Static,
 #main_screen ScrollableContainer > Static {
     color: #89b4fa;
     text-style: bold;
@@ -371,6 +415,11 @@ ModalScreen > Header, ModalScreen > Footer {
     background: #181825;
 }
 
+#main_screen Vertical DataTable {
+    width: 100%;
+    height: 1fr;
+}
+
 #technology_types_table,
 #business_domain_table,
 #communities_table,
@@ -380,10 +429,6 @@ ModalScreen > Header, ModalScreen > Footer {
 #glossary_table,
 #generic_data_view_table,
 #feedback_log_table,
-#projects_table,
-#roles_table,
-#teams_table,
-#user_identity_table,
 #user_identity_datatable,
 #status_table,
 #root_collection_table,
@@ -406,6 +451,8 @@ Button {
     color: #11111b;
     border: none;
     text-style: bold;
+    height: auto;
+    min-height: 1;
 }
 
 Button:focus {
@@ -425,10 +472,10 @@ DataTable, TextArea, SelectionList, Tree, OptionList {
 
 DataTable {
     text-style: bold;
+    border: none;
 }
 
 DataTable:focus {
-    border: heavy #a6e3a1;
     background: #1e1e2e;
 }
 DataTable > .datatable--header {
@@ -495,37 +542,52 @@ Input:focus {
     height: auto;
 }
 
-.SplashScreen {
-    align: center middle;              /* 1. Center the entire card on the screen */
-    background: rgba(30, 30, 46, 0.7);    /* Dim the 3x3 grid behind it */
+#project_mission_text,
+#community_mission_text {
+    width: 100%;
+    height: 4;
+    border: round #89b4fa;
+    background: #11111b;
+    color: #cdd6f4;
+}
+
+SplashScreen {
+    layout: vertical;
+    align: center middle;
+    background: rgba(30, 30, 46, 0.7);
 }
 
 #splash-card {
     background: #181825;
     border: thick #89b4fa;
-    padding: 2 4;
-    width: 80;
-    height: 24;
-    /* 2. Vertically pushes layout content down and horizontally centers items */
-    align: center bottom;
+    padding: 1 2;
+    width: 72;
+    max-width: 90%;
+    height: auto;
+    max-height: 18;
+    align: center middle;
 }
 
 #splash-text {
     text-align: center;
     width: 100%;
-    margin-bottom: 2;
+    margin-bottom: 1;
     color: #cdd6f4;
 }
 
+#SplashButtons,
 #splash_buttons {
     layout: horizontal;
     align: center middle;
     height: auto;
-    margin-bottom: 1;
+    margin-top: 1;
 }
 
+#SplashButtons Button,
 #splash_buttons Button {
-    margin: 0 1;                       /* Space out the two buttons side by side */
+    margin: 0 1;
+    min-width: 18;
+    height: 3;
 }
 
 .empty {
@@ -541,7 +603,8 @@ ConnectionErrorScreen, ChangeUserScreen {
     background: #181825;
     border: thick #f38ba8;
     padding: 1 2;
-    width: 90;
+    width: 72;
+    max-width: 90%;
     height: auto;
 }
 
@@ -549,7 +612,8 @@ ConnectionErrorScreen, ChangeUserScreen {
     background: #181825;
     border: thick #89b4fa;
     padding: 1 2;
-    width: 90;
+    width: 72;
+    max-width: 90%;
     height: auto;
 }
 #connection_error_reason {

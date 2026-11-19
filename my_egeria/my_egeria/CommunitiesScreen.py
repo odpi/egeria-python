@@ -5,9 +5,9 @@
    This file provides the Work with Communities screen for My Profile.
 
 """
-from textual import on
+from textual import events, on
 from textual.app import ComposeResult
-from textual.containers import ScrollableContainer, Horizontal
+from textual.containers import ScrollableContainer, Horizontal, Vertical
 from textual.screen import ModalScreen
 from textual.widgets import DataTable, Header, Static, Footer, Input, Button, Select, TextArea
 
@@ -49,15 +49,16 @@ class CreateCommunityScreen(ModalScreen):
         yield Header(show_clock=True)
         yield Static("Create Community", classes="span-3", id="create_community_title")
         yield ScrollableContainer(
-            Static("Name *"),
-            Input(placeholder="Name of the community", id="community_name_input"),
-            Static("Description *"),
-            Input(placeholder="What the community is about", id="community_description_input"),
+            Horizontal(
+                Input(placeholder="Name of the community *", id="community_name_input"),
+                Input(placeholder="What the community is about *", id="community_description_input"),
+            ),
+            Horizontal(
+                Select([(t, t) for t in CREATOR_ASSIGNMENT_TYPES] + [("Don't join", NOT_JOINING)],
+                       value=CREATOR_ASSIGNMENT_TYPES[0], allow_blank=False, id="creator_assignment_type"),
+            ),
             Static("Mission"),
             TextArea(id="community_mission_text"),
-            Static("Your part in it"),
-            Select([(t, t) for t in CREATOR_ASSIGNMENT_TYPES] + [("Don't join", NOT_JOINING)],
-                   value=CREATOR_ASSIGNMENT_TYPES[0], allow_blank=False, id="creator_assignment_type"),
             Horizontal(
                 Button("Create", id="submit_create_community_btn", variant="primary"),
                 Button("Cancel", id="cancel_create_community_btn", variant="warning"),
@@ -149,6 +150,7 @@ class CommunitiesScreen(ModalScreen):
         ("escape", "quit", "Back"),
         ("q", "quit", "Main Menu"),
         ("ctrl+o", "open_community", "Open Community"),
+        ("enter", "open_community", "Open Community"),
         ("ctrl+n", "join_community", "Join Community"),
         ("ctrl+t", "create_community", "Create Community"),
         ("ctrl+d", "leave_community", "Leave Community"),
@@ -164,6 +166,7 @@ class CommunitiesScreen(ModalScreen):
         self.focus_search = focus_search
         # The last search, repeated after joining or leaving so the found list stays current
         self.search_string = "*"
+        self.last_active_table: str = "communities_found_table" if focus_search else "my_communities_table"
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
@@ -185,11 +188,14 @@ class CommunitiesScreen(ModalScreen):
             Static("Find other communities: enter a search term ('*' for all) and press return"),
             Input(value=self.search_string, placeholder="Search term, or * for all", id="community_search_input"),
             DataTable(id="communities_found_table", zebra_stripes=True, cursor_type="row"),
-            Horizontal(
+            Vertical(
                 Select([(t, t) for t in JOIN_ASSIGNMENT_TYPES], value=JOIN_ASSIGNMENT_TYPES[0],
                        allow_blank=False, id="join_assignment_type"),
-                Button("Join Community", id="join_community_btn", variant="primary"),
-                Button("Open Community", id="open_found_community_btn", variant="primary"),
+                Horizontal(
+                    Button("Join Community", id="join_community_btn", variant="primary"),
+                    Button("Open Community", id="open_found_community_btn", variant="primary"),
+                    id="found_communities_buttons_row",
+                ),
                 id="found_communities_buttons",
             ),
             id="find_communities_container",
@@ -268,10 +274,15 @@ class CommunitiesScreen(ModalScreen):
 
         self.app.push_screen(community_screen, callback=on_close)
 
+    def on_descendant_focus(self, event: events.DescendantFocus) -> None:
+        """Track which DataTable was last focused."""
+        if isinstance(event.widget, DataTable):
+            self.last_active_table = event.widget.id or self.last_active_table
+
     def action_open_community(self) -> None:
-        """ Open the highlighted community in whichever list has focus """
+        """Open the highlighted community in whichever list was last active or focused."""
         found_table = self.query_one("#communities_found_table", DataTable)
-        if self.focused is found_table:
+        if self.focused is found_table or (self.focused is None and self.last_active_table == "communities_found_table"):
             self._open_found()
         else:
             self._open_mine()

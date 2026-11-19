@@ -29,10 +29,20 @@ from pyegeria import (
     print_basic_exception,
     exec_report_spec, Egeria,
 )
-from textual import on
+from textual import on, constants as textual_constants
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.widgets import DataTable, OptionList, Header, Footer
+
+# Turn off Textual's pixel-precise mouse mode. Terminals that support in-band resize
+# (Ghostty, kitty, WezTerm, ...) get it by default, and on the user's Mac it turned every
+# click into the row above the pointer: tables selected the wrong line and footer keys
+# never fired. The parser reads this flag when the terminal answers at startup, so
+# setting it at import time works whether the app starts from `textual run` or the
+# `my_profile` command. Setting TEXTUAL_SMOOTH_SCROLL explicitly still wins.
+if "TEXTUAL_SMOOTH_SCROLL" not in os.environ:
+    textual_constants.SMOOTH_SCROLL = False
+
 from SplashScreen import SplashScreen
 from ConnectionErrorScreen import ConnectionErrorScreen
 from ChangeUserScreen import ChangeUserScreen
@@ -119,6 +129,7 @@ class MyProfileApp(App, TechTypesMixin, ShopForDataMixin, TeamRolesMixin, Elemen
     ]
 
     CSS_PATH = "my_profile.tcss"
+    ENABLE_COMMAND_PALETTE = False
 
     SCREENS = {
         "splash": SplashScreen,

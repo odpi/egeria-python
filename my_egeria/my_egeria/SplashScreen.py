@@ -44,7 +44,7 @@ class SplashScreen(ModalScreen):
         set_screen_heading(self, "Welcome to my_egeria")
 
     def compose(self) -> ComposeResult:
-        yield Header(show_clock=True,id="splash")
+        yield Header(show_clock=True, id="splash")
         # 1. Define multi-line layout with line breaks
         splash_content = (
             f"Welcome to My_Profile for Egeria Users, {self.user_name}!\n"
@@ -53,20 +53,16 @@ class SplashScreen(ModalScreen):
             "© PDX-License-Identifier: Apache-2.0\n"    
             "Copyright Contributors to the ODPi Egeria project.\n\n"
             "This file provides a set of profile related functions for my_egeria."
-            )
+        )
 
         # 2. Build the UI components
-        yield Static(classes="empty")
         with Vertical(id="splash-card"):
             yield Label(splash_content, id="splash-text")
-        # yield Static(classes="empty")
-        # yield Static(classes="empty")
             yield Horizontal(
                 Button("Continue to App", id="continue", variant="success", classes="splash_buttons"),
                 Button("Change User", variant="warning", id="change_user", classes="splash_buttons"),
                 id="SplashButtons"
             )
-        # yield Static(classes="empty")
         yield Footer()
 
     def action_continue_to_app(self):

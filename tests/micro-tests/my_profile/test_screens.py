@@ -846,6 +846,8 @@ class TestMainScreen:
     async def test_main_screen_edit_selected_table(self, table_id):
         """Verify clicking any DataTable selects it and edit action targets that table."""
         class MockMainHostApp(App):
+            CSS_PATH = "../../../my_egeria/my_egeria/my_profile.tcss"
+
             def __init__(self):
                 super().__init__()
                 self.edited_calls = []
@@ -880,8 +882,9 @@ class TestMainScreen:
 
             await pilot.pause()
 
-            # Click on target table
-            await pilot.click(f"#{table_id}")
+            # Focus target table and trigger edit
+            target_table = main_screen.query_one(f"#{table_id}", DataTable)
+            target_table.focus()
             await pilot.pause()
 
             # Trigger edit table hotkey
@@ -890,3 +893,47 @@ class TestMainScreen:
 
             assert len(app.edited_calls) == 1
             assert app.edited_calls[0][0] == table_id
+
+    @pytest.mark.asyncio
+    async def test_main_screen_footer_mouse_click_edit_table(self):
+        """Verify mouse clicking on the FooterKey triggers the edit action."""
+        from textual.widgets import Footer
+        from textual.widgets._footer import FooterKey
+
+        class MockMainHostApp(App):
+            CSS_PATH = "../../../my_egeria/my_egeria/my_profile.tcss"
+
+            def __init__(self):
+                super().__init__()
+                self.edited_calls = []
+
+            async def on_mount(self):
+                self.main_screen = MainScreen()
+                self.install_screen(self.main_screen, name="main")
+                await self.push_screen("main")
+
+            def edit_tables(self, table_name, row_k):
+                self.edited_calls.append((table_name, row_k))
+
+        app = MockMainHostApp()
+        async with app.run_test(size=(120, 30)) as pilot:
+            main_screen = app.main_screen
+            assoc_table = main_screen.query_one("#associations_table", DataTable)
+            assoc_table.cursor_type = "row"
+            assoc_table.add_columns("Col1", "Col2")
+            assoc_table.add_row("val1", "val2", key="assoc_row_1")
+            assoc_table.focus()
+            await pilot.pause()
+
+            footer = main_screen.query_one(Footer)
+            ctrl_t_key = None
+            for key in footer.query(FooterKey):
+                if key.key == "ctrl+t":
+                    ctrl_t_key = key
+                    break
+            assert ctrl_t_key is not None
+            await pilot.click(ctrl_t_key)
+            await pilot.pause()
+
+            assert len(app.edited_calls) == 1
+            assert app.edited_calls[0][0] == "associations_table"

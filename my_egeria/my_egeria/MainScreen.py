@@ -8,7 +8,8 @@
 from typing import Any
 from textual import events, on
 from textual.app import ComposeResult
-from textual.containers import ScrollableContainer
+from textual.containers import Vertical, ScrollableContainer
+from textual.coordinate import Coordinate
 from textual.screen import Screen
 from textual.widgets import DataTable, OptionList, Header, Static, Footer
 from textual.widgets._option_list import Option
@@ -22,7 +23,7 @@ class MainScreen(Screen):
 
     BINDINGS = [
         ("q", "app.quit", "Quit"),
-        ("ctrl+t", "edit_table", "Edit Selected Table"),
+        ("ctrl+t", "edit_table", "Edit Table"),
         ("ctrl+o", "show_comments", "Show Comments"),
         ("ctrl+n", "add_comment", "Add Comment"),
         ("ctrl+k", "bookmark_row", "Bookmark Row"),
@@ -52,17 +53,17 @@ class MainScreen(Screen):
         # place widgets into grid on screen, note sequence determines position!
         yield Header(show_clock=True, id="main_header")
 
-        yield ScrollableContainer(
+        yield Vertical(
             Static("User Associations  [dim](Enter on a community: open it)[/dim]"),
             DataTable(id="associations_table"),
             id="main_associations_container"
         )
-        yield ScrollableContainer(
+        yield Vertical(
             Static(f"My Collections"),
             DataTable(id=("my_collections_table")),
             id="my_collections_container"
-            )
-        yield ScrollableContainer(
+        )
+        yield Vertical(
             Static(f"Other Functions"),
             Static(f"[b]Select a function[/b]"),
             OptionList(
@@ -84,17 +85,17 @@ class MainScreen(Screen):
             ),
             id="other_function_container"
         )
-        yield ScrollableContainer(
+        yield Vertical(
             Static("Roles  [dim](Enter on a TeamLeader/TeamMember role: show team)[/dim]"),
             DataTable(id="roles_table"),
             id="main_roles_container"
         )
-        yield ScrollableContainer(
+        yield Vertical(
             Static("Teams"),
             DataTable(id="teams_table"),
             id="main_teams_container"
         )
-        yield ScrollableContainer(
+        yield Vertical(
             Static("Blogs"),
             DataTable(id="blogs_table"),
             Static("Journal"),
@@ -104,12 +105,12 @@ class MainScreen(Screen):
             id="main_activities_container"
         )
 
-        yield ScrollableContainer(
+        yield Vertical(
             Static("User Identity"),
             DataTable(id="user_identity_table"),
             id="main_identities_container"
         )
-        yield ScrollableContainer(
+        yield Vertical(
             Static("Projects  [dim](Enter on a project: open it)[/dim]"),
             DataTable(id="projects_table"),
             id="main_projects_container"
@@ -181,11 +182,25 @@ class MainScreen(Screen):
             row_key = None
             if focused_table.row_count > 0 and 0 <= focused_table.cursor_row < focused_table.row_count:
                 try:
-                    row_key = focused_table.coordinate_to_cell_key(focused_table.cursor_coordinate).row_key
+                    row_key = focused_table.coordinate_to_cell_key(Coordinate(focused_table.cursor_row, 0)).row_key
                 except Exception:
-                    row_key = None
+                    try:
+                        row_key = list(focused_table.rows.keys())[focused_table.cursor_row]
+                    except Exception:
+                        row_key = None
+            if row_key is None and self.selected_table == table_id:
+                row_key = self.selected_row
             return table_id, row_key
-        return self.selected_table, self.selected_row
+        table_id = self.selected_table or "associations_table"
+        row_key = self.selected_row
+        if table_id and row_key is None:
+            try:
+                table = self.query_one(f"#{table_id}", DataTable)
+                if table.row_count > 0 and 0 <= table.cursor_row < table.row_count:
+                    row_key = table.coordinate_to_cell_key(Coordinate(table.cursor_row, 0)).row_key
+            except Exception:
+                pass
+        return table_id, row_key
 
     def action_edit_table(self):
         """ Edit the selected table """

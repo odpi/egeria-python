@@ -6,9 +6,9 @@
    resources and comments) for My Profile.
 
 """
-from textual import on
+from textual import events, on
 from textual.app import ComposeResult
-from textual.containers import ScrollableContainer, Horizontal
+from textual.containers import ScrollableContainer, Horizontal, Vertical
 from textual.screen import ModalScreen
 from textual.widgets import DataTable, Header, Static, Footer, Input, Button, Select, TextArea
 
@@ -155,6 +155,7 @@ class ProjectScreen(ModalScreen):
         ("q", "quit", "Main Menu"),
         ("ctrl+n", "add_item", "New Post / Comment"),
         ("ctrl+o", "feedback", "Feedback on Post / Resource"),
+        ("enter", "feedback", "Feedback on Post / Resource"),
         ("ctrl+w", "join", "Join Project"),
     ]
 
@@ -169,6 +170,7 @@ class ProjectScreen(ModalScreen):
         # Whether the user is a member (directly or through a role); None until the members are read
         self.is_member: bool | None = None
         self.joined = False
+        self.last_active_table: str = "project_posts_table"
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
@@ -188,7 +190,7 @@ class ProjectScreen(ModalScreen):
             Static("[b]Members / Team[/b]  [dim](people linked to the project, directly or through a role they hold)[/dim]"),
             DataTable(id="project_members_table", zebra_stripes=True, cursor_type="row"),
             Static("", id="project_membership_text"),
-            Horizontal(
+            Vertical(
                 Select([(t, t) for t in JOIN_ASSIGNMENT_TYPES], value=JOIN_ASSIGNMENT_TYPES[0],
                        allow_blank=False, id="project_join_assignment_type"),
                 Button("Join Project", id="project_join_btn", variant="primary"),
@@ -228,7 +230,7 @@ class ProjectScreen(ModalScreen):
     def _load_members(self) -> None:
         members = self.app.get_project_members(self.project_guid)
         if members is None:
-            self.query_one("#project_join_controls", Horizontal).display = False
+            self.query_one("#project_join_controls", Vertical).display = False
             return
         table = self.query_one("#project_members_table", DataTable)
         table.clear()
@@ -240,7 +242,7 @@ class ProjectScreen(ModalScreen):
                 through = f" (through {row[2]})" if row[2] != "Direct" else ""
                 self.query_one("#project_membership_text", Static).update(
                     f"You are a member{through} with assignment type: {row[1]}")
-        self.query_one("#project_join_controls", Horizontal).display = not self.is_member
+        self.query_one("#project_join_controls", Vertical).display = not self.is_member
         if not self.is_member:
             self.query_one("#project_membership_text", Static).update("You are not a member of this project")
 
@@ -282,6 +284,11 @@ class ProjectScreen(ModalScreen):
             table.add_row(*row, key=row[4])
 
     # --- selection and display ------------------------------------------------
+
+    def on_descendant_focus(self, event: events.DescendantFocus) -> None:
+        """Track which DataTable was last focused."""
+        if isinstance(event.widget, DataTable):
+            self.last_active_table = event.widget.id or self.last_active_table
 
     @on(DataTable.RowHighlighted, "#project_posts_table")
     def handle_posts_table_highlighted(self, event: DataTable.RowHighlighted) -> None:
@@ -375,17 +382,17 @@ class ProjectScreen(ModalScreen):
     # --- general actions (bindings) -------------------------------------------
 
     def action_feedback(self) -> None:
-        """ctrl+o gives feedback on whichever of a post or a resource currently has focus."""
+        """ctrl+o or Enter gives feedback on whichever of a post or a resource was last active."""
         resources_table = self.query_one("#project_resources_table", DataTable)
-        if self.focused is resources_table:
+        if self.focused is resources_table or self.last_active_table == "project_resources_table":
             self.action_resource_feedback()
         else:
             self.action_post_feedback()
 
     def action_add_item(self) -> None:
-        """ctrl+n adds a comment when the comments list has focus, a blog post otherwise."""
+        """ctrl+n adds a comment when the comments list was last active, a blog post otherwise."""
         comments_table = self.query_one("#project_comments_table", DataTable)
-        if self.focused is comments_table:
+        if self.focused is comments_table or self.last_active_table == "project_comments_table":
             self.action_add_comment()
         else:
             self.action_new_blog_post()
