@@ -45,6 +45,7 @@
        {"field": "url", "label": "URL"},
        {"field": "classifications", "label": "Classifications"},
        {"field": "priority", "label": "Priority"},
+       {"field": "scope", "label": "Scope"},
        {"field": "project_status", "label": "Project Status"},
        {"field": "status", "label": "Element Status"},
        {"field": "start_date", "label": "Start Date"},

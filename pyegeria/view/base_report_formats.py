@@ -561,6 +561,7 @@ EXT_REF_COLUMNS = COMMON_COLUMNS + [
 PROJECT_COLUMNS = COMMON_COLUMNS + [
     Column(name="Classifications", key='classifications'),
     Column(name='Priority', key='priority'),
+    Column(name='Scope', key='scope'),
     Column(name='Project Status', key='project_status'),
     Column(name='Element Status', key='status'),
     Column(name='Start Date', key='start_date'),
