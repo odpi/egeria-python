@@ -47,3 +47,9 @@ def test_unset_scope_is_empty_in_dict():
     # (MD/REPORT render every unset column as the text "None" -- generic formatter behaviour, not Scope-specific.)
     assert _out("DICT", None)[0]["Scope"] in (None, "")
     assert _out("DICT", "")[0]["Scope"] in (None, "")
+
+
+def test_my_user_projects_detail_has_scope():
+    from pyegeria.view.base_report_formats import get_report_registry
+    fs = get_report_registry()["My-User-Projects-Detail"]
+    assert "Scope" in [c.name for f in fs.formats for c in f.attributes]

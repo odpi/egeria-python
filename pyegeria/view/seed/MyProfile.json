@@ -388,6 +388,7 @@
        {"field": "projectType", "label": "Project Type"},
        {"field": "description", "label": "Description"},
        {"field": "priority", "label": "Priority"},
+       {"field": "scope", "label": "Scope"},
        {"field": "guid", "label": "GUID", "format": true}
       ]
      },
