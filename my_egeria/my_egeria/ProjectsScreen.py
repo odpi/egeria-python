@@ -5,9 +5,9 @@
    This file provides the Work with Projects screen for My Profile.
 
 """
-from textual import on
+from textual import events, on
 from textual.app import ComposeResult
-from textual.containers import ScrollableContainer, Horizontal
+from textual.containers import ScrollableContainer, Horizontal, Vertical
 from textual.screen import ModalScreen
 from textual.widgets import DataTable, Header, Static, Footer, Input, Button, Select, TextArea
 
@@ -50,18 +50,18 @@ class CreateProjectScreen(ModalScreen):
         yield Header(show_clock=True)
         yield Static("Create Project", classes="span-3", id="create_project_title")
         yield ScrollableContainer(
-            Static("Name *"),
-            Input(placeholder="Name of the project", id="project_name_input"),
-            Static("Description *"),
-            Input(placeholder="What the project is about", id="project_description_input"),
-            Static("Project Type"),
-            Select([(t, t) for t in PROJECT_TYPES], value=PROJECT_TYPES[0], allow_blank=False,
-                   id="project_type_select"),
+            Horizontal(
+                Input(placeholder="Name of the project *", id="project_name_input"),
+                Input(placeholder="What the project is about *", id="project_description_input"),
+            ),
+            Horizontal(
+                Select([(t, t) for t in PROJECT_TYPES], value=PROJECT_TYPES[0], allow_blank=False,
+                       id="project_type_select"),
+                Select([(t, t) for t in CREATOR_ASSIGNMENT_TYPES] + [("Don't join", NOT_JOINING)],
+                       value=CREATOR_ASSIGNMENT_TYPES[0], allow_blank=False, id="project_creator_assignment_type"),
+            ),
             Static("Mission / Planned Results"),
             TextArea(id="project_mission_text"),
-            Static("Your part in it"),
-            Select([(t, t) for t in CREATOR_ASSIGNMENT_TYPES] + [("Don't join", NOT_JOINING)],
-                   value=CREATOR_ASSIGNMENT_TYPES[0], allow_blank=False, id="project_creator_assignment_type"),
             Horizontal(
                 Button("Create", id="submit_create_project_btn", variant="primary"),
                 Button("Cancel", id="cancel_create_project_btn", variant="warning"),
@@ -154,6 +154,7 @@ class ProjectsScreen(ModalScreen):
         ("escape", "quit", "Back"),
         ("q", "quit", "Main Menu"),
         ("ctrl+o", "open_project", "Open Project"),
+        ("enter", "open_project", "Open Project"),
         ("ctrl+n", "join_project", "Join Project"),
         ("ctrl+t", "create_project", "Create Project"),
         ("ctrl+d", "leave_project", "Leave Project"),
@@ -167,6 +168,7 @@ class ProjectsScreen(ModalScreen):
         self.my_projects_data = my_projects or []
         self.focus_search = focus_search
         self.search_string = "*"
+        self.last_active_table: str = "projects_found_table" if focus_search else "my_projects_table"
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
@@ -188,11 +190,14 @@ class ProjectsScreen(ModalScreen):
                    "ctrl+n joins the highlighted project; Enter or ctrl+o opens it[/dim]"),
             Input(placeholder="Search term or *", id="project_search_input"),
             DataTable(id="projects_found_table", zebra_stripes=True, cursor_type="row"),
-            Horizontal(
+            Vertical(
                 Select([(t, t) for t in JOIN_ASSIGNMENT_TYPES], value=JOIN_ASSIGNMENT_TYPES[0],
                        allow_blank=False, id="project_join_assignment_type"),
-                Button("Join Project", id="join_project_btn", variant="primary"),
-                Button("Open Project", id="open_found_project_btn", variant="primary"),
+                Horizontal(
+                    Button("Join Project", id="join_project_btn", variant="primary"),
+                    Button("Open Project", id="open_found_project_btn", variant="primary"),
+                    id="found_projects_buttons_row",
+                ),
                 id="found_projects_buttons",
             ),
             id="find_projects_container",
@@ -271,10 +276,15 @@ class ProjectsScreen(ModalScreen):
 
         self.app.push_screen(project_screen, callback=on_close)
 
+    def on_descendant_focus(self, event: events.DescendantFocus) -> None:
+        """Track which DataTable was last focused."""
+        if isinstance(event.widget, DataTable):
+            self.last_active_table = event.widget.id or self.last_active_table
+
     def action_open_project(self) -> None:
-        """Open the highlighted project in whichever list has focus."""
+        """Open the highlighted project in whichever list was last active or focused."""
         found_table = self.query_one("#projects_found_table", DataTable)
-        if self.focused is found_table:
+        if self.focused is found_table or (self.focused is None and self.last_active_table == "projects_found_table"):
             self._open_found()
         else:
             self._open_mine()
