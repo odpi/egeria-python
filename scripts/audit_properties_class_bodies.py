@@ -52,7 +52,7 @@ at the helper, not at its callers); Python only. Tests and fakes are skipped unl
 Usage
 -----
     python scripts/audit_properties_class_bodies.py REPO [REPO ...] [--label NAME ...]
-        [--egeria ~/localGit/egeria-v6/egeria] [--ref SHA] [--report PATH] [--include-tests]
+        [--egeria ~/localGit/egeria-v6/egeria] [--ref SHA] [--table PATH] [--report PATH] [--include-tests]
 
 Exit status 1 if any finding survives (a discovery tool first: it won't be clean on first run).
 """
@@ -200,10 +200,22 @@ def incomplete_classes(parents: dict[str, str | None]) -> dict[str, str]:
     return out
 
 
+_TABLE_PATH = importlib.util.find_spec("md_processing.md_processing_utils.properties_class_fields").origin
+
+
+def load_table(path: str) -> None:
+    """Audit against another generated properties_class_fields.py (e.g. a branch's regeneration), not the
+    one in this checkout. It is a plain data module; every check reads the rebound global."""
+    global PROPERTIES_CLASS_FIELDS, _TABLE_PATH
+    spec = importlib.util.spec_from_file_location("_alt_properties_class_fields", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    PROPERTIES_CLASS_FIELDS, _TABLE_PATH = mod.PROPERTIES_CLASS_FIELDS, os.path.abspath(path)
+
+
 def table_source_ref() -> str | None:
     """The Egeria sha PROPERTIES_CLASS_FIELDS was generated from (its module docstring says)."""
-    spec = importlib.util.find_spec("md_processing.md_processing_utils.properties_class_fields")
-    with open(spec.origin, encoding="utf-8") as f:
+    with open(_TABLE_PATH, encoding="utf-8") as f:
         m = re.search(r"from Egeria \S+ at ([0-9a-f]{7,40})", f.read(2000))
     return m.group(1) if m else None
 
@@ -746,7 +758,10 @@ def main(argv=None) -> int:
     ap.add_argument("--report", help="write the markdown report here")
     ap.add_argument("--include-tests", action="store_true")
     ap.add_argument("--base", action="append", help="show paths relative to this dir, per repo in order")
+    ap.add_argument("--table", help="a generated properties_class_fields.py to use instead of this checkout's")
     args = ap.parse_args(argv)
+    if args.table:
+        load_table(args.table)
     ref = args.ref or table_source_ref()
     parents, setters, how = None, None, "inferred (no Egeria clone); keys checked against the table only"
     if ref and os.path.isdir(args.egeria):
@@ -767,7 +782,9 @@ def main(argv=None) -> int:
             results[label].extend(r)
         else:
             results[label] = r
-    meta = {"properties table source": table_source_ref() or "unknown", "class hierarchy": how,
+    meta = {"properties table": f"{os.path.relpath(_TABLE_PATH) if not args.table else args.table} "
+                                f"(generated from Egeria {table_source_ref() or 'unknown'})",
+            "class hierarchy": how,
             "tests and fakes": "included" if args.include_tests else "skipped"}
     text = render(results, meta, hierarchy.gaps)
     if args.report:

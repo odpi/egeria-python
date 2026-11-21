@@ -1,6 +1,6 @@
 # Properties-class audit of built request bodies (2026-11-21)
 
-Egeria 6.4 build plan, branch A5 (§3 of `DESIGN-EGERIA-6.4-ADDITIONS-BUILD-PLAN-2026-11-21.md`). **This is a report only: nothing in this branch fixes anything.** Each fix below becomes its own small item.
+Egeria 6.4 build plan, branch A5. Run 2 was against Egeria `90232870b2` and A0's tables; see "Runs" (§3 of `DESIGN-EGERIA-6.4-ADDITIONS-BUILD-PLAN-2026-11-21.md`). **This is a report only: nothing in this branch fixes anything.** Each fix below becomes its own small item.
 
 ## Why
 
@@ -15,7 +15,8 @@ A wrong, unrelated class is a different case. laz's Egeria already rejects it lo
 | egeria-python | upstream/main `6232bcfa` | `pyegeria/`, `md_processing/` |
 | egeria-workspaces | upstream/main `61251c77` | whole tree, read-only via `git archive` into a scratch dir |
 | trellis | origin/main `b3d9c69d` | whole tree, read-only via `git archive` into a scratch dir |
-| Egeria | `c61bad6514` (the sha `properties_class_fields.py` was generated from) | class hierarchy and Jackson setters, read with `git cat-file` (no checkout) |
+| Egeria | `90232870b2` (odpi/egeria main, the #9463 merge) | class hierarchy and Jackson setters, read with `git cat-file` (no checkout) |
+| properties table | egeria-python `claude/e64-a0-generated-tables` `83e4fb22` (A0's regeneration, from #9463's head `0dbf468774`, the same tree as `90232870b2`) | `PROPERTIES_CLASS_FIELDS`, passed with `--table` |
 
 Two kinds of file are skipped by default: tests and fakes (`tests/` dirs, `test_*.py`, `fake_*.py`, `conftest.py`), because they don't send to a real Egeria. Use `--include-tests` to scan them too. No Egeria server was called.
 
@@ -24,7 +25,8 @@ To reproduce it:
 ```bash
 python scripts/audit_properties_class_bodies.py pyegeria md_processing <ws-archive> <trellis-archive> \
   --label egeria-python --label egeria-python --label egeria-workspaces --label trellis \
-  --base . --base . --base <ws-archive> --base <trellis-archive> --report report.md
+  --base . --base . --base <ws-archive> --base <trellis-archive> \
+  --table <A0's properties_class_fields.py> --ref 90232870b2 --report report.md
 ```
 
 ## How "built" was told apart from pass-through
@@ -88,30 +90,53 @@ Each row is a separate fix item. The ones marked *read* were confirmed by readin
 | F9 | trellis `resource_explorer/open_data/publish.py:92` `origin_body` | `owner`, `ownerTypeName`, `ownerPropertyName` on `DigitalResourceOriginProperties` | these belong to the `Ownership` classification (`OwnershipProperties`) | script |
 | F10 | trellis `surveyors/egeria_investigation_publisher.py:208` | `ClassificationProperties` + `typeName` for the Investigation marker. Also PARENT_CLASS: `InvestigationProperties` exists | send `InvestigationProperties` | read |
 | F11 | trellis `scripts/create_measure_definitions.py:200` | `description`, `label` on `ValidValueMemberProperties` (it reads `isDefaultValue`, `ordinal`) | drop them, or put them on the member entity | script |
-| F12 | `md_processing/v2/schema_maker.py:300` SchemaLinkProcessor | `properties` with `label`/`description` and **no class** under NewRelationshipRequestBody. pyegeria's `validate_new_relationship_request` doesn't fill the class in (`NewRelationshipRequestBody.properties` is a plain `dict`, models.py:501) | add `f"{om_type}Properties"`, after checking that the relationship class reads label/description | read; 400 not proven live |
+| F12 | `md_processing/v2/schema_maker.py:300` SchemaLinkProcessor | `properties` with `label`/`description` and **no class** under NewRelationshipRequestBody. pyegeria's `validate_new_relationship_request` doesn't fill the class in | add `f"{om_type}Properties"`, after checking that the relationship class reads label/description | read; 400 not proven live |
 | F13 | egeria-workspaces `PyegeriaWebHandler/resource_browser_handler.py` `_create_list` (quickstart :2298, freshstart :2093) | PARENT_CLASS: `CollectionProperties` with `typeName "WorkingSet"`. Nothing is dropped today (`disposition` isn't sent) | send `WorkingSetProperties` | script |
 | F14 | trellis, 7 SurveyReport creates (`egeria_publisher.py:1426`, `database/egeria_database_surveyor.py:845, 1386`, `filesystem/egeria_filesystem_surveyor.py:366, 600, 768, 844, 910`) | PARENT_CLASS: `AssetProperties` with `typeName "SurveyReport"`. Nothing is dropped today, but any future `analysisStep`/`completionTime`/… would be | send `SurveyReportProperties` (one trellis item covering all 7) | script |
-| F15 | the generator `scripts/gen_properties_class_fields.py` | table gaps: package-private fields and superclasses outside `properties/`. Dr.Egeria's `typed_properties` would **refuse** valid keys sent through it, e.g. ResourceList `resourceUse`/`label`/`description`, AssignmentScope `assignmentType`/`description`, SupportingDefinition `rationale`, AssociatedSecurityList `operationName` | derive keys from public setters, as this audit does, or widen the field regex and the scanned paths. **Land it before or with A0's regeneration from `oak2026`** | read (Java checked) |
+| F15 | the generator `scripts/gen_properties_class_fields.py` | table gaps: package-private fields and superclasses outside `properties/`. Dr.Egeria's `typed_properties` would **refuse** valid keys, e.g. ResourceList `resourceUse`/`label`/`description`, AssignmentScope `assignmentType`/`description`, SupportingDefinition `rationale`, AssociatedSecurityList `operationName` | derive keys from public setters, as this audit does, or widen the field regex and the scanned paths. **Land it before or with A0's regeneration from `oak2026`** | read (Java checked) |
 
 `exchange-quickstart/project_manager.py` in egeria-workspaces had F2's sibling (`AssignmentScopeProperties`), which turned out to be a table gap, not a finding. That file is a vendored copy of pyegeria, so fixing F2 in pyegeria won't reach it.
 
+## Runs
+
+Each re-run adds a row here, so the drop in unclassified sites shows over time. The code refs were the same in both runs: egeria-python `6232bcfa`, egeria-workspaces `61251c77`, trellis `b3d9c69d`.
+
+| run | date | Egeria ref (hierarchy, setters) | tables ref | findings (UNREAD / PARENT / NO_CLASS) | unclassified (python / workspaces / trellis) |
+|---|---|---|---|---|---|
+| 1 | 2026-11-21 | `c61bad6514` | egeria-python upstream/main `6232bcfa` (generated from `c61bad6514`) | 19 / 11 / 1 | **127** (94 / 12 / 21) |
+| 2 | 2026-11-21 | `90232870b2` (#9463 merged) | A0 `83e4fb22` (generated from `0dbf468774`, the same tree) | 19 / 11 / 1 | **127** (94 / 12 / 21) |
+
+Run 2 gave the same findings as run 1, row for row. #9463 adds new types and endpoints, but none of the bodies we build today use them. A0's table still has every F15 gap, so the generator fix is still needed.
+
 ## Unclassified, in short
 
-There are 127 unclassified sites (egeria-python 94, egeria-workspaces 12, trellis 21), all listed below.
-- **52** have a class the script can't resolve to a string. Most are generic helpers building `f"{type}Properties"`.
-- **29** have a slot filled by a non-literal, mostly a call.
-- The rest are unresolved spreads or `update(...)` calls, slots set on a parameter, and names not bound in scope.
+There are 127 unclassified sites in run 2, all listed below.
 
-The biggest single follow-up is `md_processing_utils/common_md_utils.py` `set_element_prop_body` (`"class": prop_name + "Properties"`, 6 call sites listed). It builds keys for whatever type it's handed, so checking it needs a per-call-site (inter-procedural) pass. That is worth its own item.
+**Largest bucket, the inter-procedural follow-up:** 57 sites.
+- 52 have a class built from a type name, such as `f"{type}Properties"` or `prop_name + "Properties"`, that the script can't resolve to a string: egeria-python 32, egeria-workspaces 7, trellis 13.
+- 5 have a slot filled by `md_processing_utils/common_md_utils.py` `set_element_prop_body`.
+
+These helpers build keys for whatever type their caller hands them, so they can only be checked per call site: resolve the type argument at each caller, then check the helper's keys against that class. That is the next item to shrink this count.
+
+**The rest (70):**
+
+| reason | sites |
+|---|---|
+| slot filled by another non-literal (calls such as `element_properties(...)`, `_build_relationship_properties(...)`) | 39 |
+| unresolved `**` spread or `update(...)`, or a class that may come from a spread | 19 |
+| name not bound in scope | 7 |
+| computed key (`x[prop_name] = …`) | 2 |
+| class missing from the table | 2 |
+| slot set on a parameter | 1 |
 
 ## Re-run on 6.4
 
-Once A0 lands the `oak2026` tables, re-run with `--ref <oak2026 sha>` against the Egeria clone (after fetching the PR head) and the regenerated `properties_class_fields.py`. Do this before the 6.4 upgrade, as the plan's §3 says.
+Done: that is run 2 in the table above. Before the 6.4 upgrade on laz, re-run the audit with the tables on egeria-python main once A0 merges, and add a row.
 
-# Generated report
+# Generated report (run 2)
 
-- properties table source: c61bad6514
-- class hierarchy: Egeria c61bad6514 (git cat-file, read-only): superclasses, and keys read = table ∪ public setters in the class chain
+- properties table: A0 83e4fb22 md_processing/md_processing_utils/properties_class_fields.py (generated from Egeria 0dbf468774)
+- class hierarchy: Egeria 90232870b2 (git cat-file, read-only): superclasses, and keys read = table ∪ public setters in the class chain
 - tests and fakes: skipped
 
 ### Totals
