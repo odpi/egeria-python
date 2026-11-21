@@ -652,6 +652,28 @@ ASSET_GRAPH_COLUMNS = COMMON_COLUMNS + COMMON_METADATA_COLUMNS + [
 ]
 
 # Modularized report_specs
+# Egeria 6.4 (odpi/egeria#9463) DataValue columns, shared by the Data-Value and Literal-Data-Value specs.
+DATA_VALUE_COLUMNS = [
+    Column(name='Display Name', key='display_name'),
+    Column(name='Data Type', key='data_type'),
+    Column(name='Data Format', key='data_format'),
+    Column(name='Usage', key='usage'),
+    Column(name='Length', key='length'),
+    Column(name='Description', key='description'),
+]
+
+LITERAL_DATA_VALUE_COLUMNS = [
+    Column(name='Data Value', key='data_value'),
+    Column(name='Data Value List', key='data_value_list'),
+    Column(name='Data Value Map', key='data_value_map'),
+]
+
+DATA_VALUE_RELATIONSHIP_COLUMNS = [
+    Column(name='Used By (Processing Variable)', key='data_value_uses', label='display_name'),
+    Column(name='Data Value Sources', key='data_value_sources', label='display_name'),
+    Column(name='Embedded Data Values', key='embedded_data_values', label='display_name'),
+]
+
 base_report_specs = FormatSetDict({
     "Referenceable": FormatSet(
         heading="Default Attributes for a Referenceable",
@@ -3464,6 +3486,116 @@ formats=[
                                   spec_params={"metadata_element_subtypes": ["LicenseType"]},
                               )
                               ),
+
+    # Egeria 6.4 (odpi/egeria#9463): Decision, DataValue and LiteralDataValue. Hand maintained here,
+    # in License-Type's shape, so Dr.Egeria Display and Portal tables have columns before the
+    # Dr.Egeria commands exist (Phase B generates the "<Type>-DrE-Basic"/"-Advanced" specs, which
+    # render_result_markdown tries first; the "<Type>-DrE" alias is its fallback). Column keys are
+    # checked against PROPERTIES_CLASS_FIELDS and RELATIONSHIP_FIELDS by
+    # tests/micro-tests/test_egeria_6_4_report_specs.py. The action is the generic finder filtered to
+    # the type (as "Dashboards" does) until the typed find_decisions/find_data_values land.
+    'Decision': FormatSet(target_type='Decision',
+                          heading='Decision Attributes',
+                          description='Attributes of a Decision (Egeria 6.4), with its outcomes and assessed inputs.',
+                          aliases=['Decisions', 'Decision-DrE'],
+                          family="Governance Officer",
+                          formats=[
+                              Format(types=['DICT', 'MD', 'FORM', 'REPORT', 'ALL'],
+                                     attributes=[Column(name='Display Name', key='display_name'),
+                                                 Column(name='Disposition', key='disposition'),
+                                                 Column(name='Importance', key='importance'),
+                                                 Column(name='Content Status', key='content_status'),
+                                                 Column(name='Summary', key='summary'),
+                                                 Column(name='Description', key='description'),
+                                                 Column(name='Scope', key='scope'),
+                                                 Column(name='Usage', key='usage'),
+                                                 Column(name='Implications', key='implications'),
+                                                 Column(name='Notes', key='notes'),
+                                                 Column(name='Authors', key='authors'),
+                                                 Column(name='Start Time', key='start_time'),
+                                                 Column(name='Last Review Time', key='last_review_time'),
+                                                 Column(name='Next Review Time', key='next_review_time'),
+                                                 Column(name='Expiry Time', key='expiry_time'),
+                                                 Column(name='Outcomes', key='decision_outcomes',
+                                                        label='display_name'),
+                                                 Column(name='Inputs To Decision', key='inputs_to_decision',
+                                                        label='display_name'),
+                                                 Column(name='Qualified Name', key='qualified_name'),
+                                                 Column(name='GUID', key='guid'),
+                                                 ]),
+                              Format(types=['TABLE', 'LIST'],
+                                     attributes=[Column(name='Display Name', key='display_name'),
+                                                 Column(name='Disposition', key='disposition'),
+                                                 Column(name='Importance', key='importance'),
+                                                 Column(name='Content Status', key='content_status'),
+                                                 Column(name='Summary', key='summary'),
+                                                 Column(name='Scope', key='scope'),
+                                                 Column(name='Next Review Time', key='next_review_time'),
+                                                 Column(name='Expiry Time', key='expiry_time'),
+                                                 Column(name='Qualified Name', key='qualified_name'),
+                                                 Column(name='GUID', key='guid'),
+                                                 ])
+                          ],
+                          action=ActionParameter(
+                              function="MetadataExpert.find_metadata_elements_with_string",
+                              required_params=["search_string"],
+                              optional_params=OPTIONAL_SEARCH_PARAMS,
+                              spec_params={"metadata_element_type": "Decision"},
+                          )
+                          ),
+
+    'Data-Value': FormatSet(target_type='DataValue',
+                            heading='Data Value Attributes',
+                            description='Attributes of a Data Value (Egeria 6.4), with where it is used, '
+                                        'where it comes from and the values embedded in it.',
+                            aliases=['DataValue', 'Data Values', 'Data-Value-DrE'],
+                            family="Data Engineer",
+                            formats=[
+                                Format(types=['DICT', 'MD', 'FORM', 'REPORT', 'ALL'],
+                                       attributes=DATA_VALUE_COLUMNS + DATA_VALUE_RELATIONSHIP_COLUMNS + [
+                                           Column(name='Qualified Name', key='qualified_name'),
+                                           Column(name='GUID', key='guid'),
+                                       ]),
+                                Format(types=['TABLE', 'LIST'],
+                                       attributes=DATA_VALUE_COLUMNS + [
+                                           Column(name='Qualified Name', key='qualified_name'),
+                                           Column(name='GUID', key='guid'),
+                                       ])
+                            ],
+                            action=ActionParameter(
+                                function="MetadataExpert.find_metadata_elements_with_string",
+                                required_params=["search_string"],
+                                optional_params=OPTIONAL_SEARCH_PARAMS,
+                                spec_params={"metadata_element_type": "DataValue"},
+                            )
+                            ),
+
+    'Literal-Data-Value': FormatSet(target_type='LiteralDataValue',
+                                    heading='Literal Data Value Attributes',
+                                    description='Attributes of a Literal Data Value (Egeria 6.4): a Data Value '
+                                                'that carries its value, list or map.',
+                                    aliases=['LiteralDataValue', 'Literal Data Values', 'Literal-Data-Value-DrE'],
+                                    family="Data Engineer",
+                                    formats=[
+                                        Format(types=['DICT', 'MD', 'FORM', 'REPORT', 'ALL'],
+                                               attributes=DATA_VALUE_COLUMNS + LITERAL_DATA_VALUE_COLUMNS
+                                                          + DATA_VALUE_RELATIONSHIP_COLUMNS + [
+                                                   Column(name='Qualified Name', key='qualified_name'),
+                                                   Column(name='GUID', key='guid'),
+                                               ]),
+                                        Format(types=['TABLE', 'LIST'],
+                                               attributes=DATA_VALUE_COLUMNS + LITERAL_DATA_VALUE_COLUMNS + [
+                                                   Column(name='Qualified Name', key='qualified_name'),
+                                                   Column(name='GUID', key='guid'),
+                                               ])
+                                    ],
+                                    action=ActionParameter(
+                                        function="MetadataExpert.find_metadata_elements_with_string",
+                                        required_params=["search_string"],
+                                        optional_params=OPTIONAL_SEARCH_PARAMS,
+                                        spec_params={"metadata_element_type": "LiteralDataValue"},
+                                    )
+                                    ),
 
     "Governance Policies": FormatSet(
         target_type="GovernancePolicy",

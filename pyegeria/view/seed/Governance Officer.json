@@ -555,6 +555,84 @@
    }
   },
   {
+   "label": "Decision",
+   "envelope": {
+    "heading": "Decision Attributes",
+    "description": "Attributes of a Decision (Egeria 6.4), with its outcomes and assessed inputs.",
+    "family": "Governance Officer",
+    "target_type_name": "Decision",
+    "aliases": ["Decisions", "Decision-DrE"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Decision",
+      "function": "MetadataExpert.find_metadata_elements_with_string",
+      "params": {"search_string": "$search_string", "metadata_element_type": "Decision"}
+     }
+    ],
+    "formatters": {
+     "DICT": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "disposition", "label": "Disposition"},
+       {"field": "importance", "label": "Importance"},
+       {"field": "content_status", "label": "Content Status"},
+       {"field": "summary", "label": "Summary"},
+       {"field": "description", "label": "Description"},
+       {"field": "scope", "label": "Scope"},
+       {"field": "usage", "label": "Usage"},
+       {"field": "implications", "label": "Implications"},
+       {"field": "notes", "label": "Notes"},
+       {"field": "authors", "label": "Authors"},
+       {"field": "start_time", "label": "Start Time"},
+       {"field": "last_review_time", "label": "Last Review Time"},
+       {"field": "next_review_time", "label": "Next Review Time"},
+       {"field": "expiry_time", "label": "Expiry Time"},
+       {"field": "decision_outcomes", "label": "Outcomes", "related_label": "display_name"},
+       {"field": "inputs_to_decision", "label": "Inputs To Decision", "related_label": "display_name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"}
+      ]
+     },
+     "MD": {"same_as": "DICT"},
+     "FORM": {"same_as": "DICT"},
+     "REPORT": {"same_as": "DICT"},
+     "ALL": {"same_as": "DICT"},
+     "TABLE": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "disposition", "label": "Disposition"},
+       {"field": "importance", "label": "Importance"},
+       {"field": "content_status", "label": "Content Status"},
+       {"field": "summary", "label": "Summary"},
+       {"field": "scope", "label": "Scope"},
+       {"field": "next_review_time", "label": "Next Review Time"},
+       {"field": "expiry_time", "label": "Expiry Time"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"}
+      ]
+     },
+     "LIST": {"same_as": "TABLE"}
+    }
+   }
+  },
+  {
    "label": "Governance Policies",
    "envelope": {
     "heading": "Governance-Definitions Information",
