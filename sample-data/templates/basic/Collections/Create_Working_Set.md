@@ -18,7 +18,7 @@ ___
 
 >	**Attribute Type**: Simple
 
->	**Description**: The status of the elements in the working set.
+>	**Description**: The disposition: what was decided, or the current state of the item (for a working set, the status of its elements; for a decision or an outcome, what it settled).
 
 
 ### Journal Entry

@@ -2262,7 +2262,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "The status of the elements in the working set.",
+      "description": "The disposition: what was decided, or the current state of the item (for a working set, the status of its elements; for a decision or an outcome, what it settled).",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -2271,7 +2271,7 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Domain",
-      "Journal Entry": ""
+      "Journal Entry": "Reworded 2026-11-21 so the Egeria 6.4 Decision commands can share it."
     },
     "Business Capability Type": {
       "variable_name": "business_capability_type",

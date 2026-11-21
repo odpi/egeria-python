@@ -18,7 +18,7 @@ ___
 
 >	**Attribute Type**: Simple
 
->	**Description**: Date/time (ISO 8601) that the work started - for a promise, work on delivering the promised resource; for a report, the run that produced it.
+>	**Description**: Date/time (ISO 8601) that the work or decision started - for a promise, work on delivering the promised resource; for a report, the run that produced it; for a decision, when it took effect.
 
 
 ### Completion Time

@@ -131,6 +131,10 @@ FIND_METHOD_ADDITIONS: frozenset = frozenset({
     # find_elements_by_property_value calls it for the technology specs (deployedImplementationType
     # EQ the technology AND the name match, evaluated by Egeria in one query).
     "ClassificationExplorer.find_root_elements",
+    # Read only (Egeria 6.4, odpi/egeria#9463): POSTs a SearchStringRequestBody to
+    # governance-officer/decisions/by-search-string through _async_find_request and returns the decisions.
+    # Named by the generated Decision-DrE-Basic/-Advanced specs (Create Decision's find_method).
+    "GovernanceOfficer.find_decisions",
 })
 
 FIND_METHOD_ALLOWLIST: frozenset = _CENSUS_FIND_METHODS | FIND_METHOD_ADDITIONS
