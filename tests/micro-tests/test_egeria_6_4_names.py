@@ -76,5 +76,8 @@ def test_fixtures_and_generated_tables_name_the_same_source_sha():
     assert f"head: {sha}" in (FIXTURES / "SOURCE").read_text(encoding="utf-8")
     import md_processing.md_processing_utils.properties_class_fields as pcf
     import pyegeria.view.egeria_relationship_fields as erf
-    assert sha in pcf.__doc__, "properties_class_fields.py was not generated from the fixtures' sha"
+    # PY-45 regenerated it from the merge commit, which SOURCE records as the same tree as the head
+    merged = re.search(r"^merged: ([0-9a-f]{7,40})", (FIXTURES / "SOURCE").read_text(encoding="utf-8"), re.M)
+    assert sha in pcf.__doc__ or (merged and f"Egeria {merged.group(1)} at" in pcf.__doc__), \
+        "properties_class_fields.py was not generated from the fixtures' sha (or its merge commit)"
     assert sha[:10] in erf.__doc__, "egeria_relationship_fields.py was not generated from the fixtures' sha"

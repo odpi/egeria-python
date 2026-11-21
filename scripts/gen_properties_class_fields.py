@@ -13,6 +13,13 @@ named class doesn't declare is silently ignored (`ignoreUnknown=true`). Dr.Egeri
 build the typed bodies (parent relationship properties, initial/replacement classifications,
 template replacement properties) and to report every key it can't send.
 
+The keys are what Jackson binds: the beans say `setterVisibility=PUBLIC_ONLY, fieldVisibility=NONE`,
+so a key is a public one-argument `setX` (named as Jackson does by default: setURL is "url"), or its
+`@JsonProperty` name, declared in the class or any superclass. Superclasses are resolved the way javac
+does (explicit import, then same package, then wildcard imports) across the whole frameworks tree, so
+package-private fields and superclasses outside the properties packages (GetOptions, SearchOptions,
+...) count. This is the same ground truth scripts/audit_properties_class_bodies.py checks against (PY-45).
+
 Reads a git ref (default origin/main) with `git cat-file`, so the Egeria checkout is never modified:
 
     python scripts/gen_properties_class_fields.py [--egeria ~/localGit/egeria-v6/egeria] [--ref origin/main]
@@ -21,23 +28,36 @@ import argparse
 import os
 import re
 import subprocess
+import sys
 
 OUT = os.path.join(os.path.dirname(__file__), "..", "md_processing", "md_processing_utils",
                    "properties_class_fields.py")
 FRAMEWORKS = "open-metadata-implementation/frameworks/"
 ROOTS = {"RelationshipProperties": "relationship", "ClassificationProperties": "classification",
          "EntityProperties": "entity"}
-_FIELD = re.compile(r"^\s*(?:private|protected)\s+(?!static\b)(?!final\b)[\w<>,\s\[\]?]+?\s+(\w+)\s*(?:=[^;]*)?;",
-                    re.M)
+
+_PACKAGE = re.compile(r"^\s*package\s+([\w.]+)\s*;", re.M)
+_IMPORT = re.compile(r"^\s*import\s+(?!static\b)([\w.]+?)(\.\*)?\s*;", re.M)
+_CLASS = re.compile(r"\bpublic\s+(?:(?:abstract|final)\s+)*class\s+(\w+)(?:\s*<[^{]*?>)?"
+                    r"(?:\s+extends\s+([\w.]+))?")
+_SETTER = re.compile(r"\bpublic\s+(?:(?:final|synchronized)\s+)*void\s+set(\w+)\s*\(")
+_JSON_PROPERTY = re.compile(r"@JsonProperty\s*\(\s*(?:value\s*=\s*)?\"([^\"]*)\"")
+_JSON_IGNORE = re.compile(r"@JsonIgnore\b(?!Properties)")
 
 
 def git(egeria: str, *args, stdin: bytes | None = None) -> bytes:
     return subprocess.run(["git", "-C", egeria, *args], input=stdin, capture_output=True, check=True).stdout
 
 
+def listed(path: str) -> bool:
+    """Files whose *Properties classes go in the table (the rest are read only for superclass chains)."""
+    return path.endswith("Properties.java") or "/properties/" in path
+
+
 def read_sources(egeria: str, ref: str) -> dict[str, str]:
+    """Every main-source Java file under the frameworks tree at `ref`, by path."""
     paths = [p for p in git(egeria, "ls-tree", "-r", "--name-only", ref, "--", FRAMEWORKS).decode().split("\n")
-             if p.endswith(".java") and "/src/main/java/" in p and (p.endswith("Properties.java") or "/properties/" in p)]
+             if p.endswith(".java") and "/src/main/java/" in p]
     batch = git(egeria, "cat-file", "--batch", stdin="".join(f"{ref}:{p}\n" for p in paths).encode())
     sources, pos = {}, 0
     for path in paths:
@@ -49,27 +69,173 @@ def read_sources(egeria: str, ref: str) -> dict[str, str]:
     return sources
 
 
-def scan(sources: dict[str, str]) -> tuple[dict, dict]:
-    parent, declares = {}, {}
-    for src in sources.values():
-        m = re.search(r"public\s+(?:abstract\s+)?class\s+(\w+)(?:\s+extends\s+(\w+))?", src)
-        if not m:
+def _strip_comments(src: str) -> str:
+    """The source with comments blanked (newlines kept); string and char literals are left in place."""
+    out, i, n = [], 0, len(src)
+    while i < n:
+        c = src[i]
+        if c == "/" and src.startswith("//", i):
+            j = src.find("\n", i)
+            j = n if j < 0 else j
+            out.append(" " * (j - i))
+            i = j
+        elif c == "/" and src.startswith("/*", i):
+            j = src.find("*/", i + 2)
+            j = n if j < 0 else j + 2
+            out.append(re.sub(r"[^\n]", " ", src[i:j]))
+            i = j
+        elif c in "\"'":
+            j = i + 1
+            while j < n and src[j] != c:
+                j += 2 if src[j] == "\\" else 1
+            out.append(src[i:j + 1])
+            i = j + 1
+        else:
+            out.append(c)
+            i += 1
+    return "".join(out)
+
+
+def _depths(src: str) -> list[int]:
+    """Brace depth at every character of comment-free `src`, ignoring braces inside literals."""
+    depth, out, quote, i = 0, [0] * len(src), None, 0
+    while i < len(src):
+        c = src[i]
+        if quote:
+            if c == "\\":
+                out[i] = depth
+                i += 1
+            elif c == quote:
+                quote = None
+        elif c in "\"'":
+            quote = c
+        elif c == "{":
+            depth += 1
+        elif c == "}":
+            depth -= 1
+        if i < len(src):
+            out[i] = depth
+        i += 1
+    return out
+
+
+def _one_argument(src: str, open_paren: int) -> bool:
+    """True if the parameter list starting at `open_paren` holds exactly one parameter."""
+    depth, angle, saw = 0, 0, False
+    for c in src[open_paren:]:
+        if c == "(":
+            depth += 1
+        elif c == ")":
+            depth -= 1
+            if depth == 0:
+                return saw
+        elif c == "<":
+            angle += 1
+        elif c == ">":
+            angle -= 1
+        elif c == "," and depth == 1 and angle == 0:
+            return False
+        elif not c.isspace():
+            saw = True
+    return False
+
+
+def _jackson_name(base: str) -> str:
+    """Jackson's default (legacy) setter naming: lower-case the leading run of capitals, so setURL is
+    "url" and setGUID "guid", not java.beans' "URL". Egeria doesn't enable USE_STD_BEAN_NAMING; where it
+    wants a camel-case acronym key it says so with @JsonProperty (e.g. iscQualifiedName)."""
+    i = 0
+    while i < len(base) and base[i].isupper():
+        i += 1
+    return base[:i].lower() + base[i:]
+
+
+def parse(src: str) -> dict | None:
+    """The top-level public class of one Java file: package, imports, name, extends, and its JSON keys in
+    declaration order. Setters of nested classes don't count (depth 1 only); None for interfaces etc."""
+    src = _strip_comments(src)
+    depth = _depths(src)
+    m = next((m for m in _CLASS.finditer(src) if depth[m.start()] == 0), None)
+    if not m:
+        return None
+    package = (_PACKAGE.search(src) or [None, ""])[1]
+    explicit, wildcards = {}, []
+    for imp in _IMPORT.finditer(src):
+        if imp.group(2):
+            wildcards.append(imp.group(1))
+        else:
+            explicit[imp.group(1).rsplit(".", 1)[-1]] = imp.group(1)
+    keys, prev_end = [], m.end()
+    for s in _SETTER.finditer(src, m.end()):
+        if depth[s.start()] != 1:
             continue
-        cls = m.group(1)
-        parent[cls] = m.group(2)
-        declares[cls] = [f for f in _FIELD.findall(src[m.end():]) if f != "serialVersionUID"]
-    return parent, declares
+        # the annotations on this method: everything since the previous member ended
+        start = max(src.rfind(";", prev_end, s.start()), src.rfind("}", prev_end, s.start()), prev_end)
+        annotations = src[start:s.start()]
+        prev_end = s.end()
+        if _JSON_IGNORE.search(annotations) or not _one_argument(src, s.end() - 1):
+            continue
+        renamed = _JSON_PROPERTY.search(annotations)
+        keys.append(renamed.group(1) if renamed else _jackson_name(s.group(1)))
+    return {"package": package, "explicit": explicit, "wildcards": wildcards, "name": m.group(1),
+            "extends": m.group(2), "keys": list(dict.fromkeys(keys))}
 
 
-def describe(cls: str, parent: dict, declares: dict) -> tuple[str, tuple]:
-    fields, seen, kind, node = [], set(), "other", cls
-    while node and node not in seen:
-        seen.add(node)
-        if node in ROOTS:
-            kind = ROOTS[node]
-        fields = declares.get(node, []) + [f for f in fields if f not in declares.get(node, [])]
-        node = parent.get(node)
-    return kind, tuple(dict.fromkeys(fields))
+def build_table(sources: dict[str, str], warn=lambda msg: None) -> dict[str, tuple[str, tuple[str, ...]]]:
+    """{simple class name: (kind, keys)} for every listed *Properties class in `sources` ({path: java})."""
+    classes, paths, by_simple = {}, {}, {}
+    for path, src in sources.items():
+        info = parse(src)
+        if info is None:
+            continue
+        fqn = f"{info['package']}.{info['name']}" if info["package"] else info["name"]
+        if fqn in classes:
+            continue
+        classes[fqn], paths[fqn] = info, path
+        by_simple.setdefault(info["name"], []).append(fqn)
+
+    unresolved: dict[str, set[str]] = {}
+
+    def parent_of(fqn: str) -> str | None:
+        info = classes[fqn]
+        name = info["extends"]
+        if not name:
+            return None
+        if "." in name and name in classes:
+            return name
+        candidates = [info["explicit"].get(name), f"{info['package']}.{name}",
+                      *(f"{w}.{name}" for w in info["wildcards"])]
+        for c in candidates:
+            if c and c in classes:
+                return c
+        if len(by_simple.get(name, [])) == 1:  # e.g. a fully qualified extends to a nested name
+            return by_simple[name][0]
+        unresolved.setdefault(name, set()).add(fqn)
+        return None
+
+    def describe(fqn: str) -> tuple[str, tuple[str, ...]]:
+        chain, node, seen = [], fqn, set()
+        while node and node not in seen:
+            seen.add(node)
+            chain.append(node)
+            node = parent_of(node)
+        kind = next((ROOTS[classes[n]["name"]] for n in reversed(chain) if classes[n]["name"] in ROOTS), "other")
+        # root first, as Jackson's bean description lists them; a subclass override keeps the root's slot
+        keys = [k for n in reversed(chain) for k in classes[n]["keys"]]
+        return kind, tuple(dict.fromkeys(keys))
+
+    table = {}
+    for fqn in sorted(classes, key=lambda f: classes[f]["name"]):
+        name = classes[fqn]["name"]
+        if not name.endswith("Properties") or not listed(paths[fqn]):
+            continue
+        if name in table:
+            raise SystemExit(f"two listed classes are both called {name}: the table is keyed by simple name")
+        table[name] = describe(fqn)
+    for name, subclasses in sorted(unresolved.items()):
+        warn(f"superclass {name} not in the frameworks tree (its setters are not counted): "
+             f"{', '.join(sorted(s.rsplit('.', 1)[-1] for s in subclasses))}")
+    return table
 
 
 def main():
@@ -77,9 +243,7 @@ def main():
     ap.add_argument("--egeria", default=os.path.expanduser("~/localGit/egeria-v6/egeria"))
     ap.add_argument("--ref", default="origin/main")
     args = ap.parse_args()
-    parent, declares = scan(read_sources(args.egeria, args.ref))
-    # Superclasses such as GovernedDataClassificationBase are scanned too; only *Properties classes are listed.
-    table = {c: describe(c, parent, declares) for c in sorted(parent) if c.endswith("Properties")}
+    table = build_table(read_sources(args.egeria, args.ref), warn=lambda m: print(f"warning: {m}", file=sys.stderr))
     head = git(args.egeria, "log", "-1", "--format=%h %cs", args.ref).decode().strip()
     lines = [
         "# SPDX-License-Identifier: Apache-2.0",
@@ -90,7 +254,8 @@ def main():
         f"GENERATED by scripts/gen_properties_class_fields.py from Egeria {args.ref} at {head} -- do not",
         "edit by hand; re-run the script instead. Kind is the root of the class's superclass chain:",
         "relationship (RelationshipProperties), classification (ClassificationProperties), entity",
-        "(EntityProperties) or other.",
+        "(EntityProperties) or other. Keys are the public setters (what Jackson binds) through the whole",
+        "superclass chain, root first.",
         '"""',
         "",
         "PROPERTIES_CLASS_FIELDS: dict[str, tuple[str, tuple[str, ...]]] = {",
