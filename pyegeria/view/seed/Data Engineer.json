@@ -143,6 +143,202 @@
      "LIST": {"same_as": "TABLE"}
     }
    }
+  },
+  {
+   "label": "Data-Value-DrE-Advanced",
+   "envelope": {
+    "heading": "Data-Value-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Data Value (Create, Advanced).",
+    "family": "Data Engineer",
+    "target_type_name": "Data Value",
+    "aliases": ["Data Value DrE Advanced"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Data Value",
+      "function": "DataEngineer.find_data_values",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "data_format", "label": "Data Format"},
+       {"field": "length", "label": "Length"},
+       {"field": "data_type", "label": "Data Type", "valid_values": ["string", "int", "long", "date", "boolean", "char", "byte", "float", "double", "biginteger", "bigdecimal", "array<string>", "array<int>", "map<string,string>", "map<string,boolean>", "map<string,int>", "map<string,long>", "map<string,double>", "map<string,date>", "map<string,object>", "short", "map<string,array<string>>", "other"]},
+       {"field": "usage", "label": "Usage"},
+       {"field": "fingerprint", "label": "Fingerprint"},
+       {"field": "fingerprint_algorithm", "label": "Fingerprint Algorithm"},
+       {"field": "hash", "label": "Hash"},
+       {"field": "hash_algorithm", "label": "Hash Algorithm"},
+       {"field": "literal_value", "label": "Literal Value"},
+       {"field": "literal_value_list", "label": "Literal Value List"},
+       {"field": "literal_value_map", "label": "Literal Value Map"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "status", "label": "Status"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_time", "label": "Effective Time"},
+       {"field": "effective_to", "label": "Effective To"},
+       {"field": "glossary_term", "label": "Glossary Term"},
+       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "status", "label": "Status"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "additional_properties", "label": "Additional Properties"},
+       {"field": "category", "label": "Category"},
+       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
+       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "identifier", "label": "Identifier"},
+       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "legal", "label": "Legal"},
+       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
+       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "data_format", "label": "Data Format"},
+       {"field": "length", "label": "Length"},
+       {"field": "data_type", "label": "Data Type", "valid_values": ["string", "int", "long", "date", "boolean", "char", "byte", "float", "double", "biginteger", "bigdecimal", "array<string>", "array<int>", "map<string,string>", "map<string,boolean>", "map<string,int>", "map<string,long>", "map<string,double>", "map<string,date>", "map<string,object>", "short", "map<string,array<string>>", "other"]},
+       {"field": "usage", "label": "Usage"},
+       {"field": "fingerprint", "label": "Fingerprint"},
+       {"field": "fingerprint_algorithm", "label": "Fingerprint Algorithm"},
+       {"field": "hash", "label": "Hash"},
+       {"field": "hash_algorithm", "label": "Hash Algorithm"},
+       {"field": "literal_value", "label": "Literal Value"},
+       {"field": "literal_value_list", "label": "Literal Value List"},
+       {"field": "literal_value_map", "label": "Literal Value Map"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Data-Value-DrE-Basic",
+   "envelope": {
+    "heading": "Data-Value-DrE-Basic Attributes",
+    "description": "Auto-generated format for Data Value (Create, Basic).",
+    "family": "Data Engineer",
+    "target_type_name": "Data Value",
+    "aliases": ["Data Value DrE Basic"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "Data Value",
+      "function": "DataEngineer.find_data_values",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "LIST": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "description", "label": "Description"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "data_format", "label": "Data Format"},
+       {"field": "length", "label": "Length"},
+       {"field": "data_type", "label": "Data Type", "valid_values": ["string", "int", "long", "date", "boolean", "char", "byte", "float", "double", "biginteger", "bigdecimal", "array<string>", "array<int>", "map<string,string>", "map<string,boolean>", "map<string,int>", "map<string,long>", "map<string,double>", "map<string,date>", "map<string,object>", "short", "map<string,array<string>>", "other"]},
+       {"field": "usage", "label": "Usage"},
+       {"field": "fingerprint", "label": "Fingerprint"},
+       {"field": "fingerprint_algorithm", "label": "Fingerprint Algorithm"},
+       {"field": "hash", "label": "Hash"},
+       {"field": "hash_algorithm", "label": "Hash Algorithm"},
+       {"field": "literal_value", "label": "Literal Value"},
+       {"field": "literal_value_list", "label": "Literal Value List"},
+       {"field": "literal_value_map", "label": "Literal Value Map"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "category", "label": "Category"}
+      ]
+     },
+     "ALL": {
+      "columns": [
+       {"field": "zone_membership", "label": "Zone Membership"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description"},
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "legal", "label": "Legal"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "version_identifier", "label": "Version Identifier"},
+       {"field": "data_format", "label": "Data Format"},
+       {"field": "length", "label": "Length"},
+       {"field": "data_type", "label": "Data Type", "valid_values": ["string", "int", "long", "date", "boolean", "char", "byte", "float", "double", "biginteger", "bigdecimal", "array<string>", "array<int>", "map<string,string>", "map<string,boolean>", "map<string,int>", "map<string,long>", "map<string,double>", "map<string,date>", "map<string,object>", "short", "map<string,array<string>>", "other"]},
+       {"field": "usage", "label": "Usage"},
+       {"field": "fingerprint", "label": "Fingerprint"},
+       {"field": "fingerprint_algorithm", "label": "Fingerprint Algorithm"},
+       {"field": "hash", "label": "Hash"},
+       {"field": "hash_algorithm", "label": "Hash Algorithm"},
+       {"field": "literal_value", "label": "Literal Value"},
+       {"field": "literal_value_list", "label": "Literal Value List"},
+       {"field": "literal_value_map", "label": "Literal Value Map"}
+      ]
+     }
+    }
+   }
   }
  ]
 }

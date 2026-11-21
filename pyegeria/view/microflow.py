@@ -135,6 +135,9 @@ FIND_METHOD_ADDITIONS: frozenset = frozenset({
     # governance-officer/decisions/by-search-string through _async_find_request and returns the decisions.
     # Named by the generated Decision-DrE-Basic/-Advanced specs (Create Decision's find_method).
     "GovernanceOfficer.find_decisions",
+    # Read only (Egeria 6.4): POSTs a SearchStringRequestBody to data-engineer/data-values/by-search-string
+    # through _async_find_request and returns the data values. Named by the generated Data-Value-DrE specs.
+    "DataEngineer.find_data_values",
 })
 
 FIND_METHOD_ALLOWLIST: frozenset = _CENSUS_FIND_METHODS | FIND_METHOD_ADDITIONS

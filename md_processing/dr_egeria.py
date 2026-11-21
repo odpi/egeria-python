@@ -424,6 +424,10 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
     from md_processing.v2.decisions import register_decision_processors
     register_decision_processors(reg)
 
+    # Egeria 6.4 Data Values (odpi/egeria#9463, 0208): the Data Engineer family.
+    from md_processing.v2.data_values import register_data_value_processors
+    register_data_value_processors(reg)
+
     # Lineage Linker -- a dedicated Link/Update command pair per relationship
     # type (2026-09-16 split from one generic selector-attribute command triple
     # -- see lineage_linker.py's module docstring for why), plus one shared

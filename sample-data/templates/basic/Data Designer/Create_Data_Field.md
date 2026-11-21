@@ -82,7 +82,7 @@ ___
 
 >	**Attribute Type**: Simple Int
 
->	**Description**: The maximum number of characters or digits allowed in the field.
+>	**Description**: The maximum number of characters or digits allowed in the field, or the length of a data value.
 
 
 ### Maximum Cardinality
@@ -142,7 +142,7 @@ ___
 
 >	**Attribute Type**: Simple Int
 
->	**Description**: The ordinal position of the data field within its containing data structure.
+>	**Description**: The ordinal position: of a data field within its containing data structure, or of a data value among an element's processing variables or a parent value's embedded values (0 means unset).
 
 >	**Default Value**: 0
 

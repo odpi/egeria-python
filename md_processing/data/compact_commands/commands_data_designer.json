@@ -2741,7 +2741,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "The maximum number of characters or digits allowed in the field.",
+      "description": "The maximum number of characters or digits allowed in the field, or the length of a data value.",
       "generated": false,
       "style": "Simple Int",
       "user_specified": true,
@@ -2750,7 +2750,7 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Domain",
-      "Journal Entry": ""
+      "Journal Entry": "Reworded 2026-11-21 so the Egeria 6.4 Data Value commands can share it."
     },
     "Less Granular Data Grain": {
       "variable_name": "less_granular_data_grain",
@@ -3007,7 +3007,7 @@
       "default_value": "0",
       "valid_values": [],
       "existing_element": "",
-      "description": "The ordinal position of the data field within its containing data structure.",
+      "description": "The ordinal position: of a data field within its containing data structure, or of a data value among an element's processing variables or a parent value's embedded values (0 means unset).",
       "generated": false,
       "style": "Simple Int",
       "user_specified": true,
@@ -3016,7 +3016,7 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Domain",
-      "Journal Entry": ""
+      "Journal Entry": "Reworded 2026-11-21 so the Egeria 6.4 Data Value commands can share it."
     },
     "Precision": {
       "variable_name": "precision",

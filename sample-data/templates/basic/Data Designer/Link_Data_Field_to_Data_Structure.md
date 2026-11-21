@@ -56,7 +56,7 @@ ___
 
 >	**Attribute Type**: Simple Int
 
->	**Description**: The ordinal position of the data field within its containing data structure.
+>	**Description**: The ordinal position: of a data field within its containing data structure, or of a data value among an element's processing variables or a parent value's embedded values (0 means unset).
 
 >	**Default Value**: 0
 
