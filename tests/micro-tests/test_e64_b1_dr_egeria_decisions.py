@@ -251,11 +251,76 @@ async def test_link_assessment_run_again_with_its_guid_updates_it_instead_of_add
     doc = ASSESSMENT_DOC.replace("### Label\n", f"### Assessment GUID\n{REL_2}\n### Label\n")
     [result] = await h.run_doc(fake, doc)
     assert result["status"] == "success", result
-    [call] = fake.calls
+    [check, call] = fake.calls          # the GUID is checked against the Decision's assessed inputs first (W1)
+    assert check["path"] == f"governance-officer/decisions/{DECISION}/retrieve"
     assert call["path"] == f"governance-officer/assessments/{REL_2}/update"
     assert call["body"] == {"class": "UpdateRelationshipRequestBody", "forLineage": False,
                             "forDuplicateProcessing": False, "mergeUpdate": True, "properties": ASSESSMENT_PROPERTIES}
     assert result["output"].count("### Assessment GUID") == 1
+
+
+OTHER_ELEMENT = "e0000000-0000-4000-8000-000000000009"
+OTHER_DECISION = "d0000000-0000-4000-8000-000000000009"
+
+
+@pytest.mark.asyncio
+async def test_a_copied_document_for_another_element_is_refused_and_nothing_is_sent(monkeypatch):
+    """W1: copying a processed document is the normal way to record a new assessment (multi-link); its old
+    Assessment GUID must not overwrite the assessment it came from."""
+    fake = h.FakeEgeria(monkeypatch, respond=_decision_with(INPUTS))
+    doc = (ASSESSMENT_DOC.replace(f"### Element\n{ELEMENT}", f"### Element\n{OTHER_ELEMENT}")
+           .replace("### Label\n", f"### Assessment GUID\n{REL_2}\n### Label\n"))
+    [result] = await h.run_doc(fake, doc)
+    assert result["status"] == "failure"
+    message = result["message"]
+    assert f"Assessment GUID {REL_2} is decision {DECISION}'s assessment of element {ELEMENT}" in message
+    assert f"not of element {OTHER_ELEMENT}" in message
+    assert "To record a new assessment, remove the Assessment GUID section" in message
+    assert not [c for c in fake.calls if not c["path"].endswith("/retrieve")]
+
+
+@pytest.mark.asyncio
+async def test_a_copied_document_for_another_decision_is_refused(monkeypatch):
+    def respond(method, path, body):
+        if path.endswith(f"decisions/{OTHER_DECISION}/retrieve"):
+            return {"class": "DecisionResponse", "relatedHTTPCode": 200,
+                    "element": {"elementHeader": {"guid": OTHER_DECISION}, "properties": {},
+                                "inputsToDecision": [_assessment(REL_3, ELEMENT, "fit", "2026-11-21T10:00:00Z")]}}
+        return None
+
+    fake = h.FakeEgeria(monkeypatch, respond=respond)
+    doc = (ASSESSMENT_DOC.replace(f"### Decision\n{DECISION}", f"### Decision\n{OTHER_DECISION}")
+           .replace("### Label\n", f"### Assessment GUID\n{REL_1}\n### Label\n"))
+    [result] = await h.run_doc(fake, doc)
+    assert result["status"] == "failure"
+    assert f"is not one of decision {OTHER_DECISION}'s assessed inputs" in result["message"]
+    assert "remove the Assessment GUID section" in result["message"]
+    assert not [c for c in fake.calls if not c["path"].endswith("/retrieve")]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("verb", ["Update", "Detach"])
+async def test_update_and_detach_check_a_guid_against_the_element_and_decision_given(monkeypatch, verb):
+    fake = h.FakeEgeria(monkeypatch, respond=_decision_with(INPUTS))
+    doc = (f"## {verb} Assessment\n### Assessment GUID\n{REL_1}\n### Element\n{OTHER_ELEMENT}\n"
+           f"### Decision\n{DECISION}\n" + ("### Notes\nx\n" if verb == "Update" else ""))
+    [result] = await h.run_doc(fake, doc)
+    assert result["status"] == "failure"
+    assert f"assessment of element {ELEMENT}, not of element {OTHER_ELEMENT}" in result["message"]
+    assert "leave it out to pick one by Element, Decision and Label" in result["message"]
+    assert not [c for c in fake.calls if not c["path"].endswith("/retrieve")]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("verb", ["Update", "Detach"])
+async def test_update_and_detach_with_a_matching_guid_proceed(monkeypatch, verb):
+    fake = h.FakeEgeria(monkeypatch, respond=_decision_with(INPUTS))
+    doc = (f"## {verb} Assessment\n### Assessment GUID\n{REL_1}\n### Element\n{ELEMENT}\n"
+           f"### Decision\n{DECISION}\n" + ("### Notes\nx\n" if verb == "Update" else ""))
+    [result] = await h.run_doc(fake, doc)
+    assert result["status"] == "success", result
+    assert [c["path"] for c in fake.calls if not c["path"].endswith("/retrieve")] == [
+        f"governance-officer/assessments/{REL_1}/{verb.lower()}"]
 
 
 @pytest.mark.asyncio
@@ -410,7 +475,8 @@ async def test_unknown_version_and_a_bare_404_reads_as_needs_6_4(monkeypatch):
     fake = h.FakeEgeria(monkeypatch, about="not json", respond=respond)
     [result] = await h.run_doc(fake, B1_DOCS["Link Decision Outcome"])
     assert result["status"] == "warning"
-    assert "needs Egeria 6.4" in result["message"] and "does not serve this request" in result["message"]
+    assert "needs Egeria 6.4" in result["message"] and "does not serve this request (HTTP 404)" in result["message"]
+    assert "Nothing was sent" not in result["message"]       # N1: it was sent, and refused
 
 
 @pytest.mark.parametrize("about, expected", [

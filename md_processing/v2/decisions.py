@@ -16,7 +16,9 @@
   assessmentTime, so the author can paste the right GUID. Nothing is guessed.
 - Times compare as UTC instants; a time with no zone is refused with words.
 - Link Assessment given an Assessment GUID (a processed document run again) updates that assessment instead of
-  adding another: Egeria never merges a second Assessment between the same two elements.
+  adding another: Egeria never merges a second Assessment between the same two elements. The GUID must be the
+  document's Decision's assessment of its Element; a copied document naming another assessment is refused (W1),
+  and so is an Update/Detach whose GUID doesn't match the Element/Decision it also gives.
 
 Every command is gated on Egeria 6.4 (md_processing.v2.egeria_6_4).
 """
@@ -155,7 +157,9 @@ class AssessmentProcessor(Egeria64LinkProcessor):
         (+ Assessment Time), read from the Decision's inputsToDecision. Zero or several matches are refused."""
         explicit = value(attributes, "Assessment GUID")
         if explicit not in EMPTY:
-            return str(explicit).strip()
+            rel_guid = str(explicit).strip()
+            await self._check_guid_is_this_assessment(attributes, rel_guid)
+            return rel_guid
         what = f"{self.command.verb} {self.command.object_type}"
         element, decision, label = guid(attributes, "Element"), guid(attributes, "Decision"), value(attributes, "Label")
         missing = [n for n, v in (("Element", element), ("Decision", decision), ("Label", label)) if v in EMPTY]
@@ -199,6 +203,34 @@ class AssessmentProcessor(Egeria64LinkProcessor):
                          + "; ".join(_candidate_line(c) for c in matches)
                          + f". {hint} the Assessment GUID of the one you mean. Nothing was changed.")
 
+    async def _check_guid_is_this_assessment(self, attributes: Dict[str, Any], rel_guid: str) -> None:
+        """An Assessment GUID given with a Decision (and Element) must be that decision's assessment (of that
+        element). A copied processed document, the normal way to record another assessment of a multi-link,
+        carries the old GUID: without this check it would silently overwrite the earlier assessment.
+        Given with no Decision, there is nothing to check it against (Update/Detach by GUID alone)."""
+        element, decision = guid(attributes, "Element"), guid(attributes, "Decision")
+        if not decision:
+            return
+        what = f"{self.command.verb} {self.command.object_type}"
+        if self.command.verb in self.LINK_VERBS:
+            fix = "To record a new assessment, remove the Assessment GUID section."
+        else:
+            fix = ("Give the Assessment GUID of the assessment you mean, or leave it out to pick one by Element, "
+                   "Decision and Label.")
+        found = await self.e64(self.client.governance_officer._async_get_decision_by_guid(decision))
+        if not isinstance(found, dict):
+            raise ValueError(f"{what}: decision {decision} could not be read, so Assessment GUID {rel_guid} can't be "
+                             f"checked against it. Nothing was changed.")
+        match = next((c for c in found.get("inputsToDecision") or []
+                      if (c.get("relationshipHeader") or {}).get("guid") == rel_guid), None)
+        if match is None:
+            raise ValueError(f"{what}: Assessment GUID {rel_guid} is not one of decision {decision}'s assessed "
+                             f"inputs; it belongs to another decision, or no longer exists. {fix} Nothing was changed.")
+        owner = ((match.get("relatedElement") or {}).get("elementHeader") or {}).get("guid")
+        if element and owner != element:
+            raise ValueError(f"{what}: Assessment GUID {rel_guid} is decision {decision}'s assessment of element "
+                             f"{owner}, not of element {element}. {fix} Nothing was changed.")
+
     @staticmethod
     def _with_guid_section(raw_block: str, rel_guid: str) -> str:
         """The command block with its ``Assessment GUID`` section set to `rel_guid` (added after the header when
@@ -240,6 +272,8 @@ class AssessmentProcessor(Egeria64LinkProcessor):
         explicit = value(attributes, "Assessment GUID")
         if explicit not in EMPTY:
             rel_guid = str(explicit).strip()
+            self.ends(attributes, "Element", "Decision")
+            await self._check_guid_is_this_assessment(attributes, rel_guid)
             body = update_relationship_body(e64.ASSESSMENT, attributes, properties, attribute_of)
             self.last_body = body
             await self.e64(go._async_update_assessment(rel_guid, body))
