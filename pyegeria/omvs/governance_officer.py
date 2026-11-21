@@ -36,6 +36,7 @@ from pyegeria.models import (GetRequestBody, SearchStringRequestBody, FilterRequ
                              NewClassificationRequestBody, DeleteClassificationRequestBody)
 from pyegeria.core.utils import dynamic_catch
 from pyegeria.core.async_runner import run_sync
+from pyegeria.core import egeria_6_4_names as e64
 
 # GovernanceDefinitionProperties and every subclass in its @JsonSubTypes tree, from Egeria main
 # (8de9572c, 2026-10-26). Regenerate from the Java when Egeria adds a type; a hand-kept list missed
@@ -67,6 +68,31 @@ DEFAULT_BODY_SKELETON = {
     "effective_time": None, "limitResultsByStatus": ["ACTIVE"], "asOfTime": None, "sequencingOrder": None,
     "sequencingProperty": None, "filter": None,
     }
+
+
+def _require_properties_class(body, expected: str, request: str) -> None:
+    """Refuse, before Egeria does, a body whose ``properties`` object names a class other than ``expected``.
+
+    Egeria 6.4 rejects a properties object of the wrong class on these requests; refusing here says which
+    class was expected. A body with no properties object passes (attach works with no properties).
+    """
+    if body is None:
+        return
+    properties = body.get("properties") if isinstance(body, dict) else getattr(body, "properties", None)
+    if properties is None:
+        return
+    sent = properties.get("class") if isinstance(properties, dict) else getattr(properties, "class_", None)
+    if sent != expected:
+        named = f"names class {sent}" if sent else "names no class"
+        raise PyegeriaInvalidParameterException(additional_info={
+            "reason": f"{request}: the properties object {named}; this request expects {expected}."})
+
+
+def _require_body(body, request: str) -> None:
+    """Refuse an update sent with no body: Egeria 6.4 needs one, and an empty update changes nothing."""
+    if body is None:
+        raise PyegeriaInvalidParameterException(additional_info={
+            "reason": f"{request} needs a request body: there is nothing to update without one."})
 
 
 def base_path(client, view_server: str):
@@ -4259,6 +4285,722 @@ class GovernanceOfficer(ServerClient):
         """Remove the PolicyRetrievalPoint classification from an element."""
         run_sync(self._async_clear_policy_retrieval_point(element_guid, body))
 
+    #
+    # Decisions, their outcomes and assessments (0018 Decisions). Needs Egeria 6.4 (odpi/egeria#9463): on an
+    # earlier Egeria these requests are not found. Every name and path comes from pyegeria.core.egeria_6_4_names.
+    # The sample bodies are the createDecision ... detachAssessment requests in Egeria's
+    # Egeria-api-governance-officer.http (a copy is in tests/fixtures/egeria-6.4/).
+    #
+
+    def _e64_url(self, path: str, **guids) -> str:
+        return f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{path.format(**guids)}"
+
+    @dynamic_catch
+    async def _async_create_decision(self, body: dict | NewElementRequestBody) -> str:
+        """ Create a Decision. Async version.
+
+        Needs Egeria 6.4 (odpi/egeria#9463).
+
+        Parameters
+        ----------
+        body: dict | NewElementRequestBody
+            A NewElementRequestBody whose properties are DecisionProperties: qualifiedName, displayName,
+            description, summary, scope, usage, importance, disposition, implications (list), notes, startTime,
+            lastReviewTime, nextReviewTime, expiryTime, authors, contentStatus, userDefinedContentStatus.
+            See the createDecision sample.
+
+        Returns
+        -------
+        str
+            The GUID of the new Decision.
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            The properties object names a class other than DecisionProperties (refused before sending).
+        PyegeriaException
+        """
+        _require_properties_class(body, e64.DECISION_PROPERTIES, "create_decision")
+        url = self._e64_url(e64.DECISIONS_CREATE)
+        return await self._async_create_element_body_request(url, [e64.DECISION_PROPERTIES], body)
+
+    @dynamic_catch
+    def create_decision(self, body: dict | NewElementRequestBody) -> str:
+        """ Create a Decision.
+
+        Needs Egeria 6.4 (odpi/egeria#9463).
+
+        Parameters
+        ----------
+        body: dict | NewElementRequestBody
+            A NewElementRequestBody whose properties are DecisionProperties. See the createDecision sample.
+
+        Returns
+        -------
+        str
+            The GUID of the new Decision.
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            The properties object names a class other than DecisionProperties (refused before sending).
+        PyegeriaException
+        """
+        return run_sync(self._async_create_decision(body))
+
+    @dynamic_catch
+    async def _async_create_decision_from_template(self, body: dict | TemplateRequestBody) -> str:
+        """ Create a Decision from an existing element used as a template. Async version.
+
+        Needs Egeria 6.4 (odpi/egeria#9463). The template supplies the classifications and relationships the new
+        element is given.
+
+        Parameters
+        ----------
+        body: dict | TemplateRequestBody
+            The templateGUID, replacementProperties and placeholderPropertyValues. See the
+            createDecisionFromTemplate sample.
+
+        Returns
+        -------
+        str
+            The GUID of the new Decision.
+
+        Raises
+        ------
+        PyegeriaException
+        """
+        url = self._e64_url(e64.DECISIONS_FROM_TEMPLATE)
+        return await self._async_create_element_from_template(url, body)
+
+    @dynamic_catch
+    def create_decision_from_template(self, body: dict | TemplateRequestBody) -> str:
+        """ Create a Decision from an existing element used as a template.
+
+        Needs Egeria 6.4 (odpi/egeria#9463).
+
+        Parameters
+        ----------
+        body: dict | TemplateRequestBody
+            See the createDecisionFromTemplate sample.
+
+        Returns
+        -------
+        str
+            The GUID of the new Decision.
+
+        Raises
+        ------
+        PyegeriaException
+        """
+        return run_sync(self._async_create_decision_from_template(body))
+
+    @dynamic_catch
+    async def _async_update_decision(self, decision_guid: str, body: dict | UpdateElementRequestBody) -> None:
+        """ Update the properties of a Decision. Async version.
+
+        Needs Egeria 6.4 (odpi/egeria#9463). A body is required. With mergeUpdate true (the default) only the
+        properties sent change; with false the properties sent replace them all.
+
+        Parameters
+        ----------
+        decision_guid: str
+            The GUID of the Decision.
+        body: dict | UpdateElementRequestBody
+            An UpdateElementRequestBody whose properties are DecisionProperties. See the updateDecision sample.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            No body, or the properties object names a class other than DecisionProperties (refused before
+            sending).
+        PyegeriaException
+        """
+        _require_body(body, "update_decision")
+        _require_properties_class(body, e64.DECISION_PROPERTIES, "update_decision")
+        url = self._e64_url(e64.DECISIONS_UPDATE, decisionGUID=decision_guid)
+        await self._async_update_element_body_request(url, [e64.DECISION_PROPERTIES], body)
+        logger.info(f"Updated Decision {decision_guid}")
+
+    @dynamic_catch
+    def update_decision(self, decision_guid: str, body: dict | UpdateElementRequestBody) -> None:
+        """ Update the properties of a Decision.
+
+        Needs Egeria 6.4 (odpi/egeria#9463). A body is required; mergeUpdate is passed through.
+
+        Parameters
+        ----------
+        decision_guid: str
+            The GUID of the Decision.
+        body: dict | UpdateElementRequestBody
+            See the updateDecision sample.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            No body, or the wrong properties class (refused before sending).
+        PyegeriaException
+        """
+        run_sync(self._async_update_decision(decision_guid, body))
+
+    @dynamic_catch
+    async def _async_delete_decision(self, decision_guid: str,
+                                     body: Optional[dict | DeleteElementRequestBody] = None,
+                                     cascade: bool = False) -> None:
+        """ Delete a Decision. Async version.
+
+        Needs Egeria 6.4 (odpi/egeria#9463).
+
+        Parameters
+        ----------
+        decision_guid: str
+            The GUID of the Decision.
+        body: dict | DeleteElementRequestBody, optional
+            See the deleteDecision sample. Without one, a DeleteElementRequestBody carrying `cascade` is sent.
+        cascade: bool, default False
+            Cascade the delete; used only when no body is given.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+        """
+        url = self._e64_url(e64.DECISIONS_DELETE, decisionGUID=decision_guid)
+        await self._async_delete_element_request(url, body, cascade)
+        logger.info(f"Deleted Decision {decision_guid} with cascade {cascade}")
+
+    @dynamic_catch
+    def delete_decision(self, decision_guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
+                        cascade: bool = False) -> None:
+        """ Delete a Decision.
+
+        Needs Egeria 6.4 (odpi/egeria#9463).
+
+        Parameters
+        ----------
+        decision_guid: str
+            The GUID of the Decision.
+        body: dict | DeleteElementRequestBody, optional
+            See the deleteDecision sample.
+        cascade: bool, default False
+            Cascade the delete; used only when no body is given.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+        """
+        run_sync(self._async_delete_decision(decision_guid, body, cascade))
+
+    @dynamic_catch
+    async def _async_get_decisions_by_name(self, name: Optional[str] = None,
+                                           body: Optional[dict | FilterRequestBody] = None,
+                                           start_from: int = 0, page_size: int = 0,
+                                           graph_query_depth: int = 3, output_format: str = "JSON",
+                                           report_spec: str | dict = None,
+                                           **kwargs: Unpack[ListFilters]) -> list | str:
+        """ Return the Decisions with a particular name. Async version.
+
+        Needs Egeria 6.4 (odpi/egeria#9463).
+
+        Parameters
+        ----------
+        name: str, optional
+            The name to match. Ignored when a body is given.
+        body: dict | FilterRequestBody, optional
+            See the getDecisionsByName sample.
+        start_from: int, default 0
+        page_size: int, default 0
+        graph_query_depth: int, default 3
+        output_format: str, default "JSON"
+            JSON, DICT, MD, FORM, REPORT, LIST, MERMAID or HTML.
+        report_spec: str | dict, optional
+        **kwargs
+            The list filters (see ListFilters).
+
+        Returns
+        -------
+        list | str
+            The matching Decisions, or NO_ELEMENTS_FOUND.
+
+        Raises
+        ------
+        PyegeriaException
+        """
+        url = self._e64_url(e64.DECISIONS_BY_NAME)
+        params = {"start_from": start_from, "page_size": page_size, "graph_query_depth": graph_query_depth,
+                  "output_format": output_format, "report_spec": report_spec, "body": body}
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
+        return await self._async_get_name_request(url, _type=e64.DECISION,
+                                                  _gen_output=self._generate_referenceable_output,
+                                                  filter_string=name, **params)
+
+    @dynamic_catch
+    def get_decisions_by_name(self, name: Optional[str] = None, body: Optional[dict | FilterRequestBody] = None,
+                              start_from: int = 0, page_size: int = 0, graph_query_depth: int = 3,
+                              output_format: str = "JSON", report_spec: str | dict = None,
+                              **kwargs: Unpack[ListFilters]) -> list | str:
+        """ Return the Decisions with a particular name.
+
+        Needs Egeria 6.4 (odpi/egeria#9463). Parameters as for `_async_get_decisions_by_name`.
+
+        Returns
+        -------
+        list | str
+            The matching Decisions, or NO_ELEMENTS_FOUND.
+
+        Raises
+        ------
+        PyegeriaException
+        """
+        return run_sync(self._async_get_decisions_by_name(name, body, start_from, page_size, graph_query_depth,
+                                                          output_format, report_spec, **kwargs))
+
+    @dynamic_catch
+    async def _async_get_decision_by_guid(self, decision_guid: str, body: Optional[dict | GetRequestBody] = None,
+                                          graph_query_depth: int = 3, output_format: str = "JSON",
+                                          report_spec: str | dict = None,
+                                          **kwargs: Unpack[GetFilters]) -> dict | str:
+        """ Return a Decision by its GUID. Async version.
+
+        Needs Egeria 6.4 (odpi/egeria#9463). On 6.4 the element carries the decisionOutcomes and
+        inputsToDecision lists; inputsToDecision can name one element more than once, once per assessment.
+
+        Parameters
+        ----------
+        decision_guid: str
+            The GUID of the Decision.
+        body: dict | GetRequestBody, optional
+            See the getDecisionByGUID sample.
+        graph_query_depth: int, default 3
+        output_format: str, default "JSON"
+        report_spec: str | dict, optional
+        **kwargs
+            The get filters (see GetFilters).
+
+        Returns
+        -------
+        dict | str
+            The Decision, or NO_ELEMENTS_FOUND.
+
+        Raises
+        ------
+        PyegeriaException
+        """
+        url = self._e64_url(e64.DECISIONS_RETRIEVE, decisionGUID=decision_guid)
+        params = {"graph_query_depth": graph_query_depth, "output_format": output_format,
+                  "report_spec": report_spec, "body": body}
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
+        return await self._async_get_guid_request(url, _type=e64.DECISION,
+                                                  _gen_output=self._generate_referenceable_output, **params)
+
+    @dynamic_catch
+    def get_decision_by_guid(self, decision_guid: str, body: Optional[dict | GetRequestBody] = None,
+                             graph_query_depth: int = 3, output_format: str = "JSON",
+                             report_spec: str | dict = None, **kwargs: Unpack[GetFilters]) -> dict | str:
+        """ Return a Decision by its GUID.
+
+        Needs Egeria 6.4 (odpi/egeria#9463). Parameters as for `_async_get_decision_by_guid`.
+
+        Returns
+        -------
+        dict | str
+            The Decision, or NO_ELEMENTS_FOUND.
+
+        Raises
+        ------
+        PyegeriaException
+        """
+        return run_sync(self._async_get_decision_by_guid(decision_guid, body, graph_query_depth, output_format,
+                                                         report_spec, **kwargs))
+
+    @dynamic_catch
+    async def _async_find_decisions(self, search_string: str = "*",
+                                    body: Optional[dict | SearchStringRequestBody] = None,
+                                    starts_with: bool = True, ends_with: bool = False, ignore_case: bool = False,
+                                    start_from: int = 0, page_size: int = 100, graph_query_depth: int = 3,
+                                    output_format: str = "JSON", report_spec: str | dict = None,
+                                    **kwargs: Unpack[SearchFilters]) -> list | str:
+        """ Return the Decisions that contain the search string. Async version.
+
+        Needs Egeria 6.4 (odpi/egeria#9463).
+
+        Parameters
+        ----------
+        search_string: str, default "*"
+            The string to match; "*" matches every Decision. Ignored when a body is given.
+        body: dict | SearchStringRequestBody, optional
+            See the findDecisions sample.
+        starts_with: bool, default True
+        ends_with: bool, default False
+        ignore_case: bool, default False
+        start_from: int, default 0
+        page_size: int, default 100
+        graph_query_depth: int, default 3
+        output_format: str, default "JSON"
+        report_spec: str | dict, optional
+        **kwargs
+            The search filters (see SearchFilters).
+
+        Returns
+        -------
+        list | str
+            The matching Decisions, or NO_ELEMENTS_FOUND.
+
+        Raises
+        ------
+        PyegeriaException
+        """
+        url = self._e64_url(e64.DECISIONS_BY_SEARCH_STRING)
+        params = {"search_string": search_string, "body": body, "starts_with": starts_with,
+                  "ends_with": ends_with, "ignore_case": ignore_case, "start_from": start_from,
+                  "page_size": page_size, "graph_query_depth": graph_query_depth,
+                  "output_format": output_format, "report_spec": report_spec}
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None or k == "search_string"}
+        return await self._async_find_request(url, _type=e64.DECISION,
+                                              _gen_output=self._generate_referenceable_output, **params)
+
+    @dynamic_catch
+    def find_decisions(self, search_string: str = "*", body: Optional[dict | SearchStringRequestBody] = None,
+                       starts_with: bool = True, ends_with: bool = False, ignore_case: bool = False,
+                       start_from: int = 0, page_size: int = 100, graph_query_depth: int = 3,
+                       output_format: str = "JSON", report_spec: str | dict = None,
+                       **kwargs: Unpack[SearchFilters]) -> list | str:
+        """ Return the Decisions that contain the search string.
+
+        Needs Egeria 6.4 (odpi/egeria#9463). Parameters as for `_async_find_decisions`.
+
+        Returns
+        -------
+        list | str
+            The matching Decisions, or NO_ELEMENTS_FOUND.
+
+        Raises
+        ------
+        PyegeriaException
+        """
+        return run_sync(self._async_find_decisions(search_string, body, starts_with, ends_with, ignore_case,
+                                                   start_from, page_size, graph_query_depth, output_format,
+                                                   report_spec, **kwargs))
+
+    @dynamic_catch
+    async def _async_link_decision_outcome(self, decision_guid: str, outcome_guid: str,
+                                           body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """ Link a Decision to an element that is an outcome of it (Outcome relationship). Async version.
+
+        Needs Egeria 6.4 (odpi/egeria#9463). Outcome is a uni-link: there is at most one between the two
+        elements, so it is detached by the two GUIDs and nothing is returned. With no body, no body is sent.
+
+        Parameters
+        ----------
+        decision_guid: str
+            The GUID of the Decision (end 1).
+        outcome_guid: str
+            The GUID of the element that is the outcome (end 2, any Referenceable).
+        body: dict | NewRelationshipRequestBody, optional
+            Properties are OutcomeProperties: label, description, importance, disposition. See the
+            linkDecisionOutcome sample.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            The properties object names a class other than OutcomeProperties (refused before sending).
+        PyegeriaException
+        """
+        _require_properties_class(body, e64.OUTCOME_PROPERTIES, "link_decision_outcome")
+        url = self._e64_url(e64.OUTCOMES_ATTACH, decisionGUID=decision_guid, outcomeGUID=outcome_guid)
+        validated_body = self.validate_new_relationship_request(body, [e64.OUTCOME_PROPERTIES])
+        if validated_body:
+            await self._async_make_request("POST", url, validated_body.model_dump_json(indent=2, exclude_none=True))
+        else:
+            await self._async_make_request("POST", url)
+        logger.info(f"Linked Decision {decision_guid} to outcome {outcome_guid}")
+
+    @dynamic_catch
+    def link_decision_outcome(self, decision_guid: str, outcome_guid: str,
+                              body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """ Link a Decision to an element that is an outcome of it (Outcome relationship).
+
+        Needs Egeria 6.4 (odpi/egeria#9463). Uni-link: nothing is returned. With no body, no body is sent.
+
+        Parameters
+        ----------
+        decision_guid: str
+            The GUID of the Decision.
+        outcome_guid: str
+            The GUID of the outcome element.
+        body: dict | NewRelationshipRequestBody, optional
+            See the linkDecisionOutcome sample.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            The wrong properties class (refused before sending).
+        PyegeriaException
+        """
+        run_sync(self._async_link_decision_outcome(decision_guid, outcome_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_decision_outcome(self, decision_guid: str, outcome_guid: str,
+                                             body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """ Remove the Outcome relationship between a Decision and an element. Async version.
+
+        Needs Egeria 6.4 (odpi/egeria#9463). With no body, no body is sent.
+
+        Parameters
+        ----------
+        decision_guid: str
+            The GUID of the Decision.
+        outcome_guid: str
+            The GUID of the outcome element.
+        body: dict | DeleteRelationshipRequestBody, optional
+            See the detachDecisionOutcome sample.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+        """
+        url = self._e64_url(e64.OUTCOMES_DETACH, decisionGUID=decision_guid, outcomeGUID=outcome_guid)
+        await self._async_delete_relationship_request(url, body)
+        logger.info(f"Detached Decision {decision_guid} from outcome {outcome_guid}")
+
+    @dynamic_catch
+    def detach_decision_outcome(self, decision_guid: str, outcome_guid: str,
+                                body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """ Remove the Outcome relationship between a Decision and an element.
+
+        Needs Egeria 6.4 (odpi/egeria#9463). With no body, no body is sent.
+
+        Parameters
+        ----------
+        decision_guid: str
+            The GUID of the Decision.
+        outcome_guid: str
+            The GUID of the outcome element.
+        body: dict | DeleteRelationshipRequestBody, optional
+            See the detachDecisionOutcome sample.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+        """
+        run_sync(self._async_detach_decision_outcome(decision_guid, outcome_guid, body))
+
+    @dynamic_catch
+    async def _async_link_assessment(self, element_guid: str, decision_guid: str,
+                                     body: Optional[dict | NewRelationshipRequestBody] = None) -> str:
+        """ Record that an element was assessed for a Decision (Assessment relationship). Async version.
+
+        Needs Egeria 6.4 (odpi/egeria#9463). Assessment is a MULTI-link, as License and Certification are: the
+        same element can be assessed for the same Decision many times, and each call creates a new
+        relationship. The GUID returned identifies that relationship; `update_assessment` and
+        `detach_assessment` take it. With no body, no body is sent.
+
+        Parameters
+        ----------
+        element_guid: str
+            The GUID of the element assessed (end 1, any Referenceable).
+        decision_guid: str
+            The GUID of the Decision the assessment contributes to (end 2).
+        body: dict | NewRelationshipRequestBody, optional
+            Properties are AssessmentProperties: label, description, assessor, assessorTypeName,
+            assessorPropertyName, assessmentTime, expiryTime, notes, additionalProperties. See the
+            linkAssessment sample.
+
+        Returns
+        -------
+        str
+            The GUID of the new Assessment relationship, or NO_GUID_RETURNED if Egeria sent none.
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            The properties object names a class other than AssessmentProperties (refused before sending).
+        PyegeriaException
+        """
+        _require_properties_class(body, e64.ASSESSMENT_PROPERTIES, "link_assessment")
+        url = self._e64_url(e64.ASSESSMENTS_ATTACH, elementGUID=element_guid, decisionGUID=decision_guid)
+        validated_body = self.validate_new_relationship_request(body, [e64.ASSESSMENT_PROPERTIES])
+        if validated_body:
+            json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+            resp = await self._async_make_request("POST", url, json_body)
+        else:
+            resp = await self._async_make_request("POST", url)
+        return resp.json().get("guid", NO_GUID_RETURNED)
+
+    @dynamic_catch
+    def link_assessment(self, element_guid: str, decision_guid: str,
+                        body: Optional[dict | NewRelationshipRequestBody] = None) -> str:
+        """ Record that an element was assessed for a Decision (Assessment relationship).
+
+        Needs Egeria 6.4 (odpi/egeria#9463). Multi-link, as License is: each call creates a new relationship
+        and returns its GUID, which `update_assessment` and `detach_assessment` take.
+
+        Parameters
+        ----------
+        element_guid: str
+            The GUID of the element assessed.
+        decision_guid: str
+            The GUID of the Decision.
+        body: dict | NewRelationshipRequestBody, optional
+            See the linkAssessment sample.
+
+        Returns
+        -------
+        str
+            The GUID of the new Assessment relationship, or NO_GUID_RETURNED if Egeria sent none.
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            The wrong properties class (refused before sending).
+        PyegeriaException
+        """
+        return run_sync(self._async_link_assessment(element_guid, decision_guid, body))
+
+    @dynamic_catch
+    async def _async_update_assessment(self, assessment_guid: str, body: dict | UpdateRelationshipRequestBody) -> None:
+        """ Update the properties of one Assessment relationship. Async version.
+
+        Needs Egeria 6.4 (odpi/egeria#9463). The relationship is named by its own GUID, as returned by
+        `link_assessment` (as `update_license` takes the License GUID). A body is required; mergeUpdate is
+        passed through.
+
+        Parameters
+        ----------
+        assessment_guid: str
+            The GUID of the Assessment relationship.
+        body: dict | UpdateRelationshipRequestBody
+            Properties are AssessmentProperties. See the updateAssessment sample.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            No body, or the properties object names a class other than AssessmentProperties (refused before
+            sending).
+        PyegeriaException
+        """
+        _require_body(body, "update_assessment")
+        _require_properties_class(body, e64.ASSESSMENT_PROPERTIES, "update_assessment")
+        url = self._e64_url(e64.ASSESSMENTS_UPDATE, assessmentGUID=assessment_guid)
+        await self._async_update_relationship_request(url, [e64.ASSESSMENT_PROPERTIES], body)
+        logger.info(f"Updated Assessment {assessment_guid}")
+
+    @dynamic_catch
+    def update_assessment(self, assessment_guid: str, body: dict | UpdateRelationshipRequestBody) -> None:
+        """ Update the properties of one Assessment relationship.
+
+        Needs Egeria 6.4 (odpi/egeria#9463). Named by the relationship GUID `link_assessment` returned. A body
+        is required; mergeUpdate is passed through.
+
+        Parameters
+        ----------
+        assessment_guid: str
+            The GUID of the Assessment relationship.
+        body: dict | UpdateRelationshipRequestBody
+            See the updateAssessment sample.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            No body, or the wrong properties class (refused before sending).
+        PyegeriaException
+        """
+        run_sync(self._async_update_assessment(assessment_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_assessment(self, assessment_guid: str,
+                                       body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """ Remove one Assessment relationship. Async version.
+
+        Needs Egeria 6.4 (odpi/egeria#9463). Named by the relationship GUID `link_assessment` returned (as
+        `unlicense_element` takes the License GUID); other assessments of the same element stay. With no body,
+        no body is sent.
+
+        Parameters
+        ----------
+        assessment_guid: str
+            The GUID of the Assessment relationship.
+        body: dict | DeleteRelationshipRequestBody, optional
+            See the detachAssessment sample.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+        """
+        url = self._e64_url(e64.ASSESSMENTS_DETACH, assessmentGUID=assessment_guid)
+        await self._async_delete_relationship_request(url, body)
+        logger.info(f"Detached Assessment {assessment_guid}")
+
+    @dynamic_catch
+    def detach_assessment(self, assessment_guid: str,
+                          body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """ Remove one Assessment relationship.
+
+        Needs Egeria 6.4 (odpi/egeria#9463). Named by the relationship GUID `link_assessment` returned. With no
+        body, no body is sent.
+
+        Parameters
+        ----------
+        assessment_guid: str
+            The GUID of the Assessment relationship.
+        body: dict | DeleteRelationshipRequestBody, optional
+            See the detachAssessment sample.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+        """
+        run_sync(self._async_detach_assessment(assessment_guid, body))
 
 if __name__ == "__main__":
     print("Main-Metadata Explorer")
