@@ -1,0 +1,2423 @@
+# Egeria-governance-officer-api
+
+@baseURL=https://localhost:7443
+@viewServer=view-server
+
+###
+# =====================================================================================================================
+# Manage the authentication token.  Run this request to create/refresh the token.
+
+# @name Token (RequestBody)
+POST {{baseURL}}/api/token
+Content-Type: application/json
+
+{
+  "userId" : "peterprofile",
+  "password" : "secret"
+}
+
+> {% client.global.set("token", response.body); %}
+
+###
+# =====================================================================================================================
+# @name getValidMetadataValues - domainIdentifier values
+# Retrieve all the valid values for the domainIdentifier property.
+#
+GET {{baseURL}}/servers/{{viewServer}}/api/open-metadata/valid-metadata/get-valid-metadata-values/domainIdentifier
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+
+###
+# =====================================================================================================================
+# Work with Governance Definitions
+# https://egeria-project.org/concepts/governance-definition
+
+@governanceDefinitionGUID=add guid here
+
+###
+# @name createGovernanceDefinition (with parent)
+# Create an anchored governance definition linked to a parent.  It may be of class:
+## * BusinessImperativeProperties
+## * RegulationArticleProperties
+## * ThreatProperties
+## * GovernancePrincipleProperties
+## * GovernanceObligationProperties
+## * GovernanceApproachProperties
+## * GovernanceProcessingPurposeProperties
+# The class replaces "GovernanceDefinitionProperties" in the "class" property under "properties"
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-definitions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewElementRequestBody",
+  "anchorGUID" : "add guid here",
+  "isOwnAnchor": false,
+  "parentGUID": "add guid here",
+  "parentRelationshipTypeName": "add type name here",
+  "parentRelationshipProperties": {
+    "class": "RelationshipElementProperties",
+    "propertyValueMap" : {
+      "description" : {
+        "class": "PrimitiveTypePropertyValue",
+        "typeName": "string",
+        "primitiveValue" : "New description"
+      }
+    }
+  },
+  "parentAtEnd1": false,
+  "properties": {
+    "class" : "GovernanceDefinitionProperties",
+    "contentStatus" : "DRAFT",
+    "domainIdentifier": 0,
+    "qualifiedName": "add unique name here",
+    "identifier" : "Add value here",
+    "legal" : "Add copyright or license statement here",
+    "displayName": "add short name here",
+    "summary": "add summary here",
+    "description": "add description here",
+    "scope": "add scope of effect for this definition",
+    "importance": "add importance for this definition",
+    "implications": [],
+    "outcomes": [],
+    "results": [],
+    "additionalProperties": {
+      "property1" : "propertyValue1",
+      "property2" : "propertyValue2"
+    },
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+# @name createRegulation (with parent)
+# Create an anchored governance definition linked to a parent of type Regulation
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-definitions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewElementRequestBody",
+  "anchorGUID" : "add guid here",
+  "isOwnAnchor": false,
+  "parentGUID": "add guid here",
+  "parentRelationshipTypeName": "add type name here",
+  "parentRelationshipProperties": {
+    "class": "RelationshipElementProperties",
+    "propertyValueMap" : {
+      "description" : {
+        "class": "PrimitiveTypePropertyValue",
+        "typeName": "string",
+        "primitiveValue" : "New description"
+      }
+    }
+  },
+  "parentAtEnd1": false,
+  "properties": {
+    "class" : "RegulationProperties",
+    "domainIdentifier": 0,
+    "qualifiedName": "add unique name here",
+    "displayName": "add short name here",
+    "summary": "add summary here",
+    "description": "add description here",
+    "scope": "add scope of effect for this definition",
+    "importance": "add importance for this definition",
+    "jurisdiction" : "",
+    "implications": [],
+    "outcomes": [],
+    "results": [],
+    "additionalProperties": {
+      "property1" : "propertyValue1",
+      "property2" : "propertyValue2"
+    },
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+
+@regulationGUID=add guid here
+@regulatorGUID=add guid here
+
+### 
+# @name addRegulatorToRegulation
+# Link a regulation governance definition to an organization using the Regulator relationship.
+#
+# @param serverName  name of the server instance to connect to
+# @param urlMarker  view service URL marker
+# @param regulationGUID unique identifier of the regulation
+# @param regulatorGUID identifier of the organization to link
+# @param requestBody properties for relationship request
+#
+# @return void or
+# InvalidParameterException full path or userId is null or
+# PropertyServerException problem accessing property server or
+# UserNotAuthorizedException security access problem
+#
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/regulations/{{regulationGUID}}/regulators/organizations/{{regulatorGUID}}/attach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewRelationshipRequestBody",
+  "properties": {
+    "class": "RegulatorProperties",
+    "label": "",
+    "description": "",
+    "scope": "",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+# @name removeRegulatorFromRegulation
+# Remove the Regulator relationship between a regulation governance definition and an organization.
+#
+# @param serverName  name of the server instance to connect to
+# @param urlMarker  view service URL marker
+# @param regulationGUID unique identifier of the regulation
+# @param regulatorGUID identifier of the organization to link
+# @param requestBody properties for relationship request
+#
+# @return void or
+# InvalidParameterException full path or userId is null or
+# PropertyServerException problem accessing property server or
+# UserNotAuthorizedException security access problem
+#
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/regulations/{{regulationGUID}}/regulators/organizations/{{regulatorGUID}}/detach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteRelationshipRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+# @name createGovernanceControl (with parent)
+# Create a governance control definition. It may be of class:
+## * GovernanceRuleProperties
+## * ServiceLevelObjectiveProperties
+## * GovernanceProcessProperties
+## * GoveranceResponsibilityProperties
+## * GovernanceProcedureProperties
+## * SecurityAccessControlProperties
+# The class places "GovernanceControlProperties" in the "class" property.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-definitions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewElementRequestBody",
+  "anchorGUID" : "add guid here",
+  "isOwnAnchor": false,
+  "parentGUID": "add guid here",
+  "parentRelationshipTypeName": "add type name here",
+  "parentRelationshipProperties": {
+    "class": "RelationshipElementProperties",
+    "propertyValueMap" : {
+      "description" : {
+        "class": "PrimitiveTypePropertyValue",
+        "typeName": "string",
+        "primitiveValue" : "New description"
+      }
+    }
+  },
+  "parentAtEnd1": false,
+  "properties": {
+    "class" : "GovernanceControlProperties",
+    "typeName" : "enter the type of the governance definition",
+    "domainIdentifier": 0,
+    "qualifiedName": "add unique name here",
+    "displayName": "add short name here",
+    "summary": "add summary here",
+    "description": "add description here",
+    "scope": "add scope of effect for this definition",
+    "importance": "add importance for this definition",
+    "implementationDescription" : "Describe how this control will be implemented",
+    "implications": [],
+    "outcomes": [],
+    "results": [],
+    "additionalProperties": {
+      "property1" : "propertyValue1",
+      "property2" : "propertyValue2"
+    },
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+# @name createDataLens (with parent)
+# Create an anchored governance definition linked to a parent of type DataLens
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-definitions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewElementRequestBody",
+  "anchorGUID" : "add guid here",
+  "isOwnAnchor": false,
+  "parentGUID": "add guid here",
+  "parentRelationshipTypeName": "add type name here",
+  "parentRelationshipProperties": {
+    "class": "RelationshipElementProperties",
+    "propertyValueMap" : {
+      "description" : {
+        "class": "PrimitiveTypePropertyValue",
+        "typeName": "string",
+        "primitiveValue" : "New description"
+      }
+    }
+  },
+  "parentAtEnd1": false,
+  "properties": {
+    "class" : "DataLensProperties",
+    "domainIdentifier": 0,
+    "qualifiedName": "add unique name here",
+    "displayName": "add short name here",
+    "summary": "add summary here",
+    "description": "add description here",
+    "scope": "add scope of effect for this definition",
+    "importance": "add importance for this definition",
+    "businessImperatives" : [],
+    "implications": [],
+    "outcomes": [],
+    "results": [],
+    "dataCollectionStartTime" : "{{$isoTimestamp}}",
+    "dataCollectionEndTime" : "{{$isoTimestamp}}",
+    "dataValidityStartTime" : "{{$isoTimestamp}}",
+    "dataValidityEndTime" : "{{$isoTimestamp}}",
+    "dataCoverageStartTime" : "{{$isoTimestamp}}",
+    "dataCoverageEndTime" : "{{$isoTimestamp}}",
+    "minLongitude" : 0,
+    "minLatitude" : 0,
+    "maxLongitude" : 0,
+    "maxLatitude" : 0,
+    "minHeight" : 0,
+    "maxHeight" : 0,
+    "scopeElements" : {
+      "add scope element name" : "add scope element GUID"
+    },
+    "additionalProperties": {
+      "property1" : "propertyValue1",
+      "property2" : "propertyValue2"
+    },
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+# @name createSecurityAccessControl (with parent)
+# Create an anchored governance definition linked to a parent
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-definitions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewElementRequestBody",
+  "anchorGUID" : "add guid here",
+  "isOwnAnchor": false,
+  "parentGUID": "add guid here",
+  "parentRelationshipTypeName": "add type name here",
+  "parentRelationshipProperties": {
+    "class": "RelationshipElementProperties",
+    "propertyValueMap" : {
+      "description" : {
+        "class": "PrimitiveTypePropertyValue",
+        "typeName": "string",
+        "primitiveValue" : "New description"
+      }
+    }
+  },
+  "parentAtEnd1": false,
+  "properties": {
+    "class" : "SecurityAccessControlProperties",
+    "domainIdentifier": 0,
+    "distinguishedName" : "",
+    "qualifiedName": "add unique name here",
+    "displayName": "add short name here",
+    "summary": "add summary here",
+    "description": "add description here",
+    "scope": "add scope of effect for this definition",
+    "importance": "add importance for this definition",
+    "implementationDescription" : "Describe how this control will be implemented",
+    "implications": [],
+    "outcomes": [],
+    "results": [],
+    "additionalProperties": {
+      "property1" : "propertyValue1",
+      "property2" : "propertyValue2"
+    },
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name createNamingStandardRule (with parent)
+# Create an anchored governance definition linked to a parent of type NamingStandardRule
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-definitions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewElementRequestBody",
+  "anchorGUID" : "add guid here",
+  "isOwnAnchor": false,
+  "parentGUID": "add guid here",
+  "parentRelationshipTypeName": "add type name here",
+  "parentRelationshipProperties": {
+    "class": "RelationshipElementProperties",
+    "propertyValueMap" : {
+      "description" : {
+        "class": "PrimitiveTypePropertyValue",
+        "typeName": "string",
+        "primitiveValue" : "New description"
+      }
+    }
+  },
+  "parentAtEnd1": false,
+  "properties": {
+    "class" : "NamingStandardRuleProperties",
+    "domainIdentifier": 0,
+    "qualifiedName": "add unique name here",
+    "displayName": "add short name here",
+    "summary": "add summary here",
+    "description": "add description here",
+    "scope": "add scope of effect for this definition",
+    "importance": "add importance for this definition",
+    "implications": [],
+    "implementationDescription" : "Describe how this control will be implemented",
+    "namePatterns" : [],
+    "outcomes": [],
+    "results": [],
+    "additionalProperties": {
+      "property1" : "propertyValue1",
+      "property2" : "propertyValue2"
+    },
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name createCertificationType (with parent)
+# Create an anchored governance definition of type CertificationType, linked to a parent.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-definitions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewElementRequestBody",
+  "anchorGUID" : "add guid here",
+  "isOwnAnchor": false,
+  "parentGUID": "add guid here",
+  "parentRelationshipTypeName": "add type name here",
+  "parentRelationshipProperties": {
+    "class": "RelationshipElementProperties",
+    "propertyValueMap" : {
+      "description" : {
+        "class": "PrimitiveTypePropertyValue",
+        "typeName": "string",
+        "primitiveValue" : "New description"
+      }
+    }
+  },
+  "parentAtEnd1": false,
+  "properties": {
+    "class" : "CertificationTypeProperties",
+    "domainIdentifier": 0,
+    "qualifiedName": "add unique name here",
+    "displayName": "add short name here",
+    "summary": "add summary here",
+    "description": "add description here",
+    "scope": "add scope of effect for this definition",
+    "importance": "add importance for this definition",
+    "details" : "",
+    "implications": [],
+    "outcomes": [],
+    "results": [],
+    "additionalProperties": {
+      "property1" : "propertyValue1",
+      "property2" : "propertyValue2"
+    },
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name createLicenseType (with parent)
+# Create an anchored governance definition of type LicenseType, linked to a parent.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-definitions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewElementRequestBody",
+  "anchorGUID" : "add guid here",
+  "isOwnAnchor": false,
+  "parentGUID": "add guid here",
+  "parentRelationshipTypeName": "add type name here",
+  "parentRelationshipProperties": {
+    "class": "RelationshipElementProperties",
+    "propertyValueMap" : {
+      "description" : {
+        "class": "PrimitiveTypePropertyValue",
+        "typeName": "string",
+        "primitiveValue" : "New description"
+      }
+    }
+  },
+  "parentAtEnd1": false,
+  "properties": {
+    "class" : "LicenseTypeProperties",
+    "domainIdentifier": 0,
+    "qualifiedName": "add unique name here",
+    "displayName": "add short name here",
+    "summary": "add summary here",
+    "description": "add description here",
+    "scope": "add scope of effect for this definition",
+    "usage": "add usage for this definition",
+    "importance": "add importance for this definition",
+    "details" : "",
+    "implications": [],
+    "outcomes": [],
+    "results": [],
+    "additionalProperties": {
+      "property1" : "propertyValue1",
+      "property2" : "propertyValue2"
+    },
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+# @name createGovernanceDefinitionFromTemplate
+# Create a new metadata element to represent a governance definition using an existing metadata element as a template.  The template defines additional classifications and relationships that should be added to the new element.",
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-definitions/from-template
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "TemplateRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false,
+  "anchorGUID" : "add guid here",
+  "isOwnAnchor": false,
+  "parentGUID": "add guid here",
+  "parentRelationshipTypeName": "add type name here",
+  "parentRelationshipProperties": {
+    "class": "RelationshipElementProperties",
+    "propertyValueMap" : {
+      "description" : {
+        "class": "PrimitiveTypePropertyValue",
+        "typeName": "string",
+        "primitiveValue" : "New description"
+      }
+    }
+  },
+  "parentAtEnd1": false,
+  "templateGUID": "add guid here",
+  "replacementProperties": {
+    "class": "EntityElementProperties",
+    "propertyValueMap" : {
+      "description" : {
+        "class": "PrimitiveTypePropertyValue",
+        "typeName": "string",
+        "primitiveValue" : "New description"
+      }
+    }
+  },
+  "placeholderPropertyValues":  {
+    "placeholder1" : "propertyValue1",
+    "placeholder2" : "propertyValue2"
+  }
+}
+
+
+
+###
+# @name updateGovernanceDefinition
+# Update the properties of a governance definition.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-definitions/{{governanceDefinitionGUID}}/update
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "UpdateElementRequestBody",
+  "properties": {
+    "class" : "GovernanceDefinitionProperties",
+    "contentStatus" : "ACTIVE",
+    "qualifiedName": "add unique name here",
+    "displayName": "add short name here",
+    "description": "add description here",
+    "namespacePath": "add namespace for this structure",
+    "versionIdentifier": "add version for this structure",
+    "additionalProperties": {
+      "property1" : "propertyValue1",
+      "property2" : "propertyValue2"
+    },
+    "extendedProperties": {
+      "property1" : "propertyValue1",
+      "property2" : "propertyValue2"
+    },
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "mergeUpdate": true,
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+# @name updateGovernanceDefinitionStatus
+# Update the status of a governance definition.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-definitions/{{governanceDefinitionGUID}}/update
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "UpdateElementRequestBody",
+  "properties": {
+    "class" : "GovernanceDefinitionProperties",
+    "contentStatus": "ACTIVE"
+  },
+  "mergeUpdate": true
+}
+
+###
+
+@governanceDefinitionOneGUID=add guid here
+@governanceDefinitionTwoGUID=add guid here
+@relationshipTypeName=add type name here
+
+###
+# @name linkPeerDefinitions
+# Attach two peer governance definitions. Request body is optional.
+# The relationshipTypeNme can be:
+## * GovernanceDriverLink between governance drivers (BusinessImperitive, Regulation, RegulationArticle, Threat).
+## * GovernancePolicyLink between governance policies (GovernancePrinciple, GovernanceObligation, GovernanceApproach).
+## * GovernanceControlLink between governance controls (GovernanceRule, GovernanceProcess, GovernanceResponsibility, GovernanceProcedure, SecurityAccessControl, SecurityGroup).
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-definitions/{{governanceDefinitionOneGUID}}/peer-definitions/{{relationshipTypeName}}/{{governanceDefinitionTwoGUID}}/attach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewRelationshipRequestBody",
+  "properties": {
+    "class": "PeerDefinitionProperties",
+    "description": "",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+
+# @name detachPeerDefinitions
+# Detach a governance definition from one of its peers. Request body is optional.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-definitions/{{governanceDefinitionOneGUID}}/peer-definitions/{{relationshipTypeName}}/{{governanceDefinitionTwoGUID}}/detach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteRelationshipRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+# @name attachSupportingDefinition
+# Attach a supporting governance definition. Request body is optional.
+# The relationshipTypeNme can be:
+## * GovernanceResponse between governance drivers (BusinessImperitive, Regulation, RegulationArticle, Threat) and governance policies (GovernancePrinciple, GovernanceObligation, GovernanceApproach).
+## * GovernanceMechanism between governance policies (GovernancePrinciple, GovernanceObligation, GovernanceApproach) and governance controls (GovernanceRule, GovernanceProcess, GovernanceResponsibility, GovernanceProcedure, SecurityAccessControl, SecurityGroup).
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-definitions/{{governanceDefinitionOneGUID}}/supporting-definitions/{{relationshipTypeName}}/{{governanceDefinitionTwoGUID}}/attach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewRelationshipRequestBody",
+  "properties": {
+    "class": "SupportingDefinitionProperties",
+    "rationale": "",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+
+# @name detachSupportingDefinition
+# Detach a governance definition from a supporting governance definition. Request body is optional.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-definitions/{{governanceDefinitionOneGUID}}/supporting-definitions/{{relationshipTypeName}}/{{governanceDefinitionTwoGUID}}/detach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteRelationshipRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+# @name deleteGovernanceDefinition
+# Delete a governance definition. Request body is optional.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-definitions/{{governanceDefinitionGUID}}/delete
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteElementRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+# @name findAllGovernanceDefinitions
+# Retrieve the list of governance definition metadata elements that contain the search string.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-definitions/by-search-string
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+
+###
+# @name findAllGovernanceDefinitions - with full request body
+# Retrieve the list of governance definition metadata elements that contain the search string.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-definitions/by-search-string
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "SearchStringRequestBody",
+  "startsWith" : false,
+  "endsWith" : false,
+  "ignoreCase" : true,
+  "startFrom" : 0,
+  "pageSize": 0,
+  "asOfTime" : "{{$isoTimestamp}}",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false,
+  "limitResultsByStatus" : ["ACTIVE"],
+  "sequencingOrder" : "PROPERTY_ASCENDING",
+  "sequencingProperty" : "qualifiedName"
+}
+
+
+###
+# @name findGovernanceDefinitions
+# Retrieve the list of governance definition metadata elements that contain the search string.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-definitions/by-search-string
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "SearchStringRequestBody",
+  "searchString": "xxx",
+  "startsWith" : false,
+  "endsWith" : false,
+  "ignoreCase" : true,
+  "startFrom" : 0,
+  "pageSize": 0
+}
+
+
+###
+# @name findGovernanceDefinitions - with full request body
+# Retrieve the list of governance definition metadata elements that contain the search string.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-definitions/by-search-string
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "SearchStringRequestBody",
+  "searchString": "xxx",
+  "startsWith" : false,
+  "endsWith" : false,
+  "ignoreCase" : true,
+  "startFrom" : 0,
+  "pageSize": 0,
+  "asOfTime" : "{{$isoTimestamp}}",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false,
+  "limitResultsByStatus" : ["ACTIVE"],
+  "sequencingOrder" : "PROPERTY_ASCENDING",
+  "sequencingProperty" : "qualifiedName"
+}
+
+###
+
+# @name getGovernanceDefinitionsByName
+# Returns the list of governance definitions with a particular name.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-definitions/by-name
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "filter" : "Add name here",
+  "startFrom": 0,
+  "pageSize": 10
+}
+
+
+###
+
+# @name getGovernanceDefinitionsByName - with full request body
+# Returns the list of governance definitions with a particular name.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-definitions/by-name
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "FilterRequestBody",
+  "filter" : "Add name here",
+  "startFrom": 0,
+  "pageSize": 10,
+  "asOfTime" : "{{$isoTimestamp}}",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false,
+  "limitResultsByStatus" : ["ACTIVE"],
+  "sequencingOrder" : "PROPERTY_ASCENDING",
+  "sequencingProperty" : "qualifiedName"
+}
+
+
+###
+# @name getGovernanceDefinitionByGUID
+# Return the properties of a specific governance definition.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-definitions/{{governanceDefinitionGUID}}/retrieve
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+###
+# @name getGovernanceDefinitionByGUID - with request body
+# Return the properties of a specific governance definition.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-definitions/{{governanceDefinitionGUID}}/retrieve
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "GetRequestBody",
+  "metadataElementTypeName": "GovernancePolicy",
+  "metadataElementSubtypeNames": [],
+  "skipRelationships": [],
+  "includeOnlyRelationships": [],
+  "relationshipsPageSize": 100,
+  "skipClassifiedElements": [],
+  "includeOnlyClassifiedElements": [],
+  "graphQueryDepth" : 10,
+  "asOfTime" : "{{$isoTimestamp}}",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+# =====================================================================================================================
+# A governance action type runs a single engine action.
+#
+
+
+###
+# @name getAllGovernanceActionTypes
+# Retrieve the list of governance action type metadata elements that contain the search string.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-definitions/by-search-string
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "SearchStringRequestBody",
+  "metadataElementTypeName": "GovernanceActionType"
+}
+
+###
+# @name findGovernanceActionTypes
+# Retrieve the list of governance action type metadata elements that contain the search string.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-definitions/by-search-string
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "SearchStringRequestBody",
+  "metadataElementTypeName": "GovernanceActionType",
+  "metadataElementSubtypeNames": [],
+  "skipRelationships": [],
+  "includeOnlyRelationships": [],
+  "relationshipsPageSize": 100,
+  "skipClassifiedElements": [],
+  "includeOnlyClassifiedElements": [],
+  "graphQueryDepth" : 10,
+  "searchString": "xxx",
+  "startsWith" : false,
+  "endsWith" : false,
+  "ignoreCase" : true,
+  "startFrom" : 0,
+  "pageSize": 0,
+  "asOfTime" : "{{$isoTimestamp}}",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false,
+  "limitResultsByStatus" : ["ACTIVE"],
+  "sequencingOrder" : "PROPERTY_ASCENDING",
+  "sequencingProperty" : "qualifiedName"
+}
+
+
+###
+# @name getGovernanceActionTypesByName
+# Retrieve the list of governance action type metadata elements with a matching qualified or display name.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-definitions/by-name
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "filter" : "AssetSurvey:survey-kafka-server",
+  "metadataElementTypeName": "GovernanceActionType",
+  "startFrom" : 0,
+  "pageSize": 0
+}
+
+###
+
+@governanceActionTypeGUID=add guid here
+
+###
+# @name getGovernanceActionTypeByGUID
+# Retrieve the governance action type metadata element with the supplied unique identifier.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-definitions/{{governanceActionTypeGUID}}/retrieve
+Authorization: Bearer {{token}}
+
+
+###
+# @name getGovernanceActionTypeByGUID (Survey Folder)
+# Retrieve the governance action type metadata element with the supplied unique identifier.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-definitions/2f988d28-8fb6-4e11-83a3-63b9ae6ef031/retrieve
+Authorization: Bearer {{token}}
+
+
+###
+# =====================================================================================================================
+# A governance action process describes a well-defined series of steps that gets something done.
+
+# This is the unique identifier of the governance action process
+@processGUID = guid
+
+
+###
+# @name findGovernanceActionProcesses
+# Retrieve the list of governance action process metadata elements that contain the search string.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-action-processes/by-search-string
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "SearchStringRequestBody",
+  "metadataElementTypeName": "GovernanceActionProcess",
+  "searchString": "xxx",
+  "startsWith" : false,
+  "endsWith" : false,
+  "ignoreCase" : true,
+  "startFrom" : 0,
+  "pageSize": 0,
+  "asOfTime" : "{{$isoTimestamp}}",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false,
+  "limitResultsByStatus" : ["ACTIVE"],
+  "sequencingOrder" : "PROPERTY_ASCENDING",
+  "sequencingProperty" : "qualifiedName"
+}
+
+
+###
+# @name getAllGovernanceActionProcesses
+# Retrieve the list of governance action process metadata elements that contain the search string.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-definitions/by-search-string
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "SearchStringRequestBody",
+  "metadataElementTypeName": "GovernanceActionProcess"
+}
+
+###
+# @name getGovernanceActionProcessesByName
+# Retrieve the list of governance action process metadata elements with a matching qualified or display name.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-definitions/by-name
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "FilterRequestBody",
+  "metadataElementTypeName": "GovernanceActionProcess"
+}
+
+
+###
+# @name getGovernanceActionProcessesByName
+# Retrieve the list of governance action process metadata elements with a matching qualified or display name.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-definitions/by-name
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "FilterRequestBody",
+  "metadataElementTypeName": "GovernanceActionProcess",
+  "filter": "xxx",
+  "startFrom" : 0,
+  "pageSize": 0,
+  "asOfTime" : "{{$isoTimestamp}}",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false,
+  "limitResultsByStatus" : ["ACTIVE"],
+  "sequencingOrder" : "PROPERTY_ASCENDING",
+  "sequencingProperty" : "qualifiedName"
+}
+
+
+###
+# @name getGovernanceActionProcessesByName
+# Retrieve the list of governance action process metadata elements with a matching qualified or display name.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-definitions/by-name
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "FilterRequestBody",
+  "metadataElementTypeName": "GovernanceActionProcess",
+  "filter": "GovernanceActionProcess::Valid Value Sets List::Create Subscription::EVALUATION-SUBSCRIPTION",
+  "startFrom" : 0,
+  "pageSize": 0
+}
+
+
+###
+# @name getGovernanceActionProcessByGUID
+# Retrieve the governance action process metadata element with the supplied unique identifier.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-definitions/{{processGUID}}/retrieve
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "GetRequestBody",
+  "metadataElementTypeName": "GovernanceActionProcess"
+}
+
+
+###
+# @name getGovernanceActionProcessByGUID (Daily Process)
+# Retrieve the governance action process metadata element with the supplied unique identifier.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-definitions/dde1e255-6d0c-4589-b4a6-17e7d01db5ab/retrieve
+Authorization: Bearer {{token}}
+
+
+###
+# @name getGovernanceActionProcessGraph
+# Retrieve the governance action process metadata element with the supplied unique identifier
+# along with the flow definition describing its implementation.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-action-processes/{{processGUID}}/graph
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "ResultsRequestBody",
+  "asOfTime" : "{{$isoTimestamp}}",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false,
+  "limitResultsByStatus" : ["ACTIVE"],
+  "sequencingOrder" : "PROPERTY_ASCENDING",
+  "sequencingProperty" : "qualifiedName"
+}
+
+###
+# @name getGovernanceActionProcessGraph (Daily Process)
+# Retrieve the governance action process metadata element with the supplied unique identifier
+# along with the flow definition describing its implementation.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-action-processes/dde1e255-6d0c-4589-b4a6-17e7d01db5ab/graph
+Authorization: Bearer {{token}}
+
+###
+# @name getGovernanceActionProcessGraph (Onboarding Data Process)
+# Retrieve the governance action process metadata element with the supplied unique identifier
+# along with the flow definition describing its implementation.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-action-processes/508d3878-8eae-47e5-8507-ee936f33b418/graph
+Authorization: Bearer {{token}}
+
+
+###
+
+@elementGUID=add guid here
+@definitionGUID=add guid here
+
+###
+# @name addGovernanceDefinitionToElement
+# Link a governance definition to an element using the GovernedBy relationship.
+#
+# Governance Definitions: https://egeria-project.org/types/4/0401-Governance-Definitions/
+
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/elements/{{elementGUID}}/governed-by/definition/{{definitionGUID}}/attach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+   "class" : "NewRelationshipRequestBody",
+   "properties" : {
+     "class" : "GovernedByProperties",
+     "label" : "add label here",
+     "description" : "add description here"
+   },
+   "externalSourceGUID": "Add guid here",
+   "externalSourceName": "Add qualified name here",
+   "forLineage": false,
+   "forDuplicateProcessing": false,
+   "effectiveTime" : "{{$isoTimestamp}}"
+}
+
+
+###
+# @name removeGovernanceDefinitionFromElement
+# Remove the GovernedBy relationship between a governance definition and an element.
+#
+# Governance Definition: https://egeria-project.org/types/4/0401-Governance-Definitions/
+
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/elements/{{elementGUID}}/governed-by/definition/{{definitionGUID}}/detach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+   "class" : "DeleteRelationshipRequestBody",
+   "externalSourceGUID": "Add guid here",
+   "externalSourceName": "Add qualified name here",
+   "forLineage": false,
+   "forDuplicateProcessing": false,
+   "effectiveTime" : "{{$isoTimestamp}}"
+}
+
+###
+
+###
+
+@designDescriptionGUID=add guid here
+@implementationGUID=add guid here
+@implementationResourceGUID=add guid here
+
+###
+# @name linkDesignToImplementation
+# Attach a design object such as a solution component or governance definition to its implementation via the ImplementedBy relationship. Request body is optional.
+# https://egeria-project.org/types/7/0737-Solution-Implementation/
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/designs/{{designDescriptionGUID}}/implementations/{{implementationGUID}}/attach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewRelationshipRequestBody",
+  "properties": {
+    "class": "ImplementedByProperties",
+    "designStep": "",
+    "role": "",
+    "transformation": "",
+    "description": "",
+    "iscQualifiedName": "",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+
+# @name detachDesignFromImplementation
+# Detach a design object such as a solution component or governance definition from its implementation. Request body is optional.
+# https://egeria-project.org/types/7/0737-Solution-Implementation/
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/designs/{{designDescriptionGUID}}/implementations/{{implementationGUID}}/detach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteRelationshipRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+# @name linkImplementationResource
+# Attach a design object such as a solution component or governance definition to one of its implementation resource via the ImplementationResource relationship. Request body is optional.
+# https://egeria-project.org/types/7/0737-Solution-Implementation/
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/designs/{{designDescriptionGUID}}/implementation-resources/{{implementationResourceGUID}}/attach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewRelationshipRequestBody",
+  "properties": {
+    "class": "ImplementationResourceProperties",
+    "description": "",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+
+# @name detachImplementationResource
+# Detach a design object such as a solution component or governance definition from one of its implementation resources. Request body is optional.
+# https://egeria-project.org/types/7/0737-Solution-Implementation/
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/designs/{{designDescriptionGUID}}/implementation-resources/{{implementationResourceGUID}}/detach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteRelationshipRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+
+@governanceMetricGUID=add guid here
+@dataAssetGUID=add guid here
+@dataProcessingPurposeGUID=add guid here
+
+###
+# @name linkApprovedPurpose
+# Attach an approved purpose to an element. Request body is optional.
+# https://egeria-project.org/concepts/governance-definition/
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/elements/{{elementGUID}}/approved-purposes/{{dataProcessingPurposeGUID}}/attach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewRelationshipRequestBody",
+  "properties": {
+    "class": "ApprovedPurposeProperties",
+    "label": "",
+    "description": "",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name detachApprovedPurpose
+# Detach an approved purpose from an element. Request body is optional.
+# https://egeria-project.org/concepts/governance-definition/
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/elements/{{elementGUID}}/approved-purposes/{{dataProcessingPurposeGUID}}/detach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteRelationshipRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+
+###
+# @name linkGovernanceResults
+# Attach a governance metric to a data asset that describes where its measurements are kept. Request body is optional.
+# https://egeria-project.org/concepts/governance-definition/
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-metrics/{{governanceMetricGUID}}/measurements/{{dataAssetGUID}}/attach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewRelationshipRequestBody",
+  "properties": {
+    "class": "GovernanceResultsProperties",
+    "description": "",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name detachGovernanceResults
+# Detach an governance metric from its measurements data set. Request body is optional.
+# https://egeria-project.org/concepts/governance-definition/
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/governance-metrics/{{governanceMetricGUID}}/measurements/{{dataAssetGUID}}/detach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteRelationshipRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# =====================================================================================================================
+# Licenses
+
+@licenseTypeGUID=add guid here
+@licenseGUID=add guid here
+
+###
+# @name licenseElement
+# Link an element to a license type and include details of the license in the relationship properties.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/elements/{{elementGUID}}/license-types/{{licenseTypeGUID}}/license
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewRelationshipRequestBody",
+  "properties" : {
+    "class" : "LicenseProperties",
+    "licenseId" : "add license id here",
+    "coverageStart" : "{{$isoTimestamp}}",
+    "coverageEnd" : "{{$isoTimestamp}}",
+    "conditions" : "add conditions here",
+    "licensedBy" : "add value here",
+    "licensedByTypeName" : "add value here",
+    "licensedByPropertyName" : "add value here",
+    "custodian" : "add value here",
+    "custodianTypeName" : "add value here",
+    "custodianPropertyName" : "add value here",
+    "licensee" : "add value here",
+    "licenseeTypeName" : "add value here",
+    "licenseePropertyName" : "add value here",
+    "entitlements" : {},
+    "restrictions" : {},
+    "obligations" : {},
+    "notes" : "add notes here"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+# @name updateLicense
+# Update the properties of a license.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/licenses/{{licenseGUID}}/update
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "UpdateRelationshipRequestBody",
+  "mergeUpdate" : true,
+  "properties" : {
+    "class" : "LicenseProperties",
+    "licenseId" : "add license id here",
+    "coverageStart" : "{{$isoTimestamp}}",
+    "coverageEnd" : "{{$isoTimestamp}}",
+    "conditions" : "add conditions here",
+    "licensedBy" : "add value here",
+    "licensedByTypeName" : "add value here",
+    "licensedByPropertyName" : "add value here",
+    "custodian" : "add value here",
+    "custodianTypeName" : "add value here",
+    "custodianPropertyName" : "add value here",
+    "licensee" : "add value here",
+    "licenseeTypeName" : "add value here",
+    "licenseePropertyName" : "add value here",
+    "entitlements" : {},
+    "restrictions" : {},
+    "obligations" : {},
+    "notes" : "add notes here"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+# @name unlicenseElement
+# Remove the license for an element.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/licenses/{{licenseGUID}}/delete
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteRelationshipRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+# =====================================================================================================================
+# Certifications
+
+@certificationTypeGUID=add guid here
+@certificationGUID=add guid here
+
+###
+# @name certifyElement
+# Link an element to a certification type and include details of the certification in the relationship properties.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/elements/{{elementGUID}}/certification-types/{{certificationTypeGUID}}/certify
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewRelationshipRequestBody",
+  "properties" : {
+    "class" : "CertificationProperties",
+    "certificateId" : "add certificate id here",
+    "coverageStart" : "{{$isoTimestamp}}",
+    "coverageEnd" : "{{$isoTimestamp}}",
+    "conditions" : "add conditions here",
+    "certifiedBy" : "add value here",
+    "certifiedByTypeName" : "add value here",
+    "certifiedByPropertyName" : "add value here",
+    "custodian" : "add value here",
+    "custodianTypeName" : "add value here",
+    "custodianPropertyName" : "add value here",
+    "recipient" : "add value here",
+    "recipientTypeName" : "add value here",
+    "recipientPropertyName" : "add value here",
+    "notes" : "add notes here"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+# @name updateCertification
+# Update the properties of a certification.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/certifications/{{certificationGUID}}/update
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "UpdateRelationshipRequestBody",
+  "mergeUpdate" : true,
+  "properties" : {
+    "class" : "CertificationProperties",
+    "certificateId" : "add certificate id here",
+    "coverageStart" : "{{$isoTimestamp}}",
+    "coverageEnd" : "{{$isoTimestamp}}",
+    "conditions" : "add conditions here",
+    "certifiedBy" : "add value here",
+    "certifiedByTypeName" : "add value here",
+    "certifiedByPropertyName" : "add value here",
+    "custodian" : "add value here",
+    "custodianTypeName" : "add value here",
+    "custodianPropertyName" : "add value here",
+    "recipient" : "add value here",
+    "recipientTypeName" : "add value here",
+    "recipientPropertyName" : "add value here",
+    "notes" : "add notes here"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+# @name decertifyElement
+# Remove the certification for an element.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/certifications/{{certificationGUID}}/delete
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteRelationshipRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+
+###
+# =====================================================================================================================
+# Regulation and exception relationships
+# https://egeria-project.org/concepts/governance-definition
+
+@exceptionGUID=add guid here
+@exceptionTypeGUID=add guid here
+
+###
+# @name linkException
+# Attach an element to an exception type that excludes it from a requirement.  This is a multi-link relationship so a new relationship is always created and its unique identifier is returned.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/elements/{{elementGUID}}/exceptions/{{exceptionTypeGUID}}/attach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewRelationshipRequestBody",
+  "properties": {
+    "class": "ExceptionProperties",
+    "label": "add label",
+    "description": "add description",
+    "conditions": "add conditions here",
+    "lastReviewTime": "{{$isoTimestamp}}",
+    "reviewDate": "{{$isoTimestamp}}",
+    "steward": "add steward here",
+    "stewardTypeName": "add steward type name here",
+    "stewardPropertyName": "add steward property name here",
+    "notes": "add notes here",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name updateException
+# Update the properties of a exception relationship.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/exceptions/{{exceptionGUID}}/update
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "UpdateRelationshipRequestBody",
+  "mergeUpdate": true,
+  "properties": {
+    "class": "ExceptionProperties",
+    "label": "add label",
+    "description": "add description",
+    "conditions": "add conditions here",
+    "lastReviewTime": "{{$isoTimestamp}}",
+    "reviewDate": "{{$isoTimestamp}}",
+    "steward": "add steward here",
+    "stewardTypeName": "add steward type name here",
+    "stewardPropertyName": "add steward property name here",
+    "notes": "add notes here",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name detachException
+# Detach an element from an exception type that excluded it from a requirement.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/exceptions/{{exceptionGUID}}/detach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteRelationshipRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name linkRegulationCertificationType
+# Attach a certification type to the regulation that requires it.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/regulations/{{regulationGUID}}/regulation-certification-types/{{certificationTypeGUID}}/attach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewRelationshipRequestBody",
+  "properties": {
+    "class": "RegulationCertificationTypeProperties",
+    "label": "add label",
+    "description": "add description",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name detachRegulationCertificationType
+# Detach a certification type from the regulation that required it.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/regulations/{{regulationGUID}}/regulation-certification-types/{{certificationTypeGUID}}/detach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteRelationshipRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# =====================================================================================================================
+# Governance point classifications
+# https://egeria-project.org/concepts/governance-definition
+
+
+###
+# @name setControlPoint
+# Classify an element to say that it is a control point where a governance action is performed.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/elements/{{elementGUID}}/control-point
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewClassificationRequestBody",
+  "properties": {
+    "class": "ControlPointProperties",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name clearControlPoint
+# Remove the control point designation from an element.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/elements/{{elementGUID}}/control-point/remove
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteClassificationRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name setVerificationPoint
+# Classify an element to say that it is a verification point where a governance requirement is checked.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/elements/{{elementGUID}}/verification-point
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewClassificationRequestBody",
+  "properties": {
+    "class": "VerificationPointProperties",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name clearVerificationPoint
+# Remove the verification point designation from an element.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/elements/{{elementGUID}}/verification-point/remove
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteClassificationRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name setEnforcementPoint
+# Classify an element to say that it is an enforcement point where a governance requirement is enforced.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/elements/{{elementGUID}}/enforcement-point
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewClassificationRequestBody",
+  "properties": {
+    "class": "EnforcementPointProperties",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name clearEnforcementPoint
+# Remove the enforcement point designation from an element.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/elements/{{elementGUID}}/enforcement-point/remove
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteClassificationRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name setExecutionPoint
+# Classify an element to say that it is an execution point where governance is executed.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/elements/{{elementGUID}}/execution-point
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewClassificationRequestBody",
+  "properties": {
+    "class": "ExecutionPointProperties",
+    "qualifiedName": "add unique name here",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name clearExecutionPoint
+# Remove the execution point designation from an element.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/elements/{{elementGUID}}/execution-point/remove
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteClassificationRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name setPolicyAdministrationPoint
+# Classify an element to say that it is a policy administration point where policies are created and maintained.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/elements/{{elementGUID}}/policy-administration-point
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewClassificationRequestBody",
+  "properties": {
+    "class": "PolicyAdministrationPointProperties",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name clearPolicyAdministrationPoint
+# Remove the policy administration point designation from an element.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/elements/{{elementGUID}}/policy-administration-point/remove
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteClassificationRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name setPolicyDecisionPoint
+# Classify an element to say that it is a policy decision point where a policy decision is made.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/elements/{{elementGUID}}/policy-decision-point
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewClassificationRequestBody",
+  "properties": {
+    "class": "PolicyDecisionPointProperties",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name clearPolicyDecisionPoint
+# Remove the policy decision point designation from an element.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/elements/{{elementGUID}}/policy-decision-point/remove
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteClassificationRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name setPolicyEnforcementPoint
+# Classify an element to say that it is a policy enforcement point where a policy decision is applied.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/elements/{{elementGUID}}/policy-enforcement-point
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewClassificationRequestBody",
+  "properties": {
+    "class": "PolicyEnforcementPointProperties",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name clearPolicyEnforcementPoint
+# Remove the policy enforcement point designation from an element.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/elements/{{elementGUID}}/policy-enforcement-point/remove
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteClassificationRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name setPolicyInformationPoint
+# Classify an element to say that it is a policy information point that supplies the information a policy decision needs.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/elements/{{elementGUID}}/policy-information-point
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewClassificationRequestBody",
+  "properties": {
+    "class": "PolicyInformationPointProperties",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name clearPolicyInformationPoint
+# Remove the policy information point designation from an element.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/elements/{{elementGUID}}/policy-information-point/remove
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteClassificationRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name setPolicyManagementPoint
+# Classify an element to say that it is a policy management point.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/elements/{{elementGUID}}/policy-management-point
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewClassificationRequestBody",
+  "properties": {
+    "class": "PolicyManagementPointProperties",
+    "label": "add label here",
+    "description": "add description here",
+    "pointType": "add point type here",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name clearPolicyManagementPoint
+# Remove the policy management point designation from an element.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/elements/{{elementGUID}}/policy-management-point/remove
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteClassificationRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name setPolicyRetrievalPoint
+# Classify an element to say that it is a policy retrieval point where policies are retrieved for a decision.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/elements/{{elementGUID}}/policy-retrieval-point
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewClassificationRequestBody",
+  "properties": {
+    "class": "PolicyRetrievalPointProperties",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name clearPolicyRetrievalPoint
+# Remove the policy retrieval point designation from an element.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/elements/{{elementGUID}}/policy-retrieval-point/remove
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteClassificationRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# =====================================================================================================================
+# Decisions, their outcomes and assessments
+# https://egeria-project.org/types/0/0018-Decisions/
+
+@decisionGUID=add guid here
+@outcomeGUID=add guid here
+@elementGUID=add guid here
+@assessmentGUID=add guid here
+
+###
+# @name createDecision
+# Create a decision.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/decisions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewElementRequestBody",
+  "anchorGUID" : "add guid here",
+  "isOwnAnchor": false,
+  "parentGUID": "add guid here",
+  "parentRelationshipTypeName": "add type name here",
+  "parentRelationshipProperties": {
+    "class": "RelationshipElementProperties",
+    "propertyValueMap" : {
+      "description" : {
+        "class": "PrimitiveTypePropertyValue",
+        "typeName": "string",
+        "primitiveValue" : "New description"
+      }
+    }
+  },
+  "parentAtEnd1": false,
+  "properties": {
+    "class" : "DecisionProperties",
+    "qualifiedName": "add unique name here",
+    "identifier" : "add identifier here",
+    "displayName": "add short name here",
+    "description": "add description here",
+    "summary": "add summary here",
+    "scope": "add scope here",
+    "usage": "add usage here",
+    "importance": "add importance here",
+    "disposition": "add disposition here",
+    "implications": ["add implication here"],
+    "notes": "add notes here",
+    "startTime": "{{$isoTimestamp}}",
+    "lastReviewTime": "{{$isoTimestamp}}",
+    "nextReviewTime": "{{$isoTimestamp}}",
+    "expiryTime": "{{$isoTimestamp}}",
+    "authors": ["add author here"],
+    "contentStatus": "DRAFT",
+    "additionalProperties": {
+      "property1" : "propertyValue1",
+      "property2" : "propertyValue2"
+    },
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name createDecisionFromTemplate
+# Create a new metadata element to represent a decision using an existing metadata element as a template.  The template defines additional classifications and relationships that should be added to the new element.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/decisions/from-template
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "TemplateRequestBody",
+  "anchorGUID" : "add guid here",
+  "isOwnAnchor": false,
+  "parentGUID": "add guid here",
+  "parentRelationshipTypeName": "add type name here",
+  "parentRelationshipProperties": {
+    "class": "RelationshipElementProperties",
+    "propertyValueMap" : {
+      "description" : {
+        "class": "PrimitiveTypePropertyValue",
+        "typeName": "string",
+        "primitiveValue" : "New description"
+      }
+    }
+  },
+  "parentAtEnd1": false,
+  "templateGUID": "add guid here",
+  "replacementProperties": {
+    "class": "EntityElementProperties",
+    "propertyValueMap" : {
+      "description" : {
+        "class": "PrimitiveTypePropertyValue",
+        "typeName": "string",
+        "primitiveValue" : "New description"
+      }
+    }
+  },
+  "placeholderPropertyValues":  {
+    "placeholder1" : "propertyValue1",
+    "placeholder2" : "propertyValue2"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name updateDecision
+# Update the properties of a decision.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/decisions/{{decisionGUID}}/update
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "UpdateElementRequestBody",
+  "mergeUpdate": true,
+  "properties": {
+    "class" : "DecisionProperties",
+    "qualifiedName": "add unique name here",
+    "identifier" : "add identifier here",
+    "displayName": "add short name here",
+    "description": "add description here",
+    "summary": "add summary here",
+    "scope": "add scope here",
+    "usage": "add usage here",
+    "importance": "add importance here",
+    "disposition": "add disposition here",
+    "implications": ["add implication here"],
+    "notes": "add notes here",
+    "startTime": "{{$isoTimestamp}}",
+    "lastReviewTime": "{{$isoTimestamp}}",
+    "nextReviewTime": "{{$isoTimestamp}}",
+    "expiryTime": "{{$isoTimestamp}}",
+    "authors": ["add author here"],
+    "contentStatus": "DRAFT",
+    "additionalProperties": {
+      "property1" : "propertyValue1",
+      "property2" : "propertyValue2"
+    },
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name deleteDecision
+# Delete a decision.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/decisions/{{decisionGUID}}/delete
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteElementRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name getDecisionsByName
+# Returns the list of decisions with a particular name.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/decisions/by-name
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "FilterRequestBody",
+  "filter" : "Add name here",
+  "startFrom": 0,
+  "pageSize": 10
+}
+
+###
+# @name getDecisionByGUID
+# Return the properties of a specific decision.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/decisions/{{decisionGUID}}/retrieve
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "GetRequestBody",
+  "asOfTime" : "{{$isoTimestamp}}",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name findDecisions
+# Retrieve the list of decision metadata elements that contain the search string.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/decisions/by-search-string
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "SearchStringRequestBody",
+  "searchString" : "Add value here",
+  "startsWith" : false,
+  "endsWith" : false,
+  "ignoreCase" : true,
+  "startFrom" : 0,
+  "pageSize": 10
+}
+
+###
+# @name linkDecisionOutcome
+# Attach a decision to an element that represents an outcome of the decision.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/decisions/{{decisionGUID}}/outcomes/{{outcomeGUID}}/attach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewRelationshipRequestBody",
+  "properties": {
+    "class" : "OutcomeProperties",
+    "label": "add label here",
+    "description": "add description here",
+    "importance": "add importance here",
+    "disposition": "add disposition here",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name detachDecisionOutcome
+# Detach a decision from an element that represents an outcome of the decision.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/decisions/{{decisionGUID}}/outcomes/{{outcomeGUID}}/detach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteRelationshipRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name linkAssessment
+# Attach an element that has been assessed to the decision that the assessment contributes to.  This is a multi-link relationship so a new relationship is always created and its unique identifier is returned.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/elements/{{elementGUID}}/assessments/{{decisionGUID}}/attach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewRelationshipRequestBody",
+  "properties": {
+    "class" : "AssessmentProperties",
+    "label": "add label here",
+    "description": "add description here",
+    "assessor": "add assessor here",
+    "assessorTypeName": "add assessor type name here",
+    "assessorPropertyName": "add assessor property name here",
+    "assessmentTime": "{{$isoTimestamp}}",
+    "expiryTime": "{{$isoTimestamp}}",
+    "notes": "add notes here",
+    "additionalProperties": {
+      "property1" : "propertyValue1",
+      "property2" : "propertyValue2"
+    },
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name updateAssessment
+# Update the properties of an assessment relationship.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/assessments/{{assessmentGUID}}/update
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "UpdateRelationshipRequestBody",
+  "mergeUpdate": true,
+  "properties": {
+    "class" : "AssessmentProperties",
+    "label": "add label here",
+    "description": "add description here",
+    "assessor": "add assessor here",
+    "assessorTypeName": "add assessor type name here",
+    "assessorPropertyName": "add assessor property name here",
+    "assessmentTime": "{{$isoTimestamp}}",
+    "expiryTime": "{{$isoTimestamp}}",
+    "notes": "add notes here",
+    "additionalProperties": {
+      "property1" : "propertyValue1",
+      "property2" : "propertyValue2"
+    },
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name detachAssessment
+# Remove an assessment relationship between an element and a decision.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/governance-officer/assessments/{{assessmentGUID}}/detach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteRelationshipRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
