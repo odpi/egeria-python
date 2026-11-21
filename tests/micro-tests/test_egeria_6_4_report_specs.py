@@ -135,3 +135,17 @@ def test_strict_authoring_validation_checks_and_accepts_the_spec(label):
     result = validate(SpecDraft(label=label, format_set=base_report_specs[label]))
     assert "column attributes" in result.checked, (label, result.not_checked)
     assert not result.errors, (label, result.errors)
+
+
+def test_related_element_keys_contain_every_relationship_fields_key_in_snake_case():
+    """A6 follow-up to A4: RELATED_ELEMENT_KEYS is derived from the generated RELATIONSHIP_FIELDS, so a later
+    Egeria's relationship lists need no hand edit in authoring/validate.py."""
+    from pyegeria.authoring.validate import RELATED_ELEMENT_KEYS, _snake
+    from pyegeria.view.egeria_relationship_fields import RELATIONSHIP_FIELDS
+
+    missing = sorted(_snake(key) for key in RELATIONSHIP_FIELDS if _snake(key) not in RELATED_ELEMENT_KEYS)
+    assert missing == []
+    assert all(key == key.lower() for key in RELATED_ELEMENT_KEYS), "every key is snake_case"
+    for key in ("decision_outcomes", "inputs_to_decision", "data_value_uses", "data_value_sources",
+                "embedded_data_values"):
+        assert key in RELATED_ELEMENT_KEYS

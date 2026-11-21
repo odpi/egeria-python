@@ -162,9 +162,11 @@ def test_no_shipped_find_spec_is_refused_for_its_find_method_fit():
 
 
 def test_the_allow_lists_name_only_keys_a_shipped_spec_uses():
-    from pyegeria.authoring.validate import ANNOTATION_KEYS, RELATED_ELEMENT_KEYS
+    # The hand-kept lists only: RELATED_ELEMENT_KEYS' relationship lists are derived from the generated
+    # RELATIONSHIP_FIELDS (every list Egeria can attach), so they need no shipped spec to justify them.
+    from pyegeria.authoring.validate import ANNOTATION_KEYS, _HAND_KEPT_RELATED_KEYS
     used, _ = _registry_columns_and_types()
-    unused = sorted((RELATED_ELEMENT_KEYS | ANNOTATION_KEYS) - used)
+    unused = sorted((_HAND_KEPT_RELATED_KEYS | ANNOTATION_KEYS) - used)
     assert not unused, f"allow-listed but no shipped spec uses them (remove): {unused}"
 
 
