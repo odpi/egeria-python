@@ -36,6 +36,8 @@ from pyegeria.view.output_formatter import (
 )
 from pyegeria.core.utils import dynamic_catch
 from pyegeria.core.async_runner import run_sync
+from pyegeria.core import egeria_6_4_names as e64
+from pyegeria.omvs.devops_pipeline import _checked_6_4_body  # the shared Egeria 6.4 body check (A3)
 
 
 class SchemaTypeProperties(ReferenceableProperties):
@@ -1200,3 +1202,117 @@ class SchemaMaker(ServerClient):
         """Remove the CalculatedValue classification from a schema attribute."""
         run_sync(self._async_remove_calculated_value(
             schema_attribute_guid, body, cascade_delete))
+
+
+    #
+    # SupportedVariableType relationship (Egeria 6.4, model 0520)
+    #
+
+    @dynamic_catch
+    async def _async_link_supported_variable_type(self, element_guid: str, schema_type_guid: str,
+                                                  body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach an element, such as a process, to a schema type describing a type of data value used to
+        initialize or configure it (SupportedVariableType relationship). Async version.
+
+        Needs Egeria 6.4 (odpi/egeria#9463); an older Egeria does not have this request. SupportedVariableType
+        is a uni-link relationship, so it is addressed by its two ends and the attach returns nothing.
+
+        Parameters
+        ----------
+        element_guid: str
+            The element (end 1), any Referenceable.
+        schema_type_guid: str
+            The schema type (end 2).
+        body: dict | NewRelationshipRequestBody, optional
+            A NewRelationshipRequestBody whose properties are SupportedVariableTypeProperties: label,
+            description, position, minCardinality, maxCardinality, effectiveFrom, effectiveTo. Left out, the
+            request is sent with no body.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            Refused locally, before Egeria: a body class other than NewRelationshipRequestBody; properties
+            of a class other than SupportedVariableTypeProperties, or with no class; keys the class does not
+            read.
+        PyegeriaAPIException
+            Raised by the server when an issue arises in processing a valid request.
+        PyegeriaNotAuthorizedException
+            The principal does not have authorization for the requested action.
+        """
+        payload = _checked_6_4_body(body, "NewRelationshipRequestBody", e64.SUPPORTED_VARIABLE_TYPE_PROPERTIES,
+                                    "link_supported_variable_type")
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
+               + e64.SUPPORTED_VARIABLE_TYPES_ATTACH.format(elementGUID=element_guid,
+                                                            schemaTypeGUID=schema_type_guid))
+        if payload:
+            await self._async_make_request("POST", url, payload)
+        else:
+            await self._async_make_request("POST", url)
+        logger.info(f"Linked {element_guid} to supported variable type {schema_type_guid}.")
+
+    @dynamic_catch
+    def link_supported_variable_type(self, element_guid: str, schema_type_guid: str,
+                                     body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach an element, such as a process, to a schema type describing a type of data value used to
+        initialize or configure it (SupportedVariableType relationship).
+
+        Needs Egeria 6.4 (odpi/egeria#9463). See `_async_link_supported_variable_type`; the body, if any,
+        carries SupportedVariableTypeProperties (position, minCardinality, maxCardinality, label,
+        description).
+        """
+        return run_sync(self._async_link_supported_variable_type(element_guid, schema_type_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_supported_variable_type(self, element_guid: str, schema_type_guid: str,
+                                                    body: Optional[dict | DeleteRelationshipRequestBody] = None
+                                                    ) -> None:
+        """Detach an element from a schema type describing a type of data value used to initialize or
+        configure it (SupportedVariableType relationship). Async version.
+
+        Needs Egeria 6.4 (odpi/egeria#9463); an older Egeria does not have this request.
+
+        Parameters
+        ----------
+        element_guid: str
+            The element (end 1).
+        schema_type_guid: str
+            The schema type (end 2).
+        body: dict | DeleteRelationshipRequestBody, optional
+            A DeleteRelationshipRequestBody. Left out, the request is sent with no body.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            A body class other than DeleteRelationshipRequestBody, refused locally.
+        PyegeriaAPIException
+            Raised by the server when an issue arises in processing a valid request.
+        PyegeriaNotAuthorizedException
+            The principal does not have authorization for the requested action.
+        """
+        payload = _checked_6_4_body(body, "DeleteRelationshipRequestBody", None, "detach_supported_variable_type")
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
+               + e64.SUPPORTED_VARIABLE_TYPES_DETACH.format(elementGUID=element_guid,
+                                                            schemaTypeGUID=schema_type_guid))
+        if payload:
+            await self._async_make_request("POST", url, payload)
+        else:
+            await self._async_make_request("POST", url)
+        logger.info(f"Detached {element_guid} from supported variable type {schema_type_guid}.")
+
+    @dynamic_catch
+    def detach_supported_variable_type(self, element_guid: str, schema_type_guid: str,
+                                       body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach an element from a schema type describing a type of data value used to initialize or
+        configure it (SupportedVariableType relationship).
+
+        Needs Egeria 6.4 (odpi/egeria#9463). See `_async_detach_supported_variable_type`.
+        """
+        return run_sync(self._async_detach_supported_variable_type(element_guid, schema_type_guid, body))

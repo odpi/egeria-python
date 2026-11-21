@@ -19,6 +19,7 @@ from pyegeria.omvs.data_designer import DataDesigner
 from pyegeria.omvs.data_discovery import DataDiscovery
 from pyegeria.omvs.data_engineer import DataEngineer
 from pyegeria.omvs.digital_business import DigitalBusiness
+from pyegeria.omvs.devops_pipeline import DevopsPipeline
 from pyegeria.omvs.external_links import ExternalReferences
 from pyegeria.core._server_client import ServerClient
 from pyegeria.omvs.glossary_manager import GlossaryManager
@@ -131,6 +132,7 @@ class EgeriaTech:
             "location_arena": LocationArena,
             "data_discovery": DataDiscovery,
             "data_engineer": DataEngineer,
+            "devops_pipeline": DevopsPipeline,
             "security_officer": SecurityOfficer,
             "digital_business": DigitalBusiness,
             "lineage_linker": LineageLinker,
