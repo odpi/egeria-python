@@ -7,7 +7,9 @@ The 12 requests are checked against the `.http` samples in tests/fixtures/egeria
 taken from pyegeria.core.egeria_6_4_names. For each method: the HTTP verb, the URL, and that the body sent
 equals the sample once its placeholders are filled. Also: attach with no body sends no body; update without a
 body is refused locally; mergeUpdate passes through; link_assessment returns the relationship GUID; a
-properties object of the wrong class is refused locally, naming the class expected.
+properties object of the wrong class is refused locally, naming the class expected. Writes are compared to the
+sample by exact equality (A6: one body rule, pyegeria.core.egeria_6_4_bodies); reads to the sample plus
+Egeria's own defaults.
 
 No live server: the HTTP call is captured.
 """
@@ -154,21 +156,24 @@ async def test_each_request_sends_the_sample_body_to_the_right_url(monkeypatch, 
     assert len(calls) == 1
     assert calls[0]["method"] == "POST"
     assert calls[0]["url"] == _url(path, **guids)
-    # The sample is sent whole and unchanged; the only additions are the defaults pyegeria's shared request
-    # models always send (Egeria's own defaults for those fields), listed here so any other addition fails.
-    assert calls[0]["body"] == {**SAMPLES[name][2], **MODEL_DEFAULTS.get(name, {})}
+    if name in READS:
+        # Reads use the shared request helpers; their only additions are Egeria's own defaults for those
+        # fields, listed here so any other addition fails.
+        assert calls[0]["body"] == {**SAMPLES[name][2], **READ_DEFAULTS[name]}
+    else:
+        # Writes send the caller's body exactly (pyegeria.core.egeria_6_4_bodies): no model re-dump, no
+        # added defaults.
+        assert calls[0]["body"] == SAMPLES[name][2]
 
 
 _GET_DEFAULTS = {"relationshipsPageSize": 0}
 _LIST_DEFAULTS = {"forLineage": False, "forDuplicateProcessing": False, "relationshipsPageSize": 0}
-MODEL_DEFAULTS = {
-    "createDecisionFromTemplate": {"templateSubstitute": False, "allowRetrieve": True},  # TemplateRequestBody
+READ_DEFAULTS = {
     "getDecisionsByName": _LIST_DEFAULTS,                                                # FilterRequestBody
     "getDecisionByGUID": _GET_DEFAULTS,                                                  # GetRequestBody
     "findDecisions": _LIST_DEFAULTS,                                                     # SearchStringRequestBody
-    "linkDecisionOutcome": {"makeAnchor": False},                                        # NewRelationshipRequestBody
-    "linkAssessment": {"makeAnchor": False},
 }
+READS = set(READ_DEFAULTS)
 
 
 @pytest.mark.parametrize("name", list(CASES))
@@ -316,4 +321,4 @@ async def test_attach_with_a_body_but_no_properties_is_sent(monkeypatch):
 
     await client._async_link_decision_outcome(DECISION_GUID, OUTCOME_GUID, body)
 
-    assert calls[0]["body"] == {**body, "makeAnchor": False}
+    assert calls[0]["body"] == body

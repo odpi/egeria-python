@@ -24,7 +24,7 @@ from pyegeria.core.utils import body_slimmer, dynamic_catch
 from loguru import logger
 from pyegeria.core.async_runner import run_sync
 from pyegeria.core import egeria_6_4_names as e64
-from pyegeria.omvs.devops_pipeline import _checked_6_4_body  # the shared Egeria 6.4 body check (A3)
+from pyegeria.core.egeria_6_4_bodies import checked_body, e64_url  # the shared Egeria 6.4 body check
 
 PROJECT_TYPES = ["Project", "Campaign", "StudyProject", "Task", "PersonalProject", "Experiment", "Investigation"]
 
@@ -2745,14 +2745,11 @@ class ProjectManager(ServerClient):
         PyegeriaNotAuthorizedException
             The principal does not have authorization for the requested action.
         """
-        payload = _checked_6_4_body(body, "NewRelationshipRequestBody", e64.PROJECT_TARGET_PROPERTIES,
-                                    "setup_project_target")
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-               + e64.PROJECT_TARGETS_ATTACH.format(projectGUID=project_guid, targetGUID=target_guid))
-        if payload:
-            await self._async_make_request("POST", url, payload)
-        else:
-            await self._async_make_request("POST", url)
+        payload = checked_body(body, "setup_project_target", request_class="NewRelationshipRequestBody",
+                               properties_classes={e64.PROJECT_TARGET_PROPERTIES})
+        url = e64_url(self.platform_url, self.view_server, e64.PROJECT_TARGETS_ATTACH, projectGUID=project_guid,
+                      targetGUID=target_guid)
+        await self._async_make_request("POST", url, payload)
         logger.info(f"Project {project_guid} targets {target_guid}")
 
     @dynamic_catch
@@ -2794,13 +2791,10 @@ class ProjectManager(ServerClient):
         PyegeriaNotAuthorizedException
             The principal does not have authorization for the requested action.
         """
-        payload = _checked_6_4_body(body, "DeleteRelationshipRequestBody", None, "clear_project_target")
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-               + e64.PROJECT_TARGETS_DETACH.format(projectGUID=project_guid, targetGUID=target_guid))
-        if payload:
-            await self._async_make_request("POST", url, payload)
-        else:
-            await self._async_make_request("POST", url)
+        payload = checked_body(body, "clear_project_target", request_class="DeleteRelationshipRequestBody")
+        url = e64_url(self.platform_url, self.view_server, e64.PROJECT_TARGETS_DETACH, projectGUID=project_guid,
+                      targetGUID=target_guid)
+        await self._async_make_request("POST", url, payload)
         logger.info(f"Project {project_guid} no longer targets {target_guid}")
 
     @dynamic_catch

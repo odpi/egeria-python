@@ -37,6 +37,7 @@ from pyegeria.models import (GetRequestBody, SearchStringRequestBody, FilterRequ
 from pyegeria.core.utils import dynamic_catch
 from pyegeria.core.async_runner import run_sync
 from pyegeria.core import egeria_6_4_names as e64
+from pyegeria.core.egeria_6_4_bodies import checked_body, e64_url
 
 # GovernanceDefinitionProperties and every subclass in its @JsonSubTypes tree, from Egeria main
 # (8de9572c, 2026-10-26). Regenerate from the Java when Egeria adds a type; a hand-kept list missed
@@ -68,31 +69,6 @@ DEFAULT_BODY_SKELETON = {
     "effective_time": None, "limitResultsByStatus": ["ACTIVE"], "asOfTime": None, "sequencingOrder": None,
     "sequencingProperty": None, "filter": None,
     }
-
-
-def _require_properties_class(body, expected: str, request: str) -> None:
-    """Refuse, before Egeria does, a body whose ``properties`` object names a class other than ``expected``.
-
-    Egeria 6.4 rejects a properties object of the wrong class on these requests; refusing here says which
-    class was expected. A body with no properties object passes (attach works with no properties).
-    """
-    if body is None:
-        return
-    properties = body.get("properties") if isinstance(body, dict) else getattr(body, "properties", None)
-    if properties is None:
-        return
-    sent = properties.get("class") if isinstance(properties, dict) else getattr(properties, "class_", None)
-    if sent != expected:
-        named = f"names class {sent}" if sent else "names no class"
-        raise PyegeriaInvalidParameterException(additional_info={
-            "reason": f"{request}: the properties object {named}; this request expects {expected}."})
-
-
-def _require_body(body, request: str) -> None:
-    """Refuse an update sent with no body: Egeria 6.4 needs one, and an empty update changes nothing."""
-    if body is None:
-        raise PyegeriaInvalidParameterException(additional_info={
-            "reason": f"{request} needs a request body: there is nothing to update without one."})
 
 
 def base_path(client, view_server: str):
@@ -4290,10 +4266,9 @@ class GovernanceOfficer(ServerClient):
     # earlier Egeria these requests are not found. Every name and path comes from pyegeria.core.egeria_6_4_names.
     # The sample bodies are the createDecision ... detachAssessment requests in Egeria's
     # Egeria-api-governance-officer.http (a copy is in tests/fixtures/egeria-6.4/).
+    # Writes send the caller's body exactly as given, after pyegeria.core.egeria_6_4_bodies.checked_body's
+    # checks (request class, properties class, unread keys); reads use the shared helpers.
     #
-
-    def _e64_url(self, path: str, **guids) -> str:
-        return f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{path.format(**guids)}"
 
     @dynamic_catch
     async def _async_create_decision(self, body: dict | NewElementRequestBody) -> str:
@@ -4320,9 +4295,11 @@ class GovernanceOfficer(ServerClient):
             The properties object names a class other than DecisionProperties (refused before sending).
         PyegeriaException
         """
-        _require_properties_class(body, e64.DECISION_PROPERTIES, "create_decision")
-        url = self._e64_url(e64.DECISIONS_CREATE)
-        return await self._async_create_element_body_request(url, [e64.DECISION_PROPERTIES], body)
+        json_body = checked_body(body, "create_decision", request_class="NewElementRequestBody",
+                                 properties_classes={e64.DECISION_PROPERTIES}, required=True)
+        url = e64_url(self.platform_url, self.view_server, e64.DECISIONS_CREATE)
+        response = await self._async_make_request("POST", url, json_body)
+        return response.json().get("guid", NO_GUID_RETURNED)
 
     @dynamic_catch
     def create_decision(self, body: dict | NewElementRequestBody) -> str:
@@ -4370,8 +4347,11 @@ class GovernanceOfficer(ServerClient):
         ------
         PyegeriaException
         """
-        url = self._e64_url(e64.DECISIONS_FROM_TEMPLATE)
-        return await self._async_create_element_from_template(url, body)
+        json_body = checked_body(body, "create_decision_from_template", request_class="TemplateRequestBody",
+                                 required=True)
+        url = e64_url(self.platform_url, self.view_server, e64.DECISIONS_FROM_TEMPLATE)
+        response = await self._async_make_request("POST", url, json_body)
+        return response.json().get("guid", NO_GUID_RETURNED)
 
     @dynamic_catch
     def create_decision_from_template(self, body: dict | TemplateRequestBody) -> str:
@@ -4420,10 +4400,10 @@ class GovernanceOfficer(ServerClient):
             sending).
         PyegeriaException
         """
-        _require_body(body, "update_decision")
-        _require_properties_class(body, e64.DECISION_PROPERTIES, "update_decision")
-        url = self._e64_url(e64.DECISIONS_UPDATE, decisionGUID=decision_guid)
-        await self._async_update_element_body_request(url, [e64.DECISION_PROPERTIES], body)
+        json_body = checked_body(body, "update_decision", request_class="UpdateElementRequestBody",
+                                 properties_classes={e64.DECISION_PROPERTIES}, required=True)
+        url = e64_url(self.platform_url, self.view_server, e64.DECISIONS_UPDATE, decisionGUID=decision_guid)
+        await self._async_make_request("POST", url, json_body)
         logger.info(f"Updated Decision {decision_guid}")
 
     @dynamic_catch
@@ -4476,8 +4456,10 @@ class GovernanceOfficer(ServerClient):
         ------
         PyegeriaException
         """
-        url = self._e64_url(e64.DECISIONS_DELETE, decisionGUID=decision_guid)
-        await self._async_delete_element_request(url, body, cascade)
+        json_body = checked_body(body, "delete_decision", request_class="DeleteElementRequestBody",
+                                 default_body={"class": "DeleteElementRequestBody", "cascadedDelete": cascade})
+        url = e64_url(self.platform_url, self.view_server, e64.DECISIONS_DELETE, decisionGUID=decision_guid)
+        await self._async_make_request("POST", url, json_body)
         logger.info(f"Deleted Decision {decision_guid} with cascade {cascade}")
 
     @dynamic_catch
@@ -4541,7 +4523,7 @@ class GovernanceOfficer(ServerClient):
         ------
         PyegeriaException
         """
-        url = self._e64_url(e64.DECISIONS_BY_NAME)
+        url = e64_url(self.platform_url, self.view_server, e64.DECISIONS_BY_NAME)
         params = {"start_from": start_from, "page_size": page_size, "graph_query_depth": graph_query_depth,
                   "output_format": output_format, "report_spec": report_spec, "body": body}
         params.update(kwargs)
@@ -4602,7 +4584,7 @@ class GovernanceOfficer(ServerClient):
         ------
         PyegeriaException
         """
-        url = self._e64_url(e64.DECISIONS_RETRIEVE, decisionGUID=decision_guid)
+        url = e64_url(self.platform_url, self.view_server, e64.DECISIONS_RETRIEVE, decisionGUID=decision_guid)
         params = {"graph_query_depth": graph_query_depth, "output_format": output_format,
                   "report_spec": report_spec, "body": body}
         params.update(kwargs)
@@ -4667,7 +4649,7 @@ class GovernanceOfficer(ServerClient):
         ------
         PyegeriaException
         """
-        url = self._e64_url(e64.DECISIONS_BY_SEARCH_STRING)
+        url = e64_url(self.platform_url, self.view_server, e64.DECISIONS_BY_SEARCH_STRING)
         params = {"search_string": search_string, "body": body, "starts_with": starts_with,
                   "ends_with": ends_with, "ignore_case": ignore_case, "start_from": start_from,
                   "page_size": page_size, "graph_query_depth": graph_query_depth,
@@ -4728,13 +4710,11 @@ class GovernanceOfficer(ServerClient):
             The properties object names a class other than OutcomeProperties (refused before sending).
         PyegeriaException
         """
-        _require_properties_class(body, e64.OUTCOME_PROPERTIES, "link_decision_outcome")
-        url = self._e64_url(e64.OUTCOMES_ATTACH, decisionGUID=decision_guid, outcomeGUID=outcome_guid)
-        validated_body = self.validate_new_relationship_request(body, [e64.OUTCOME_PROPERTIES])
-        if validated_body:
-            await self._async_make_request("POST", url, validated_body.model_dump_json(indent=2, exclude_none=True))
-        else:
-            await self._async_make_request("POST", url)
+        json_body = checked_body(body, "link_decision_outcome", request_class="NewRelationshipRequestBody",
+                                 properties_classes={e64.OUTCOME_PROPERTIES})
+        url = e64_url(self.platform_url, self.view_server, e64.OUTCOMES_ATTACH, decisionGUID=decision_guid,
+                      outcomeGUID=outcome_guid)
+        await self._async_make_request("POST", url, json_body)
         logger.info(f"Linked Decision {decision_guid} to outcome {outcome_guid}")
 
     @dynamic_catch
@@ -4789,8 +4769,10 @@ class GovernanceOfficer(ServerClient):
         ------
         PyegeriaException
         """
-        url = self._e64_url(e64.OUTCOMES_DETACH, decisionGUID=decision_guid, outcomeGUID=outcome_guid)
-        await self._async_delete_relationship_request(url, body)
+        json_body = checked_body(body, "detach_decision_outcome", request_class="DeleteRelationshipRequestBody")
+        url = e64_url(self.platform_url, self.view_server, e64.OUTCOMES_DETACH, decisionGUID=decision_guid,
+                      outcomeGUID=outcome_guid)
+        await self._async_make_request("POST", url, json_body)
         logger.info(f"Detached Decision {decision_guid} from outcome {outcome_guid}")
 
     @dynamic_catch
@@ -4851,14 +4833,11 @@ class GovernanceOfficer(ServerClient):
             The properties object names a class other than AssessmentProperties (refused before sending).
         PyegeriaException
         """
-        _require_properties_class(body, e64.ASSESSMENT_PROPERTIES, "link_assessment")
-        url = self._e64_url(e64.ASSESSMENTS_ATTACH, elementGUID=element_guid, decisionGUID=decision_guid)
-        validated_body = self.validate_new_relationship_request(body, [e64.ASSESSMENT_PROPERTIES])
-        if validated_body:
-            json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-            resp = await self._async_make_request("POST", url, json_body)
-        else:
-            resp = await self._async_make_request("POST", url)
+        json_body = checked_body(body, "link_assessment", request_class="NewRelationshipRequestBody",
+                                 properties_classes={e64.ASSESSMENT_PROPERTIES})
+        url = e64_url(self.platform_url, self.view_server, e64.ASSESSMENTS_ATTACH, elementGUID=element_guid,
+                      decisionGUID=decision_guid)
+        resp = await self._async_make_request("POST", url, json_body)
         return resp.json().get("guid", NO_GUID_RETURNED)
 
     @dynamic_catch
@@ -4917,10 +4896,10 @@ class GovernanceOfficer(ServerClient):
             sending).
         PyegeriaException
         """
-        _require_body(body, "update_assessment")
-        _require_properties_class(body, e64.ASSESSMENT_PROPERTIES, "update_assessment")
-        url = self._e64_url(e64.ASSESSMENTS_UPDATE, assessmentGUID=assessment_guid)
-        await self._async_update_relationship_request(url, [e64.ASSESSMENT_PROPERTIES], body)
+        json_body = checked_body(body, "update_assessment", request_class="UpdateRelationshipRequestBody",
+                                 properties_classes={e64.ASSESSMENT_PROPERTIES}, required=True)
+        url = e64_url(self.platform_url, self.view_server, e64.ASSESSMENTS_UPDATE, assessmentGUID=assessment_guid)
+        await self._async_make_request("POST", url, json_body)
         logger.info(f"Updated Assessment {assessment_guid}")
 
     @dynamic_catch
@@ -4973,8 +4952,9 @@ class GovernanceOfficer(ServerClient):
         ------
         PyegeriaException
         """
-        url = self._e64_url(e64.ASSESSMENTS_DETACH, assessmentGUID=assessment_guid)
-        await self._async_delete_relationship_request(url, body)
+        json_body = checked_body(body, "detach_assessment", request_class="DeleteRelationshipRequestBody")
+        url = e64_url(self.platform_url, self.view_server, e64.ASSESSMENTS_DETACH, assessmentGUID=assessment_guid)
+        await self._async_make_request("POST", url, json_body)
         logger.info(f"Detached Assessment {assessment_guid}")
 
     @dynamic_catch

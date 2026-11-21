@@ -19,8 +19,8 @@ from pyegeria.models import SearchStringRequestBody
 from pyegeria.models import (NewElementRequestBody, TemplateRequestBody, UpdateElementRequestBody,
                              DeleteElementRequestBody, FilterRequestBody, GetRequestBody,
                              NewRelationshipRequestBody, DeleteRelationshipRequestBody)
-from pyegeria.core._exceptions import PyegeriaInvalidParameterException
 from pyegeria.core._globals import NO_GUID_RETURNED
+from pyegeria.core.egeria_6_4_bodies import checked_body, e64_url
 from pyegeria.core.egeria_6_4_names import (
     DATA_VALUE, DATA_VALUE_PROPERTIES, LITERAL_DATA_VALUE_PROPERTIES,
     DATA_VALUES_CREATE, DATA_VALUES_FROM_TEMPLATE, DATA_VALUES_UPDATE, DATA_VALUES_DELETE, DATA_VALUES_BY_NAME,
@@ -32,8 +32,6 @@ from pyegeria.core.egeria_6_4_names import (
 from pyegeria.view.output_formatter import _generate_default_output
 from typing import Any, Optional
 from pyegeria.core.async_runner import run_sync
-import json
-from pydantic import BaseModel, TypeAdapter
 
 # The properties classes a data-value request accepts (Egeria 6.4): a DataValue or its LiteralDataValue subtype.
 DATA_VALUE_PROPERTIES_CLASSES = (DATA_VALUE_PROPERTIES, LITERAL_DATA_VALUE_PROPERTIES)
@@ -387,44 +385,12 @@ class DataEngineer(ServerClient):
     # Every request below needs Egeria 6.4 or later: on an earlier Egeria the endpoints do not exist (404).
     # The paths come from pyegeria.core.egeria_6_4_names, the one place the 6.4 names are kept.
     #
-    # The write requests send the caller's body as given (a dict is checked against its request-body model and
-    # then sent unchanged; a model is sent as its JSON dump), so a body copied from Egeria's `.http` samples
-    # reaches Egeria exactly. A DataValue's properties may be DataValueProperties or its subtype
-    # LiteralDataValueProperties (dataValue, dataValueList, dataValueMap); any other properties class is
-    # refused here, before Egeria refuses it.
+    # The write requests send the caller's body as given, after pyegeria.core.egeria_6_4_bodies.checked_body's
+    # checks (a dict is sent unchanged; a model is sent as its JSON dump), so a body copied from Egeria's `.http`
+    # samples reaches Egeria exactly. A DataValue's properties may be DataValueProperties or its subtype
+    # LiteralDataValueProperties (dataValue, dataValueList, dataValueMap); any other properties class, and any
+    # property key the class does not read, is refused here, before Egeria refuses or silently drops it.
     # =========================================================================================================
-
-    def _e64_url(self, path: str, **guids: str) -> str:
-        """The full URL of a 6.4 request whose path (from egeria_6_4_names) is relative to open-metadata/."""
-        return f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{path.format(**guids)}"
-
-    def _e64_body(self, body: Optional[dict | BaseModel], adapter: TypeAdapter, method: str,
-                  prop_classes: Optional[tuple[str, ...]] = None, required: bool = True) -> Optional[str]:
-        """Check a request body locally and return the JSON to send (None when no body is given and none is
-        required). Refuses, with words, a missing body that is required and a properties class not in
-        `prop_classes` (when given). A dict is validated by `adapter` but sent exactly as given."""
-        if body is None:
-            if required:
-                raise PyegeriaInvalidParameterException(additional_info={
-                    "reason": f"{method} needs a request body: Egeria 6.4 refuses this request without one."})
-            return None
-        if isinstance(body, BaseModel):
-            payload = json.loads(body.model_dump_json(exclude_none=True, by_alias=True))
-        elif isinstance(body, dict):
-            self._validate_body(adapter.validate_python, body)
-            payload = body
-        else:
-            raise PyegeriaInvalidParameterException(additional_info={
-                "reason": f"{method} takes a dict or a request-body model, not {type(body).__name__}."})
-        if prop_classes:
-            props = payload.get("properties")
-            got = props.get("class") if isinstance(props, dict) else None
-            if got not in prop_classes:
-                expected = " or ".join(prop_classes)
-                raise PyegeriaInvalidParameterException(additional_info={
-                    "reason": f"{method}: properties.class must be {expected}, not {got or 'missing'}. "
-                              f"Egeria rejects a properties object of the wrong class."})
-        return json.dumps(payload)
 
     @dynamic_catch
     async def _async_create_data_value(self, body: dict | NewElementRequestBody) -> str:
@@ -478,9 +444,9 @@ class DataEngineer(ServerClient):
         For a LiteralDataValue, use "class": "LiteralDataValueProperties" and add any of
         "dataValue": "42", "dataValueList": ["a", "b"], "dataValueMap": {"low": "1", "high": "9"}.
         """
-        json_body = self._e64_body(body, self._new_element_request_adapter, "create_data_value",
-                                   DATA_VALUE_PROPERTIES_CLASSES)
-        response = await self._async_make_request("POST", self._e64_url(DATA_VALUES_CREATE), json_body)
+        json_body = checked_body(body, "create_data_value", request_class="NewElementRequestBody",
+                                 properties_classes=DATA_VALUE_PROPERTIES_CLASSES, required=True)
+        response = await self._async_make_request("POST", e64_url(self.platform_url, self.view_server, DATA_VALUES_CREATE), json_body)
         return response.json().get("guid", NO_GUID_RETURNED)
 
     @dynamic_catch
@@ -541,8 +507,9 @@ class DataEngineer(ServerClient):
               "placeholderPropertyValues": {"placeholder1" : "propertyValue1"}
             }
         """
-        json_body = self._e64_body(body, self._template_request_adapter, "create_data_value_from_template")
-        response = await self._async_make_request("POST", self._e64_url(DATA_VALUES_FROM_TEMPLATE), json_body)
+        json_body = checked_body(body, "create_data_value_from_template", request_class="TemplateRequestBody",
+                                 required=True)
+        response = await self._async_make_request("POST", e64_url(self.platform_url, self.view_server, DATA_VALUES_FROM_TEMPLATE), json_body)
         return response.json().get("guid", NO_GUID_RETURNED)
 
     @dynamic_catch
@@ -600,9 +567,9 @@ class DataEngineer(ServerClient):
               }
             }
         """
-        json_body = self._e64_body(body, self._update_element_request_adapter, "update_data_value",
-                                   DATA_VALUE_PROPERTIES_CLASSES)
-        await self._async_make_request("POST", self._e64_url(DATA_VALUES_UPDATE, dataValueGUID=data_value_guid),
+        json_body = checked_body(body, "update_data_value", request_class="UpdateElementRequestBody",
+                                 properties_classes=DATA_VALUE_PROPERTIES_CLASSES, required=True)
+        await self._async_make_request("POST", e64_url(self.platform_url, self.view_server, DATA_VALUES_UPDATE, dataValueGUID=data_value_guid),
                                        json_body)
 
     @dynamic_catch
@@ -648,8 +615,8 @@ class DataEngineer(ServerClient):
         """
         if body is None:
             body = {"class": "DeleteElementRequestBody", "cascadedDelete": cascade}
-        json_body = self._e64_body(body, self._delete_element_request_adapter, "delete_data_value")
-        await self._async_make_request("POST", self._e64_url(DATA_VALUES_DELETE, dataValueGUID=data_value_guid),
+        json_body = checked_body(body, "delete_data_value", request_class="DeleteElementRequestBody")
+        await self._async_make_request("POST", e64_url(self.platform_url, self.view_server, DATA_VALUES_DELETE, dataValueGUID=data_value_guid),
                                        json_body)
 
     @dynamic_catch
@@ -698,7 +665,7 @@ class DataEngineer(ServerClient):
 
             {"class" : "FilterRequestBody", "filter" : "Add name here", "startFrom": 0, "pageSize": 10}
         """
-        return await self._async_get_name_request(self._e64_url(DATA_VALUES_BY_NAME), _type=DATA_VALUE,
+        return await self._async_get_name_request(e64_url(self.platform_url, self.view_server, DATA_VALUES_BY_NAME), _type=DATA_VALUE,
                                                   _gen_output=self._generate_referenceable_output,
                                                   filter_string=filter_string, body=body, start_from=start_from,
                                                   page_size=page_size, output_format=output_format,
@@ -750,7 +717,7 @@ class DataEngineer(ServerClient):
              "effectiveTime" : "2026-11-21T10:00:00Z", "forLineage" : false, "forDuplicateProcessing" : false}
         """
         return await self._async_get_guid_request(
-            self._e64_url(DATA_VALUES_RETRIEVE, dataValueGUID=data_value_guid), _type=DATA_VALUE,
+            e64_url(self.platform_url, self.view_server, DATA_VALUES_RETRIEVE, dataValueGUID=data_value_guid), _type=DATA_VALUE,
             _gen_output=self._generate_referenceable_output, body=body, output_format=output_format,
             report_spec=report_spec, **kwargs)
 
@@ -807,7 +774,7 @@ class DataEngineer(ServerClient):
             {"class" : "SearchStringRequestBody", "searchString" : "Add value here", "startsWith" : false,
              "endsWith" : false, "ignoreCase" : true, "startFrom" : 0, "pageSize": 10}
         """
-        return await self._async_find_request(self._e64_url(DATA_VALUES_BY_SEARCH_STRING), _type=DATA_VALUE,
+        return await self._async_find_request(e64_url(self.platform_url, self.view_server, DATA_VALUES_BY_SEARCH_STRING), _type=DATA_VALUE,
                                               _gen_output=self._generate_referenceable_output,
                                               search_string=search_string, body=body, starts_with=starts_with,
                                               ends_with=ends_with, ignore_case=ignore_case,
@@ -835,35 +802,6 @@ class DataEngineer(ServerClient):
     # be the relationship's own class, and `position` (ProcessingVariable, EmbeddedDataValue) must be an int:
     # 0 means unset, and it is passed through unchanged.
     # =========================================================================================================
-
-    def _e64_link_body(self, body: Optional[dict | NewRelationshipRequestBody], method: str, prop_class: str,
-                       positioned: bool = False) -> Optional[str]:
-        """The JSON for a 6.4 attach request, or None to send no body. Refuses, with words, a properties
-        class other than `prop_class` and a `position` that is not an int."""
-        if body is None:
-            return None
-        json_body = self._e64_body(body, self._new_relationship_request_adapter, method)
-        props = json.loads(json_body).get("properties")
-        if props is None:
-            return json_body
-        got = props.get("class") if isinstance(props, dict) else None
-        if got != prop_class:
-            raise PyegeriaInvalidParameterException(additional_info={
-                "reason": f"{method}: properties.class must be {prop_class}, not {got or 'missing'}. "
-                          f"Egeria rejects a properties object of the wrong class."})
-        if positioned:
-            position = props.get("position")
-            if position is not None and (type(position) is not int):
-                raise PyegeriaInvalidParameterException(additional_info={
-                    "reason": f"{method}: position must be an int (0 means unset), not "
-                              f"{type(position).__name__} {position!r}."})
-        return json_body
-
-    def _e64_detach_body(self, body: Optional[dict | DeleteRelationshipRequestBody], method: str) -> Optional[str]:
-        """The JSON for a 6.4 detach request, or None to send no body."""
-        if body is None:
-            return None
-        return self._e64_body(body, self._delete_relationship_request_adapter, method)
 
     @dynamic_catch
     async def _async_link_data_value_source(self, data_value_guid: str, asset_guid: str,
@@ -908,8 +846,9 @@ class DataEngineer(ServerClient):
               }
             }
         """
-        json_body = self._e64_link_body(body, "link_data_value_source", DATA_VALUE_SOURCE_PROPERTIES)
-        url = self._e64_url(DATA_VALUE_SOURCES_ATTACH, dataValueGUID=data_value_guid, assetGUID=asset_guid)
+        json_body = checked_body(body, "link_data_value_source", request_class="NewRelationshipRequestBody",
+                                 properties_classes={DATA_VALUE_SOURCE_PROPERTIES})
+        url = e64_url(self.platform_url, self.view_server, DATA_VALUE_SOURCES_ATTACH, dataValueGUID=data_value_guid, assetGUID=asset_guid)
         response = await self._async_make_request("POST", url, json_body)
         return response.json().get("guid", NO_GUID_RETURNED)
 
@@ -947,8 +886,8 @@ class DataEngineer(ServerClient):
         -------
         None
         """
-        url = self._e64_url(DATA_VALUE_SOURCES_DETACH, dataValueGUID=data_value_guid, assetGUID=asset_guid)
-        await self._async_make_request("POST", url, self._e64_detach_body(body, "detach_data_value_source"))
+        url = e64_url(self.platform_url, self.view_server, DATA_VALUE_SOURCES_DETACH, dataValueGUID=data_value_guid, assetGUID=asset_guid)
+        await self._async_make_request("POST", url, checked_body(body, "detach_data_value_source", request_class="DeleteRelationshipRequestBody"))
 
     @dynamic_catch
     def detach_data_value_source(self, data_value_guid: str, asset_guid: str,
@@ -1005,9 +944,9 @@ class DataEngineer(ServerClient):
               }
             }
         """
-        json_body = self._e64_link_body(body, "link_processing_variable", PROCESSING_VARIABLE_PROPERTIES,
-                                        positioned=True)
-        url = self._e64_url(PROCESSING_VARIABLES_ATTACH, elementGUID=element_guid, dataValueGUID=data_value_guid)
+        json_body = checked_body(body, "link_processing_variable", request_class="NewRelationshipRequestBody",
+                                 properties_classes={PROCESSING_VARIABLE_PROPERTIES}, int_keys=("position",))
+        url = e64_url(self.platform_url, self.view_server, PROCESSING_VARIABLES_ATTACH, elementGUID=element_guid, dataValueGUID=data_value_guid)
         response = await self._async_make_request("POST", url, json_body)
         return response.json().get("guid", NO_GUID_RETURNED)
 
@@ -1047,8 +986,8 @@ class DataEngineer(ServerClient):
         -------
         None
         """
-        url = self._e64_url(PROCESSING_VARIABLES_DETACH, elementGUID=element_guid, dataValueGUID=data_value_guid)
-        await self._async_make_request("POST", url, self._e64_detach_body(body, "detach_processing_variable"))
+        url = e64_url(self.platform_url, self.view_server, PROCESSING_VARIABLES_DETACH, elementGUID=element_guid, dataValueGUID=data_value_guid)
+        await self._async_make_request("POST", url, checked_body(body, "detach_processing_variable", request_class="DeleteRelationshipRequestBody"))
 
     @dynamic_catch
     def detach_processing_variable(self, element_guid: str, data_value_guid: str,
@@ -1104,9 +1043,9 @@ class DataEngineer(ServerClient):
               }
             }
         """
-        json_body = self._e64_link_body(body, "link_embedded_data_value", EMBEDDED_DATA_VALUE_PROPERTIES,
-                                        positioned=True)
-        url = self._e64_url(EMBEDDED_DATA_VALUES_ATTACH, parentDataValueGUID=parent_data_value_guid,
+        json_body = checked_body(body, "link_embedded_data_value", request_class="NewRelationshipRequestBody",
+                                 properties_classes={EMBEDDED_DATA_VALUE_PROPERTIES}, int_keys=("position",))
+        url = e64_url(self.platform_url, self.view_server, EMBEDDED_DATA_VALUES_ATTACH, parentDataValueGUID=parent_data_value_guid,
                             embeddedDataValueGUID=embedded_data_value_guid)
         response = await self._async_make_request("POST", url, json_body)
         return response.json().get("guid", NO_GUID_RETURNED)
@@ -1147,9 +1086,9 @@ class DataEngineer(ServerClient):
         -------
         None
         """
-        url = self._e64_url(EMBEDDED_DATA_VALUES_DETACH, parentDataValueGUID=parent_data_value_guid,
+        url = e64_url(self.platform_url, self.view_server, EMBEDDED_DATA_VALUES_DETACH, parentDataValueGUID=parent_data_value_guid,
                             embeddedDataValueGUID=embedded_data_value_guid)
-        await self._async_make_request("POST", url, self._e64_detach_body(body, "detach_embedded_data_value"))
+        await self._async_make_request("POST", url, checked_body(body, "detach_embedded_data_value", request_class="DeleteRelationshipRequestBody"))
 
     @dynamic_catch
     def detach_embedded_data_value(self, parent_data_value_guid: str, embedded_data_value_guid: str,

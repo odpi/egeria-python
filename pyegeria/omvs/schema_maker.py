@@ -37,7 +37,7 @@ from pyegeria.view.output_formatter import (
 from pyegeria.core.utils import dynamic_catch
 from pyegeria.core.async_runner import run_sync
 from pyegeria.core import egeria_6_4_names as e64
-from pyegeria.omvs.devops_pipeline import _checked_6_4_body  # the shared Egeria 6.4 body check (A3)
+from pyegeria.core.egeria_6_4_bodies import checked_body, e64_url  # the shared Egeria 6.4 body check
 
 
 class SchemaTypeProperties(ReferenceableProperties):
@@ -1243,15 +1243,11 @@ class SchemaMaker(ServerClient):
         PyegeriaNotAuthorizedException
             The principal does not have authorization for the requested action.
         """
-        payload = _checked_6_4_body(body, "NewRelationshipRequestBody", e64.SUPPORTED_VARIABLE_TYPE_PROPERTIES,
-                                    "link_supported_variable_type")
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-               + e64.SUPPORTED_VARIABLE_TYPES_ATTACH.format(elementGUID=element_guid,
-                                                            schemaTypeGUID=schema_type_guid))
-        if payload:
-            await self._async_make_request("POST", url, payload)
-        else:
-            await self._async_make_request("POST", url)
+        payload = checked_body(body, "link_supported_variable_type", request_class="NewRelationshipRequestBody",
+                               properties_classes={e64.SUPPORTED_VARIABLE_TYPE_PROPERTIES}, int_keys=("position",))
+        url = e64_url(self.platform_url, self.view_server, e64.SUPPORTED_VARIABLE_TYPES_ATTACH,
+                      elementGUID=element_guid, schemaTypeGUID=schema_type_guid)
+        await self._async_make_request("POST", url, payload)
         logger.info(f"Linked {element_guid} to supported variable type {schema_type_guid}.")
 
     @dynamic_catch
@@ -1297,14 +1293,10 @@ class SchemaMaker(ServerClient):
         PyegeriaNotAuthorizedException
             The principal does not have authorization for the requested action.
         """
-        payload = _checked_6_4_body(body, "DeleteRelationshipRequestBody", None, "detach_supported_variable_type")
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-               + e64.SUPPORTED_VARIABLE_TYPES_DETACH.format(elementGUID=element_guid,
-                                                            schemaTypeGUID=schema_type_guid))
-        if payload:
-            await self._async_make_request("POST", url, payload)
-        else:
-            await self._async_make_request("POST", url)
+        payload = checked_body(body, "detach_supported_variable_type", request_class="DeleteRelationshipRequestBody")
+        url = e64_url(self.platform_url, self.view_server, e64.SUPPORTED_VARIABLE_TYPES_DETACH,
+                      elementGUID=element_guid, schemaTypeGUID=schema_type_guid)
+        await self._async_make_request("POST", url, payload)
         logger.info(f"Detached {element_guid} from supported variable type {schema_type_guid}.")
 
     @dynamic_catch
