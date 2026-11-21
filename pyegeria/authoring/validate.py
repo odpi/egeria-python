@@ -53,6 +53,8 @@ RELATED_ELEMENT_KEYS = frozenset({
     # planned/actual start dates) and the view service doesn't attach, so it shows nothing today. Allowed so that
     # authoring doesn't refuse a copy of a shipped spec; the spec itself is to be fixed against live output.
     "start_date",
+    # Egeria 6.4 (odpi/egeria#9463) relationship lists, read by the Decision, Data-Value and Literal-Data-Value specs.
+    "decision_outcomes", "inputs_to_decision", "data_value_uses", "data_value_sources", "embedded_data_values",
 })
 
 #: Properties of the survey annotation subtypes, which the Properties-class catalog doesn't list.
