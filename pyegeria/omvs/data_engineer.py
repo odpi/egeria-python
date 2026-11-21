@@ -11,14 +11,32 @@ import asyncio
 from pydantic import HttpUrl
 
 from typing import Unpack
-from pyegeria.core.request_filters import SearchFilters
+from pyegeria.core.request_filters import GetFilters, ListFilters, SearchFilters
 from pyegeria.core._exceptions import PyegeriaException
 from pyegeria.core.utils import dynamic_catch, transform_json_to_tabular
 from pyegeria.core._server_client import ServerClient
 from pyegeria.models import SearchStringRequestBody
+from pyegeria.models import (NewElementRequestBody, TemplateRequestBody, UpdateElementRequestBody,
+                             DeleteElementRequestBody, FilterRequestBody, GetRequestBody,
+                             NewRelationshipRequestBody, DeleteRelationshipRequestBody)
+from pyegeria.core._exceptions import PyegeriaInvalidParameterException
+from pyegeria.core._globals import NO_GUID_RETURNED
+from pyegeria.core.egeria_6_4_names import (
+    DATA_VALUE, DATA_VALUE_PROPERTIES, LITERAL_DATA_VALUE_PROPERTIES,
+    DATA_VALUES_CREATE, DATA_VALUES_FROM_TEMPLATE, DATA_VALUES_UPDATE, DATA_VALUES_DELETE, DATA_VALUES_BY_NAME,
+    DATA_VALUES_RETRIEVE, DATA_VALUES_BY_SEARCH_STRING,
+    DATA_VALUE_SOURCE_PROPERTIES, PROCESSING_VARIABLE_PROPERTIES, EMBEDDED_DATA_VALUE_PROPERTIES,
+    DATA_VALUE_SOURCES_ATTACH, DATA_VALUE_SOURCES_DETACH, PROCESSING_VARIABLES_ATTACH,
+    PROCESSING_VARIABLES_DETACH, EMBEDDED_DATA_VALUES_ATTACH, EMBEDDED_DATA_VALUES_DETACH,
+)
 from pyegeria.view.output_formatter import _generate_default_output
 from typing import Any, Optional
 from pyegeria.core.async_runner import run_sync
+import json
+from pydantic import BaseModel, TypeAdapter
+
+# The properties classes a data-value request accepts (Egeria 6.4): a DataValue or its LiteralDataValue subtype.
+DATA_VALUE_PROPERTIES_CLASSES = (DATA_VALUE_PROPERTIES, LITERAL_DATA_VALUE_PROPERTIES)
 
 class DataEngineer(ServerClient):
     """
@@ -362,3 +380,783 @@ class DataEngineer(ServerClient):
             return el_list
         else:
             raise PyegeriaException(f"Unsupported output format: {output_format}")
+
+    # =========================================================================================================
+    # Data values (Egeria 6.4, odpi/egeria#9463; type 0208 Data Values)
+    #
+    # Every request below needs Egeria 6.4 or later: on an earlier Egeria the endpoints do not exist (404).
+    # The paths come from pyegeria.core.egeria_6_4_names, the one place the 6.4 names are kept.
+    #
+    # The write requests send the caller's body as given (a dict is checked against its request-body model and
+    # then sent unchanged; a model is sent as its JSON dump), so a body copied from Egeria's `.http` samples
+    # reaches Egeria exactly. A DataValue's properties may be DataValueProperties or its subtype
+    # LiteralDataValueProperties (dataValue, dataValueList, dataValueMap); any other properties class is
+    # refused here, before Egeria refuses it.
+    # =========================================================================================================
+
+    def _e64_url(self, path: str, **guids: str) -> str:
+        """The full URL of a 6.4 request whose path (from egeria_6_4_names) is relative to open-metadata/."""
+        return f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{path.format(**guids)}"
+
+    def _e64_body(self, body: Optional[dict | BaseModel], adapter: TypeAdapter, method: str,
+                  prop_classes: Optional[tuple[str, ...]] = None, required: bool = True) -> Optional[str]:
+        """Check a request body locally and return the JSON to send (None when no body is given and none is
+        required). Refuses, with words, a missing body that is required and a properties class not in
+        `prop_classes` (when given). A dict is validated by `adapter` but sent exactly as given."""
+        if body is None:
+            if required:
+                raise PyegeriaInvalidParameterException(additional_info={
+                    "reason": f"{method} needs a request body: Egeria 6.4 refuses this request without one."})
+            return None
+        if isinstance(body, BaseModel):
+            payload = json.loads(body.model_dump_json(exclude_none=True, by_alias=True))
+        elif isinstance(body, dict):
+            self._validate_body(adapter.validate_python, body)
+            payload = body
+        else:
+            raise PyegeriaInvalidParameterException(additional_info={
+                "reason": f"{method} takes a dict or a request-body model, not {type(body).__name__}."})
+        if prop_classes:
+            props = payload.get("properties")
+            got = props.get("class") if isinstance(props, dict) else None
+            if got not in prop_classes:
+                expected = " or ".join(prop_classes)
+                raise PyegeriaInvalidParameterException(additional_info={
+                    "reason": f"{method}: properties.class must be {expected}, not {got or 'missing'}. "
+                              f"Egeria rejects a properties object of the wrong class."})
+        return json.dumps(payload)
+
+    @dynamic_catch
+    async def _async_create_data_value(self, body: dict | NewElementRequestBody) -> str:
+        """Create a data value (a DataValue, or a LiteralDataValue that holds the value itself). Async version.
+
+        Needs Egeria 6.4 or later (odpi/egeria#9463).
+
+        Parameters
+        ----------
+        body : dict | NewElementRequestBody
+            A NewElementRequestBody whose properties are DataValueProperties or LiteralDataValueProperties.
+            Required. For a literal value, `dataValue` holds one value, `dataValueList` a list of values and
+            `dataValueMap` a map of names to values; all three are sent unchanged.
+
+        Returns
+        -------
+        str
+            The GUID of the new data value.
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            No body, or a properties class other than DataValueProperties or LiteralDataValueProperties
+            (refused locally, before the request is sent).
+        PyegeriaException
+            Issues raised in communicating or server-side processing.
+
+        Notes
+        -----
+        Sample body (Egeria's data-engineer `.http`, createDataValue)::
+
+            {
+              "class" : "NewElementRequestBody",
+              "anchorGUID" : "add guid here",
+              "isOwnAnchor": false,
+              "parentGUID": "add guid here",
+              "parentRelationshipTypeName": "add type name here",
+              "parentAtEnd1": false,
+              "properties": {
+                "class" : "DataValueProperties",
+                "qualifiedName": "add unique name here",
+                "displayName": "add short name here",
+                "description": "add description here",
+                "dataFormat": "add data format here",
+                "length": 0,
+                "dataType": "add data type here",
+                "usage": "add usage here"
+              }
+            }
+
+        For a LiteralDataValue, use "class": "LiteralDataValueProperties" and add any of
+        "dataValue": "42", "dataValueList": ["a", "b"], "dataValueMap": {"low": "1", "high": "9"}.
+        """
+        json_body = self._e64_body(body, self._new_element_request_adapter, "create_data_value",
+                                   DATA_VALUE_PROPERTIES_CLASSES)
+        response = await self._async_make_request("POST", self._e64_url(DATA_VALUES_CREATE), json_body)
+        return response.json().get("guid", NO_GUID_RETURNED)
+
+    @dynamic_catch
+    def create_data_value(self, body: dict | NewElementRequestBody) -> str:
+        """Create a data value (a DataValue, or a LiteralDataValue that holds the value itself).
+
+        Needs Egeria 6.4 or later (odpi/egeria#9463). See `_async_create_data_value` for the body.
+
+        Returns
+        -------
+        str
+            The GUID of the new data value.
+        """
+        return run_sync(self._async_create_data_value(body))
+
+    @dynamic_catch
+    async def _async_create_data_value_from_template(self, body: dict | TemplateRequestBody) -> str:
+        """Create a data value from an existing element used as a template. Async version.
+
+        Needs Egeria 6.4 or later (odpi/egeria#9463).
+
+        The template defines additional classifications and relationships to add to the new element.
+
+        Parameters
+        ----------
+        body : dict | TemplateRequestBody
+            A TemplateRequestBody naming the `templateGUID`, with optional `replacementProperties` and
+            `placeholderPropertyValues`. Required.
+
+        Returns
+        -------
+        str
+            The GUID of the new data value.
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            No body (refused locally).
+        PyegeriaException
+            Issues raised in communicating or server-side processing.
+
+        Notes
+        -----
+        Sample body (createDataValueFromTemplate)::
+
+            {
+              "class" : "TemplateRequestBody",
+              "anchorGUID" : "add guid here",
+              "isOwnAnchor": false,
+              "templateGUID": "add guid here",
+              "replacementProperties": {
+                "class": "EntityElementProperties",
+                "propertyValueMap" : {
+                  "description" : {"class": "PrimitiveTypePropertyValue", "typeName": "string",
+                                    "primitiveValue" : "New description"}
+                }
+              },
+              "placeholderPropertyValues": {"placeholder1" : "propertyValue1"}
+            }
+        """
+        json_body = self._e64_body(body, self._template_request_adapter, "create_data_value_from_template")
+        response = await self._async_make_request("POST", self._e64_url(DATA_VALUES_FROM_TEMPLATE), json_body)
+        return response.json().get("guid", NO_GUID_RETURNED)
+
+    @dynamic_catch
+    def create_data_value_from_template(self, body: dict | TemplateRequestBody) -> str:
+        """Create a data value from an existing element used as a template.
+
+        Needs Egeria 6.4 or later (odpi/egeria#9463). See `_async_create_data_value_from_template`.
+
+        Returns
+        -------
+        str
+            The GUID of the new data value.
+        """
+        return run_sync(self._async_create_data_value_from_template(body))
+
+    @dynamic_catch
+    async def _async_update_data_value(self, data_value_guid: str, body: dict | UpdateElementRequestBody) -> None:
+        """Update the properties of a data value. Async version.
+
+        Needs Egeria 6.4 or later (odpi/egeria#9463).
+
+        Parameters
+        ----------
+        data_value_guid : str
+            The GUID of the data value to update.
+        body : dict | UpdateElementRequestBody
+            Required. Its properties are DataValueProperties or LiteralDataValueProperties. `mergeUpdate` is
+            sent as given: true changes only the properties sent; false replaces them all.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            No body, or a properties class other than DataValueProperties or LiteralDataValueProperties
+            (refused locally).
+        PyegeriaException
+            Issues raised in communicating or server-side processing.
+
+        Notes
+        -----
+        Sample body (updateDataValue)::
+
+            {
+              "class" : "UpdateElementRequestBody",
+              "mergeUpdate": true,
+              "properties": {
+                "class" : "DataValueProperties",
+                "qualifiedName": "add unique name here",
+                "description": "add description here",
+                "dataFormat": "add data format here",
+                "dataType": "add data type here"
+              }
+            }
+        """
+        json_body = self._e64_body(body, self._update_element_request_adapter, "update_data_value",
+                                   DATA_VALUE_PROPERTIES_CLASSES)
+        await self._async_make_request("POST", self._e64_url(DATA_VALUES_UPDATE, dataValueGUID=data_value_guid),
+                                       json_body)
+
+    @dynamic_catch
+    def update_data_value(self, data_value_guid: str, body: dict | UpdateElementRequestBody) -> None:
+        """Update the properties of a data value.
+
+        Needs Egeria 6.4 or later (odpi/egeria#9463). See `_async_update_data_value` for the body.
+        """
+        return run_sync(self._async_update_data_value(data_value_guid, body))
+
+    @dynamic_catch
+    async def _async_delete_data_value(self, data_value_guid: str,
+                                       body: Optional[dict | DeleteElementRequestBody] = None,
+                                       cascade: bool = False) -> None:
+        """Delete a data value. Async version.
+
+        Needs Egeria 6.4 or later (odpi/egeria#9463).
+
+        Parameters
+        ----------
+        data_value_guid : str
+            The GUID of the data value to delete.
+        body : dict | DeleteElementRequestBody, optional
+            Sent as given. With no body, a DeleteElementRequestBody with `cascadedDelete` = `cascade` is sent.
+        cascade : bool, default False
+            Used only when no body is given: also delete the elements anchored to this one.
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        Sample body (deleteDataValue)::
+
+            {
+              "class" : "DeleteElementRequestBody",
+              "externalSourceGUID": "add guid here",
+              "externalSourceName": "add qualified name here",
+              "forLineage" : false,
+              "forDuplicateProcessing" : false
+            }
+        """
+        if body is None:
+            body = {"class": "DeleteElementRequestBody", "cascadedDelete": cascade}
+        json_body = self._e64_body(body, self._delete_element_request_adapter, "delete_data_value")
+        await self._async_make_request("POST", self._e64_url(DATA_VALUES_DELETE, dataValueGUID=data_value_guid),
+                                       json_body)
+
+    @dynamic_catch
+    def delete_data_value(self, data_value_guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
+                          cascade: bool = False) -> None:
+        """Delete a data value.
+
+        Needs Egeria 6.4 or later (odpi/egeria#9463). See `_async_delete_data_value`.
+        """
+        return run_sync(self._async_delete_data_value(data_value_guid, body, cascade))
+
+    @dynamic_catch
+    async def _async_get_data_values_by_name(self, filter_string: Optional[str] = None,
+                                             body: Optional[dict | FilterRequestBody] = None,
+                                             start_from: int = 0, page_size: int = 0,
+                                             output_format: str = "JSON",
+                                             report_spec: str | dict = "Referenceable",
+                                             **kwargs: Unpack[ListFilters]) -> list | str:
+        """Return the data values (and literal data values) with a particular name. Async version.
+
+        Needs Egeria 6.4 or later (odpi/egeria#9463).
+
+        Parameters
+        ----------
+        filter_string : str, optional
+            The name to match. Ignored when `body` is given.
+        body : dict | FilterRequestBody, optional
+            A FilterRequestBody; it takes precedence over the other arguments.
+        start_from : int, default 0
+            The first result to return, when paging.
+        page_size : int, default 0
+            The most results to return (0 means the server's maximum).
+        output_format : str, default "JSON"
+            One of "JSON", "DICT", "MD", "FORM", "REPORT", "LIST", "MERMAID".
+        report_spec : str | dict, default "Referenceable"
+            The report spec that chooses the columns, for formats other than JSON.
+
+        Returns
+        -------
+        list | str
+            The matching elements, or NO_ELEMENTS_FOUND.
+
+        Notes
+        -----
+        Sample body (getDataValuesByName)::
+
+            {"class" : "FilterRequestBody", "filter" : "Add name here", "startFrom": 0, "pageSize": 10}
+        """
+        return await self._async_get_name_request(self._e64_url(DATA_VALUES_BY_NAME), _type=DATA_VALUE,
+                                                  _gen_output=self._generate_referenceable_output,
+                                                  filter_string=filter_string, body=body, start_from=start_from,
+                                                  page_size=page_size, output_format=output_format,
+                                                  report_spec=report_spec, **kwargs)
+
+    @dynamic_catch
+    def get_data_values_by_name(self, filter_string: Optional[str] = None,
+                                body: Optional[dict | FilterRequestBody] = None, start_from: int = 0,
+                                page_size: int = 0, output_format: str = "JSON",
+                                report_spec: str | dict = "Referenceable", **kwargs: Unpack[ListFilters]) -> list | str:
+        """Return the data values (and literal data values) with a particular name.
+
+        Needs Egeria 6.4 or later (odpi/egeria#9463). See `_async_get_data_values_by_name`.
+        """
+        return run_sync(self._async_get_data_values_by_name(filter_string, body, start_from, page_size,
+                                                            output_format, report_spec, **kwargs))
+
+    @dynamic_catch
+    async def _async_get_data_value_by_guid(self, data_value_guid: str,
+                                            body: Optional[dict | GetRequestBody] = None,
+                                            output_format: str = "JSON",
+                                            report_spec: str | dict = "Referenceable",
+                                            **kwargs: Unpack[GetFilters]) -> dict | str:
+        """Return the properties of a data value (or literal data value). Async version.
+
+        Needs Egeria 6.4 or later (odpi/egeria#9463).
+
+        Parameters
+        ----------
+        data_value_guid : str
+            The GUID of the data value.
+        body : dict | GetRequestBody, optional
+            A GetRequestBody (asOfTime, effectiveTime, ...); it takes precedence over the other arguments.
+        output_format : str, default "JSON"
+            One of "JSON", "DICT", "MD", "FORM", "REPORT", "LIST", "MERMAID".
+        report_spec : str | dict, default "Referenceable"
+            The report spec that chooses the columns, for formats other than JSON.
+
+        Returns
+        -------
+        dict | str
+            The element, or NO_ELEMENTS_FOUND.
+
+        Notes
+        -----
+        Sample body (getDataValueByGUID)::
+
+            {"class" : "GetRequestBody", "asOfTime" : "2026-11-21T10:00:00Z",
+             "effectiveTime" : "2026-11-21T10:00:00Z", "forLineage" : false, "forDuplicateProcessing" : false}
+        """
+        return await self._async_get_guid_request(
+            self._e64_url(DATA_VALUES_RETRIEVE, dataValueGUID=data_value_guid), _type=DATA_VALUE,
+            _gen_output=self._generate_referenceable_output, body=body, output_format=output_format,
+            report_spec=report_spec, **kwargs)
+
+    @dynamic_catch
+    def get_data_value_by_guid(self, data_value_guid: str, body: Optional[dict | GetRequestBody] = None,
+                               output_format: str = "JSON", report_spec: str | dict = "Referenceable",
+                               **kwargs: Unpack[GetFilters]) -> dict | str:
+        """Return the properties of a data value (or literal data value).
+
+        Needs Egeria 6.4 or later (odpi/egeria#9463). See `_async_get_data_value_by_guid`.
+        """
+        return run_sync(self._async_get_data_value_by_guid(data_value_guid, body, output_format, report_spec,
+                                                           **kwargs))
+
+    @dynamic_catch
+    async def _async_find_data_values(self, search_string: str = "*",
+                                      body: Optional[dict | SearchStringRequestBody] = None,
+                                      starts_with: bool = True, ends_with: bool = False,
+                                      ignore_case: bool = False, start_from: int = 0, page_size: int = 0,
+                                      output_format: str = "JSON", report_spec: str | dict = "Referenceable",
+                                      **kwargs: Unpack[SearchFilters]) -> list | str:
+        """Return the data values (and literal data values) that contain the search string. Async version.
+
+        Needs Egeria 6.4 or later (odpi/egeria#9463).
+
+        Parameters
+        ----------
+        search_string : str, default "*"
+            The string to search for; "*" matches every data value. Ignored when `body` is given.
+        body : dict | SearchStringRequestBody, optional
+            A SearchStringRequestBody; it takes precedence over the other arguments.
+        starts_with, ends_with, ignore_case : bool
+            How the search string matches.
+        start_from : int, default 0
+            The first result to return, when paging.
+        page_size : int, default 0
+            The most results to return (0 means the server's maximum).
+        output_format : str, default "JSON"
+            One of "JSON", "DICT", "MD", "FORM", "REPORT", "LIST", "MERMAID".
+        report_spec : str | dict, default "Referenceable"
+            The report spec that chooses the columns, for formats other than JSON.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``).
+
+        Returns
+        -------
+        list | str
+            The matching elements, or NO_ELEMENTS_FOUND.
+
+        Notes
+        -----
+        Sample body (findDataValues)::
+
+            {"class" : "SearchStringRequestBody", "searchString" : "Add value here", "startsWith" : false,
+             "endsWith" : false, "ignoreCase" : true, "startFrom" : 0, "pageSize": 10}
+        """
+        return await self._async_find_request(self._e64_url(DATA_VALUES_BY_SEARCH_STRING), _type=DATA_VALUE,
+                                              _gen_output=self._generate_referenceable_output,
+                                              search_string=search_string, body=body, starts_with=starts_with,
+                                              ends_with=ends_with, ignore_case=ignore_case,
+                                              start_from=start_from, page_size=page_size,
+                                              output_format=output_format, report_spec=report_spec, **kwargs)
+
+    @dynamic_catch
+    def find_data_values(self, search_string: str = "*", body: Optional[dict | SearchStringRequestBody] = None,
+                         starts_with: bool = True, ends_with: bool = False, ignore_case: bool = False,
+                         start_from: int = 0, page_size: int = 0, output_format: str = "JSON",
+                         report_spec: str | dict = "Referenceable", **kwargs: Unpack[SearchFilters]) -> list | str:
+        """Return the data values (and literal data values) that contain the search string.
+
+        Needs Egeria 6.4 or later (odpi/egeria#9463). See `_async_find_data_values`.
+        """
+        return run_sync(self._async_find_data_values(search_string, body, starts_with, ends_with, ignore_case,
+                                                     start_from, page_size, output_format, report_spec,
+                                                     **kwargs))
+
+    # =========================================================================================================
+    # Data-value links (Egeria 6.4, odpi/egeria#9463): DataValueSource, ProcessingVariable, EmbeddedDataValue
+    #
+    # Attach and detach take an optional body. With no body, no body is sent (Egeria accepts an attach with
+    # no body or no properties). A body is sent as given; its properties class, when it has properties, must
+    # be the relationship's own class, and `position` (ProcessingVariable, EmbeddedDataValue) must be an int:
+    # 0 means unset, and it is passed through unchanged.
+    # =========================================================================================================
+
+    def _e64_link_body(self, body: Optional[dict | NewRelationshipRequestBody], method: str, prop_class: str,
+                       positioned: bool = False) -> Optional[str]:
+        """The JSON for a 6.4 attach request, or None to send no body. Refuses, with words, a properties
+        class other than `prop_class` and a `position` that is not an int."""
+        if body is None:
+            return None
+        json_body = self._e64_body(body, self._new_relationship_request_adapter, method)
+        props = json.loads(json_body).get("properties")
+        if props is None:
+            return json_body
+        got = props.get("class") if isinstance(props, dict) else None
+        if got != prop_class:
+            raise PyegeriaInvalidParameterException(additional_info={
+                "reason": f"{method}: properties.class must be {prop_class}, not {got or 'missing'}. "
+                          f"Egeria rejects a properties object of the wrong class."})
+        if positioned:
+            position = props.get("position")
+            if position is not None and (type(position) is not int):
+                raise PyegeriaInvalidParameterException(additional_info={
+                    "reason": f"{method}: position must be an int (0 means unset), not "
+                              f"{type(position).__name__} {position!r}."})
+        return json_body
+
+    def _e64_detach_body(self, body: Optional[dict | DeleteRelationshipRequestBody], method: str) -> Optional[str]:
+        """The JSON for a 6.4 detach request, or None to send no body."""
+        if body is None:
+            return None
+        return self._e64_body(body, self._delete_relationship_request_adapter, method)
+
+    @dynamic_catch
+    async def _async_link_data_value_source(self, data_value_guid: str, asset_guid: str,
+                                            body: Optional[dict | NewRelationshipRequestBody] = None) -> str:
+        """Attach a data value to the asset that describes the digital resource where its data is stored
+        (a DataValueSource relationship). Async version.
+
+        Needs Egeria 6.4 or later (odpi/egeria#9463).
+
+        Parameters
+        ----------
+        data_value_guid : str
+            The GUID of the data value.
+        asset_guid : str
+            The GUID of the asset where the data is stored.
+        body : dict | NewRelationshipRequestBody, optional
+            Sent as given; with no body, no body is sent. Its properties, if any, are
+            DataValueSourceProperties (label, description, effectiveFrom, effectiveTo).
+
+        Returns
+        -------
+        str
+            The GUID of the new relationship, or NO_GUID_RETURNED.
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            A properties class other than DataValueSourceProperties (refused locally).
+        PyegeriaException
+            Issues raised in communicating or server-side processing.
+
+        Notes
+        -----
+        Sample body (linkDataValueSource)::
+
+            {
+              "class" : "NewRelationshipRequestBody",
+              "properties": {
+                "class" : "DataValueSourceProperties",
+                "label": "add label here",
+                "description": "add description here"
+              }
+            }
+        """
+        json_body = self._e64_link_body(body, "link_data_value_source", DATA_VALUE_SOURCE_PROPERTIES)
+        url = self._e64_url(DATA_VALUE_SOURCES_ATTACH, dataValueGUID=data_value_guid, assetGUID=asset_guid)
+        response = await self._async_make_request("POST", url, json_body)
+        return response.json().get("guid", NO_GUID_RETURNED)
+
+    @dynamic_catch
+    def link_data_value_source(self, data_value_guid: str, asset_guid: str,
+                               body: Optional[dict | NewRelationshipRequestBody] = None) -> str:
+        """Attach a data value to the asset where its data is stored (DataValueSource).
+
+        Needs Egeria 6.4 or later (odpi/egeria#9463). See `_async_link_data_value_source`.
+
+        Returns
+        -------
+        str
+            The GUID of the new relationship, or NO_GUID_RETURNED.
+        """
+        return run_sync(self._async_link_data_value_source(data_value_guid, asset_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_data_value_source(self, data_value_guid: str, asset_guid: str,
+                                              body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a data value from the asset where its data is stored (DataValueSource). Async version.
+
+        Needs Egeria 6.4 or later (odpi/egeria#9463).
+
+        Parameters
+        ----------
+        data_value_guid : str
+            The GUID of the data value.
+        asset_guid : str
+            The GUID of the asset.
+        body : dict | DeleteRelationshipRequestBody, optional
+            Sent as given; with no body, no body is sent.
+
+        Returns
+        -------
+        None
+        """
+        url = self._e64_url(DATA_VALUE_SOURCES_DETACH, dataValueGUID=data_value_guid, assetGUID=asset_guid)
+        await self._async_make_request("POST", url, self._e64_detach_body(body, "detach_data_value_source"))
+
+    @dynamic_catch
+    def detach_data_value_source(self, data_value_guid: str, asset_guid: str,
+                                 body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a data value from the asset where its data is stored (DataValueSource).
+
+        Needs Egeria 6.4 or later (odpi/egeria#9463). See `_async_detach_data_value_source`.
+        """
+        return run_sync(self._async_detach_data_value_source(data_value_guid, asset_guid, body))
+
+    @dynamic_catch
+    async def _async_link_processing_variable(self, element_guid: str, data_value_guid: str,
+                                              body: Optional[dict | NewRelationshipRequestBody] = None) -> str:
+        """Attach an element (such as a process) to a data value used to configure its processing
+        (a ProcessingVariable relationship). Async version.
+
+        Needs Egeria 6.4 or later (odpi/egeria#9463).
+
+        Parameters
+        ----------
+        element_guid : str
+            The GUID of the element (for example a process) that uses the data value.
+        data_value_guid : str
+            The GUID of the data value.
+        body : dict | NewRelationshipRequestBody, optional
+            Sent as given; with no body, no body is sent. Its properties, if any, are
+            ProcessingVariableProperties (label, description, position). `position` is an int and 0 means
+            unset; it is passed through unchanged.
+
+        Returns
+        -------
+        str
+            The GUID of the new relationship, or NO_GUID_RETURNED.
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            A properties class other than ProcessingVariableProperties, or a position that is not an int
+            (refused locally).
+        PyegeriaException
+            Issues raised in communicating or server-side processing.
+
+        Notes
+        -----
+        Sample body (linkProcessingVariable)::
+
+            {
+              "class" : "NewRelationshipRequestBody",
+              "properties": {
+                "class" : "ProcessingVariableProperties",
+                "label": "add label here",
+                "description": "add description here",
+                "position": 0
+              }
+            }
+        """
+        json_body = self._e64_link_body(body, "link_processing_variable", PROCESSING_VARIABLE_PROPERTIES,
+                                        positioned=True)
+        url = self._e64_url(PROCESSING_VARIABLES_ATTACH, elementGUID=element_guid, dataValueGUID=data_value_guid)
+        response = await self._async_make_request("POST", url, json_body)
+        return response.json().get("guid", NO_GUID_RETURNED)
+
+    @dynamic_catch
+    def link_processing_variable(self, element_guid: str, data_value_guid: str,
+                                 body: Optional[dict | NewRelationshipRequestBody] = None) -> str:
+        """Attach an element (such as a process) to a data value that configures its processing.
+
+        Needs Egeria 6.4 or later (odpi/egeria#9463). See `_async_link_processing_variable`.
+
+        Returns
+        -------
+        str
+            The GUID of the new relationship, or NO_GUID_RETURNED.
+        """
+        return run_sync(self._async_link_processing_variable(element_guid, data_value_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_processing_variable(self, element_guid: str, data_value_guid: str,
+                                                body: Optional[dict | DeleteRelationshipRequestBody] = None
+                                                ) -> None:
+        """Detach an element (such as a process) from a data value that configures its processing
+        (ProcessingVariable). Async version.
+
+        Needs Egeria 6.4 or later (odpi/egeria#9463).
+
+        Parameters
+        ----------
+        element_guid : str
+            The GUID of the element that uses the data value.
+        data_value_guid : str
+            The GUID of the data value.
+        body : dict | DeleteRelationshipRequestBody, optional
+            Sent as given; with no body, no body is sent.
+
+        Returns
+        -------
+        None
+        """
+        url = self._e64_url(PROCESSING_VARIABLES_DETACH, elementGUID=element_guid, dataValueGUID=data_value_guid)
+        await self._async_make_request("POST", url, self._e64_detach_body(body, "detach_processing_variable"))
+
+    @dynamic_catch
+    def detach_processing_variable(self, element_guid: str, data_value_guid: str,
+                                   body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach an element (such as a process) from a data value that configures its processing.
+
+        Needs Egeria 6.4 or later (odpi/egeria#9463). See `_async_detach_processing_variable`.
+        """
+        return run_sync(self._async_detach_processing_variable(element_guid, data_value_guid, body))
+
+    @dynamic_catch
+    async def _async_link_embedded_data_value(self, parent_data_value_guid: str, embedded_data_value_guid: str,
+                                              body: Optional[dict | NewRelationshipRequestBody] = None) -> str:
+        """Embed a data value in another data value (an EmbeddedDataValue relationship). Async version.
+
+        Needs Egeria 6.4 or later (odpi/egeria#9463).
+
+        Parameters
+        ----------
+        parent_data_value_guid : str
+            The GUID of the data value that holds the embedded one.
+        embedded_data_value_guid : str
+            The GUID of the data value to embed.
+        body : dict | NewRelationshipRequestBody, optional
+            Sent as given; with no body, no body is sent. Its properties, if any, are
+            EmbeddedDataValueProperties (label, description, position). `position` orders the embedded
+            values: an int, 0 meaning unset, passed through unchanged.
+
+        Returns
+        -------
+        str
+            The GUID of the new relationship, or NO_GUID_RETURNED.
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            A properties class other than EmbeddedDataValueProperties, or a position that is not an int
+            (refused locally).
+        PyegeriaException
+            Issues raised in communicating or server-side processing.
+
+        Notes
+        -----
+        Sample body (linkEmbeddedDataValue)::
+
+            {
+              "class" : "NewRelationshipRequestBody",
+              "properties": {
+                "class" : "EmbeddedDataValueProperties",
+                "label": "add label here",
+                "description": "add description here",
+                "position": 0
+              }
+            }
+        """
+        json_body = self._e64_link_body(body, "link_embedded_data_value", EMBEDDED_DATA_VALUE_PROPERTIES,
+                                        positioned=True)
+        url = self._e64_url(EMBEDDED_DATA_VALUES_ATTACH, parentDataValueGUID=parent_data_value_guid,
+                            embeddedDataValueGUID=embedded_data_value_guid)
+        response = await self._async_make_request("POST", url, json_body)
+        return response.json().get("guid", NO_GUID_RETURNED)
+
+    @dynamic_catch
+    def link_embedded_data_value(self, parent_data_value_guid: str, embedded_data_value_guid: str,
+                                 body: Optional[dict | NewRelationshipRequestBody] = None) -> str:
+        """Embed a data value in another data value (EmbeddedDataValue).
+
+        Needs Egeria 6.4 or later (odpi/egeria#9463). See `_async_link_embedded_data_value`.
+
+        Returns
+        -------
+        str
+            The GUID of the new relationship, or NO_GUID_RETURNED.
+        """
+        return run_sync(self._async_link_embedded_data_value(parent_data_value_guid, embedded_data_value_guid,
+                                                             body))
+
+    @dynamic_catch
+    async def _async_detach_embedded_data_value(self, parent_data_value_guid: str, embedded_data_value_guid: str,
+                                                body: Optional[dict | DeleteRelationshipRequestBody] = None
+                                                ) -> None:
+        """Remove an embedded data value from its parent data value (EmbeddedDataValue). Async version.
+
+        Needs Egeria 6.4 or later (odpi/egeria#9463).
+
+        Parameters
+        ----------
+        parent_data_value_guid : str
+            The GUID of the parent data value.
+        embedded_data_value_guid : str
+            The GUID of the embedded data value.
+        body : dict | DeleteRelationshipRequestBody, optional
+            Sent as given; with no body, no body is sent.
+
+        Returns
+        -------
+        None
+        """
+        url = self._e64_url(EMBEDDED_DATA_VALUES_DETACH, parentDataValueGUID=parent_data_value_guid,
+                            embeddedDataValueGUID=embedded_data_value_guid)
+        await self._async_make_request("POST", url, self._e64_detach_body(body, "detach_embedded_data_value"))
+
+    @dynamic_catch
+    def detach_embedded_data_value(self, parent_data_value_guid: str, embedded_data_value_guid: str,
+                                   body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Remove an embedded data value from its parent data value (EmbeddedDataValue).
+
+        Needs Egeria 6.4 or later (odpi/egeria#9463). See `_async_detach_embedded_data_value`.
+        """
+        return run_sync(self._async_detach_embedded_data_value(parent_data_value_guid, embedded_data_value_guid,
+                                                               body))
