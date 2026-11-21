@@ -220,26 +220,42 @@ def table_source_ref() -> str | None:
     return m.group(1) if m else None
 
 
-_SETTER = re.compile(r"public\s+void\s+set(\w+)\s*\(")
-_CLASS = re.compile(r"public\s+(?:abstract\s+)?class\s+(\w+)(?:\s*<[^>{]*>)?(?:\s+extends\s+(\w+))?")
 
 
-def _decapitalize(name: str) -> str:
-    """java.beans.Introspector.decapitalize, which Jackson uses for setter names."""
-    if len(name) > 1 and name[0].isupper() and name[1].isupper():
-        return name
-    return name[:1].lower() + name[1:]
+def _generator():
+    """scripts/gen_properties_class_fields.py, loaded once: its parser is the one key-naming rule."""
+    global _GEN
+    if _GEN is None:
+        spec = importlib.util.spec_from_file_location("_gen_pcf",
+                                                      os.path.join(_HERE, "gen_properties_class_fields.py"))
+        _GEN = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(_GEN)
+    return _GEN
+
+
+_GEN = None
+
+
+def class_setters(src: str) -> tuple[str, str | None, set[str]] | None:
+    """(class, superclass, JSON keys) of one Java file's top-level public class, or None.
+
+    The keys are named as Jackson binds them, by gen_properties_class_fields' own parser (the PY-45 rule):
+    public one-argument setters of the class itself (not nested classes), not @JsonIgnore'd; an
+    @JsonProperty name wins; otherwise Jackson's legacy naming lower-cases the leading run of capitals, so
+    setURL is "url" and setGUID "guid" (java.beans' decapitalize would keep "URL")."""
+    info = _generator().parse(src)
+    if info is None:
+        return None
+    extends = info["extends"].rsplit(".", 1)[-1] if info["extends"] else None
+    return info["name"], extends, set(info["keys"])
 
 
 def load_egeria(egeria: str, ref: str) -> tuple[dict[str, str | None], dict[str, set[str]]]:
     """From Egeria's Java at `ref` (git cat-file, read-only): every frameworks class's superclass, and the
-    JSON keys it declares a public setter for. Jackson binds through setters (the beans say
-    `setterVisibility=PUBLIC_ONLY, fieldVisibility=NONE`), so setters are the ground truth; they also
-    cover package-private fields and superclasses outside the properties packages, which
-    gen_properties_class_fields' field regex misses."""
-    spec = importlib.util.spec_from_file_location("_gen_pcf", os.path.join(_HERE, "gen_properties_class_fields.py"))
-    gen = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(gen)
+    JSON keys it declares a public setter for (named by `class_setters`, Jackson's rule). Jackson binds
+    through setters (the beans say `setterVisibility=PUBLIC_ONLY, fieldVisibility=NONE`), so setters are the
+    ground truth; they also cover superclasses outside the properties packages."""
+    gen = _generator()
     paths = [p for p in gen.git(egeria, "ls-tree", "-r", "--name-only", ref, "--", gen.FRAMEWORKS).decode().split("\n")
              if p.endswith(".java") and "/src/main/java/" in p]
     batch = gen.git(egeria, "cat-file", "--batch", stdin="".join(f"{ref}:{p}\n" for p in paths).encode())
@@ -250,11 +266,10 @@ def load_egeria(egeria: str, ref: str) -> tuple[dict[str, str | None], dict[str,
         start = header_end + 1
         src = batch[start:start + size].decode("utf-8", errors="ignore")
         pos = start + size + 1
-        m = _CLASS.search(src)
-        if not m or m.group(1) in parents:
+        found = class_setters(src)
+        if not found or found[0] in parents:
             continue
-        parents[m.group(1)] = m.group(2)
-        setters[m.group(1)] = {_decapitalize(x) for x in _SETTER.findall(src[m.end():])}
+        parents[found[0]], setters[found[0]] = found[1], found[2]
     return parents, setters
 
 

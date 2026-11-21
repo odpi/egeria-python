@@ -189,8 +189,16 @@ def test_literal_type_name_overrides_function_name(audit, tmp_path):
     assert result.findings == []
 
 
-def test_class_with_unscanned_superclass_is_unclassified(audit, tmp_path):
-    """FindPropertyNameProperties inherits from GetOptions, which the table generator doesn't scan."""
+def _plant_table_rows(audit, monkeypatch, **rows):
+    """Replace rows of the audited table. PY-45 made the generated table complete (setters through the whole
+    chain), so the gaps these tests need are planted, in A0's pre-PY-45 shape, instead of read live."""
+    monkeypatch.setattr(audit, "PROPERTIES_CLASS_FIELDS", {**audit.PROPERTIES_CLASS_FIELDS, **rows})
+
+
+def test_class_with_unscanned_superclass_is_unclassified(audit, tmp_path, monkeypatch):
+    """FindPropertyNameProperties inherits from GetOptions, which the table generator didn't scan (A0)."""
+    _plant_table_rows(audit, monkeypatch,
+                      FindPropertyNameProperties=("other", ("propertyValue", "propertyName")))
     result = _run(audit, tmp_path, """
         def find(client, v):
             return client.find({"class": "FindPropertyNameProperties", "propertyValue": v,
@@ -245,8 +253,10 @@ def test_name_reused_across_branches_keeps_keys_apart(audit, tmp_path):
     assert result.bodies_checked == 2
 
 
-def test_setter_known_key_is_not_a_finding_but_a_table_gap(audit, tmp_path):
-    """ResourceListProperties' fields are package-private, so the table misses them; Jackson binds setters."""
+def test_setter_known_key_is_not_a_finding_but_a_table_gap(audit, tmp_path, monkeypatch):
+    """ResourceListProperties' fields are package-private, so A0's table missed them; Jackson binds setters."""
+    _plant_table_rows(audit, monkeypatch, ResourceListProperties=(
+        "relationship", ("effectiveFrom", "effectiveTo", "typeName", "extendedProperties")))
     repo = tmp_path / "repo"
     repo.mkdir()
     (repo / "planted.py").write_text(textwrap.dedent("""
@@ -280,3 +290,25 @@ def test_alternate_table_is_used(audit, tmp_path):
         assert result.findings == []
     finally:
         audit.PROPERTIES_CLASS_FIELDS, audit._TABLE_PATH = saved
+
+
+def test_setter_keys_follow_jacksons_naming_like_the_generator(audit):
+    """A6 follow-up to A5: setURL is "url" (Jackson's legacy naming, not java.beans' "URL"), @JsonProperty wins,
+    @JsonIgnore'd and nested-class setters are not keys: the same parser as gen_properties_class_fields."""
+    java = textwrap.dedent("""
+        package org.odpi.openmetadata.frameworks.openmetadata.properties;
+        public class BranchishProperties extends org.odpi.x.ClassificationBeanProperties
+        {
+            public void setURL(String url) { }
+            public void setGUID(String guid) { }
+            public void setDisplayName(String n) { }
+            @JsonProperty(value = "iscQualifiedName")
+            public void setISCQualifiedName(String n) { }
+            @JsonIgnore
+            public void setHidden(String h) { }
+            static class Inner { public void setInnerOnly(String x) { } }
+        }
+    """)
+    name, parent, keys = audit.class_setters(java)
+    assert (name, parent) == ("BranchishProperties", "ClassificationBeanProperties")
+    assert keys == {"url", "guid", "displayName", "iscQualifiedName"}

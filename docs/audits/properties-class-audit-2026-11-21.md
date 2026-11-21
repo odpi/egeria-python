@@ -99,14 +99,20 @@ Each row is a separate fix item. The ones marked *read* were confirmed by readin
 
 ## Runs
 
-Each re-run adds a row here, so the drop in unclassified sites shows over time. The code refs were the same in both runs: egeria-python `6232bcfa`, egeria-workspaces `61251c77`, trellis `b3d9c69d`.
+Each re-run adds a row here, so the drop in unclassified sites shows over time. The code refs were the same in runs 1–3: egeria-python `6232bcfa`, egeria-workspaces `61251c77`, trellis `b3d9c69d` (each read with `git archive`).
 
 | run | date | Egeria ref (hierarchy, setters) | tables ref | findings (UNREAD / PARENT / NO_CLASS) | unclassified (python / workspaces / trellis) |
 |---|---|---|---|---|---|
 | 1 | 2026-11-21 | `c61bad6514` | egeria-python upstream/main `6232bcfa` (generated from `c61bad6514`) | 19 / 11 / 1 | **127** (94 / 12 / 21) |
 | 2 | 2026-11-21 | `90232870b2` (#9463 merged) | A0 `83e4fb22` (generated from `0dbf468774`, the same tree) | 19 / 11 / 1 | **127** (94 / 12 / 21) |
+| 3 | 2026-11-21 | `90232870b2`; **setter keys by Jackson's naming** (A6) | PY-45 `a0f914e4` (setters through the whole chain) | 19 / 11 / 1 | **127** (94 / 12 / 21) |
+| 4 | 2026-11-21 | as run 3; egeria-python code = A6 `claude/e64-a6-consolidation` instead of `6232bcfa` | as run 3 | 19 / 11 / 1 | **129** (96 / 12 / 21) |
 
 Run 2 gave the same findings as run 1, row for row. #9463 adds new types and endpoints, but none of the bodies we build today use them. A0's table still has every F15 gap, so the generator fix is still needed.
+
+Run 3 changes only how the script names Egeria's setters, and the table. The script now uses gen_properties_class_fields' own parser (PY-45's rule): Jackson's legacy naming (`setURL` → `url`, `setGUID` → `guid`, not java.beans' `URL`), `@JsonProperty` names honoured, and `@JsonIgnore`'d, multi-argument and nested-class setters not counted. That changes the setter keys of 70 Egeria classes at `90232870b2`, but no finding: the 19 / 11 / 1 are the same rows as runs 1 and 2. PY-45's table already has every F15 key, so the "table gaps" section is empty.
+
+Run 4 scans the A6 code. Its 2 extra unclassified sites are the shared 6.4 checker itself (`pyegeria/core/egeria_6_4_bodies.py` `checked_body`, whose class is a parameter) and DevopsPipeline's Branch keywords body (`e64.BRANCH_PROPERTIES`, a names-module constant). Both are checked at run time by `checked_body` (rules 3 and 4), so neither is a gap. The A1–A3 6.4 wrappers add no finding.
 
 ## Unclassified, in short
 
