@@ -428,6 +428,10 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
     from md_processing.v2.data_values import register_data_value_processors
     register_data_value_processors(reg)
 
+    # Egeria 6.4: Project Target (Projects), Supported Variable Type (Schema Maker), Branch (Devops Pipeline).
+    from md_processing.v2.egeria_6_4_other import register_other_6_4_processors
+    register_other_6_4_processors(reg)
+
     # Lineage Linker -- a dedicated Link/Update command pair per relationship
     # type (2026-09-16 split from one generic selector-attribute command triple
     # -- see lineage_linker.py's module docstring for why), plus one shared

@@ -1126,7 +1126,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "The purpose of this collection \u2014 a short description of why it exists or what it is used for.",
+      "description": "The purpose of this element - a short description of why it exists or what it is used for (for a collection, why it was made; for a branch, what the branch is for).",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -1135,7 +1135,7 @@
       "min_cardinality": 1,
       "max_cardinality": 1,
       "level": "Common",
-      "Journal Entry": ""
+      "Journal Entry": "Reworded 2026-11-21 so the Egeria 6.4 commands can share it."
     },
     "Start Time": {
       "variable_name": "start_time",
