@@ -294,7 +294,7 @@ def refuse_certification_attributes_it_cannot_hold(verb: str, attributes: Dict[s
         raise ValueError(
             f"{verb} Certification cannot take {', '.join(given)}: Egeria's Certification relationship has no such "
             f"propert{'y' if len(given) == 1 else 'ies'} (it would drop them without an error). They are properties of the "
-            f"Certification Type, so set them there (Create Certification Type / Update Certification Type). "
+            f"Certification Type, so set them there, when it is created (Create Certification Type lists them). "
             f"Nothing was sent to Egeria.")
 
 
