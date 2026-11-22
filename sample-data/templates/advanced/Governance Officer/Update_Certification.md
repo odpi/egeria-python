@@ -85,18 +85,6 @@ ___
 >	**Description**: Date at which the license or certification expires.
 
 
-### Obligations
->	**Input Required**: False
-
->	**Attribute Type**: Dictionary
-
->	**Description**: A dictionary of property:value pairs describing obligations.
-
->	| Parameter Name | Parameter Value |
->	|---|---|
->	| example_key | example_value |
-
-
 ### Recipient
 >	**Input Required**: False
 
@@ -143,30 +131,6 @@ ___
 >	**Attribute Type**: Simple
 
 >	**Description**: A description.
-
-
-### Entitlements
->	**Input Required**: False
-
->	**Attribute Type**: Dictionary
-
->	**Description**: A dictionary of property:value pairs describing entitlements.
-
->	| Parameter Name | Parameter Value |
->	|---|---|
->	| example_key | example_value |
-
-
-### Restrictions
->	**Input Required**: False
-
->	**Attribute Type**: Dictionary
-
->	**Description**: A dictionary of property:value pairs describing restrictions.
-
->	| Parameter Name | Parameter Value |
->	|---|---|
->	| example_key | example_value |
 
 
 ### Effective From

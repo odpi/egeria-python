@@ -4704,13 +4704,10 @@
         "Custodian Property Name",
         "Custodian Type Name",
         "End Date",
-        "Entitlements",
-        "Obligations",
         "Recipient",
         "Recipient Property Name",
         "Recipient Type Name",
         "Referenceable",
-        "Restrictions",
         "Start Date"
       ],
       "Journal Entry": ""
@@ -5049,12 +5046,9 @@
         "Custodian Property Name",
         "Custodian Type Name",
         "End Date",
-        "Entitlements",
-        "Obligations",
         "Recipient",
         "Recipient Property Name",
         "Recipient Type Name",
-        "Restrictions",
         "Start Date"
       ],
       "Journal Entry": ""

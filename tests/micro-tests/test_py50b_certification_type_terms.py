@@ -78,3 +78,40 @@ async def test_create_certification_type_sends_the_three_in_certification_type_p
 async def test_a_blank_attribute_sends_nothing_not_an_empty_value():
     props = await _create({"Entitlements": {"value": None}})            # one blank, two not given at all
     assert not {"entitlements", "obligations", "restrictions"} & set(props)
+
+
+# ── the Link/Update Certification commands no longer offer what they refuse (Dan, via the Coordinator) ──────────────
+
+TEMPLATES = Path(__file__).resolve().parents[2] / "sample-data" / "templates"
+
+
+def test_link_and_update_certification_no_longer_list_the_three_but_license_still_does():
+    d = _spec()
+    for name in ("Link Certification", "Update Certification"):
+        assert not set(THREE) & set(d["commands"][name]["custom_attributes"]), name
+    for name in ("Link License", "Update License"):
+        assert set(THREE) <= set(d["commands"][name]["custom_attributes"]), name
+    assert set(THREE) <= set(d["attribute_definitions"])                  # the shared definitions stay: License and the type use them
+
+
+def test_the_generated_templates_agree_with_the_spec():
+    seen = 0
+    for level in ("advanced", "basic"):
+        for name in ("Link_Certification.md", "Update_Certification.md"):
+            f = TEMPLATES / level / "Governance Officer" / name
+            if f.exists():
+                seen += 1
+                text = f.read_text(encoding="utf-8")
+                assert [a for a in THREE if f"### {a}" in text] == [], f"{f} still offers fields its command refuses"
+        for name in ("Link_License.md", "Update_License.md"):
+            f = TEMPLATES / level / "Governance Officer" / name
+            if f.exists():
+                text = f.read_text(encoding="utf-8")
+                assert all(f"### {a}" in text for a in THREE), f"{f} lost fields License reads"
+    assert seen >= 2
+
+
+def test_create_certification_type_still_offers_the_three_in_its_template():
+    f = TEMPLATES / "advanced" / "Governance Officer" / "Create_Certification_Type.md"
+    text = f.read_text(encoding="utf-8")
+    assert all(f"### {a}" in text for a in THREE)
