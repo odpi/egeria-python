@@ -525,13 +525,11 @@
        {"field": "usage", "label": "Usage"},
        {"field": "scope", "label": "Scope"},
        {"field": "importance", "label": "Importance"},
-       {"field": "measurement", "label": "measurement"},
-       {"field": "target", "label": "target"},
        {"field": "implications", "label": "Implications"},
        {"field": "outcomes", "label": "Outcomes"},
        {"field": "results", "label": "Results"},
        {"field": "element_status", "label": "Status"},
-       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "user_defined_content_status", "label": "User Defined Status"},
        {"field": "qualified_name", "label": "Qualified Name"},
        {"field": "guid", "label": "GUID"}
       ]

@@ -122,11 +122,26 @@ def _is_generated(fs: Any, label: str) -> bool:
     return str(getattr(fs, "description", "") or "").startswith(_GENERATED_MARK) or "-DrE" in (label or "")
 
 
+def egeria_type_name(type_name: str) -> str:
+    """A spec's target type as the Egeria type name the Properties-class catalog is keyed by.
+
+    Specs write the name for people ('License Type', 'Actor Profile', 'External-Reference'); Egeria's type is
+    'LicenseType'. A name the catalog has as written is returned as is; otherwise the same name without
+    spaces or punctuation, if the catalog has that; otherwise the name unchanged (an unknown type stays
+    unknown and is reported as such, never silently treated as known)."""
+    from md_processing.md_processing_utils.properties_class_fields import PROPERTIES_CLASS_FIELDS
+    if f"{type_name}Properties" in PROPERTIES_CLASS_FIELDS:
+        return type_name
+    squashed = "".join(ch for ch in (type_name or "") if ch.isalnum())
+    return squashed if squashed and f"{squashed}Properties" in PROPERTIES_CLASS_FIELDS else type_name
+
+
 def type_attributes(type_name: str) -> Optional[Set[str]]:
     """The snake_case property names of an Egeria type (inherited included), from pyegeria's generated
-    Properties-class catalog; None if the catalog has no such type."""
+    Properties-class catalog; None if the catalog has no such type. The type may be written as a spec writes
+    it ('License Type') or as Egeria names it ('LicenseType')."""
     from md_processing.md_processing_utils.properties_class_fields import PROPERTIES_CLASS_FIELDS
-    entry = PROPERTIES_CLASS_FIELDS.get(f"{type_name}Properties")
+    entry = PROPERTIES_CLASS_FIELDS.get(f"{egeria_type_name(type_name)}Properties")
     if not entry or entry[0] != "entity":
         return None
     return {_snake(f) for f in entry[1]}
