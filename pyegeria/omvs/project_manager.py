@@ -23,6 +23,8 @@ from pyegeria.view.output_formatter import populate_common_columns, overlay_addi
 from pyegeria.core.utils import body_slimmer, dynamic_catch
 from loguru import logger
 from pyegeria.core.async_runner import run_sync
+from pyegeria.core import egeria_6_4_names as e64
+from pyegeria.core.egeria_6_4_bodies import checked_body, e64_url  # the shared Egeria 6.4 body check
 
 PROJECT_TYPES = ["Project", "Campaign", "StudyProject", "Task", "PersonalProject", "Experiment", "Investigation"]
 
@@ -2705,6 +2707,104 @@ class ProjectManager(ServerClient):
                       body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the project kind classification from a project."""
         run_sync(self._async_clear_project_kind(project_guid, body))
+
+
+    #
+    # ProjectTarget relationship (Egeria 6.4, model 0130)
+    #
+
+    @dynamic_catch
+    async def _async_setup_project_target(self, project_guid: str, target_guid: str,
+                                          body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a project to an element it is to work on (ProjectTarget relationship). Async version.
+
+        Needs Egeria 6.4 (odpi/egeria#9463); an older Egeria does not have this request. ProjectTarget is a
+        uni-link relationship, so it is addressed by its two ends and the attach returns nothing.
+
+        Parameters
+        ----------
+        project_guid: str
+            The project (end 1).
+        target_guid: str
+            The element the project works on (end 2), any Referenceable.
+        body: dict | NewRelationshipRequestBody, optional
+            A NewRelationshipRequestBody whose properties are ProjectTargetProperties (label, description,
+            effectiveFrom, effectiveTo). Left out, the request is sent with no body.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            Refused locally, before Egeria: a body class other than NewRelationshipRequestBody; properties
+            of a class other than ProjectTargetProperties, or with no class; keys the class does not read.
+        PyegeriaAPIException
+            Raised by the server when an issue arises in processing a valid request.
+        PyegeriaNotAuthorizedException
+            The principal does not have authorization for the requested action.
+        """
+        payload = checked_body(body, "setup_project_target", request_class="NewRelationshipRequestBody",
+                               properties_classes={e64.PROJECT_TARGET_PROPERTIES})
+        url = e64_url(self.platform_url, self.view_server, e64.PROJECT_TARGETS_ATTACH, projectGUID=project_guid,
+                      targetGUID=target_guid)
+        await self._async_make_request("POST", url, payload)
+        logger.info(f"Project {project_guid} targets {target_guid}")
+
+    @dynamic_catch
+    def setup_project_target(self, project_guid: str, target_guid: str,
+                             body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Attach a project to an element it is to work on (ProjectTarget relationship).
+
+        Needs Egeria 6.4 (odpi/egeria#9463). See `_async_setup_project_target` for the parameters; the body,
+        if any, carries ProjectTargetProperties.
+        """
+        return run_sync(self._async_setup_project_target(project_guid, target_guid, body))
+
+    @dynamic_catch
+    async def _async_clear_project_target(self, project_guid: str, target_guid: str,
+                                          body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a project from an element it was to work on (ProjectTarget relationship). Async version.
+
+        Needs Egeria 6.4 (odpi/egeria#9463); an older Egeria does not have this request.
+
+        Parameters
+        ----------
+        project_guid: str
+            The project (end 1).
+        target_guid: str
+            The element the project worked on (end 2).
+        body: dict | DeleteRelationshipRequestBody, optional
+            A DeleteRelationshipRequestBody. Left out, the request is sent with no body.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            A body class other than DeleteRelationshipRequestBody, refused locally.
+        PyegeriaAPIException
+            Raised by the server when an issue arises in processing a valid request.
+        PyegeriaNotAuthorizedException
+            The principal does not have authorization for the requested action.
+        """
+        payload = checked_body(body, "clear_project_target", request_class="DeleteRelationshipRequestBody")
+        url = e64_url(self.platform_url, self.view_server, e64.PROJECT_TARGETS_DETACH, projectGUID=project_guid,
+                      targetGUID=target_guid)
+        await self._async_make_request("POST", url, payload)
+        logger.info(f"Project {project_guid} no longer targets {target_guid}")
+
+    @dynamic_catch
+    def clear_project_target(self, project_guid: str, target_guid: str,
+                             body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """Detach a project from an element it was to work on (ProjectTarget relationship).
+
+        Needs Egeria 6.4 (odpi/egeria#9463). See `_async_clear_project_target`.
+        """
+        return run_sync(self._async_clear_project_target(project_guid, target_guid, body))
 
 
 if __name__ == "__main__":

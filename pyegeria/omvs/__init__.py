@@ -13,6 +13,7 @@ from pyegeria.omvs.data_designer import DataDesigner
 from pyegeria.omvs.data_discovery import DataDiscovery
 from pyegeria.omvs.data_engineer import DataEngineer
 from pyegeria.omvs.digital_business import DigitalBusiness
+from pyegeria.omvs.devops_pipeline import DevopsPipeline
 from pyegeria.omvs.external_links import ExternalReferences
 from pyegeria.omvs.full_omag_server_config import FullServerConfig
 from pyegeria.omvs.glossary_manager import GlossaryManager
@@ -54,6 +55,7 @@ __all__ = [
     "DataDesigner",
     "DataDiscovery",
     "DataEngineer",
+    "DevopsPipeline",
     "DigitalBusiness",
     "ExternalReferences",
     "FullServerConfig",

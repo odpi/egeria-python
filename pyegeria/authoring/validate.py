@@ -35,25 +35,35 @@ from pyegeria.authoring.models import (
     AuthoringGates, AuthoringRefused, ReportDraft, SheetDraft, SpecDraft, ValidationResult, as_draft, default_gates,
 )
 from pyegeria.authoring.serialize import FIND_PARAMETERS, serialize
+from pyegeria.view.egeria_relationship_fields import RELATIONSHIP_FIELDS
 
 #: Column keys the formatter derives from an element's header or relationships, not a property of the type.
 DERIVED_KEYS = {"guid", "type_name", "classifications", "created_by", "create_time", "updated_by", "update_time",
                 "version", "status", "anchor", "mermaid", "related", "members", "member_of", "properties"}
 
 
+def _snake(camel: str) -> str:
+    out = []
+    for ch in camel:
+        out.append("_" + ch.lower() if ch.isupper() else ch)
+    return "".join(out).lstrip("_")
+
+
 #: Fields the view service attaches to an element from its relationships, read by the formatter's step 3
-#: (`element[camelCase(key)]`). No type definition lists them, so the attribute catalog can't. Each is used by
-#: a shipped find spec.
-RELATED_ELEMENT_KEYS = frozenset({
-    "collection_members", "member_of_collections", "assigned_actors", "actor_list", "governed_by", "next_version",
-    "solution_designs", "used_by_digital_products", "uses_digital_products", "agreement_items", "service_levels",
-    "support_level", "folder_display_names", "as_of_data_field", "basis_data_field", "managed_projects",
-    "project_roles", "resource_list", "report_type_instances", "note_log_name", "note_log_qualified_name",
+#: (`element[camelCase(key)]`). No type definition lists them, so the attribute catalog can't. Every
+#: relationship list Egeria's OpenMetadataRootElement carries is derived, in snake_case, from the generated
+#: RELATIONSHIP_FIELDS, so a regeneration for a later Egeria (6.4 added decisionOutcomes, inputsToDecision,
+#: dataValueUses, ...) needs no edit here. The hand-kept keys below are ones a shipped find spec reads that are
+#: not relationship lists.
+_HAND_KEPT_RELATED_KEYS = frozenset({
+    "actor_list", "folder_display_names", "next_version", "note_log_name", "note_log_qualified_name",
+    "project_roles", "service_levels", "support_level",
     # The shipped 'Projects' spec reads start_date, which ProjectProperties doesn't have (it has
     # planned/actual start dates) and the view service doesn't attach, so it shows nothing today. Allowed so that
     # authoring doesn't refuse a copy of a shipped spec; the spec itself is to be fixed against live output.
     "start_date",
 })
+RELATED_ELEMENT_KEYS = frozenset({_snake(key) for key in RELATIONSHIP_FIELDS}) | _HAND_KEPT_RELATED_KEYS
 
 #: Properties of the survey annotation subtypes, which the Properties-class catalog doesn't list.
 ANNOTATION_KEYS = frozenset({
@@ -110,13 +120,6 @@ def _command_attribute_keys() -> Set[str]:
 
 def _is_generated(fs: Any, label: str) -> bool:
     return str(getattr(fs, "description", "") or "").startswith(_GENERATED_MARK) or "-DrE" in (label or "")
-
-
-def _snake(camel: str) -> str:
-    out = []
-    for ch in camel:
-        out.append("_" + ch.lower() if ch.isupper() else ch)
-    return "".join(out).lstrip("_")
 
 
 def type_attributes(type_name: str) -> Optional[Set[str]]:

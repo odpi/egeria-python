@@ -26,6 +26,7 @@ from pyegeria.omvs.data_designer import DataDesigner
 from pyegeria.omvs.data_discovery import DataDiscovery
 from pyegeria.omvs.data_engineer import DataEngineer
 from pyegeria.omvs.digital_business import DigitalBusiness
+from pyegeria.omvs.devops_pipeline import DevopsPipeline
 from pyegeria.omvs.external_links import ExternalReferences
 from pyegeria.core._server_client import ServerClient
 from pyegeria.omvs.full_omag_server_config import FullServerConfig
@@ -97,6 +98,7 @@ class Egeria:
             "config": EgeriaConfig,
             "data_discovery": DataDiscovery,
             "data_engineer": DataEngineer,
+            "devops_pipeline": DevopsPipeline,
             "designer": DataDesigner,
             "data_designer": DataDesigner,
             "digital_business": DigitalBusiness,

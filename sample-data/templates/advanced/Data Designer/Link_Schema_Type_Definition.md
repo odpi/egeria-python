@@ -42,7 +42,7 @@ ___
 
 >	**Attribute Type**: Reference Name
 
->	**Description**: A physical schema type (e.g. a TabularSchemaType) equivalent to the data structure (SchemaTypeDefinition relationship).
+>	**Description**: A schema type (e.g. a TabularSchemaType): for a data structure, the physical schema type equivalent to it (SchemaTypeDefinition relationship); for a process, the type of a variable it supports (SupportedVariableType relationship).
 
 
 ### Effective From

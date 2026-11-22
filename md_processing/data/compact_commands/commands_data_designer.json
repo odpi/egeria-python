@@ -1505,7 +1505,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "The purpose of this collection \u2014 a short description of why it exists or what it is used for.",
+      "description": "The purpose of this element - a short description of why it exists or what it is used for (for a collection, why it was made; for a branch, what the branch is for).",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -1514,7 +1514,7 @@
       "min_cardinality": 1,
       "max_cardinality": 1,
       "level": "Common",
-      "Journal Entry": ""
+      "Journal Entry": "Reworded 2026-11-21 so the Egeria 6.4 commands can share it."
     },
     "Purposes": {
       "variable_name": "purposes",
@@ -2741,7 +2741,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "The maximum number of characters or digits allowed in the field.",
+      "description": "The maximum number of characters or digits allowed in the field, or the length of a data value.",
       "generated": false,
       "style": "Simple Int",
       "user_specified": true,
@@ -2750,7 +2750,7 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Domain",
-      "Journal Entry": ""
+      "Journal Entry": "Reworded 2026-11-21 so the Egeria 6.4 Data Value commands can share it."
     },
     "Less Granular Data Grain": {
       "variable_name": "less_granular_data_grain",
@@ -3007,7 +3007,7 @@
       "default_value": "0",
       "valid_values": [],
       "existing_element": "",
-      "description": "The ordinal position of the data field within its containing data structure.",
+      "description": "The ordinal position: of a data field within its containing data structure, or of a data value among an element's processing variables or a parent value's embedded values (0 means unset).",
       "generated": false,
       "style": "Simple Int",
       "user_specified": true,
@@ -3016,7 +3016,7 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Domain",
-      "Journal Entry": ""
+      "Journal Entry": "Reworded 2026-11-21 so the Egeria 6.4 Data Value commands can share it."
     },
     "Precision": {
       "variable_name": "precision",
@@ -3416,7 +3416,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "SchemaType",
-      "description": "A physical schema type (e.g. a TabularSchemaType) equivalent to the data structure (SchemaTypeDefinition relationship).",
+      "description": "A schema type (e.g. a TabularSchemaType): for a data structure, the physical schema type equivalent to it (SchemaTypeDefinition relationship); for a process, the type of a variable it supports (SupportedVariableType relationship).",
       "generated": false,
       "style": "Reference Name",
       "user_specified": true,
@@ -3425,7 +3425,7 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Basic",
-      "Journal Entry": "2026-09-26 -- aligned with Egeria types 0580/0581 (DataField/DataStructure and their relationships)."
+      "Journal Entry": "2026-09-26 -- aligned with Egeria types 0580/0581 (DataField/DataStructure and their relationships). Reworded 2026-11-21 so the Egeria 6.4 commands can share it."
     },
     "Primary Key Name": {
       "variable_name": "primary_key_name",

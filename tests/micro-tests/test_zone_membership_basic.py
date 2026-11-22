@@ -31,7 +31,7 @@ def test_zone_membership_is_basic_with_an_empty_default_in_every_family():
         seen += 1
         assert attr["level"] == "Basic", path.name
         assert attr["default_value"] == "", path.name
-    assert seen == 14
+    assert seen == 15   # + Data Engineer (Egeria 6.4 data values, 2026-11-21)
 
 
 def test_basic_templates_show_zone_membership_without_a_value():

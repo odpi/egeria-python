@@ -18,7 +18,7 @@ ___
 
 >	**Attribute Type**: Simple
 
->	**Description**: Date/time (ISO 8601) that the work started - for a promise, work on delivering the promised resource; for a report, the run that produced it.
+>	**Description**: Date/time (ISO 8601) that the work or decision started - for a promise, work on delivering the promised resource; for a report, the run that produced it; for a decision, when it took effect.
 
 
 ### Completion Time
@@ -76,7 +76,7 @@ ___
 
 >	**Attribute Type**: Simple
 
->	**Description**: The purpose of this collection — a short description of why it exists or what it is used for.
+>	**Description**: The purpose of this element - a short description of why it exists or what it is used for (for a collection, why it was made; for a branch, what the branch is for).
 
 
 ### Search Keywords

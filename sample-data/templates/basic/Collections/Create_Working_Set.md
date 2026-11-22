@@ -18,7 +18,7 @@ ___
 
 >	**Attribute Type**: Simple
 
->	**Description**: The status of the elements in the working set.
+>	**Description**: The disposition: what was decided, or the current state of the item (for a working set, the status of its elements; for a decision or an outcome, what it settled).
 
 
 ### Journal Entry
@@ -80,7 +80,7 @@ ___
 
 >	**Attribute Type**: Simple
 
->	**Description**: The purpose of this collection — a short description of why it exists or what it is used for.
+>	**Description**: The purpose of this element - a short description of why it exists or what it is used for (for a collection, why it was made; for a branch, what the branch is for).
 
 
 ### Search Keywords

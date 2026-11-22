@@ -72,7 +72,7 @@ ___
 
 >	**Attribute Type**: Simple
 
->	**Description**: The purpose of this collection — a short description of why it exists or what it is used for.
+>	**Description**: The purpose of this element - a short description of why it exists or what it is used for (for a collection, why it was made; for a branch, what the branch is for).
 
 
 ### Aliases

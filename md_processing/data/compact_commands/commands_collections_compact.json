@@ -1505,7 +1505,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "The purpose of this collection \u2014 a short description of why it exists or what it is used for.",
+      "description": "The purpose of this element - a short description of why it exists or what it is used for (for a collection, why it was made; for a branch, what the branch is for).",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -1514,7 +1514,7 @@
       "min_cardinality": 1,
       "max_cardinality": 1,
       "level": "Common",
-      "Journal Entry": ""
+      "Journal Entry": "Reworded 2026-11-21 so the Egeria 6.4 commands can share it."
     },
     "Purposes": {
       "variable_name": "purposes",
@@ -2262,7 +2262,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "The status of the elements in the working set.",
+      "description": "The disposition: what was decided, or the current state of the item (for a working set, the status of its elements; for a decision or an outcome, what it settled).",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -2271,7 +2271,7 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Domain",
-      "Journal Entry": ""
+      "Journal Entry": "Reworded 2026-11-21 so the Egeria 6.4 Decision commands can share it."
     },
     "Business Capability Type": {
       "variable_name": "business_capability_type",

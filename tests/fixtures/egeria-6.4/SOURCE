@@ -1,0 +1,4 @@
+odpi/egeria#9463 (branch oak2026)
+head: 0dbf468774c7f3dc102dd677b720b670ed6a8e09
+merged: 90232870b2 on odpi/egeria main, 2026-11-21 (same tree as the head)
+files: the five Egeria-api-*.http collections at the head, copied unchanged with git show <sha>:<path>

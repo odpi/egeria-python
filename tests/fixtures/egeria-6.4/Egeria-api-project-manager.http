@@ -1,0 +1,896 @@
+# Egeria-project-manager-api
+
+@baseURL=https://localhost:7443
+@viewServer=view-server
+
+###
+# =====================================================================================================================
+# Manage the authentication token.  Run this request to create/refresh the token.
+
+# @name Token (RequestBody)
+POST {{baseURL}}/api/token
+Content-Type: application/json
+
+{
+  "userId" : "peterprofile",
+  "password" : "secret"
+}
+
+> {% client.global.set("token", response.body); %}
+
+###
+# =====================================================================================================================
+# Retrieving Projects: https://egeria-project.org/concepts/project
+#
+
+@parentGUID=xxx
+
+###
+# @name getLinkedProjects
+# Returns the list of projects that are linked off of the supplied element.  Any relationship will do.
+# The request body is optional, but if supplied acts as a filter on project status.
+
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/metadata-elements/{{parentGUID}}/projects
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "filter" : ""
+}
+
+
+###
+# @name getClassifiedProjects
+# Returns the list of projects with a particular classification.  The name of the classification is supplied in the request body.
+# Examples of these classifications include "StudyProject", "PersonalProject", "Campaign" or "Task".
+# There is also "GlossaryProject" and "GovernanceProject".
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/by-classifications
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "filter" : ""
+}
+
+###
+# @name getProjectsByClassificationProperties
+# Returns the list of projects with a ProjectClassification classification and with matching properties.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/by-classification-properties
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "FindProjectClassificationProperties",
+  "approach" : "",
+  "managementStyle" : "",
+  "resultsUsage" : ""
+}
+
+
+###
+# @name getProjectTeam
+# Returns the list of actors that are linked off of the project.  This includes the project managers.
+# The optional request body allows a teamRole to be specified as a filter.  To retrieve the project managers,
+# specify "Leader" as the filter.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/{{projectGUID}}/team
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "filter" : ""
+}
+
+
+###
+# @name findProjects
+# Returns the list of projects matching the search string.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/by-search-string
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "SearchStringRequestBody",
+  "searchString" : "Add value here",
+  "startsWith" : false,
+  "endsWith" : false,
+  "ignoreCase" : true,
+  "startFrom" : 0,
+  "pageSize": 10,
+  "asOfTime" : "{{$isoTimestamp}}",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false,
+  "limitResultsByStatus" : ["ACTIVE"],
+  "sequencingOrder" : "PROPERTY_ASCENDING",
+  "sequencingProperty" : "qualifiedName"
+}
+
+###
+# @name getProjectsByName
+# Returns the list of projects with a particular name.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/by-name
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "FilterRequestBody",
+  "filter" : "Add name here",
+  "startFrom": 0,
+  "pageSize": 10,
+  "asOfTime" : "{{$isoTimestamp}}",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false,
+  "limitResultsByStatus" : ["ACTIVE"],
+  "sequencingOrder" : "PROPERTY_ASCENDING",
+  "sequencingProperty" : "qualifiedName"
+}
+
+###
+
+@projectGUID=xxx
+
+###
+# @name getProjectByGUID
+# Return the properties of a specific project.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/{{projectGUID}}
+Authorization: Bearer {{token}}
+
+###
+# @name getProjectGraph
+# Returns the graph of related projects and resources starting with a supplied project guid..
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/{{projectGUID}}/graph
+Authorization: Bearer {{token}}
+
+###
+# @name getProjectHierarchy
+# Returns the hierarchy of managed projects and resources starting with a supplied project guid. Request body is optional.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/{{projectGUID}}/hierarchy
+Authorization: Bearer {{token}}
+
+###
+# =====================================================================================================================
+# Create Projects: https://egeria-project.org/concepts/project
+# These requests use the following parameters:
+#
+# anchorGUID - the unique identifier of the element that should be the anchor for the new project. Set to null if no anchor,
+# or if this project is to be its own anchor.
+#
+# isOwnAnchor -this element should be classified as its own anchor or not.  The default is false.
+#
+# parentGUID - the optional unique identifier for an element that should be connected to the newly created element.
+# If this property is specified, parentRelationshipTypeName must also be specified
+#
+# parentRelationshipTypeName - the name of the relationship, if any, that should be established between the new
+# project and the parent element.  An example could be "ResourceList".
+#
+# parentAtEnd1 -identifies which end any parent entity sits on the relationship.
+#
+
+###
+# @name createProject
+# Create a new generic project.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "anchorGUID" : "anchor GUID, if set then isOwnAnchor=false",
+  "isOwnAnchor" : false,
+  "parentGUID" : "parent GUID, if set, set all parameters beginning 'parent'",
+  "parentRelationshipTypeName" : "open metadata type name",
+  "parentAtEnd1": true,
+  "properties": {
+    "class" : "ProjectProperties",
+    "qualifiedName": "Must provide a unique name here",
+    "identifier" : "Add business identifier",
+    "displayName" : "Add display name here",
+    "description" : "Add description of the project here",
+    "projectPhase" : "lifecycle phase of the project",
+    "projectStatus": "Add appropriate valid value for type",
+    "projectHealth" : "Add how well the project is tracking to plan",
+    "priority" : 0,
+    "startDate" : "date/time",
+    "plannedEndDate" : "date/time"
+  }
+}
+
+###
+
+@classificationName="PersonalProject"
+
+###
+# @name createClassifiedProject
+# Create a new project with a specific classification.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects?classificationName={{classificationName}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "anchorGUID" : "anchor GUID, if set then isOwnAnchor=false",
+  "isOwnAnchor" : false,
+  "parentGUID" : "parent GUID, if set, set all parameters beginning 'parent'",
+  "parentRelationshipTypeName" : "open metadata type name",
+  "parentAtEnd1": true,
+  "properties": {
+    "class" : "ProjectProperties",
+    "qualifiedName": "Must provide a unique name here",
+    "identifier" : "Add business identifier",
+    "displayName" : "Add display name here",
+    "description" : "Add description of the project here",
+    "projectPhase" : "lifecycle phase of the project",
+    "projectStatus": "Add appropriate valid value for type",
+    "projectHealth" : "Add how well the project is tracking to plan",
+    "priority" : 0,
+    "startDate" : "date/time",
+    "plannedEndDate" : "date/time"
+  }
+}
+
+###
+# @name createCampaign
+# Create a new project with the Campaign classification.  Used to identify the top of a project hierarchy.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects?classificationName=Campaign
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "anchorGUID" : "anchor GUID, if set then isOwnAnchor=false",
+  "isOwnAnchor" : false,
+  "parentGUID" : "parent GUID, if set, set all parameters beginning 'parent'",
+  "parentRelationshipTypeName" : "open metadata type name",
+  "parentAtEnd1": true,
+  "properties": {
+    "class" : "ProjectProperties",
+    "qualifiedName": "Must provide a unique name here",
+    "identifier" : "Add business identifier",
+    "displayName" : "Add display name here",
+    "description" : "Add description of the project here",
+    "projectPhase" : "lifecycle phase of the project",
+    "projectStatus": "Add appropriate valid value for type",
+    "projectHealth" : "Add how well the project is tracking to plan",
+    "priority" : 0,
+    "startDate" : "date/time",
+    "plannedEndDate" : "date/time"
+  }
+}
+
+
+###
+# @name createTaskForProject
+# Create a new project with the Task classificationand link it to a project.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/{{projectGUID}}/task-classification
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+   "class": "NewAttachmentRequestBody",
+   "properties" : {
+        "class" : "ProjectProperties",
+        "qualifiedName": "Must provide a unique name here",
+        "identifier": "Add business identifier",
+        "displayName": "Add display name here",
+        "description": "Add description of the task here",
+        "projectPhase": "lifecycle phase of the task",
+        "projectStatus": "Add appropriate valid value for type",
+        "projectHealth": "Add how well the task is tracking to plan",
+        "priority": 0,
+        "startDate": "date/time",
+        "plannedEndDate": "date/time"
+    }
+}
+
+###
+# @name createProjectFromTemplate
+# Create a new metadata element to represent a project using an existing metadata element as a template.
+# The template defines additional classifications and relationships that should be added to the new project.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/from-template
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class": "TemplateRequestBody",
+  "anchorGUID": "anchor GUID, if set then isOwnAnchor=false",
+  "isOwnAnchor": false,
+  "parentGUID": "parent GUID, if set, set all parameters beginning 'parent'",
+  "parentRelationshipTypeName": "open metadata type name",
+  "parentAtEnd1": true,
+  "templateGUID": "template GUID",
+  "replacementProperties": {
+    "class": "EntityElementProperties",
+    "propertyValueMap" : {
+      "propertyName" : {
+        "class": "PrimitiveTypePropertyValue",
+        "typeName": "string",
+        "primitiveTypeCategory" : "OM_PRIMITIVE_TYPE_STRING",
+        "primitiveValue" : "value of property"
+      }
+    }
+  },
+  "placeholderPropertyValues" : {
+    "placeholderProperty1Name" : "property1Value",
+    "placeholderProperty2Name" : "property2Value"
+  }
+}
+
+###
+# @name updateProject
+# Update the properties of a project.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/{{projectGUID}}/update
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "UpdateElementRequestBody",
+  "properties": {
+      "class" : "ProjectProperties",
+      "qualifiedName": "Must provide a unique name here",
+      "identifier" : "Add business identifier",
+      "displayName" : "Add display name here",
+      "description" : "Add description of the project here",
+      "projectPhase" : "lifecycle phase of the project",
+      "projectStatus": "Add appropriate valid value for type",
+      "projectHealth" : "Add how well the project is tracking to plan",
+      "priority" : 0,
+      "startDate" : "date/time",
+      "plannedEndDate" : "date/time"
+    },
+  "mergeUpdate": true,
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+
+###
+# @name deleteProject
+# Delete a project.  It is detected from all parent elements.  If members are anchored to the project
+# then they are also deleted.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/{{projectGUID}}/delete
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteElementRequestBody"
+}
+
+###
+
+@actorGUID="guid that is to be a member of the project"
+
+###
+# @name addToProjectTeam
+# Add an actor to a project. The request body is optional.  If supplied, it contain the name of the role that the actor
+# plays in the project.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/{{projectGUID}}/members/{{actorGUID}}/attach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewRelationshipRequestBody",
+  "properties" : {
+    "class": "AssignmentScopeProperties",
+    "assignmentType": "xxx",
+    "description": "xxx"
+  }
+}
+
+
+###
+# @name removeFromProjectTeam
+# Remove an actor from a project.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/{{projectGUID}}/members/{{actorGUID}}/detach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteRelationshipRequestBody"
+}
+
+
+###
+# @name addProjectClassification
+# Classify the project to indicate the approach and style of project based on its intended outcome.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/{{projectGUID}}/classification-properties/classify
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+
+{
+  "class" : "NewClassificationRequestBody",
+  "properties": {
+    "class": "ProjectClassificationProperties",
+    "approach": "",
+    "managementStyle": "",
+    "resultsUsage": "",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+# @name clearProjectClassification
+# Remove the ProjectClassification classification from the element.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/{{projectGUID}}/classification-properties/declassify
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteClassificationRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+
+@dependsOnProjectGUID=add guid here
+@managedProjectGUID=add guid here
+
+###
+# @name setupProjectDependency
+# Create a project dependency relationship between two projects. Request body is optional.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/{{projectGUID}}/project-dependencies/{{dependsOnProjectGUID}}/attach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewRelationshipRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+# @name clearProjectDependency
+# Remove a project dependency relationship between two projects. Request body is optional.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/{{projectGUID}}/project-dependencies/{{dependsOnProjectGUID}}/detach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteRelationshipRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+# @name setupProjectHierarchy
+# Create a project hierarchy relationship between two projects. Request body is optional.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/{{projectGUID}}/project-hierarchies/{{managedProjectGUID}}/attach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewRelationshipRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+# @name clearProjectHierarchy
+# Remove a project hierarchy relationship between two projects. Request body is optional.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/{{projectGUID}}/project-hierarchies/{{managedProjectGUID}}/detach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteRelationshipRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+
+###
+# =====================================================================================================================
+# Project classifications
+# https://egeria-project.org/concepts/project
+
+###
+# @name setProjectAsCampaign
+# Classify a project to say that it is a campaign - a long running activity made up of many projects.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/{{projectGUID}}/campaign
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewClassificationRequestBody",
+  "properties": {
+    "class": "CampaignProperties",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name clearProjectAsCampaign
+# Remove the campaign designation from a project.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/{{projectGUID}}/campaign/remove
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteClassificationRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name setProjectAsTask
+# Classify a project to say that it is a task within a larger project.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/{{projectGUID}}/task-classification
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewClassificationRequestBody",
+  "properties": {
+    "class": "TaskProperties",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name clearProjectAsTask
+# Remove the task designation from a project.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/{{projectGUID}}/task-classification/remove
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteClassificationRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name setProjectAsPersonalProject
+# Classify a project to say that it is a personal project used to organize an individual's work.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/{{projectGUID}}/personal-project
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewClassificationRequestBody",
+  "properties": {
+    "class": "PersonalProjectProperties",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name clearProjectAsPersonalProject
+# Remove the personal project designation from a project.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/{{projectGUID}}/personal-project/remove
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteClassificationRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name setProjectAsStudyProject
+# Classify a project to say that it is a study project that is investigating a topic.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/{{projectGUID}}/study-project
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewClassificationRequestBody",
+  "properties": {
+    "class": "StudyProjectProperties",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name clearProjectAsStudyProject
+# Remove the study project designation from a project.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/{{projectGUID}}/study-project/remove
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteClassificationRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name setProjectAsExperiment
+# Classify a project to say that it is an experiment that is testing a hypothesis.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/{{projectGUID}}/experiment
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewClassificationRequestBody",
+  "properties": {
+    "class": "ExperimentProperties",
+    "hypothesis": "add the hypothesis being tested here",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name clearProjectAsExperiment
+# Remove the experiment designation from a project.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/{{projectGUID}}/experiment/remove
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteClassificationRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name setProjectAsInvestigation
+# Classify a project to say that it is an investigation that is seeking to answer a question.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/{{projectGUID}}/investigation
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewClassificationRequestBody",
+  "properties": {
+    "class": "InvestigationProperties",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name clearProjectAsInvestigation
+# Remove the investigation designation from a project.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/{{projectGUID}}/investigation/remove
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteClassificationRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name setProjectAsGlossaryProject
+# Classify a project to say that it is managing the development of a glossary.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/{{projectGUID}}/glossary-project
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewClassificationRequestBody",
+  "properties": {
+    "class": "GlossaryProjectProperties",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name clearProjectAsGlossaryProject
+# Remove the glossary project designation from a project.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/{{projectGUID}}/glossary-project/remove
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteClassificationRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name setProjectAsGovernanceProject
+# Classify a project to say that it is part of the governance program.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/{{projectGUID}}/governance-project
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewClassificationRequestBody",
+  "properties": {
+    "class": "GovernanceProjectProperties",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name clearProjectAsGovernanceProject
+# Remove the governance project designation from a project.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/{{projectGUID}}/governance-project/remove
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteClassificationRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name setProjectKind
+# Classify a project to describe the kind of project that it is.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/{{projectGUID}}/project-kind
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewClassificationRequestBody",
+  "properties": {
+    "class": "ProjectKindProperties",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name clearProjectKind
+# Remove the project kind classification from a project.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/{{projectGUID}}/project-kind/remove
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteClassificationRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# =====================================================================================================================
+# Project targets
+# https://egeria-project.org/types/1/0130-Projects/
+
+@targetGUID=add guid here
+
+###
+# @name setupProjectTarget
+# Attach a project to an element that the project is to work on.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/{{projectGUID}}/project-targets/{{targetGUID}}/attach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewRelationshipRequestBody",
+  "properties": {
+    "class" : "ProjectTargetProperties",
+    "label": "add label here",
+    "description": "add description here",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name clearProjectTarget
+# Detach a project from an element that the project was to work on.
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/project-manager/projects/{{projectGUID}}/project-targets/{{targetGUID}}/detach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteRelationshipRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###

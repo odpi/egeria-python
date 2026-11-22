@@ -1543,7 +1543,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "The purpose of this collection \u2014 a short description of why it exists or what it is used for.",
+      "description": "The purpose of this element - a short description of why it exists or what it is used for (for a collection, why it was made; for a branch, what the branch is for).",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -1552,7 +1552,7 @@
       "min_cardinality": 1,
       "max_cardinality": 1,
       "level": "Common",
-      "Journal Entry": ""
+      "Journal Entry": "Reworded 2026-11-21 so the Egeria 6.4 commands can share it."
     },
     "Purposes": {
       "variable_name": "purposes",
@@ -2900,7 +2900,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "Date/time (ISO 8601) that the work started - for a promise, work on delivering the promised resource; for a report, the run that produced it.",
+      "description": "Date/time (ISO 8601) that the work or decision started - for a promise, work on delivering the promised resource; for a report, the run that produced it; for a decision, when it took effect.",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -2909,7 +2909,7 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Domain",
-      "Journal Entry": "Added 2026-09-30 -- Promise classification (0010), Classification Explorer setElementAsPromise."
+      "Journal Entry": "Added 2026-09-30 -- Promise classification (0010), Classification Explorer setElementAsPromise. Reworded 2026-11-21 so the Egeria 6.4 Decision commands can share it."
     },
     "Last Review Time": {
       "variable_name": "last_review_time",
@@ -2919,7 +2919,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "Date/time (ISO 8601) that the promise was last reviewed.",
+      "description": "Date/time (ISO 8601) that the element (a promise, a decision) was last reviewed.",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -2928,7 +2928,7 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Domain",
-      "Journal Entry": "Added 2026-09-30 -- Promise classification (0010), Classification Explorer setElementAsPromise."
+      "Journal Entry": "Added 2026-09-30 -- Promise classification (0010), Classification Explorer setElementAsPromise. Reworded 2026-11-21 so the Egeria 6.4 Decision commands can share it."
     },
     "Completion Time": {
       "variable_name": "completion_time",

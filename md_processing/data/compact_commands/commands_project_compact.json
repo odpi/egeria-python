@@ -1524,7 +1524,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "The purpose of this collection \u2014 a short description of why it exists or what it is used for.",
+      "description": "The purpose of this element - a short description of why it exists or what it is used for (for a collection, why it was made; for a branch, what the branch is for).",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -1533,7 +1533,7 @@
       "min_cardinality": 1,
       "max_cardinality": 1,
       "level": "Common",
-      "Journal Entry": ""
+      "Journal Entry": "Reworded 2026-11-21 so the Egeria 6.4 commands can share it."
     },
     "Purposes": {
       "variable_name": "purposes",
@@ -2650,6 +2650,44 @@
       "max_cardinality": 1,
       "level": "Domain",
       "Journal Entry": ""
+    },
+    "Project": {
+      "variable_name": "project",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "Project",
+      "description": "The project: its qualified name, display name or GUID.",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": "Added 2026-11-21 -- Egeria 6.4 (odpi/egeria#9463)."
+    },
+    "Target Element": {
+      "variable_name": "target_element",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Qualified name of the existing element being classified or linked.",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": true,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": ""
     }
   },
   "bundles": {
@@ -3026,6 +3064,50 @@
       "bundle": "Project Base",
       "custom_attributes": [],
       "Journal Entry": ""
+    },
+    "Link Project Target": {
+      "display_name": "Project Target",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Projects",
+      "description": "Record an element that a project works on (the ProjectTarget relationship, Project to any element). Needs Egeria 6.4.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": true,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "ProjectTarget",
+      "bundle": "Link Command Base",
+      "custom_attributes": [
+        "Project",
+        "Target Element"
+      ],
+      "Journal Entry": "Added 2026-11-21 -- Egeria 6.4 (odpi/egeria#9463)."
+    },
+    "Detach Project Target": {
+      "display_name": "Project Target",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Projects",
+      "description": "Remove the ProjectTarget relationship between a project and an element. Needs Egeria 6.4.",
+      "verb": "Detach",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "ProjectTarget",
+      "bundle": "Request Base",
+      "custom_attributes": [
+        "Project",
+        "Target Element"
+      ],
+      "Journal Entry": "Added 2026-11-21 -- Egeria 6.4 (odpi/egeria#9463)."
     }
   }
 }

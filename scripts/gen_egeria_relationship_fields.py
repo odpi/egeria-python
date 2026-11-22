@@ -8,7 +8,10 @@ Reads every `RelatedMetadataElementSummary` / `RelatedMetadataHierarchySummary` 
 metadataelements) with the relationship type names its trailing comment gives. Run it when Egeria adds
 relationships, and say the egeria commit in the commit message.
 
-    uv run -p 3.13 python scripts/gen_egeria_relationship_fields.py ~/localGit/egeria-v6/egeria
+    uv run -p 3.13 python scripts/gen_egeria_relationship_fields.py ~/localGit/egeria-v6/egeria [--ref <sha>]
+
+With --ref the two files are read from that git ref (`git show`), so the checkout is never modified and a
+PR head can be generated from before it merges; the output then names the ref.
 """
 import re
 import subprocess
@@ -20,9 +23,15 @@ REL = ("open-metadata-implementation/frameworks/open-metadata-framework/src/main
 OUT = Path(__file__).resolve().parent.parent / "pyegeria" / "view" / "egeria_relationship_fields.py"
 
 
-def fields(egeria: Path) -> dict:
-    src = "".join((egeria / REL / f).read_text() for f in ("AttributedMetadataElement.java",
-                                                         "OpenMetadataRootElement.java"))
+FILES = ("AttributedMetadataElement.java", "OpenMetadataRootElement.java")
+
+
+def fields(egeria: Path, ref: str | None = None) -> dict:
+    if ref:
+        src = "".join(subprocess.run(["git", "-C", str(egeria), "show", f"{ref}:{REL}/{f}"], capture_output=True,
+                                     text=True, check=True).stdout for f in FILES)
+    else:
+        src = "".join((egeria / REL / f).read_text() for f in FILES)
     out = {}
     for m in re.finditer(r"private\s+(?:List<)?RelatedMetadata(?:Element|Hierarchy)Summary>?\s+(\w+)\s*=\s*null;"
                          r"\s*(?://|/\*)\s*([^\n]*)", src):
@@ -31,12 +40,14 @@ def fields(egeria: Path) -> dict:
     return out
 
 
-def main(egeria_dir: str) -> None:
+def main(egeria_dir: str, ref: str | None = None) -> None:
     egeria = Path(egeria_dir).expanduser()
-    found = fields(egeria)
-    commit = subprocess.run(["git", "-C", str(egeria), "log", "-1", "--format=%h, %cs", "--",
-                             f"{REL}/AttributedMetadataElement.java", f"{REL}/OpenMetadataRootElement.java"],
+    found = fields(egeria, ref)
+    commit = subprocess.run(["git", "-C", str(egeria), "log", "-1", "--format=%h, %cs", *([ref] if ref else []),
+                             "--", f"{REL}/AttributedMetadataElement.java", f"{REL}/OpenMetadataRootElement.java"],
                             capture_output=True, text=True).stdout.strip()
+    if ref:
+        commit = f"{ref}; files last changed in {commit}"
     lines = ['# SPDX-License-Identifier: Apache-2.0', '# Copyright Contributors to the ODPi Egeria project.',
              '"""The relationship lists an Egeria 6 element can carry, and the relationship type(s) each one reads.', '',
              "Generated from Egeria's `AttributedMetadataElement.java` and `OpenMetadataRootElement.java`",
@@ -56,4 +67,10 @@ def main(egeria_dir: str) -> None:
 
 
 if __name__ == "__main__":
-    main(sys.argv[1] if len(sys.argv) > 1 else "~/localGit/egeria-v6/egeria")
+    args = sys.argv[1:]
+    ref = None
+    if "--ref" in args:
+        i = args.index("--ref")
+        ref = args[i + 1]
+        del args[i:i + 2]
+    main(args[0] if args else "~/localGit/egeria-v6/egeria", ref)

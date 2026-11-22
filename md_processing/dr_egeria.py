@@ -418,6 +418,20 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
     reg("Update Certification", GovernanceLinkProcessor)
     reg("Update License", GovernanceLinkProcessor)
 
+    # Egeria 6.4 Decisions (odpi/egeria#9463): Decision, Outcome and Assessment have their own
+    # GovernanceOfficer requests, so override the family walker's GovernanceProcessor/
+    # GovernanceLinkProcessor routing above. Each command is gated on Egeria 6.4 (md_processing/v2/egeria_6_4.py).
+    from md_processing.v2.decisions import register_decision_processors
+    register_decision_processors(reg)
+
+    # Egeria 6.4 Data Values (odpi/egeria#9463, 0208): the Data Engineer family.
+    from md_processing.v2.data_values import register_data_value_processors
+    register_data_value_processors(reg)
+
+    # Egeria 6.4: Project Target (Projects), Supported Variable Type (Schema Maker), Branch (Devops Pipeline).
+    from md_processing.v2.egeria_6_4_other import register_other_6_4_processors
+    register_other_6_4_processors(reg)
+
     # Lineage Linker -- a dedicated Link/Update command pair per relationship
     # type (2026-09-16 split from one generic selector-attribute command triple
     # -- see lineage_linker.py's module docstring for why), plus one shared
