@@ -22,3 +22,10 @@ def test_process_variables_no_longer_appears_in_the_sentence_and_decisions_does(
     for words in (needs_6_4_words("X", "https://h", "6.3"), needs_6_4_words("X", "https://h"), needs_6_4_words("X")):
         assert "process variables" not in words.lower()
         assert "configuration values and decisions" in words
+
+
+def test_the_names_module_docstring_says_it_the_same_way():
+    import pyegeria.core.egeria_6_4_names as names
+
+    assert "process variables" not in (names.__doc__ or "").lower()
+    assert "configuration values and decisions" in (names.__doc__ or "")
