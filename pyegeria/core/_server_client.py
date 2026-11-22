@@ -531,7 +531,7 @@ class ServerClient(BaseServerClient):
 
         body = {
             "class": "FindPropertyNamesProperties",
-            "openMetadataType": relationship_type,
+            "metadataElementTypeName": relationship_type,
             "propertyValue": property_value,
             "propertyNames": property_names,
             "effectiveTime": effective_time,
