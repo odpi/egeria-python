@@ -44,7 +44,7 @@ def _project_dates(start_date=None, planned_end_date=None, planned_start_date=No
         if old_value is None:
             continue
         warnings.warn(f"'{old}' is deprecated: Egeria's ProjectProperties has no such property; it is sent as "
-                      f"'{new}'. Use '{new}'.", DeprecationWarning, stacklevel=4)
+                      f"'{new}'. Use '{new}'.", FutureWarning, stacklevel=4)
         if new_value is not None and new_value != old_value:
             raise TypeError(f"'{old}' (deprecated) is {old_value!r} but '{new}' is {new_value!r}; pass only '{new}'.")
     return {

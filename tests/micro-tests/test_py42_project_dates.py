@@ -58,7 +58,7 @@ def test_the_four_dates_egeria_reads_are_sent_under_those_names(sent, op):
 @pytest.mark.parametrize("op", CALLS)
 def test_the_old_parameter_names_still_work_are_sent_under_the_real_keys_and_warn(sent, op):
     client, calls = sent
-    with pytest.warns(DeprecationWarning, match="start_date.*plannedStartDate|planned_start_date"):
+    with pytest.warns(FutureWarning, match="start_date.*plannedStartDate|planned_start_date"):
         CALLS[op](client, start_date="2030-01-01T00:00:00", planned_end_date="2030-06-01T00:00:00")
     props = _props(calls)
     assert props["plannedStartDate"] == "2030-01-01T00:00:00"
@@ -69,7 +69,7 @@ def test_the_old_parameter_names_still_work_are_sent_under_the_real_keys_and_war
 def test_the_old_names_still_work_positionally(sent):
     client, calls = sent
     # create_project(..., status, phase, health, start_date, planned_end_date, body): the positions are unchanged
-    with pytest.warns(DeprecationWarning):
+    with pytest.warns(FutureWarning):
         client.create_project(None, None, None, False, "p", "d", "Project", "id", True, "s", "ph", "h",
                               "2030-01-01T00:00:00", "2030-06-01T00:00:00")
     assert _props(calls)["plannedStartDate"] == "2030-01-01T00:00:00"
@@ -79,13 +79,13 @@ def test_the_old_names_still_work_positionally(sent):
 def test_the_new_names_do_not_warn(sent):
     client, calls = sent
     with warnings.catch_warnings():
-        warnings.simplefilter("error", DeprecationWarning)
+        warnings.simplefilter("error", FutureWarning)
         client.create_project(display_name="p", planned_start_date="2030-01-01T00:00:00")
 
 
 def test_old_and_new_name_that_disagree_are_refused_not_guessed(sent):
     client, calls = sent
-    with pytest.warns(DeprecationWarning), pytest.raises(TypeError, match="planned_start_date"):
+    with pytest.warns(FutureWarning), pytest.raises(TypeError, match="planned_start_date"):
         client.create_project(display_name="p", start_date="2030-01-01", planned_start_date="2031-01-01")
     assert calls == []
 
@@ -95,3 +95,15 @@ def test_no_date_given_is_no_date_sent_never_a_made_up_one(sent):
     client.create_project(display_name="p")
     props = _props(calls)
     assert all(props.get(k) is None for k in READ) and not DROPPED & set(props)
+
+
+def test_the_warning_is_a_FutureWarning_so_ordinary_callers_see_it_and_not_a_DeprecationWarning(sent):
+    """DeprecationWarning is ignored by default outside __main__ and test runners; FutureWarning is shown to every caller."""
+    client, calls = sent
+    with warnings.catch_warnings(record=True) as seen:
+        warnings.simplefilter("always")
+        client.create_project(display_name="p", start_date="2030-01-01T00:00:00", planned_end_date="2030-06-01T00:00:00")
+    kinds = {w.category for w in seen if "deprecated" in str(w.message)}
+    assert kinds == {FutureWarning}
+    assert not any(issubclass(w.category, DeprecationWarning) for w in seen if "start_date" in str(w.message))
+    assert any("start_date" in str(w.message) for w in seen) and any("planned_end_date" in str(w.message) for w in seen)
