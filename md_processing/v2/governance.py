@@ -280,6 +280,24 @@ class GovernanceProcessor(AsyncBaseCommandProcessor):
             except Exception as e:
                 self.add_related_result("Governance Driver", driver, status="failure", message=str(e))
 
+#: PY-50: attributes the Link/Update Certification commands list (they share their definitions with License) but that
+#: Egeria's CertificationProperties does not read, so they were dropped silently. A Certification relationship has no home
+#: for them: they are properties of the Certification TYPE (CertificationTypeProperties), as of License/LicenseType.
+CERTIFICATION_UNREAD_ATTRIBUTES = ("Entitlements", "Obligations", "Restrictions")
+
+
+def refuse_certification_attributes_it_cannot_hold(verb: str, attributes: Dict[str, Any]) -> None:
+    """Raise, naming where they belong, if a Link/Update Certification command was given a value for an attribute the
+    Certification relationship cannot hold. Nothing has been sent when this raises."""
+    given = [a for a in CERTIFICATION_UNREAD_ATTRIBUTES if (attributes.get(a) or {}).get("value") not in (None, "", {}, [])]
+    if given:
+        raise ValueError(
+            f"{verb} Certification cannot take {', '.join(given)}: Egeria's Certification relationship has no such "
+            f"propert{'y' if len(given) == 1 else 'ies'} (it would drop them without an error). They are properties of the "
+            f"Certification Type, so set them there (Create Certification Type / Update Certification Type). "
+            f"Nothing was sent to Egeria.")
+
+
 class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
     """
     Processor for Governance Peer/Supporting/Governed-By links.
@@ -371,6 +389,7 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
                     f"Update {object_type} requires the relationship GUID. Provide it in `Certificate GUID`/`License GUID` (as returned by the original Link {object_type})."
                 )
             if object_type == "Certification":
+                refuse_certification_attributes_it_cannot_hold(verb, attributes)
                 properties = {
                     "class": "CertificationProperties",
                     "startDate": attributes.get("Start Date", {}).get("value"),
@@ -385,9 +404,6 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
                     "recipient": attributes.get("Recipient", {}).get("value"),
                     "recipientTypeName": attributes.get("Recipient Type Name", {}).get("value"),
                     "recipientPropertyName": attributes.get("Recipient Property Name", {}).get("value"),
-                    "entitlements": attributes.get("Entitlements", {}).get("value"),
-                    "obligations": attributes.get("Obligations", {}).get("value"),
-                    "restrictions": attributes.get("Restrictions", {}).get("value"),
                 }
                 body = body_slimmer({"class": "UpdateRelationshipRequestBody", "properties": properties, "mergeUpdate": True})
                 await self.client._async_update_certification(rel_guid, body)
@@ -525,6 +541,7 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
                 await self.client._async_link_governance_zones(left_guid, right_guid, body)
 
             elif object_type == "Certification":
+                refuse_certification_attributes_it_cannot_hold(verb, attributes)
                 body = body_slimmer({
                     "class": "NewRelationshipRequestBody",
                     "properties": {
@@ -542,9 +559,6 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
                         "recipient": attributes.get("Recipient", {}).get("value"),
                         "recipientTypeName": attributes.get("Recipient Type Name", {}).get("value"),
                         "recipientPropertyName": attributes.get("Recipient Property Name", {}).get("value"),
-                        "entitlements": attributes.get("Entitlements", {}).get("value"),
-                        "obligations": attributes.get("Obligations", {}).get("value"),
-                        "restrictions": attributes.get("Restrictions", {}).get("value"),
                         "effectiveFrom": attributes.get("Effective From", {}).get("value"),
                         "effectiveTo": attributes.get("Effective To", {}).get("value"),
                     },
