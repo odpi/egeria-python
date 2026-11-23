@@ -412,6 +412,9 @@ class ServerClient(BaseServerClient):
         Fetch valid values for a property. If found in cache, return from cache.
         Otherwise, fetch from Egeria and cache the result.
         Async version.
+
+        Returns the valid values: [] means Egeria answered and holds none. A failed lookup (timeout, connection,
+        HTTP or Egeria error) RAISES, and is not cached; it used to return [] and read as "no valid values" (PY-67).
         """
         cache_key = f"{property_name}:{type_name}"
         if cache_key in self._valid_value_cache:
@@ -429,11 +432,11 @@ class ServerClient(BaseServerClient):
         try:
             resp = await self._async_make_request("GET", url)
             elements = resp.json().get("elements", [])
-            self._valid_value_cache[cache_key] = elements
-            return elements
         except Exception as e:
             logger.error(f"Error fetching valid values for {property_name}: {e}")
-            return []
+            raise
+        self._valid_value_cache[cache_key] = elements
+        return elements
 
     def get_valid_metadata_values(
         self,
