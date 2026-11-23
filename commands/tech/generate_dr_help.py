@@ -307,6 +307,7 @@ def main():
             client.create_egeria_bearer_token(args.userid, args.user_pass)
             logger.info(f"Connected to Egeria at {args.url} for dynamic valid values")
         except Exception as e:
+            client = None   # a half-built client would be asked for values and fail: say "no connection" instead
             logger.warning(f"Could not connect to Egeria: {e}. Falling back to static values.")
 
     create_help_terms(client=client, advanced=args.advanced)
