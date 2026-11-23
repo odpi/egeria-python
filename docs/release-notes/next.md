@@ -128,6 +128,8 @@ notes and are not repeated here.
   connections, connector types, endpoints, data structures, data fields, data value specifications, external
   references, external identifiers, governance definitions, schema attributes and design patterns. The rest keep the
   PY-63 refusal (their find returned nothing, timed out, differs in defaults, or was not proven).
+  When `*` is routed to a find, the find's `page_size` (100) applies unless you pass one; the helpers' own default
+  is 0 (or 500 for design patterns). A real name given as `filter_string=` or another name keyword is never routed.
 - **Egeria 400 errors are not labelled server errors** (PY-58). A request Egeria refuses (HTTP 400) raises
   `PyegeriaBadRequestException`, a `PyegeriaInvalidParameterException` (and still a `PyegeriaAPIException`), with
   Egeria's own message and message id, instead of "SERVER_ERROR_500". `get_platforms_by_name("*")` returns the

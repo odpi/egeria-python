@@ -17,6 +17,11 @@ import inspect
 from typing import Any, Callable
 
 
+#: The other keywords a caller (or the helper's own body) may carry the name in: the deprecated `filter_string=` and
+#: its relatives. A real name in any of them means the call is a by-name call, not a request for everything.
+NAME_ALIASES = ("filter_string", "name", "filter", "search_string", "keyword")
+
+
 def _is_missing(value: Any) -> bool:
     return value is None or str(value).strip() in ("", "*")
 
@@ -36,6 +41,9 @@ def routes_all_to(find_name: str) -> Callable:
             extra = next((v for k, v in given.items()
                           if sig.parameters[k].kind is inspect.Parameter.VAR_KEYWORD), {})
             body = given.get("body", extra.get("body"))
+            if _is_missing(effective):
+                effective = next((extra[a] for a in NAME_ALIASES if a in extra and not _is_missing(extra[a])),
+                                 effective)
             if _is_missing(effective) and body is None:
                 find = getattr(self, find_name, None)
                 if find is not None:
@@ -46,7 +54,8 @@ def routes_all_to(find_name: str) -> Callable:
                         if key in ("self", name_param, "body"):
                             continue
                         if sig.parameters[key].kind is inspect.Parameter.VAR_KEYWORD:
-                            passed.update({k: v for k, v in value.items() if takes_any or k in find_params})
+                            passed.update({k: v for k, v in value.items()
+                                           if k not in NAME_ALIASES and (takes_any or k in find_params)})
                         elif key in find_params or takes_any:
                             passed[key] = value
                     return await find("*", **passed)

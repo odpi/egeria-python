@@ -230,3 +230,37 @@ def test_the_routed_answer_is_the_find_answer_for_a_real_shaped_element(pair):
     assert got == want
     assert isinstance(got, list) and [e["elementHeader"]["type"]["typeName"] for e in got] == [type_name] * 2
     assert sorted(got[0]) == sorted(elements[0])
+
+
+@pytest.mark.parametrize("alias", ["filter_string", "name"])
+@pytest.mark.parametrize("pair", sorted(ROUTED))
+def test_a_real_name_given_by_an_alias_keyword_is_never_routed(pair, alias):
+    """F1 (read-back): 22 helpers read the name from `filter_string=` in kwargs; the call must stay a by-name call."""
+    module, cls, helper, find = ROUTED[pair][:4]
+    obj = _client(module, cls)
+    find_mock = AsyncMock(return_value=["found"])
+    setattr(obj, "_async_" + find, find_mock)
+    fn = _helper(obj, helper)
+    if alias != list(inspect.signature(fn).parameters)[0] and alias == "name" and \
+            "kwargs" not in " ".join(inspect.signature(fn).parameters):
+        pytest.skip("this helper takes no free keywords")
+    try:
+        asyncio.run(fn(**{alias: "RealName"}))
+    except Exception:
+        pass
+    find_mock.assert_not_called()
+
+
+@pytest.mark.parametrize("pair", sorted(ROUTED))
+def test_an_alias_keyword_that_is_itself_missing_is_routed_and_not_passed_on(pair):
+    module, cls, helper, find = ROUTED[pair][:4]
+    obj = _client(module, cls)
+    find_mock = AsyncMock(return_value=["found"])
+    setattr(obj, "_async_" + find, find_mock)
+    fn = _helper(obj, helper)
+    if not any(p.kind is inspect.Parameter.VAR_KEYWORD for p in inspect.signature(fn).parameters.values()):
+        pytest.skip("this helper takes no free keywords")
+    if list(inspect.signature(fn).parameters)[0] == "filter_string":
+        pytest.skip("filter_string is this helper's own first argument")
+    assert asyncio.run(fn("*", filter_string="*")) == ["found"]
+    assert "filter_string" not in find_mock.await_args.kwargs
