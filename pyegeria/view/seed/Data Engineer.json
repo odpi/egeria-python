@@ -9,7 +9,10 @@
     "description": "Attributes of a Data Value (Egeria 6.4), with where it is used, where it comes from and the values embedded in it.",
     "family": "Data Engineer",
     "target_type_name": "DataValue",
-    "aliases": ["DataValue", "Data Values", "Data-Value-DrE", "Data Value"]
+    "aliases": ["DataValue", "Data Values", "Data-Value-DrE", "Data Value"],
+    "annotations": {
+     "min_egeria_version": ["6.4"]
+    }
    },
    "microflow": {
     "format": "microflow/1",
@@ -77,7 +80,10 @@
     "description": "Attributes of a Literal Data Value (Egeria 6.4): a Data Value that carries its value, list or map.",
     "family": "Data Engineer",
     "target_type_name": "LiteralDataValue",
-    "aliases": ["LiteralDataValue", "Literal Data Values", "Literal-Data-Value-DrE", "Literal Data Value"]
+    "aliases": ["LiteralDataValue", "Literal Data Values", "Literal-Data-Value-DrE", "Literal Data Value"],
+    "annotations": {
+     "min_egeria_version": ["6.4"]
+    }
    },
    "microflow": {
     "format": "microflow/1",
@@ -151,7 +157,10 @@
     "description": "Auto-generated format for Data Value (Create, Advanced).",
     "family": "Data Engineer",
     "target_type_name": "Data Value",
-    "aliases": ["Data Value DrE Advanced"]
+    "aliases": ["Data Value DrE Advanced"],
+    "annotations": {
+     "min_egeria_version": ["6.4"]
+    }
    },
    "microflow": {
     "format": "microflow/1",
@@ -246,7 +255,10 @@
     "description": "Auto-generated format for Data Value (Create, Basic).",
     "family": "Data Engineer",
     "target_type_name": "Data Value",
-    "aliases": ["Data Value DrE Basic"]
+    "aliases": ["Data Value DrE Basic"],
+    "annotations": {
+     "min_egeria_version": ["6.4"]
+    }
    },
    "microflow": {
     "format": "microflow/1",

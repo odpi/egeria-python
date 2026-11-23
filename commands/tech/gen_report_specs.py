@@ -132,6 +132,10 @@ ATTRIBUTE_RELATIONSHIP_LISTS = {
     "in_reference_data_set": "memberOfValidValueSets",
 }
 
+# The Create commands for types that exist only from Egeria 6.4 (odpi/egeria#9463): their generated specs carry
+# min_egeria_version, so the report runner refuses them in words on an older platform (PY-49).
+NEW_IN_6_4_TYPES = {"Decision", "Data Value", "Literal Data Value"}
+
 # The columns every element has; what a generated spec shows when the Create command has nothing else a find can fill.
 UNIVERSAL_COLUMNS = [
     Column(name="Display Name", key="display_name"),
@@ -581,7 +585,8 @@ def build_format_sets_from_commands(
                 description=f"Auto-generated format for {display_name} (Create, {lvl}).",
                 family=cmd_obj.get("family"),
                 formats=formats,
-                action=action
+                action=action,
+                annotations={"min_egeria_version": ["6.4"]} if display_name in NEW_IN_6_4_TYPES else {},
             )
             results[f"{set_name}-{lvl}"] = fs
 

@@ -559,7 +559,10 @@
     "description": "Attributes of a Decision (Egeria 6.4), with its outcomes and assessed inputs.",
     "family": "Governance Officer",
     "target_type_name": "Decision",
-    "aliases": ["Decisions", "Decision-DrE"]
+    "aliases": ["Decisions", "Decision-DrE"],
+    "annotations": {
+     "min_egeria_version": ["6.4"]
+    }
    },
    "microflow": {
     "format": "microflow/1",
@@ -1457,7 +1460,10 @@
     "description": "Auto-generated format for Decision (Create, Advanced).",
     "family": "Governance Officer",
     "target_type_name": "Decision",
-    "aliases": ["Decision DrE Advanced"]
+    "aliases": ["Decision DrE Advanced"],
+    "annotations": {
+     "min_egeria_version": ["6.4"]
+    }
    },
    "microflow": {
     "format": "microflow/1",
@@ -1558,7 +1564,10 @@
     "description": "Auto-generated format for Decision (Create, Basic).",
     "family": "Governance Officer",
     "target_type_name": "Decision",
-    "aliases": ["Decision DrE Basic"]
+    "aliases": ["Decision DrE Basic"],
+    "annotations": {
+     "min_egeria_version": ["6.4"]
+    }
    },
    "microflow": {
     "format": "microflow/1",

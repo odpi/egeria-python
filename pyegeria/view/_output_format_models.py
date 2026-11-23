@@ -436,6 +436,11 @@ class QuestionSpec(BaseModel):
     perspectives: List[str] = Field(default_factory=list)
     questions: List[str] = Field(default_factory=list)
 
+#: The annotation that holds a spec's minimum Egeria version, and the versions the runner can check (PY-49).
+MIN_EGERIA_VERSION_KEY = "min_egeria_version"
+CHECKABLE_MIN_EGERIA_VERSIONS = ("6.4",)
+
+
 class FormatSet(BaseModel):
     """
     Represents a complete format set with target_type, heading, description, aliases, annotations, formats, and actions.
@@ -485,6 +490,24 @@ class FormatSet(BaseModel):
     def target_type_name(self) -> Optional[str]:
         """Egeria's name for `target_type` (the ReportSpec property targetTypeName)."""
         return self.target_type
+
+    @property
+    def min_egeria_version(self) -> Optional[str]:
+        """The Egeria version a platform needs for this spec to run (PY-49), or None.
+
+        Held in the annotation `min_egeria_version`, so the seed and the Egeria-held envelope carry it unchanged. Only
+        "6.4" can be checked today (pyegeria.core.egeria_6_4_gate); the report runner refuses the spec, in words, on a
+        platform that does not carry the 6.4 additions."""
+        values = self.annotations.get(MIN_EGERIA_VERSION_KEY) or []
+        return values[0] if values else None
+
+    @model_validator(mode="after")
+    def _min_egeria_version_is_checkable(self):
+        version = self.min_egeria_version
+        if version is not None and version not in CHECKABLE_MIN_EGERIA_VERSIONS:
+            raise ValueError(f"Report spec '{self.heading}': min_egeria_version '{version}' cannot be checked; "
+                             f"supported: {', '.join(CHECKABLE_MIN_EGERIA_VERSIONS)}")
+        return self
 
     @field_validator('formats', mode='before')
     @classmethod
