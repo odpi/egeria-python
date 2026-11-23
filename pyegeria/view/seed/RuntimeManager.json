@@ -24,12 +24,36 @@
        {"field": "description", "label": "Description", "format": true},
        {"field": "type_name", "label": "Type Name"},
        {"field": "url", "label": "URL"},
+       {"field": "guid", "label": "GUID"}
+      ]
+     },
+     "TABLE": {"same_as": "ALL"},
+     "DICT": {"same_as": "ALL"}
+    }
+   }
+  },
+  {
+   "label": "Platform-Report",
+   "envelope": {
+    "heading": "OMAG Server Platform Report",
+    "description": "The running OMAG Server Platform: its URL, origin, start time, properties and the servers it hosts.",
+    "family": "RuntimeManager",
+    "target_type_name": "Platform",
+    "aliases": ["Platform Report"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {},
+    "stages": [],
+    "formatters": {
+     "ALL": {
+      "columns": [
        {"field": "guid", "label": "GUID"},
        {"field": "platform_url_root", "label": "Platform URL"},
-       {"field": "version", "label": "Platform Version"},
        {"field": "platform_origin", "label": "Platform Origin"},
        {"field": "platform_start_time", "label": "Platform Start Time"},
        {"field": "platform_build_properties", "label": "Build Properties"},
+       {"field": "platform_public_properties", "label": "Public Properties"},
        {"field": "omag_servers", "label": "Servers"}
       ]
      },

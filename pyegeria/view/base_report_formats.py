@@ -1944,11 +1944,28 @@ base_report_specs = FormatSetDict({
                 types=["ALL", "TABLE", "DICT"],
                 attributes=COMMON_COLUMNS + [
                     Column(name="GUID", key='guid'),
+                ],
+            )
+        ],
+    ),
+    # PY-49 row 9: what the platform REPORT (get_platform_report, /platforms/{guid}/report) carries; the platform
+    # element the "Platforms" spec formats has none of these.
+    "Platform-Report": FormatSet(
+        target_type="Platform",
+        heading="OMAG Server Platform Report",
+        description="The running OMAG Server Platform: its URL, origin, start time, properties and the servers it hosts.",
+        annotations={},
+        family="RuntimeManager",
+        formats=[
+            Format(
+                types=["ALL", "TABLE", "DICT"],
+                attributes=[
+                    Column(name="GUID", key='guid'),
                     Column(name="Platform URL", key='platform_url_root'),
-                    Column(name="Platform Version", key='version'),
                     Column(name="Platform Origin", key='platform_origin'),
                     Column(name="Platform Start Time", key='platform_start_time'),
                     Column(name="Build Properties", key="platform_build_properties"),
+                    Column(name="Public Properties", key="platform_public_properties"),
                     Column(name="Servers", key="omag_servers"),
                 ],
             )
