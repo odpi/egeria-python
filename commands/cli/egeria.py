@@ -1441,8 +1441,8 @@ def deployed_data(ctx):
 @deployed_data.command("deployed-servers")
 @click.option(
     "--search-string",
-    default="*",
-    help="Filter deployed for deployed implementation type by search string",
+    default="View Server",
+    help="The deployed implementation type of the servers to show (Egeria needs a type; '*' is not accepted)",
 )
 @click.pass_context
 def show_deployed_servers(ctx, search_string):
@@ -1688,8 +1688,8 @@ def show_user_ids(ctx):
 @deployed_data.command("deployed-servers")
 @click.option(
     "--search-string",
-    default="*",
-    help="Filter deployed for deployed implementation type by search string",
+    default="View Server",
+    help="The deployed implementation type of the servers to show (Egeria needs a type; '*' is not accepted)",
 )
 @click.pass_context
 def show_deployed_servers(ctx, search_string):

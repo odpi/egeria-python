@@ -42,7 +42,7 @@ app_config = settings.Environment
 # config_logging()
 
 
-def display_servers_by_dep_imp(search_string: str = "*", view_server: str = app_config.egeria_view_server,
+def display_servers_by_dep_imp(search_string: str = "View Server", view_server: str = app_config.egeria_view_server,
                                view_url: str = app_config.egeria_view_server_url, user: str = EGERIA_USER,
                                user_pass: str = EGERIA_USER_PASSWORD, jupyter: bool = settings.Environment.egeria_jupyter,
                                width: int = settings.Environment.egeria_width):
