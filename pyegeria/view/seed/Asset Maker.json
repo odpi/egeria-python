@@ -729,26 +729,14 @@
     "formatters": {
      "LIST": {
       "columns": [
-       {"field": "file_path_name", "label": "File Path Name"},
-       {"field": "file_name", "label": "File Name"},
        {"field": "description", "label": "Description"},
-       {"field": "file_system_name", "label": "File System Name"},
-       {"field": "file_type", "label": "File Type"},
-       {"field": "file_extension", "label": "File Extension"},
-       {"field": "file_encoding", "label": "File Encoding"},
        {"field": "version_identifier", "label": "Version Identifier"}
       ]
      },
      "ALL": {
       "columns": [
-       {"field": "file_path_name", "label": "File Path Name"},
-       {"field": "file_name", "label": "File Name"},
        {"field": "description", "label": "Description"},
-       {"field": "version_identifier", "label": "Version Identifier"},
-       {"field": "file_system_name", "label": "File System Name"},
-       {"field": "file_type", "label": "File Type"},
-       {"field": "file_extension", "label": "File Extension"},
-       {"field": "file_encoding", "label": "File Encoding"}
+       {"field": "version_identifier", "label": "Version Identifier"}
       ]
      }
     }
@@ -793,26 +781,14 @@
     "formatters": {
      "LIST": {
       "columns": [
-       {"field": "file_path_name", "label": "File Path Name"},
-       {"field": "file_name", "label": "File Name"},
        {"field": "description", "label": "Description"},
-       {"field": "file_system_name", "label": "File System Name"},
-       {"field": "file_type", "label": "File Type"},
-       {"field": "file_extension", "label": "File Extension"},
-       {"field": "file_encoding", "label": "File Encoding"},
        {"field": "version_identifier", "label": "Version Identifier"}
       ]
      },
      "ALL": {
       "columns": [
-       {"field": "file_path_name", "label": "File Path Name"},
-       {"field": "file_name", "label": "File Name"},
        {"field": "description", "label": "Description"},
-       {"field": "version_identifier", "label": "Version Identifier"},
-       {"field": "file_system_name", "label": "File System Name"},
-       {"field": "file_type", "label": "File Type"},
-       {"field": "file_extension", "label": "File Extension"},
-       {"field": "file_encoding", "label": "File Encoding"}
+       {"field": "version_identifier", "label": "Version Identifier"}
       ]
      }
     }

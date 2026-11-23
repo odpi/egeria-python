@@ -129,6 +129,16 @@ CLASSIFICATION_SOURCES = {
     "term_activity_type": "class:ActivityDescription.activityType",
 }
 
+# PY-57: the inputs of a "create from its catalog template" command that name a FILE, not a property of the element
+# the spec finds. "Create Secrets Store Element" creates a SecretsCollection (a DataSet; the 6.4 table has no file_*
+# property for it: fileName, fileExtension, fileType and pathName belong to DataFile, which is the secrets store
+# FILE, a different element), so a column under these keys never fills.
+TEMPLATE_PLACEHOLDER_KEYS = {
+    "Create Secrets Store Element": {
+        "file_path_name", "file_name", "file_system_name", "file_type", "file_extension", "file_encoding",
+    },
+}
+
 # PY-49: Reference Name / Reference Name List attributes. The Create command takes the NAME of another element;
 # a find report shows the relationship list the view service attaches (RELATIONSHIP_FIELDS, in camelCase), which is
 # the column the formatter fills. Only the attributes whose relationship is known are mapped; any other Reference
@@ -614,11 +624,18 @@ def build_format_sets_from_commands(
         spec_target = _spec_target_type(display_name, cmd_obj)
         target_attrs = _target_attributes(spec_target, str(cmd_obj.get("OM_TYPE") or ""))
 
+        skip_keys = TEMPLATE_PLACEHOLDER_KEYS.get(cmd_key, set())
+
+        def _extract(usage_level, _skip=skip_keys):
+            cols = _extract_columns_from_attributes(cmd_obj.get("Attributes", []), usage_level=usage_level,
+                                                    target_attrs=target_attrs)
+            return [c for c in cols if c.key not in _skip]
+
         for lvl in levels_to_generate:
-            columns = _extract_columns_from_attributes(cmd_obj.get("Attributes", []), usage_level=lvl, target_attrs=target_attrs)
+            columns = _extract(lvl)
             if not columns:
                 if lvl == "Basic":
-                    columns = _extract_columns_from_attributes(cmd_obj.get("Attributes", []), usage_level="Advanced", target_attrs=target_attrs)
+                    columns = _extract("Advanced")
                 if not columns and cmd_obj.get("Attributes"):
                     # PY-49: every attribute was request-only or a classification payload (Element, Instance, the
                     # "From Template" commands), so the spec shows the universal columns only.
