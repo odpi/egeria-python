@@ -251,6 +251,15 @@ class PyegeriaException(Exception):
         return msg
 
 
+    @property
+    def not_visible(self) -> bool:
+        """PY-24: True when Egeria refused the read because the element is hidden from the caller (in a zone or
+        anchor it cannot see: OPEN-METADATA-SECURITY-403-020 / 403-007, OMAG-REPOSITORY-HANDLER-400-010), so a caller can
+        say why instead of "failed". A refused or expired token is not this."""
+        from pyegeria.view.dashboard_resolver import is_not_visible_error
+        return bool(is_not_visible_error(self))
+
+
 class PyegeriaConnectionException(PyegeriaException):
     """Raised when there's an issue connecting to an Egeria Platform."""
     def __init__(self, context: dict = None, additional_info:dict = None, e: Exception = None) -> None:
@@ -303,6 +312,7 @@ class PyegeriaAPIException(PyegeriaException):
                          context, additional_info, e)
         related_response = response.json()
         self.related_http_code = related_response.get("relatedHTTPCode", None)
+        self.egeria_message_id = related_response.get("exceptionErrorMessageId") or ""
         msg = self.__str__()
         if self.related_http_code:
             exception_msg_id = related_response.get("exceptionErrorMessageId", "UNKNOWN_ERROR")
@@ -381,6 +391,7 @@ class PyegeriaBadRequestException(PyegeriaInvalidParameterException, PyegeriaAPI
         self.response_egeria_msg_id = info.get("exceptionErrorMessageId", self.response_egeria_msg_id)
         self.response_egeria_msg = info.get("exceptionErrorMessage", self.response_egeria_msg)
         self.related_http_code = info.get("relatedHTTPCode")
+        self.egeria_message_id = self.response_egeria_msg_id or ""
         self.message = self.error_details["message_template"].format(self.response_egeria_msg or info.get("reason", ""))
         logger.info(self.__str__().replace("{", "{{").replace("}", "}}"), ip=self.response_url,
                     http_code=self.response_code, pyegeria_code=self.pyegeria_code)
@@ -402,6 +413,7 @@ class PyegeriaNotFoundException(PyegeriaAPIException):
         # See PyegeriaUnauthorizedException.__init__ for why this is set explicitly
         # here rather than inherited from PyegeriaAPIException.__init__.
         self.related_http_code = (additional_info or {}).get("relatedHTTPCode") or getattr(response, "status_code", None)
+        self.egeria_message_id = (additional_info or {}).get("exceptionErrorMessageId") or ""
         # See PyegeriaInvalidParameterException's comment above.
         logger.info(self.__str__().replace("{", "{{").replace("}", "}}"), ip=self.response_url, http_code=self.response_code, pyegeria_code=self.pyegeria_code)
 
