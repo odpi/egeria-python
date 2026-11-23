@@ -8,7 +8,7 @@ DataEngineer wrapper, whose HTTP call is captured (tests/micro-tests/e64_dre_har
 body the wrapper sends, so its own checks (properties class, unread keys, int positions) passed too.
 
 Also: a Literal Value / List / Map selects LiteralDataValue; Position must be a whole number and is sent only when
-given; and the version gate ("needs Egeria 6.4", a WARNING row, nothing sent) for the family.
+given; and the version gate ("needs Egeria 6.4", a FAILURE row since PY-48, nothing sent) for the family.
 
 No live server.
 """
@@ -216,7 +216,7 @@ B2_DOCS = {
 async def test_before_egeria_6_4_every_b2_command_says_needs_6_4(monkeypatch, command, directive):
     fake = h.FakeEgeria(monkeypatch, about=h.ABOUT_6_3)
     [result] = await h.run_doc(fake, B2_DOCS[command], directive=directive)
-    assert result["status"] == "warning"
+    assert result["status"] == "failure"
     assert result["message"].startswith(f"{command} needs Egeria 6.4")
     assert "runs Egeria 6.3" in result["message"] and "Nothing was sent" in result["message"]
     assert fake.calls == []

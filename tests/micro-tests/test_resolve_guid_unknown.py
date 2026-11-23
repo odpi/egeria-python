@@ -29,6 +29,7 @@ def _processor(client):
 
         async def apply_changes(self) -> str:
             P.created.append(self.parsed_output["qualified_name"])
+            self.parsed_output["guid"] = "guid-of-the-new-element"  # a create names what it made (PY-48)
             return "created"
     return P
 
