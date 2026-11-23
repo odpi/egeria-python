@@ -26,6 +26,34 @@ from pyegeria.core.async_runner import run_sync
 from pyegeria.core import egeria_6_4_names as e64
 from pyegeria.core.egeria_6_4_bodies import checked_body, e64_url  # the shared Egeria 6.4 body check
 
+
+def _project_dates(start_date=None, planned_end_date=None, planned_start_date=None, actual_start_date=None,
+                   planned_completion_date=None, actual_completion_date=None) -> dict:
+    """The four date keys Egeria's ProjectProperties reads, from the arguments a caller gave.
+
+    Egeria reads plannedStartDate, actualStartDate, plannedCompletionDate and actualCompletionDate and drops
+    any other key silently (ignoreUnknown). pyegeria used to send startDate and plannedEndDate, which Egeria
+    never read, so those dates were lost. ``start_date`` and ``planned_end_date`` are the old parameter
+    names: they still work, are sent as plannedStartDate and plannedCompletionDate, and warn.
+    """
+    import warnings
+
+    for old, new, old_value, new_value in (("start_date", "planned_start_date", start_date, planned_start_date),
+                                           ("planned_end_date", "planned_completion_date", planned_end_date,
+                                            planned_completion_date)):
+        if old_value is None:
+            continue
+        warnings.warn(f"'{old}' is deprecated: Egeria's ProjectProperties has no such property; it is sent as "
+                      f"'{new}'. Use '{new}'.", FutureWarning, stacklevel=4)
+        if new_value is not None and new_value != old_value:
+            raise TypeError(f"'{old}' (deprecated) is {old_value!r} but '{new}' is {new_value!r}; pass only '{new}'.")
+    return {
+        "plannedStartDate": planned_start_date if planned_start_date is not None else start_date,
+        "actualStartDate": actual_start_date,
+        "plannedCompletionDate": planned_completion_date if planned_completion_date is not None else planned_end_date,
+        "actualCompletionDate": actual_completion_date,
+    }
+
 PROJECT_TYPES = ["Project", "Campaign", "StudyProject", "Task", "PersonalProject", "Experiment", "Investigation"]
 
 
@@ -1254,6 +1282,10 @@ class ProjectManager(ServerClient):
             start_date: Optional[str] = None,
             planned_end_date: Optional[str] = None,
             body: Optional[dict | NewElementRequestBody] = None,
+            planned_start_date: Optional[str] = None,
+            actual_start_date: Optional[str] = None,
+            planned_completion_date: Optional[str] = None,
+            actual_completion_date: Optional[str] = None,
     ) -> str:
         """Create project: https://egeria-project.org/concepts/project Async version.
 
@@ -1283,10 +1315,12 @@ class ProjectManager(ServerClient):
             The project phase.
         health: str, optional
             The project health.
-        start_date: str, optional
+        start_date: str (deprecated, sent as plannedStartDate), optional
             The start date of the project.
-        planned_end_date: str, optional
+        planned_end_date: str (deprecated, sent as plannedCompletionDate), optional
             The planned completion date of the project.
+        planned_start_date, actual_start_date, planned_completion_date, actual_completion_date: str, optional
+            The four dates Egeria's ProjectProperties reads, in ISO 8601 string format.
         body: dict
             A dict representing the details of the project to create. To create different kinds of projects,
             set the initial_classifications in the body to be, for instance, "PersonalProject" or "Campaign".
@@ -1329,12 +1363,14 @@ class ProjectManager(ServerClient):
             "projectStatus": "Add appropriate valid value for type",
             "projectPhase" : "Add appropriate valid value for phase",
             "projectHealth" : "Add appropriate valid value for health",
-            "startDate" : "date/time",
-            "plannedEndDate" : "date/time"
+            "plannedStartDate" : "date/time",
+            "plannedCompletionDate" : "date/time"
           }
         }
 
         """
+        dates = _project_dates(start_date, planned_end_date, planned_start_date, actual_start_date,
+                               planned_completion_date, actual_completion_date)
         if body is None:
             import time
             body = {
@@ -1358,8 +1394,10 @@ class ProjectManager(ServerClient):
                     "projectStatus": status,
                     "projectPhase": phase,
                     "projectHealth": health,
-                    "startDate": start_date,
-                    "plannedEndDate": planned_end_date,
+                    "plannedStartDate": dates["plannedStartDate"],
+                    "actualStartDate": dates["actualStartDate"],
+                    "plannedCompletionDate": dates["plannedCompletionDate"],
+                    "actualCompletionDate": dates["actualCompletionDate"],
                 }
             }
 
@@ -1385,6 +1423,10 @@ class ProjectManager(ServerClient):
             start_date: Optional[str] = None,
             planned_end_date: Optional[str] = None,
             body: Optional[dict | NewElementRequestBody] = None,
+            planned_start_date: Optional[str] = None,
+            actual_start_date: Optional[str] = None,
+            planned_completion_date: Optional[str] = None,
+            actual_completion_date: Optional[str] = None,
     ) -> str:
         """Create project: https://egeria-project.org/concepts/project
 
@@ -1414,10 +1456,12 @@ class ProjectManager(ServerClient):
             The project phase.
         health: str, optional
             The project health.
-        start_date: str, optional
+        start_date: str (deprecated, sent as plannedStartDate), optional
             The start date of the project.
-        planned_end_date: str, optional
+        planned_end_date: str (deprecated, sent as plannedCompletionDate), optional
             The planned completion date of the project.
+        planned_start_date, actual_start_date, planned_completion_date, actual_completion_date: str, optional
+            The four dates Egeria's ProjectProperties reads, in ISO 8601 string format.
         body: dict
             A dict representing the details of the project to create.
 
@@ -1452,8 +1496,8 @@ class ProjectManager(ServerClient):
             "projectStatus": "Add appropriate valid value for type",
             "projectPhase" : "Add appropriate valid value for phase",
             "projectHealth" : "Add appropriate valid value for health",
-            "startDate" : "date/time",
-            "plannedEndDate" : "date/time"
+            "plannedStartDate" : "date/time",
+            "plannedCompletionDate" : "date/time"
           }
         }
 
@@ -1461,7 +1505,9 @@ class ProjectManager(ServerClient):
         resp = run_sync(
             self._async_create_project(anchor_guid, parent_guid, parent_relationship_type_name, parent_at_end1,
                                        display_name, description, classification_name, identifier,
-                                       is_own_anchor, status, phase, health, start_date, planned_end_date, body)
+                                       is_own_anchor, status, phase, health, start_date, planned_end_date, body,
+                                       planned_start_date, actual_start_date, planned_completion_date,
+                                       actual_completion_date)
         )
         return resp
 
@@ -1606,6 +1652,10 @@ class ProjectManager(ServerClient):
             planned_end_date: Optional[str] = None,
             merge_update: bool = True,
             body: Optional[dict | UpdateElementRequestBody] = None,
+            planned_start_date: Optional[str] = None,
+            actual_start_date: Optional[str] = None,
+            planned_completion_date: Optional[str] = None,
+            actual_completion_date: Optional[str] = None,
     ) -> None:
         """Update the properties of a project. Async Version.
 
@@ -1627,10 +1677,12 @@ class ProjectManager(ServerClient):
             Project phase as defined in valid values
         project_health: str, optional
             Project health as defined in valid values
-        start_date: str, optional, defaults to None
+        start_date: str (deprecated, sent as plannedStartDate), optional, defaults to None
             Start date of the project in ISO 8601 string format.
-        planned_end_date: str, optional, defaults to None
+        planned_end_date: str (deprecated, sent as plannedCompletionDate), optional, defaults to None
             Planned completion date in ISO 8601 string format.
+        planned_start_date, actual_start_date, planned_completion_date, actual_completion_date: str, optional
+            The four dates Egeria's ProjectProperties reads, in ISO 8601 string format.
         merge_update: bool, optional, defaults to False
             If True, then all the properties of the project will be replaced with the specified properties.
         body: dict, optional
@@ -1649,6 +1701,8 @@ class ProjectManager(ServerClient):
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
         """
+        dates = _project_dates(start_date, planned_end_date, planned_start_date, actual_start_date,
+                               planned_completion_date, actual_completion_date)
         if body is None:
             body = {
                 "class": "UpdateElementRequestBody",
@@ -1662,8 +1716,10 @@ class ProjectManager(ServerClient):
                     "projectStatus": project_status,
                     "projectPhase": project_phase,
                     "projectHealth": project_health,
-                    "startDate": start_date,
-                    "plannedEndDate": planned_end_date,
+                    "plannedStartDate": dates["plannedStartDate"],
+                    "actualStartDate": dates["actualStartDate"],
+                    "plannedCompletionDate": dates["plannedCompletionDate"],
+                    "actualCompletionDate": dates["actualCompletionDate"],
                 }
             }
 
@@ -1690,6 +1746,10 @@ class ProjectManager(ServerClient):
             planned_end_date: Optional[str] = None,
             merge_update: bool = True,
             body: Optional[dict | UpdateElementRequestBody] = None,
+            planned_start_date: Optional[str] = None,
+            actual_start_date: Optional[str] = None,
+            planned_completion_date: Optional[str] = None,
+            actual_completion_date: Optional[str] = None,
     ) -> None:
         """Update the properties of a project.
 
@@ -1711,10 +1771,12 @@ class ProjectManager(ServerClient):
             Project phase as defined in valid values
         project_health: str, optional
             Project health as defined in valid values
-        start_date: str, optional, defaults to None
+        start_date: str (deprecated, sent as plannedStartDate), optional, defaults to None
             Start date of the project in ISO 8601 string format.
-        planned_end_date: str, optional, defaults to None
+        planned_end_date: str (deprecated, sent as plannedCompletionDate), optional, defaults to None
             Planned completion date in ISO 8601 string format.
+        planned_start_date, actual_start_date, planned_completion_date, actual_completion_date: str, optional
+            The four dates Egeria's ProjectProperties reads, in ISO 8601 string format.
         merge_update: bool, optional, defaults to False
             If True, then all the properties of the project will be replaced with the specified properties.
         body: dict, optional
@@ -1736,7 +1798,8 @@ class ProjectManager(ServerClient):
         run_sync(
             self._async_update_project(project_guid, qualified_name, identifier, display_name, description,
                                        project_status, project_phase, project_health, start_date, planned_end_date,
-                                       merge_update, body))
+                                       merge_update, body, planned_start_date, actual_start_date,
+                                       planned_completion_date, actual_completion_date))
 
     @dynamic_catch
     async def _async_delete_project(
@@ -2379,9 +2442,15 @@ class ProjectManager(ServerClient):
             health: Optional[str] = None,
             start_date: Optional[str] = None,
             planned_end_date: Optional[str] = None,
-            body: Optional[dict | NewElementRequestBody] = None
+            body: Optional[dict | NewElementRequestBody] = None,
+            planned_start_date: Optional[str] = None,
+            actual_start_date: Optional[str] = None,
+            planned_completion_date: Optional[str] = None,
+            actual_completion_date: Optional[str] = None,
     ) -> str:
         """Create a new task for a project.  Async version."""
+        dates = _project_dates(start_date, planned_end_date, planned_start_date, actual_start_date,
+                               planned_completion_date, actual_completion_date)
         if body is None:
             import time
             body = {
@@ -2395,8 +2464,10 @@ class ProjectManager(ServerClient):
                     "projectStatus": status,
                     "projectPhase": phase,
                     "projectHealth": health,
-                    "startDate": start_date,
-                    "plannedEndDate": planned_end_date,
+                    "plannedStartDate": dates["plannedStartDate"],
+                    "actualStartDate": dates["actualStartDate"],
+                    "plannedCompletionDate": dates["plannedCompletionDate"],
+                    "actualCompletionDate": dates["actualCompletionDate"],
                 }
             }
 
@@ -2417,12 +2488,17 @@ class ProjectManager(ServerClient):
             health: Optional[str] = None,
             start_date: Optional[str] = None,
             planned_end_date: Optional[str] = None,
-            body: Optional[dict | NewElementRequestBody] = None
+            body: Optional[dict | NewElementRequestBody] = None,
+            planned_start_date: Optional[str] = None,
+            actual_start_date: Optional[str] = None,
+            planned_completion_date: Optional[str] = None,
+            actual_completion_date: Optional[str] = None,
     ) -> str:
         """Create a new task for a project.  """
         resp = run_sync(
             self._async_create_project_task(project_guid, display_name, identifier, description, status, phase, health,
-                                            start_date, planned_end_date, body)
+                                            start_date, planned_end_date, body, planned_start_date, actual_start_date,
+                                            planned_completion_date, actual_completion_date)
         )
         return resp
 

@@ -29,6 +29,7 @@ from pydantic import ValidationError
 
 import importlib
 from pyegeria.core._globals import NO_ELEMENTS_FOUND
+from pyegeria.core.async_runner import run_sync
 from pyegeria.core.config import settings
 from pyegeria.core._exceptions import PyegeriaException, print_validation_error
 from pyegeria.view.base_report_formats import (
@@ -227,6 +228,34 @@ def resolve_report_spec_function(func_decl: str):
         f"Report spec names analytic function {func_decl!r}, which is not a registered name; {instead}. "
         f"Report specs name analytic functions by registered name only (dotted paths are refused "
         f"from pyegeria 6.2.19).")
+
+
+class SpecNeedsNewerEgeria(ValueError):
+    """The spec needs a later Egeria than the platform runs (PY-49). Nothing was sent; the message is the words."""
+
+
+def _min_egeria_version_of(fmt: Any) -> Optional[str]:
+    """The `min_egeria_version` annotation of a spec as select_report_spec returns it (a dict), or None."""
+    values = ((fmt or {}).get("annotations") or {}).get("min_egeria_version") if isinstance(fmt, dict) else None
+    return values[0] if values else None
+
+
+def _needs_newer_egeria(report_name: Any, minimum: str, platform_url: str, version: str) -> SpecNeedsNewerEgeria:
+    from pyegeria.core.egeria_6_4_gate import needs_6_4_words
+    return SpecNeedsNewerEgeria(needs_6_4_words(f"Report spec '{report_name}'", platform_url, version))
+
+
+async def _async_refuse_if_platform_too_old(report_name: Any, fmt: Any, client: Any) -> None:
+    """Refuse a spec that needs Egeria 6.4 on a platform that does not carry it, before the find (PY-49).
+
+    An unreadable version is unknown, never "no": the find is sent."""
+    minimum = _min_egeria_version_of(fmt)
+    if minimum is None:
+        return
+    from pyegeria.core.egeria_6_4_gate import async_egeria_6_4_status
+    carries, version, url = await async_egeria_6_4_status(client)
+    if carries is False:
+        raise _needs_newer_egeria(report_name, minimum, url, version)
 
 
 def _plain_client(view_server: str, view_url: str, user: str, user_pass: str,
@@ -1005,6 +1034,7 @@ async def _async_run_report_impl(
 
 
     try:
+        await _async_refuse_if_platform_too_old(report_name, fmt, egeria_client)   # PY-49: before the find
         func = getattr(target_client, method_name) if method_name and hasattr(target_client, method_name) else None
         # Add logging to validate func
         msg = f"func={func}, method_name={method_name}, client_class={client_class}, target_client={type(target_client)}"
@@ -1933,6 +1963,7 @@ def _exec_report_spec_impl(
             client.set_bearer_token(token)
         else:
             client.create_egeria_bearer_token()
+        run_sync(_async_refuse_if_platform_too_old(format_set_name, fmt, client))   # PY-49: before the find
         func = getattr(client, method_name) if method_name and hasattr(client, method_name) else None
         if func is None:
             raise AttributeError(

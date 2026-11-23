@@ -23,7 +23,7 @@ from pyegeria.core.config import settings
 from pyegeria.core._exceptions import (
     PyegeriaAPIException, PyegeriaConnectionException, PyegeriaInvalidParameterException,
     PyegeriaUnknownException, PyegeriaClientException, PyegeriaTimeoutException,
-    PyegeriaNotFoundException, PyegeriaUnauthorizedException
+    PyegeriaNotFoundException, PyegeriaUnauthorizedException, PyegeriaBadRequestException
 )
 from pyegeria.core import _globals
 from pyegeria.core._globals import enable_ssl_check, max_paging_size
@@ -709,6 +709,9 @@ class BaseServerClient:
                     elif related_http_code in (401, 403) and _is_authorization_failure(json_response):
                         raise PyegeriaUnauthorizedException(
                             response, context, additional_info={**json_response, "userid": self.user_id})
+                    elif related_http_code == 400:
+                        # PY-58: Egeria refused the parameters (InvalidParameterException); not a server error
+                        raise PyegeriaBadRequestException(response, context, additional_info=json_response)
                     else:
                         raise PyegeriaAPIException(response, context, additional_info=json_response)
 

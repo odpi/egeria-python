@@ -65,8 +65,12 @@ SPEC_NOT_IN_FOLDER = "held in Egeria, not in this tool's folder"
 
 #: Egeria's message ids for "this element is in a zone you cannot see": an explicit read (403-020) and a
 #: filtered one (500-002, normally swallowed by the server, matched in case it surfaces).
-_NOT_VISIBLE_IDS = ("OPEN-METADATA-SECURITY-403-020", "OPEN-METADATA-SECURITY-500-002")
-_NOT_VISIBLE_WORDS = ("is not visible to user", "is not authorized to issue an operation read")
+_NOT_VISIBLE_IDS = ("OPEN-METADATA-SECURITY-403-020", "OPEN-METADATA-SECURITY-500-002",
+                    # PY-24: an element hidden by its anchor ("not visible to the caller ... [Anchors, Promise]",
+                    # UNAVAILABLE_ENTITY, HTTP 400) and a read refused by its anchor (UNAUTHORIZED_ANCHOR_ACCESS, 403)
+                    "OMAG-REPOSITORY-HANDLER-400-010", "OPEN-METADATA-SECURITY-403-007")
+_NOT_VISIBLE_WORDS = ("is not visible to user", "is not authorized to issue an operation read",
+                     "not visible to the caller")
 _MAX_CONCURRENT_READS = 6
 
 

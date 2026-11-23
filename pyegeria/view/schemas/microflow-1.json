@@ -59,6 +59,7 @@
                   "valid_values": {"type": ["array", "object"]},
                   "render": {"enum": ["text", "join", "bullets", "kv", "subtable", "count", "link"]},
                   "max_items": {"type": "integer", "minimum": 1}, "max_lines": {"type": "integer", "minimum": 1},
+                  "source": {"type": "string", "description": "PY-53: class:<A[,B]>[.<prop>] | rel:<end>.<prop> | of:<end>.<attr>; the column's value is related information"},
                   "related_label": {"enum": ["qualified_name", "display_name"],
                                     "description": "Column.label: the name a related element shows in text outputs; 'label' is the column's title"}}}
               ]}}

@@ -22,6 +22,7 @@ from httpx import Response
 from loguru import logger
 from pydantic import TypeAdapter, ValidationError
 
+from pyegeria.core._route_all import routes_all_to
 from pyegeria.core.request_filters import deprecated_names
 from pyegeria.core._base_server_client import BaseServerClient
 from pyegeria.core._exceptions import (
@@ -412,6 +413,9 @@ class ServerClient(BaseServerClient):
         Fetch valid values for a property. If found in cache, return from cache.
         Otherwise, fetch from Egeria and cache the result.
         Async version.
+
+        Returns the valid values: [] means Egeria answered and holds none. A failed lookup (timeout, connection,
+        HTTP or Egeria error) RAISES, and is not cached; it used to return [] and read as "no valid values" (PY-67).
         """
         cache_key = f"{property_name}:{type_name}"
         if cache_key in self._valid_value_cache:
@@ -429,11 +433,11 @@ class ServerClient(BaseServerClient):
         try:
             resp = await self._async_make_request("GET", url)
             elements = resp.json().get("elements", [])
-            self._valid_value_cache[cache_key] = elements
-            return elements
         except Exception as e:
             logger.error(f"Error fetching valid values for {property_name}: {e}")
-            return []
+            raise
+        self._valid_value_cache[cache_key] = elements
+        return elements
 
     def get_valid_metadata_values(
         self,
@@ -531,7 +535,7 @@ class ServerClient(BaseServerClient):
 
         body = {
             "class": "FindPropertyNamesProperties",
-            "openMetadataType": relationship_type,
+            "metadataElementTypeName": relationship_type,
             "propertyValue": property_value,
             "propertyNames": property_names,
             "effectiveTime": effective_time,
@@ -1025,7 +1029,7 @@ class ServerClient(BaseServerClient):
 
         url = (
             f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/classification-explorer/elements/{element_guid}"
-            f"/by-relationship/{relationship_type}/with-exact-property-value?startAtEnd={start_at_end}"
+            f"/by-relationship/{relationship_type}/with-exact-property-value?startingAtEnd={start_at_end}"
         )
 
         response: Response = await self._async_make_request(
@@ -2675,6 +2679,7 @@ class ServerClient(BaseServerClient):
 
     @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
+    @routes_all_to("_async_find_note_logs")
     async def _async_get_note_logs_by_name(
             self, name: str = "*",
             metadata_element_type: str | None = "NoteLog",
@@ -5529,7 +5534,8 @@ class ServerClient(BaseServerClient):
             self,
             element_guid: str,
             keyword: Optional[str] = None,
-            body: dict = None
+            body: dict = None,
+            description: Optional[str] = None,
     ) -> str:
         """
         Creates a search keyword and attaches it to an element.
@@ -5540,9 +5546,11 @@ class ServerClient(BaseServerClient):
         element_guid: str
             - the identity of the element to update
         keyword: str = None
-            - the name of the search keyword to add
+            - the name of the search keyword to add; sent as the keyword's displayName
         body: dict, optional
             - structure containing search string information - see Notes
+        description: str = None
+            - optional description of the keyword; ignored when body is given
 
         Returns
         -------
@@ -5559,7 +5567,7 @@ class ServerClient(BaseServerClient):
           "class" : "NewAttachmentRequestBody",
           "properties" : {
             "class" : "SearchKeywordProperties",
-            "keyword" : "myKeyword",
+            "displayName" : "myKeyword",
             "description" : "Add search keyword text here"
           }
         }
@@ -5570,7 +5578,8 @@ class ServerClient(BaseServerClient):
                 "class": "NewAttachmentRequestBody",
                 "properties": {
                     "class": "SearchKeywordProperties",
-                    "keyword": keyword
+                    "displayName": keyword,
+                    "description": description,
                 }
             }
         elif body is None:
@@ -5587,6 +5596,7 @@ class ServerClient(BaseServerClient):
             element_guid: str,
             keyword: Optional[str] = None,
             body: dict = None,
+            description: Optional[str] = None,
     ) -> str:
         """
         Creates a search keyword and attaches it to an element.
@@ -5597,9 +5607,11 @@ class ServerClient(BaseServerClient):
         element_guid: str
             - the identity of the element to update
         keyword: str = None
-            - the name of the search keyword to add
+            - the name of the search keyword to add; sent as the keyword's displayName
         body: dict, optional
             - structure containing search string information - see Notes
+        description: str = None
+            - optional description of the keyword; ignored when body is given
 
         Returns
         -------
@@ -5616,7 +5628,7 @@ class ServerClient(BaseServerClient):
           "class" : "NewAttachmentRequestBody",
           "properties" : {
             "class" : "SearchKeywordProperties",
-            "keyword" : "myKeyword",
+            "displayName" : "myKeyword",
             "description" : "Add search keyword text here"
           }
         }
@@ -5624,7 +5636,7 @@ class ServerClient(BaseServerClient):
         """
 
         response = run_sync(
-            self._async_add_search_keyword_to_element(element_guid, keyword, body)
+            self._async_add_search_keyword_to_element(element_guid, keyword, body, description)
         )
         return response
 
@@ -5661,7 +5673,7 @@ class ServerClient(BaseServerClient):
           "mergeUpdate": true,
           "properties" : {
             "class" : "SearchKeywordProperties",
-            "keyword" : "myKeyword",
+            "displayName" : "myKeyword",
             "description" : "Add search keyword text here"
           }
         }
@@ -5703,7 +5715,7 @@ class ServerClient(BaseServerClient):
            "mergeUpdate": true,
            "properties" : {
              "class" : "SearchKeywordProperties",
-             "keyword" : "myKeyword",
+             "displayName" : "myKeyword",
              "description" : "Add search keyword text here"
            }
          }
@@ -5799,7 +5811,7 @@ class ServerClient(BaseServerClient):
 
         """
 
-        url = f"{self.command_root}classification-explorer/search-keywords/{guid}"
+        url = f"{self.command_root}classification-explorer/search-keywords/{guid}/retrieve"
         response = await self._async_get_guid_request(url, "SearchKeyword", self._generate_feedback_output,
                                                       graph_query_depth=graph_query_depth,
                                                       output_format=output_format, report_spec=report_spec,
@@ -5844,6 +5856,7 @@ class ServerClient(BaseServerClient):
 
     @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
+    @routes_all_to("_async_find_search_keywords")
     async def _async_get_search_keyword_by_keyword(
             self,
             name: str,
@@ -6718,6 +6731,43 @@ class ServerClient(BaseServerClient):
                                output_format=output_format, report_spec=report_spec, **kwargs)
         return elements
 
+
+    #: PY-63: what each by-name style helper's key is called in the refusal, from the suffix of its name
+    _NAME_KEY_LABELS = {
+        "name": "name", "keyword": "keyword", "category": "category", "network_address": "network address",
+        "connector_provider_class_name": "connector provider class name",
+        "deployed_implementation_type": "deployed implementation type", "dep_impl_type": "deployed implementation type",
+        "type": "type", "analysis_step": "analysis step", "annotation_type": "annotation type",
+    }
+
+    def _name_request_refusal(self, helper: str) -> str:
+        """The words of PY-63's refusal: "<helper> needs a <key>; use <find> to list all"."""
+        import re as _re
+        bare = helper[len("_async_"):] if helper.startswith("_async_") else helper
+        suffix = bare.split("_by_", 1)[1] if "_by_" in bare else "name"
+        label = self._NAME_KEY_LABELS.get(suffix, suffix.replace("_", " "))
+        noun = _re.sub(r"^get_", "", bare.split("_by_", 1)[0])
+        finds = sorted(n for n in dir(type(self)) if n.startswith("find_") and not n.startswith("find__")
+                       and n[len("find_"):].startswith(noun.rstrip("s")[:6]))
+        use = f"; use {finds[0]} to list all" if finds else ""
+        return f"{bare} needs a {label}{use}. A null, empty or \"*\" {label} is refused by Egeria (HTTP 400)."
+
+    def _refuse_missing_name(self, filter_value: Any) -> None:
+        """PY-63: no Egeria by-name or by-type endpoint accepts a null name, and "*" is an exact match there, so a
+        None, "" or "*" is refused here, after the helper's own default, before anything is sent."""
+        if filter_value is not None and str(filter_value).strip() not in ("", "*"):
+            return
+        import sys as _sys
+        frame, helper = _sys._getframe(1), "the by-name call"
+        while frame is not None:
+            name = frame.f_code.co_name
+            if name.startswith("_async_get_") and name != "_async_get_name_request":
+                helper = name
+                break
+            frame = frame.f_back
+        raise PyegeriaInvalidParameterException(None, {"caller": helper},
+                                                {"reason": self._name_request_refusal(helper)})
+
     @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_get_name_request(self, url: str, _type: str, _gen_output: Callable[..., Any],
@@ -6731,8 +6781,16 @@ class ServerClient(BaseServerClient):
                                       start_from: int = 0, page_size: int = 0, output_format: str = "JSON",
                                       report_spec: Optional[str | dict] = None,
                                       body: Optional[dict | FilterRequestBody] = None,
-                                      max_mermaid_node_count=10, **kwargs) -> Any:
+                                      max_mermaid_node_count=10, name_required: bool = True, **kwargs) -> Any:
         report_spec = await self._async_refresh_report_spec(report_spec, kwargs)  # refresh_spec=True (RS-EGERIA-TIER)
+
+        if name_required:  # PY-63: `name_required=False` is for a helper whose key is in the URL path, not the filter
+            if isinstance(body, FilterRequestBody):
+                self._refuse_missing_name(body.filter_string)
+            elif isinstance(body, dict):
+                self._refuse_missing_name(body.get("filter", body.get("filter_string")))
+            else:
+                self._refuse_missing_name(filter_string)
 
         # ISSUE-131: this argument is spelt `metadata_element_type`, as in _async_find_request (6.2.28:
         # one name everywhere). The old `metadata_element_type_name` still works via @deprecated_names.

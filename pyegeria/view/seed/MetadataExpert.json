@@ -8,7 +8,7 @@
     "heading": "Enum-Def-DrE-Advanced Attributes",
     "description": "Auto-generated format for Enum Def (Create, Advanced).",
     "family": "MetadataExpert",
-    "target_type_name": "Enum Def",
+    "target_type_name": "OpenMetadataTypeDef",
     "aliases": ["Enum Def DrE Advanced"]
    },
    "microflow": {
@@ -41,7 +41,7 @@
     "heading": "Enum-Def-DrE-Basic Attributes",
     "description": "Auto-generated format for Enum Def (Create, Basic).",
     "family": "MetadataExpert",
-    "target_type_name": "Enum Def",
+    "target_type_name": "OpenMetadataTypeDef",
     "aliases": ["Enum Def DrE Basic"]
    },
    "microflow": {
@@ -74,7 +74,7 @@
     "heading": "Instance-DrE-Advanced Attributes",
     "description": "Auto-generated format for Instance (Create, Advanced).",
     "family": "MetadataExpert",
-    "target_type_name": "Instance",
+    "target_type_name": "Referenceable",
     "aliases": ["Instance DrE Advanced"]
    },
    "microflow": {
@@ -84,20 +84,18 @@
     "formatters": {
      "LIST": {
       "columns": [
-       {"field": "instance_type_name", "label": "Instance Type Name"},
-       {"field": "instance_properties", "label": "Instance Properties"},
-       {"field": "anchor_guid", "label": "Anchor GUID"},
-       {"field": "is_own_anchor", "label": "Is Own Anchor"},
-       {"field": "parent_guid", "label": "Parent GUID"}
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"}
       ]
      },
      "ALL": {
       "columns": [
-       {"field": "instance_type_name", "label": "Instance Type Name"},
-       {"field": "instance_properties", "label": "Instance Properties"},
-       {"field": "anchor_guid", "label": "Anchor GUID"},
-       {"field": "is_own_anchor", "label": "Is Own Anchor"},
-       {"field": "parent_guid", "label": "Parent GUID"}
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "guid", "label": "GUID"}
       ]
      }
     }
@@ -109,7 +107,7 @@
     "heading": "Instance-DrE-Basic Attributes",
     "description": "Auto-generated format for Instance (Create, Basic).",
     "family": "MetadataExpert",
-    "target_type_name": "Instance",
+    "target_type_name": "Referenceable",
     "aliases": ["Instance DrE Basic"]
    },
    "microflow": {
@@ -119,20 +117,18 @@
     "formatters": {
      "LIST": {
       "columns": [
-       {"field": "instance_type_name", "label": "Instance Type Name"},
-       {"field": "instance_properties", "label": "Instance Properties"},
-       {"field": "anchor_guid", "label": "Anchor GUID"},
-       {"field": "is_own_anchor", "label": "Is Own Anchor"},
-       {"field": "parent_guid", "label": "Parent GUID"}
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"}
       ]
      },
      "ALL": {
       "columns": [
-       {"field": "instance_type_name", "label": "Instance Type Name"},
-       {"field": "instance_properties", "label": "Instance Properties"},
-       {"field": "anchor_guid", "label": "Anchor GUID"},
-       {"field": "is_own_anchor", "label": "Is Own Anchor"},
-       {"field": "parent_guid", "label": "Parent GUID"}
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "guid", "label": "GUID"}
       ]
      }
     }
@@ -144,7 +140,7 @@
     "heading": "Type-Def-DrE-Advanced Attributes",
     "description": "Auto-generated format for Type Def (Create, Advanced).",
     "family": "MetadataExpert",
-    "target_type_name": "Type Def",
+    "target_type_name": "OpenMetadataTypeDef",
     "aliases": ["Type Def DrE Advanced"]
    },
    "microflow": {
@@ -191,7 +187,7 @@
     "heading": "Type-Def-DrE-Basic Attributes",
     "description": "Auto-generated format for Type Def (Create, Basic).",
     "family": "MetadataExpert",
-    "target_type_name": "Type Def",
+    "target_type_name": "OpenMetadataTypeDef",
     "aliases": ["Type Def DrE Basic"]
    },
    "microflow": {

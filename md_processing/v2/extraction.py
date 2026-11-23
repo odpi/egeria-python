@@ -172,6 +172,10 @@ class UniversalExtractor:
         if command_attributes is None:
             command_attributes = _load_command_attributes()
         known = {name.lower(): {a.lower() for a in attrs} for name, attrs in (command_attributes or {}).items()}
+        # A Create command is also written as Update (the dispatcher upserts), so "# Update Data Class" is a known name.
+        for name, attrs in list((command_attributes or {}).items()):
+            if name.startswith("Create "):
+                known.setdefault("update " + name[len("Create "):].lower(), {a.lower() for a in attrs})
 
         in_fence = False
         for number, line in enumerate(self.text.splitlines(), 1):

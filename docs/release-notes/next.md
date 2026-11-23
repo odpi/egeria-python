@@ -55,6 +55,23 @@ notes and are not repeated here.
     confirms the end.
   - See `docs/my_egeria_manual.md` and `docs/My-Egeria-Doc.md`.
 
+- **A report column can show related information** (PY-53, `Column.source`). `class:<Classification>[.<property>]`
+  shows a classification property (`class:Branch.scope`; `class:Campaign,Task` lists every one present),
+  `rel:<end>.<property>` a property of the relationship (`rel:projectTargets.label`), and `of:<end>.<attribute>` an
+  attribute of the related element. A relationship column and an element column of one end line up by position, a
+  related element without the value shows "—" in its place; when none has it, the cell is blank (never "None"). The validator refuses an unknown classification,
+  end or property. New in Projects (Project Kind, covering all six project-kind classifications; Target Labels) and the new File-Folders spec (Branch).
+- **A report spec can say it needs Egeria 6.4** (PY-49, annotation `min_egeria_version`). Run against an older
+  platform, it stops before sending anything, with "needs Egeria 6.4". Decisions and Data Values use it.
+- **New Platform-Report spec** (PY-49). `get_platform_report(..., output_format="DICT")` now shows the platform's URL,
+  origin, start time, build and public properties and the servers it hosts, each as "name (STATUS)". The Platforms
+  spec keeps only what the platform element carries.
+- **Catalog-Target shows the CatalogTarget relationship** (PY-53). Its columns come from the relationship of the
+  connector you asked about (catalog target name, metadata collection and source, connection name, permitted
+  synchronization, delete method, templates, configuration properties), and the target's own name and type come
+  from the target. The spec runs `get_catalog_targets`, which needs the integration connector's GUID and is now on
+  the report-spec allowlist.
+
 ## Planned for pyegeria 6.4 or the next release
 
 - **No default password, and no built-in identity outside a named demo profile.** pyegeria 6.4 or the next release drops the quickstart
@@ -93,6 +110,70 @@ notes and are not repeated here.
   None. Use it to show a count, rather than reading `end` yourself.
 
 
+- **Content status: four finds now return every status by default** (PY-27). `find_data_assets`,
+  `get_data_assets_by_category`, `find_authored_elements` and `find_authored_elements_by_category` used to limit
+  results to content status ACTIVE, which hid every element created without a content status (Egeria stores none
+  for those; on a demo server, 2026-11-17, 1,246 of 3,937 data assets). They now send no content-status filter, so Egeria
+  returns elements of any status, including those with none and DRAFT, DEPRECATED and REJECTED ones. **To get the
+  previous result, pass `content_status_list=["ACTIVE"]`.** A list you pass is sent unchanged.
+- **A by-name or by-type lookup refuses a missing name** (PY-63). A `None`, `""` or `"*"` name or key is refused
+  before anything is sent, with "<call> needs a name; use <find> to list all", because the Egeria 6.4 by-name and by-type
+  endpoints refuse it (each one checked answered HTTP 400; "*" there is an exact match). `hey_egeria ... deployed-servers` now
+  defaults to `View Server` instead of `*`.
+- **`find_digital_product_catalogs` lists catalogs** (PY-71). It sent no type filter and so listed every Collection
+  (a live `find("*")` returned Agreements). It now asks for `DigitalProductCatalog` unless you pass
+  `metadata_element_subtypes`, and it and `get_digital_product_catalogs_by_name` format `output_format="DICT"`, `"MD"` and
+  the others (they had no output generator and raised `TypeError`).
+- **Unity Catalog report specs take the caller's search and show real columns** (PY-56). The UC-Catalog-Element specs
+  no longer pin the search to "Unity Catalog Catalog::": the prefix is a `qualified_name_prefix` constraint
+  (`find_elements_by_property_value(..., qualified_name_prefix=...)`) ANDed with the search string you pass. The six
+  UC-*-Element specs no longer list the create-from-template inputs (`uc_catalog`, `uc_schema`, `uc_table`, `host_url`,
+  `port`, `network_address` ...), which are not properties of the element found and were always blank.
+- **29 by-name helpers answer "everything" with their find** (PY-64). `get_<x>_by_name("*")` (or no name) runs
+  `find_<x>("*")` where a live check on Egeria 6.4 showed both return the same element type and shape and have the
+  same `output_format` and `report_spec` defaults: note logs, search keywords, actor profiles, roles, user identities,
+  contribution records, perspectives, contact details, assets, software capabilities, collections, glossaries,
+  communities, locations, subject areas, business capabilities, valid value definitions, statements of applicability,
+  connections, connector types, endpoints, data structures, data fields, data value specifications, external
+  references, external identifiers, governance definitions, schema attributes and design patterns. The rest keep the
+  PY-63 refusal (their find returned nothing, timed out, differs in defaults, or was not proven).
+  When `*` is routed to a find, the find's `page_size` (100) applies unless you pass one; the helpers' own default
+  is 0 (or 500 for design patterns). A real name given as `filter_string=` or another name keyword is never routed.
+- **Egeria 400 errors are not labelled server errors** (PY-58). A request Egeria refuses (HTTP 400) raises
+  `PyegeriaBadRequestException`, a `PyegeriaInvalidParameterException` (and still a `PyegeriaAPIException`), with
+  Egeria's own message and message id, instead of "SERVER_ERROR_500". `get_platforms_by_name("*")` returns the
+  platforms of the default type ("OMAG Server Platform").
+- **Generated report specs show only columns a find can fill, and lead with name, qualified name and guid**
+  (PY-49, PY-62). Columns that no find ever filled are gone (about 1,500 of 8,600), the file inputs of the Secrets
+  Store Element spec among them (PY-57); every generated spec shows display name, qualified name and guid where its
+  type has them (34 specs gained columns). The Unity Catalog specs now target real types (Namespace, SoftwareServer,
+  DeployedDatabaseSchema, ...).
+- **The Subscription Type spec and Dr.Egeria command are removed** (PY-49): Egeria has no such type. The hand-written
+  specs were checked against the 6.4 type tables; the columns that could not be checked are in
+  `docs/audits/PY-49-q7-unverified-columns.md`.
+- **The registered-service "URL Marker" column fills** (PY-49): it read the wrong key and was always empty.
+
+
+- **Data Scope carries every field Egeria 6.4 defines, and Description is removed from it** (PY-25).
+  **Behaviour change:** `Classify Data Scope` and `Update Data Scope` no longer have a **Description** attribute.
+  It was sent as `additionalProperties` (a text into a map) and Data Scope has no description, so it never worked;
+  use **Additional Properties** for key/value pairs. The commands now take the collection, validity and coverage start
+  and end times, **Min/Max Longitude, Latitude and Height**, **Scope Elements**, Effective From and To, and Extended
+  Properties, and send each under its Egeria name. **The six bounds must be numbers** (`-10.5`, `35`): text that isn't
+  a number is refused before anything is sent, and they go to Egeria as numbers. `Create Data Lens` gains the same
+  validity and coverage periods and sends its bounds as numbers too.
+- **A failed read is not "none"** (PY-22). **Behaviour changes:** initiating a survey, with no action target name
+  given, now stops with "the action targets of survey X could not be read ... pass action_target_name" when it cannot
+  read them from the survey type (it used to guess `serverToSurvey`); and `karma_leaderboard` returns `None`
+  (unknown), not `[]`, when it could not read every contribution record, so a caller shows "couldn't be read" rather
+  than "no contributors". `[]` now means the records were read in full and nobody qualifies.
+- **Exceptions say when Egeria hid the element** (PY-24). `PyegeriaException.not_visible` is True when Egeria refused
+  a read because the element is hidden from the caller (`OMAG-REPOSITORY-HANDLER-400-010`,
+  `OPEN-METADATA-SECURITY-403-007`, `OPEN-METADATA-SECURITY-403-020`), and the API, bad-request and not-found
+  exceptions carry `egeria_message_id`, as the unauthorized one already did.
+- **Reading a search keyword by GUID works** (PY-28). `get_search_keyword_by_guid` posts to
+  `.../search-keywords/{guid}/retrieve`; the old path answered 404.
+
 ## Fixes
 
 - **Authoring validation is strict** (PY-15). A spec's find method must return its target type (or a super type),
@@ -101,6 +182,28 @@ notes and are not repeated here.
   key is refused by name. The old loose check remains only as `validate(..., legacy=True)`, with a warning per key.
 - **The deployment-status fallback matches Egeria** (PY-21). It offered `REJECTED_FOR_DEPLOYMENT`; Egeria's value is
   `REJECTED`.
+- **Dr.Egeria Certification and License send the right fields** (PY-43, PY-50). Link and Update send `coverageStart` /
+  `coverageEnd` (they sent `startDate` / `endDate`, which Egeria dropped). Link and Update Certification refuse
+  Entitlements, Obligations and Restrictions with words naming the Certification Type, where they belong, instead of
+  dropping them silently, and the command templates no longer offer them.
+- **A Dr.Egeria command that needs Egeria 6.4 fails on an older platform** (PY-48). It was reported as a pass with
+  nothing written. The runner now counts only `success`, `deferred` and `read` as succeeded; any other status, or none,
+  is a failure with the status in the words.
+- **`add_search_keyword_to_element` creates a keyword with its text** (PY-41). It sent `keyword`, which Egeria ignores;
+  it now sends `displayName` (and the description, if given). `FindPropertyNames` sends `metadataElementTypeName`
+  (PY-44), so the relationship type is applied.
+- **Markdown output no longer prints "None" for an unset property** (PY-39). In FORM and MD the heading stays and the
+  body is blank; in REPORT and MERMAID the property is left out.
+- **The `start_date` / `planned_end_date` rename warning is shown** (PY-42): it is a `FutureWarning`, not a
+  `DeprecationWarning` that Python hides outside `__main__`.
+- **Dr.Egeria accepts every key a Properties class reads** (PY-45, PY-46). The properties table follows public
+  setters through the whole superclass chain (for example `ResourceList`'s `resourceUse` and `label`, and the query
+  options of `FindPropertyNames`), and strict validation checks a spec's columns against the Egeria type name
+  (`License Type` is `LicenseType`).
+- **`validate_compact_specs` reports 0 errors, and a regeneration is stable** (PY-51, PY-52). It accepts the Egeria 6.4
+  type names, `generated_format_sets.json` leaves out empty optional fields and is current, and a template generated
+  with no Egeria connection says "valid values not read" instead of dropping the line.
+- **Two unparsable deprecated scripts are removed** (PY-36); a test parses every file under `commands/`.
 
 ## Fixes (drafts)
 

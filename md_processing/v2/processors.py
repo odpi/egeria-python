@@ -1485,6 +1485,25 @@ class AsyncBaseCommandProcessor(ABC):
 
         deferred = bool(self.parsed_output.get("deferred")) and not self.context.get("final_round")
 
+        # PY-48: a Create/Update that wrote nothing, or whose element cannot be named, is not a success.
+        unconfirmed = self._unconfirmed_write(output, guid, deferred)
+        if unconfirmed:
+            logger.error(f"{self.command.verb} {self.command.object_type}: {unconfirmed}")
+            return {
+                "output": self.command.raw_block,
+                "analysis": analysis,
+                "status": "failure",
+                "message": f"Execution failed: {unconfirmed}",
+                "verb": self.command.verb,
+                "object_type": self.canonical_object_type,
+                "markdown_object_type": self.markdown_object_type,
+                "display_name": self.parsed_output.get("display_name"),
+                "qualified_name": self.parsed_output.get("qualified_name"),
+                "found": self.parsed_output.get("exists", False),
+                "warnings": self.parsed_output.get("warnings", []),
+                "errors": [unconfirmed],
+            }
+
         if deferred and output == self.command.raw_block:
             # Nothing was actually applied yet (a standalone-flavor command's own
             # duplicate resolution deferred without going through apply_changes()'s
@@ -1521,6 +1540,27 @@ class AsyncBaseCommandProcessor(ABC):
             "found": self.parsed_output.get("exists", False),
             "warnings": self.parsed_output.get("warnings", [])
         }
+
+    #: verbs whose command writes an element and so must be able to name it afterwards
+    WRITE_VERBS = ("Create", "Define", "Register", "Update", "Modify", "Upsert")
+
+    def _unconfirmed_write(self, output: Any, guid: Optional[str], deferred: bool) -> str:
+        """Words saying why a Create/Update-type command that ran is not confirmed as written, or "" (PY-48).
+
+        Two cases: the processor handed back the block it was given (or nothing), so it applied nothing; or it came
+        back with no element GUID (None or empty), so nothing it did can be named or read back. A deferred command
+        has not run yet and a local-only one (a Dashboard Sheet with no Egeria connection) has no Egeria element.
+        """
+        if self.command.verb not in self.WRITE_VERBS or deferred or self.parsed_output.get("local_only"):
+            return ""
+        what = f"{self.command.verb} {self.command.object_type}"
+        handed_back_the_block = output == self.command.raw_block and not self.parsed_output.get("render_failed")
+        if not output or handed_back_the_block:
+            return f"{what} applied nothing: no change was made to Egeria, so it is not reported as done."
+        if not guid:
+            return (f"{what} returned no GUID, so Egeria's element cannot be named or read back and the write is "
+                    f"not confirmed.")
+        return ""
 
     def derive_qualified_name(self, attributes: Optional[Dict[str, Any]] = None) -> str:
         """
@@ -1628,9 +1668,11 @@ class AsyncBaseCommandProcessor(ABC):
             element = await self.fetch_element(guid)
             if not element or isinstance(element, str):
                 logger.warning(f"Could not fetch element {guid} for rendering.")
+                self.parsed_output["render_failed"] = True  # the write happened; only the read-back did not
                 return self.command.raw_block
         except Exception as e:
             logger.error(f"Error fetching element for rendering: {e}")
+            self.parsed_output["render_failed"] = True
             return self.command.raw_block
 
         # 3. Select the report spec
@@ -1660,6 +1702,7 @@ class AsyncBaseCommandProcessor(ABC):
             return markdown
         except Exception as e:
             logger.error(f"Error generating markdown: {e}")
+            self.parsed_output["render_failed"] = True
             return self.command.raw_block
 
     async def fetch_element(self, guid: str, _max_timeout_retries: int = 2) -> Optional[Dict[str, Any]]:

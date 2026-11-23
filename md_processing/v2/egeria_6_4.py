@@ -3,7 +3,7 @@
 """Shared pieces of the Dr.Egeria commands for the Egeria 6.4 additions (odpi/egeria#9463).
 
 - **The version gate.** Every 6.4 command asks pyegeria.core.egeria_6_4_gate first. On an Egeria before 6.4 the
-  command is refused with the "needs Egeria 6.4" words, as a WARNING row: never an error, never "none", and
+  command is refused with the "needs Egeria 6.4" words, as a FAILURE row (PY-48: it was not run, so it is never counted as succeeded), and
   nothing is sent. When the platform's version can't be read, the command runs, and a bare HTTP 404 from its
   6.4 request is turned into the same words.
 - **Bodies.** The request bodies are built here from the parsed attributes, then sent through the pyegeria 6.4
@@ -140,8 +140,10 @@ class Egeria64Processor(AsyncBaseCommandProcessor):
         parsed = self.parsed_output or {}
         return {
             "output": f"{self.command.raw_block}\n\n> ⚠️ **Needs Egeria 6.4**\n> - {words}\n",
-            "status": "warning",
+            # PY-48: the command was not run, so it is a failure (never "warning", which consumers counted as success)
+            "status": "failure",
             "message": words,
+            "errors": [words],
             "verb": self.command.verb,
             "object_type": self.canonical_object_type,
             "markdown_object_type": self.markdown_object_type,

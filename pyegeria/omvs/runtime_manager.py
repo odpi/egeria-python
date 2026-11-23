@@ -2110,6 +2110,10 @@ class RuntimeManager(ServerClient):
         filter_string : str, opt
             Filter specifies the display name or qualified name of the platforms to return information for. If the
             value is None, we will default to the default_platform_name that comes from the core content pack.
+            "*" (or no name at all, when there is no default) means all platforms OF THE DEFAULT TYPE ("OMAG Server
+            Platform"), not every platform of every type: the by-name endpoint takes an exact name only (a null name
+            is refused with HTTP 400), so that case is answered by the by-deployed-implementation-type lookup, which
+            always sends that default type (PY-58, PY-63).
 
         start_from : int, optional
            The index from which to start fetching the engine actions. Default is 0.
@@ -2142,6 +2146,14 @@ class RuntimeManager(ServerClient):
 
         if filter_string is None:
             filter_string = self.default_platform_name
+
+        if not filter_string or filter_string == "*":
+            # PY-58: /platforms/by-name needs a name (an exact match; "*" is not a wildcard there, and an absent
+            # filter is refused: OPEN-METADATA-400-004, "The name passed on the name parameter ... is null"), so
+            # "all platforms" is the by-type lookup with no filter, which returns every platform.
+            return await self._async_get_platforms_by_type(
+                filter_string=None, start_from=start_from, page_size=page_size, output_format=output_format,
+                report_spec=report_spec, body=body, **kwargs)
 
         url = (
             f"{self.runtime_command_root}/platforms/by-name"
@@ -2428,6 +2440,8 @@ class RuntimeManager(ServerClient):
 
         if output_format != 'JSON':  # return a simplified markdown representation
             logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
+            if isinstance(elements, dict) and platform_guid and "guid" not in elements:
+                elements = {**elements, "guid": platform_guid}  # the report carries no guid of its own
             return self._generate_platform_report_output(elements, "None", "Platform-Report", output_format, report_spec)
         return elements
 
@@ -3098,23 +3112,36 @@ class RuntimeManager(ServerClient):
         col_data = populate_columns_from_properties(element, columns_struct)
         columns_list = col_data.get("formats", {}).get("attributes", [])
 
-        if "platformUrlRoot" in element:
-             for column in columns_list:
+        if isinstance(element, dict) and ("platformURLRoot" in element or "platformUrlRoot" in element):
+            # The platform REPORT (get_platform_report): the response spells it platformURLRoot, and lists the
+            # servers under the lowercase key omagservers. PY-49 row 9.
+            def _raw(*names):
+                for name in names:
+                    if name in element:
+                        return element[name]
+                return None
+
+            servers = _raw("omagservers", "omagServers") or []
+            native_servers = [{k: s.get(k) for k in ("serverName", "serverType", "serverActiveStatus")}
+                              for s in servers if isinstance(s, dict)]
+            servers_text = ", ".join(
+                f"{s.get('serverName')} ({s.get('serverActiveStatus')})" if s.get("serverActiveStatus")
+                else str(s.get("serverName")) for s in native_servers)
+            values = {
+                "platform_url_root": _raw("platformURLRoot", "platformUrlRoot"),
+                "platform_origin": _raw("platformOrigin"),
+                "platform_start_time": _raw("platformStartTime", "startTime"),
+                "platform_build_properties": _raw("platformBuildProperties"),
+                "platform_public_properties": _raw("platformPublicProperties"),
+                "guid": _raw("guid"),
+            }
+            for column in columns_list:
                 key = column.get('key')
-                if key == 'platform_url_root':
-                    column['value'] = element.get('platformUrlRoot')
-                elif key == 'version':
-                    column['value'] = element.get('version')
-                elif key == 'platform_origin':
-                    column['value'] = element.get('platformOrigin')
-                elif key == 'platform_start_time':
-                    column['value'] = element.get('startTime')
-                elif key == 'platform_build_properties':
-                    column['value'] = element.get('platformBuildProperties')
-                elif key == 'omagservers':
-                    column['value'] = element.get('omagservers', element.get('omagServers'))
-                elif key == 'guid':
-                    column['value'] = element.get('guid', element.get('elementHeader', {}).get('guid', ''))
+                if key == 'omag_servers':
+                    column['native'] = native_servers
+                    column['value'] = servers_text
+                elif key in values and values[key] is not None:
+                    column['value'] = values[key]
         else:
             header_props = _extract_referenceable_properties(element)
             for column in columns_list:

@@ -161,7 +161,7 @@ def test_rel_elements_reads_current_egeria_relationship_keys():
     assert rels["parent_guids"] == ["pf"]
     assert rels["assigned_meanings_guids"] == ["term"]
     assert rels["data_class_guids"] == ["dc"]
-    assert rels["nested_data_class_guids"] == ["pdc"]
+    assert rels["containing_data_class_guids"] == ["pdc"]  # PY-49: renamed from nested_data_class_*
     assert rels["specialized_data_value_spec_guids"] == ["sup"]
 
 

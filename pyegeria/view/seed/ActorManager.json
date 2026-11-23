@@ -126,7 +126,7 @@
     "heading": "Actor Profile",
     "description": "Actor Profile Information",
     "family": "ActorManager",
-    "target_type_name": "Actor Profile",
+    "target_type_name": "ActorRole",
     "aliases": ["Actor Roles"]
    },
    "microflow": {
@@ -143,7 +143,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Actor Profile",
+      "type": "ActorRole",
       "function": "ActorManager.find_actor_roles",
       "params": {"search_string": "$search_string"}
      }

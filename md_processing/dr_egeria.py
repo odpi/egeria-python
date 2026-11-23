@@ -466,7 +466,6 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
         reg(f"{_verb} Instance", InstanceClassificationProcessor)
 
     # Digital Products: subscription types and ODCS/ODPS Bitol documents (product_manager.py)
-    reg("Create Subscription Type", SubscriptionTypeProcessor)
     for _bitol_verb in ("Import", "Publish"):
         for _bitol_doc in ("Data Contract", "Data Product"):
             reg(f"{_bitol_verb} {_bitol_doc}", BitolDocumentProcessor)

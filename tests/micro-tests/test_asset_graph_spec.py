@@ -85,6 +85,11 @@ def offline_asset_catalog(monkeypatch):
 
     monkeypatch.setattr(fse, "_resolve_client_and_method", _resolve)
     monkeypatch.setattr(EgeriaTech, "__init__", _no_egeria_tech)
+    # spec_resolver caches what it resolved; with EgeriaTech's constructor patched out, a later resolve_all() would
+    # cache "unknown" for the specs that build a client, and a test run after this one would read it. A private
+    # cache for this test; monkeypatch puts the real one back.
+    import pyegeria.view.spec_resolver as spec_resolver
+    monkeypatch.setattr(spec_resolver, "_CACHE", {})
     monkeypatch.setattr(AssetCatalog, "__init__", _init)
     monkeypatch.setattr(AssetCatalog, "_async_make_request", _request)
     monkeypatch.setattr(AssetCatalog, "create_egeria_bearer_token", lambda self, *a, **k: "token")

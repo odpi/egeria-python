@@ -12,6 +12,7 @@ import asyncio
 from loguru import logger
 
 from typing import Unpack
+from pyegeria.core._route_all import routes_all_to
 from pyegeria.core.request_filters import GetFilters, ListFilters, SearchFilters
 from pyegeria.core._server_client import max_paging_size, ServerClient
 from pyegeria.view.base_report_formats import select_report_spec, get_report_spec_match
@@ -1170,6 +1171,7 @@ class DataDesigner(ServerClient):
         return response
 
     @dynamic_catch
+    @routes_all_to("_async_find_data_structures")
     async def _async_get_data_structures_by_name(self, name: Optional[str] = None, classification_names: Optional[list[str]] = None,
                                                  body: Optional[dict | FilterRequestBody] = None, start_from: int = 0,
                                                  page_size: int = 0,
@@ -1514,9 +1516,9 @@ class DataDesigner(ServerClient):
         member_data_field_names = []
         member_data_field_qnames = []
 
-        nested_data_classes_guids = []
-        nested_data_classes_names = []
-        nested_data_classes_qnames = []
+        containing_data_classes_guids = []
+        containing_data_classes_names = []
+        containing_data_classes_qnames = []
 
         specialized_data_classes_guids = []
         specialized_data_classes_names = []
@@ -1589,9 +1591,10 @@ class DataDesigner(ServerClient):
         collect(related("assignedDataValueSpecifications"),
                 assigned_data_value_specs_guids, assigned_data_value_specs_names, assigned_data_value_specs_qnames)
 
-        # data classes this data class is part of (DataClassComposition, parent side)
-        collect(related("partOfDataClasses", "nestedDataClasses"),
-                nested_data_classes_guids, nested_data_classes_names, nested_data_classes_qnames)
+        # data classes this data class is part of: the containing class (DataClassComposition, end 1 is the whole).
+        # Filled into the columns `containing_data_class` (PY-49)
+        collect(related("partOfDataClasses"),
+                containing_data_classes_guids, containing_data_classes_names, containing_data_classes_qnames)
 
         # legacy key only -- Egeria no longer has a separate data class specialization relationship;
         # specialization is DataValueHierarchy (below)
@@ -1599,7 +1602,7 @@ class DataDesigner(ServerClient):
                 specialized_data_classes_guids, specialized_data_classes_names, specialized_data_classes_qnames)
 
         # the more general data value specification this one specializes (DataValueHierarchy, parent side)
-        collect(related("superDataValueSpecification", "specializedDataValueSpecifications"),
+        collect(related("superDataValueSpecification"),
                 specialized_data_value_specs_guids, specialized_data_value_specs_names,
                 specialized_data_value_specs_qnames)
 
@@ -1622,9 +1625,9 @@ class DataDesigner(ServerClient):
             "data_class_names": data_class_names,
             "data_class_qnames": data_class_qnames,
 
-            "nested_data_class_guids": nested_data_classes_guids,
-            "nested_data_class_names": nested_data_classes_names,
-            "nested_data_class_qnames": nested_data_classes_qnames,
+            "containing_data_class_guids": containing_data_classes_guids,
+            "containing_data_class_names": containing_data_classes_names,
+            "containing_data_class": containing_data_classes_qnames,
 
             "specialized_data_class_guids": specialized_data_classes_guids,
             "specialized_data_class_names": specialized_data_classes_names,
@@ -1637,6 +1640,8 @@ class DataDesigner(ServerClient):
             "specialized_data_value_spec_guids": specialized_data_value_specs_guids,
             "specialized_data_value_spec_names": specialized_data_value_specs_names,
             "specialized_data_value_spec_qnames": specialized_data_value_specs_qnames,
+            # the column `specializes_data_class`: the one more general specification (DataValueHierarchy)
+            "specializes_data_class": specialized_data_value_specs_qnames,
 
             "external_references_guids": external_references_guids,
             "external_references_names": external_references_names,
@@ -2952,6 +2957,7 @@ class DataDesigner(ServerClient):
         return response
 
     @dynamic_catch
+    @routes_all_to("_async_find_data_fields")
     async def _async_get_data_fields_by_name(self, filter_string: str | None = None, classification_names: Optional[list[str]] = None,
                                              body: Optional[dict | FilterRequestBody] = None, start_from: int = 0,
                                              page_size: int = 0,
@@ -3097,6 +3103,7 @@ class DataDesigner(ServerClient):
             self._async_get_data_field_by_guid(guid, element_type, body, graph_query_depth, output_format, report_spec, **kwargs))
 
     @dynamic_catch
+    @routes_all_to("_async_find_data_value_specifications")
     async def _async_get_data_value_specifications_by_name(self, filter_string: str | None = None,
                                                            classification_names: Optional[list[str]] = None,
                                                            body: Optional[dict | FilterRequestBody] = None, start_from: int = 0,

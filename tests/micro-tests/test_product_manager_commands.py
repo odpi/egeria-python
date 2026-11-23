@@ -1,6 +1,6 @@
 """
 Digital Products family commands (md_processing/v2/product_manager.py) through the real
-dispatcher with a fake client: Create Subscription Type, Import / Publish Data Contract and
+dispatcher with a fake client: Import / Publish Data Contract and
 Data Product -- plus the extractor recognising the new Import / Publish verbs.
 """
 from typing import Any, Dict, List
@@ -71,74 +71,8 @@ async def _run(command: DrECommand, context=None, **client_kwargs):
     return results[0], client.product_manager.calls
 
 
-# --- Create Subscription Type ----------------------------------------------------------------
-
-@pytest.mark.asyncio
-async def test_one_time_subscription_type_with_defaults_left_to_egeria():
-    result, calls = await _run(_cmd("Create", "Subscription Type", {
-        "Digital Product": "Hospital Data", "Subscription Kind": "ONE_TIME",
-        "Display Name": "Evaluation subscription"}))
-
-    assert result["status"] == "success", result
-    [(kind, guid, body)] = calls
-    assert (kind, guid) == ("one-time", "product-1")
-    assert body == {"displayName": "Evaluation subscription"}   # nothing unset is sent
-    assert "gap-one-time" in result["output"]
-
-
-@pytest.mark.asyncio
-async def test_periodic_subscription_type_sends_interval_in_minutes_as_int():
-    result, calls = await _run(_cmd("Create", "Subscription Type", {
-        "Digital Product": "Hospital Data", "Subscription Kind": "periodic",   # case-insensitive
-        "Display Name": "Daily refresh", "Identifier": "DAILY-REFRESH-SUBSCRIPTION",
-        "Minimum Notification Interval": "1440", "Subscription Manager": "Baudot Manager"}))
-
-    assert result["status"] == "success", result
-    [(kind, guid, body)] = calls
-    assert kind == "periodic"
-    assert body["minimumNotificationInterval"] == 1440 and isinstance(body["minimumNotificationInterval"], int)
-    assert body["identifier"] == "DAILY-REFRESH-SUBSCRIPTION"
-    assert body["subscriptionManagerGUID"] == "manager-1"
-
-
-@pytest.mark.asyncio
-async def test_ongoing_update_subscription_type_sends_monitored_resource_guids():
-    # Uses the attribute's old label, "Subscription Notification Interval", which stays an alternate
-    # label of "Minimum Notification Interval" so existing documents still parse.
-    result, calls = await _run(_cmd("Create", "Subscription Type", {
-        "Digital Product": "Hospital Data", "Subscription Kind": "ONGOING_UPDATE",
-        "Display Name": "Ongoing", "Subscription Notification Interval": "10",
-        "Monitored Resources": "Hospital Asset, Hospital Feed"}))
-
-    assert result["status"] == "success", result
-    [(kind, guid, body)] = calls
-    assert kind == "ongoing-update"
-    assert body["monitoredResourceGUIDs"] == ["asset-1", "asset-2"]
-    assert body["minimumNotificationInterval"] == 10
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize("attributes, message", [
-    ({"Subscription Kind": "PERIODIC"}, "Minimum Notification Interval"),
-    ({"Subscription Kind": "ONGOING_UPDATE", "Minimum Notification Interval": "5"}, "Monitored Resources"),
-    ({"Subscription Kind": "HOURLY"}, "Subscription Kind"),
-])
-async def test_subscription_type_rejects_incomplete_requests_before_calling_egeria(attributes, message):
-    result, calls = await _run(_cmd("Create", "Subscription Type", {
-        "Digital Product": "Hospital Data", "Display Name": "x", **attributes}))
-
-    assert result["status"] != "success"
-    assert message in (result.get("message", "") + result.get("analysis", ""))
-    assert calls == []
-
-
-@pytest.mark.asyncio
-async def test_subscription_type_needs_an_existing_product():
-    result, calls = await _run(_cmd("Create", "Subscription Type", {
-        "Digital Product": "No Such Product", "Subscription Kind": "ONE_TIME", "Display Name": "x"}))
-
-    assert result["status"] != "success"
-    assert calls == []
+# PY-49: the Create Subscription Type command no longer exists (Egeria 6.4 has no subscription type), so its tests
+# are gone with it.
 
 
 # --- Import / Publish documents --------------------------------------------------------------
@@ -207,7 +141,6 @@ async def test_absolute_document_path_is_used_as_given(tmp_path):
     ("## Import Data Product", "Import", "Data Product"),
     ("## Publish Data Contract", "Publish", "Data Contract"),
     ("## Publish Data Product", "Publish", "Data Product"),
-    ("## Create Subscription Type", "Create", "Subscription Type"),
 ])
 def test_new_headings_are_extracted_as_commands(heading, verb, object_type):
     text = f"\n___\n\n{heading}\n\n### Document File\nc.yaml\n\n___\n"

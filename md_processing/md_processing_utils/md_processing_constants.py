@@ -561,7 +561,7 @@ def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
             "examples": "APPROVED",
             "default_value": "ACTIVE",
             "valid_values": "",
-            "property_name": "Status",
+            "property_name": "status",
             "existing_element": "",
             "description": "The status of the digital product. There is a list of valid values that this conforms to.",
             "generated": False,

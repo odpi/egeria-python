@@ -311,7 +311,7 @@
     "heading": "Display Help for Dr.Egeria Commands",
     "description": "Designed for help output of Dr.Egeria commands.",
     "family": "General",
-    "target_type_name": "Term",
+    "target_type_name": "GlossaryTerm",
     "aliases": ["Help Terms"],
     "annotations": {
      "wikilinks": ["[[Help]]", "[[Dr.Egeria]]"]
@@ -335,7 +335,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Term",
+      "type": "GlossaryTerm",
       "function": "GlossaryManager.find_glossary_terms",
       "params": {"search_string": "$search_string"}
      }

@@ -82,6 +82,26 @@ __all__ = [
     'load_format_sets_from_json',
 ]
 
+# Optional fields a file leaves out while they are empty. Loading reads an absent key as the null default, so
+# the file round-trips, and a spec that does not use a field is not rewritten when the field is added (PY-51).
+_OMIT_WHEN_NONE_ON_FORMAT = ("document",)
+_OMIT_WHEN_NONE_ON_COLUMN = ("render", "max_items", "max_lines", "label")
+
+
+def _omit_empty_optional_fields(serializable: Dict[str, dict]) -> None:
+    """Drop the empty optional keys from every format and column of the dicts `FormatSet.dict()` made."""
+    for fs in serializable.values():
+        for fmt in fs.get("formats") or []:
+            for key in _OMIT_WHEN_NONE_ON_FORMAT:
+                if key in fmt and fmt[key] is None:
+                    del fmt[key]
+            for rows in ("attributes", "columns"):
+                for col in fmt.get(rows) or []:
+                    for key in _OMIT_WHEN_NONE_ON_COLUMN:
+                        if key in col and col[key] is None:
+                            del col[key]
+
+
 def save_format_sets_to_json(format_sets: Dict[str, 'FormatSet'], file_path: str) -> None:
     """
     Save format sets to a JSON file.
@@ -92,6 +112,7 @@ def save_format_sets_to_json(format_sets: Dict[str, 'FormatSet'], file_path: str
     """
     # Convert FormatSet objects to dictionaries
     serializable_dict = {key: value.dict() for key, value in format_sets.items()}
+    _omit_empty_optional_fields(serializable_dict)
     
     # Create directory if it doesn't exist
     os.makedirs(os.path.dirname(os.path.abspath(file_path)), exist_ok=True)
@@ -152,6 +173,9 @@ class Column(BaseModel):
         max_lines: Lines a long text cell shows in web-oriented outputs (effective default 3).
         label: Which name a related element shows in text outputs: "qualified_name" (the default,
             today's text) or "display_name". Set per column, never globally (the F7 read-back).
+        source: PY-53: where the value comes from when it is related information rather than a property of
+            the element: `class:<A[,B]>[.<property>]`, `rel:<end>.<property>` or `of:<end>.<attribute>`
+            (see pyegeria/view/column_source.py). `key` stays the column's own name.
     """
     name: str
     key: str
@@ -163,6 +187,18 @@ class Column(BaseModel):
     max_items: Optional[int] = Field(default=None, ge=1)
     max_lines: Optional[int] = Field(default=None, ge=1)
     label: Optional[Literal["qualified_name", "display_name"]] = None
+    source: Optional[str] = None
+
+    @field_validator("source")
+    @classmethod
+    def _source_grammar(cls, v):
+        if v is not None:
+            from pyegeria.view.column_source import parse_source, SourceError
+            try:
+                parse_source(v)
+            except SourceError as exc:
+                raise ValueError(str(exc))
+        return v
 
 # New preferred alias for Column
 Attribute = Column
@@ -436,6 +472,11 @@ class QuestionSpec(BaseModel):
     perspectives: List[str] = Field(default_factory=list)
     questions: List[str] = Field(default_factory=list)
 
+#: The annotation that holds a spec's minimum Egeria version, and the versions the runner can check (PY-49).
+MIN_EGERIA_VERSION_KEY = "min_egeria_version"
+CHECKABLE_MIN_EGERIA_VERSIONS = ("6.4",)
+
+
 class FormatSet(BaseModel):
     """
     Represents a complete format set with target_type, heading, description, aliases, annotations, formats, and actions.
@@ -485,6 +526,24 @@ class FormatSet(BaseModel):
     def target_type_name(self) -> Optional[str]:
         """Egeria's name for `target_type` (the ReportSpec property targetTypeName)."""
         return self.target_type
+
+    @property
+    def min_egeria_version(self) -> Optional[str]:
+        """The Egeria version a platform needs for this spec to run (PY-49), or None.
+
+        Held in the annotation `min_egeria_version`, so the seed and the Egeria-held envelope carry it unchanged. Only
+        "6.4" can be checked today (pyegeria.core.egeria_6_4_gate); the report runner refuses the spec, in words, on a
+        platform that does not carry the 6.4 additions."""
+        values = self.annotations.get(MIN_EGERIA_VERSION_KEY) or []
+        return values[0] if values else None
+
+    @model_validator(mode="after")
+    def _min_egeria_version_is_checkable(self):
+        version = self.min_egeria_version
+        if version is not None and version not in CHECKABLE_MIN_EGERIA_VERSIONS:
+            raise ValueError(f"Report spec '{self.heading}': min_egeria_version '{version}' cannot be checked; "
+                             f"supported: {', '.join(CHECKABLE_MIN_EGERIA_VERSIONS)}")
+        return self
 
     @field_validator('formats', mode='before')
     @classmethod

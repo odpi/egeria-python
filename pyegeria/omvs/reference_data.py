@@ -11,6 +11,7 @@ import asyncio
 from typing import Any, Optional
 
 from typing import Unpack
+from pyegeria.core._route_all import routes_all_to
 from pyegeria.core.request_filters import GetFilters, ListFilters, SearchFilters
 from pyegeria.view.base_report_formats import select_report_spec
 from pyegeria.core._server_client import ServerClient
@@ -303,6 +304,7 @@ class ReferenceDataManager(ServerClient):
 
     @dynamic_catch
     @dynamic_catch
+    @routes_all_to("_async_find_valid_value_definitions")
     async def _async_get_valid_value_definitions_by_name(
             self, name: Optional[str] = None, classification_names: Optional[list[str]] = None,
             body: Optional[dict | FilterRequestBody] = None,

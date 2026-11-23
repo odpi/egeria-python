@@ -262,7 +262,12 @@ class RegisteredInfo(ServerClient):
 
         The registered services payload is typically a flat dict of camelCase keys, so we can
         rely on populate_columns_from_properties which maps our snake_case keys to camelCase.
+
+        The platform spells the marker ``serviceURLMarker`` (capital URL), which the snake-to-camel
+        mapping (``serviceUrlMarker``) does not reach, so it is copied under that name first.
         """
+        if isinstance(element, dict) and "serviceURLMarker" in element:
+            element = {**element, "serviceUrlMarker": element["serviceURLMarker"]}
         return populate_columns_from_properties(element, columns_struct)
 
     def _extract_severity_properties(self, element: dict, columns_struct: dict) -> dict:

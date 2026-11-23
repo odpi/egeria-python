@@ -703,3 +703,32 @@ PROPERTIES_CLASS_FIELDS: dict[str, tuple[str, tuple[str, ...]]] = {
     'ZoneMembershipProfileProperties': ('classification', ('effectiveFrom', 'effectiveTo', 'typeName', 'extendedProperties', 'totalMembership', 'typeMembership', 'anchoredTotalMembership', 'anchoredTypeMembership', 'allTotalMembership', 'allTypeMembership', 'analysisTime')),
     'ZoneMembershipProperties': ('classification', ('effectiveFrom', 'effectiveTo', 'typeName', 'extendedProperties', 'zoneMembership')),
 }
+
+#: Each classification's supertypes, nearest first, from the typedefs (getClassificationDef's 2nd argument
+#: in OpenMetadataTypesArchive*.java), for the classifications that have any. `class:A` in a report column
+#: matches a classification named A or any classification with A in this list (PY-59).
+CLASSIFICATION_SUPERTYPES: dict[str, tuple[str, ...]] = {
+    'Campaign': ('ProjectKind',),
+    'CanonicalVocabulary': ('CollectionKind',),
+    'ControlPoint': ('ExecutionPoint',),
+    'DataSharingAgreement': ('CollectionKind',),
+    'EditingCollection': ('CollectionKind',),
+    'EnforcementPoint': ('ExecutionPoint',),
+    'Experiment': ('ProjectKind',),
+    'GlossaryProject': ('ProjectKind',),
+    'GovernanceProject': ('ProjectKind',),
+    'Investigation': ('ProjectKind',),
+    'NamingStandardsVocabulary': ('CollectionKind',),
+    'PersonalProject': ('ProjectKind',),
+    'PolicyAdministrationPoint': ('PolicyManagementPoint',),
+    'PolicyDecisionPoint': ('PolicyManagementPoint',),
+    'PolicyEnforcementPoint': ('PolicyManagementPoint',),
+    'PolicyInformationPoint': ('PolicyManagementPoint',),
+    'PolicyRetrievalPoint': ('PolicyManagementPoint',),
+    'ScopingCollection': ('CollectionKind',),
+    'StagingCollection': ('CollectionKind',),
+    'StudyProject': ('ProjectKind',),
+    'Task': ('ProjectKind',),
+    'Taxonomy': ('CollectionKind',),
+    'VerificationPoint': ('ExecutionPoint',),
+}

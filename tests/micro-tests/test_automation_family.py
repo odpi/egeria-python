@@ -165,7 +165,7 @@ def _curation(monkeypatch, supported: list) -> tuple:
 @pytest.mark.parametrize("supported, expected", [
     (["postgresDatabase"], "postgresDatabase"),   # read from the survey type
     (["*"], "serverToSurvey"),                    # any name accepted -> default
-    ([], "serverToSurvey"),                       # lookup failed -> default
+    ([], "serverToSurvey"),                       # read, and the survey declares none -> default
 ])
 async def test_initiate_survey_action_target_name(monkeypatch, supported, expected):
     client, sent = _curation(monkeypatch, supported)

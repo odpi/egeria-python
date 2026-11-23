@@ -73,8 +73,10 @@ def test_exec_report_spec_runs(spec_name, _offline):
                                   view_server="v", view_url="https://x", user="u", user_pass="p")
     assert result["kind"] != "unknown", result
     assert "multiple values" not in str(result)
-    assert _offline, "expected one request to Egeria"
-    assert _offline[0][1].endswith("/metadata-elements/by-search-string")
+    # PY-49: a spec that needs Egeria 6.4 first reads /api/about (the version gate), then sends the find
+    finds = [c for c in _offline if not c[1].endswith("/api/about")]
+    assert finds, "expected one request to Egeria"
+    assert finds[0][1].endswith("/metadata-elements/by-search-string")
 
 
 @pytest.mark.parametrize("method, args", [

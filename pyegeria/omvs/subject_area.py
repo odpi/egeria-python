@@ -5,6 +5,7 @@ Copyright Contributors to the ODPi Egeria project.
 This module contains the Subject Area View Service client.
 """
 
+from pyegeria.core._route_all import routes_all_to
 from pyegeria.core._no_password import NO_PASSWORD, carried_password, password_as_given, resolve_password
 import asyncio
 from typing import Annotated, Literal, Optional
@@ -573,6 +574,7 @@ class SubjectArea(ServerClient):
 
     @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
+    @routes_all_to("_async_find_subject_areas")
     async def _async_get_subject_areas_by_name(
         self,
         name: str = None,

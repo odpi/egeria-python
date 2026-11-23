@@ -8,7 +8,7 @@
     "heading": "Element-DrE-Advanced Attributes",
     "description": "Auto-generated format for Element (Create, Advanced).",
     "family": "Automation",
-    "target_type_name": "Element",
+    "target_type_name": "Referenceable",
     "aliases": ["Element DrE Advanced"]
    },
    "microflow": {
@@ -29,7 +29,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Element",
+      "type": "Referenceable",
       "function": "ClassificationExplorer.find_elements_by_property_value",
       "params": {
        "search_string": "$search_string",
@@ -41,32 +41,22 @@
     "formatters": {
      "LIST": {
       "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
        {"field": "type_name", "label": "Element Type Name"},
-       {"field": "template_guid", "label": "Template GUID"},
-       {"field": "placeholder_property_values", "label": "Placeholder Property Values"},
-       {"field": "template_properties", "label": "Template Properties"},
-       {"field": "initial_classifications", "label": "Generic Initial Classifications"},
-       {"field": "is_own_anchor", "label": "Is Own Anchor"},
        {"field": "effective_from", "label": "Effective From"},
-       {"field": "effective_to", "label": "Effective To"},
-       {"field": "effective_time", "label": "Effective Time"},
-       {"field": "deep_copy", "label": "Deep Copy"},
-       {"field": "initial_status", "label": "Initial Status", "valid_values": ["ACTIVE", "DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "DEPRECATED", "OTHER"]}
+       {"field": "effective_to", "label": "Effective To"}
       ]
      },
      "ALL": {
       "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
        {"field": "type_name", "label": "Element Type Name"},
-       {"field": "template_guid", "label": "Template GUID"},
-       {"field": "placeholder_property_values", "label": "Placeholder Property Values"},
-       {"field": "template_properties", "label": "Template Properties"},
-       {"field": "initial_status", "label": "Initial Status", "valid_values": ["ACTIVE", "DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "DEPRECATED", "OTHER"]},
-       {"field": "initial_classifications", "label": "Generic Initial Classifications"},
-       {"field": "is_own_anchor", "label": "Is Own Anchor"},
        {"field": "effective_from", "label": "Effective From"},
-       {"field": "effective_to", "label": "Effective To"},
-       {"field": "effective_time", "label": "Effective Time"},
-       {"field": "deep_copy", "label": "Deep Copy"}
+       {"field": "effective_to", "label": "Effective To"}
       ]
      }
     }
@@ -78,7 +68,7 @@
     "heading": "Element-DrE-Basic Attributes",
     "description": "Auto-generated format for Element (Create, Basic).",
     "family": "Automation",
-    "target_type_name": "Element",
+    "target_type_name": "Referenceable",
     "aliases": ["Element DrE Basic"]
    },
    "microflow": {
@@ -99,7 +89,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Element",
+      "type": "Referenceable",
       "function": "ClassificationExplorer.find_elements_by_property_value",
       "params": {
        "search_string": "$search_string",
@@ -111,16 +101,22 @@
     "formatters": {
      "LIST": {
       "columns": [
-       {"field": "template_guid", "label": "Template GUID"},
-       {"field": "placeholder_property_values", "label": "Placeholder Property Values"},
-       {"field": "template_properties", "label": "Template Properties"}
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "type_name", "label": "Element Type Name"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_to", "label": "Effective To"}
       ]
      },
      "ALL": {
       "columns": [
-       {"field": "template_guid", "label": "Template GUID"},
-       {"field": "placeholder_property_values", "label": "Placeholder Property Values"},
-       {"field": "template_properties", "label": "Template Properties"}
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "type_name", "label": "Element Type Name"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_to", "label": "Effective To"}
       ]
      }
     }

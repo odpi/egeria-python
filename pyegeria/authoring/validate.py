@@ -55,14 +55,14 @@ def _snake(camel: str) -> str:
 #: RELATIONSHIP_FIELDS, so a regeneration for a later Egeria (6.4 added decisionOutcomes, inputsToDecision,
 #: dataValueUses, ...) needs no edit here. The hand-kept keys below are ones a shipped find spec reads that are
 #: not relationship lists.
-_HAND_KEPT_RELATED_KEYS = frozenset({
-    "actor_list", "folder_display_names", "next_version", "note_log_name", "note_log_qualified_name",
-    "project_roles", "service_levels", "support_level",
-    # The shipped 'Projects' spec reads start_date, which ProjectProperties doesn't have (it has
-    # planned/actual start dates) and the view service doesn't attach, so it shows nothing today. Allowed so that
-    # authoring doesn't refuse a copy of a shipped spec; the spec itself is to be fixed against live output.
-    "start_date",
-})
+#: PY-49 removed three that were dead: `start_date` (ProjectProperties has planned/actual start dates), `next_version`
+#: (DigitalProductProperties.nextVersionDate) and `project_roles`.
+#: PY-55 settled the other four: `actor_list` and the two `note_log_*` columns are now `source` columns
+#: (of:assignedActors.displayName, of:presentInNoteLogs.displayName / .qualifiedName), and `folder_display_names`
+#: is client-derived (CLIENT_DERIVED_COLUMNS, GlossaryManager.find_glossaries). `service_levels` and `support_level`
+#: stay on purpose (Dan's PY-49 Q3): no single Properties class has them, but the rows of the agreement subtypes
+#: that carry them are filled, so the column is kept for those rows.
+_HAND_KEPT_RELATED_KEYS = frozenset({"service_levels", "support_level"})
 RELATED_ELEMENT_KEYS = frozenset({_snake(key) for key in RELATIONSHIP_FIELDS}) | _HAND_KEPT_RELATED_KEYS
 
 #: Properties of the survey annotation subtypes, which the Properties-class catalog doesn't list.
@@ -71,6 +71,41 @@ ANNOTATION_KEYS = frozenset({
     "report_completion_time", "critical_findings", "high_findings", "medium_findings", "low_findings",
     "none_findings",
 })
+
+#: PY-49. Columns a client fills itself, by find method: not attributes of the type and not relationship lists, but values
+#: the extractor adds to the row, so a spec that names them is not wrong. Each entry was read where it is produced.
+CLIENT_DERIVED_COLUMNS: Dict[str, frozenset] = {
+    # pyegeria/omvs/actor_manager.py:1212,1226 (the related-element summary's sideLinks)
+    "ActorManager.find_actor_profiles": frozenset({"sideLinks"}),
+    # pyegeria/omvs/data_designer.py get_data_rel_elements_dict (:1615-1655), overlaid by _extract_data_*_properties
+    # pyegeria/omvs/glossary_manager.py _extract_term_properties: the glossaries in the term's memberOfCollections
+    "GlossaryManager.find_glossary_terms": frozenset({"parent_glossary"}),
+    # PY-55: glossary_manager.py (_extract_glossary_properties, ~:3239): the display names of the CollectionFolder
+    # entries in the glossary's collectionMembers (a type filter, which a plain related-element column cannot express)
+    "GlossaryManager.find_glossaries": frozenset({"folder_display_names"}),
+    "DataDesigner.find_data_structures": frozenset({"in_data_dictionary", "in_data_spec", "member_data_fields"}),
+    "DataDesigner.find_data_fields": frozenset({"in_data_dictionary", "in_data_structure", "member_data_fields"}),
+    "DataDesigner.find_data_value_specifications": frozenset({
+        "in_data_dictionary", "in_data_structure",
+        # PY-49 Group B: DataClassComposition (partOfDataClasses) and DataValueHierarchy (superDataValueSpecification)
+        "containing_data_class", "specializes_data_class"}),
+}
+
+#: The seven membership figures of the ZoneMembershipProfile classification, which GovernanceOfficer adds to a
+#: GovernanceZone row (pyegeria/omvs/governance_officer.py:190-201). Only a GovernanceZone has them.
+ZONE_MEMBERSHIP_COLUMNS = frozenset({
+    "total_membership", "type_membership", "anchored_total_membership", "anchored_type_membership",
+    "all_total_membership", "all_type_membership", "analysis_time",
+})
+
+
+def client_derived_columns(function: Optional[str], target_type: Optional[str]) -> frozenset:
+    """The columns the client fills itself for this find method (and, for governance definitions, this target)."""
+    keys = CLIENT_DERIVED_COLUMNS.get(function or "", frozenset())
+    if function == "GovernanceOfficer.find_governance_definitions" and _type_key(target_type) == "governancezone":
+        keys = keys | ZONE_MEMBERSHIP_COLUMNS
+    return keys
+
 
 _GENERATED_MARK = "Auto-generated format for"
 
@@ -122,11 +157,34 @@ def _is_generated(fs: Any, label: str) -> bool:
     return str(getattr(fs, "description", "") or "").startswith(_GENERATED_MARK) or "-DrE" in (label or "")
 
 
+def egeria_type_name(type_name: str) -> str:
+    """A spec's target type as the Egeria type name the Properties-class catalog is keyed by.
+
+    Specs write the name for people ('License Type', 'Actor Profile', 'External-Reference', 'Terms and Conditions');
+    Egeria's type is 'LicenseType', 'TermsAndConditions'. A name the catalog has as written is returned as is;
+    otherwise the same name without spaces or punctuation, if the catalog has that, then with case ignored (PY-49:
+    'Todo' is `ToDo`); otherwise the name unchanged (an unknown type stays unknown and is reported as such, never
+    silently treated as known)."""
+    from md_processing.md_processing_utils.properties_class_fields import PROPERTIES_CLASS_FIELDS
+    if f"{type_name}Properties" in PROPERTIES_CLASS_FIELDS:
+        return type_name
+    squashed = "".join(ch for ch in (type_name or "") if ch.isalnum())
+    if squashed and f"{squashed}Properties" in PROPERTIES_CLASS_FIELDS:
+        return squashed
+    folded = squashed.lower()
+    if folded:
+        for key in PROPERTIES_CLASS_FIELDS:
+            if key.endswith("Properties") and key[:-10].lower() == folded:
+                return key[:-10]
+    return type_name
+
+
 def type_attributes(type_name: str) -> Optional[Set[str]]:
     """The snake_case property names of an Egeria type (inherited included), from pyegeria's generated
-    Properties-class catalog; None if the catalog has no such type."""
+    Properties-class catalog; None if the catalog has no such type. The type may be written as a spec writes
+    it ('License Type') or as Egeria names it ('LicenseType')."""
     from md_processing.md_processing_utils.properties_class_fields import PROPERTIES_CLASS_FIELDS
-    entry = PROPERTIES_CLASS_FIELDS.get(f"{type_name}Properties")
+    entry = PROPERTIES_CLASS_FIELDS.get(f"{egeria_type_name(type_name)}Properties")
     if not entry or entry[0] != "entity":
         return None
     return {_snake(f) for f in entry[1]}
@@ -264,18 +322,27 @@ async def _check_spec(draft: SpecDraft, result: ValidationResult, client: Any = 
                          f"and no pyegeria spec uses it.")
         result.checked.append("target type")
     action = fs.action
+    from pyegeria.view.column_source import check_source
+    for fmt in fs.formats or []:  # PY-53: a column's `source` names real 6.4 classifications, ends and properties
+        for col in getattr(fmt, "attributes", None) or []:
+            source = col.get("source") if isinstance(col, dict) else getattr(col, "source", None)
+            for words in (check_source(source) if source else []):
+                result.error(words)
     is_find = bool(getattr(action, "function", None)) and not getattr(action, "analytic_function", None)
     if is_find and target:
         await _check_find_fit(fs, client, result)
     if is_find and attrs is not None:
-        strict_known = attrs | _formatter_derived_keys() | RELATED_ELEMENT_KEYS | ANNOTATION_KEYS
+        strict_known = (attrs | _formatter_derived_keys() | RELATED_ELEMENT_KEYS | ANNOTATION_KEYS
+                        | client_derived_columns(getattr(action, "function", None), target))
         if _is_generated(fs, draft.label):
             strict_known = strict_known | _command_attribute_keys()
         for fmt in fs.formats or []:
             for col in getattr(fmt, "attributes", None) or []:
                 key = col.get("key") if isinstance(col, dict) else col.key
                 name = col.get("name") if isinstance(col, dict) else col.name
-                if not key or key in strict_known or _derived_by_rule(key):
+                if (col.get("source") if isinstance(col, dict) else getattr(col, "source", None)):
+                    continue  # PY-53: its value is related information; the source check above covers it
+                if not key or key in strict_known or _snake(key) in strict_known or _derived_by_rule(key):
                     continue
                 if legacy and key in used_keys:
                     result.warn(f"Column '{name}' names '{key}', which isn't an attribute of {target}; it is "

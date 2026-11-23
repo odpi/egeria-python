@@ -6,6 +6,7 @@ This module provides access to the Solution Architect OMVS module.
 
 """
 
+from pyegeria.core._route_all import routes_all_to
 from pyegeria.core._no_password import NO_PASSWORD, carried_password, password_as_given, resolve_password
 import asyncio
 import os
@@ -264,6 +265,7 @@ class SolutionArchitect(ServerClient):
                                                          graph_query_depth,
                                                          output_format, report_spec, **kwargs))
 
+    @routes_all_to("_async_find_design_patterns")
     async def _async_get_design_patterns_by_name(self, name: Optional[str] = None, body: Optional[dict | SearchStringRequestBody] = None,
                                          start_from: int = 0, page_size: int = max_paging_size,
                                          graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str | dict = "Design-Pattern-DrE", **kwargs: Unpack[ListFilters]):

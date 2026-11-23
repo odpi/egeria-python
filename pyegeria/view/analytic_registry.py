@@ -1693,7 +1693,7 @@ _BUILTINS: Dict[str, AnalyticFunctionSpec] = {
                     "scalar property on the record itself (not derived from counting related things), "
                     "filtered to the given anchor type(s) via each record's own Anchors classification. "
                     "Cost: one find, paged until Egeria returns an empty page, seconds.",
-        returns="list[dict] (name, karmaPoints, anchorGuid, anchorType), longest-karma first",
+        returns="list[dict] | None (name, karmaPoints, anchorGuid, anchorType), longest-karma first; None when the find failed",
         generic=False,
         binding_note="Fixed to ContributionRecord.karmaPoints -- top_n and anchor_types tune the "
                      "result but don't change what's being measured.",

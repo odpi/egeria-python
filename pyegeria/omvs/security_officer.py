@@ -12,6 +12,7 @@ import uuid
 from typing import Optional, Union, Any
 
 from typing import Unpack
+from pyegeria.core._route_all import routes_all_to
 from pyegeria.core.request_filters import deprecated_names
 from pyegeria.core.request_filters import ListFilters
 from pyegeria.core._server_client import ServerClient
@@ -888,6 +889,7 @@ class SecurityOfficer(ServerClient):
         )
 
     @dynamic_catch
+    @routes_all_to("_async_find_statements_of_applicability")
     async def _async_get_statements_of_applicability_by_name(
         self,
         filter_string: str | None = None,

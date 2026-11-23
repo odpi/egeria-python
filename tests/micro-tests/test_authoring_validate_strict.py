@@ -65,7 +65,10 @@ def test_the_same_mismatch_with_no_client_is_a_warning_and_not_a_pass():
 
 def test_the_find_methods_own_type_and_registered_pairs_fit_with_no_client():
     assert "find method fits the target type" in validate(_spec(target_type="Project")).checked
-    assert "find method fits the target type" in validate(_spec(target_type="Campaign")).checked   # a shipped pair
+    # a shipped pair: a subtype the find method does not itself return (Governance-Controls). PY-49: the Campaign specs
+    # used to be this example; they now target Project, the type find_projects returns.
+    governance = {"function": "GovernanceOfficer.find_governance_definitions", "required_params": ["search_string"]}
+    assert "find method fits the target type" in validate(_spec(target_type="GovernanceControl", action=governance)).checked
 
 
 def test_a_subtype_fits_through_its_super_types():
@@ -110,7 +113,7 @@ def test_a_super_type_attribute_is_accepted():
 
 
 def test_a_key_only_a_generated_spec_uses_is_refused_strictly_and_warned_when_legacy():
-    key = "anchor_scope_guid"           # a Create command's attribute, in the generated -DrE- specs only
+    key = "analytic_parameters"        # a Create command's attribute (Create Report), in the generated -DrE- specs only
     used, _ = _registry_columns_and_types()
     assert key in used and key not in type_attributes("Project") | DERIVED_KEYS
     spec = _spec(formats=[{"types": ["TABLE"], "attributes": [{"name": "Odd", "key": key}]}])
@@ -139,17 +142,36 @@ def _shipped_find_specs():
             yield label, fs
 
 
+#: PY-46 / PY-49. The strict column check used to skip a spec whose target_type was written for people ('Data Class')
+#: instead of as Egeria's type name ('DataClass'); once it was normalised, 41 columns of 12 shipped specs were refused.
+#: PY-49 settled each of them (client-derived keys accepted, wrong names fixed, subtype fields moved, targets corrected),
+#: so the list is empty. It stays as the shrink-only pin: a shipped find spec that gains an unknown column fails here.
+KNOWN_UNKNOWN_COLUMNS: dict = {}
+
+
 def test_strict_validation_refuses_no_shipped_find_spec_column():
+    import re
     refused = {}
     checked = 0
     for label, fs in _shipped_find_specs():
         result = validate(SpecDraft(label=label, format_set=fs))
-        bad = [e for e in result.errors if "isn't an attribute of" in e]
+        bad = sorted({re.search(r"names '([^']+)'", e).group(1) for e in result.errors if "isn't an attribute of" in e})
         checked += "column attributes" in result.checked
         if bad:
             refused[label] = bad
     assert checked > 50, "the shipped find specs weren't checked"
-    assert not refused, f"strict column check refuses shipped specs: {refused}"
+    assert refused == KNOWN_UNKNOWN_COLUMNS, (
+        "strict column check differs from the pinned list (PY-49): "
+        f"new {({k: sorted(set(v) - set(KNOWN_UNKNOWN_COLUMNS.get(k, []))) for k, v in refused.items() if set(v) - set(KNOWN_UNKNOWN_COLUMNS.get(k, []))})}; "
+        f"fixed, remove from the list {({k: sorted(set(v) - set(refused.get(k, []))) for k, v in KNOWN_UNKNOWN_COLUMNS.items() if set(v) - set(refused.get(k, []))})}")
+
+
+def test_the_pinned_list_can_only_shrink_it_names_no_spec_or_column_that_does_not_exist():
+    shipped = {label: fs for label, fs in _shipped_find_specs()}
+    for label, keys in KNOWN_UNKNOWN_COLUMNS.items():
+        assert label in shipped, label
+        used = {col.key for fmt in shipped[label].formats for col in fmt.attributes}
+        assert set(keys) <= used, (label, set(keys) - used)
 
 
 def test_no_shipped_find_spec_is_refused_for_its_find_method_fit():
