@@ -6,6 +6,7 @@ Copyright Contributors to the ODPi Egeria project.
 
 """
 
+from pyegeria.core._route_all import routes_all_to
 from pyegeria.core._no_password import NO_PASSWORD, carried_password, password_as_given, resolve_password
 import asyncio
 from typing import Optional, Any
@@ -914,6 +915,7 @@ class ActorManager(ServerClient):
 
     @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
+    @routes_all_to("_async_find_actor_profiles")
     async def _async_get_actor_profiles_by_name(
         self,
         name: str | None = None,
@@ -2489,6 +2491,7 @@ class ActorManager(ServerClient):
 
     @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
+    @routes_all_to("_async_find_actor_roles")
     async def _async_get_actor_roles_by_name(
         self,
         name: str | None = None,
@@ -4172,6 +4175,7 @@ class ActorManager(ServerClient):
 
     @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
+    @routes_all_to("_async_find_user_identities")
     async def _async_get_user_identities_by_name(
         self,
         name: str = None,
@@ -4876,6 +4880,7 @@ class ActorManager(ServerClient):
 
     @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
+    @routes_all_to("_async_find_contribution_records")
     async def _async_get_contribution_records_by_name(
         self,
         name: str = None,
@@ -6082,6 +6087,7 @@ class ActorManager(ServerClient):
 
     @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
+    @routes_all_to("_async_find_contact_details")
     async def _async_get_contact_details_by_name(
         self,
         name: str = None,
@@ -6907,6 +6913,7 @@ class ActorManager(ServerClient):
 
     @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
+    @routes_all_to("_async_find_perspectives")
     async def _async_get_perspectives_by_name(
         self,
         name: str = None,

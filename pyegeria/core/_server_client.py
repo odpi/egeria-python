@@ -22,6 +22,7 @@ from httpx import Response
 from loguru import logger
 from pydantic import TypeAdapter, ValidationError
 
+from pyegeria.core._route_all import routes_all_to
 from pyegeria.core.request_filters import deprecated_names
 from pyegeria.core._base_server_client import BaseServerClient
 from pyegeria.core._exceptions import (
@@ -2678,6 +2679,7 @@ class ServerClient(BaseServerClient):
 
     @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
+    @routes_all_to("_async_find_note_logs")
     async def _async_get_note_logs_by_name(
             self, name: str = "*",
             metadata_element_type: str | None = "NoteLog",
@@ -5854,6 +5856,7 @@ class ServerClient(BaseServerClient):
 
     @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
+    @routes_all_to("_async_find_search_keywords")
     async def _async_get_search_keyword_by_keyword(
             self,
             name: str,

@@ -5,6 +5,7 @@ Copyright Contributors to the ODPi Egeria project.
 This module contains the Schema Maker View Service client.
 """
 
+from pyegeria.core._route_all import routes_all_to
 from pyegeria.core._no_password import NO_PASSWORD, carried_password, password_as_given, resolve_password
 import asyncio
 from typing import Annotated, Literal, Optional
@@ -527,6 +528,7 @@ class SchemaMaker(ServerClient):
         return run_sync(self._async_get_schema_types_by_name(name, start_from, page_size, **kwargs))
 
     @dynamic_catch
+    @routes_all_to("_async_find_schema_attributes")
     async def _async_get_schema_attributes_by_name(self, name: str | None = None, start_from: int = 0, page_size: int = 100, **kwargs: Unpack[ListFilters]) -> list | str:
         """Get schema attributes by name. Async version.
 

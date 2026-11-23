@@ -120,6 +120,14 @@ notes and are not repeated here.
   before anything is sent, with "<call> needs a name; use <find> to list all", because the Egeria 6.4 by-name and by-type
   endpoints refuse it (each one checked answered HTTP 400; "*" there is an exact match). `hey_egeria ... deployed-servers` now
   defaults to `View Server` instead of `*`.
+- **29 by-name helpers answer "everything" with their find** (PY-64). `get_<x>_by_name("*")` (or no name) runs
+  `find_<x>("*")` where a live check on Egeria 6.4 showed both return the same element type and shape and have the
+  same `output_format` and `report_spec` defaults: note logs, search keywords, actor profiles, roles, user identities,
+  contribution records, perspectives, contact details, assets, software capabilities, collections, glossaries,
+  communities, locations, subject areas, business capabilities, valid value definitions, statements of applicability,
+  connections, connector types, endpoints, data structures, data fields, data value specifications, external
+  references, external identifiers, governance definitions, schema attributes and design patterns. The rest keep the
+  PY-63 refusal (their find returned nothing, timed out, differs in defaults, or was not proven).
 - **Egeria 400 errors are not labelled server errors** (PY-58). A request Egeria refuses (HTTP 400) raises
   `PyegeriaBadRequestException`, a `PyegeriaInvalidParameterException` (and still a `PyegeriaAPIException`), with
   Egeria's own message and message id, instead of "SERVER_ERROR_500". `get_platforms_by_name("*")` returns the

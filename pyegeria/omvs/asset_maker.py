@@ -10,6 +10,7 @@ The Asset Maker OMVS provides APIs for supporting the creation and editing of as
 import asyncio
 from typing import Any, Optional
 from typing import Unpack
+from pyegeria.core._route_all import routes_all_to
 from pyegeria.core.request_filters import deprecated_names
 from pyegeria.core.request_filters import GetFilters, ListFilters
 from pyegeria.core._server_client import ServerClient
@@ -605,6 +606,7 @@ class AssetMaker(ServerClient):
 
     @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
+    @routes_all_to("_async_find_assets")
     async def _async_get_assets_by_name(
         self,
         filter_string: str | None = None,
@@ -6170,6 +6172,7 @@ class AssetMaker(ServerClient):
 
     @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
+    @routes_all_to("_async_find_software_capabilities")
     async def _async_get_software_capabilities_by_name(
         self,
         name: str | None = None,

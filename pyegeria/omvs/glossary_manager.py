@@ -16,6 +16,7 @@ from loguru import logger
 from pydantic import Field
 
 from typing import Unpack
+from pyegeria.core._route_all import routes_all_to
 from pyegeria.core.request_filters import deprecated_names
 from pyegeria.core.request_filters import GetFilters
 from pyegeria.core._exceptions import PyegeriaInvalidParameterException, PyegeriaException
@@ -3573,6 +3574,7 @@ class GlossaryManager(CollectionManager):
         )
 
     @dynamic_catch
+    @routes_all_to("_async_find_glossaries")
     async def _async_get_glossaries_by_name(
         self,
         filter_string: Optional[str] = None,

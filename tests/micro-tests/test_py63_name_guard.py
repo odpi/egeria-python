@@ -43,6 +43,8 @@ def _name_helpers():
 
 
 HELPERS = _name_helpers()
+# PY-64: these answer a missing or "*" name with their find (test_py64_route_star.py), so nothing by-name is sent
+ROUTED = {(c, n) for c, n in HELPERS if hasattr(getattr(c, n), "routes_all_to")}
 
 
 def _lenient(self, name):
@@ -78,8 +80,8 @@ def test_the_reflection_found_the_helpers():
     assert len(HELPERS) > 55, len(HELPERS)
 
 
-@pytest.mark.parametrize("cls,name", [h for h in HELPERS if h[1] not in NOT_BY_NAME],
-                         ids=[f"{c.__name__}.{n[7:]}" for c, n in HELPERS if n not in NOT_BY_NAME])
+@pytest.mark.parametrize("cls,name", [h for h in HELPERS if h[1] not in NOT_BY_NAME and h not in ROUTED],
+                         ids=[f"{c.__name__}.{n[7:]}" for c, n in HELPERS if n not in NOT_BY_NAME and (c, n) not in ROUTED])
 @pytest.mark.parametrize("key", [None, "", "*"])
 def test_no_helper_sends_a_null_missing_or_star_filter(cls, name, key):
     obj = _stubbed(cls)
@@ -177,3 +179,7 @@ def test_platforms_default_comes_before_the_guard():
 def test_the_platforms_docstring_says_all_platforms_of_the_default_type():
     assert "OF THE DEFAULT TYPE" in RuntimeManager._async_get_platforms_by_name.__doc__ or \
         "OF THE DEFAULT TYPE" in inspect.unwrap(RuntimeManager._async_get_platforms_by_name).__doc__
+
+
+def test_the_routed_helpers_are_the_ones_py64_names():
+    assert 25 <= len(ROUTED) <= 40, len(ROUTED)

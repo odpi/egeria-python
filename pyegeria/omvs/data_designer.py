@@ -12,6 +12,7 @@ import asyncio
 from loguru import logger
 
 from typing import Unpack
+from pyegeria.core._route_all import routes_all_to
 from pyegeria.core.request_filters import GetFilters, ListFilters, SearchFilters
 from pyegeria.core._server_client import max_paging_size, ServerClient
 from pyegeria.view.base_report_formats import select_report_spec, get_report_spec_match
@@ -1170,6 +1171,7 @@ class DataDesigner(ServerClient):
         return response
 
     @dynamic_catch
+    @routes_all_to("_async_find_data_structures")
     async def _async_get_data_structures_by_name(self, name: Optional[str] = None, classification_names: Optional[list[str]] = None,
                                                  body: Optional[dict | FilterRequestBody] = None, start_from: int = 0,
                                                  page_size: int = 0,
@@ -2955,6 +2957,7 @@ class DataDesigner(ServerClient):
         return response
 
     @dynamic_catch
+    @routes_all_to("_async_find_data_fields")
     async def _async_get_data_fields_by_name(self, filter_string: str | None = None, classification_names: Optional[list[str]] = None,
                                              body: Optional[dict | FilterRequestBody] = None, start_from: int = 0,
                                              page_size: int = 0,
@@ -3100,6 +3103,7 @@ class DataDesigner(ServerClient):
             self._async_get_data_field_by_guid(guid, element_type, body, graph_query_depth, output_format, report_spec, **kwargs))
 
     @dynamic_catch
+    @routes_all_to("_async_find_data_value_specifications")
     async def _async_get_data_value_specifications_by_name(self, filter_string: str | None = None,
                                                            classification_names: Optional[list[str]] = None,
                                                            body: Optional[dict | FilterRequestBody] = None, start_from: int = 0,

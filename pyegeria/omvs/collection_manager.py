@@ -14,6 +14,7 @@ from loguru import logger
 from pydantic import Field, HttpUrl
 
 from typing import Unpack
+from pyegeria.core._route_all import routes_all_to
 from pyegeria.core.request_filters import deprecated_names
 from pyegeria.core.request_filters import ListFilters
 from pyegeria.core.request_filters import filter_body_kwargs
@@ -854,6 +855,7 @@ class CollectionManager(ServerClient):
     @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     @dynamic_catch
+    @routes_all_to("_async_find_collections")
     async def _async_get_collections_by_name(
         self,
         name: str = None,
