@@ -61,11 +61,18 @@ Live check on a 6.4 platform (laz, read-only SQL and the 6.4 source; LIVECHECK-P
 | 28 to 30 | KEEP, by source: OpenMetadataStoreRESTServices.java:5425-5446 fills beanClassName (name + "Properties"), initialStatus and descriptionWiki | none (the expected drops of 28 and 30 were wrong) |
 | UC Catalog Element | a UC catalog is a Namespace with no deployedImplementationType; its qualifiedName starts "Unity Catalog Catalog::" | the spec finds Namespace elements by that qualified-name prefix (QUALIFIED_NAME_PREFIX_SPECS) and has no technology column |
 
-**HELD: needs a 6.4 read with a token (rows 1 to 19 and 27).** The registered-services and severity-definitions calls answer HTTP 401 on a 6.4 platform without a bearer token, so they need a persona sign-in, which waits for Dan. The UC prefix stays pinned for now (a typed-name override is a later nicety).
+**Rows 1 to 19 and 27, checked read-only on laz 6.4 (signed in as erinoverview; verdicts from the raw JSON keys; LIVECHECK-PY49-Q7-ROWS-1-19-27-2026-11-23.md):**
 
-**Still unchecked: rows 1 to 19 and 27** (asset types, My Profile teams and communities, note-log detail, platform servers,
-registered services, severity definitions, technology-type elements). They need API reads on a platform; none was reachable
-from the machine that built this change (no Egeria on :9443, Docker not running), so they are unchanged. Row 17
-(`severity_code`) is the one to look at first: the audit-log severity payload is, as far as I recall, `ordinal`, `name` and
-`description` only, so `severity_code`, `system_action` and `user_action` (rows 17 to 19) may be absent; that is a recollection,
-not a check.
+| Rows | Answer | Applied |
+|---|---|---|
+| 1 super_type | KEEP (superType 96/96) | none |
+| 10, 11, 12, 14 service_name, service_description, service_url_marker, service_wiki | KEEP | the raw key is `serviceURLMarker` (capital URL), which the snake-to-camel mapping never reached, so the 6.2.39 "URL Marker" column was empty 0/55; `_extract_registered_service_properties` now copies it to `serviceUrlMarker` |
+| 13 service_type, 15 conformance_profile | DROP (absent in all 55 services) | both columns removed from Registered-Services |
+| 16 ordinal | KEEP (16/16) | none |
+| 17 severity_code, 18 system_action, 19 user_action | DROP (absent 0/16; rows carry ordinal, name, description) | all three removed from Severity-Definitions |
+| 27 deployedImplementationType | KEEP (File System Directory 6/6, PostgreSQL Relational Database, Unity Catalog Server) | none |
+| 2 to 5 teams, communities (My-User, My-User-MD) | NO DATA: unverified, test persona has none (no team or community memberships; the raw profile has no such key, the client builds them) | unchanged |
+| 6 to 8 note-log title, text, time | NO DATA: unverified, test persona has no note logs | unchanged |
+| 9 omag_servers (Platforms) | DROP-CANDIDATE: `get_platforms_by_type` returns 1 platform with no omagServers key (only serverEndpoints, serverId, serverName) | unchanged, awaiting a decision |
+
+Separate finding: `get_platforms_by_name("*")` returns SERVER_ERROR_500 on 6.4; not a spec problem, not addressed here.

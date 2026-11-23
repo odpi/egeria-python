@@ -21,9 +21,7 @@
        {"field": "service_name", "label": "Service Name"},
        {"field": "service_description", "label": "Description"},
        {"field": "service_url_marker", "label": "URL Marker"},
-       {"field": "service_type", "label": "Service Type"},
-       {"field": "service_wiki", "label": "Wiki"},
-       {"field": "conformance_profile", "label": "Conformance Profile"}
+       {"field": "service_wiki", "label": "Wiki"}
       ]
      }
     }
@@ -47,10 +45,7 @@
       "columns": [
        {"field": "name", "label": "Name"},
        {"field": "ordinal", "label": "Ordinal"},
-       {"field": "description", "label": "Description"},
-       {"field": "severity_code", "label": "Severity Code"},
-       {"field": "system_action", "label": "System Action"},
-       {"field": "user_action", "label": "User Action"}
+       {"field": "description", "label": "Description"}
       ]
      }
     }

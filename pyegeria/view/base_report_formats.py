@@ -2589,9 +2589,7 @@ formats=[
                     Column(name="Service Name", key='service_name'),
                     Column(name="Description", key='service_description'),
                     Column(name="URL Marker", key='service_url_marker'),
-                    Column(name="Service Type", key='service_type'),
                     Column(name="Wiki", key='service_wiki'),
-                    Column(name="Conformance Profile", key='conformance_profile'),
                 ],
             )
         ],
@@ -2609,9 +2607,6 @@ formats=[
                     Column(name="Name", key='name'),
                     Column(name="Ordinal", key='ordinal'),
                     Column(name="Description", key='description'),
-                    Column(name="Severity Code", key='severity_code'),
-                    Column(name="System Action", key='system_action'),
-                    Column(name="User Action", key='user_action'),
                 ],
             )
         ],
