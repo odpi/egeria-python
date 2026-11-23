@@ -16,14 +16,19 @@ One string, three forms:
         An attribute of each related element at that end.
 
 Results: `rel:` and `of:` are lists aligned with the element's related elements of that end, a "" where one
-has no value, so two columns of the same end line up by position. The text value (TABLE, MD) joins the
-non-blank entries with ", "; the native value (DICT, JSON) keeps every position. Absent is "", never "None".
+has no value, so two columns of the same end line up by position. The text value (TABLE, MD) keeps every
+position too, joined with ", " and a "\u2014" for a blank slot ("" when every slot is blank); the native value
+(DICT, JSON) is the list with "" placeholders. Absent is "", never "None".
 """
 from __future__ import annotations
 
 import re
 from dataclasses import dataclass
 from typing import Any, Iterable, List, Optional, Tuple
+
+#: The text of a blank slot among filled ones in a `rel:` or `of:` column, so two columns of one end keep
+#: their positions in TABLE and MD. A column with every slot blank is "".
+BLANK_SLOT = "\u2014"
 
 _NAME = r"[A-Za-z][A-Za-z0-9_]*"
 _CLASS_RE = re.compile(rf"^class:({_NAME}(?:,{_NAME})*)(?:\.({_NAME}))?$")
@@ -83,6 +88,9 @@ def check_source(text: str) -> List[str]:
     from pyegeria.view.egeria_relationship_fields import RELATIONSHIP_FIELDS
     errors: List[str] = []
     if src.kind == "class":
+        if src.prop and len(src.names) > 1:
+            return [f"source {text!r}: a named property allows only one classification (class:A.prop), not "
+                    f"{len(src.names)}; the values could not be told apart."]
         for name in src.names:
             fields = _fields(name, "classification")
             if fields is None:
@@ -185,4 +193,5 @@ def resolve_source(element: dict, text: str) -> Tuple[Any, str]:
         else:
             related = item.get("relatedElement") if isinstance(item.get("relatedElement"), dict) else item
             native.append(_prop_value(related.get("properties") or related, src.prop))
-    return native, ", ".join(_text(v) for v in native if _text(v))
+    cells = [_text(v) for v in native]
+    return native, (", ".join(c or BLANK_SLOT for c in cells) if any(cells) else "")

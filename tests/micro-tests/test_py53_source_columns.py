@@ -67,7 +67,7 @@ def test_class_absent_is_blank_never_none():
 def test_rel_property_reads_flat_bean_and_property_value_map():
     got = _populate(Column(name="Label", key="target_label", source="rel:projectTargets.label"))
     assert got["target_label"]["native"] == ["first", "second", ""]
-    assert got["target_label"]["value"] == "first, second"
+    assert got["target_label"]["value"] == "first, second, \u2014"
 
 
 # ── form 3: attribute of the related element ──
@@ -149,3 +149,35 @@ def test_validator_error_for_a_spec_with_a_bad_source():
     draft = SimpleNamespace(format_set=fs, label="T")
     asyncio.run(v._check_spec(draft, result))
     assert any("NoSuchClass" in e for e in result.errors)
+
+
+# ── F1: the text keeps every position ──
+def _blank_first():
+    el = _element()
+    el["projectTargets"] = [
+        {"relationshipProperties": {}, "relatedElement": {"elementHeader": {"guid": "t1"}, "properties": {"displayName": "T1"}}},
+        {"relationshipProperties": {"label": "second"},
+         "relatedElement": {"elementHeader": {"guid": "t2"}, "properties": {"displayName": "T2"}}},
+    ]
+    return el
+
+
+def test_text_keeps_every_position_with_the_blank_first():
+    labels = resolve_source(_blank_first(), "rel:projectTargets.label")
+    names = resolve_source(_blank_first(), "of:projectTargets.displayName")
+    assert labels == (["", "second"], "\u2014, second")
+    assert names[1] == "T1, T2"
+    assert len(labels[1].split(", ")) == len(names[1].split(", "))  # T1 is not paired with "second"
+
+
+def test_text_is_empty_when_every_slot_is_blank():
+    el = _blank_first()
+    el["projectTargets"][1]["relationshipProperties"] = {}
+    assert resolve_source(el, "rel:projectTargets.label")[1] == ""
+
+
+# ── F2: a named property allows only one classification ──
+def test_validator_errors_on_several_classifications_with_a_property():
+    errors = check_source("class:Branch,Task.effectiveFrom")  # a property both have, so only F2 can object
+    assert len(errors) == 1 and "only one classification" in errors[0]
+    assert check_source("class:Branch.scope") == [] and check_source("class:Branch,Campaign") == []
