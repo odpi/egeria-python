@@ -1685,20 +1685,6 @@ def show_user_ids(ctx):
     )
 
 
-@deployed_data.command("deployed-servers")
-@click.option(
-    "--search-string",
-    default="View Server",
-    help="The deployed implementation type of the servers to show (Egeria needs a type; '*' is not accepted)",
-)
-@click.pass_context
-def show_deployed_servers(ctx, search_string):
-    """Show list of deployed servers"""
-    c = ctx.obj
-    display_servers_by_dep_imp(search_string, c.view_server, c.view_server_url, c.userid, c.password, c.jupyter,
-                               c.width)
-
-
 @deployed_data.command("deployed-schemas")
 @click.option(
     "--search_catalog", default="*", help="What database or catalog to search"
