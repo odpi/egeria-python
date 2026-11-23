@@ -15,6 +15,7 @@
         "ACTIVATING",
         "IN_PROGRESS",
         "PAUSED",
+        "FOR_INFO",
         "COMPLETED",
         "INVALID",
         "IGNORED",

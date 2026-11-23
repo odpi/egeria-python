@@ -635,7 +635,7 @@
        {"field": "situation", "label": "Situation"},
        {"field": "objective", "label": "Objective"},
        {"field": "priority", "label": "Priority"},
-       {"field": "activity_status", "label": "Activity Status", "valid_values": ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRESS", "PAUSED", "COMPLETED", "INVALID", "IGNORED", "FAILED", "CANCELLED", "ABANDONED", "OTHER"]}
+       {"field": "activity_status", "label": "Activity Status", "valid_values": ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRESS", "PAUSED", "FOR_INFO", "COMPLETED", "INVALID", "IGNORED", "FAILED", "CANCELLED", "ABANDONED", "OTHER"]}
       ]
      },
      "ALL": {
@@ -649,7 +649,7 @@
        {"field": "situation", "label": "Situation"},
        {"field": "objective", "label": "Objective"},
        {"field": "priority", "label": "Priority"},
-       {"field": "activity_status", "label": "Activity Status", "valid_values": ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRESS", "PAUSED", "COMPLETED", "INVALID", "IGNORED", "FAILED", "CANCELLED", "ABANDONED", "OTHER"]}
+       {"field": "activity_status", "label": "Activity Status", "valid_values": ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRESS", "PAUSED", "FOR_INFO", "COMPLETED", "INVALID", "IGNORED", "FAILED", "CANCELLED", "ABANDONED", "OTHER"]}
       ]
      }
     }
@@ -678,7 +678,7 @@
        {"field": "situation", "label": "Situation"},
        {"field": "objective", "label": "Objective"},
        {"field": "priority", "label": "Priority"},
-       {"field": "activity_status", "label": "Activity Status", "valid_values": ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRESS", "PAUSED", "COMPLETED", "INVALID", "IGNORED", "FAILED", "CANCELLED", "ABANDONED", "OTHER"]}
+       {"field": "activity_status", "label": "Activity Status", "valid_values": ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRESS", "PAUSED", "FOR_INFO", "COMPLETED", "INVALID", "IGNORED", "FAILED", "CANCELLED", "ABANDONED", "OTHER"]}
       ]
      },
      "ALL": {
@@ -690,7 +690,7 @@
        {"field": "situation", "label": "Situation"},
        {"field": "objective", "label": "Objective"},
        {"field": "priority", "label": "Priority"},
-       {"field": "activity_status", "label": "Activity Status", "valid_values": ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRESS", "PAUSED", "COMPLETED", "INVALID", "IGNORED", "FAILED", "CANCELLED", "ABANDONED", "OTHER"]}
+       {"field": "activity_status", "label": "Activity Status", "valid_values": ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRESS", "PAUSED", "FOR_INFO", "COMPLETED", "INVALID", "IGNORED", "FAILED", "CANCELLED", "ABANDONED", "OTHER"]}
       ]
      }
     }
@@ -811,7 +811,7 @@
        {"field": "situation", "label": "Situation"},
        {"field": "objective", "label": "Objective"},
        {"field": "priority", "label": "Priority"},
-       {"field": "activity_status", "label": "Activity Status", "valid_values": ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRESS", "PAUSED", "COMPLETED", "INVALID", "IGNORED", "FAILED", "CANCELLED", "ABANDONED", "OTHER"]}
+       {"field": "activity_status", "label": "Activity Status", "valid_values": ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRESS", "PAUSED", "FOR_INFO", "COMPLETED", "INVALID", "IGNORED", "FAILED", "CANCELLED", "ABANDONED", "OTHER"]}
       ]
      },
      "ALL": {
@@ -825,7 +825,7 @@
        {"field": "situation", "label": "Situation"},
        {"field": "objective", "label": "Objective"},
        {"field": "priority", "label": "Priority"},
-       {"field": "activity_status", "label": "Activity Status", "valid_values": ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRESS", "PAUSED", "COMPLETED", "INVALID", "IGNORED", "FAILED", "CANCELLED", "ABANDONED", "OTHER"]}
+       {"field": "activity_status", "label": "Activity Status", "valid_values": ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRESS", "PAUSED", "FOR_INFO", "COMPLETED", "INVALID", "IGNORED", "FAILED", "CANCELLED", "ABANDONED", "OTHER"]}
       ]
      }
     }
@@ -854,7 +854,7 @@
        {"field": "situation", "label": "Situation"},
        {"field": "objective", "label": "Objective"},
        {"field": "priority", "label": "Priority"},
-       {"field": "activity_status", "label": "Activity Status", "valid_values": ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRESS", "PAUSED", "COMPLETED", "INVALID", "IGNORED", "FAILED", "CANCELLED", "ABANDONED", "OTHER"]}
+       {"field": "activity_status", "label": "Activity Status", "valid_values": ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRESS", "PAUSED", "FOR_INFO", "COMPLETED", "INVALID", "IGNORED", "FAILED", "CANCELLED", "ABANDONED", "OTHER"]}
       ]
      },
      "ALL": {
@@ -866,7 +866,7 @@
        {"field": "situation", "label": "Situation"},
        {"field": "objective", "label": "Objective"},
        {"field": "priority", "label": "Priority"},
-       {"field": "activity_status", "label": "Activity Status", "valid_values": ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRESS", "PAUSED", "COMPLETED", "INVALID", "IGNORED", "FAILED", "CANCELLED", "ABANDONED", "OTHER"]}
+       {"field": "activity_status", "label": "Activity Status", "valid_values": ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRESS", "PAUSED", "FOR_INFO", "COMPLETED", "INVALID", "IGNORED", "FAILED", "CANCELLED", "ABANDONED", "OTHER"]}
       ]
      }
     }
