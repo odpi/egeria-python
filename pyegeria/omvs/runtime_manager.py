@@ -2110,6 +2110,8 @@ class RuntimeManager(ServerClient):
         filter_string : str, opt
             Filter specifies the display name or qualified name of the platforms to return information for. If the
             value is None, we will default to the default_platform_name that comes from the core content pack.
+            "*" (or no name at all, when there is no default) means ALL platforms: the by-name endpoint takes an
+            exact name only, so that case is answered by the by-deployed-implementation-type lookup (PY-58).
 
         start_from : int, optional
            The index from which to start fetching the engine actions. Default is 0.
@@ -2142,6 +2144,14 @@ class RuntimeManager(ServerClient):
 
         if filter_string is None:
             filter_string = self.default_platform_name
+
+        if not filter_string or filter_string == "*":
+            # PY-58: /platforms/by-name needs a name (an exact match; "*" is not a wildcard there, and an absent
+            # filter is refused: OPEN-METADATA-400-004, "The name passed on the name parameter ... is null"), so
+            # "all platforms" is the by-type lookup with no filter, which returns every platform.
+            return await self._async_get_platforms_by_type(
+                filter_string=None, start_from=start_from, page_size=page_size, output_format=output_format,
+                report_spec=report_spec, body=body, **kwargs)
 
         url = (
             f"{self.runtime_command_root}/platforms/by-name"

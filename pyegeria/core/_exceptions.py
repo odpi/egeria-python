@@ -367,6 +367,25 @@ class PyegeriaUnauthorizedException(PyegeriaAPIException):
 
 
 
+class PyegeriaBadRequestException(PyegeriaInvalidParameterException, PyegeriaAPIException):
+    """Egeria answered HTTP 200 with relatedHTTPCode 400: it refused the request's parameters (InvalidParameterException,
+    e.g. OPEN-METADATA-400-004 "The name passed on the name parameter ... is null"). PY-58: this was raised as a plain
+    PyegeriaAPIException, which labels it SERVER_ERROR_500. It is a PyegeriaInvalidParameterException; it is also still a
+    PyegeriaAPIException, so a handler written for the old class keeps catching it. The message shows Egeria's own
+    exceptionErrorMessageId and exceptionErrorMessage."""
+    def __init__(self, response: Response,
+                 context: dict = None, additional_info: dict = None, e: Exception = None) -> None:
+        # as PyegeriaNotFoundException: skip PyegeriaAPIException.__init__ (it re-reads the response and logs its own text)
+        PyegeriaException.__init__(self, response, PyegeriaErrorCode.VALIDATION_ERROR, context, additional_info, e)
+        info = self.additional_info
+        self.response_egeria_msg_id = info.get("exceptionErrorMessageId", self.response_egeria_msg_id)
+        self.response_egeria_msg = info.get("exceptionErrorMessage", self.response_egeria_msg)
+        self.related_http_code = info.get("relatedHTTPCode")
+        self.message = self.error_details["message_template"].format(self.response_egeria_msg or info.get("reason", ""))
+        logger.info(self.__str__().replace("{", "{{").replace("}", "}}"), ip=self.response_url,
+                    http_code=self.response_code, pyegeria_code=self.pyegeria_code)
+
+
 class PyegeriaNotFoundException(PyegeriaAPIException):
     """Raised for 404 Not Found errors.
 
