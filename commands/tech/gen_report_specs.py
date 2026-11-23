@@ -139,6 +139,21 @@ TEMPLATE_PLACEHOLDER_KEYS = {
     },
 }
 
+# PY-62: a generated spec always leads with the columns that name an element, when the target type has them.
+LEADING_COLUMNS = (("display_name", "Display Name"), ("qualified_name", "Qualified Name"), ("guid", "GUID"))
+
+
+def _lead_with_universal_columns(columns: List[Column], target_attrs: Optional[set]) -> List[Column]:
+    """Prepend display_name, qualified_name and guid (in that order) to `columns` for each the spec lacks and the
+    target type has (guid is on every element header; a type unknown to the catalog gets none)."""
+    if target_attrs is None:
+        return columns
+    have = {c.key for c in columns}
+    lead = [Column(name=name, key=key) for key, name in LEADING_COLUMNS
+            if key not in have and (key == "guid" or key in target_attrs)]
+    return [*lead, *columns]
+
+
 # PY-49: Reference Name / Reference Name List attributes. The Create command takes the NAME of another element;
 # a find report shows the relationship list the view service attaches (RELATIONSHIP_FIELDS, in camelCase), which is
 # the column the formatter fills. Only the attributes whose relationship is known are mapped; any other Reference
@@ -644,6 +659,7 @@ def build_format_sets_from_commands(
                     logger.debug(f"Skip {set_name}-{lvl}: no attributes")
                     continue
 
+            columns = _lead_with_universal_columns(columns, target_attrs)
             find_method = cmd_obj.get("find_method") or ""
             constraints = _generic_search_constraints(
                 cmd_key, cmd_obj, find_method, _safe_parse_constraints(cmd_obj.get("find_constraints")))

@@ -41,6 +41,9 @@
     "formatters": {
      "LIST": {
       "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
        {"field": "type_name", "label": "Element Type Name"},
        {"field": "effective_from", "label": "Effective From"},
        {"field": "effective_to", "label": "Effective To"}
@@ -48,6 +51,9 @@
      },
      "ALL": {
       "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
        {"field": "type_name", "label": "Element Type Name"},
        {"field": "effective_from", "label": "Effective From"},
        {"field": "effective_to", "label": "Effective To"}
@@ -95,6 +101,9 @@
     "formatters": {
      "LIST": {
       "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
        {"field": "type_name", "label": "Element Type Name"},
        {"field": "effective_from", "label": "Effective From"},
        {"field": "effective_to", "label": "Effective To"}
@@ -102,6 +111,9 @@
      },
      "ALL": {
       "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
        {"field": "type_name", "label": "Element Type Name"},
        {"field": "effective_from", "label": "Effective From"},
        {"field": "effective_to", "label": "Effective To"}

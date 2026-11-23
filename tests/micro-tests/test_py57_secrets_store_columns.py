@@ -17,7 +17,7 @@ def test_the_6_4_secrets_collection_has_none_of_the_file_properties():
 def test_the_secrets_store_element_specs_show_no_file_columns():
     for label in ("Secrets-Store-Element-DrE-Basic", "Secrets-Store-Element-DrE-Advanced"):
         assert not (FILE_KEYS & _keys(label)), label
-        assert _keys(label) == {"description", "version_identifier"}, label  # what the command can set, minus the file inputs
+        assert _keys(label) == {"display_name", "qualified_name", "guid", "description", "version_identifier"}, label  # what the command can set, minus the file inputs, plus the PY-62 leading columns
 
 
 def test_other_specs_keep_their_file_columns():

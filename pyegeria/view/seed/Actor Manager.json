@@ -1506,6 +1506,8 @@
      "LIST": {
       "columns": [
        {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
        {"field": "effective_from", "label": "Effective From"},
        {"field": "effective_to", "label": "Effective To"},
        {"field": "description", "label": "Description"},
@@ -1517,6 +1519,8 @@
      },
      "ALL": {
       "columns": [
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
        {"field": "effective_from", "label": "Effective From"},
        {"field": "effective_to", "label": "Effective To"},
        {"field": "display_name", "label": "Display Name"},
@@ -1547,6 +1551,8 @@
      "LIST": {
       "columns": [
        {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
        {"field": "description", "label": "Description"},
        {"field": "situation", "label": "Situation"},
        {"field": "objective", "label": "Objective"},
@@ -1556,6 +1562,8 @@
      },
      "ALL": {
       "columns": [
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
        {"field": "display_name", "label": "Display Name"},
        {"field": "description", "label": "Description"},
        {"field": "situation", "label": "Situation"},
