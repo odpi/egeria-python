@@ -166,3 +166,50 @@ def test_the_committed_generated_format_sets_json_loads_and_round_trips(tmp_path
     again = tmp_path / "again.json"
     loaded.save_to_json(str(again))
     assert again.read_bytes() == committed.read_bytes()
+
+
+# --- PY-52: no Egeria connection must not silently drop the Valid Values lines -----------------------------
+NO_CONNECTION = "valid values not read (no Egeria connection)"
+
+
+class _FailingClient:
+    def get_valid_metadata_values(self, property_name):
+        raise ConnectionError("platform down")
+
+
+def _block(attr, client):
+    from commands.tech.generate_md_cmd_templates import _write_attr_block
+
+    out = io.StringIO()
+    _write_attr_block(out, "Renderer", attr, client=client)
+    return out.getvalue()
+
+
+def test_without_a_connection_a_looked_up_attribute_says_its_values_were_not_read():
+    text = _block({"description": "d", "property_name": "renderer", "valid_values": []}, client=None)
+    assert f">\t**Valid Values**: {NO_CONNECTION}" in text
+
+
+def test_a_failed_lookup_says_so_and_names_the_error():
+    text = _block({"description": "d", "property_name": "renderer", "valid_values": []}, client=_FailingClient())
+    line = [ln for ln in text.splitlines() if "**Valid Values**" in ln]
+    assert len(line) == 1 and "valid values not read (Egeria lookup failed: ConnectionError)" in line[0], text
+
+
+def test_no_marker_when_the_spec_lists_its_values_or_nothing_is_looked_up():
+    listed = _block({"description": "d", "property_name": "renderer", "valid_values": ["a", "b"]}, client=None)
+    assert "a,b" in listed and "not read" not in listed
+    plain = _block({"description": "d", "valid_values": []}, client=None)
+    assert "Valid Values" not in plain
+
+
+def test_no_marker_when_the_server_answers():
+    text = _block({"description": "d", "property_name": "renderer", "valid_values": []}, client=_StubClient(["B", "A"]))
+    assert "**Valid Values**: A; B" in text and "not read" not in text
+
+
+def test_the_printed_attribute_carries_the_same_marker(capsys):
+    from commands.tech.generate_md_cmd_templates import _print_attr
+
+    _print_attr("Renderer", {"description": "d", "property_name": "renderer", "valid_values": []}, client=None)
+    assert f"Valid Values: {NO_CONNECTION}" in capsys.readouterr().out
