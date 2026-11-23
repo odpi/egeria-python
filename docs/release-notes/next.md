@@ -120,6 +120,11 @@ notes and are not repeated here.
   before anything is sent, with "<call> needs a name; use <find> to list all", because the Egeria 6.4 by-name and by-type
   endpoints refuse it (each one checked answered HTTP 400; "*" there is an exact match). `hey_egeria ... deployed-servers` now
   defaults to `View Server` instead of `*`.
+- **Unity Catalog report specs take the caller's search and show real columns** (PY-56). The UC-Catalog-Element specs
+  no longer pin the search to "Unity Catalog Catalog::": the prefix is a `qualified_name_prefix` constraint
+  (`find_elements_by_property_value(..., qualified_name_prefix=...)`) ANDed with the search string you pass. The six
+  UC-*-Element specs no longer list the create-from-template inputs (`uc_catalog`, `uc_schema`, `uc_table`, `host_url`,
+  `port`, `network_address` ...), which are not properties of the element found and were always blank.
 - **29 by-name helpers answer "everything" with their find** (PY-64). `get_<x>_by_name("*")` (or no name) runs
   `find_<x>("*")` where a live check on Egeria 6.4 showed both return the same element type and shape and have the
   same `output_format` and `report_spec` defaults: note logs, search keywords, actor profiles, roles, user identities,

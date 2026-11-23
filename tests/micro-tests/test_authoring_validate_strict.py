@@ -113,7 +113,7 @@ def test_a_super_type_attribute_is_accepted():
 
 
 def test_a_key_only_a_generated_spec_uses_is_refused_strictly_and_warned_when_legacy():
-    key = "network_address"            # a Create command's attribute (UC Catalog Element), in the generated -DrE- specs only
+    key = "analytic_parameters"        # a Create command's attribute (Create Report), in the generated -DrE- specs only
     used, _ = _registry_columns_and_types()
     assert key in used and key not in type_attributes("Project") | DERIVED_KEYS
     spec = _spec(formats=[{"types": ["TABLE"], "attributes": [{"name": "Odd", "key": key}]}])

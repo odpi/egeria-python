@@ -85,8 +85,9 @@ def test_a_unity_catalog_catalog_is_found_by_its_qualified_name_prefix(level):
     """A UC catalog is a Namespace with no deployedImplementationType (live), so the technology filter matched nothing."""
     fs = get_report_registry()[f"UC-Catalog-Element-DrE-{level}"]
     assert fs.target_type == "Namespace"
-    assert fs.action.spec_params == {"search_string": "Unity Catalog Catalog::", "metadata_element_type": "Namespace",
-                                     "property_names": ["qualifiedName"]}
+    # PY-56: the prefix is a constraint on qualifiedName, not a pinned search string
+    assert fs.action.spec_params == {"qualified_name_prefix": "Unity Catalog Catalog::",
+                                     "metadata_element_type": "Namespace"}
     assert "deployed_implementation_type" not in fs.action.optional_params
     assert "deployed_implementation_type" not in {c.key for f in fs.formats for c in f.attributes}
 

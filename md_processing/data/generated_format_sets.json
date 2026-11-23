@@ -26988,33 +26988,6 @@
             "source": null
           },
           {
-            "name": "UC Server Name",
-            "key": "uc_server_name",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Host URL",
-            "key": "host_url",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Port",
-            "key": "port",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
             "name": "Description",
             "key": "description",
             "value": null,
@@ -27068,33 +27041,6 @@
             "format": false,
             "detail_spec": null,
             "valid_values": null,
-            "source": null
-          },
-          {
-            "name": "UC Server Name",
-            "key": "uc_server_name",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Host URL",
-            "key": "host_url",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Port",
-            "key": "port",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
             "source": null
           },
           {
@@ -27159,33 +27105,6 @@
             "source": null
           },
           {
-            "name": "UC Server Name",
-            "key": "uc_server_name",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Host URL",
-            "key": "host_url",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Port",
-            "key": "port",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
             "name": "Description",
             "key": "description",
             "value": null,
@@ -27239,33 +27158,6 @@
             "format": false,
             "detail_spec": null,
             "valid_values": null,
-            "source": null
-          },
-          {
-            "name": "UC Server Name",
-            "key": "uc_server_name",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Host URL",
-            "key": "host_url",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Port",
-            "key": "port",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
             "source": null
           },
           {
@@ -27371,33 +27263,6 @@
             "source": null
           },
           {
-            "name": "UC Server Name",
-            "key": "uc_server_name",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Host URL",
-            "key": "host_url",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Port",
-            "key": "port",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
             "name": "Description",
             "key": "description",
             "value": null,
@@ -27451,33 +27316,6 @@
             "format": false,
             "detail_spec": null,
             "valid_values": null,
-            "source": null
-          },
-          {
-            "name": "UC Server Name",
-            "key": "uc_server_name",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Host URL",
-            "key": "host_url",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Port",
-            "key": "port",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
             "source": null
           },
           {
@@ -27542,33 +27380,6 @@
             "source": null
           },
           {
-            "name": "UC Server Name",
-            "key": "uc_server_name",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Host URL",
-            "key": "host_url",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Port",
-            "key": "port",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
             "name": "Description",
             "key": "description",
             "value": null,
@@ -27622,33 +27433,6 @@
             "format": false,
             "detail_spec": null,
             "valid_values": null,
-            "source": null
-          },
-          {
-            "name": "UC Server Name",
-            "key": "uc_server_name",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Host URL",
-            "key": "host_url",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Port",
-            "key": "port",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
             "source": null
           },
           {
@@ -27754,24 +27538,6 @@
             "source": null
           },
           {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
             "name": "Description",
             "key": "description",
             "value": null,
@@ -27816,24 +27582,6 @@
             "format": false,
             "detail_spec": null,
             "valid_values": null,
-            "source": null
-          },
-          {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
             "source": null
           },
           {
@@ -27889,24 +27637,6 @@
             "source": null
           },
           {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
             "name": "Description",
             "key": "description",
             "value": null,
@@ -27954,24 +27684,6 @@
             "source": null
           },
           {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
             "name": "Description",
             "key": "description",
             "value": null,
@@ -28011,10 +27723,7 @@
       ],
       "spec_params": {
         "metadata_element_type": "Namespace",
-        "property_names": [
-          "qualifiedName"
-        ],
-        "search_string": "Unity Catalog Catalog::"
+        "qualified_name_prefix": "Unity Catalog Catalog::"
       },
       "analytic_function": null,
       "analytic_spec_params": {}
@@ -28063,24 +27772,6 @@
             "source": null
           },
           {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
             "name": "Description",
             "key": "description",
             "value": null,
@@ -28125,24 +27816,6 @@
             "format": false,
             "detail_spec": null,
             "valid_values": null,
-            "source": null
-          },
-          {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
             "source": null
           },
           {
@@ -28198,24 +27871,6 @@
             "source": null
           },
           {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
             "name": "Description",
             "key": "description",
             "value": null,
@@ -28263,24 +27918,6 @@
             "source": null
           },
           {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
             "name": "Description",
             "key": "description",
             "value": null,
@@ -28320,10 +27957,7 @@
       ],
       "spec_params": {
         "metadata_element_type": "Namespace",
-        "property_names": [
-          "qualifiedName"
-        ],
-        "search_string": "Unity Catalog Catalog::"
+        "qualified_name_prefix": "Unity Catalog Catalog::"
       },
       "analytic_function": null,
       "analytic_spec_params": {}
@@ -28372,33 +28006,6 @@
             "source": null
           },
           {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Schema Name",
-            "key": "uc_schema",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
             "name": "Description",
             "key": "description",
             "value": null,
@@ -28452,33 +28059,6 @@
             "format": false,
             "detail_spec": null,
             "valid_values": null,
-            "source": null
-          },
-          {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Schema Name",
-            "key": "uc_schema",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
             "source": null
           },
           {
@@ -28543,33 +28123,6 @@
             "source": null
           },
           {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Schema Name",
-            "key": "uc_schema",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
             "name": "Description",
             "key": "description",
             "value": null,
@@ -28623,33 +28176,6 @@
             "format": false,
             "detail_spec": null,
             "valid_values": null,
-            "source": null
-          },
-          {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Schema Name",
-            "key": "uc_schema",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
             "source": null
           },
           {
@@ -28755,33 +28281,6 @@
             "source": null
           },
           {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Schema Name",
-            "key": "uc_schema",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
             "name": "Description",
             "key": "description",
             "value": null,
@@ -28835,33 +28334,6 @@
             "format": false,
             "detail_spec": null,
             "valid_values": null,
-            "source": null
-          },
-          {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Schema Name",
-            "key": "uc_schema",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
             "source": null
           },
           {
@@ -28926,33 +28398,6 @@
             "source": null
           },
           {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Schema Name",
-            "key": "uc_schema",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
             "name": "Description",
             "key": "description",
             "value": null,
@@ -29006,33 +28451,6 @@
             "format": false,
             "detail_spec": null,
             "valid_values": null,
-            "source": null
-          },
-          {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Schema Name",
-            "key": "uc_schema",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
             "source": null
           },
           {
@@ -29138,80 +28556,6 @@
             "source": null
           },
           {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Schema Name",
-            "key": "uc_schema",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Table Name",
-            "key": "uc_table",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Table Type",
-            "key": "uc_table_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "Managed",
-              "External"
-            ],
-            "source": null
-          },
-          {
-            "name": "UC Storage Location",
-            "key": "uc_storage_loc",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Data Source Format",
-            "key": "uc_data_source_format",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "DELTA",
-              "CSV",
-              "JSON",
-              "AVRO",
-              "PARQUET",
-              "ORC",
-              "TEXT"
-            ],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
             "name": "Description",
             "key": "description",
             "value": null,
@@ -29265,80 +28609,6 @@
             "format": false,
             "detail_spec": null,
             "valid_values": null,
-            "source": null
-          },
-          {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Schema Name",
-            "key": "uc_schema",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Table Name",
-            "key": "uc_table",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Table Type",
-            "key": "uc_table_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "Managed",
-              "External"
-            ],
-            "source": null
-          },
-          {
-            "name": "UC Storage Location",
-            "key": "uc_storage_loc",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Data Source Format",
-            "key": "uc_data_source_format",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "DELTA",
-              "CSV",
-              "JSON",
-              "AVRO",
-              "PARQUET",
-              "ORC",
-              "TEXT"
-            ],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
             "source": null
           },
           {
@@ -29403,80 +28673,6 @@
             "source": null
           },
           {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Schema Name",
-            "key": "uc_schema",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Table Name",
-            "key": "uc_table",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Table Type",
-            "key": "uc_table_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "Managed",
-              "External"
-            ],
-            "source": null
-          },
-          {
-            "name": "UC Storage Location",
-            "key": "uc_storage_loc",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Data Source Format",
-            "key": "uc_data_source_format",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "DELTA",
-              "CSV",
-              "JSON",
-              "AVRO",
-              "PARQUET",
-              "ORC",
-              "TEXT"
-            ],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
             "name": "Description",
             "key": "description",
             "value": null,
@@ -29530,80 +28726,6 @@
             "format": false,
             "detail_spec": null,
             "valid_values": null,
-            "source": null
-          },
-          {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Schema Name",
-            "key": "uc_schema",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Table Name",
-            "key": "uc_table",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Table Type",
-            "key": "uc_table_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "Managed",
-              "External"
-            ],
-            "source": null
-          },
-          {
-            "name": "UC Storage Location",
-            "key": "uc_storage_loc",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Data Source Format",
-            "key": "uc_data_source_format",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "DELTA",
-              "CSV",
-              "JSON",
-              "AVRO",
-              "PARQUET",
-              "ORC",
-              "TEXT"
-            ],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
             "source": null
           },
           {
@@ -29709,80 +28831,6 @@
             "source": null
           },
           {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Schema Name",
-            "key": "uc_schema",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Table Name",
-            "key": "uc_table",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Table Type",
-            "key": "uc_table_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "Managed",
-              "External"
-            ],
-            "source": null
-          },
-          {
-            "name": "UC Storage Location",
-            "key": "uc_storage_loc",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Data Source Format",
-            "key": "uc_data_source_format",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "DELTA",
-              "CSV",
-              "JSON",
-              "AVRO",
-              "PARQUET",
-              "ORC",
-              "TEXT"
-            ],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
             "name": "Description",
             "key": "description",
             "value": null,
@@ -29836,80 +28884,6 @@
             "format": false,
             "detail_spec": null,
             "valid_values": null,
-            "source": null
-          },
-          {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Schema Name",
-            "key": "uc_schema",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Table Name",
-            "key": "uc_table",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Table Type",
-            "key": "uc_table_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "Managed",
-              "External"
-            ],
-            "source": null
-          },
-          {
-            "name": "UC Storage Location",
-            "key": "uc_storage_loc",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Data Source Format",
-            "key": "uc_data_source_format",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "DELTA",
-              "CSV",
-              "JSON",
-              "AVRO",
-              "PARQUET",
-              "ORC",
-              "TEXT"
-            ],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
             "source": null
           },
           {
@@ -29974,80 +28948,6 @@
             "source": null
           },
           {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Schema Name",
-            "key": "uc_schema",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Table Name",
-            "key": "uc_table",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Table Type",
-            "key": "uc_table_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "Managed",
-              "External"
-            ],
-            "source": null
-          },
-          {
-            "name": "UC Storage Location",
-            "key": "uc_storage_loc",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Data Source Format",
-            "key": "uc_data_source_format",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "DELTA",
-              "CSV",
-              "JSON",
-              "AVRO",
-              "PARQUET",
-              "ORC",
-              "TEXT"
-            ],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
             "name": "Description",
             "key": "description",
             "value": null,
@@ -30101,80 +29001,6 @@
             "format": false,
             "detail_spec": null,
             "valid_values": null,
-            "source": null
-          },
-          {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Schema Name",
-            "key": "uc_schema",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Table Name",
-            "key": "uc_table",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Table Type",
-            "key": "uc_table_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "Managed",
-              "External"
-            ],
-            "source": null
-          },
-          {
-            "name": "UC Storage Location",
-            "key": "uc_storage_loc",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Data Source Format",
-            "key": "uc_data_source_format",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "DELTA",
-              "CSV",
-              "JSON",
-              "AVRO",
-              "PARQUET",
-              "ORC",
-              "TEXT"
-            ],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
             "source": null
           },
           {
@@ -30280,42 +29106,6 @@
             "source": null
           },
           {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Schema Name",
-            "key": "uc_schema",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Function Name",
-            "key": "uc_function",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
             "name": "Description",
             "key": "description",
             "value": null,
@@ -30369,42 +29159,6 @@
             "format": false,
             "detail_spec": null,
             "valid_values": null,
-            "source": null
-          },
-          {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Schema Name",
-            "key": "uc_schema",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Function Name",
-            "key": "uc_function",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
             "source": null
           },
           {
@@ -30469,42 +29223,6 @@
             "source": null
           },
           {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Schema Name",
-            "key": "uc_schema",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Function Name",
-            "key": "uc_function",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
             "name": "Description",
             "key": "description",
             "value": null,
@@ -30558,42 +29276,6 @@
             "format": false,
             "detail_spec": null,
             "valid_values": null,
-            "source": null
-          },
-          {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Schema Name",
-            "key": "uc_schema",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Function Name",
-            "key": "uc_function",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
             "source": null
           },
           {
@@ -30699,42 +29381,6 @@
             "source": null
           },
           {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Schema Name",
-            "key": "uc_schema",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Function Name",
-            "key": "uc_function",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
             "name": "Description",
             "key": "description",
             "value": null,
@@ -30788,42 +29434,6 @@
             "format": false,
             "detail_spec": null,
             "valid_values": null,
-            "source": null
-          },
-          {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Schema Name",
-            "key": "uc_schema",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Function Name",
-            "key": "uc_function",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
             "source": null
           },
           {
@@ -30888,42 +29498,6 @@
             "source": null
           },
           {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Schema Name",
-            "key": "uc_schema",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Function Name",
-            "key": "uc_function",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
             "name": "Description",
             "key": "description",
             "value": null,
@@ -30977,42 +29551,6 @@
             "format": false,
             "detail_spec": null,
             "valid_values": null,
-            "source": null
-          },
-          {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Schema Name",
-            "key": "uc_schema",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Function Name",
-            "key": "uc_function",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
             "source": null
           },
           {
@@ -31118,63 +29656,6 @@
             "source": null
           },
           {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Schema Name",
-            "key": "uc_schema",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Volume Name",
-            "key": "uc_volume",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Volume Type",
-            "key": "uc_vol_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "Managed",
-              "External"
-            ],
-            "source": null
-          },
-          {
-            "name": "UC Storage Location",
-            "key": "uc_storage_loc",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
             "name": "Description",
             "key": "description",
             "value": null,
@@ -31228,63 +29709,6 @@
             "format": false,
             "detail_spec": null,
             "valid_values": null,
-            "source": null
-          },
-          {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Schema Name",
-            "key": "uc_schema",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Volume Name",
-            "key": "uc_volume",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Volume Type",
-            "key": "uc_vol_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "Managed",
-              "External"
-            ],
-            "source": null
-          },
-          {
-            "name": "UC Storage Location",
-            "key": "uc_storage_loc",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
             "source": null
           },
           {
@@ -31349,63 +29773,6 @@
             "source": null
           },
           {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Schema Name",
-            "key": "uc_schema",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Volume Name",
-            "key": "uc_volume",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Volume Type",
-            "key": "uc_vol_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "Managed",
-              "External"
-            ],
-            "source": null
-          },
-          {
-            "name": "UC Storage Location",
-            "key": "uc_storage_loc",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
             "name": "Description",
             "key": "description",
             "value": null,
@@ -31459,63 +29826,6 @@
             "format": false,
             "detail_spec": null,
             "valid_values": null,
-            "source": null
-          },
-          {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Schema Name",
-            "key": "uc_schema",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Volume Name",
-            "key": "uc_volume",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Volume Type",
-            "key": "uc_vol_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "Managed",
-              "External"
-            ],
-            "source": null
-          },
-          {
-            "name": "UC Storage Location",
-            "key": "uc_storage_loc",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
             "source": null
           },
           {
@@ -31621,63 +29931,6 @@
             "source": null
           },
           {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Schema Name",
-            "key": "uc_schema",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Volume Name",
-            "key": "uc_volume",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Volume Type",
-            "key": "uc_vol_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "Managed",
-              "External"
-            ],
-            "source": null
-          },
-          {
-            "name": "UC Storage Location",
-            "key": "uc_storage_loc",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
             "name": "Description",
             "key": "description",
             "value": null,
@@ -31731,63 +29984,6 @@
             "format": false,
             "detail_spec": null,
             "valid_values": null,
-            "source": null
-          },
-          {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Schema Name",
-            "key": "uc_schema",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Volume Name",
-            "key": "uc_volume",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Volume Type",
-            "key": "uc_vol_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "Managed",
-              "External"
-            ],
-            "source": null
-          },
-          {
-            "name": "UC Storage Location",
-            "key": "uc_storage_loc",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
             "source": null
           },
           {
@@ -31852,63 +30048,6 @@
             "source": null
           },
           {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Schema Name",
-            "key": "uc_schema",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Volume Name",
-            "key": "uc_volume",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Volume Type",
-            "key": "uc_vol_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "Managed",
-              "External"
-            ],
-            "source": null
-          },
-          {
-            "name": "UC Storage Location",
-            "key": "uc_storage_loc",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
             "name": "Description",
             "key": "description",
             "value": null,
@@ -31962,63 +30101,6 @@
             "format": false,
             "detail_spec": null,
             "valid_values": null,
-            "source": null
-          },
-          {
-            "name": "UC Catalog Name",
-            "key": "uc_catalog",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Schema Name",
-            "key": "uc_schema",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Volume Name",
-            "key": "uc_volume",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "UC Volume Type",
-            "key": "uc_vol_type",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "Managed",
-              "External"
-            ],
-            "source": null
-          },
-          {
-            "name": "UC Storage Location",
-            "key": "uc_storage_loc",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Network Address",
-            "key": "network_address",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
             "source": null
           },
           {

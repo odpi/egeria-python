@@ -139,6 +139,13 @@ TEMPLATE_PLACEHOLDER_KEYS = {
     },
 }
 
+# PY-56: a Unity Catalog "create from its template" command takes the NAMES of the catalog, schema, table ... and the
+# endpoint (host, port, network address) as inputs for the template; none is a property of the element the spec finds
+# (a catalog is a Namespace, a schema a DeployedDatabaseSchema ...), so a column under these keys never fills.
+UC_CREATE_ONLY_PREFIX = "uc_"
+UC_CREATE_ONLY_KEYS = {"network_address", "host_url", "port"}
+
+
 # PY-62: a generated spec always leads with the columns that name an element, when the target type has them.
 LEADING_COLUMNS = (("display_name", "Display Name"), ("qualified_name", "Qualified Name"), ("guid", "GUID"))
 
@@ -533,8 +540,9 @@ def _generic_search_constraints(cmd_key: str, cmd_obj: dict, find_method: str, c
     if cmd_key in QUALIFIED_NAME_PREFIX_SPECS:
         element_type, prefix = QUALIFIED_NAME_PREFIX_SPECS[cmd_key]
         out.setdefault("metadata_element_type", element_type)
-        out.setdefault("property_names", ["qualifiedName"])
-        out.setdefault("search_string", prefix)          # pinned: a catalog is found by this prefix
+        # PY-56: the prefix constrains qualifiedName and the caller's search_string still applies (it used to be
+        # pinned as the search string, which ignored the caller's)
+        out.setdefault("qualified_name_prefix", prefix)
         return out
     if not _TYPE_FILTER_KEYS & set(out):
         out["metadata_element_type"] = (cmd_obj.get("OM_TYPE") or "").strip() or "OpenMetadataRoot"
@@ -640,11 +648,14 @@ def build_format_sets_from_commands(
         target_attrs = _target_attributes(spec_target, str(cmd_obj.get("OM_TYPE") or ""))
 
         skip_keys = TEMPLATE_PLACEHOLDER_KEYS.get(cmd_key, set())
+        is_uc_create = cmd_key.startswith("Create UC ")
 
         def _extract(usage_level, _skip=skip_keys):
             cols = _extract_columns_from_attributes(cmd_obj.get("Attributes", []), usage_level=usage_level,
                                                     target_attrs=target_attrs)
-            return [c for c in cols if c.key not in _skip]
+            return [c for c in cols if c.key not in _skip and not (
+                is_uc_create and (c.key.startswith(UC_CREATE_ONLY_PREFIX) or c.key in UC_CREATE_ONLY_KEYS)
+                and (target_attrs is None or c.key not in target_attrs))]
 
         for lvl in levels_to_generate:
             columns = _extract(lvl)

@@ -895,11 +895,7 @@
       "stage": "producer/find",
       "type": "Namespace",
       "function": "ClassificationExplorer.find_elements_by_property_value",
-      "params": {
-       "search_string": "Unity Catalog Catalog::",
-       "metadata_element_type": "Namespace",
-       "property_names": ["qualifiedName"]
-      }
+      "params": {"search_string": "$search_string", "metadata_element_type": "Namespace", "qualified_name_prefix": "Unity Catalog Catalog::"}
      }
     ],
     "formatters": {
@@ -908,8 +904,6 @@
        {"field": "display_name", "label": "Display Name"},
        {"field": "qualified_name", "label": "Qualified Name"},
        {"field": "guid", "label": "GUID"},
-       {"field": "uc_catalog", "label": "UC Catalog Name"},
-       {"field": "network_address", "label": "Network Address"},
        {"field": "description", "label": "Description"},
        {"field": "version_identifier", "label": "Version Identifier"}
       ]
@@ -919,8 +913,6 @@
        {"field": "display_name", "label": "Display Name"},
        {"field": "qualified_name", "label": "Qualified Name"},
        {"field": "guid", "label": "GUID"},
-       {"field": "uc_catalog", "label": "UC Catalog Name"},
-       {"field": "network_address", "label": "Network Address"},
        {"field": "description", "label": "Description"},
        {"field": "version_identifier", "label": "Version Identifier"}
       ]
@@ -957,11 +949,7 @@
       "stage": "producer/find",
       "type": "Namespace",
       "function": "ClassificationExplorer.find_elements_by_property_value",
-      "params": {
-       "search_string": "Unity Catalog Catalog::",
-       "metadata_element_type": "Namespace",
-       "property_names": ["qualifiedName"]
-      }
+      "params": {"search_string": "$search_string", "metadata_element_type": "Namespace", "qualified_name_prefix": "Unity Catalog Catalog::"}
      }
     ],
     "formatters": {
@@ -970,8 +958,6 @@
        {"field": "display_name", "label": "Display Name"},
        {"field": "qualified_name", "label": "Qualified Name"},
        {"field": "guid", "label": "GUID"},
-       {"field": "uc_catalog", "label": "UC Catalog Name"},
-       {"field": "network_address", "label": "Network Address"},
        {"field": "description", "label": "Description"},
        {"field": "version_identifier", "label": "Version Identifier"}
       ]
@@ -981,8 +967,6 @@
        {"field": "display_name", "label": "Display Name"},
        {"field": "qualified_name", "label": "Qualified Name"},
        {"field": "guid", "label": "GUID"},
-       {"field": "uc_catalog", "label": "UC Catalog Name"},
-       {"field": "network_address", "label": "Network Address"},
        {"field": "description", "label": "Description"},
        {"field": "version_identifier", "label": "Version Identifier"}
       ]
@@ -1034,10 +1018,6 @@
        {"field": "display_name", "label": "Display Name"},
        {"field": "qualified_name", "label": "Qualified Name"},
        {"field": "guid", "label": "GUID"},
-       {"field": "uc_catalog", "label": "UC Catalog Name"},
-       {"field": "uc_schema", "label": "UC Schema Name"},
-       {"field": "uc_function", "label": "UC Function Name"},
-       {"field": "network_address", "label": "Network Address"},
        {"field": "description", "label": "Description"},
        {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"},
        {"field": "version_identifier", "label": "Version Identifier"}
@@ -1048,10 +1028,6 @@
        {"field": "display_name", "label": "Display Name"},
        {"field": "qualified_name", "label": "Qualified Name"},
        {"field": "guid", "label": "GUID"},
-       {"field": "uc_catalog", "label": "UC Catalog Name"},
-       {"field": "uc_schema", "label": "UC Schema Name"},
-       {"field": "uc_function", "label": "UC Function Name"},
-       {"field": "network_address", "label": "Network Address"},
        {"field": "description", "label": "Description"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"}
@@ -1104,10 +1080,6 @@
        {"field": "display_name", "label": "Display Name"},
        {"field": "qualified_name", "label": "Qualified Name"},
        {"field": "guid", "label": "GUID"},
-       {"field": "uc_catalog", "label": "UC Catalog Name"},
-       {"field": "uc_schema", "label": "UC Schema Name"},
-       {"field": "uc_function", "label": "UC Function Name"},
-       {"field": "network_address", "label": "Network Address"},
        {"field": "description", "label": "Description"},
        {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"},
        {"field": "version_identifier", "label": "Version Identifier"}
@@ -1118,10 +1090,6 @@
        {"field": "display_name", "label": "Display Name"},
        {"field": "qualified_name", "label": "Qualified Name"},
        {"field": "guid", "label": "GUID"},
-       {"field": "uc_catalog", "label": "UC Catalog Name"},
-       {"field": "uc_schema", "label": "UC Schema Name"},
-       {"field": "uc_function", "label": "UC Function Name"},
-       {"field": "network_address", "label": "Network Address"},
        {"field": "description", "label": "Description"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"}
@@ -1174,9 +1142,6 @@
        {"field": "display_name", "label": "Display Name"},
        {"field": "qualified_name", "label": "Qualified Name"},
        {"field": "guid", "label": "GUID"},
-       {"field": "uc_catalog", "label": "UC Catalog Name"},
-       {"field": "uc_schema", "label": "UC Schema Name"},
-       {"field": "network_address", "label": "Network Address"},
        {"field": "description", "label": "Description"},
        {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"},
        {"field": "version_identifier", "label": "Version Identifier"}
@@ -1187,9 +1152,6 @@
        {"field": "display_name", "label": "Display Name"},
        {"field": "qualified_name", "label": "Qualified Name"},
        {"field": "guid", "label": "GUID"},
-       {"field": "uc_catalog", "label": "UC Catalog Name"},
-       {"field": "uc_schema", "label": "UC Schema Name"},
-       {"field": "network_address", "label": "Network Address"},
        {"field": "description", "label": "Description"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"}
@@ -1242,9 +1204,6 @@
        {"field": "display_name", "label": "Display Name"},
        {"field": "qualified_name", "label": "Qualified Name"},
        {"field": "guid", "label": "GUID"},
-       {"field": "uc_catalog", "label": "UC Catalog Name"},
-       {"field": "uc_schema", "label": "UC Schema Name"},
-       {"field": "network_address", "label": "Network Address"},
        {"field": "description", "label": "Description"},
        {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"},
        {"field": "version_identifier", "label": "Version Identifier"}
@@ -1255,9 +1214,6 @@
        {"field": "display_name", "label": "Display Name"},
        {"field": "qualified_name", "label": "Qualified Name"},
        {"field": "guid", "label": "GUID"},
-       {"field": "uc_catalog", "label": "UC Catalog Name"},
-       {"field": "uc_schema", "label": "UC Schema Name"},
-       {"field": "network_address", "label": "Network Address"},
        {"field": "description", "label": "Description"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"}
@@ -1310,9 +1266,6 @@
        {"field": "display_name", "label": "Display Name"},
        {"field": "qualified_name", "label": "Qualified Name"},
        {"field": "guid", "label": "GUID"},
-       {"field": "uc_server_name", "label": "UC Server Name"},
-       {"field": "host_url", "label": "Host URL"},
-       {"field": "port", "label": "Port"},
        {"field": "description", "label": "Description"},
        {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"},
        {"field": "version_identifier", "label": "Version Identifier"}
@@ -1323,9 +1276,6 @@
        {"field": "display_name", "label": "Display Name"},
        {"field": "qualified_name", "label": "Qualified Name"},
        {"field": "guid", "label": "GUID"},
-       {"field": "uc_server_name", "label": "UC Server Name"},
-       {"field": "host_url", "label": "Host URL"},
-       {"field": "port", "label": "Port"},
        {"field": "description", "label": "Description"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"}
@@ -1378,9 +1328,6 @@
        {"field": "display_name", "label": "Display Name"},
        {"field": "qualified_name", "label": "Qualified Name"},
        {"field": "guid", "label": "GUID"},
-       {"field": "uc_server_name", "label": "UC Server Name"},
-       {"field": "host_url", "label": "Host URL"},
-       {"field": "port", "label": "Port"},
        {"field": "description", "label": "Description"},
        {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"},
        {"field": "version_identifier", "label": "Version Identifier"}
@@ -1391,9 +1338,6 @@
        {"field": "display_name", "label": "Display Name"},
        {"field": "qualified_name", "label": "Qualified Name"},
        {"field": "guid", "label": "GUID"},
-       {"field": "uc_server_name", "label": "UC Server Name"},
-       {"field": "host_url", "label": "Host URL"},
-       {"field": "port", "label": "Port"},
        {"field": "description", "label": "Description"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"}
@@ -1446,13 +1390,6 @@
        {"field": "display_name", "label": "Display Name"},
        {"field": "qualified_name", "label": "Qualified Name"},
        {"field": "guid", "label": "GUID"},
-       {"field": "uc_catalog", "label": "UC Catalog Name"},
-       {"field": "uc_schema", "label": "UC Schema Name"},
-       {"field": "uc_table", "label": "UC Table Name"},
-       {"field": "uc_table_type", "label": "UC Table Type", "valid_values": ["Managed", "External"]},
-       {"field": "uc_storage_loc", "label": "UC Storage Location"},
-       {"field": "uc_data_source_format", "label": "UC Data Source Format", "valid_values": ["DELTA", "CSV", "JSON", "AVRO", "PARQUET", "ORC", "TEXT"]},
-       {"field": "network_address", "label": "Network Address"},
        {"field": "description", "label": "Description"},
        {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"},
        {"field": "version_identifier", "label": "Version Identifier"}
@@ -1463,13 +1400,6 @@
        {"field": "display_name", "label": "Display Name"},
        {"field": "qualified_name", "label": "Qualified Name"},
        {"field": "guid", "label": "GUID"},
-       {"field": "uc_catalog", "label": "UC Catalog Name"},
-       {"field": "uc_schema", "label": "UC Schema Name"},
-       {"field": "uc_table", "label": "UC Table Name"},
-       {"field": "uc_table_type", "label": "UC Table Type", "valid_values": ["Managed", "External"]},
-       {"field": "uc_storage_loc", "label": "UC Storage Location"},
-       {"field": "uc_data_source_format", "label": "UC Data Source Format", "valid_values": ["DELTA", "CSV", "JSON", "AVRO", "PARQUET", "ORC", "TEXT"]},
-       {"field": "network_address", "label": "Network Address"},
        {"field": "description", "label": "Description"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"}
@@ -1522,13 +1452,6 @@
        {"field": "display_name", "label": "Display Name"},
        {"field": "qualified_name", "label": "Qualified Name"},
        {"field": "guid", "label": "GUID"},
-       {"field": "uc_catalog", "label": "UC Catalog Name"},
-       {"field": "uc_schema", "label": "UC Schema Name"},
-       {"field": "uc_table", "label": "UC Table Name"},
-       {"field": "uc_table_type", "label": "UC Table Type", "valid_values": ["Managed", "External"]},
-       {"field": "uc_storage_loc", "label": "UC Storage Location"},
-       {"field": "uc_data_source_format", "label": "UC Data Source Format", "valid_values": ["DELTA", "CSV", "JSON", "AVRO", "PARQUET", "ORC", "TEXT"]},
-       {"field": "network_address", "label": "Network Address"},
        {"field": "description", "label": "Description"},
        {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"},
        {"field": "version_identifier", "label": "Version Identifier"}
@@ -1539,13 +1462,6 @@
        {"field": "display_name", "label": "Display Name"},
        {"field": "qualified_name", "label": "Qualified Name"},
        {"field": "guid", "label": "GUID"},
-       {"field": "uc_catalog", "label": "UC Catalog Name"},
-       {"field": "uc_schema", "label": "UC Schema Name"},
-       {"field": "uc_table", "label": "UC Table Name"},
-       {"field": "uc_table_type", "label": "UC Table Type", "valid_values": ["Managed", "External"]},
-       {"field": "uc_storage_loc", "label": "UC Storage Location"},
-       {"field": "uc_data_source_format", "label": "UC Data Source Format", "valid_values": ["DELTA", "CSV", "JSON", "AVRO", "PARQUET", "ORC", "TEXT"]},
-       {"field": "network_address", "label": "Network Address"},
        {"field": "description", "label": "Description"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"}
@@ -1598,12 +1514,6 @@
        {"field": "display_name", "label": "Display Name"},
        {"field": "qualified_name", "label": "Qualified Name"},
        {"field": "guid", "label": "GUID"},
-       {"field": "uc_catalog", "label": "UC Catalog Name"},
-       {"field": "uc_schema", "label": "UC Schema Name"},
-       {"field": "uc_volume", "label": "UC Volume Name"},
-       {"field": "uc_vol_type", "label": "UC Volume Type", "valid_values": ["Managed", "External"]},
-       {"field": "uc_storage_loc", "label": "UC Storage Location"},
-       {"field": "network_address", "label": "Network Address"},
        {"field": "description", "label": "Description"},
        {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"},
        {"field": "version_identifier", "label": "Version Identifier"}
@@ -1614,12 +1524,6 @@
        {"field": "display_name", "label": "Display Name"},
        {"field": "qualified_name", "label": "Qualified Name"},
        {"field": "guid", "label": "GUID"},
-       {"field": "uc_catalog", "label": "UC Catalog Name"},
-       {"field": "uc_schema", "label": "UC Schema Name"},
-       {"field": "uc_volume", "label": "UC Volume Name"},
-       {"field": "uc_vol_type", "label": "UC Volume Type", "valid_values": ["Managed", "External"]},
-       {"field": "uc_storage_loc", "label": "UC Storage Location"},
-       {"field": "network_address", "label": "Network Address"},
        {"field": "description", "label": "Description"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"}
@@ -1672,12 +1576,6 @@
        {"field": "display_name", "label": "Display Name"},
        {"field": "qualified_name", "label": "Qualified Name"},
        {"field": "guid", "label": "GUID"},
-       {"field": "uc_catalog", "label": "UC Catalog Name"},
-       {"field": "uc_schema", "label": "UC Schema Name"},
-       {"field": "uc_volume", "label": "UC Volume Name"},
-       {"field": "uc_vol_type", "label": "UC Volume Type", "valid_values": ["Managed", "External"]},
-       {"field": "uc_storage_loc", "label": "UC Storage Location"},
-       {"field": "network_address", "label": "Network Address"},
        {"field": "description", "label": "Description"},
        {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"},
        {"field": "version_identifier", "label": "Version Identifier"}
@@ -1688,12 +1586,6 @@
        {"field": "display_name", "label": "Display Name"},
        {"field": "qualified_name", "label": "Qualified Name"},
        {"field": "guid", "label": "GUID"},
-       {"field": "uc_catalog", "label": "UC Catalog Name"},
-       {"field": "uc_schema", "label": "UC Schema Name"},
-       {"field": "uc_volume", "label": "UC Volume Name"},
-       {"field": "uc_vol_type", "label": "UC Volume Type", "valid_values": ["Managed", "External"]},
-       {"field": "uc_storage_loc", "label": "UC Storage Location"},
-       {"field": "network_address", "label": "Network Address"},
        {"field": "description", "label": "Description"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"}

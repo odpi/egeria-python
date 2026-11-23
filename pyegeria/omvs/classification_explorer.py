@@ -2974,6 +2974,7 @@ class ClassificationExplorer(ServerClient):
         body: Optional[dict | FindPropertyNamesRequestBody] = None,
         deployed_implementation_type: Optional[str] = None,
         default_deployed_implementation_type: Optional[str] = None,
+        qualified_name_prefix: Optional[str] = None,
         **kwargs,
     ) -> list | str:
         """
@@ -2991,6 +2992,8 @@ class ClassificationExplorer(ServerClient):
             - list only elements of exactly this technology within metadata_element_type: Egeria ANDs deployedImplementationType EQUALS this value (ignoring case) with (for a search string other than '*') property_names matching it, in one complex query, so paging stays exact. "*" means any technology (no technology condition).
         default_deployed_implementation_type: str, optional
             - the technology used when deployed_implementation_type is not given (report specs pin it; a caller's deployed_implementation_type overrides it).
+        qualified_name_prefix: str, optional
+            - only elements whose qualifiedName starts with this (Egeria ANDs it with the search string in one complex query), for a kind of element that has no deployedImplementationType, e.g. a Unity Catalog catalog ("Unity Catalog Catalog::"). The caller's search string still applies; '*' means every element with the prefix (PY-56).
         property_names: list[str]
             - property names to search in.
         metadata_element_type : str, default = None
@@ -3089,13 +3092,16 @@ class ClassificationExplorer(ServerClient):
         technology = deployed_implementation_type or default_deployed_implementation_type
         if technology == "*":
             technology = None
-        if technology and body is None:
+        if (technology or qualified_name_prefix) and body is None:
             # One technology within a shared supertype (e.g. "PostgreSQL Server" among the
             # SoftwareServers). Both conditions are ANDed by Egeria in one complex query, so paging is
             # exact and no other technology can appear: deployedImplementationType EQUALS the
             # technology, AND (for a search string) one of property_names matches it.
             # exact, ignoring case: "postgresql server" finds the PostgreSQL Server
-            conditions = [_string_condition("deployedImplementationType", "CASE_INSENSITIVE_EQ", technology)]
+            conditions = ([_string_condition("deployedImplementationType", "CASE_INSENSITIVE_EQ", technology)]
+                          if technology else [])
+            if qualified_name_prefix:
+                conditions.append(_string_condition("qualifiedName", "STARTS_WITH", qualified_name_prefix))
             if not star:
                 operator = _match_operator(starts_with, ends_with, ignore_case)
                 conditions.append({"nestedConditions": {
@@ -3212,6 +3218,7 @@ class ClassificationExplorer(ServerClient):
         body: Optional[dict | FindPropertyNamesRequestBody] = None,
         deployed_implementation_type: Optional[str] = None,
         default_deployed_implementation_type: Optional[str] = None,
+        qualified_name_prefix: Optional[str] = None,
         **kwargs,
     ) -> list | str:
         """
@@ -3304,6 +3311,7 @@ class ClassificationExplorer(ServerClient):
                 body=body,
                 deployed_implementation_type=deployed_implementation_type,
                 default_deployed_implementation_type=default_deployed_implementation_type,
+                qualified_name_prefix=qualified_name_prefix,
                 **kwargs
             )
         )
