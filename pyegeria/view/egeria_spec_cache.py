@@ -814,7 +814,7 @@ async def _async_find_specs_by_label(client, label: str) -> List[Dict[str, Any]]
 
 def _pinned_element_state(client, guid: str) -> Tuple[str, str]:
     """Whether a pinned spec's element is still there, by GUID, three ways: ("found", ""), ("gone", why)
-    (Egeria's specific element not-found, or the element is no longer visible to the syncing identity: the
+    (Egeria's specific element not-found, or Egeria says the element is not effective for this read (400-010; never reported as deleted): the
     only answers that prune), or ("unknown", the error class): any other error, OMAG-MULTI-TENANT-404 (the
     server or service isn't available) included, which keeps the entry."""
     if not guid:
@@ -825,7 +825,7 @@ def _pinned_element_state(client, guid: str) -> Tuple[str, str]:
         if _folders.is_gone_error(exc):
             from pyegeria.view.dashboard_resolver import is_not_visible_error
             if is_not_visible_error(exc):
-                return "gone", f"is no longer visible to {_client_identity(client)}"
+                return "gone", f"is not effective for this read as {_client_identity(client)}"
             return "gone", "no longer exists"
         return "unknown", type(exc).__name__
     return ("found", "") if el else ("gone", "no longer exists")   # NO_ELEMENTS_FOUND: Egeria's not-found
