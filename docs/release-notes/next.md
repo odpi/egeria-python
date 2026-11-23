@@ -143,6 +143,28 @@ notes and are not repeated here.
   key is refused by name. The old loose check remains only as `validate(..., legacy=True)`, with a warning per key.
 - **The deployment-status fallback matches Egeria** (PY-21). It offered `REJECTED_FOR_DEPLOYMENT`; Egeria's value is
   `REJECTED`.
+- **Dr.Egeria Certification and License send the right fields** (PY-43, PY-50). Link and Update send `coverageStart` /
+  `coverageEnd` (they sent `startDate` / `endDate`, which Egeria dropped). Link and Update Certification refuse
+  Entitlements, Obligations and Restrictions with words naming the Certification Type, where they belong, instead of
+  dropping them silently, and the command templates no longer offer them.
+- **A Dr.Egeria command that needs Egeria 6.4 fails on an older platform** (PY-48). It was reported as a pass with
+  nothing written. The runner now counts only `success`, `deferred` and `read` as succeeded; any other status, or none,
+  is a failure with the status in the words.
+- **`add_search_keyword_to_element` creates a keyword with its text** (PY-41). It sent `keyword`, which Egeria ignores;
+  it now sends `displayName` (and the description, if given). `FindPropertyNames` sends `metadataElementTypeName`
+  (PY-44), so the relationship type is applied.
+- **Markdown output no longer prints "None" for an unset property** (PY-39). In FORM and MD the heading stays and the
+  body is blank; in REPORT and MERMAID the property is left out.
+- **The `start_date` / `planned_end_date` rename warning is shown** (PY-42): it is a `FutureWarning`, not a
+  `DeprecationWarning` that Python hides outside `__main__`.
+- **Dr.Egeria accepts every key a Properties class reads** (PY-45, PY-46). The properties table follows public
+  setters through the whole superclass chain (for example `ResourceList`'s `resourceUse` and `label`, and the query
+  options of `FindPropertyNames`), and strict validation checks a spec's columns against the Egeria type name
+  (`License Type` is `LicenseType`).
+- **`validate_compact_specs` reports 0 errors, and a regeneration is stable** (PY-51, PY-52). It accepts the Egeria 6.4
+  type names, `generated_format_sets.json` leaves out empty optional fields and is current, and a template generated
+  with no Egeria connection says "valid values not read" instead of dropping the line.
+- **Two unparsable deprecated scripts are removed** (PY-36); a test parses every file under `commands/`.
 
 ## Fixes (drafts)
 
