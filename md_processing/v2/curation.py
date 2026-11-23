@@ -184,10 +184,6 @@ CLASSIFICATION_METHODS: Dict[str, ClassificationSpec] = {
             "Max Height": "maxHeight",
             "Scope Elements": "scopeElements",
             "Additional Properties": "additionalProperties",
-            # the classification's own effectivity and extended properties, inherited from Request Base
-            "Effective From": "effectiveFrom",
-            "Effective To": "effectiveTo",
-            "Extended Properties": "extendedProperties",
         },
         number_fields=("Min Longitude", "Max Longitude", "Min Latitude", "Max Latitude", "Min Height", "Max Height")),
     "GovernanceExpectations": ClassificationSpec(
@@ -322,6 +318,11 @@ CURATION_CLASSIFICATION_CLIENTS = {
 }
 
 
+#: Sent for every classification (ClassificationProperties holds them): attribute -> property
+CLASSIFICATION_COMMON_FIELDS = {"Effective From": "effectiveFrom", "Effective To": "effectiveTo",
+                                "Extended Properties": "extendedProperties"}
+
+
 def _build_classification_properties(spec: ClassificationSpec, attributes: dict) -> dict:
     props: dict = {"class": spec.props_class}
     if spec.level_field:
@@ -341,6 +342,14 @@ def _build_classification_properties(spec: ClassificationSpec, attributes: dict)
                 raise PyegeriaInvalidParameterException(
                     None, {"caller": "_build_classification_properties"},
                     {"reason": f"{attr_name} must be a number, not {val!r}."})
+        if val is not None:
+            props[prop_name] = val
+    # PY-69: every classification's properties carry effectivity and extended properties, and every classification
+    # command inherits the three attributes from Request Base: one rule for all, not a field per spec.
+    for attr_name, prop_name in CLASSIFICATION_COMMON_FIELDS.items():
+        if prop_name in props or attr_name in spec.fields:
+            continue
+        val = _v(attributes, attr_name)
         if val is not None:
             props[prop_name] = val
     return props

@@ -55,7 +55,8 @@ def test_the_data_scope_commands_carry_every_attribute():
 
 def test_the_processor_sends_each_attribute_under_its_property_name():
     spec = CLASSIFICATION_METHODS["DataScope"]
-    assert spec.fields == EXPECTED
+    common = {"Effective From", "Effective To", "Extended Properties"}  # sent for every classification (PY-69)
+    assert spec.fields == {k: v for k, v in EXPECTED.items() if k not in common}
 
 
 def test_the_body_the_processor_builds_has_every_value():
