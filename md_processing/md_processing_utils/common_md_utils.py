@@ -884,6 +884,18 @@ def set_gov_prop_body(object_type: str, qualified_name: str, attributes: dict)->
     return complete_bundle_properties(body, attributes)  # keys added after the common builder (F-B 6)
     
 
+def _number_or_refuse(attributes: dict, name: str):
+    """The attribute's value as a float (a parsed "Simple Float" arrives as text, and Egeria reads a double), None
+    when it is blank; text that is not a number is refused, never sent (PY-25)."""
+    value = attributes.get(name, {}).get('value', None)
+    if value is None or value == "":
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        raise PyegeriaException(f"{name} must be a number, not {value!r}.")
+
+
 def update_gov_body_for_type(object_type: str, body: dict, attributes: dict) -> dict:
     # Callers pass either the spaced display name (e.g. "Certification Type") or the
     # no-space OM_TYPE (e.g. "CertificationType", which is what GovernanceProcessor
@@ -979,12 +991,15 @@ def update_gov_body_for_type(object_type: str, body: dict, attributes: dict) -> 
         # above (ISSUE-71).
         body['dataCollectionStartTime'] = attributes.get('Data Collection Start Time', {}).get('value', None)
         body['dataCollectionEndTime'] = attributes.get('Data Collection End Time', {}).get('value', None)
-        body['minLongitude'] = attributes.get('Min Longitude', {}).get('value', None)
-        body['maxLongitude'] = attributes.get('Max Longitude', {}).get('value', None)
-        body['minLatitude'] = attributes.get('Min Latitude', {}).get('value', None)
-        body['maxLatitude'] = attributes.get('Max Latitude', {}).get('value', None)
-        body['minHeight'] = attributes.get('Min Height', {}).get('value', None)
-        body['maxHeight'] = attributes.get('Max Height', {}).get('value', None)
+        # PY-25: DataLensProperties also reads the validity and coverage periods
+        body['dataValidityStartTime'] = attributes.get('Data Validity Start Time', {}).get('value', None)
+        body['dataValidityEndTime'] = attributes.get('Data Validity End Time', {}).get('value', None)
+        body['dataCoverageStartTime'] = attributes.get('Data Coverage Start Time', {}).get('value', None)
+        body['dataCoverageEndTime'] = attributes.get('Data Coverage End Time', {}).get('value', None)
+        for attr_name, prop_name in (("Min Longitude", "minLongitude"), ("Max Longitude", "maxLongitude"),
+                                     ("Min Latitude", "minLatitude"), ("Max Latitude", "maxLatitude"),
+                                     ("Min Height", "minHeight"), ("Max Height", "maxHeight")):
+            body[prop_name] = _number_or_refuse(attributes, attr_name)
         body['scopeElements'] = attributes.get('Scope Elements', {}).get('value', None)
         return body
 

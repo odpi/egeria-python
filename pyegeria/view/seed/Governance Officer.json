@@ -1153,6 +1153,10 @@
        {"field": "min_latitude", "label": "Min Latitude"},
        {"field": "min_longitude", "label": "Min Longitude"},
        {"field": "scope_elements", "label": "Scope Elements"},
+       {"field": "data_validity_start_time", "label": "Data Validity Start Time"},
+       {"field": "data_validity_end_time", "label": "Data Validity End Time"},
+       {"field": "data_coverage_start_time", "label": "Data Coverage Start Time"},
+       {"field": "data_coverage_end_time", "label": "Data Coverage End Time"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "status", "label": "Status"},
        {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
@@ -1204,7 +1208,11 @@
        {"field": "min_height", "label": "Min Height"},
        {"field": "min_latitude", "label": "Min Latitude"},
        {"field": "min_longitude", "label": "Min Longitude"},
-       {"field": "scope_elements", "label": "Scope Elements"}
+       {"field": "scope_elements", "label": "Scope Elements"},
+       {"field": "data_validity_start_time", "label": "Data Validity Start Time"},
+       {"field": "data_validity_end_time", "label": "Data Validity End Time"},
+       {"field": "data_coverage_start_time", "label": "Data Coverage Start Time"},
+       {"field": "data_coverage_end_time", "label": "Data Coverage End Time"}
       ]
      }
     }
@@ -1270,6 +1278,10 @@
        {"field": "min_latitude", "label": "Min Latitude"},
        {"field": "min_longitude", "label": "Min Longitude"},
        {"field": "scope_elements", "label": "Scope Elements"},
+       {"field": "data_validity_start_time", "label": "Data Validity Start Time"},
+       {"field": "data_validity_end_time", "label": "Data Validity End Time"},
+       {"field": "data_coverage_start_time", "label": "Data Coverage Start Time"},
+       {"field": "data_coverage_end_time", "label": "Data Coverage End Time"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
        {"field": "category", "label": "Category"}
@@ -1305,7 +1317,11 @@
        {"field": "min_height", "label": "Min Height"},
        {"field": "min_latitude", "label": "Min Latitude"},
        {"field": "min_longitude", "label": "Min Longitude"},
-       {"field": "scope_elements", "label": "Scope Elements"}
+       {"field": "scope_elements", "label": "Scope Elements"},
+       {"field": "data_validity_start_time", "label": "Data Validity Start Time"},
+       {"field": "data_validity_end_time", "label": "Data Validity End Time"},
+       {"field": "data_coverage_start_time", "label": "Data Coverage Start Time"},
+       {"field": "data_coverage_end_time", "label": "Data Coverage End Time"}
       ]
      }
     }

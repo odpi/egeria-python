@@ -137924,6 +137924,42 @@
             "source": null
           },
           {
+            "name": "Data Validity Start Time",
+            "key": "data_validity_start_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Data Validity End Time",
+            "key": "data_validity_end_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Data Coverage Start Time",
+            "key": "data_coverage_start_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Data Coverage End Time",
+            "key": "data_coverage_end_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
             "name": "Version Identifier",
             "key": "version_identifier",
             "value": null,
@@ -138190,6 +138226,42 @@
           {
             "name": "Scope Elements",
             "key": "scope_elements",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Data Validity Start Time",
+            "key": "data_validity_start_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Data Validity End Time",
+            "key": "data_validity_end_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Data Coverage Start Time",
+            "key": "data_coverage_start_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Data Coverage End Time",
+            "key": "data_coverage_end_time",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -138518,6 +138590,42 @@
             "detail_spec": null,
             "valid_values": [],
             "source": null
+          },
+          {
+            "name": "Data Validity Start Time",
+            "key": "data_validity_start_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Data Validity End Time",
+            "key": "data_validity_end_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Data Coverage Start Time",
+            "key": "data_coverage_start_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Data Coverage End Time",
+            "key": "data_coverage_end_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
           }
         ],
         "columns": [
@@ -138795,6 +138903,42 @@
           {
             "name": "Scope Elements",
             "key": "scope_elements",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Data Validity Start Time",
+            "key": "data_validity_start_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Data Validity End Time",
+            "key": "data_validity_end_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Data Coverage Start Time",
+            "key": "data_coverage_start_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Data Coverage End Time",
+            "key": "data_coverage_end_time",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -139187,6 +139331,42 @@
             "source": null
           },
           {
+            "name": "Data Validity Start Time",
+            "key": "data_validity_start_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Data Validity End Time",
+            "key": "data_validity_end_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Data Coverage Start Time",
+            "key": "data_coverage_start_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Data Coverage End Time",
+            "key": "data_coverage_end_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
             "name": "Version Identifier",
             "key": "version_identifier",
             "value": null,
@@ -139579,6 +139759,42 @@
           {
             "name": "Scope Elements",
             "key": "scope_elements",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Data Validity Start Time",
+            "key": "data_validity_start_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Data Validity End Time",
+            "key": "data_validity_end_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Data Coverage Start Time",
+            "key": "data_coverage_start_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Data Coverage End Time",
+            "key": "data_coverage_end_time",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -140051,6 +140267,42 @@
             "detail_spec": null,
             "valid_values": [],
             "source": null
+          },
+          {
+            "name": "Data Validity Start Time",
+            "key": "data_validity_start_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Data Validity End Time",
+            "key": "data_validity_end_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Data Coverage Start Time",
+            "key": "data_coverage_start_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Data Coverage End Time",
+            "key": "data_coverage_end_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
           }
         ],
         "columns": [
@@ -140454,6 +140706,42 @@
           {
             "name": "Scope Elements",
             "key": "scope_elements",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Data Validity Start Time",
+            "key": "data_validity_start_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Data Validity End Time",
+            "key": "data_validity_end_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Data Coverage Start Time",
+            "key": "data_coverage_start_time",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Data Coverage End Time",
+            "key": "data_coverage_end_time",
             "value": null,
             "format": false,
             "detail_spec": null,
