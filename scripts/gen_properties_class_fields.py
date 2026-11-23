@@ -69,6 +69,63 @@ def read_sources(egeria: str, ref: str) -> dict[str, str]:
     return sources
 
 
+ARCHIVES = "open-metadata-resources/open-metadata-archives/open-metadata-types/src/main/java/"
+_ENUM_CONSTANT = re.compile(r"\b([A-Z][A-Z0-9_]*)\(\s*\"[0-9a-f-]{36}\"\s*,\s*\"([^\"]+)\"")
+_CLASSIFICATION_DEF = re.compile(
+    r"archiveHelper\.getClassificationDef\(\s*OpenMetadataType\.(\w+)\s*,\s*"
+    r"(null|this\.archiveBuilder\.getClassificationDef\(\s*OpenMetadataType\.(\w+)\.typeName\s*\))")
+
+
+def read_typedef_sources(egeria: str, ref: str) -> dict[str, str]:
+    """The OpenMetadataTypesArchive*.java files at `ref`, by path (the typedefs the platform loads)."""
+    paths = [p for p in git(egeria, "ls-tree", "-r", "--name-only", ref, "--", ARCHIVES).decode().split("\n")
+             if re.search(r"/OpenMetadataTypesArchive[\w]*\.java$", p)]
+    batch = git(egeria, "cat-file", "--batch", stdin="".join(f"{ref}:{p}\n" for p in paths).encode())
+    sources, pos = {}, 0
+    for path in paths:
+        header_end = batch.index(b"\n", pos)
+        size = int(batch[pos:header_end].split()[2])
+        start = header_end + 1
+        sources[path] = batch[start:start + size].decode("utf-8", errors="ignore")
+        pos = start + size + 1
+    return sources
+
+
+def type_name_constants(sources: dict[str, str]) -> dict[str, str]:
+    """{OpenMetadataType constant: its typeName}, from OpenMetadataType.java (NAME("guid", "typeName", ...))."""
+    out: dict[str, str] = {}
+    for path, src in sources.items():
+        if path.endswith("/OpenMetadataType.java") or path == "OpenMetadataType.java" or "OpenMetadataType.java" in path:
+            out.update({m.group(1): m.group(2) for m in _ENUM_CONSTANT.finditer(src)})
+    return out
+
+
+def classification_typedef_supers(archives: dict[str, str], names: dict[str, str]) -> dict[str, str]:
+    """{classification: its supertype} from the typedefs: the 2nd argument of
+    archiveHelper.getClassificationDef(<type>, <supertype or null>, <entity>, <bool>) in every archive."""
+    out: dict[str, str] = {}
+    for src in archives.values():
+        for m in _CLASSIFICATION_DEF.finditer(_strip_comments(src)):
+            sub = names.get(m.group(1))
+            sup = names.get(m.group(3)) if m.group(3) else None
+            if sub and sup:
+                out[sub] = sup
+    return out
+
+
+def supertype_chains(direct: dict[str, str]) -> dict[str, tuple[str, ...]]:
+    """{classification: (supertype, its supertype, ...)}, nearest first, for the ones that have a supertype."""
+    out = {}
+    for sub in direct:
+        chain, node, seen = [], direct.get(sub), {sub}
+        while node and node not in seen:
+            chain.append(node)
+            seen.add(node)
+            node = direct.get(node)
+        out[sub] = tuple(chain)
+    return out
+
+
 def _strip_comments(src: str) -> str:
     """The source with comments blanked (newlines kept); string and char literals are left in place."""
     out, i, n = [], 0, len(src)
@@ -181,8 +238,9 @@ def parse(src: str) -> dict | None:
             "extends": m.group(2), "keys": list(dict.fromkeys(keys))}
 
 
-#: Filled by build_table: {classification: (its supertypes, nearest first)} for every classification that has one.
-supertypes: dict[str, tuple[str, ...]] = {}
+#: Filled by build_table: the Java Properties-class chain above each classification. A cross-check only: the table
+#: is built from the typedefs (supertype_chains), which also give supertypes the Java classes do not extend (PY-59 F2).
+java_supertypes: dict[str, tuple[str, ...]] = {}
 
 
 def build_table(sources: dict[str, str], warn=lambda msg: None) -> dict[str, tuple[str, tuple[str, ...]]]:
@@ -238,7 +296,7 @@ def build_table(sources: dict[str, str], warn=lambda msg: None) -> dict[str, tup
         return tuple(out)
 
     table = {}
-    supertypes.clear()
+    java_supertypes.clear()
     for fqn in sorted(classes, key=lambda f: classes[f]["name"]):
         name = classes[fqn]["name"]
         if not name.endswith("Properties") or not listed(paths[fqn]):
@@ -251,7 +309,7 @@ def build_table(sources: dict[str, str], warn=lambda msg: None) -> dict[str, tup
             above = tuple(n[:-len("Properties")] for n in supers(fqn)
                           if n.endswith("Properties") and n != "ClassificationBeanProperties")
             if above:
-                supertypes[name[:-len("Properties")]] = above
+                java_supertypes[name[:-len("Properties")]] = above
     for name, subclasses in sorted(unresolved.items()):
         warn(f"superclass {name} not in the frameworks tree (its setters are not counted): "
              f"{', '.join(sorted(s.rsplit('.', 1)[-1] for s in subclasses))}")
@@ -263,8 +321,17 @@ def main():
     ap.add_argument("--egeria", default=os.path.expanduser("~/localGit/egeria-v6/egeria"))
     ap.add_argument("--ref", default="origin/main")
     args = ap.parse_args()
-    table = build_table(read_sources(args.egeria, args.ref), warn=lambda m: print(f"warning: {m}", file=sys.stderr))
-    head = git(args.egeria, "log", "-1", "--format=%h %cs", args.ref).decode().strip()
+    warn = lambda m: print(f"warning: {m}", file=sys.stderr)  # noqa: E731
+    sources = read_sources(args.egeria, args.ref)
+    table = build_table(sources, warn=warn)
+    # the supertypes come from the typedefs the platform loads; the Java class chain is only a cross-check
+    chains = supertype_chains(classification_typedef_supers(read_typedef_sources(args.egeria, args.ref),
+                                                            type_name_constants(sources)))
+    for cls, above in sorted(java_supertypes.items()):
+        if chains.get(cls) != above:
+            warn(f"classification {cls}: typedef supertypes {chains.get(cls, ())} differ from the Java chain {above}")
+    sha, date = git(args.egeria, "log", "-1", "--format=%H %cs", args.ref).decode().strip().split()
+    head = f"{sha[:10]} {date}"
     lines = [
         "# SPDX-License-Identifier: Apache-2.0",
         "# Copyright Contributors to the ODPi Egeria project.",
@@ -285,12 +352,12 @@ def main():
     lines.append("}")
     lines += [
         "",
-        "#: Each classification's supertypes, nearest first (the Properties classes above it, short of the",
-        "#: ClassificationProperties root), for the classifications that have any. `class:A` in a report column",
+        "#: Each classification's supertypes, nearest first, from the typedefs (getClassificationDef's 2nd argument",
+        "#: in OpenMetadataTypesArchive*.java), for the classifications that have any. `class:A` in a report column",
         "#: matches a classification named A or any classification with A in this list (PY-59).",
         "CLASSIFICATION_SUPERTYPES: dict[str, tuple[str, ...]] = {",
     ]
-    for cls, above in sorted(supertypes.items()):
+    for cls, above in sorted(chains.items()):
         lines.append(f"    {cls!r}: {above!r},")
     lines.append("}")
     with open(OUT, "w", encoding="utf-8") as f:
