@@ -992,7 +992,7 @@ def render_rich_value(value: Any, output_format: str) -> str:
         if isinstance(v, list):
             names = [summarize(i) for i in v]
             return ", ".join([x for x in names if x])
-        return str(v)
+        return "" if v is None else str(v)
 
     if output_format == 'FORM':
         return summarize(value)
@@ -1000,7 +1000,7 @@ def render_rich_value(value: Any, output_format: str) -> str:
     # REPORT/MD nested bullets
     def bullets(v: Any, indent: int = 0) -> str:
         if not isinstance(v, (list, dict)):
-            return str(v)
+            return "" if v is None else str(v)
         prefix = "  " * indent
         out = []
         if isinstance(v, list):
@@ -1010,17 +1010,17 @@ def render_rich_value(value: Any, output_format: str) -> str:
                     out.append(f"{prefix}- **{name}**")
                     for k, val in item.items():
                         if k in ('name', 'nested_elements'): continue
-                        out.append(f"{prefix}  - {camel_to_title_case(k)}: {val}")
+                        out.append(f"{prefix}  - {camel_to_title_case(k)}: {'' if val is None else val}".rstrip())
                     if item.get('nested_elements'):
                         out.append(bullets(item['nested_elements'], indent + 2))
-                else:
+                elif item is not None:  # an unset item is not a bullet (PY-39)
                     out.append(f"{prefix}- {item}")
         else:  # dict
             for k, val in v.items():
                 if k == 'nested_elements':
                     out.append(bullets(val, indent + 1))
                 else:
-                    out.append(f"{prefix}- **{camel_to_title_case(k)}**: {val}")
+                    out.append(f"{prefix}- **{camel_to_title_case(k)}**: {'' if val is None else val}".rstrip())
         return "\n".join(out)
 
     return bullets(value, 0)
@@ -1042,6 +1042,8 @@ def make_md_attribute(attribute_name: str, attribute_value: str|list|dict, outpu
     output = ""
     if isinstance(attribute_value,str):
         attribute_value = attribute_value.strip() if attribute_value else ""
+    elif attribute_value is None and output_type in ("FORM", "MD"):
+        attribute_value = ""  # unset: the heading stays, the body is blank, never the text "None" (PY-39)
 
     if attribute_name:
         attribute_title = camel_to_title_case(attribute_name)
