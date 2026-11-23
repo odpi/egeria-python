@@ -569,7 +569,7 @@ PROJECT_COLUMNS = COMMON_COLUMNS + [
     # PY-49 Q8: ProjectTarget (Egeria 6.4): the elements the project works on
     Column(name="Project Targets", key='project_targets', label='display_name'),
     # PY-53: related information, one column mechanism (Column.source)
-    Column(name="Project Kind", key='project_kind', source='class:Campaign,Task'),
+    Column(name="Project Kind", key='project_kind', source='class:Campaign,Task,StudyProject,PersonalProject,GlossaryProject,GovernanceProject'),
     Column(name="Target Labels", key='project_target_labels', source='rel:projectTargets.label'),
 
 ]

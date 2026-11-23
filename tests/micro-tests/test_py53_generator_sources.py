@@ -35,7 +35,7 @@ def test_a_generated_spec_carries_the_classification_source_column():
 
 
 def test_projects_shows_kind_and_target_label():
-    assert _sources("Projects") == {"project_kind": "class:Campaign,Task",
+    assert _sources("Projects") == {"project_kind": "class:Campaign,Task,StudyProject,PersonalProject,GlossaryProject,GovernanceProject",
                                     "project_target_labels": "rel:projectTargets.label"}
 
 
@@ -53,3 +53,21 @@ def test_every_source_in_the_registry_validates():
                 if c.source and check_source(c.source):
                     bad[(label, c.key)] = check_source(c.source)
     assert bad == {}
+
+
+SIX_PROJECT_KINDS = ["Campaign", "Task", "StudyProject", "PersonalProject", "GlossaryProject", "GovernanceProject"]
+
+
+def test_project_kind_names_all_six_6_4_project_kind_classifications():
+    from md_processing.md_processing_utils.properties_class_fields import PROPERTIES_CLASS_FIELDS
+    for name in SIX_PROJECT_KINDS:
+        assert PROPERTIES_CLASS_FIELDS[f"{name}Properties"][0] == "classification", name
+    assert _sources("Projects")["project_kind"] == "class:" + ",".join(SIX_PROJECT_KINDS)
+
+
+def test_every_project_kind_shows_in_the_project_kind_column():
+    from pyegeria.view.column_source import resolve_source
+    source = _sources("Projects")["project_kind"]
+    for name in SIX_PROJECT_KINDS:
+        element = {"elementHeader": {"classifications": [{"classificationName": name}]}}
+        assert resolve_source(element, source)[1] == name, name

@@ -59,8 +59,8 @@ notes and are not repeated here.
   shows a classification property (`class:Branch.scope`; `class:Campaign,Task` lists every one present),
   `rel:<end>.<property>` a property of the relationship (`rel:projectTargets.label`), and `of:<end>.<attribute>` an
   attribute of the related element. A relationship column and an element column of one end line up by position, a
-  blank slot shows "—", and an absent value is blank, never "None". The validator refuses an unknown classification,
-  end or property. New in Projects (Project Kind, Target Labels) and the new File-Folders spec (Branch).
+  related element without the value shows "—" in its place; when none has it, the cell is blank (never "None"). The validator refuses an unknown classification,
+  end or property. New in Projects (Project Kind, covering all six project-kind classifications; Target Labels) and the new File-Folders spec (Branch).
 - **A report spec can say it needs Egeria 6.4** (PY-49, annotation `min_egeria_version`). Run against an older
   platform, it stops before sending anything, with "needs Egeria 6.4". Decisions and Data Values use it.
 - **New Platform-Report spec** (PY-49). `get_platform_report(..., output_format="DICT")` now shows the platform's URL,
@@ -69,7 +69,8 @@ notes and are not repeated here.
 - **Catalog-Target shows the CatalogTarget relationship** (PY-53). Its columns come from the relationship of the
   connector you asked about (catalog target name, metadata collection and source, connection name, permitted
   synchronization, delete method, templates, configuration properties), and the target's own name and type come
-  from the target. The spec runs `get_catalog_targets`.
+  from the target. The spec runs `get_catalog_targets`, which needs the integration connector's GUID and is now on
+  the report-spec allowlist.
 
 ## Planned for pyegeria 6.4 or the next release
 
@@ -112,12 +113,12 @@ notes and are not repeated here.
 - **Content status: four finds now return every status by default** (PY-27). `find_data_assets`,
   `get_data_assets_by_category`, `find_authored_elements` and `find_authored_elements_by_category` used to limit
   results to content status ACTIVE, which hid every element created without a content status (Egeria stores none
-  for those; on one test server, 1,246 of 3,937 data assets). They now send no content-status filter, so Egeria
+  for those; on a demo server, 2026-11-17, 1,246 of 3,937 data assets). They now send no content-status filter, so Egeria
   returns elements of any status, including those with none and DRAFT, DEPRECATED and REJECTED ones. **To get the
   previous result, pass `content_status_list=["ACTIVE"]`.** A list you pass is sent unchanged.
 - **A by-name or by-type lookup refuses a missing name** (PY-63). A `None`, `""` or `"*"` name or key is refused
-  before anything is sent, with "<call> needs a name; use <find> to list all", because no Egeria by-name or by-type
-  endpoint accepts it (it answered 400, and "*" there is an exact match). `hey_egeria ... deployed-servers` now
+  before anything is sent, with "<call> needs a name; use <find> to list all", because the Egeria 6.4 by-name and by-type
+  endpoints refuse it (each one checked answered HTTP 400; "*" there is an exact match). `hey_egeria ... deployed-servers` now
   defaults to `View Server` instead of `*`.
 - **Egeria 400 errors are not labelled server errors** (PY-58). A request Egeria refuses (HTTP 400) raises
   `PyegeriaBadRequestException`, a `PyegeriaInvalidParameterException` (and still a `PyegeriaAPIException`), with
