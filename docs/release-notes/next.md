@@ -186,14 +186,14 @@ notes and are not repeated here.
   and so on (23 classifications have supertypes). The supertypes come from the 6.4 typedefs
   (`CLASSIFICATION_SUPERTYPES`); a supertype does not fill a subtype column.
 - **Governance-level columns show the level name** (PY-60). Confidentiality, Confidence, Criticality, Impact and
-  Retention classification columns read e.g. "Confidential", "Authoritative", "High", "Regulated Lifetime" instead of 1, 3.
+  Retention classification columns read e.g. "Confidential", "Authoritative", "High", "Regulated Lifetime" instead of 2, 3, 3, 5.
   DICT and JSON keep the integer; a number outside the enum shows as "7 (unknown level)", and a missing property stays
   blank.
 - **Status attributes offer all five element statuses** (PY-68). The Dr.Egeria `Status` attribute looked up the valid
-  metadata property `Status`, which Egeria does not have, so the templates listed no values. It now looks up `status`
+  metadata property `Status`, whose valid-value set in Egeria holds no values, so the templates listed none. It now looks up `status`
   and the templates offer ACTIVE, DELETED, INVALID, OTHER and UNKNOWN.
 - **The spec-cache says "not effective for this read"** (PY-70). When Egeria answers OMAG-REPOSITORY-HANDLER-400-010 for a
-  pinned spec, the reason no longer says the element is gone or "no longer visible". `karma_leaderboard` is declared to
+  pinned spec, the entry is still dropped from the cache, but its reason no longer says the element is gone or "no longer visible". `karma_leaderboard` is declared to
   return `list[dict] | None` (None when its find failed).
 - **`hey_egeria ... deployed-servers` is one command** (PY-66). It was registered twice and the second silently replaced
   the first.
@@ -213,7 +213,7 @@ notes and are not repeated here.
   template output says "valid values not read (no Egeria connection)" or "(Egeria lookup failed: <Type>)" instead of
   dropping the line, and a failed sign-in counts as no connection.
 - **Classification commands send Effective From, Effective To and Extended Properties** (PY-69). Every Dr.Egeria
-  classification command sent only its own fields and dropped these three.
+  classification command except Classify and Update Data Scope (already fixed by PY-25) sent only its own fields and dropped these three.
 - **Generated report specs carry fresh data** (PY-54). `md_processing/data/generated_format_sets.json` was regenerated
   by `refresh_specs --merge-reports` (it had stale target types and `glossary_term` keys); nothing reads it at runtime.
 - **Related-information report columns are settled** (PY-55). The actor list (Contacts) and note log name columns
