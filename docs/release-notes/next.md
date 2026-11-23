@@ -135,6 +135,26 @@ notes and are not repeated here.
 - **The registered-service "URL Marker" column fills** (PY-49): it read the wrong key and was always empty.
 
 
+- **Data Scope carries every field Egeria 6.4 defines, and Description is removed from it** (PY-25).
+  **Behaviour change:** `Classify Data Scope` and `Update Data Scope` no longer have a **Description** attribute.
+  It was sent as `additionalProperties` (a text into a map) and Data Scope has no description, so it never worked;
+  use **Additional Properties** for key/value pairs. The commands now take the collection, validity and coverage start
+  and end times, **Min/Max Longitude, Latitude and Height**, **Scope Elements**, Effective From and To, and Extended
+  Properties, and send each under its Egeria name. **The six bounds must be numbers** (`-10.5`, `35`): text that isn't
+  a number is refused before anything is sent, and they go to Egeria as numbers. `Create Data Lens` gains the same
+  validity and coverage periods and sends its bounds as numbers too.
+- **A failed read is not "none"** (PY-22). **Behaviour changes:** initiating a survey, with no action target name
+  given, now stops with "the action targets of survey X could not be read ... pass action_target_name" when it cannot
+  read them from the survey type (it used to guess `serverToSurvey`); and `karma_leaderboard` returns `None`
+  (unknown), not `[]`, when it could not read every contribution record, so a caller shows "couldn't be read" rather
+  than "no contributors". `[]` now means the records were read in full and nobody qualifies.
+- **Exceptions say when Egeria hid the element** (PY-24). `PyegeriaException.not_visible` is True when Egeria refused
+  a read because the element is hidden from the caller (`OMAG-REPOSITORY-HANDLER-400-010`,
+  `OPEN-METADATA-SECURITY-403-007`, `OPEN-METADATA-SECURITY-403-020`), and the API, bad-request and not-found
+  exceptions carry `egeria_message_id`, as the unauthorized one already did.
+- **Reading a search keyword by GUID works** (PY-28). `get_search_keyword_by_guid` posts to
+  `.../search-keywords/{guid}/retrieve`; the old path answered 404.
+
 ## Fixes
 
 - **Authoring validation is strict** (PY-15). A spec's find method must return its target type (or a super type),
