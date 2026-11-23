@@ -181,6 +181,10 @@ def parse(src: str) -> dict | None:
             "extends": m.group(2), "keys": list(dict.fromkeys(keys))}
 
 
+#: Filled by build_table: {classification: (its supertypes, nearest first)} for every classification that has one.
+supertypes: dict[str, tuple[str, ...]] = {}
+
+
 def build_table(sources: dict[str, str], warn=lambda msg: None) -> dict[str, tuple[str, tuple[str, ...]]]:
     """{simple class name: (kind, keys)} for every listed *Properties class in `sources` ({path: java})."""
     classes, paths, by_simple = {}, {}, {}
@@ -224,7 +228,17 @@ def build_table(sources: dict[str, str], warn=lambda msg: None) -> dict[str, tup
         keys = [k for n in reversed(chain) for k in classes[n]["keys"]]
         return kind, tuple(dict.fromkeys(keys))
 
+    def supers(fqn: str) -> tuple[str, ...]:
+        """The *Properties classes above `fqn`, nearest first, not counting the polymorphic root itself."""
+        out, node, seen = [], parent_of(fqn), {fqn}
+        while node and node not in seen and classes[node]["name"] not in ROOTS:
+            seen.add(node)
+            out.append(classes[node]["name"])
+            node = parent_of(node)
+        return tuple(out)
+
     table = {}
+    supertypes.clear()
     for fqn in sorted(classes, key=lambda f: classes[f]["name"]):
         name = classes[fqn]["name"]
         if not name.endswith("Properties") or not listed(paths[fqn]):
@@ -232,6 +246,12 @@ def build_table(sources: dict[str, str], warn=lambda msg: None) -> dict[str, tup
         if name in table:
             raise SystemExit(f"two listed classes are both called {name}: the table is keyed by simple name")
         table[name] = describe(fqn)
+        if table[name][0] == "classification":
+            # ClassificationBean is the Java base of the classification beans, not an Egeria classification
+            above = tuple(n[:-len("Properties")] for n in supers(fqn)
+                          if n.endswith("Properties") and n != "ClassificationBeanProperties")
+            if above:
+                supertypes[name[:-len("Properties")]] = above
     for name, subclasses in sorted(unresolved.items()):
         warn(f"superclass {name} not in the frameworks tree (its setters are not counted): "
              f"{', '.join(sorted(s.rsplit('.', 1)[-1] for s in subclasses))}")
@@ -262,6 +282,16 @@ def main():
     ]
     for cls, (kind, fields) in table.items():
         lines.append(f"    {cls!r}: ({kind!r}, {fields!r}),")
+    lines.append("}")
+    lines += [
+        "",
+        "#: Each classification's supertypes, nearest first (the Properties classes above it, short of the",
+        "#: ClassificationProperties root), for the classifications that have any. `class:A` in a report column",
+        "#: matches a classification named A or any classification with A in this list (PY-59).",
+        "CLASSIFICATION_SUPERTYPES: dict[str, tuple[str, ...]] = {",
+    ]
+    for cls, above in sorted(supertypes.items()):
+        lines.append(f"    {cls!r}: {above!r},")
     lines.append("}")
     with open(OUT, "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")

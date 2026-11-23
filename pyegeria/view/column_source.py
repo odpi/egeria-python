@@ -5,7 +5,8 @@
 One string, three forms:
 
     class:<Classification>[,<Classification>...][.<property>]
-        A classification of the element, matched by its type name (`classificationName`) wherever it sits in
+        A classification of the element, matched by its type name (`classificationName`), or the name of any
+        subtype of it (PolicyManagementPoint also takes a PolicyEnforcementPoint), wherever it sits in
         elementHeader: the `classifications` list, a named slot such as `zoneMembership`, or
         `otherClassifications`. Without a property the value is the names of ALL the listed classifications
         the element has, joined. With a property it is that property of the classification (one name only).
@@ -206,6 +207,19 @@ def _related_items(element: dict, end: str) -> List[dict]:
     return [i for i in items if isinstance(i, dict)] if isinstance(items, list) else []
 
 
+def _matching_classifications(found: dict, wanted: Iterable[str]) -> List[str]:
+    """The names in `found` (the element's classifications) that a `class:` source asks for: each wanted name
+    itself, then any classification that has it as a supertype (PY-59: `class:PolicyManagementPoint` also takes a
+    PolicyEnforcementPoint). Each once, in the order asked."""
+    from md_processing.md_processing_utils.properties_class_fields import CLASSIFICATION_SUPERTYPES
+    out: List[str] = []
+    for want in wanted:
+        for name in found:
+            if name not in out and (name == want or want in CLASSIFICATION_SUPERTYPES.get(name, ())):
+                out.append(name)
+    return out
+
+
 def resolve_source(element: dict, text: str) -> Tuple[Any, str]:
     """(native, text) of a column's `source` for one element. Native is a string for a classification
     property or a bare class list, and a list aligned with the related elements for `rel:` and `of:`."""
@@ -216,12 +230,12 @@ def resolve_source(element: dict, text: str) -> Tuple[Any, str]:
         found = {}
         for cls in _classification_dicts(element.get("elementHeader")):
             found.setdefault(cls["classificationName"], cls)
-        present = [n for n in src.names if n in found]
+        present = _matching_classifications(found, src.names)
         if src.prop is None:
             joined = ", ".join(present)
             return joined, joined
         raw = [_prop_value(found[n].get("classificationProperties") or {}, src.prop) for n in present]
-        if len(present) == 1 and (present[0], src.prop) in LEVEL_NAMES:
+        if len(present) == 1 and (present[0], src.prop) in LEVEL_NAMES:   # the five level classes have no subtypes
             number = _as_int(raw[0])
             label = level_name(present[0], src.prop, raw[0])
             return (number if number is not None else label), label
