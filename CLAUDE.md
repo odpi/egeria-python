@@ -64,8 +64,10 @@ dr_egeria_folder <folder> --results-file out.txt  # also write the full per-file
 refresh_specs                           # both Basic + Advanced (default)
 refresh_specs --usage-level Basic       # restrict to a single usage level
 # Needs EGERIA_USER, EGERIA_USER_PASSWORD, EGERIA_VIEW_SERVER and EGERIA_VIEW_SERVER_URL set to a platform that has the
-# valid metadata values (renderer, layoutStyle, ...): without one the template generator logs "Could not connect"
-# and silently drops those Valid Values lines. The values it does write are sorted, so any server gives the same bytes.
+# valid metadata values (renderer, layoutStyle, ...): without one the template generator logs "Could not connect" and
+# writes "valid values not read (no Egeria connection)" in place of each of those Valid Values lines. Do not commit
+# those marker lines: restore the templates (git checkout -- sample-data/templates) after an offline run. The values it
+# does write are sorted, so any server gives the same bytes.
 
 # Validate compact command JSON files
 validate_compact_specs
