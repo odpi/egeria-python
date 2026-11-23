@@ -2153,7 +2153,15 @@ def populate_common_columns(
         if column.get('value') not in (None, ""):
             continue
         column.pop('native', None)
-        
+
+        # PY-53: related information named by the column's `source` (class:, rel:, of:)
+        if column.get('source'):
+            from pyegeria.view.column_source import resolve_source
+            native, text = resolve_source(element, column['source'])
+            column['native'] = native
+            column['value'] = text
+            continue
+
         # 0) Dot notation path resolution
         if "." in key:
             val = _resolve_dot_path(element, key)

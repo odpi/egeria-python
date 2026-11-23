@@ -152,6 +152,9 @@ class Column(BaseModel):
         max_lines: Lines a long text cell shows in web-oriented outputs (effective default 3).
         label: Which name a related element shows in text outputs: "qualified_name" (the default,
             today's text) or "display_name". Set per column, never globally (the F7 read-back).
+        source: PY-53: where the value comes from when it is related information rather than a property of
+            the element: `class:<A[,B]>[.<property>]`, `rel:<end>.<property>` or `of:<end>.<attribute>`
+            (see pyegeria/view/column_source.py). `key` stays the column's own name.
     """
     name: str
     key: str
@@ -163,6 +166,18 @@ class Column(BaseModel):
     max_items: Optional[int] = Field(default=None, ge=1)
     max_lines: Optional[int] = Field(default=None, ge=1)
     label: Optional[Literal["qualified_name", "display_name"]] = None
+    source: Optional[str] = None
+
+    @field_validator("source")
+    @classmethod
+    def _source_grammar(cls, v):
+        if v is not None:
+            from pyegeria.view.column_source import parse_source, SourceError
+            try:
+                parse_source(v)
+            except SourceError as exc:
+                raise ValueError(str(exc))
+        return v
 
 # New preferred alias for Column
 Attribute = Column

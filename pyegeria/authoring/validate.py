@@ -317,6 +317,12 @@ async def _check_spec(draft: SpecDraft, result: ValidationResult, client: Any = 
                          f"and no pyegeria spec uses it.")
         result.checked.append("target type")
     action = fs.action
+    from pyegeria.view.column_source import check_source
+    for fmt in fs.formats or []:  # PY-53: a column's `source` names real 6.4 classifications, ends and properties
+        for col in getattr(fmt, "attributes", None) or []:
+            source = col.get("source") if isinstance(col, dict) else getattr(col, "source", None)
+            for words in (check_source(source) if source else []):
+                result.error(words)
     is_find = bool(getattr(action, "function", None)) and not getattr(action, "analytic_function", None)
     if is_find and target:
         await _check_find_fit(fs, client, result)
@@ -329,6 +335,8 @@ async def _check_spec(draft: SpecDraft, result: ValidationResult, client: Any = 
             for col in getattr(fmt, "attributes", None) or []:
                 key = col.get("key") if isinstance(col, dict) else col.key
                 name = col.get("name") if isinstance(col, dict) else col.name
+                if (col.get("source") if isinstance(col, dict) else getattr(col, "source", None)):
+                    continue  # PY-53: its value is related information; the source check above covers it
                 if not key or key in strict_known or _snake(key) in strict_known or _derived_by_rule(key):
                     continue
                 if legacy and key in used_keys:
