@@ -58,12 +58,9 @@ def test_request_only_parameters_are_never_emitted(tmp_path, key):
     assert key not in keys and "display_name" in keys
 
 
-@pytest.mark.parametrize("key", ["confidence_classification", "confidentiality_classification", "criticality_classification",
-                                 "impact_classification", "retention_classification", "security_tags",
-                                 "policy_management_point", "supplementary_properties", "class_word_classification",
-                                 "prime_word_classification", "modifier_classification", "is_abstract_concept",
-                                 "is_activity_description", "is_data_value", "term_activity_type"])
-def test_classification_payloads_are_not_emitted(tmp_path, key):
+@pytest.mark.parametrize("key", ["supplementary_properties", "is_data_value"])
+def test_classification_payloads_without_a_6_4_classification_table_are_not_emitted(tmp_path, key):
+    # PY-53 emits the other 13 as `source` columns (test_py53_generator_sources); these two have no table
     assert key not in _keys(tmp_path, {**BASE, "X": _attr(key, "Valid Value", "Advanced")})
 
 

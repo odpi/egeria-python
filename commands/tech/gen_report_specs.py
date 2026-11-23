@@ -99,13 +99,34 @@ REQUEST_ONLY_KEYS = {
 REQUEST_ONLY_PREFIXES = ("anchor_", "template_", "instance_")
 
 # PY-49: the payload of a classification the Create command sets. The formatter exposes classifications only as the
-# one `classifications` column, so a column under these keys is never filled. Not emitted for now (PY-53).
+# one `classifications` column, so a plain column under these keys is never filled. PY-53 emits the ones in
+# CLASSIFICATION_SOURCES as a `source` column; the rest stay unemitted.
 CLASSIFICATION_PAYLOAD_KEYS = {
     "confidence_classification", "confidentiality_classification", "criticality_classification",
     "impact_classification", "retention_classification", "security_tags", "policy_management_point",
     "supplementary_properties", "class_word_classification", "prime_word_classification",
     "modifier_classification", "is_abstract_concept", "is_activity_description", "is_data_value",
     "term_activity_type",
+}
+
+# PY-53: the classification payloads that can be shown, as the `source` (Column.source) of the column that
+# shows them: key -> (key of the column, source). Each property is in the 6.4 Properties-class table
+# (test_py53_generator_sources checks that). A payload not listed here stays unemitted: `is_data_value` (DataValue
+# is an entity in 6.4, not a classification) and `supplementary_properties` (no classification table).
+CLASSIFICATION_SOURCES = {
+    "confidence_classification": "class:Confidence.confidenceLevel",
+    "confidentiality_classification": "class:Confidentiality.confidentialityLevel",
+    "criticality_classification": "class:Criticality.criticalityLevel",
+    "impact_classification": "class:Impact.severityLevel",
+    "retention_classification": "class:Retention.retentionBasis",
+    "security_tags": "class:SecurityTags.securityLabels",
+    "policy_management_point": "class:PolicyManagementPoint.pointType",
+    "class_word_classification": "class:ClassWord",
+    "prime_word_classification": "class:PrimeWord",
+    "modifier_classification": "class:Modifier",
+    "is_abstract_concept": "class:AbstractConcept",
+    "is_activity_description": "class:ActivityDescription",
+    "term_activity_type": "class:ActivityDescription.activityType",
 }
 
 # PY-49: Reference Name / Reference Name List attributes. The Create command takes the NAME of another element;
@@ -386,6 +407,11 @@ def _extract_columns_from_attributes(attributes: Iterable[dict], usage_level: st
         if not key:
             return
         key, label = str(key), str(label)
+        if key in CLASSIFICATION_SOURCES:
+            if key not in seen:
+                seen.add(key)
+                cols.append(Column(name=label, key=key, source=CLASSIFICATION_SOURCES[key]))
+            return
         if _is_request_only(key) or key in CLASSIFICATION_PAYLOAD_KEYS:
             return
         if key == "user_defined_status":
@@ -768,7 +794,10 @@ def _format_column(col: Column) -> str:
     valid_values = getattr(col, "valid_values", None)
     if valid_values:
         parts.append(f"valid_values={_py_literal(valid_values)}")
-        
+    source = getattr(col, "source", None)
+    if source:
+        parts.append(f"source={_py_literal(source)}")
+
     return "Column(" + ", ".join(parts) + ")"
 
 

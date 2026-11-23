@@ -3,6 +3,58 @@
  "family": "Asset Maker",
  "specs": [
   {
+   "label": "File-Folders",
+   "envelope": {
+    "heading": "File Folders",
+    "description": "File folders, with their Branch classification (the branch they follow).",
+    "family": "Asset Maker",
+    "target_type_name": "FileFolder",
+    "aliases": ["File Folders"]
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "FileFolder",
+      "function": "AssetMaker.find_assets",
+      "params": {"search_string": "$search_string", "metadata_element_type": "FileFolder"}
+     }
+    ],
+    "formatters": {
+     "ALL": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "path_name", "label": "Path"},
+       {"field": "branch_name", "label": "Branch", "source": "class:Branch.displayName"},
+       {"field": "branch_scope", "label": "Branch Scope", "source": "class:Branch.scope"},
+       {"field": "branch_purpose", "label": "Branch Purpose", "source": "class:Branch.purpose"},
+       {"field": "branch_url", "label": "Branch URL", "source": "class:Branch.url"}
+      ]
+     },
+     "LIST": {"same_as": "ALL"}
+    }
+   }
+  },
+  {
    "label": "CSV-Data-File-Element-DrE-Advanced",
    "envelope": {
     "heading": "CSV-Data-File-Element-DrE-Advanced Attributes",

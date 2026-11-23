@@ -53,7 +53,9 @@
        {"field": "assigned_actors", "label": "Assigned Actors"},
        {"field": "resource_list", "label": "Resources"},
        {"field": "managed_projects", "label": "Managed Projects"},
-       {"field": "project_targets", "label": "Project Targets", "related_label": "display_name"}
+       {"field": "project_targets", "label": "Project Targets", "related_label": "display_name"},
+       {"field": "project_kind", "label": "Project Kind", "source": "class:Campaign,Task"},
+       {"field": "project_target_labels", "label": "Target Labels", "source": "rel:projectTargets.label"}
       ]
      },
      "LIST": {"same_as": "ALL"}
