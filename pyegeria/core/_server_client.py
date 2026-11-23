@@ -5806,7 +5806,7 @@ class ServerClient(BaseServerClient):
 
         """
 
-        url = f"{self.command_root}classification-explorer/search-keywords/{guid}"
+        url = f"{self.command_root}classification-explorer/search-keywords/{guid}/retrieve"
         response = await self._async_get_guid_request(url, "SearchKeyword", self._generate_feedback_output,
                                                       graph_query_depth=graph_query_depth,
                                                       output_format=output_format, report_spec=report_spec,
