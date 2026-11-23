@@ -1499,8 +1499,12 @@ def _full_read(plan: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     """Pager arguments for a run asked to page fully up to page_to rows (preview), or None."""
     if not plan["page_to"] or not plan["list"]:
         return None
-    return dict(want=plan["page_to"], fetch_page_size=DEFAULT_FETCH_PAGE_SIZE, start_from=plan["start"],
-                **plan["paging"])
+    # PY-19: ask only for the rows shown: a 25-row preview is one request of 25, not of 100. A preview of more than
+    # the default pages at the default until page_to rows are in, so it reads at most one page past page_to (the pager
+    # treats a short or empty page as "more", only a null as the end). The last page is deliberately NOT trimmed to the
+    # remainder: with filtered rows that would be one-row requests, hundreds of them.
+    return dict(want=plan["page_to"], fetch_page_size=min(plan["page_to"], DEFAULT_FETCH_PAGE_SIZE),
+                start_from=plan["start"], **plan["paging"])
 
 
 def _settle(plan: Dict[str, Any], record: Dict[str, Any], result: Any, paged: Optional[PageResult]):

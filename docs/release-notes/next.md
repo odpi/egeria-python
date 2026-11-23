@@ -120,6 +120,14 @@ notes and are not repeated here.
   before anything is sent, with "<call> needs a name; use <find> to list all", because the Egeria 6.4 by-name and by-type
   endpoints refuse it (each one checked answered HTTP 400; "*" there is an exact match). `hey_egeria ... deployed-servers` now
   defaults to `View Server` instead of `*`.
+- **An `of:` report column is checked against the entity type at its relationship end** (PY-61). The validator used to
+  accept `of:<list>.<attribute>` if any entity type had the attribute; it now checks the entity type(s) at that end of the
+  relationship and their supertypes, both from the 6.4 typedefs, and refuses a wrong-end attribute naming the relationship,
+  the end, its type and the attribute. A list whose end type is not in the tables is checked loosely and gets a warning.
+- **A preview asks Egeria only for the rows it shows** (PY-19). A report run with `page_to=N` made its requests
+  for `min(N, 100)` rows, not always 100, so it reads at most one page past `N`. Paging is
+  unchanged otherwise: a short or empty page does not end the read, only Egeria's null does, and a run that stopped at
+  `N` still says so ("stopped at the N rows asked for; there may be more"). Full reads are untouched.
 - **`find_digital_product_catalogs` lists catalogs** (PY-71). It sent no type filter and so listed every Collection
   (a live `find("*")` returned Agreements). It now asks for `DigitalProductCatalog` unless you pass
   `metadata_element_subtypes`, and it and `get_digital_product_catalogs_by_name` format `output_format="DICT"`, `"MD"` and
@@ -173,6 +181,22 @@ notes and are not repeated here.
   exceptions carry `egeria_message_id`, as the unauthorized one already did.
 - **Reading a search keyword by GUID works** (PY-28). `get_search_keyword_by_guid` posts to
   `.../search-keywords/{guid}/retrieve`; the old path answered 404.
+- **`class:` report columns match a classification's subtypes** (PY-59). `class:PolicyManagementPoint` also fills from a
+  PolicyEnforcementPoint, `class:ProjectKind` from a Campaign, Task, Experiment, GlossaryProject or GovernanceProject,
+  and so on (23 classifications have supertypes). The supertypes come from the 6.4 typedefs
+  (`CLASSIFICATION_SUPERTYPES`); a supertype does not fill a subtype column.
+- **Governance-level columns show the level name** (PY-60). Confidentiality, Confidence, Criticality, Impact and
+  Retention classification columns read e.g. "Confidential", "Authoritative", "High", "Regulated Lifetime" instead of 1, 3.
+  DICT and JSON keep the integer; a number outside the enum shows as "7 (unknown level)", and a missing property stays
+  blank.
+- **Status attributes offer all five element statuses** (PY-68). The Dr.Egeria `Status` attribute looked up the valid
+  metadata property `Status`, which Egeria does not have, so the templates listed no values. It now looks up `status`
+  and the templates offer ACTIVE, DELETED, INVALID, OTHER and UNKNOWN.
+- **The spec-cache says "not effective for this read"** (PY-70). When Egeria answers OMAG-REPOSITORY-HANDLER-400-010 for a
+  pinned spec, the reason no longer says the element is gone or "no longer visible". `karma_leaderboard` is declared to
+  return `list[dict] | None` (None when its find failed).
+- **`hey_egeria ... deployed-servers` is one command** (PY-66). It was registered twice and the second silently replaced
+  the first.
 
 ## Fixes
 
@@ -180,6 +204,22 @@ notes and are not repeated here.
   and every column key must be an attribute of the target type, a key the output formatter derives, a documented
   related-element or annotation field, or (for a generated -DrE- spec) a Dr.Egeria command attribute. An unknown
   key is refused by name. The old loose check remains only as `validate(..., legacy=True)`, with a warning per key.
+- **Activity Status offers FOR_INFO** (PY-21). The generated Dr.Egeria `activity_status` columns (Meeting, Note, Review,
+  ToDo ...) listed 13 of Egeria's 14 ActivityStatus values; FOR_INFO is now offered after PAUSED.
+- **`start_at_end` reaches Egeria** (PY-23). pyegeria sent `startAtEnd`; the query parameter is `startingAtEnd`, so Egeria
+  ignored it. The related-element finds now send `startingAtEnd`.
+- **A failed valid-values lookup is not "no valid values"** (PY-67). `get_valid_metadata_values` raises when Egeria
+  cannot be asked, and is never cached as empty; `[]` means Egeria answered with none. Offline `generate_dr_help` and
+  template output says "valid values not read (no Egeria connection)" or "(Egeria lookup failed: <Type>)" instead of
+  dropping the line, and a failed sign-in counts as no connection.
+- **Classification commands send Effective From, Effective To and Extended Properties** (PY-69). Every Dr.Egeria
+  classification command sent only its own fields and dropped these three.
+- **Generated report specs carry fresh data** (PY-54). `md_processing/data/generated_format_sets.json` was regenerated
+  by `refresh_specs --merge-reports` (it had stale target types and `glossary_term` keys); nothing reads it at runtime.
+- **Related-information report columns are settled** (PY-55). The actor list (Contacts) and note log name columns
+  (Journal Entry) are `of:` source columns filled from the real relationship lists, and the folder names column on
+  `find_glossaries` is client-derived; the old helpers that ran actor names together and cut the last two characters of
+  note log names are no longer needed.
 - **The deployment-status fallback matches Egeria** (PY-21). It offered `REJECTED_FOR_DEPLOYMENT`; Egeria's value is
   `REJECTED`.
 - **Dr.Egeria Certification and License send the right fields** (PY-43, PY-50). Link and Update send `coverageStart` /
