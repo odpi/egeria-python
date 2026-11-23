@@ -65,7 +65,10 @@ def test_the_same_mismatch_with_no_client_is_a_warning_and_not_a_pass():
 
 def test_the_find_methods_own_type_and_registered_pairs_fit_with_no_client():
     assert "find method fits the target type" in validate(_spec(target_type="Project")).checked
-    assert "find method fits the target type" in validate(_spec(target_type="Campaign")).checked   # a shipped pair
+    # a shipped pair: a subtype the find method does not itself return (Governance-Controls). PY-49: the Campaign specs
+    # used to be this example; they now target Project, the type find_projects returns.
+    governance = {"function": "GovernanceOfficer.find_governance_definitions", "required_params": ["search_string"]}
+    assert "find method fits the target type" in validate(_spec(target_type="GovernanceControl", action=governance)).checked
 
 
 def test_a_subtype_fits_through_its_super_types():

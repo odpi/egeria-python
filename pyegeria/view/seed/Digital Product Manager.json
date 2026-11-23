@@ -320,7 +320,7 @@
     "heading": "Data-Sharing-Agreement-DrE-Advanced Attributes",
     "description": "Auto-generated format for Data Sharing Agreement (Create, Advanced).",
     "family": "Digital Product Manager",
-    "target_type_name": "Data Sharing Agreement",
+    "target_type_name": "Collection",
     "aliases": ["Data Sharing Agreement DrE Advanced"]
    },
    "microflow": {
@@ -341,7 +341,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Data Sharing Agreement",
+      "type": "Collection",
       "function": "CollectionManager.find_collections",
       "params": {
        "search_string": "$search_string",
@@ -406,7 +406,7 @@
     "heading": "Data-Sharing-Agreement-DrE-Basic Attributes",
     "description": "Auto-generated format for Data Sharing Agreement (Create, Basic).",
     "family": "Digital Product Manager",
-    "target_type_name": "Data Sharing Agreement",
+    "target_type_name": "Collection",
     "aliases": ["Data Sharing Agreement DrE Basic"]
    },
    "microflow": {
@@ -427,7 +427,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Data Sharing Agreement",
+      "type": "Collection",
       "function": "CollectionManager.find_collections",
       "params": {
        "search_string": "$search_string",
@@ -951,78 +951,6 @@
        {"field": "purpose", "label": "Purpose"},
        {"field": "support_level", "label": "Support Level"},
        {"field": "service_levels", "label": "Service Levels"}
-      ]
-     }
-    }
-   }
-  },
-  {
-   "label": "Subscription-Type-DrE-Advanced",
-   "envelope": {
-    "heading": "Subscription-Type-DrE-Advanced Attributes",
-    "description": "Auto-generated format for Subscription Type (Create, Advanced).",
-    "family": "Digital Product Manager",
-    "target_type_name": "Subscription Type",
-    "aliases": ["Subscription Type DrE Advanced"]
-   },
-   "microflow": {
-    "format": "microflow/1",
-    "params": {},
-    "stages": [],
-    "formatters": {
-     "LIST": {
-      "columns": [
-       {"field": "display_name", "label": "Display Name"},
-       {"field": "effective_from", "label": "Effective From"},
-       {"field": "effective_to", "label": "Effective To"},
-       {"field": "subscription_kind", "label": "Subscription Kind", "valid_values": ["ONE_TIME", "PERIODIC", "ONGOING_UPDATE"]},
-       {"field": "description", "label": "Description"},
-       {"field": "identifier", "label": "Identifier"},
-       {"field": "minimum_notification_interval", "label": "Minimum Notification Interval"}
-      ]
-     },
-     "ALL": {
-      "columns": [
-       {"field": "effective_from", "label": "Effective From"},
-       {"field": "effective_to", "label": "Effective To"},
-       {"field": "subscription_kind", "label": "Subscription Kind", "valid_values": ["ONE_TIME", "PERIODIC", "ONGOING_UPDATE"]},
-       {"field": "display_name", "label": "Display Name"},
-       {"field": "description", "label": "Description"},
-       {"field": "identifier", "label": "Identifier"},
-       {"field": "minimum_notification_interval", "label": "Minimum Notification Interval"}
-      ]
-     }
-    }
-   }
-  },
-  {
-   "label": "Subscription-Type-DrE-Basic",
-   "envelope": {
-    "heading": "Subscription-Type-DrE-Basic Attributes",
-    "description": "Auto-generated format for Subscription Type (Create, Basic).",
-    "family": "Digital Product Manager",
-    "target_type_name": "Subscription Type",
-    "aliases": ["Subscription Type DrE Basic"]
-   },
-   "microflow": {
-    "format": "microflow/1",
-    "params": {},
-    "stages": [],
-    "formatters": {
-     "LIST": {
-      "columns": [
-       {"field": "display_name", "label": "Display Name"},
-       {"field": "subscription_kind", "label": "Subscription Kind", "valid_values": ["ONE_TIME", "PERIODIC", "ONGOING_UPDATE"]},
-       {"field": "description", "label": "Description"},
-       {"field": "minimum_notification_interval", "label": "Minimum Notification Interval"}
-      ]
-     },
-     "ALL": {
-      "columns": [
-       {"field": "subscription_kind", "label": "Subscription Kind", "valid_values": ["ONE_TIME", "PERIODIC", "ONGOING_UPDATE"]},
-       {"field": "display_name", "label": "Display Name"},
-       {"field": "description", "label": "Description"},
-       {"field": "minimum_notification_interval", "label": "Minimum Notification Interval"}
       ]
      }
     }

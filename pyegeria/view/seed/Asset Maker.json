@@ -8,7 +8,7 @@
     "heading": "CSV-Data-File-Element-DrE-Advanced Attributes",
     "description": "Auto-generated format for CSV Data File Element (Create, Advanced).",
     "family": "Asset Maker",
-    "target_type_name": "CSV Data File Element",
+    "target_type_name": "CSVFile",
     "aliases": ["CSV Data File Element DrE Advanced"]
    },
    "microflow": {
@@ -29,7 +29,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "CSV Data File Element",
+      "type": "CSVFile",
       "function": "ClassificationExplorer.find_elements_by_property_value",
       "params": {
        "search_string": "$search_string",
@@ -72,7 +72,7 @@
     "heading": "CSV-Data-File-Element-DrE-Basic Attributes",
     "description": "Auto-generated format for CSV Data File Element (Create, Basic).",
     "family": "Asset Maker",
-    "target_type_name": "CSV Data File Element",
+    "target_type_name": "CSVFile",
     "aliases": ["CSV Data File Element DrE Basic"]
    },
    "microflow": {
@@ -93,7 +93,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "CSV Data File Element",
+      "type": "CSVFile",
       "function": "ClassificationExplorer.find_elements_by_property_value",
       "params": {
        "search_string": "$search_string",
@@ -136,7 +136,7 @@
     "heading": "Folder-Element-DrE-Advanced Attributes",
     "description": "Auto-generated format for Folder Element (Create, Advanced).",
     "family": "Asset Maker",
-    "target_type_name": "Folder Element",
+    "target_type_name": "DataFolder",
     "aliases": ["Folder Element DrE Advanced"]
    },
    "microflow": {
@@ -157,7 +157,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Folder Element",
+      "type": "DataFolder",
       "function": "ClassificationExplorer.find_elements_by_property_value",
       "params": {
        "search_string": "$search_string",
@@ -194,7 +194,7 @@
     "heading": "Folder-Element-DrE-Basic Attributes",
     "description": "Auto-generated format for Folder Element (Create, Basic).",
     "family": "Asset Maker",
-    "target_type_name": "Folder Element",
+    "target_type_name": "DataFolder",
     "aliases": ["Folder Element DrE Basic"]
    },
    "microflow": {
@@ -215,7 +215,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Folder Element",
+      "type": "DataFolder",
       "function": "ClassificationExplorer.find_elements_by_property_value",
       "params": {
        "search_string": "$search_string",
@@ -252,7 +252,7 @@
     "heading": "Kafka-Server-Element-DrE-Advanced Attributes",
     "description": "Auto-generated format for Kafka Server Element (Create, Advanced).",
     "family": "Asset Maker",
-    "target_type_name": "Kafka Server Element",
+    "target_type_name": "SoftwareServer",
     "aliases": ["Kafka Server Element DrE Advanced"]
    },
    "microflow": {
@@ -274,7 +274,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Kafka Server Element",
+      "type": "SoftwareServer",
       "function": "ClassificationExplorer.find_elements_by_property_value",
       "params": {
        "search_string": "$search_string",
@@ -312,7 +312,7 @@
     "heading": "Kafka-Server-Element-DrE-Basic Attributes",
     "description": "Auto-generated format for Kafka Server Element (Create, Basic).",
     "family": "Asset Maker",
-    "target_type_name": "Kafka Server Element",
+    "target_type_name": "SoftwareServer",
     "aliases": ["Kafka Server Element DrE Basic"]
    },
    "microflow": {
@@ -334,7 +334,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Kafka Server Element",
+      "type": "SoftwareServer",
       "function": "ClassificationExplorer.find_elements_by_property_value",
       "params": {
        "search_string": "$search_string",
@@ -372,7 +372,7 @@
     "heading": "Postgres-Database-Element-DrE-Advanced Attributes",
     "description": "Auto-generated format for Postgres Database Element (Create, Advanced).",
     "family": "Asset Maker",
-    "target_type_name": "Postgres Database Element",
+    "target_type_name": "RelationalDatabase",
     "aliases": ["Postgres Database Element DrE Advanced"]
    },
    "microflow": {
@@ -394,7 +394,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Postgres Database Element",
+      "type": "RelationalDatabase",
       "function": "ClassificationExplorer.find_elements_by_property_value",
       "params": {
        "search_string": "$search_string",
@@ -440,7 +440,7 @@
     "heading": "Postgres-Database-Element-DrE-Basic Attributes",
     "description": "Auto-generated format for Postgres Database Element (Create, Basic).",
     "family": "Asset Maker",
-    "target_type_name": "Postgres Database Element",
+    "target_type_name": "RelationalDatabase",
     "aliases": ["Postgres Database Element DrE Basic"]
    },
    "microflow": {
@@ -462,7 +462,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Postgres Database Element",
+      "type": "RelationalDatabase",
       "function": "ClassificationExplorer.find_elements_by_property_value",
       "params": {
        "search_string": "$search_string",
@@ -508,7 +508,7 @@
     "heading": "Postgres-Server-Element-DrE-Advanced Attributes",
     "description": "Auto-generated format for Postgres Server Element (Create, Advanced).",
     "family": "Asset Maker",
-    "target_type_name": "Postgres Server Element",
+    "target_type_name": "SoftwareServer",
     "aliases": ["Postgres Server Element DrE Advanced"]
    },
    "microflow": {
@@ -530,7 +530,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Postgres Server Element",
+      "type": "SoftwareServer",
       "function": "ClassificationExplorer.find_elements_by_property_value",
       "params": {
        "search_string": "$search_string",
@@ -576,7 +576,7 @@
     "heading": "Postgres-Server-Element-DrE-Basic Attributes",
     "description": "Auto-generated format for Postgres Server Element (Create, Basic).",
     "family": "Asset Maker",
-    "target_type_name": "Postgres Server Element",
+    "target_type_name": "SoftwareServer",
     "aliases": ["Postgres Server Element DrE Basic"]
    },
    "microflow": {
@@ -598,7 +598,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Postgres Server Element",
+      "type": "SoftwareServer",
       "function": "ClassificationExplorer.find_elements_by_property_value",
       "params": {
        "search_string": "$search_string",
@@ -644,7 +644,7 @@
     "heading": "Secrets-Store-Element-DrE-Advanced Attributes",
     "description": "Auto-generated format for Secrets Store Element (Create, Advanced).",
     "family": "Asset Maker",
-    "target_type_name": "Secrets Store Element",
+    "target_type_name": "SecretsCollection",
     "aliases": ["Secrets Store Element DrE Advanced"]
    },
    "microflow": {
@@ -665,7 +665,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Secrets Store Element",
+      "type": "SecretsCollection",
       "function": "ClassificationExplorer.find_elements_by_property_value",
       "params": {
        "search_string": "$search_string",
@@ -708,7 +708,7 @@
     "heading": "Secrets-Store-Element-DrE-Basic Attributes",
     "description": "Auto-generated format for Secrets Store Element (Create, Basic).",
     "family": "Asset Maker",
-    "target_type_name": "Secrets Store Element",
+    "target_type_name": "SecretsCollection",
     "aliases": ["Secrets Store Element DrE Basic"]
    },
    "microflow": {
@@ -729,7 +729,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Secrets Store Element",
+      "type": "SecretsCollection",
       "function": "ClassificationExplorer.find_elements_by_property_value",
       "params": {
        "search_string": "$search_string",
@@ -772,7 +772,7 @@
     "heading": "UC-Catalog-Element-DrE-Advanced Attributes",
     "description": "Auto-generated format for UC Catalog Element (Create, Advanced).",
     "family": "Asset Maker",
-    "target_type_name": "UC Catalog Element",
+    "target_type_name": "SoftwareCapability",
     "aliases": ["UC Catalog Element DrE Advanced"]
    },
    "microflow": {
@@ -794,7 +794,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "UC Catalog Element",
+      "type": "SoftwareCapability",
       "function": "ClassificationExplorer.find_elements_by_property_value",
       "params": {
        "search_string": "$search_string",
@@ -832,7 +832,7 @@
     "heading": "UC-Catalog-Element-DrE-Basic Attributes",
     "description": "Auto-generated format for UC Catalog Element (Create, Basic).",
     "family": "Asset Maker",
-    "target_type_name": "UC Catalog Element",
+    "target_type_name": "SoftwareCapability",
     "aliases": ["UC Catalog Element DrE Basic"]
    },
    "microflow": {
@@ -854,7 +854,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "UC Catalog Element",
+      "type": "SoftwareCapability",
       "function": "ClassificationExplorer.find_elements_by_property_value",
       "params": {
        "search_string": "$search_string",
@@ -892,7 +892,7 @@
     "heading": "UC-Function-Element-DrE-Advanced Attributes",
     "description": "Auto-generated format for UC Function Element (Create, Advanced).",
     "family": "Asset Maker",
-    "target_type_name": "UC Function Element",
+    "target_type_name": "DeployedAPI",
     "aliases": ["UC Function Element DrE Advanced"]
    },
    "microflow": {
@@ -914,7 +914,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "UC Function Element",
+      "type": "DeployedAPI",
       "function": "ClassificationExplorer.find_elements_by_property_value",
       "params": {
        "search_string": "$search_string",
@@ -956,7 +956,7 @@
     "heading": "UC-Function-Element-DrE-Basic Attributes",
     "description": "Auto-generated format for UC Function Element (Create, Basic).",
     "family": "Asset Maker",
-    "target_type_name": "UC Function Element",
+    "target_type_name": "DeployedAPI",
     "aliases": ["UC Function Element DrE Basic"]
    },
    "microflow": {
@@ -978,7 +978,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "UC Function Element",
+      "type": "DeployedAPI",
       "function": "ClassificationExplorer.find_elements_by_property_value",
       "params": {
        "search_string": "$search_string",
@@ -1020,7 +1020,7 @@
     "heading": "UC-Schema-Element-DrE-Advanced Attributes",
     "description": "Auto-generated format for UC Schema Element (Create, Advanced).",
     "family": "Asset Maker",
-    "target_type_name": "UC Schema Element",
+    "target_type_name": "DeployedDatabaseSchema",
     "aliases": ["UC Schema Element DrE Advanced"]
    },
    "microflow": {
@@ -1042,7 +1042,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "UC Schema Element",
+      "type": "DeployedDatabaseSchema",
       "function": "ClassificationExplorer.find_elements_by_property_value",
       "params": {
        "search_string": "$search_string",
@@ -1082,7 +1082,7 @@
     "heading": "UC-Schema-Element-DrE-Basic Attributes",
     "description": "Auto-generated format for UC Schema Element (Create, Basic).",
     "family": "Asset Maker",
-    "target_type_name": "UC Schema Element",
+    "target_type_name": "DeployedDatabaseSchema",
     "aliases": ["UC Schema Element DrE Basic"]
    },
    "microflow": {
@@ -1104,7 +1104,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "UC Schema Element",
+      "type": "DeployedDatabaseSchema",
       "function": "ClassificationExplorer.find_elements_by_property_value",
       "params": {
        "search_string": "$search_string",
@@ -1144,7 +1144,7 @@
     "heading": "UC-Server-Element-DrE-Advanced Attributes",
     "description": "Auto-generated format for UC Server Element (Create, Advanced).",
     "family": "Asset Maker",
-    "target_type_name": "UC Server Element",
+    "target_type_name": "SoftwareServer",
     "aliases": ["UC Server Element DrE Advanced"]
    },
    "microflow": {
@@ -1166,7 +1166,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "UC Server Element",
+      "type": "SoftwareServer",
       "function": "ClassificationExplorer.find_elements_by_property_value",
       "params": {
        "search_string": "$search_string",
@@ -1206,7 +1206,7 @@
     "heading": "UC-Server-Element-DrE-Basic Attributes",
     "description": "Auto-generated format for UC Server Element (Create, Basic).",
     "family": "Asset Maker",
-    "target_type_name": "UC Server Element",
+    "target_type_name": "SoftwareServer",
     "aliases": ["UC Server Element DrE Basic"]
    },
    "microflow": {
@@ -1228,7 +1228,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "UC Server Element",
+      "type": "SoftwareServer",
       "function": "ClassificationExplorer.find_elements_by_property_value",
       "params": {
        "search_string": "$search_string",
@@ -1268,7 +1268,7 @@
     "heading": "UC-Table-Element-DrE-Advanced Attributes",
     "description": "Auto-generated format for UC Table Element (Create, Advanced).",
     "family": "Asset Maker",
-    "target_type_name": "UC Table Element",
+    "target_type_name": "VirtualRelationalTable",
     "aliases": ["UC Table Element DrE Advanced"]
    },
    "microflow": {
@@ -1290,7 +1290,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "UC Table Element",
+      "type": "VirtualRelationalTable",
       "function": "ClassificationExplorer.find_elements_by_property_value",
       "params": {
        "search_string": "$search_string",
@@ -1338,7 +1338,7 @@
     "heading": "UC-Table-Element-DrE-Basic Attributes",
     "description": "Auto-generated format for UC Table Element (Create, Basic).",
     "family": "Asset Maker",
-    "target_type_name": "UC Table Element",
+    "target_type_name": "VirtualRelationalTable",
     "aliases": ["UC Table Element DrE Basic"]
    },
    "microflow": {
@@ -1360,7 +1360,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "UC Table Element",
+      "type": "VirtualRelationalTable",
       "function": "ClassificationExplorer.find_elements_by_property_value",
       "params": {
        "search_string": "$search_string",
@@ -1408,7 +1408,7 @@
     "heading": "UC-Volume-Element-DrE-Advanced Attributes",
     "description": "Auto-generated format for UC Volume Element (Create, Advanced).",
     "family": "Asset Maker",
-    "target_type_name": "UC Volume Element",
+    "target_type_name": "DataFolder",
     "aliases": ["UC Volume Element DrE Advanced"]
    },
    "microflow": {
@@ -1430,7 +1430,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "UC Volume Element",
+      "type": "DataFolder",
       "function": "ClassificationExplorer.find_elements_by_property_value",
       "params": {
        "search_string": "$search_string",
@@ -1476,7 +1476,7 @@
     "heading": "UC-Volume-Element-DrE-Basic Attributes",
     "description": "Auto-generated format for UC Volume Element (Create, Basic).",
     "family": "Asset Maker",
-    "target_type_name": "UC Volume Element",
+    "target_type_name": "DataFolder",
     "aliases": ["UC Volume Element DrE Basic"]
    },
    "microflow": {
@@ -1498,7 +1498,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "UC Volume Element",
+      "type": "DataFolder",
       "function": "ClassificationExplorer.find_elements_by_property_value",
       "params": {
        "search_string": "$search_string",

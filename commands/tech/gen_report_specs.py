@@ -132,6 +132,41 @@ ATTRIBUTE_RELATIONSHIP_LISTS = {
     "in_reference_data_set": "memberOfValidValueSets",
 }
 
+# PY-49 Q6: a generated spec's target_type is a real Egeria type, not the command's name for people. Explicit cases
+# first; otherwise the display name when it names an entity (spaces, punctuation and case ignored), otherwise the
+# command's own OM_TYPE when that is an entity. A classification targets the entity it classifies, and its find
+# keeps filtering on the classification (the spec's include_only_classified_elements / classification_names).
+TARGET_TYPE_OVERRIDES = {
+    # classifications -> the entity they classify
+    "Campaign": "Project", "Experiment": "Project", "Glossary Project": "Project", "Governance Project": "Project",
+    "Personal Project": "Project", "Study Project": "Project", "Task": "Project",
+    "Data Sharing Agreement": "Collection", "Question": "GlossaryTerm",
+    # friendly names whose command has no entity OM_TYPE
+    "Solution Role": "SolutionActorRole",
+    # Unity Catalog elements: the entity each is made as (UC Catalog Element waits for the Egeria team's answer)
+    "UC Server Element": "SoftwareServer", "UC Schema Element": "DeployedDatabaseSchema",
+    "UC Table Element": "VirtualRelationalTable", "UC Function Element": "DeployedAPI", "UC Volume Element": "DataFolder",
+    # the generic root: universal columns only
+    "Element": "Referenceable", "Instance": "Referenceable",
+    # the supertypes: universal columns only
+    "Schema Attribute From Template": "SchemaAttribute", "Schema Type From Template": "SchemaType",
+    # type-system definitions
+    "Enum Def": "OpenMetadataTypeDef", "Type Def": "OpenMetadataTypeDef",
+}
+
+
+def _spec_target_type(display_name: str, cmd_obj: dict) -> str:
+    """The target_type of a command's generated spec (see TARGET_TYPE_OVERRIDES)."""
+    if display_name in TARGET_TYPE_OVERRIDES:
+        return TARGET_TYPE_OVERRIDES[display_name]
+    if _target_attributes(display_name) is not None:
+        return display_name
+    om_type = str(cmd_obj.get("OM_TYPE") or "").strip()
+    if om_type and _target_attributes(om_type) is not None:
+        return om_type
+    return display_name
+
+
 # The Create commands for types that exist only from Egeria 6.4 (odpi/egeria#9463): their generated specs carry
 # min_egeria_version, so the report runner refuses them in words on an older platform (PY-49).
 NEW_IN_6_4_TYPES = {"Decision", "Data Value", "Literal Data Value"}
@@ -535,7 +570,8 @@ def build_format_sets_from_commands(
             continue
 
         levels_to_generate = [usage_level.capitalize()] if usage_level else ["Basic", "Advanced"]
-        target_attrs = _target_attributes(display_name, str(cmd_obj.get("OM_TYPE") or ""))
+        spec_target = _spec_target_type(display_name, cmd_obj)
+        target_attrs = _target_attributes(spec_target, str(cmd_obj.get("OM_TYPE") or ""))
 
         for lvl in levels_to_generate:
             columns = _extract_columns_from_attributes(cmd_obj.get("Attributes", []), usage_level=lvl, target_attrs=target_attrs)
@@ -580,7 +616,7 @@ def build_format_sets_from_commands(
                 continue
 
             fs = FormatSet(
-                target_type=display_name,
+                target_type=spec_target,
                 heading=f"{set_name}-{lvl} Attributes",
                 description=f"Auto-generated format for {display_name} (Create, {lvl}).",
                 family=cmd_obj.get("family"),

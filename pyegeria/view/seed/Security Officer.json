@@ -218,7 +218,7 @@
     "heading": "Penetration-Test-Finding-DrE-Advanced Attributes",
     "description": "Auto-generated format for Penetration Test Finding (Create, Advanced).",
     "family": "Security Officer",
-    "target_type_name": "Penetration Test Finding",
+    "target_type_name": "PenetrationTestFindingAnnotation",
     "aliases": ["Penetration Test Finding DrE Advanced"]
    },
    "microflow": {
@@ -310,7 +310,7 @@
     "heading": "Penetration-Test-Finding-DrE-Basic Attributes",
     "description": "Auto-generated format for Penetration Test Finding (Create, Basic).",
     "family": "Security Officer",
-    "target_type_name": "Penetration Test Finding",
+    "target_type_name": "PenetrationTestFindingAnnotation",
     "aliases": ["Penetration Test Finding DrE Basic"]
    },
    "microflow": {
@@ -384,7 +384,7 @@
     "heading": "Security-Finding-DrE-Advanced Attributes",
     "description": "Auto-generated format for Security Finding (Create, Advanced).",
     "family": "Security Officer",
-    "target_type_name": "Security Finding",
+    "target_type_name": "SecurityFindingAnnotation",
     "aliases": ["Security Finding DrE Advanced"]
    },
    "microflow": {
@@ -466,7 +466,7 @@
     "heading": "Security-Finding-DrE-Basic Attributes",
     "description": "Auto-generated format for Security Finding (Create, Basic).",
     "family": "Security Officer",
-    "target_type_name": "Security Finding",
+    "target_type_name": "SecurityFindingAnnotation",
     "aliases": ["Security Finding DrE Basic"]
    },
    "microflow": {
@@ -530,7 +530,7 @@
     "heading": "Security-Posture-Summary-DrE-Advanced Attributes",
     "description": "Auto-generated format for Security Posture Summary (Create, Advanced).",
     "family": "Security Officer",
-    "target_type_name": "Security Posture Summary",
+    "target_type_name": "SecurityPostureAnnotation",
     "aliases": ["Security Posture Summary DrE Advanced"]
    },
    "microflow": {
@@ -604,7 +604,7 @@
     "heading": "Security-Posture-Summary-DrE-Basic Attributes",
     "description": "Auto-generated format for Security Posture Summary (Create, Basic).",
     "family": "Security Officer",
-    "target_type_name": "Security Posture Summary",
+    "target_type_name": "SecurityPostureAnnotation",
     "aliases": ["Security Posture Summary DrE Basic"]
    },
    "microflow": {
@@ -966,7 +966,7 @@
     "heading": "Vulnerability-Finding-DrE-Advanced Attributes",
     "description": "Auto-generated format for Vulnerability Finding (Create, Advanced).",
     "family": "Security Officer",
-    "target_type_name": "Vulnerability Finding",
+    "target_type_name": "VulnerabilityAnnotation",
     "aliases": ["Vulnerability Finding DrE Advanced"]
    },
    "microflow": {
@@ -1056,7 +1056,7 @@
     "heading": "Vulnerability-Finding-DrE-Basic Attributes",
     "description": "Auto-generated format for Vulnerability Finding (Create, Basic).",
     "family": "Security Officer",
-    "target_type_name": "Vulnerability Finding",
+    "target_type_name": "VulnerabilityAnnotation",
     "aliases": ["Vulnerability Finding DrE Basic"]
    },
    "microflow": {

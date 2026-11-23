@@ -1816,7 +1816,7 @@
     "heading": "Question-Spec-DrE-Advanced Attributes",
     "description": "Auto-generated format for Question Spec (Create, Advanced).",
     "family": "Collections",
-    "target_type_name": "Question Spec",
+    "target_type_name": "CollectionFolder",
     "aliases": ["Question Spec DrE Advanced"]
    },
    "microflow": {
@@ -1837,7 +1837,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Question Spec",
+      "type": "CollectionFolder",
       "function": "CollectionManager.find_collections",
       "params": {"search_string": "QuestionSpec", "metadata_element_type": "CollectionFolder", "starts_with": true}
      }
@@ -1899,7 +1899,7 @@
     "heading": "Question-Spec-DrE-Basic Attributes",
     "description": "Auto-generated format for Question Spec (Create, Basic).",
     "family": "Collections",
-    "target_type_name": "Question Spec",
+    "target_type_name": "CollectionFolder",
     "aliases": ["Question Spec DrE Basic"]
    },
    "microflow": {
@@ -1920,7 +1920,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Question Spec",
+      "type": "CollectionFolder",
       "function": "CollectionManager.find_collections",
       "params": {"search_string": "QuestionSpec", "metadata_element_type": "CollectionFolder", "starts_with": true}
      }

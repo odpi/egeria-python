@@ -554,7 +554,7 @@
     "heading": "Schema-Attribute-From-Template-DrE-Advanced Attributes",
     "description": "Auto-generated format for Schema Attribute From Template (Create, Advanced).",
     "family": "Schema Maker",
-    "target_type_name": "Schema Attribute From Template",
+    "target_type_name": "SchemaAttribute",
     "aliases": ["Schema Attribute From Template DrE Advanced"]
    },
    "microflow": {
@@ -575,7 +575,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Schema Attribute From Template",
+      "type": "SchemaAttribute",
       "function": "ClassificationExplorer.find_elements_by_property_value",
       "params": {
        "search_string": "$search_string",
@@ -610,7 +610,7 @@
     "heading": "Schema-Attribute-From-Template-DrE-Basic Attributes",
     "description": "Auto-generated format for Schema Attribute From Template (Create, Basic).",
     "family": "Schema Maker",
-    "target_type_name": "Schema Attribute From Template",
+    "target_type_name": "SchemaAttribute",
     "aliases": ["Schema Attribute From Template DrE Basic"]
    },
    "microflow": {
@@ -631,7 +631,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Schema Attribute From Template",
+      "type": "SchemaAttribute",
       "function": "ClassificationExplorer.find_elements_by_property_value",
       "params": {
        "search_string": "$search_string",
@@ -830,7 +830,7 @@
     "heading": "Schema-Type-From-Template-DrE-Advanced Attributes",
     "description": "Auto-generated format for Schema Type From Template (Create, Advanced).",
     "family": "Schema Maker",
-    "target_type_name": "Schema Type From Template",
+    "target_type_name": "SchemaType",
     "aliases": ["Schema Type From Template DrE Advanced"]
    },
    "microflow": {
@@ -851,7 +851,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Schema Type From Template",
+      "type": "SchemaType",
       "function": "ClassificationExplorer.find_elements_by_property_value",
       "params": {
        "search_string": "$search_string",
@@ -886,7 +886,7 @@
     "heading": "Schema-Type-From-Template-DrE-Basic Attributes",
     "description": "Auto-generated format for Schema Type From Template (Create, Basic).",
     "family": "Schema Maker",
-    "target_type_name": "Schema Type From Template",
+    "target_type_name": "SchemaType",
     "aliases": ["Schema Type From Template DrE Basic"]
    },
    "microflow": {
@@ -907,7 +907,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Schema Type From Template",
+      "type": "SchemaType",
       "function": "ClassificationExplorer.find_elements_by_property_value",
       "params": {
        "search_string": "$search_string",

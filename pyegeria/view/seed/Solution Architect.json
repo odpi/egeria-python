@@ -1433,7 +1433,7 @@
     "heading": "Solution-Role-DrE-Advanced Attributes",
     "description": "Auto-generated format for Solution Role (Create, Advanced).",
     "family": "Solution Architect",
-    "target_type_name": "Solution Role",
+    "target_type_name": "SolutionActorRole",
     "aliases": ["Solution Role DrE Advanced"]
    },
    "microflow": {
@@ -1454,7 +1454,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Solution Role",
+      "type": "SolutionActorRole",
       "function": "SolutionArchitect.find_solution_roles",
       "params": {"search_string": "$search_string"}
      }
@@ -1520,7 +1520,7 @@
     "heading": "Solution-Role-DrE-Basic Attributes",
     "description": "Auto-generated format for Solution Role (Create, Basic).",
     "family": "Solution Architect",
-    "target_type_name": "Solution Role",
+    "target_type_name": "SolutionActorRole",
     "aliases": ["Solution Role DrE Basic"]
    },
    "microflow": {
@@ -1541,7 +1541,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Solution Role",
+      "type": "SolutionActorRole",
       "function": "SolutionArchitect.find_solution_roles",
       "params": {"search_string": "$search_string"}
      }

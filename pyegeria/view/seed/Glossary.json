@@ -342,7 +342,7 @@
     "heading": "Question-DrE-Advanced Attributes",
     "description": "Auto-generated format for Question (Create, Advanced).",
     "family": "Glossary",
-    "target_type_name": "Question",
+    "target_type_name": "GlossaryTerm",
     "aliases": ["Question DrE Advanced"]
    },
    "microflow": {
@@ -363,7 +363,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Question",
+      "type": "GlossaryTerm",
       "function": "GlossaryManager.find_glossary_terms",
       "params": {
        "search_string": "$search_string",
@@ -439,7 +439,7 @@
     "heading": "Question-DrE-Basic Attributes",
     "description": "Auto-generated format for Question (Create, Basic).",
     "family": "Glossary",
-    "target_type_name": "Question",
+    "target_type_name": "GlossaryTerm",
     "aliases": ["Question DrE Basic"]
    },
    "microflow": {
@@ -460,7 +460,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Question",
+      "type": "GlossaryTerm",
       "function": "GlossaryManager.find_glossary_terms",
       "params": {
        "search_string": "$search_string",
