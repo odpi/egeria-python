@@ -21,7 +21,7 @@ from pyegeria.core.request_filters import GetFilters, ListFilters, SearchFilters
 from pyegeria.core._globals import NO_ELEMENTS_FOUND
 from pyegeria.core._server_client import ServerClient
 from pyegeria.core._validators import validate_guid, validate_name, validate_search_string
-from pyegeria.core._exceptions import PyegeriaException
+from pyegeria.core._exceptions import PyegeriaException, PyegeriaInvalidParameterException
 # from pyegeria._exceptions import (
 #     PyegeriaInvalidParameterException,
 #     PyegeriaAPIException,
@@ -3409,21 +3409,22 @@ class AutomatedCuration(ServerClient):
     #   Initiate surveys
     #
 
-    async def _async_get_supported_action_target_names(self, action_type_qualified_name: str) -> list[str]:
+    async def _async_get_supported_action_target_names(self, action_type_qualified_name: str) -> list[str] | None:
         """Return the action target names a governance action type declares it accepts
-        (its specification's supportedActionTarget entries), or [] if they can't be read."""
+        (its specification's supportedActionTarget entries): [] when it was read and declares none, and None
+        when it could not be read (PY-22: a failed read is not "none declared")."""
         try:
             guid = await self.__async_get_guid__(qualified_name=action_type_qualified_name)
             if not guid or guid == NO_ELEMENTS_FOUND:
-                return []
+                return None
             url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
                    f"classification-explorer/elements/{guid}")
             response = await self._async_make_request("POST", url, {"class": "GetRequestBody"})
             spec = (response.json().get("element") or {}).get("specification") or {}
             return [t.get("name") for t in spec.get("supportedActionTarget") or [] if t.get("name")]
         except Exception as e:
-            logger.debug(f"Could not read supported action targets for {action_type_qualified_name}: {e}")
-            return []
+            logger.warning(f"Could not read supported action targets for {action_type_qualified_name}: {e}")
+            return None
 
     async def _async_initiate_survey(
             self,
@@ -3469,7 +3470,12 @@ class AutomatedCuration(ServerClient):
             # Each survey type expects its own target name; a single hardcoded name
             # ("serverToSurvey") was wrong for e.g. database and folder surveys.
             # "*" means the survey accepts any name (e.g. the Kafka server survey).
-            supported = [n for n in await self._async_get_supported_action_target_names(survey_name) if n != "*"]
+            declared = await self._async_get_supported_action_target_names(survey_name)
+            if declared is None:
+                raise PyegeriaInvalidParameterException(None, {"caller": "_async_initiate_survey"}, {
+                    "reason": f"The action targets of survey {survey_name} could not be read, so the target name "
+                              f"is not known. Pass action_target_name to name it."})
+            supported = [n for n in declared if n != "*"]
             action_target_name = supported[0] if len(supported) == 1 else "serverToSurvey"
 
         url = f"{self.ref_curation_command_base}/governance-action-types/initiate"
