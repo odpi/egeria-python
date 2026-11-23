@@ -103,3 +103,46 @@ def test_the_tables_cover_the_relationship_lists():
     assert ENTITY_SUPERTYPES["Endpoint"][0] == "Referenceable"
     covered = [k for k in RELATIONSHIP_FIELDS if k in END_ENTITY_TYPES]
     assert len(covered) > len(RELATIONSHIP_FIELDS) * 0.8, (len(covered), len(RELATIONSHIP_FIELDS))
+
+
+def test_the_constant_parser_takes_any_guid_shape_egeria_wrote():
+    """F4: 11 constants have a GUID that is upper/mixed case or 35/37 characters long, so a strict 36-char
+    lowercase pattern dropped them (Port, PortAlias, IncidentReport, CloudProvider ...)."""
+    gen = _gen()
+    got = gen.type_name_constants({"x/OpenMetadataType.java": """
+    PORT("e3d9FD9F-d5eD-2aed-CC98-0bc21aB6f71C",
+         "Port",
+         OpenMetadataWikiPages.MODEL_0217_PORTS),
+    INCIDENT_REPORT("072f252b-dea7-4b88-bb2e-8f741c9ca7f6e",
+                    "IncidentReport", X),
+    CLOUD_PROVIDER_CLASSIFICATION("a2bfdd08-d0a8-49db-bc97-7f240628104",
+                                  "CloudProvider", X),
+    PLAIN("11111111-1111-1111-1111-111111111111", "Plain", X),
+"""})
+    assert got == {"PORT": "Port", "INCIDENT_REPORT": "IncidentReport", "CLOUD_PROVIDER_CLASSIFICATION": "CloudProvider",
+                   "PLAIN": "Plain"}
+
+
+def test_the_four_ends_the_parser_used_to_miss_now_have_types():
+    from md_processing.md_processing_utils.properties_class_fields import END_ENTITY_TYPES, ENTITY_SUPERTYPES
+    for end in ("incidentReports", "ports", "portDelegatingFrom", "portDelegatingTo"):
+        assert END_ENTITY_TYPES.get(end), end
+    for entity in ("IncidentReport", "Port", "PortAlias", "PortImplementation", "RecentAccess",
+                   "ResourceMeasureAnnotation"):
+        assert entity in ENTITY_SUPERTYPES, entity
+
+
+def test_the_parser_finds_every_enum_entry_in_the_6_4_source():
+    import os
+    import re
+    src, ref = os.environ.get("EGERIA_6_4_SRC"), os.environ.get("EGERIA_6_4_REF", "90232870b2")
+    if not src:
+        pytest.skip("set EGERIA_6_4_SRC to a checkout of odpi/egeria at the table's sha")
+    gen = _gen()
+    sources = {p: t for p, t in gen.read_sources(src, ref).items() if p.endswith("/OpenMetadataType.java")}
+    assert sources
+    text = next(iter(sources.values()))
+    # every enum entry starts a line as NAME("<guid>", with the type name on that or a following line
+    entries = re.findall(r"^\s{4}([A-Z][A-Z0-9_]*)\(\s*\"[^\"]+\"\s*,\s*\"[^\"]+\"", text, re.M)
+    assert len(entries) > 600
+    assert set(gen.type_name_constants(sources)) == set(entries)

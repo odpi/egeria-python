@@ -73,7 +73,7 @@ def read_sources(egeria: str, ref: str) -> dict[str, str]:
 
 
 ARCHIVES = "open-metadata-resources/open-metadata-archives/open-metadata-types/src/main/java/"
-_ENUM_CONSTANT = re.compile(r"\b([A-Z][A-Z0-9_]*)\(\s*\"[0-9a-f-]{36}\"\s*,\s*\"([^\"]+)\"")
+_ENUM_CONSTANT = re.compile(r"\b([A-Z][A-Z0-9_]*)\(\s*\"[0-9a-fA-F-]{20,}\"\s*,\s*\"([^\"]+)\"")
 _CLASSIFICATION_DEF = re.compile(
     r"archiveHelper\.getClassificationDef\(\s*OpenMetadataType\.(\w+)\s*,\s*"
     r"(null|this\.archiveBuilder\.getClassificationDef\(\s*OpenMetadataType\.(\w+)\.typeName\s*\))")
