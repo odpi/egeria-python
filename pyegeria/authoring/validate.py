@@ -80,7 +80,10 @@ CLIENT_DERIVED_COLUMNS: Dict[str, frozenset] = {
     # pyegeria/omvs/data_designer.py get_data_rel_elements_dict (:1615-1655), overlaid by _extract_data_*_properties
     "DataDesigner.find_data_structures": frozenset({"in_data_dictionary", "in_data_spec", "member_data_fields"}),
     "DataDesigner.find_data_fields": frozenset({"in_data_dictionary", "in_data_structure", "member_data_fields"}),
-    "DataDesigner.find_data_value_specifications": frozenset({"in_data_dictionary", "in_data_structure"}),
+    "DataDesigner.find_data_value_specifications": frozenset({
+        "in_data_dictionary", "in_data_structure",
+        # PY-49 Group B: DataClassComposition (partOfDataClasses) and DataValueHierarchy (superDataValueSpecification)
+        "containing_data_class", "specializes_data_class"}),
 }
 
 #: The seven membership figures of the ZoneMembershipProfile classification, which GovernanceOfficer adds to a

@@ -148,8 +148,6 @@ def _shipped_find_specs():
 KNOWN_UNKNOWN_COLUMNS = {
     "Actor-Roles": ['scope'],
     "CitedDocument": ['reference_url'],
-    "Data-Classes": ['containing_data_class', 'specializes_data_class'],
-    "Data-Value-Spec": ['containing_data_class', 'specializes_data_class'],
     "External-References": ['current_version', 'first_pub_date', 'number_of_pages', 'page_range', 'pub_city', 'pub_date',
                             'pub_numbers', 'pub_series_volume', 'pub_year', 'publication_series', 'publisher',
                             'reference_sources', 'reference_url'],
