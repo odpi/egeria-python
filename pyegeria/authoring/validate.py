@@ -57,10 +57,12 @@ def _snake(camel: str) -> str:
 #: not relationship lists.
 #: PY-49 removed three that were dead: `start_date` (ProjectProperties has planned/actual start dates), `next_version`
 #: (DigitalProductProperties.nextVersionDate) and `project_roles`.
-_HAND_KEPT_RELATED_KEYS = frozenset({
-    "actor_list", "folder_display_names", "note_log_name", "note_log_qualified_name", "service_levels",
-    "support_level",
-})
+#: PY-55 settled the other four: `actor_list` and the two `note_log_*` columns are now `source` columns
+#: (of:assignedActors.displayName, of:presentInNoteLogs.displayName / .qualifiedName), and `folder_display_names`
+#: is client-derived (CLIENT_DERIVED_COLUMNS, GlossaryManager.find_glossaries). `service_levels` and `support_level`
+#: stay on purpose (Dan's PY-49 Q3): no single Properties class has them, but the rows of the agreement subtypes
+#: that carry them are filled, so the column is kept for those rows.
+_HAND_KEPT_RELATED_KEYS = frozenset({"service_levels", "support_level"})
 RELATED_ELEMENT_KEYS = frozenset({_snake(key) for key in RELATIONSHIP_FIELDS}) | _HAND_KEPT_RELATED_KEYS
 
 #: Properties of the survey annotation subtypes, which the Properties-class catalog doesn't list.
@@ -78,6 +80,9 @@ CLIENT_DERIVED_COLUMNS: Dict[str, frozenset] = {
     # pyegeria/omvs/data_designer.py get_data_rel_elements_dict (:1615-1655), overlaid by _extract_data_*_properties
     # pyegeria/omvs/glossary_manager.py _extract_term_properties: the glossaries in the term's memberOfCollections
     "GlossaryManager.find_glossary_terms": frozenset({"parent_glossary"}),
+    # PY-55: glossary_manager.py (_extract_glossary_properties, ~:3239): the display names of the CollectionFolder
+    # entries in the glossary's collectionMembers (a type filter, which a plain related-element column cannot express)
+    "GlossaryManager.find_glossaries": frozenset({"folder_display_names"}),
     "DataDesigner.find_data_structures": frozenset({"in_data_dictionary", "in_data_spec", "member_data_fields"}),
     "DataDesigner.find_data_fields": frozenset({"in_data_dictionary", "in_data_structure", "member_data_fields"}),
     "DataDesigner.find_data_value_specifications": frozenset({

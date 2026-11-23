@@ -367,7 +367,7 @@
        {"field": "deployment_status", "label": "Deployment Status"},
        {"field": "product_name", "label": "Product Name"},
        {"field": "members", "label": "Members", "format": true},
-       {"field": "actor_list", "label": "Contacts"}
+       {"field": "actor_list", "label": "Contacts", "source": "of:assignedActors.displayName"}
       ]
      },
      "TABLE": {"same_as": "FORM"},
