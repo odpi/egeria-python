@@ -721,3 +721,39 @@ def test_validate_compact_spec_file_does_not_warn_missing_om_type_for_dynamic_na
     assert "OM_TYPE_MISSING" not in codes
 
 
+
+
+def _one_command_file(tmp_path, om_type):
+    payload = {
+        "attribute_definitions": {"Display Name": {"style": "Simple"}},
+        "bundles": {"Base": {"inherits": None, "own_attributes": ["Display Name"]}},
+        "commands": {
+            "Create Thing": {
+                "family": "Test",
+                "find_method": "",
+                "OM_TYPE": om_type,
+                "bundle": "Base",
+                "custom_attributes": [],
+            }
+        },
+    }
+    path = tmp_path / "compact_one.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    return path
+
+
+def test_egeria_6_4_type_names_are_not_invalid_on_an_older_platform(tmp_path):
+    """PY-51: a 6.3 platform does not list the 6.4 types, but the specs may name them."""
+    from pyegeria.core import egeria_6_4_names as n
+
+    older_platform_types = {"Project", "Referenceable", "DataValueDefinition"}
+    for om_type in n.TYPE_NAMES:
+        path = _one_command_file(tmp_path, om_type)
+        findings = validate_compact_spec_file(path, valid_om_types=older_platform_types)
+        assert [f for f in findings if f.code == "OM_TYPE_INVALID"] == [], om_type
+
+
+def test_a_wrong_type_name_is_still_invalid_next_to_the_6_4_names(tmp_path):
+    path = _one_command_file(tmp_path, "DataValues")  # near miss of DataValue
+    findings = validate_compact_spec_file(path, valid_om_types={"Project"})
+    assert [f.severity for f in findings if f.code == "OM_TYPE_INVALID"] == ["ERROR"]

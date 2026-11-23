@@ -13,6 +13,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
+from pyegeria.core.egeria_6_4_names import TYPE_NAMES as _EGERIA_6_4_TYPE_NAMES
 from pyegeria.omvs.valid_metadata import ValidMetadataManager
 
 
@@ -650,7 +651,13 @@ def validate_compact_spec_file(
                         ),
                     )
                 )
-            elif valid_om_types is not None and om_type not in valid_om_types:
+            elif (
+                valid_om_types is not None
+                and om_type not in valid_om_types
+                # The platform being asked may be older than the specs: the Egeria 6.4 types
+                # (odpi/egeria#9463) are real, but a 6.3 platform does not list them.
+                and om_type not in _EGERIA_6_4_TYPE_NAMES
+            ):
                 findings.append(
                     SpecFinding(
                         severity="ERROR",

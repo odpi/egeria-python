@@ -121,6 +121,44 @@ logger.add("debug_log", rotation="1 day", retention="1 week", compression="zip",
 # Attribute block writer (shared by file output and console output)
 # ---------------------------------------------------------------------------
 
+NOT_READ_NO_CONNECTION = "valid values not read (no Egeria connection)"
+
+
+def _join_server_values(valid_elements: list) -> str:
+    """The preferred values the server lists, sorted: the server's own order differs between servers
+    and runs, which made every regeneration rewrite the templates (PY-51)."""
+    values = [el.get("preferredValue") for el in valid_elements if el.get("preferredValue")]
+    return "; ".join(sorted(values, key=lambda v: (v.lower(), v)))
+
+
+def _resolve_valid_values(value: dict, client: Optional[ServerClient]) -> tuple:
+    """The valid values and dynamic default for one attribute: the spec's own list, else the server's.
+
+    An attribute that is looked up (it has a property_name and no values of its own) and cannot be, because there is
+    no connection or the lookup failed, gets a marker saying so instead of silently losing the line (PY-52).
+    The marker keeps refresh_specs usable offline, and the difference shows up in the diff.
+    """
+    valid_values = value.get("valid_values") or ""
+    prop_name = value.get("property_name")
+    dynamic_default = None
+    if not prop_name:
+        return valid_values, dynamic_default
+    if client is None:
+        return (valid_values or NOT_READ_NO_CONNECTION), dynamic_default
+    try:
+        valid_elements = client.get_valid_metadata_values(prop_name)
+    except Exception as exc:
+        return (valid_values or f"valid values not read (Egeria lookup failed: {type(exc).__name__})"), dynamic_default
+    if valid_elements:
+        if not valid_values:
+            valid_values = _join_server_values(valid_elements)
+        for el in valid_elements:
+            if el.get("additionalProperties", {}).get("isDefaultValue") == "true":
+                dynamic_default = el.get("preferredValue")
+                break
+    return valid_values, dynamic_default
+
+
 def _write_attr_block(out: io.StringIO, key: str, value: dict, client: Optional[ServerClient] = None) -> None:
     """Write a single ### attribute block into the StringIO buffer."""
     out.write(f"\n### {key}\n")
@@ -136,24 +174,7 @@ def _write_attr_block(out: io.StringIO, key: str, value: dict, client: Optional[
     if labels.strip():
         out.write(f">\t**Alternative Labels**: {labels}\n\n")
 
-    valid_values = value.get("valid_values") or ""
-    prop_name = value.get("property_name")
-    
-    dynamic_default = None
-    if prop_name and client:
-        try:
-            valid_elements = client.get_valid_metadata_values(prop_name)
-            if valid_elements:
-                if not valid_values:
-                    valid_values = "; ".join([el.get("preferredValue") for el in valid_elements if el.get("preferredValue")])
-                
-                # Look for dynamic default
-                for el in valid_elements:
-                    if el.get("additionalProperties", {}).get("isDefaultValue") == "true":
-                        dynamic_default = el.get("preferredValue")
-                        break
-        except Exception:
-            pass
+    valid_values, dynamic_default = _resolve_valid_values(value, client)
 
     if isinstance(valid_values, str):
         vv = valid_values.strip()
@@ -189,24 +210,7 @@ def _print_attr(key: str, value: dict, client: Optional[ServerClient] = None) ->
     if labels.strip():
         print(f">\tAlternative Labels: {labels}")
         
-    valid_values = value.get("valid_values") or ""
-    prop_name = value.get("property_name")
-    
-    dynamic_default = None
-    if prop_name and client:
-        try:
-            valid_elements = client.get_valid_metadata_values(prop_name)
-            if valid_elements:
-                if not valid_values:
-                    valid_values = "; ".join([el.get("preferredValue") for el in valid_elements if el.get("preferredValue")])
-                
-                # Look for dynamic default
-                for el in valid_elements:
-                    if el.get("additionalProperties", {}).get("isDefaultValue") == "true":
-                        dynamic_default = el.get("preferredValue")
-                        break
-        except Exception:
-            pass
+    valid_values, dynamic_default = _resolve_valid_values(value, client)
 
     if isinstance(valid_values, str):
         vv = valid_values.strip()
