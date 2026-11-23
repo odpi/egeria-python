@@ -121,6 +121,13 @@ logger.add("debug_log", rotation="1 day", retention="1 week", compression="zip",
 # Attribute block writer (shared by file output and console output)
 # ---------------------------------------------------------------------------
 
+def _join_server_values(valid_elements: list) -> str:
+    """The preferred values the server lists, sorted: the server's own order differs between servers
+    and runs, which made every regeneration rewrite the templates (PY-51)."""
+    values = [el.get("preferredValue") for el in valid_elements if el.get("preferredValue")]
+    return "; ".join(sorted(values, key=lambda v: (v.lower(), v)))
+
+
 def _write_attr_block(out: io.StringIO, key: str, value: dict, client: Optional[ServerClient] = None) -> None:
     """Write a single ### attribute block into the StringIO buffer."""
     out.write(f"\n### {key}\n")
@@ -145,7 +152,7 @@ def _write_attr_block(out: io.StringIO, key: str, value: dict, client: Optional[
             valid_elements = client.get_valid_metadata_values(prop_name)
             if valid_elements:
                 if not valid_values:
-                    valid_values = "; ".join([el.get("preferredValue") for el in valid_elements if el.get("preferredValue")])
+                    valid_values = _join_server_values(valid_elements)
                 
                 # Look for dynamic default
                 for el in valid_elements:
@@ -198,7 +205,7 @@ def _print_attr(key: str, value: dict, client: Optional[ServerClient] = None) ->
             valid_elements = client.get_valid_metadata_values(prop_name)
             if valid_elements:
                 if not valid_values:
-                    valid_values = "; ".join([el.get("preferredValue") for el in valid_elements if el.get("preferredValue")])
+                    valid_values = _join_server_values(valid_elements)
                 
                 # Look for dynamic default
                 for el in valid_elements:
