@@ -5529,7 +5529,8 @@ class ServerClient(BaseServerClient):
             self,
             element_guid: str,
             keyword: Optional[str] = None,
-            body: dict = None
+            body: dict = None,
+            description: Optional[str] = None,
     ) -> str:
         """
         Creates a search keyword and attaches it to an element.
@@ -5540,9 +5541,11 @@ class ServerClient(BaseServerClient):
         element_guid: str
             - the identity of the element to update
         keyword: str = None
-            - the name of the search keyword to add
+            - the name of the search keyword to add; sent as the keyword's displayName
         body: dict, optional
             - structure containing search string information - see Notes
+        description: str = None
+            - optional description of the keyword; ignored when body is given
 
         Returns
         -------
@@ -5559,7 +5562,7 @@ class ServerClient(BaseServerClient):
           "class" : "NewAttachmentRequestBody",
           "properties" : {
             "class" : "SearchKeywordProperties",
-            "keyword" : "myKeyword",
+            "displayName" : "myKeyword",
             "description" : "Add search keyword text here"
           }
         }
@@ -5570,7 +5573,8 @@ class ServerClient(BaseServerClient):
                 "class": "NewAttachmentRequestBody",
                 "properties": {
                     "class": "SearchKeywordProperties",
-                    "keyword": keyword
+                    "displayName": keyword,
+                    "description": description,
                 }
             }
         elif body is None:
@@ -5587,6 +5591,7 @@ class ServerClient(BaseServerClient):
             element_guid: str,
             keyword: Optional[str] = None,
             body: dict = None,
+            description: Optional[str] = None,
     ) -> str:
         """
         Creates a search keyword and attaches it to an element.
@@ -5597,9 +5602,11 @@ class ServerClient(BaseServerClient):
         element_guid: str
             - the identity of the element to update
         keyword: str = None
-            - the name of the search keyword to add
+            - the name of the search keyword to add; sent as the keyword's displayName
         body: dict, optional
             - structure containing search string information - see Notes
+        description: str = None
+            - optional description of the keyword; ignored when body is given
 
         Returns
         -------
@@ -5616,7 +5623,7 @@ class ServerClient(BaseServerClient):
           "class" : "NewAttachmentRequestBody",
           "properties" : {
             "class" : "SearchKeywordProperties",
-            "keyword" : "myKeyword",
+            "displayName" : "myKeyword",
             "description" : "Add search keyword text here"
           }
         }
@@ -5624,7 +5631,7 @@ class ServerClient(BaseServerClient):
         """
 
         response = run_sync(
-            self._async_add_search_keyword_to_element(element_guid, keyword, body)
+            self._async_add_search_keyword_to_element(element_guid, keyword, body, description)
         )
         return response
 
@@ -5661,7 +5668,7 @@ class ServerClient(BaseServerClient):
           "mergeUpdate": true,
           "properties" : {
             "class" : "SearchKeywordProperties",
-            "keyword" : "myKeyword",
+            "displayName" : "myKeyword",
             "description" : "Add search keyword text here"
           }
         }
@@ -5703,7 +5710,7 @@ class ServerClient(BaseServerClient):
            "mergeUpdate": true,
            "properties" : {
              "class" : "SearchKeywordProperties",
-             "keyword" : "myKeyword",
+             "displayName" : "myKeyword",
              "description" : "Add search keyword text here"
            }
          }
