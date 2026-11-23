@@ -124,8 +124,8 @@ notes and are not repeated here.
   accept `of:<list>.<attribute>` if any entity type had the attribute; it now checks the entity type(s) at that end of the
   relationship and their supertypes, both from the 6.4 typedefs, and refuses a wrong-end attribute naming the relationship,
   the end, its type and the attribute. A list whose end type is not in the tables is checked loosely and gets a warning.
-- **A preview asks Egeria only for the rows it shows** (PY-19). A report run with `page_to=N` made its first request
-  for `min(N, 100)` rows, not always 100, and its last request for the remainder, so no page is read past `N`. Paging is
+- **A preview asks Egeria only for the rows it shows** (PY-19). A report run with `page_to=N` made its requests
+  for `min(N, 100)` rows, not always 100, so it reads at most one page past `N`. Paging is
   unchanged otherwise: a short or empty page does not end the read, only Egeria's null does, and a run that stopped at
   `N` still says so ("stopped at the N rows asked for; there may be more"). Full reads are untouched.
 - **`find_digital_product_catalogs` lists catalogs** (PY-71). It sent no type filter and so listed every Collection

@@ -47,13 +47,13 @@ def test_a_25_row_preview_sends_one_request_of_25():
 def test_a_preview_larger_than_the_default_pages_at_100_up_to_max_rows():
     fake = _Rows(1000)
     got = page_all(fake, **fse._full_read(_plan(250)))
-    assert fake.calls == [(0, 100), (100, 100), (200, 50)] and len(got.items) == 250   # the last asks for the remainder
+    assert fake.calls == [(0, 100), (100, 100), (200, 100)] and len(got.items) == 250   # one page past, at most
 
 
 def test_a_short_first_page_still_pages_on_and_stops_at_max_rows():
     fake = _Rows(1000, short=10)
     got = page_all(fake, **fse._full_read(_plan(25)))
-    assert fake.calls[:2] == [(0, 25), (25, 15)]                      # a short page is not the last page; ask the rest
+    assert fake.calls[:2] == [(0, 25), (25, 25)]                      # a short page is not the last page
     assert len(got.items) == 25 and got.end == "capped"               # and it stops at the rows asked for
 
 
@@ -87,10 +87,37 @@ def test_an_empty_filtered_page_does_not_end_the_preview():
     assert calls[:2] == [(0, 25), (25, 25)] and got.items == ["a", "b"]
 
 
-def test_no_request_reads_past_max_rows():
+def test_a_preview_reads_at_most_one_page_past_max_rows():
     fake = _Rows(1000)
     page_all(fake, **fse._full_read(_plan(130)))
-    assert sum(size for _, size in fake.calls) == 130
+    assert fake.calls == [(0, 100), (100, 100)]          # 200 positions for 130 rows: under one page over
+
+
+class _Filtered:
+    """24 visible rows, then `filtered` positions Egeria returns as empty (zone-filtered) pages, then the end."""
+    def __init__(self, filtered):
+        self.filtered, self.calls = filtered, []
+
+    def __call__(self, start, size):
+        self.calls.append((start, size))
+        visible = [f"r{i}" for i in range(start, min(start + size, 24))]
+        if visible:
+            return visible
+        return [] if start < 24 + self.filtered else None
+
+
+def test_filtered_positions_after_the_rows_cost_a_bounded_number_of_requests():
+    fake = _Filtered(500)
+    got = page_all(fake, **fse._full_read(_plan(25)))
+    assert len(fake.calls) <= 30 and {size for _, size in fake.calls} == {25}   # not hundreds of one-row requests
+    assert len(got.items) == 24
+
+
+def test_a_long_filtered_run_ends_at_the_empty_run_cap_in_bounded_requests():
+    fake = _Filtered(3000)
+    got = page_all(fake, **fse._full_read(_plan(25)))
+    assert got.end_reason == "empty_run_cap" and not got.complete
+    assert len(fake.calls) <= 90 and {size for _, size in fake.calls} == {25}
 
 
 def test_the_result_tells_stopped_at_max_rows_from_everything():
@@ -99,9 +126,3 @@ def test_the_result_tells_stopped_at_max_rows_from_everything():
     assert "25 rows asked for" in stopped.note
     everything = page_all(_Rows(12), **fse._full_read(_plan(25)))
     assert len(everything.items) == 12 and everything.end_reason in ("trusted_null", "null_then_empty_probes")
-
-
-def test_a_pager_without_trim_asks_the_full_size_every_time():
-    fake = _Rows(1000)
-    page_all(fake, want=130, fetch_page_size=100)
-    assert fake.calls == [(0, 100), (100, 100)]
