@@ -373,8 +373,8 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
             if object_type == "Certification":
                 properties = {
                     "class": "CertificationProperties",
-                    "startDate": attributes.get("Start Date", {}).get("value"),
-                    "endDate": attributes.get("End Date", {}).get("value"),
+                    "coverageStart": attributes.get("Start Date", {}).get("value"),
+                    "coverageEnd": attributes.get("End Date", {}).get("value"),
                     "conditions": attributes.get("Conditions", {}).get("value"),
                     "certifiedBy": attributes.get("Certified By", {}).get("value"),
                     "certifiedByTypeName": attributes.get("Certified By Type Name", {}).get("value"),
@@ -394,8 +394,8 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
             else:
                 properties = {
                     "class": "LicenseProperties",
-                    "startDate": attributes.get("Start Date", {}).get("value"),
-                    "endDate": attributes.get("End Date", {}).get("value"),
+                    "coverageStart": attributes.get("Start Date", {}).get("value"),
+                    "coverageEnd": attributes.get("End Date", {}).get("value"),
                     "conditions": attributes.get("Conditions", {}).get("value"),
                     "licensedBy": attributes.get("Licensed By", {}).get("value"),
                     "licensedByTypeName": attributes.get("Licensed By Type Name", {}).get("value"),
@@ -530,8 +530,8 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
                     "properties": {
                         "class": "CertificationProperties",
                         "certificateId": attributes.get("Certificate GUID", {}).get("value"),
-                        "startDate": attributes.get("Start Date", {}).get("value"),
-                        "endDate": attributes.get("End Date", {}).get("value"),
+                        "coverageStart": attributes.get("Start Date", {}).get("value"),
+                        "coverageEnd": attributes.get("End Date", {}).get("value"),
                         "conditions": attributes.get("Conditions", {}).get("value"),
                         "certifiedBy": attributes.get("Certified By", {}).get("value"),
                         "certifiedByTypeName": attributes.get("Certified By Type Name", {}).get("value"),
@@ -563,8 +563,8 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
                     "properties": {
                         "class": "LicenseProperties",
                         "licenseId": attributes.get("License GUID", {}).get("value"),
-                        "startDate": attributes.get("Start Date", {}).get("value"),
-                        "endDate": attributes.get("End Date", {}).get("value"),
+                        "coverageStart": attributes.get("Start Date", {}).get("value"),
+                        "coverageEnd": attributes.get("End Date", {}).get("value"),
                         "conditions": attributes.get("Conditions", {}).get("value"),
                         "licensedBy": attributes.get("Licensed By", {}).get("value"),
                         "licensedByTypeName": attributes.get("Licensed By Type Name", {}).get("value"),
