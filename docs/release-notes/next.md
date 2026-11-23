@@ -120,6 +120,10 @@ notes and are not repeated here.
   before anything is sent, with "<call> needs a name; use <find> to list all", because the Egeria 6.4 by-name and by-type
   endpoints refuse it (each one checked answered HTTP 400; "*" there is an exact match). `hey_egeria ... deployed-servers` now
   defaults to `View Server` instead of `*`.
+- **`find_digital_product_catalogs` lists catalogs** (PY-71). It sent no type filter and so listed every Collection
+  (a live `find("*")` returned Agreements). It now asks for `DigitalProductCatalog` unless you pass
+  `metadata_element_subtypes`, and it and `get_digital_product_catalogs_by_name` format `output_format="DICT"`, `"MD"` and
+  the others (they had no output generator and raised `TypeError`).
 - **Unity Catalog report specs take the caller's search and show real columns** (PY-56). The UC-Catalog-Element specs
   no longer pin the search to "Unity Catalog Catalog::": the prefix is a `qualified_name_prefix` constraint
   (`find_elements_by_property_value(..., qualified_name_prefix=...)`) ANDed with the search string you pass. The six
