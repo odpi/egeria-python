@@ -365,7 +365,9 @@
        {"field": "summary", "label": "Summary"},
        {"field": "category", "label": "Category"},
        {"field": "element_status", "label": "Status"},
-       {"field": "qualified_name", "label": "Qualified Name"}
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "processing_variables", "label": "Processing Variables", "related_label": "display_name"},
+       {"field": "process_variable_types", "label": "Supported Variable Types", "related_label": "display_name"}
       ]
      }
     }
@@ -430,7 +432,7 @@
     "heading": "Secrets Collection User Profile Charts",
     "description": "Secrets Collection User Profile",
     "family": "Governance Officer",
-    "target_type_name": "GovernanceZone",
+    "target_type_name": "SecretsCollection",
     "aliases": ["Secrets Collection User Profile Charts"]
    },
    "microflow": {
@@ -451,22 +453,17 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "GovernanceZone",
-      "function": "GovernanceOfficer.find_governance_definitions",
-      "params": {
-       "search_string": "$search_string",
-       "metadata_element_subtypes": ["GovernanceZone"]
-      }
+      "type": "SecretsCollection",
+      "function": "AssetMaker.find_assets",
+      "params": {"search_string": "$search_string", "metadata_element_type": "SecretsCollection"}
      }
     ],
     "formatters": {
      "MERMAID": {
       "columns": [
        {"field": "mermaidGraph", "label": "Mermaid Graph"},
-       {"field": "userAccountTypeProfileBarGraph", "label": "Account Type Bar Chart"},
-       {"field": "userAccountTypeProfilePieGraph", "label": "Account Type Pie Chart"},
-       {"field": "userAccountStatusProfileBarGraph", "label": "Account Status Bar Chart"},
-       {"field": "userAccountStatusProfilePieGraph", "label": "Account Status Pie Chart"}
+       {"field": "userAccountTypeProfileMermaidPieChart", "label": "Account Type Profile (Mermaid)"},
+       {"field": "userAccountStatusProfileMermaidPieChart", "label": "Account Status Profile (Mermaid)"}
       ]
      },
      "REPORT": {"same_as": "MERMAID"},
@@ -592,6 +589,7 @@
        {"field": "disposition", "label": "Disposition"},
        {"field": "importance", "label": "Importance"},
        {"field": "content_status", "label": "Content Status"},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
        {"field": "summary", "label": "Summary"},
        {"field": "description", "label": "Description"},
        {"field": "scope", "label": "Scope"},

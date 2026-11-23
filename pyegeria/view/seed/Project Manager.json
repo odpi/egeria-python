@@ -52,7 +52,8 @@
        {"field": "actual_start_date", "label": "Actual Start Date"},
        {"field": "assigned_actors", "label": "Assigned Actors"},
        {"field": "resource_list", "label": "Resources"},
-       {"field": "managed_projects", "label": "Managed Projects"}
+       {"field": "managed_projects", "label": "Managed Projects"},
+       {"field": "project_targets", "label": "Project Targets", "related_label": "display_name"}
       ]
      },
      "LIST": {"same_as": "ALL"}

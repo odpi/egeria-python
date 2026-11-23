@@ -169,13 +169,13 @@
       "columns": [
        {"field": "label", "label": "Control"},
        {"field": "display_name", "label": "Display Name"},
+       {"field": "description", "label": "Description"},
        {"field": "is_applicable", "label": "Applicable"},
        {"field": "implementation_status", "label": "Implementation Status"},
        {"field": "justification", "label": "Justification"},
        {"field": "inclusion_reasons", "label": "Inclusion Reasons"},
        {"field": "review_date", "label": "Review Date"},
        {"field": "implementation_description", "label": "Implementation Description"},
-       {"field": "notes", "label": "Notes"},
        {"field": "qualified_name", "label": "Qualified Name"},
        {"field": "GUID", "label": "GUID"}
       ]

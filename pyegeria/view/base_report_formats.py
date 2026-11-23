@@ -395,8 +395,8 @@ generated_format_sets = FormatSetDict({
     'ToDo-DrE-Basic': FormatSet(target_type='ToDo', heading='ToDo-DrE-Basic Attributes', description='Auto-generated format for ToDo (Create, Basic).', family='Actor Manager', formats=[Format(types=['LIST'], attributes=[Column(name='Display Name', key='display_name'), Column(name='Description', key='description'), Column(name='Situation', key='situation'), Column(name='Objective', key='objective'), Column(name='Priority', key='priority'), Column(name='Activity Status', key='activity_status', valid_values=['REQUESTED', 'APPROVED', 'WAITING', 'ACTIVATING', 'IN_PROGRESS', 'PAUSED', 'COMPLETED', 'INVALID', 'IGNORED', 'FAILED', 'CANCELLED', 'ABANDONED', 'OTHER'])]), Format(types=['ALL'], attributes=[Column(name='Display Name', key='display_name'), Column(name='Description', key='description'), Column(name='Situation', key='situation'), Column(name='Objective', key='objective'), Column(name='Priority', key='priority'), Column(name='Activity Status', key='activity_status', valid_values=['REQUESTED', 'APPROVED', 'WAITING', 'ACTIVATING', 'IN_PROGRESS', 'PAUSED', 'COMPLETED', 'INVALID', 'IGNORED', 'FAILED', 'CANCELLED', 'ABANDONED', 'OTHER'])])]),
     'Type-Def-DrE-Advanced': FormatSet(target_type='OpenMetadataTypeDef', heading='Type-Def-DrE-Advanced Attributes', description='Auto-generated format for Type Def (Create, Advanced).', family='MetadataExpert', formats=[Format(types=['LIST'], attributes=[Column(name='Type Def Name', key='type_def_name'), Column(name='Type Def Category', key='type_def_category', valid_values=['Entity', 'Relationship', 'Classification']), Column(name='Super Type', key='super_type'), Column(name='Type Def Description', key='type_def_description'), Column(name='Type Def Attributes', key='type_def_attributes'), Column(name='Valid Entity Types', key='valid_entity_types'), Column(name='Propagatable', key='propagatable'), Column(name='End1 Entity Type', key='end1_entity_type'), Column(name='End1 Attribute Name', key='end1_attribute_name'), Column(name='End2 Entity Type', key='end2_entity_type'), Column(name='End2 Attribute Name', key='end2_attribute_name')]), Format(types=['ALL'], attributes=[Column(name='Type Def Name', key='type_def_name'), Column(name='Type Def Category', key='type_def_category', valid_values=['Entity', 'Relationship', 'Classification']), Column(name='Super Type', key='super_type'), Column(name='Type Def Description', key='type_def_description'), Column(name='Type Def Attributes', key='type_def_attributes'), Column(name='Valid Entity Types', key='valid_entity_types'), Column(name='Propagatable', key='propagatable'), Column(name='End1 Entity Type', key='end1_entity_type'), Column(name='End1 Attribute Name', key='end1_attribute_name'), Column(name='End2 Entity Type', key='end2_entity_type'), Column(name='End2 Attribute Name', key='end2_attribute_name')])]),
     'Type-Def-DrE-Basic': FormatSet(target_type='OpenMetadataTypeDef', heading='Type-Def-DrE-Basic Attributes', description='Auto-generated format for Type Def (Create, Basic).', family='MetadataExpert', formats=[Format(types=['LIST'], attributes=[Column(name='Type Def Name', key='type_def_name'), Column(name='Type Def Category', key='type_def_category', valid_values=['Entity', 'Relationship', 'Classification']), Column(name='Super Type', key='super_type'), Column(name='Type Def Description', key='type_def_description'), Column(name='Type Def Attributes', key='type_def_attributes'), Column(name='Valid Entity Types', key='valid_entity_types'), Column(name='Propagatable', key='propagatable'), Column(name='End1 Entity Type', key='end1_entity_type'), Column(name='End1 Attribute Name', key='end1_attribute_name'), Column(name='End2 Entity Type', key='end2_entity_type'), Column(name='End2 Attribute Name', key='end2_attribute_name')]), Format(types=['ALL'], attributes=[Column(name='Type Def Name', key='type_def_name'), Column(name='Type Def Category', key='type_def_category', valid_values=['Entity', 'Relationship', 'Classification']), Column(name='Super Type', key='super_type'), Column(name='Type Def Description', key='type_def_description'), Column(name='Type Def Attributes', key='type_def_attributes'), Column(name='Valid Entity Types', key='valid_entity_types'), Column(name='Propagatable', key='propagatable'), Column(name='End1 Entity Type', key='end1_entity_type'), Column(name='End1 Attribute Name', key='end1_attribute_name'), Column(name='End2 Entity Type', key='end2_entity_type'), Column(name='End2 Attribute Name', key='end2_attribute_name')])]),
-    'UC-Catalog-Element-DrE-Advanced': FormatSet(target_type='SoftwareCapability', heading='UC-Catalog-Element-DrE-Advanced Attributes', description='Auto-generated format for UC Catalog Element (Create, Advanced).', family='Asset Maker', formats=[Format(types=['LIST'], attributes=[Column(name='UC Catalog Name', key='uc_catalog'), Column(name='Network Address', key='network_address'), Column(name='Description', key='description'), Column(name='Deployed Implementation Type', key='deployed_implementation_type'), Column(name='Version Identifier', key='version_identifier')]), Format(types=['ALL'], attributes=[Column(name='UC Catalog Name', key='uc_catalog'), Column(name='Network Address', key='network_address'), Column(name='Description', key='description'), Column(name='Version Identifier', key='version_identifier'), Column(name='Deployed Implementation Type', key='deployed_implementation_type')])], action=ActionParameter(function='ClassificationExplorer.find_elements_by_property_value', required_params=['search_string'], optional_params=['sequencing_order', 'sequencing_property', 'page_size', 'start_from', 'starts_with', 'ends_with', 'ignore_case', 'classification_names', 'metadata_element_subtypes', 'metadata_element_type', 'deployed_implementation_type'], spec_params={'default_deployed_implementation_type': 'Unity Catalog Catalog', 'metadata_element_type': 'SoftwareCapability', 'property_names': ['displayName', 'qualifiedName']})),
-    'UC-Catalog-Element-DrE-Basic': FormatSet(target_type='SoftwareCapability', heading='UC-Catalog-Element-DrE-Basic Attributes', description='Auto-generated format for UC Catalog Element (Create, Basic).', family='Asset Maker', formats=[Format(types=['LIST'], attributes=[Column(name='UC Catalog Name', key='uc_catalog'), Column(name='Network Address', key='network_address'), Column(name='Description', key='description'), Column(name='Deployed Implementation Type', key='deployed_implementation_type'), Column(name='Version Identifier', key='version_identifier')]), Format(types=['ALL'], attributes=[Column(name='UC Catalog Name', key='uc_catalog'), Column(name='Network Address', key='network_address'), Column(name='Description', key='description'), Column(name='Version Identifier', key='version_identifier'), Column(name='Deployed Implementation Type', key='deployed_implementation_type')])], action=ActionParameter(function='ClassificationExplorer.find_elements_by_property_value', required_params=['search_string'], optional_params=['sequencing_order', 'sequencing_property', 'page_size', 'start_from', 'starts_with', 'ends_with', 'ignore_case', 'classification_names', 'metadata_element_subtypes', 'metadata_element_type', 'deployed_implementation_type'], spec_params={'default_deployed_implementation_type': 'Unity Catalog Catalog', 'metadata_element_type': 'SoftwareCapability', 'property_names': ['displayName', 'qualifiedName']})),
+    'UC-Catalog-Element-DrE-Advanced': FormatSet(target_type='Namespace', heading='UC-Catalog-Element-DrE-Advanced Attributes', description='Auto-generated format for UC Catalog Element (Create, Advanced).', family='Asset Maker', formats=[Format(types=['LIST'], attributes=[Column(name='UC Catalog Name', key='uc_catalog'), Column(name='Network Address', key='network_address'), Column(name='Description', key='description'), Column(name='Version Identifier', key='version_identifier')]), Format(types=['ALL'], attributes=[Column(name='UC Catalog Name', key='uc_catalog'), Column(name='Network Address', key='network_address'), Column(name='Description', key='description'), Column(name='Version Identifier', key='version_identifier')])], action=ActionParameter(function='ClassificationExplorer.find_elements_by_property_value', required_params=['search_string'], optional_params=['sequencing_order', 'sequencing_property', 'page_size', 'start_from', 'starts_with', 'ends_with', 'ignore_case', 'classification_names', 'metadata_element_subtypes', 'metadata_element_type'], spec_params={'metadata_element_type': 'Namespace', 'property_names': ['qualifiedName'], 'search_string': 'Unity Catalog Catalog::'})),
+    'UC-Catalog-Element-DrE-Basic': FormatSet(target_type='Namespace', heading='UC-Catalog-Element-DrE-Basic Attributes', description='Auto-generated format for UC Catalog Element (Create, Basic).', family='Asset Maker', formats=[Format(types=['LIST'], attributes=[Column(name='UC Catalog Name', key='uc_catalog'), Column(name='Network Address', key='network_address'), Column(name='Description', key='description'), Column(name='Version Identifier', key='version_identifier')]), Format(types=['ALL'], attributes=[Column(name='UC Catalog Name', key='uc_catalog'), Column(name='Network Address', key='network_address'), Column(name='Description', key='description'), Column(name='Version Identifier', key='version_identifier')])], action=ActionParameter(function='ClassificationExplorer.find_elements_by_property_value', required_params=['search_string'], optional_params=['sequencing_order', 'sequencing_property', 'page_size', 'start_from', 'starts_with', 'ends_with', 'ignore_case', 'classification_names', 'metadata_element_subtypes', 'metadata_element_type'], spec_params={'metadata_element_type': 'Namespace', 'property_names': ['qualifiedName'], 'search_string': 'Unity Catalog Catalog::'})),
     'UC-Function-Element-DrE-Advanced': FormatSet(target_type='DeployedAPI', heading='UC-Function-Element-DrE-Advanced Attributes', description='Auto-generated format for UC Function Element (Create, Advanced).', family='Asset Maker', formats=[Format(types=['LIST'], attributes=[Column(name='UC Catalog Name', key='uc_catalog'), Column(name='UC Schema Name', key='uc_schema'), Column(name='UC Function Name', key='uc_function'), Column(name='Network Address', key='network_address'), Column(name='Description', key='description'), Column(name='Deployed Implementation Type', key='deployed_implementation_type'), Column(name='Version Identifier', key='version_identifier')]), Format(types=['ALL'], attributes=[Column(name='UC Catalog Name', key='uc_catalog'), Column(name='UC Schema Name', key='uc_schema'), Column(name='UC Function Name', key='uc_function'), Column(name='Network Address', key='network_address'), Column(name='Description', key='description'), Column(name='Version Identifier', key='version_identifier'), Column(name='Deployed Implementation Type', key='deployed_implementation_type')])], action=ActionParameter(function='ClassificationExplorer.find_elements_by_property_value', required_params=['search_string'], optional_params=['sequencing_order', 'sequencing_property', 'page_size', 'start_from', 'starts_with', 'ends_with', 'ignore_case', 'classification_names', 'metadata_element_subtypes', 'metadata_element_type', 'deployed_implementation_type'], spec_params={'default_deployed_implementation_type': 'Unity Catalog Function', 'metadata_element_type': 'DeployedAPI', 'property_names': ['displayName', 'qualifiedName']})),
     'UC-Function-Element-DrE-Basic': FormatSet(target_type='DeployedAPI', heading='UC-Function-Element-DrE-Basic Attributes', description='Auto-generated format for UC Function Element (Create, Basic).', family='Asset Maker', formats=[Format(types=['LIST'], attributes=[Column(name='UC Catalog Name', key='uc_catalog'), Column(name='UC Schema Name', key='uc_schema'), Column(name='UC Function Name', key='uc_function'), Column(name='Network Address', key='network_address'), Column(name='Description', key='description'), Column(name='Deployed Implementation Type', key='deployed_implementation_type'), Column(name='Version Identifier', key='version_identifier')]), Format(types=['ALL'], attributes=[Column(name='UC Catalog Name', key='uc_catalog'), Column(name='UC Schema Name', key='uc_schema'), Column(name='UC Function Name', key='uc_function'), Column(name='Network Address', key='network_address'), Column(name='Description', key='description'), Column(name='Version Identifier', key='version_identifier'), Column(name='Deployed Implementation Type', key='deployed_implementation_type')])], action=ActionParameter(function='ClassificationExplorer.find_elements_by_property_value', required_params=['search_string'], optional_params=['sequencing_order', 'sequencing_property', 'page_size', 'start_from', 'starts_with', 'ends_with', 'ignore_case', 'classification_names', 'metadata_element_subtypes', 'metadata_element_type', 'deployed_implementation_type'], spec_params={'default_deployed_implementation_type': 'Unity Catalog Function', 'metadata_element_type': 'DeployedAPI', 'property_names': ['displayName', 'qualifiedName']})),
     'UC-Schema-Element-DrE-Advanced': FormatSet(target_type='DeployedDatabaseSchema', heading='UC-Schema-Element-DrE-Advanced Attributes', description='Auto-generated format for UC Schema Element (Create, Advanced).', family='Asset Maker', formats=[Format(types=['LIST'], attributes=[Column(name='UC Catalog Name', key='uc_catalog'), Column(name='UC Schema Name', key='uc_schema'), Column(name='Network Address', key='network_address'), Column(name='Description', key='description'), Column(name='Deployed Implementation Type', key='deployed_implementation_type'), Column(name='Version Identifier', key='version_identifier')]), Format(types=['ALL'], attributes=[Column(name='UC Catalog Name', key='uc_catalog'), Column(name='UC Schema Name', key='uc_schema'), Column(name='Network Address', key='network_address'), Column(name='Description', key='description'), Column(name='Version Identifier', key='version_identifier'), Column(name='Deployed Implementation Type', key='deployed_implementation_type')])], action=ActionParameter(function='ClassificationExplorer.find_elements_by_property_value', required_params=['search_string'], optional_params=['sequencing_order', 'sequencing_property', 'page_size', 'start_from', 'starts_with', 'ends_with', 'ignore_case', 'classification_names', 'metadata_element_subtypes', 'metadata_element_type', 'deployed_implementation_type'], spec_params={'default_deployed_implementation_type': 'Unity Catalog Schema', 'metadata_element_type': 'DeployedDatabaseSchema', 'property_names': ['displayName', 'qualifiedName']})),
@@ -566,6 +566,8 @@ PROJECT_COLUMNS = COMMON_COLUMNS + [
     Column(name='Assigned Actors', key='assigned_actors'),
     Column(name='Resources', key='resource_list'),
     Column(name="Managed Projects", key='managed_projects'),
+    # PY-49 Q8: ProjectTarget (Egeria 6.4): the elements the project works on
+    Column(name="Project Targets", key='project_targets', label='display_name'),
 
 ]
 
@@ -662,6 +664,11 @@ DATA_VALUE_COLUMNS = [
     Column(name='Usage', key='usage'),
     Column(name='Length', key='length'),
     Column(name='Description', key='description'),
+    # PY-49 Q8: the fingerprint and hash attributes of a DataValue (Egeria 6.4)
+    Column(name='Fingerprint', key='fingerprint'),
+    Column(name='Fingerprint Algorithm', key='fingerprint_algorithm'),
+    Column(name='Hash', key='hash'),
+    Column(name='Hash Algorithm', key='hash_algorithm'),
 ]
 
 LITERAL_DATA_VALUE_COLUMNS = [
@@ -674,6 +681,8 @@ DATA_VALUE_RELATIONSHIP_COLUMNS = [
     Column(name='Used By (Processing Variable)', key='data_value_uses', label='display_name'),
     Column(name='Data Value Sources', key='data_value_sources', label='display_name'),
     Column(name='Embedded Data Values', key='embedded_data_values', label='display_name'),
+    # PY-49 Q8: the other end of EmbeddedDataValue
+    Column(name='Embedded In Data Values', key='parent_data_values', label='display_name'),
 ]
 
 base_report_specs = FormatSetDict({
@@ -2452,13 +2461,13 @@ base_report_specs = FormatSetDict({
                 attributes=[
                     Column(name="Control", key="label"),
                     Column(name="Display Name", key="display_name"),
+                    Column(name="Description", key="description"),
                     Column(name="Applicable", key="is_applicable"),
                     Column(name="Implementation Status", key="implementation_status"),
                     Column(name="Justification", key="justification"),
                     Column(name="Inclusion Reasons", key="inclusion_reasons"),
                     Column(name="Review Date", key="review_date"),
                     Column(name="Implementation Description", key="implementation_description"),
-                    Column(name="Notes", key="notes"),
                     Column(name="Qualified Name", key="qualified_name"),
                     Column(name="GUID", key="GUID"),
                 ],
@@ -3346,6 +3355,13 @@ formats=[
                                                            Column(name='Category', key='category'),
                                                            Column(name='Status', key='element_status'),
                                                            Column(name='Qualified Name', key='qualified_name'),
+                                                           # PY-49 Q8 (Egeria 6.4): the configuration values the process
+                                                           # reads (ProcessingVariable) and the types it accepts
+                                                           # (SupportedVariableType)
+                                                           Column(name='Processing Variables', key='processing_variables',
+                                                                  label='display_name'),
+                                                           Column(name='Supported Variable Types',
+                                                                  key='process_variable_types', label='display_name'),
                                                            ])
                                     ],
                                     action=ActionParameter(
@@ -3380,7 +3396,7 @@ formats=[
                                         spec_params={"metadata_element_subtypes": ["GovernanceZone"]},
                                     )
                                     ),
-    'Secrets-Collection-User-Profile-Charts': FormatSet(target_type="GovernanceZone",
+    'Secrets-Collection-User-Profile-Charts': FormatSet(target_type="SecretsCollection",
                                                  heading='Secrets Collection User Profile Charts',
                                                  description='Secrets Collection User Profile',
                                                  family="Governance Officer",
@@ -3388,25 +3404,19 @@ formats=[
                                                      Format(types=['MERMAID', 'REPORT', 'GRAPH', 'DICT'],
                                                             attributes=[
                                                                 Column(name='Mermaid Graph', key='mermaidGraph'),
-                                                                # Column(name='Account Type Profile (Mermaid)',
-                                                                #        key='userAccountTypeProfileMermaidPieChart'),
-                                                                Column(name='Account Type Bar Chart',
-                                                                       key='userAccountTypeProfileBarGraph'),
-                                                                Column(name='Account Type Pie Chart',
-                                                                       key='userAccountTypeProfilePieGraph'),
-                                                                # Column(name='Account Status Profile (Mermaid)',
-                                                                #        key='userAccountStatusProfileMermaidPieChart'),
-                                                                Column(name='Account Status Bar Chart',
-                                                                       key='userAccountStatusProfileBarGraph'),
-                                                                Column(name='Account Status Pie Chart',
-                                                                       key='userAccountStatusProfilePieGraph'),
+                                                                # the two charts Egeria sends for a SecretsCollection's
+                                                                # UserAccountProfile (OpenMetadataHandlerBase)
+                                                                Column(name='Account Type Profile (Mermaid)',
+                                                                       key='userAccountTypeProfileMermaidPieChart'),
+                                                                Column(name='Account Status Profile (Mermaid)',
+                                                                       key='userAccountStatusProfileMermaidPieChart'),
                                                                 ])
                                                  ],
                                                  action=ActionParameter(
-                                                     function="GovernanceOfficer.find_governance_definitions",
+                                                     function="AssetMaker.find_assets",
                                                      required_params=["search_string"],
                                                      optional_params=OPTIONAL_SEARCH_PARAMS,
-                                                     spec_params={"metadata_element_subtypes": ["GovernanceZone"]},
+                                                     spec_params={"metadata_element_type": "SecretsCollection"},
                                                  )
                                                  ),
     "Valid-Value-Def": FormatSet(
@@ -3491,6 +3501,8 @@ formats=[
                                                  Column(name='Disposition', key='disposition'),
                                                  Column(name='Importance', key='importance'),
                                                  Column(name='Content Status', key='content_status'),
+                                                 Column(name='User Defined Content Status',
+                                                        key='user_defined_content_status'),
                                                  Column(name='Summary', key='summary'),
                                                  Column(name='Description', key='description'),
                                                  Column(name='Scope', key='scope'),

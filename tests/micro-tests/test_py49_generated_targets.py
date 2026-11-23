@@ -31,7 +31,7 @@ EXPECTED = {
     "Penetration-Test-Finding": "PenetrationTestFindingAnnotation", "Security-Finding": "SecurityFindingAnnotation",
     "Security-Posture-Summary": "SecurityPostureAnnotation", "Vulnerability-Finding": "VulnerabilityAnnotation",
     "Solution-Role": "SolutionActorRole",
-    "UC-Server-Element": "SoftwareServer", "UC-Schema-Element": "DeployedDatabaseSchema",
+    "UC-Catalog-Element": "Namespace", "UC-Server-Element": "SoftwareServer", "UC-Schema-Element": "DeployedDatabaseSchema",
     "UC-Table-Element": "VirtualRelationalTable", "UC-Function-Element": "DeployedAPI", "UC-Volume-Element": "DataFolder",
     "Element": "Referenceable", "Instance": "Referenceable",
     "Schema-Attribute-From-Template": "SchemaAttribute", "Schema-Type-From-Template": "SchemaType",
@@ -69,7 +69,7 @@ def test_the_subscription_type_spec_and_command_are_gone():
 
 
 def test_no_generated_spec_names_a_target_that_is_neither_an_entity_nor_a_known_exception():
-    exceptions = {"Dashboard Sheet", "UC Catalog Element", "OpenMetadataTypeDef", "Journal Entry"}
+    exceptions = {"Dashboard Sheet", "OpenMetadataTypeDef", "Journal Entry"}
     bad = []
     for label, fs in get_report_registry().items():
         if "-DrE-" in label and fs.target_type and type_attributes(fs.target_type) is None and fs.target_type not in exceptions:

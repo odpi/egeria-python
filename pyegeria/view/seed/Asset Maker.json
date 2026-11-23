@@ -772,7 +772,7 @@
     "heading": "UC-Catalog-Element-DrE-Advanced Attributes",
     "description": "Auto-generated format for UC Catalog Element (Create, Advanced).",
     "family": "Asset Maker",
-    "target_type_name": "SoftwareCapability",
+    "target_type_name": "Namespace",
     "aliases": ["UC Catalog Element DrE Advanced"]
    },
    "microflow": {
@@ -788,19 +788,17 @@
      "ignore_case": {"type": "string", "required": false},
      "classification_names": {"type": "string", "required": false},
      "metadata_element_subtypes": {"type": "string", "required": false},
-     "metadata_element_type": {"type": "string", "required": false},
-     "deployed_implementation_type": {"type": "string", "required": false}
+     "metadata_element_type": {"type": "string", "required": false}
     },
     "stages": [
      {
       "stage": "producer/find",
-      "type": "SoftwareCapability",
+      "type": "Namespace",
       "function": "ClassificationExplorer.find_elements_by_property_value",
       "params": {
-       "search_string": "$search_string",
-       "default_deployed_implementation_type": "Unity Catalog Catalog",
-       "metadata_element_type": "SoftwareCapability",
-       "property_names": ["displayName", "qualifiedName"]
+       "search_string": "Unity Catalog Catalog::",
+       "metadata_element_type": "Namespace",
+       "property_names": ["qualifiedName"]
       }
      }
     ],
@@ -810,7 +808,6 @@
        {"field": "uc_catalog", "label": "UC Catalog Name"},
        {"field": "network_address", "label": "Network Address"},
        {"field": "description", "label": "Description"},
-       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"},
        {"field": "version_identifier", "label": "Version Identifier"}
       ]
      },
@@ -819,8 +816,7 @@
        {"field": "uc_catalog", "label": "UC Catalog Name"},
        {"field": "network_address", "label": "Network Address"},
        {"field": "description", "label": "Description"},
-       {"field": "version_identifier", "label": "Version Identifier"},
-       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"}
+       {"field": "version_identifier", "label": "Version Identifier"}
       ]
      }
     }
@@ -832,7 +828,7 @@
     "heading": "UC-Catalog-Element-DrE-Basic Attributes",
     "description": "Auto-generated format for UC Catalog Element (Create, Basic).",
     "family": "Asset Maker",
-    "target_type_name": "SoftwareCapability",
+    "target_type_name": "Namespace",
     "aliases": ["UC Catalog Element DrE Basic"]
    },
    "microflow": {
@@ -848,19 +844,17 @@
      "ignore_case": {"type": "string", "required": false},
      "classification_names": {"type": "string", "required": false},
      "metadata_element_subtypes": {"type": "string", "required": false},
-     "metadata_element_type": {"type": "string", "required": false},
-     "deployed_implementation_type": {"type": "string", "required": false}
+     "metadata_element_type": {"type": "string", "required": false}
     },
     "stages": [
      {
       "stage": "producer/find",
-      "type": "SoftwareCapability",
+      "type": "Namespace",
       "function": "ClassificationExplorer.find_elements_by_property_value",
       "params": {
-       "search_string": "$search_string",
-       "default_deployed_implementation_type": "Unity Catalog Catalog",
-       "metadata_element_type": "SoftwareCapability",
-       "property_names": ["displayName", "qualifiedName"]
+       "search_string": "Unity Catalog Catalog::",
+       "metadata_element_type": "Namespace",
+       "property_names": ["qualifiedName"]
       }
      }
     ],
@@ -870,7 +864,6 @@
        {"field": "uc_catalog", "label": "UC Catalog Name"},
        {"field": "network_address", "label": "Network Address"},
        {"field": "description", "label": "Description"},
-       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"},
        {"field": "version_identifier", "label": "Version Identifier"}
       ]
      },
@@ -879,8 +872,7 @@
        {"field": "uc_catalog", "label": "UC Catalog Name"},
        {"field": "network_address", "label": "Network Address"},
        {"field": "description", "label": "Description"},
-       {"field": "version_identifier", "label": "Version Identifier"},
-       {"field": "deployed_implementation_type", "label": "Deployed Implementation Type"}
+       {"field": "version_identifier", "label": "Version Identifier"}
       ]
      }
     }

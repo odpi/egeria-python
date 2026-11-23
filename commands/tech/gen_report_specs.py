@@ -143,8 +143,9 @@ TARGET_TYPE_OVERRIDES = {
     "Data Sharing Agreement": "Collection", "Question": "GlossaryTerm",
     # friendly names whose command has no entity OM_TYPE
     "Solution Role": "SolutionActorRole",
-    # Unity Catalog elements: the entity each is made as (UC Catalog Element waits for the Egeria team's answer)
-    "UC Server Element": "SoftwareServer", "UC Schema Element": "DeployedDatabaseSchema",
+    # Unity Catalog elements: the entity each is made as. A catalog is a Namespace (the Java constant
+    # NAMESPACE_COLLECTION has the type name "Namespace", OpenMetadataType.java:702)
+    "UC Catalog Element": "Namespace", "UC Server Element": "SoftwareServer", "UC Schema Element": "DeployedDatabaseSchema",
     "UC Table Element": "VirtualRelationalTable", "UC Function Element": "DeployedAPI", "UC Volume Element": "DataFolder",
     # the generic root: universal columns only
     "Element": "Referenceable", "Instance": "Referenceable",
@@ -465,11 +466,25 @@ def _technology_for_command(cmd_key: str) -> Optional[str]:
     return ELEMENT_TEMPLATE_TECHNOLOGY.get(re.sub(r"\s+", "_", m.group(1).strip().lower()))
 
 
+# PY-49: elements of a technology that carry no deployedImplementationType are found by the prefix of their qualified
+# name instead (live check on a 6.4 platform: a Unity Catalog catalog is a Namespace with no deployedImplementationType;
+# its qualified name starts "Unity Catalog Catalog::"). The command -> (type, qualified-name prefix).
+QUALIFIED_NAME_PREFIX_SPECS = {
+    "Create UC Catalog Element": ("Namespace", "Unity Catalog Catalog::"),
+}
+
+
 def _generic_search_constraints(cmd_key: str, cmd_obj: dict, find_method: str, constraints: dict) -> dict:
     """spec_params for a generic-search spec: the command's type (and technology), derived here."""
     if find_method not in GENERIC_SEARCH_METHODS:
         return constraints
     out = dict(constraints or {})
+    if cmd_key in QUALIFIED_NAME_PREFIX_SPECS:
+        element_type, prefix = QUALIFIED_NAME_PREFIX_SPECS[cmd_key]
+        out.setdefault("metadata_element_type", element_type)
+        out.setdefault("property_names", ["qualifiedName"])
+        out.setdefault("search_string", prefix)          # pinned: a catalog is found by this prefix
+        return out
     if not _TYPE_FILTER_KEYS & set(out):
         out["metadata_element_type"] = (cmd_obj.get("OM_TYPE") or "").strip() or "OpenMetadataRoot"
     if find_method.startswith("ClassificationExplorer."):
@@ -590,7 +605,9 @@ def build_format_sets_from_commands(
             constraints = _generic_search_constraints(
                 cmd_key, cmd_obj, find_method, _safe_parse_constraints(cmd_obj.get("find_constraints")))
             technology_spec = "default_deployed_implementation_type" in constraints
-            if technology_spec and all(c.key != TECHNOLOGY_COLUMN.key for c in columns):
+            # PY-49: the technology column only where the target type has the attribute (a Namespace does not)
+            if technology_spec and all(c.key != TECHNOLOGY_COLUMN.key for c in columns) and (
+                    target_attrs is None or "deployed_implementation_type" in target_attrs):
                 columns = [*columns, Column(**TECHNOLOGY_COLUMN.model_dump())]
             extra_find = cmd_obj.get("extra_find") or ""
             extra_constraints = _safe_parse_constraints(cmd_obj.get("extra_constraints"))
