@@ -252,6 +252,8 @@ ___
 
 >	**Description**: The status of the digital product. There is a list of valid values that this conforms to.
 
+>	**Valid Values**: ACTIVE; DELETED; INVALID; OTHER; UNKNOWN
+
 >	**Default Value**: ACTIVE
 
 

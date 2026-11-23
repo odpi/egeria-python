@@ -470,6 +470,8 @@ ___
 
 >	**Description**: Repository or element header status for an element.
 
+>	**Valid Values**: ACTIVE; DELETED; INVALID; OTHER; UNKNOWN
+
 >	**Default Value**: ACTIVE
 
 
