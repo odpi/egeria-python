@@ -1028,7 +1028,7 @@ class ServerClient(BaseServerClient):
 
         url = (
             f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/classification-explorer/elements/{element_guid}"
-            f"/by-relationship/{relationship_type}/with-exact-property-value?startAtEnd={start_at_end}"
+            f"/by-relationship/{relationship_type}/with-exact-property-value?startingAtEnd={start_at_end}"
         )
 
         response: Response = await self._async_make_request(

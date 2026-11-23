@@ -4390,12 +4390,12 @@ class ClassificationExplorer(ServerClient):
 
         if relationship_type is None:
             url = (
-                f"{self.classification_command_root}/elements/{element_guid}/by-relationship?startAtEnd={start_at_end}"
+                f"{self.classification_command_root}/elements/{element_guid}/by-relationship?startingAtEnd={start_at_end}"
             )
         else:
             url = (
                 f"{self.classification_command_root}/elements/{element_guid}/by-relationship/"
-                f"{relationship_type}?startAtEnd={start_at_end}"
+                f"{relationship_type}?startingAtEnd={start_at_end}"
             )
 
         return await self._async_get_results_body_request(
@@ -4594,7 +4594,7 @@ class ClassificationExplorer(ServerClient):
 
         url = (
             f"{self.classification_command_root}/elements/{element_guid}/by-relationship/"
-            f"{relationship_type}/with-exact-property-value?startAtEnd={start_at_end}"
+            f"{relationship_type}/with-exact-property-value?startingAtEnd={start_at_end}"
         )
 
         return await self._async_find_request(url, "Referenceable", self._generate_referenceable_output, property_value,
@@ -4838,7 +4838,7 @@ class ClassificationExplorer(ServerClient):
 
         url = (
             f"{self.classification_command_root}/elements/{element_guid}/by-relationship/"
-            f"{relationship_type}/with-property-value-search?startAtEnd={start_at_end}"
+            f"{relationship_type}/with-property-value-search?startingAtEnd={start_at_end}"
         )
 
         params = {
