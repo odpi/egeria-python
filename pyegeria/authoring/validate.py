@@ -55,13 +55,11 @@ def _snake(camel: str) -> str:
 #: RELATIONSHIP_FIELDS, so a regeneration for a later Egeria (6.4 added decisionOutcomes, inputsToDecision,
 #: dataValueUses, ...) needs no edit here. The hand-kept keys below are ones a shipped find spec reads that are
 #: not relationship lists.
+#: PY-49 removed three that were dead: `start_date` (ProjectProperties has planned/actual start dates), `next_version`
+#: (DigitalProductProperties.nextVersionDate) and `project_roles`.
 _HAND_KEPT_RELATED_KEYS = frozenset({
-    "actor_list", "folder_display_names", "next_version", "note_log_name", "note_log_qualified_name",
-    "project_roles", "service_levels", "support_level",
-    # The shipped 'Projects' spec reads start_date, which ProjectProperties doesn't have (it has
-    # planned/actual start dates) and the view service doesn't attach, so it shows nothing today. Allowed so that
-    # authoring doesn't refuse a copy of a shipped spec; the spec itself is to be fixed against live output.
-    "start_date",
+    "actor_list", "folder_display_names", "note_log_name", "note_log_qualified_name", "service_levels",
+    "support_level",
 })
 RELATED_ELEMENT_KEYS = frozenset({_snake(key) for key in RELATIONSHIP_FIELDS}) | _HAND_KEPT_RELATED_KEYS
 

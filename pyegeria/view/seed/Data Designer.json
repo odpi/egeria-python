@@ -47,7 +47,7 @@
     "heading": "Data Specification Information",
     "description": "Attributes about Data Specification.",
     "family": "Data Designer",
-    "target_type_name": "Data Specification",
+    "target_type_name": "DataSpec",
     "aliases": ["Data Spec", "DataSpec", "DataSpecification", "Data Specifications"],
     "annotations": {
      "wikilinks": ["[[Data Specification]]"]
@@ -61,7 +61,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Data Specification",
+      "type": "DataSpec",
       "function": "CollectionManager.find_collections",
       "params": {
        "search_string": "$search_string",

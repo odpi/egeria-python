@@ -62,4 +62,4 @@ def test_get_report_spec_match_falls_back_to_text_match_without_resolved_name():
 def test_terms_alias_resolves_glossary_terms():
     fmt = select_report_spec("Terms", "LIST")
     assert fmt is not None
-    assert fmt.get("target_type") in ("Term", "Terms", None)
+    assert fmt.get("target_type") in ("GlossaryTerm", "Term", "Terms", None)   # PY-49: the Egeria type name

@@ -1,15 +1,15 @@
 {
  "digital_products/DICT": {
-  "bytes": 81323,
-  "sha256": "d3ee03cea267e51def0e7a59ab2bec11c7d24321797ced06a01b6b2c59787760"
+  "bytes": 81823,
+  "sha256": "ffd41e7342f1b397807b734780acf5c4ad68b8270e43edf83c7900b7f9a57313"
  },
  "digital_products/FORM": {
-  "bytes": 97589,
-  "sha256": "8965850d3acbe8702f25af5c69d535b85a0e6761c9fa097df46c0afde13bbf64"
+  "bytes": 98089,
+  "sha256": "d5a91c8bd0667e2f5bda3d70472782fa9d8190b377e5430708be7ed5a6972147"
  },
  "digital_products/LIST": {
-  "bytes": 55001,
-  "sha256": "d62bf1f16a5eeb73181ce635d0f3f0e7b45fd4d165a0bc173caa08c7ddf082bf"
+  "bytes": 55006,
+  "sha256": "123e8c42f78ac2c288917f1965b9a466df3bba8e846ab1680df867b01d342970"
  },
  "digital_products/MD": {
   "bytes": 198,
@@ -20,8 +20,8 @@
   "sha256": "90c229292f83209e58348cc3c8427a37e200c654794f080a198895516513dedf"
  },
  "digital_products/TABLE": {
-  "bytes": 81323,
-  "sha256": "d3ee03cea267e51def0e7a59ab2bec11c7d24321797ced06a01b6b2c59787760"
+  "bytes": 81823,
+  "sha256": "ffd41e7342f1b397807b734780acf5c4ad68b8270e43edf83c7900b7f9a57313"
  },
  "governance_metrics/DICT": {
   "bytes": 98177,

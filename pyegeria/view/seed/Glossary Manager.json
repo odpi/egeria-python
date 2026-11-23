@@ -60,7 +60,7 @@
     "heading": "Basic Glossary Term Attributes",
     "description": "Attributes that apply to all Basic Glossary Terms.",
     "family": "Glossary Manager",
-    "target_type_name": "Term",
+    "target_type_name": "GlossaryTerm",
     "aliases": ["Terms", "Glossary Terms"]
    },
    "microflow": {
@@ -81,7 +81,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Term",
+      "type": "GlossaryTerm",
       "function": "GlossaryManager.find_glossary_terms",
       "params": {"search_string": "$search_string"}
      }
@@ -101,7 +101,7 @@
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "summary", "label": "Summary"},
        {"field": "additional_properties", "label": "Additional Properties"},
-       {"field": "example", "label": "Example"},
+       {"field": "examples", "label": "Examples"},
        {"field": "usage", "label": "Usage"},
        {"field": "updated_by", "label": "Updated By"},
        {"field": "update_time", "label": "Update Time"},

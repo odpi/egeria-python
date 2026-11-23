@@ -181,13 +181,11 @@
        {"field": "usage", "label": "Usage"},
        {"field": "scope", "label": "Scope"},
        {"field": "importance", "label": "Importance"},
-       {"field": "measurement", "label": "measurement"},
-       {"field": "target", "label": "target"},
        {"field": "implications", "label": "Implications"},
        {"field": "outcomes", "label": "Outcomes"},
        {"field": "results", "label": "Results"},
        {"field": "element_status", "label": "Status"},
-       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
        {"field": "qualified_name", "label": "Qualified Name"},
        {"field": "guid", "label": "GUID"}
       ]
@@ -318,7 +316,7 @@
     "heading": "Governance Process Attributes",
     "description": "Governance Process Attributes.",
     "family": "Governance Officer",
-    "target_type_name": "Governance Process",
+    "target_type_name": "GovernanceActionProcess",
     "aliases": ["Governance Process"]
    },
    "microflow": {
@@ -339,7 +337,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Governance Process",
+      "type": "GovernanceActionProcess",
       "function": "GovernanceOfficer.find_governance_definitions",
       "params": {
        "search_string": "$search_string",
@@ -432,7 +430,7 @@
     "heading": "Secrets Collection User Profile Charts",
     "description": "Secrets Collection User Profile",
     "family": "Governance Officer",
-    "target_type_name": "SecretsCollection",
+    "target_type_name": "GovernanceZone",
     "aliases": ["Secrets Collection User Profile Charts"]
    },
    "microflow": {
@@ -453,7 +451,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "SecretsCollection",
+      "type": "GovernanceZone",
       "function": "GovernanceOfficer.find_governance_definitions",
       "params": {
        "search_string": "$search_string",

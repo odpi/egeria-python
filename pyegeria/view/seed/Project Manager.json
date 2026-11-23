@@ -48,10 +48,10 @@
        {"field": "scope", "label": "Scope"},
        {"field": "project_status", "label": "Project Status"},
        {"field": "status", "label": "Element Status"},
-       {"field": "start_date", "label": "Start Date"},
+       {"field": "planned_start_date", "label": "Planned Start Date"},
+       {"field": "actual_start_date", "label": "Actual Start Date"},
        {"field": "assigned_actors", "label": "Assigned Actors"},
        {"field": "resource_list", "label": "Resources"},
-       {"field": "project_roles", "label": "Project Roles"},
        {"field": "managed_projects", "label": "Managed Projects"}
       ]
      },

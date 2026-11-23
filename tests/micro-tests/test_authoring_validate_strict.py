@@ -140,21 +140,13 @@ def _shipped_find_specs():
 
 
 #: PY-46 / PY-49. The strict column check used to skip a spec whose target_type was written for people ('Data Class')
-#: instead of as Egeria's type name ('DataClass'), because the catalog lookup missed. The type is now normalised, so
-#: these shipped specs are checked for the first time, and each names columns the target type doesn't have. They are
-#: pinned here, by spec and column, until PY-49 settles what each column should be (not guessed here). The list is
-#: EXACT: a spec that gains a new unknown column fails, and a listed column that gets fixed fails until it is
-#: removed, so this list can only shrink.
-KNOWN_UNKNOWN_COLUMNS = {
-    "Actor-Roles": ['scope'],
-    "CitedDocument": ['reference_url'],
-    "External-References": ['current_version', 'first_pub_date', 'number_of_pages', 'page_range', 'pub_city', 'pub_date',
-                            'pub_numbers', 'pub_series_volume', 'pub_year', 'publication_series', 'publisher',
-                            'reference_sources', 'reference_url'],
-    "ExternalReference": ['reference_url'],
-    "Governance-Controls": ['measurement', 'target', 'user_defined_status'],
-    "RelatedMedia": ['reference_url'],
-}
+#: instead of as Egeria's type name ('DataClass'); once it was normalised, 41 columns of 12 shipped specs were refused.
+#: PY-49 settled each of them (client-derived keys accepted, wrong names fixed, subtype fields moved, targets corrected),
+#: so the list is empty. It stays as the shrink-only pin: a shipped find spec that gains an unknown column fails here.
+#: One column is still pending a decision: `parent_glossary` on Glossary-Terms (Dan: fill from TermAnchor). The term carries only
+#: the Anchors classification's anchorScopeGUID, so the glossary's NAME needs a lookup per distinct glossary, and the
+#: extractor that fills columns is synchronous.
+KNOWN_UNKNOWN_COLUMNS: dict = {"Glossary-Terms": ['parent_glossary']}
 
 
 def test_strict_validation_refuses_no_shipped_find_spec_column():
