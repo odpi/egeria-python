@@ -138,6 +138,10 @@ FIND_METHOD_ADDITIONS: frozenset = frozenset({
     # Read only (Egeria 6.4): POSTs a SearchStringRequestBody to data-engineer/data-values/by-search-string
     # through _async_find_request and returns the data values. Named by the generated Data-Value-DrE specs.
     "DataEngineer.find_data_values",
+    # Read only (PY-53 Q2): the catalog targets of one integration connector (automated-curation
+    # integration-connectors/{guid}/catalog-targets, through _async_get_name_request); returns the target
+    # elements. Named by the "Catalog-Target" spec, whose one required parameter is integ_connector_guid.
+    "AutomatedCuration.get_catalog_targets",
 })
 
 FIND_METHOD_ALLOWLIST: frozenset = _CENSUS_FIND_METHODS | FIND_METHOD_ADDITIONS

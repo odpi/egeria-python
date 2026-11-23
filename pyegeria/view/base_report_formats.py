@@ -1863,10 +1863,25 @@ base_report_specs = FormatSetDict({
                     Column(name="Target Name", key="target_display_name"),
                     Column(name="Target Qualified Name", key="target_qualified_name"),
                     Column(name="Target Description", key="target_description"),
-                    Column(name="Catalog Target Name", key="catalogTargetName"),
+                    Column(name="Target Type", key="target_type_name"),
+                    # PY-53 Q2: the CatalogTarget relationship's own properties (from the entry for this connector)
+                    Column(name="Catalog Target Name", key="catalog_target_name"),
+                    Column(name="Metadata Collection Qualified Name", key="metadata_collection_qualified_name"),
+                    Column(name="Metadata Source Qualified Name", key="metadata_source_qualified_name"),
+                    Column(name="Connection Name", key="connection_name"),
+                    Column(name="Permitted Synchronization", key="permitted_synchronization"),
+                    Column(name="Delete Method", key="delete_method"),
+                    Column(name="Templates", key="templates"),
+                    Column(name="Configuration Properties", key="configuration_properties"),
                 ],
             )
         ],
+        action=ActionParameter(
+            function="AutomatedCuration.get_catalog_targets",
+            required_params=["integ_connector_guid"],
+            optional_params=["start_from", "page_size"],
+            spec_params={},
+        ),
     ),
     "Tech-Type-Processes": FormatSet(
         target_type="TechTypeDetail",

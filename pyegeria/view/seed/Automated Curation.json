@@ -362,8 +362,19 @@
    },
    "microflow": {
     "format": "microflow/1",
-    "params": {},
-    "stages": [],
+    "params": {
+     "integ_connector_guid": {"type": "string", "required": true},
+     "start_from": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "CatalogTarget",
+      "function": "AutomatedCuration.get_catalog_targets",
+      "params": {"integ_connector_guid": "$integ_connector_guid"}
+     }
+    ],
     "formatters": {
      "ALL": {
       "columns": [
@@ -376,7 +387,15 @@
        {"field": "target_display_name", "label": "Target Name"},
        {"field": "target_qualified_name", "label": "Target Qualified Name"},
        {"field": "target_description", "label": "Target Description"},
-       {"field": "catalogTargetName", "label": "Catalog Target Name"}
+       {"field": "target_type_name", "label": "Target Type"},
+       {"field": "catalog_target_name", "label": "Catalog Target Name"},
+       {"field": "metadata_collection_qualified_name", "label": "Metadata Collection Qualified Name"},
+       {"field": "metadata_source_qualified_name", "label": "Metadata Source Qualified Name"},
+       {"field": "connection_name", "label": "Connection Name"},
+       {"field": "permitted_synchronization", "label": "Permitted Synchronization"},
+       {"field": "delete_method", "label": "Delete Method"},
+       {"field": "templates", "label": "Templates"},
+       {"field": "configuration_properties", "label": "Configuration Properties"}
       ]
      }
     }
