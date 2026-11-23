@@ -96,3 +96,73 @@ def test_generated_format_sets_json_is_current(tmp_path):
     assert committed == _json_bytes(tmp_path, "fresh.json"), (
         "md_processing/data/generated_format_sets.json is stale: run refresh_specs --merge-reports"
     )
+
+
+# --- omit empty fields (Dan: "Omit empty fields") --------------------------------------------------------
+_OPTIONAL_NEW_KEYS = ("render", "max_items", "max_lines", "label", "document")
+
+
+def _sample_sets():
+    from pyegeria.view._output_format_models import Column, Format, FormatSet, FormatSetDict
+
+    plain = Column(name="Display Name", key="display_name")
+    rendered = Column(name="Tags", key="tags", render="join", max_items=5, max_lines=2, label="display_name")
+    fs = FormatSet(
+        target_type="Thing", heading="Things", description="d",
+        formats=[Format(types=["LIST"], attributes=[plain, rendered])],
+    )
+    return FormatSetDict({"Thing-DrE-Basic": fs})
+
+
+def _walk_keys(node, found):
+    if isinstance(node, dict):
+        for k, v in node.items():
+            found.append((k, v))
+            _walk_keys(v, found)
+    elif isinstance(node, list):
+        for v in node:
+            _walk_keys(v, found)
+
+
+def test_a_null_optional_field_is_not_written(tmp_path):
+    import json
+
+    sets = _sample_sets()
+    path = tmp_path / "s.json"
+    sets.save_to_json(str(path))
+    data = json.loads(path.read_text())
+    cols = data["Thing-DrE-Basic"]["formats"][0]["attributes"]
+    assert not any(k in cols[0] for k in _OPTIONAL_NEW_KEYS), cols[0]
+    assert (cols[1]["render"], cols[1]["max_items"], cols[1]["max_lines"], cols[1]["label"]) == ("join", 5, 2, "display_name")
+    assert "document" not in data["Thing-DrE-Basic"]["formats"][0]
+
+
+def test_save_then_load_gives_back_the_same_sets(tmp_path):
+    from pyegeria.view._output_format_models import FormatSetDict
+
+    sets = _sample_sets()
+    path = tmp_path / "s.json"
+    sets.save_to_json(str(path))
+    loaded = FormatSetDict.load_from_json(str(path))
+    assert loaded.to_dict() == sets.to_dict()
+    assert loaded["Thing-DrE-Basic"].formats[0].attributes[0].render is None  # absent reads as the null default
+
+
+def test_the_committed_generated_format_sets_json_carries_none_of_the_empty_new_fields():
+    import json
+
+    data = json.loads((ROOT / "md_processing" / "data" / "generated_format_sets.json").read_text())
+    found = []
+    _walk_keys(data, found)
+    bad = [k for k, v in found if k in _OPTIONAL_NEW_KEYS and v is None]
+    assert bad == [], f"{len(bad)} null optional fields written"
+
+
+def test_the_committed_generated_format_sets_json_loads_and_round_trips(tmp_path):
+    from pyegeria.view._output_format_models import FormatSetDict
+
+    committed = ROOT / "md_processing" / "data" / "generated_format_sets.json"
+    loaded = FormatSetDict.load_from_json(str(committed))
+    again = tmp_path / "again.json"
+    loaded.save_to_json(str(again))
+    assert again.read_bytes() == committed.read_bytes()

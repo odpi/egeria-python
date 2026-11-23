@@ -82,6 +82,26 @@ __all__ = [
     'load_format_sets_from_json',
 ]
 
+# Optional fields a file leaves out while they are empty. Loading reads an absent key as the null default, so
+# the file round-trips, and a spec that does not use a field is not rewritten when the field is added (PY-51).
+_OMIT_WHEN_NONE_ON_FORMAT = ("document",)
+_OMIT_WHEN_NONE_ON_COLUMN = ("render", "max_items", "max_lines", "label")
+
+
+def _omit_empty_optional_fields(serializable: Dict[str, dict]) -> None:
+    """Drop the empty optional keys from every format and column of the dicts `FormatSet.dict()` made."""
+    for fs in serializable.values():
+        for fmt in fs.get("formats") or []:
+            for key in _OMIT_WHEN_NONE_ON_FORMAT:
+                if key in fmt and fmt[key] is None:
+                    del fmt[key]
+            for rows in ("attributes", "columns"):
+                for col in fmt.get(rows) or []:
+                    for key in _OMIT_WHEN_NONE_ON_COLUMN:
+                        if key in col and col[key] is None:
+                            del col[key]
+
+
 def save_format_sets_to_json(format_sets: Dict[str, 'FormatSet'], file_path: str) -> None:
     """
     Save format sets to a JSON file.
@@ -92,6 +112,7 @@ def save_format_sets_to_json(format_sets: Dict[str, 'FormatSet'], file_path: str
     """
     # Convert FormatSet objects to dictionaries
     serializable_dict = {key: value.dict() for key, value in format_sets.items()}
+    _omit_empty_optional_fields(serializable_dict)
     
     # Create directory if it doesn't exist
     os.makedirs(os.path.dirname(os.path.abspath(file_path)), exist_ok=True)
