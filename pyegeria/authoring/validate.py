@@ -155,15 +155,23 @@ def _is_generated(fs: Any, label: str) -> bool:
 def egeria_type_name(type_name: str) -> str:
     """A spec's target type as the Egeria type name the Properties-class catalog is keyed by.
 
-    Specs write the name for people ('License Type', 'Actor Profile', 'External-Reference'); Egeria's type is
-    'LicenseType'. A name the catalog has as written is returned as is; otherwise the same name without
-    spaces or punctuation, if the catalog has that; otherwise the name unchanged (an unknown type stays
-    unknown and is reported as such, never silently treated as known)."""
+    Specs write the name for people ('License Type', 'Actor Profile', 'External-Reference', 'Terms and Conditions');
+    Egeria's type is 'LicenseType', 'TermsAndConditions'. A name the catalog has as written is returned as is;
+    otherwise the same name without spaces or punctuation, if the catalog has that, then with case ignored (PY-49:
+    'Todo' is `ToDo`); otherwise the name unchanged (an unknown type stays unknown and is reported as such, never
+    silently treated as known)."""
     from md_processing.md_processing_utils.properties_class_fields import PROPERTIES_CLASS_FIELDS
     if f"{type_name}Properties" in PROPERTIES_CLASS_FIELDS:
         return type_name
     squashed = "".join(ch for ch in (type_name or "") if ch.isalnum())
-    return squashed if squashed and f"{squashed}Properties" in PROPERTIES_CLASS_FIELDS else type_name
+    if squashed and f"{squashed}Properties" in PROPERTIES_CLASS_FIELDS:
+        return squashed
+    folded = squashed.lower()
+    if folded:
+        for key in PROPERTIES_CLASS_FIELDS:
+            if key.endswith("Properties") and key[:-10].lower() == folded:
+                return key[:-10]
+    return type_name
 
 
 def type_attributes(type_name: str) -> Optional[Set[str]]:
@@ -321,7 +329,7 @@ async def _check_spec(draft: SpecDraft, result: ValidationResult, client: Any = 
             for col in getattr(fmt, "attributes", None) or []:
                 key = col.get("key") if isinstance(col, dict) else col.key
                 name = col.get("name") if isinstance(col, dict) else col.name
-                if not key or key in strict_known or _derived_by_rule(key):
+                if not key or key in strict_known or _snake(key) in strict_known or _derived_by_rule(key):
                     continue
                 if legacy and key in used_keys:
                     result.warn(f"Column '{name}' names '{key}', which isn't an attribute of {target}; it is "
