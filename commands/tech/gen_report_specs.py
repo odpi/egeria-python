@@ -89,6 +89,66 @@ GENERATED_REPORT_EXCLUDED_KEYS = {
     "search_keywords",
 }
 
+# PY-49: columns a find report can never fill. These are parameters of the Create REQUEST (the element's anchor,
+# the template a copy is made from, the instance a raw create names, the parent a new element hangs from), so the
+# stored element has nothing under them. Never emitted.
+REQUEST_ONLY_KEYS = {
+    "effective_time", "is_own_anchor", "parent_guid", "initial_classifications", "initial_status", "deep_copy",
+    "placeholder_property_values", "parent_rel_type_name", "parent_end1",
+}
+REQUEST_ONLY_PREFIXES = ("anchor_", "template_", "instance_")
+
+# PY-49: the payload of a classification the Create command sets. The formatter exposes classifications only as the
+# one `classifications` column, so a column under these keys is never filled. Not emitted for now (PY-53).
+CLASSIFICATION_PAYLOAD_KEYS = {
+    "confidence_classification", "confidentiality_classification", "criticality_classification",
+    "impact_classification", "retention_classification", "security_tags", "policy_management_point",
+    "supplementary_properties", "class_word_classification", "prime_word_classification",
+    "modifier_classification", "is_abstract_concept", "is_activity_description", "is_data_value",
+    "term_activity_type",
+}
+
+# PY-49: Reference Name / Reference Name List attributes. The Create command takes the NAME of another element;
+# a find report shows the relationship list the view service attaches (RELATIONSHIP_FIELDS, in camelCase), which is
+# the column the formatter fills. Only the attributes whose relationship is known are mapped; any other Reference
+# Name attribute is not emitted (it named no column the formatter fills).
+ATTRIBUTE_RELATIONSHIP_LISTS = {
+    # "Term that provides meaning": the SemanticDefinition relationship
+    "glossary_term": "semanticDefinitions",
+    # DataClassComposition; the data class this one is part of (end 1 is the whole)
+    "containing_data_class": "partOfDataClasses",
+    # DataValueHierarchy parent. Dr.Egeria treats the two attributes as aliases of one relationship
+    # (md_processing/v2/data_designer.py:133-142), so they are one column.
+    "specializes_data_value_specification": "superDataValueSpecification",
+    "in_data_value_specification": "superDataValueSpecification",
+    # NestedDataField
+    "in_data_field": "parentDataFields",
+    # ProjectHierarchy
+    "sub_projects": "managedProjects",
+    # SolutionComposition
+    "solution_sub_components": "nestedSolutionComponents",
+    "in_components": "usedInSolutionComponents",
+    # ValidValueMember
+    "in_reference_data_set": "memberOfValidValueSets",
+}
+
+# The columns every element has; what a generated spec shows when the Create command has nothing else a find can fill.
+UNIVERSAL_COLUMNS = [
+    Column(name="Display Name", key="display_name"),
+    Column(name="Qualified Name", key="qualified_name"),
+    Column(name="Description", key="description"),
+    Column(name="GUID", key="guid"),
+]
+
+# Keys the data designer's extractors fill themselves (pyegeria/omvs/data_designer.py get_data_rel_elements_dict,
+# overlaid by _extract_data_*_properties). The attribute keeps its column; a different attribute name is renamed to the
+# key the client fills.
+CLIENT_DERIVED_KEYS = {
+    "in_data_dictionary": "in_data_dictionary",
+    "in_data_structure": "in_data_structure",
+    "in_data_specification": "in_data_spec",
+}
+
 LIST_PRIORITY_KEYS = ["display_name", "qualified_name", "guid"]
 LIST_DEMOTED_KEYS = {"version_identifier"}
 LIST_LAST_KEY = "category"
@@ -228,23 +288,50 @@ def _safe_parse_constraints(s) -> dict:
     logger.debug(f"Could not parse find_constraints: {s!r} -> {{}}")
     return {}
 
-def _extract_columns_from_attributes(attributes: Iterable[dict], usage_level: str = None) -> List[Column]:
+def _is_request_only(key: str) -> bool:
+    return key in REQUEST_ONLY_KEYS or key.startswith(REQUEST_ONLY_PREFIXES) or key in GENERATED_REPORT_EXCLUDED_KEYS
+
+
+def _target_attributes(display_name: str, om_type: str = "") -> Optional[set]:
+    """The snake_case attribute names of the Egeria entity type a spec is about, or None when none is known.
+
+    The display name is tried first (case-insensitive, spaces and punctuation ignored), then the command's OM_TYPE."""
+    from md_processing.md_processing_utils.properties_class_fields import PROPERTIES_CLASS_FIELDS
+    from pyegeria.authoring.validate import _snake
+    for name in (display_name, om_type):
+        squashed = re.sub(r"[^A-Za-z0-9]", "", name or "").lower()
+        if not squashed:
+            continue
+        for cls, entry in PROPERTIES_CLASS_FIELDS.items():
+            if cls.endswith("Properties") and cls[:-10].lower() == squashed and entry[0] == "entity":
+                return {_snake(f) for f in entry[1]}
+    return None
+
+
+def _extract_columns_from_attributes(attributes: Iterable[dict], usage_level: str = None,
+                                     target_attrs: Optional[set] = None) -> List[Column]:
     """Extract Columns from a command's Attributes list.
 
     Parameters
     - attributes: iterable of dict entries. Support both old single-key
       mapping (Label -> metadata) and new flat mapping (name, variable_name, level, etc.).
     - usage_level: Egeria usage level (Basic or Advanced). If None, uses EGERIA_USAGE_LEVEL.
+    - target_attrs: the attribute names (snake_case) of the spec's Egeria type, when known; decides whether
+      `user_defined_status` can become `user_defined_content_status`.
 
     Behavior
     - Visibility is determined by common_md_proc_utils._level_visible
     - Duplicate variable_name values are de-duplicated
     - Column.name is the label; Column.key is the variable_name
+    - PY-49: request-only parameters and classification payloads are not emitted; `user_defined_status` becomes
+      `user_defined_content_status` where the target has it; a Reference Name attribute becomes its relationship-list
+      column (ATTRIBUTE_RELATIONSHIP_LISTS), or the key the client fills (CLIENT_DERIVED_KEYS), or is not emitted.
 
     Returns
     - List[Column]
     """
     from md_processing.md_processing_utils.common_md_proc_utils import _level_visible, EGERIA_USAGE_LEVEL
+    from pyegeria.authoring.validate import _snake
     target_usage = usage_level or EGERIA_USAGE_LEVEL
 
     cols: List[Column] = []
@@ -256,18 +343,34 @@ def _extract_columns_from_attributes(attributes: Iterable[dict], usage_level: st
         if not _level_visible(details.get("level"), target_usage):
             return
         key = details.get("variable_name")
-        if not key or key in seen:
+        if not key:
+            return
+        key, label = str(key), str(label)
+        if _is_request_only(key) or key in CLASSIFICATION_PAYLOAD_KEYS:
+            return
+        if key == "user_defined_status":
+            if not (target_attrs and "user_defined_content_status" in target_attrs):
+                return
+            key, label = "user_defined_content_status", "User Defined Content Status"
+        elif str(details.get("style") or "").startswith("Reference Name"):
+            if key in CLIENT_DERIVED_KEYS:
+                key = CLIENT_DERIVED_KEYS[key]
+            elif key in ATTRIBUTE_RELATIONSHIP_LISTS:
+                key = _snake(ATTRIBUTE_RELATIONSHIP_LISTS[key])
+            else:
+                return
+        if key in seen:
             return
         seen.add(key)
         valid_values = details.get("valid_values")
         if not isinstance(valid_values, (list, dict)):
             valid_values = None
-        cols.append(Column(name=str(label), key=str(key), valid_values=valid_values))
+        cols.append(Column(name=label, key=key, valid_values=valid_values))
 
     for entry in attributes or []:
         if not isinstance(entry, dict) or not entry:
             continue
-        
+
         if "name" in entry and "variable_name" in entry:
             # New flat structure
             process_attr(entry["name"], entry)
@@ -428,12 +531,17 @@ def build_format_sets_from_commands(
             continue
 
         levels_to_generate = [usage_level.capitalize()] if usage_level else ["Basic", "Advanced"]
-        
+        target_attrs = _target_attributes(display_name, str(cmd_obj.get("OM_TYPE") or ""))
+
         for lvl in levels_to_generate:
-            columns = _extract_columns_from_attributes(cmd_obj.get("Attributes", []), usage_level=lvl)
+            columns = _extract_columns_from_attributes(cmd_obj.get("Attributes", []), usage_level=lvl, target_attrs=target_attrs)
             if not columns:
                 if lvl == "Basic":
-                    columns = _extract_columns_from_attributes(cmd_obj.get("Attributes", []), usage_level="Advanced")
+                    columns = _extract_columns_from_attributes(cmd_obj.get("Attributes", []), usage_level="Advanced", target_attrs=target_attrs)
+                if not columns and cmd_obj.get("Attributes"):
+                    # PY-49: every attribute was request-only or a classification payload (Element, Instance, the
+                    # "From Template" commands), so the spec shows the universal columns only.
+                    columns = [Column(**c.model_dump()) for c in UNIVERSAL_COLUMNS]
                 if not columns:
                     logger.debug(f"Skip {set_name}-{lvl}: no attributes")
                     continue

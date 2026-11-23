@@ -110,7 +110,7 @@ def test_a_super_type_attribute_is_accepted():
 
 
 def test_a_key_only_a_generated_spec_uses_is_refused_strictly_and_warned_when_legacy():
-    key = "anchor_scope_guid"           # a Create command's attribute, in the generated -DrE- specs only
+    key = "network_address"            # a Create command's attribute (UC Catalog Element), in the generated -DrE- specs only
     used, _ = _registry_columns_and_types()
     assert key in used and key not in type_attributes("Project") | DERIVED_KEYS
     spec = _spec(formats=[{"types": ["TABLE"], "attributes": [{"name": "Odd", "key": key}]}])
@@ -146,20 +146,15 @@ def _shipped_find_specs():
 #: EXACT: a spec that gains a new unknown column fails, and a listed column that gets fixed fails until it is
 #: removed, so this list can only shrink.
 KNOWN_UNKNOWN_COLUMNS = {
-    "Actor-Profiles-Assigned-MD": ['sideLinks'],
     "Actor-Roles": ['scope'],
     "CitedDocument": ['reference_url'],
-    "Data-Classes": ['containing_data_class', 'in_data_dictionary', 'in_data_structure', 'specializes_data_class'],
-    "Data-Fields": ['in_data_dictionary', 'in_data_structure', 'member_data_fields'],
-    "Data-Structures": ['in_data_dictionary', 'in_data_spec', 'member_data_fields'],
-    "Data-Value-Spec": ['containing_data_class', 'in_data_dictionary', 'specializes_data_class'],
+    "Data-Classes": ['containing_data_class', 'specializes_data_class'],
+    "Data-Value-Spec": ['containing_data_class', 'specializes_data_class'],
     "External-References": ['current_version', 'first_pub_date', 'number_of_pages', 'page_range', 'pub_city', 'pub_date',
                             'pub_numbers', 'pub_series_volume', 'pub_year', 'publication_series', 'publisher',
                             'reference_sources', 'reference_url'],
     "ExternalReference": ['reference_url'],
     "Governance-Controls": ['measurement', 'target', 'user_defined_status'],
-    "Governance-Zones": ['all_total_membership', 'all_type_membership', 'analysis_time', 'anchored_total_membership',
-                         'anchored_type_membership', 'total_membership', 'type_membership'],
     "RelatedMedia": ['reference_url'],
 }
 

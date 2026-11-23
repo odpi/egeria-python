@@ -72,6 +72,33 @@ ANNOTATION_KEYS = frozenset({
     "none_findings",
 })
 
+#: PY-49. Columns a client fills itself, by find method: not attributes of the type and not relationship lists, but values
+#: the extractor adds to the row, so a spec that names them is not wrong. Each entry was read where it is produced.
+CLIENT_DERIVED_COLUMNS: Dict[str, frozenset] = {
+    # pyegeria/omvs/actor_manager.py:1212,1226 (the related-element summary's sideLinks)
+    "ActorManager.find_actor_profiles": frozenset({"sideLinks"}),
+    # pyegeria/omvs/data_designer.py get_data_rel_elements_dict (:1615-1655), overlaid by _extract_data_*_properties
+    "DataDesigner.find_data_structures": frozenset({"in_data_dictionary", "in_data_spec", "member_data_fields"}),
+    "DataDesigner.find_data_fields": frozenset({"in_data_dictionary", "in_data_structure", "member_data_fields"}),
+    "DataDesigner.find_data_value_specifications": frozenset({"in_data_dictionary", "in_data_structure"}),
+}
+
+#: The seven membership figures of the ZoneMembershipProfile classification, which GovernanceOfficer adds to a
+#: GovernanceZone row (pyegeria/omvs/governance_officer.py:190-201). Only a GovernanceZone has them.
+ZONE_MEMBERSHIP_COLUMNS = frozenset({
+    "total_membership", "type_membership", "anchored_total_membership", "anchored_type_membership",
+    "all_total_membership", "all_type_membership", "analysis_time",
+})
+
+
+def client_derived_columns(function: Optional[str], target_type: Optional[str]) -> frozenset:
+    """The columns the client fills itself for this find method (and, for governance definitions, this target)."""
+    keys = CLIENT_DERIVED_COLUMNS.get(function or "", frozenset())
+    if function == "GovernanceOfficer.find_governance_definitions" and _type_key(target_type) == "governancezone":
+        keys = keys | ZONE_MEMBERSHIP_COLUMNS
+    return keys
+
+
 _GENERATED_MARK = "Auto-generated format for"
 
 
@@ -283,7 +310,8 @@ async def _check_spec(draft: SpecDraft, result: ValidationResult, client: Any = 
     if is_find and target:
         await _check_find_fit(fs, client, result)
     if is_find and attrs is not None:
-        strict_known = attrs | _formatter_derived_keys() | RELATED_ELEMENT_KEYS | ANNOTATION_KEYS
+        strict_known = (attrs | _formatter_derived_keys() | RELATED_ELEMENT_KEYS | ANNOTATION_KEYS
+                        | client_derived_columns(getattr(action, "function", None), target))
         if _is_generated(fs, draft.label):
             strict_known = strict_known | _command_attribute_keys()
         for fmt in fs.formats or []:

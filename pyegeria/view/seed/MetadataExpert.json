@@ -84,20 +84,18 @@
     "formatters": {
      "LIST": {
       "columns": [
-       {"field": "instance_type_name", "label": "Instance Type Name"},
-       {"field": "instance_properties", "label": "Instance Properties"},
-       {"field": "anchor_guid", "label": "Anchor GUID"},
-       {"field": "is_own_anchor", "label": "Is Own Anchor"},
-       {"field": "parent_guid", "label": "Parent GUID"}
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"}
       ]
      },
      "ALL": {
       "columns": [
-       {"field": "instance_type_name", "label": "Instance Type Name"},
-       {"field": "instance_properties", "label": "Instance Properties"},
-       {"field": "anchor_guid", "label": "Anchor GUID"},
-       {"field": "is_own_anchor", "label": "Is Own Anchor"},
-       {"field": "parent_guid", "label": "Parent GUID"}
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "guid", "label": "GUID"}
       ]
      }
     }
@@ -119,20 +117,18 @@
     "formatters": {
      "LIST": {
       "columns": [
-       {"field": "instance_type_name", "label": "Instance Type Name"},
-       {"field": "instance_properties", "label": "Instance Properties"},
-       {"field": "anchor_guid", "label": "Anchor GUID"},
-       {"field": "is_own_anchor", "label": "Is Own Anchor"},
-       {"field": "parent_guid", "label": "Parent GUID"}
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"}
       ]
      },
      "ALL": {
       "columns": [
-       {"field": "instance_type_name", "label": "Instance Type Name"},
-       {"field": "instance_properties", "label": "Instance Properties"},
-       {"field": "anchor_guid", "label": "Anchor GUID"},
-       {"field": "is_own_anchor", "label": "Is Own Anchor"},
-       {"field": "parent_guid", "label": "Parent GUID"}
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "guid", "label": "GUID"}
       ]
      }
     }

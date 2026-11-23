@@ -42,31 +42,15 @@
      "LIST": {
       "columns": [
        {"field": "type_name", "label": "Element Type Name"},
-       {"field": "template_guid", "label": "Template GUID"},
-       {"field": "placeholder_property_values", "label": "Placeholder Property Values"},
-       {"field": "template_properties", "label": "Template Properties"},
-       {"field": "initial_classifications", "label": "Generic Initial Classifications"},
-       {"field": "is_own_anchor", "label": "Is Own Anchor"},
        {"field": "effective_from", "label": "Effective From"},
-       {"field": "effective_to", "label": "Effective To"},
-       {"field": "effective_time", "label": "Effective Time"},
-       {"field": "deep_copy", "label": "Deep Copy"},
-       {"field": "initial_status", "label": "Initial Status", "valid_values": ["ACTIVE", "DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "DEPRECATED", "OTHER"]}
+       {"field": "effective_to", "label": "Effective To"}
       ]
      },
      "ALL": {
       "columns": [
        {"field": "type_name", "label": "Element Type Name"},
-       {"field": "template_guid", "label": "Template GUID"},
-       {"field": "placeholder_property_values", "label": "Placeholder Property Values"},
-       {"field": "template_properties", "label": "Template Properties"},
-       {"field": "initial_status", "label": "Initial Status", "valid_values": ["ACTIVE", "DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "DEPRECATED", "OTHER"]},
-       {"field": "initial_classifications", "label": "Generic Initial Classifications"},
-       {"field": "is_own_anchor", "label": "Is Own Anchor"},
        {"field": "effective_from", "label": "Effective From"},
-       {"field": "effective_to", "label": "Effective To"},
-       {"field": "effective_time", "label": "Effective Time"},
-       {"field": "deep_copy", "label": "Deep Copy"}
+       {"field": "effective_to", "label": "Effective To"}
       ]
      }
     }
@@ -111,16 +95,16 @@
     "formatters": {
      "LIST": {
       "columns": [
-       {"field": "template_guid", "label": "Template GUID"},
-       {"field": "placeholder_property_values", "label": "Placeholder Property Values"},
-       {"field": "template_properties", "label": "Template Properties"}
+       {"field": "type_name", "label": "Element Type Name"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_to", "label": "Effective To"}
       ]
      },
      "ALL": {
       "columns": [
-       {"field": "template_guid", "label": "Template GUID"},
-       {"field": "placeholder_property_values", "label": "Placeholder Property Values"},
-       {"field": "template_properties", "label": "Template Properties"}
+       {"field": "type_name", "label": "Element Type Name"},
+       {"field": "effective_from", "label": "Effective From"},
+       {"field": "effective_to", "label": "Effective To"}
       ]
      }
     }

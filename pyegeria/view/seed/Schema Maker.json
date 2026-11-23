@@ -44,8 +44,6 @@
        {"field": "usage", "label": "Usage"},
        {"field": "authors", "label": "Authors"},
        {"field": "additional_properties", "label": "Additional Properties"},
-       {"field": "is_own_anchor", "label": "Is Own Anchor"},
-       {"field": "initial_classifications", "label": "Initial Classifications"},
        {"field": "effective_from", "label": "Effective From"},
        {"field": "effective_to", "label": "Effective To"},
        {"field": "element_position", "label": "Element Position"},
@@ -61,13 +59,10 @@
        {"field": "markdown_content", "label": "Markdown Content"},
        {"field": "identifier", "label": "Identifier"},
        {"field": "classifications", "label": "Classifications"},
-       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
-       {"field": "effective_time", "label": "Effective Time"},
-       {"field": "supplementary_properties", "label": "Supplementary Properties"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
        {"field": "element_status", "label": "Status"},
-       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
        {"field": "category", "label": "Category"}
       ]
      },
@@ -83,8 +78,6 @@
        {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
        {"field": "authors", "label": "Authors"},
        {"field": "additional_properties", "label": "Additional Properties"},
-       {"field": "is_own_anchor", "label": "Is Own Anchor"},
-       {"field": "initial_classifications", "label": "Initial Classifications"},
        {"field": "effective_from", "label": "Effective From"},
        {"field": "effective_to", "label": "Effective To"},
        {"field": "element_position", "label": "Element Position"},
@@ -99,13 +92,10 @@
        {"field": "presentation_style", "label": "Presentation Style"},
        {"field": "markdown_content", "label": "Markdown Content"},
        {"field": "element_status", "label": "Status"},
-       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
        {"field": "identifier", "label": "Identifier"},
        {"field": "classifications", "label": "Classifications"},
-       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
-       {"field": "guid", "label": "GUID"},
-       {"field": "effective_time", "label": "Effective Time"},
-       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+       {"field": "guid", "label": "GUID"}
       ]
      }
     }
@@ -152,7 +142,6 @@
        {"field": "description", "label": "Description"},
        {"field": "usage", "label": "Usage"},
        {"field": "authors", "label": "Authors"},
-       {"field": "initial_classifications", "label": "Initial Classifications"},
        {"field": "element_position", "label": "Element Position"},
        {"field": "min_cardinality", "label": "Min Cardinality"},
        {"field": "max_cardinality", "label": "Max Cardinality"},
@@ -181,7 +170,6 @@
        {"field": "usage", "label": "Usage"},
        {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
        {"field": "authors", "label": "Authors"},
-       {"field": "initial_classifications", "label": "Initial Classifications"},
        {"field": "element_position", "label": "Element Position"},
        {"field": "min_cardinality", "label": "Min Cardinality"},
        {"field": "max_cardinality", "label": "Max Cardinality"},
@@ -242,8 +230,6 @@
        {"field": "usage", "label": "Usage"},
        {"field": "authors", "label": "Authors"},
        {"field": "additional_properties", "label": "Additional Properties"},
-       {"field": "is_own_anchor", "label": "Is Own Anchor"},
-       {"field": "initial_classifications", "label": "Initial Classifications"},
        {"field": "effective_from", "label": "Effective From"},
        {"field": "effective_to", "label": "Effective To"},
        {"field": "element_position", "label": "Element Position"},
@@ -259,13 +245,10 @@
        {"field": "markdown_content", "label": "Markdown Content"},
        {"field": "identifier", "label": "Identifier"},
        {"field": "classifications", "label": "Classifications"},
-       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
-       {"field": "effective_time", "label": "Effective Time"},
-       {"field": "supplementary_properties", "label": "Supplementary Properties"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
        {"field": "element_status", "label": "Status"},
-       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
        {"field": "category", "label": "Category"}
       ]
      },
@@ -281,8 +264,6 @@
        {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
        {"field": "authors", "label": "Authors"},
        {"field": "additional_properties", "label": "Additional Properties"},
-       {"field": "is_own_anchor", "label": "Is Own Anchor"},
-       {"field": "initial_classifications", "label": "Initial Classifications"},
        {"field": "effective_from", "label": "Effective From"},
        {"field": "effective_to", "label": "Effective To"},
        {"field": "element_position", "label": "Element Position"},
@@ -297,13 +278,10 @@
        {"field": "presentation_style", "label": "Presentation Style"},
        {"field": "markdown_content", "label": "Markdown Content"},
        {"field": "element_status", "label": "Status"},
-       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
        {"field": "identifier", "label": "Identifier"},
        {"field": "classifications", "label": "Classifications"},
-       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
-       {"field": "guid", "label": "GUID"},
-       {"field": "effective_time", "label": "Effective Time"},
-       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+       {"field": "guid", "label": "GUID"}
       ]
      }
     }
@@ -350,7 +328,6 @@
        {"field": "description", "label": "Description"},
        {"field": "usage", "label": "Usage"},
        {"field": "authors", "label": "Authors"},
-       {"field": "initial_classifications", "label": "Initial Classifications"},
        {"field": "element_position", "label": "Element Position"},
        {"field": "min_cardinality", "label": "Min Cardinality"},
        {"field": "max_cardinality", "label": "Max Cardinality"},
@@ -379,7 +356,6 @@
        {"field": "usage", "label": "Usage"},
        {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
        {"field": "authors", "label": "Authors"},
-       {"field": "initial_classifications", "label": "Initial Classifications"},
        {"field": "element_position", "label": "Element Position"},
        {"field": "min_cardinality", "label": "Min Cardinality"},
        {"field": "max_cardinality", "label": "Max Cardinality"},
@@ -444,8 +420,6 @@
        {"field": "usage", "label": "Usage"},
        {"field": "authors", "label": "Authors"},
        {"field": "additional_properties", "label": "Additional Properties"},
-       {"field": "is_own_anchor", "label": "Is Own Anchor"},
-       {"field": "initial_classifications", "label": "Initial Classifications"},
        {"field": "effective_from", "label": "Effective From"},
        {"field": "effective_to", "label": "Effective To"},
        {"field": "element_position", "label": "Element Position"},
@@ -456,13 +430,10 @@
        {"field": "default_value_override", "label": "Default Value Override"},
        {"field": "identifier", "label": "Identifier"},
        {"field": "classifications", "label": "Classifications"},
-       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
-       {"field": "effective_time", "label": "Effective Time"},
-       {"field": "supplementary_properties", "label": "Supplementary Properties"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
        {"field": "element_status", "label": "Status"},
-       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
        {"field": "category", "label": "Category"}
       ]
      },
@@ -478,8 +449,6 @@
        {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
        {"field": "authors", "label": "Authors"},
        {"field": "additional_properties", "label": "Additional Properties"},
-       {"field": "is_own_anchor", "label": "Is Own Anchor"},
-       {"field": "initial_classifications", "label": "Initial Classifications"},
        {"field": "effective_from", "label": "Effective From"},
        {"field": "effective_to", "label": "Effective To"},
        {"field": "element_position", "label": "Element Position"},
@@ -489,13 +458,10 @@
        {"field": "is_ordered_values", "label": "Is Ordered Values"},
        {"field": "default_value_override", "label": "Default Value Override"},
        {"field": "element_status", "label": "Status"},
-       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
        {"field": "identifier", "label": "Identifier"},
        {"field": "classifications", "label": "Classifications"},
-       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
-       {"field": "guid", "label": "GUID"},
-       {"field": "effective_time", "label": "Effective Time"},
-       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+       {"field": "guid", "label": "GUID"}
       ]
      }
     }
@@ -546,7 +512,6 @@
        {"field": "description", "label": "Description"},
        {"field": "usage", "label": "Usage"},
        {"field": "authors", "label": "Authors"},
-       {"field": "initial_classifications", "label": "Initial Classifications"},
        {"field": "element_position", "label": "Element Position"},
        {"field": "min_cardinality", "label": "Min Cardinality"},
        {"field": "max_cardinality", "label": "Max Cardinality"},
@@ -570,7 +535,6 @@
        {"field": "usage", "label": "Usage"},
        {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
        {"field": "authors", "label": "Authors"},
-       {"field": "initial_classifications", "label": "Initial Classifications"},
        {"field": "element_position", "label": "Element Position"},
        {"field": "min_cardinality", "label": "Min Cardinality"},
        {"field": "max_cardinality", "label": "Max Cardinality"},
@@ -623,16 +587,18 @@
     "formatters": {
      "LIST": {
       "columns": [
-       {"field": "template_guid", "label": "Template GUID"},
-       {"field": "placeholder_property_values", "label": "Placeholder Property Values"},
-       {"field": "template_properties", "label": "Template Properties"}
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"}
       ]
      },
      "ALL": {
       "columns": [
-       {"field": "template_guid", "label": "Template GUID"},
-       {"field": "placeholder_property_values", "label": "Placeholder Property Values"},
-       {"field": "template_properties", "label": "Template Properties"}
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "guid", "label": "GUID"}
       ]
      }
     }
@@ -677,16 +643,18 @@
     "formatters": {
      "LIST": {
       "columns": [
-       {"field": "template_guid", "label": "Template GUID"},
-       {"field": "placeholder_property_values", "label": "Placeholder Property Values"},
-       {"field": "template_properties", "label": "Template Properties"}
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"}
       ]
      },
      "ALL": {
       "columns": [
-       {"field": "template_guid", "label": "Template GUID"},
-       {"field": "placeholder_property_values", "label": "Placeholder Property Values"},
-       {"field": "template_properties", "label": "Template Properties"}
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "guid", "label": "GUID"}
       ]
      }
     }
@@ -738,8 +706,6 @@
        {"field": "usage", "label": "Usage"},
        {"field": "authors", "label": "Authors"},
        {"field": "additional_properties", "label": "Additional Properties"},
-       {"field": "is_own_anchor", "label": "Is Own Anchor"},
-       {"field": "initial_classifications", "label": "Initial Classifications"},
        {"field": "effective_from", "label": "Effective From"},
        {"field": "effective_to", "label": "Effective To"},
        {"field": "is_deprecated", "label": "Is Deprecated"},
@@ -748,13 +714,10 @@
        {"field": "namespace", "label": "Namespace"},
        {"field": "identifier", "label": "Identifier"},
        {"field": "classifications", "label": "Classifications"},
-       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
-       {"field": "effective_time", "label": "Effective Time"},
-       {"field": "supplementary_properties", "label": "Supplementary Properties"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
        {"field": "element_status", "label": "Status"},
-       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
        {"field": "category", "label": "Category"}
       ]
      },
@@ -770,8 +733,6 @@
        {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
        {"field": "authors", "label": "Authors"},
        {"field": "additional_properties", "label": "Additional Properties"},
-       {"field": "is_own_anchor", "label": "Is Own Anchor"},
-       {"field": "initial_classifications", "label": "Initial Classifications"},
        {"field": "effective_from", "label": "Effective From"},
        {"field": "effective_to", "label": "Effective To"},
        {"field": "is_deprecated", "label": "Is Deprecated"},
@@ -779,13 +740,10 @@
        {"field": "encoding_standard", "label": "Encoding Standard"},
        {"field": "namespace", "label": "Namespace"},
        {"field": "element_status", "label": "Status"},
-       {"field": "user_defined_status", "label": "User Defined Status"},
+       {"field": "user_defined_content_status", "label": "User Defined Content Status"},
        {"field": "identifier", "label": "Identifier"},
        {"field": "classifications", "label": "Classifications"},
-       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
-       {"field": "guid", "label": "GUID"},
-       {"field": "effective_time", "label": "Effective Time"},
-       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+       {"field": "guid", "label": "GUID"}
       ]
      }
     }
@@ -836,7 +794,6 @@
        {"field": "description", "label": "Description"},
        {"field": "usage", "label": "Usage"},
        {"field": "authors", "label": "Authors"},
-       {"field": "initial_classifications", "label": "Initial Classifications"},
        {"field": "is_deprecated", "label": "Is Deprecated"},
        {"field": "author", "label": "Author"},
        {"field": "encoding_standard", "label": "Encoding Standard"},
@@ -857,7 +814,6 @@
        {"field": "usage", "label": "Usage"},
        {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
        {"field": "authors", "label": "Authors"},
-       {"field": "initial_classifications", "label": "Initial Classifications"},
        {"field": "is_deprecated", "label": "Is Deprecated"},
        {"field": "author", "label": "Author"},
        {"field": "encoding_standard", "label": "Encoding Standard"},
@@ -907,16 +863,18 @@
     "formatters": {
      "LIST": {
       "columns": [
-       {"field": "template_guid", "label": "Template GUID"},
-       {"field": "placeholder_property_values", "label": "Placeholder Property Values"},
-       {"field": "template_properties", "label": "Template Properties"}
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"}
       ]
      },
      "ALL": {
       "columns": [
-       {"field": "template_guid", "label": "Template GUID"},
-       {"field": "placeholder_property_values", "label": "Placeholder Property Values"},
-       {"field": "template_properties", "label": "Template Properties"}
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "guid", "label": "GUID"}
       ]
      }
     }
@@ -961,16 +919,18 @@
     "formatters": {
      "LIST": {
       "columns": [
-       {"field": "template_guid", "label": "Template GUID"},
-       {"field": "placeholder_property_values", "label": "Placeholder Property Values"},
-       {"field": "template_properties", "label": "Template Properties"}
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
+       {"field": "description", "label": "Description"}
       ]
      },
      "ALL": {
       "columns": [
-       {"field": "template_guid", "label": "Template GUID"},
-       {"field": "placeholder_property_values", "label": "Placeholder Property Values"},
-       {"field": "template_properties", "label": "Template Properties"}
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "description", "label": "Description"},
+       {"field": "guid", "label": "GUID"}
       ]
      }
     }
