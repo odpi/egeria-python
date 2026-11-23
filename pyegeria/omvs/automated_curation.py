@@ -4036,7 +4036,7 @@ class AutomatedCuration(ServerClient):
 
         url = f"{self.ref_curation_command_base}/integration-connectors/{integ_connector_guid}/catalog-targets"
 
-        response = await self._async_get_name_request(url, _type=self.CATALOG_TARGET_LABEL,
+        response = await self._async_get_name_request(url, name_required=False, _type=self.CATALOG_TARGET_LABEL,
                                                       _gen_output=functools.partial(
                                                           self._generate_catalog_target_output,
                                                           integ_connector_guid=integ_connector_guid),
@@ -4572,7 +4572,7 @@ class AutomatedCuration(ServerClient):
         """
 
         url = f"{self.ref_curation_command_base}/open-metadata-types/{type_name}/technology-types"
-        response = await self._async_get_name_request(url, _type=self.TECH_TYPE_ENTITY_LABEL,
+        response = await self._async_get_name_request(url, name_required=False, _type=self.TECH_TYPE_ENTITY_LABEL,
                                                       _gen_output=self._generate_tech_type_output,
                                                       start_from=start_from,
                                                       page_size=page_size, output_format=output_format,

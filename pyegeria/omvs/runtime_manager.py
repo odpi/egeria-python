@@ -2110,8 +2110,10 @@ class RuntimeManager(ServerClient):
         filter_string : str, opt
             Filter specifies the display name or qualified name of the platforms to return information for. If the
             value is None, we will default to the default_platform_name that comes from the core content pack.
-            "*" (or no name at all, when there is no default) means ALL platforms: the by-name endpoint takes an
-            exact name only, so that case is answered by the by-deployed-implementation-type lookup (PY-58).
+            "*" (or no name at all, when there is no default) means all platforms OF THE DEFAULT TYPE ("OMAG Server
+            Platform"), not every platform of every type: the by-name endpoint takes an exact name only (a null name
+            is refused with HTTP 400), so that case is answered by the by-deployed-implementation-type lookup, which
+            always sends that default type (PY-58, PY-63).
 
         start_from : int, optional
            The index from which to start fetching the engine actions. Default is 0.

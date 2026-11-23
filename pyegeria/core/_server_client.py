@@ -6718,6 +6718,43 @@ class ServerClient(BaseServerClient):
                                output_format=output_format, report_spec=report_spec, **kwargs)
         return elements
 
+
+    #: PY-63: what each by-name style helper's key is called in the refusal, from the suffix of its name
+    _NAME_KEY_LABELS = {
+        "name": "name", "keyword": "keyword", "category": "category", "network_address": "network address",
+        "connector_provider_class_name": "connector provider class name",
+        "deployed_implementation_type": "deployed implementation type", "dep_impl_type": "deployed implementation type",
+        "type": "type", "analysis_step": "analysis step", "annotation_type": "annotation type",
+    }
+
+    def _name_request_refusal(self, helper: str) -> str:
+        """The words of PY-63's refusal: "<helper> needs a <key>; use <find> to list all"."""
+        import re as _re
+        bare = helper[len("_async_"):] if helper.startswith("_async_") else helper
+        suffix = bare.split("_by_", 1)[1] if "_by_" in bare else "name"
+        label = self._NAME_KEY_LABELS.get(suffix, suffix.replace("_", " "))
+        noun = _re.sub(r"^get_", "", bare.split("_by_", 1)[0])
+        finds = sorted(n for n in dir(type(self)) if n.startswith("find_") and not n.startswith("find__")
+                       and n[len("find_"):].startswith(noun.rstrip("s")[:6]))
+        use = f"; use {finds[0]} to list all" if finds else ""
+        return f"{bare} needs a {label}{use}. A null, empty or \"*\" {label} is refused by Egeria (HTTP 400)."
+
+    def _refuse_missing_name(self, filter_value: Any) -> None:
+        """PY-63: no Egeria by-name or by-type endpoint accepts a null name, and "*" is an exact match there, so a
+        None, "" or "*" is refused here, after the helper's own default, before anything is sent."""
+        if filter_value is not None and str(filter_value).strip() not in ("", "*"):
+            return
+        import sys as _sys
+        frame, helper = _sys._getframe(1), "the by-name call"
+        while frame is not None:
+            name = frame.f_code.co_name
+            if name.startswith("_async_get_") and name != "_async_get_name_request":
+                helper = name
+                break
+            frame = frame.f_back
+        raise PyegeriaInvalidParameterException(None, {"caller": helper},
+                                                {"reason": self._name_request_refusal(helper)})
+
     @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     async def _async_get_name_request(self, url: str, _type: str, _gen_output: Callable[..., Any],
@@ -6731,8 +6768,16 @@ class ServerClient(BaseServerClient):
                                       start_from: int = 0, page_size: int = 0, output_format: str = "JSON",
                                       report_spec: Optional[str | dict] = None,
                                       body: Optional[dict | FilterRequestBody] = None,
-                                      max_mermaid_node_count=10, **kwargs) -> Any:
+                                      max_mermaid_node_count=10, name_required: bool = True, **kwargs) -> Any:
         report_spec = await self._async_refresh_report_spec(report_spec, kwargs)  # refresh_spec=True (RS-EGERIA-TIER)
+
+        if name_required:  # PY-63: `name_required=False` is for a helper whose key is in the URL path, not the filter
+            if isinstance(body, FilterRequestBody):
+                self._refuse_missing_name(body.filter_string)
+            elif isinstance(body, dict):
+                self._refuse_missing_name(body.get("filter", body.get("filter_string")))
+            else:
+                self._refuse_missing_name(filter_string)
 
         # ISSUE-131: this argument is spelt `metadata_element_type`, as in _async_find_request (6.2.28:
         # one name everywhere). The old `metadata_element_type_name` still works via @deprecated_names.

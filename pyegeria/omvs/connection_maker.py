@@ -881,6 +881,7 @@ class ConnectionMaker(ServerClient):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
+            name_required=False,  # PY-63: the asset is in the URL path; the name is an optional filter
             **{"filter_string": name, **kwargs},
         )
 
