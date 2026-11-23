@@ -137,6 +137,44 @@ def _classification_dicts(header: Any) -> Iterable[dict]:
                     yield item
 
 
+#: Egeria 6.4 level enums behind the governance classifications, by (classification, property): integer -> name.
+#: ConfidentialityLevel, ConfidenceLevel, CriticalityLevel, SeverityLevel (Impact has no enum of its own) and
+#: RetentionBasis, in open-metadata-framework refdata (read from the laz checkout 8de9572c4d).
+LEVEL_NAMES = {
+    ("Confidentiality", "confidentialityLevel"): {0: "Unclassified", 1: "Internal", 2: "Confidential",
+                                                  3: "Sensitive", 4: "Restricted", 99: "Other"},
+    ("Confidence", "confidenceLevel"): {0: "Unclassified", 1: "Ad Hoc", 2: "Transactional", 3: "Authoritative",
+                                        4: "Derived", 5: "Obsolete", 99: "Other"},
+    ("Criticality", "criticalityLevel"): {0: "Unclassified", 1: "Marginal", 2: "Important", 3: "Critical",
+                                          4: "Catastrophic", 99: "Other"},
+    ("Impact", "severityLevel"): {0: "Unclassified", 1: "Low", 2: "Medium", 3: "High", 99: "Other"},
+    ("Retention", "retentionBasis"): {0: "Unclassified", 1: "Temporary", 2: "Project Lifetime", 3: "Team Lifetime",
+                                      4: "Contract Lifetime", 5: "Regulated Lifetime", 6: "Time Boxed Lifetime",
+                                      99: "Other"},
+}
+
+
+def _as_int(value: Any) -> Optional[int]:
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str) and value.strip().lstrip("-").isdigit():
+        return int(value.strip())
+    return None
+
+
+def level_name(cls: str, prop: str, value: Any) -> str:
+    """The level name of a governance-level integer; a number outside the enum reads "<n> (unknown level)";
+    a missing value stays ""; anything that is not an integer is shown as it is."""
+    if value in (None, ""):
+        return ""
+    number = _as_int(value)
+    if number is None:
+        return _text(value)
+    return LEVEL_NAMES[(cls, prop)].get(number, f"{number} (unknown level)")
+
+
 def _text(value: Any) -> str:
     if value is None:
         return ""
@@ -182,8 +220,12 @@ def resolve_source(element: dict, text: str) -> Tuple[Any, str]:
         if src.prop is None:
             joined = ", ".join(present)
             return joined, joined
-        values = [_text(_prop_value(found[n].get("classificationProperties") or {}, src.prop)) for n in present]
-        joined = ", ".join(v for v in values if v)
+        raw = [_prop_value(found[n].get("classificationProperties") or {}, src.prop) for n in present]
+        if len(present) == 1 and (present[0], src.prop) in LEVEL_NAMES:
+            number = _as_int(raw[0])
+            label = level_name(present[0], src.prop, raw[0])
+            return (number if number is not None else label), label
+        joined = ", ".join(v for v in (_text(r) for r in raw) if v)
         return joined, joined
     items = _related_items(element, src.names[0])
     native: List[Any] = []
