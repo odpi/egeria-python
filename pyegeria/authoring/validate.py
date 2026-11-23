@@ -322,12 +322,15 @@ async def _check_spec(draft: SpecDraft, result: ValidationResult, client: Any = 
                          f"and no pyegeria spec uses it.")
         result.checked.append("target type")
     action = fs.action
-    from pyegeria.view.column_source import check_source
+    from pyegeria.view.column_source import check_source_with_warnings
     for fmt in fs.formats or []:  # PY-53: a column's `source` names real 6.4 classifications, ends and properties
         for col in getattr(fmt, "attributes", None) or []:
             source = col.get("source") if isinstance(col, dict) else getattr(col, "source", None)
-            for words in (check_source(source) if source else []):
+            errors, warnings = check_source_with_warnings(source) if source else ([], [])
+            for words in errors:
                 result.error(words)
+            for words in warnings:   # PY-61: an end whose type is not in the 6.4 tables is checked loosely, and said so
+                result.warn(words)
     is_find = bool(getattr(action, "function", None)) and not getattr(action, "analytic_function", None)
     if is_find and target:
         await _check_find_fit(fs, client, result)

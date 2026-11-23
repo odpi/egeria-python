@@ -20,6 +20,9 @@ does (explicit import, then same package, then wildcard imports) across the whol
 package-private fields and superclasses outside the properties packages (GetOptions, SearchOptions,
 ...) count. This is the same ground truth scripts/audit_properties_class_bodies.py checks against (PY-45).
 
+Regenerating from another Egeria ref: re-run test_py59 with EGERIA_6_4_SRC/EGERIA_6_4_REF set; CI skips the
+equality test.
+
 Reads a git ref (default origin/main) with `git cat-file`, so the Egeria checkout is never modified:
 
     python scripts/gen_properties_class_fields.py [--egeria ~/localGit/egeria-v6/egeria] [--ref origin/main]
@@ -76,6 +79,15 @@ _CLASSIFICATION_DEF = re.compile(
     r"(null|this\.archiveBuilder\.getClassificationDef\(\s*OpenMetadataType\.(\w+)\.typeName\s*\))")
 
 
+_ENTITY_DEF = re.compile(
+    r"archiveHelper\.getDefaultEntityDef\(\s*OpenMetadataType\.(\w+)\s*,\s*"
+    r"(null|this\.archiveBuilder\.getEntityDef\(\s*OpenMetadataType\.(\w+)\.typeName\s*\))")
+_STRING_LITERAL = re.compile(r"\bString\s+(\w+)\s*=\s*\"([^\"]*)\"\s*;")
+_RELATIONSHIP_END = re.compile(
+    r"archiveHelper\.getRelationshipEndDef\(\s*this\.archiveBuilder\.getEntityDef\(\s*"
+    r"OpenMetadataType\.(\w+)\.typeName\s*\)\s*,\s*(\w+)\s*,")
+
+
 def read_typedef_sources(egeria: str, ref: str) -> dict[str, str]:
     """The OpenMetadataTypesArchive*.java files at `ref`, by path (the typedefs the platform loads)."""
     paths = [p for p in git(egeria, "ls-tree", "-r", "--name-only", ref, "--", ARCHIVES).decode().split("\n")
@@ -111,6 +123,34 @@ def classification_typedef_supers(archives: dict[str, str], names: dict[str, str
             if sub and sup:
                 out[sub] = sup
     return out
+
+
+def entity_typedef_supers(archives: dict[str, str], names: dict[str, str]) -> dict[str, str]:
+    """{entity type: its supertype} from the typedefs: archiveHelper.getDefaultEntityDef(<type>, <supertype or null>)."""
+    out: dict[str, str] = {}
+    for src in archives.values():
+        for m in _ENTITY_DEF.finditer(_strip_comments(src)):
+            sub = names.get(m.group(1))
+            sup = names.get(m.group(3)) if m.group(3) else None
+            if sub and sup:
+                out[sub] = sup
+    return out
+
+
+def relationship_end_types(archives: dict[str, str], names: dict[str, str]) -> dict[str, tuple[str, ...]]:
+    """{relationship end attribute name: the entity types at that end}, from the typedefs' getRelationshipEndDef
+    (<entity type>, <end attribute name variable>, ...) calls. The attribute name is what an element's relationship
+    list is called (serverEndpoints), so the type is what a list's related elements are."""
+    out: dict[str, set[str]] = {}
+    for src in archives.values():
+        text = _strip_comments(src)
+        literals: list[tuple[int, str, str]] = [(m.start(), m.group(1), m.group(2)) for m in _STRING_LITERAL.finditer(text)]
+        for m in _RELATIONSHIP_END.finditer(text):
+            entity = names.get(m.group(1))
+            attr = next((lit for pos, var, lit in reversed(literals) if pos < m.start() and var == m.group(2)), None)
+            if entity and attr:
+                out.setdefault(attr, set()).add(entity)
+    return {k: tuple(sorted(v)) for k, v in sorted(out.items())}
 
 
 def supertype_chains(direct: dict[str, str]) -> dict[str, tuple[str, ...]]:
@@ -327,6 +367,10 @@ def main():
     # the supertypes come from the typedefs the platform loads; the Java class chain is only a cross-check
     chains = supertype_chains(classification_typedef_supers(read_typedef_sources(args.egeria, args.ref),
                                                             type_name_constants(sources)))
+    archives = read_typedef_sources(args.egeria, args.ref)
+    constants = type_name_constants(sources)
+    entity_chains = supertype_chains(entity_typedef_supers(archives, constants))
+    end_types = relationship_end_types(archives, constants)
     for cls, above in sorted(java_supertypes.items()):
         if chains.get(cls) != above:
             warn(f"classification {cls}: typedef supertypes {chains.get(cls, ())} differ from the Java chain {above}")
@@ -359,6 +403,23 @@ def main():
     ]
     for cls, above in sorted(chains.items()):
         lines.append(f"    {cls!r}: {above!r},")
+    lines.append("}")
+    lines += [
+        "",
+        "#: Each entity type's supertypes, nearest first, from the typedefs (getDefaultEntityDef's 2nd argument).",
+        "ENTITY_SUPERTYPES: dict[str, tuple[str, ...]] = {",
+    ]
+    for cls, above in sorted(entity_chains.items()):
+        lines.append(f"    {cls!r}: {above!r},")
+    lines.append("}")
+    lines += [
+        "",
+        "#: The entity type(s) at each relationship end, by the end's attribute name, which is also what an element's",
+        "#: relationship list is called (serverEndpoints -> Endpoint), from the typedefs (getRelationshipEndDef). PY-61.",
+        "END_ENTITY_TYPES: dict[str, tuple[str, ...]] = {",
+    ]
+    for attr, types in end_types.items():
+        lines.append(f"    {attr!r}: {types!r},")
     lines.append("}")
     with open(OUT, "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")

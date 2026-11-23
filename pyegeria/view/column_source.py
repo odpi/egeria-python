@@ -77,14 +77,82 @@ def _fields(type_name: str, kind: str) -> Optional[set]:
     return {_snake(f) for f in entry[1]}
 
 
-def check_source(text: str) -> List[str]:
-    """Why a `source` is wrong, as validator error messages ([] when it is right). Classification and
-    relationship names and their properties are checked against the 6.4 Properties-class tables; an `of:`
-    attribute is wrong only when no entity type has it."""
+def _end_entity_types() -> dict:
+    """{relationship list (end attribute) name: the entity type(s) at that end}, from the 6.4 typedefs."""
+    from md_processing.md_processing_utils.properties_class_fields import END_ENTITY_TYPES
+    return END_ENTITY_TYPES
+
+
+def _entity_supertypes() -> dict:
+    from md_processing.md_processing_utils.properties_class_fields import ENTITY_SUPERTYPES
+    return ENTITY_SUPERTYPES
+
+
+_UNIVERSAL_ATTRIBUTES = {"guid", "type", "status", "name", "origin"}
+
+
+def _union_has(wanted: str) -> bool:
+    """The PY-53 check: some entity type has the attribute (catches a typo, not a wrong end)."""
+    from md_processing.md_processing_utils.properties_class_fields import PROPERTIES_CLASS_FIELDS
+    return wanted in _UNIVERSAL_ATTRIBUTES or any(
+        wanted in {_snake(f) for f in fields}
+        for kind, fields in PROPERTIES_CLASS_FIELDS.values() if kind == "entity")
+
+
+def _type_attributes(type_name: str) -> Optional[set]:
+    """The snake_case attributes of an entity type, its typedef supertypes included, or None if none is known."""
+    found, known = set(), False
+    for t in (type_name, *_entity_supertypes().get(type_name, ())):
+        fields = _fields(t, "entity")
+        if fields is not None:
+            known = True
+            found |= fields
+    return found if known else None
+
+
+def check_source_with_warnings(text: str) -> Tuple[List[str], List[str]]:
+    """(errors, warnings) for a `source`. Classification and relationship names and their properties are checked
+    against the 6.4 Properties-class tables. An `of:` attribute is checked against the entity type(s) at that
+    relationship end and their supertypes (the typedefs, PY-61); where the end's type is not in the tables it is
+    checked against the union of all entity types and a warning says so, never silently."""
     try:
         src = parse_source(text)
     except SourceError as exc:
-        return [str(exc)]
+        return [str(exc)], []
+    from pyegeria.view.egeria_relationship_fields import RELATIONSHIP_FIELDS
+    if src.kind != "of":
+        return check_source_core(text, src), []
+    end = src.names[0]
+    rel_types = RELATIONSHIP_FIELDS.get(end)
+    if rel_types is None:
+        return [f"source {text!r}: {end!r} is not a relationship list an Egeria element carries "
+                f"(RELATIONSHIP_FIELDS)."], []
+    wanted = _snake(src.prop)
+    types = _end_entity_types().get(end)
+    attrs_by_type = {t: _type_attributes(t) for t in types} if types else {}
+    if not types or any(a is None for a in attrs_by_type.values()):
+        unknown = ", ".join(t for t, a in attrs_by_type.items() if a is None) or "unknown"
+        warning = (f"source {text!r}: the entity type at the {end!r} end ({unknown}) is not in the 6.4 tables, so "
+                   f"{src.prop!r} was checked against the union of all entity types, which cannot tell a wrong end.")
+        errors = [] if _union_has(wanted) else [f"source {text!r}: no Egeria entity type has the attribute {src.prop!r}."]
+        return errors, [warning]
+    if wanted in _UNIVERSAL_ATTRIBUTES or any(wanted in attrs for attrs in attrs_by_type.values()):
+        return [], []
+    held = " / ".join(f"{t} (with its supertypes {', '.join(_entity_supertypes().get(t, ())) or 'none'})"
+                      for t in types)
+    rel = " / ".join(rel_types) if rel_types else "?"
+    return [f"source {text!r}: the {end!r} end of relationship {rel} holds {held}, which has no attribute "
+            f"{src.prop!r}."], []
+
+
+def check_source(text: str) -> List[str]:
+    """Why a `source` is wrong, as validator error messages ([] when it is right). See check_source_with_warnings,
+    which also gives the warnings."""
+    return check_source_with_warnings(text)[0]
+
+
+def check_source_core(text: str, src: Source) -> List[str]:
+    """The class: and rel: checks (an `of:` source goes through check_source_with_warnings)."""
     from md_processing.md_processing_utils.properties_class_fields import PROPERTIES_CLASS_FIELDS
     from pyegeria.view.egeria_relationship_fields import RELATIONSHIP_FIELDS
     errors: List[str] = []
@@ -105,20 +173,11 @@ def check_source(text: str) -> List[str]:
     if rel_types is None:
         return [f"source {text!r}: {end!r} is not a relationship list an Egeria element carries "
                 f"(RELATIONSHIP_FIELDS)."]
-    if src.kind == "rel":
-        if not rel_types:
-            return [f"source {text!r}: the end {end!r} names no relationship type, so {src.prop!r} cannot be checked."]
-        tables = [_fields(t, "relationship") for t in rel_types]
-        if not any(t is not None and _snake(src.prop) in t for t in tables):
-            errors.append(f"source {text!r}: relationship {' / '.join(rel_types)} has no property {src.prop!r}.")
-        return errors
-    # of: any entity type has the attribute
-    wanted = _snake(src.prop)
-    universal = {"guid", "type", "status", "name", "origin"}
-    if wanted not in universal and not any(
-            wanted in {_snake(f) for f in fields}
-            for kind, fields in PROPERTIES_CLASS_FIELDS.values() if kind == "entity"):
-        errors.append(f"source {text!r}: no Egeria entity type has the attribute {src.prop!r}.")
+    if not rel_types:
+        return [f"source {text!r}: the end {end!r} names no relationship type, so {src.prop!r} cannot be checked."]
+    tables = [_fields(t, "relationship") for t in rel_types]
+    if not any(t is not None and _snake(src.prop) in t for t in tables):
+        errors.append(f"source {text!r}: relationship {' / '.join(rel_types)} has no property {src.prop!r}.")
     return errors
 
 

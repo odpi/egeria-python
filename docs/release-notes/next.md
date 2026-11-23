@@ -120,6 +120,10 @@ notes and are not repeated here.
   before anything is sent, with "<call> needs a name; use <find> to list all", because the Egeria 6.4 by-name and by-type
   endpoints refuse it (each one checked answered HTTP 400; "*" there is an exact match). `hey_egeria ... deployed-servers` now
   defaults to `View Server` instead of `*`.
+- **An `of:` report column is checked against the entity type at its relationship end** (PY-61). The validator used to
+  accept `of:<list>.<attribute>` if any entity type had the attribute; it now checks the entity type(s) at that end of the
+  relationship and their supertypes, both from the 6.4 typedefs, and refuses a wrong-end attribute naming the relationship,
+  the end, its type and the attribute. A list whose end type is not in the tables is checked loosely and gets a warning.
 - **A preview asks Egeria only for the rows it shows** (PY-19). A report run with `page_to=N` made its first request
   for `min(N, 100)` rows, not always 100, and its last request for the remainder, so no page is read past `N`. Paging is
   unchanged otherwise: a short or empty page does not end the read, only Egeria's null does, and a run that stopped at
