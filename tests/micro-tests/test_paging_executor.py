@@ -167,10 +167,12 @@ def test_text_format_trusted_null_is_confirmed(server):
 # ── page_to: preview pages fully ──
 
 def test_page_to_pages_fully_up_to_the_rows_asked_for(server):
-    srv = server("find_authored_elements", {0: [], 100: [ROW(1)], 200: [ROW(2), ROW(3)]})
+    # PY-19: a preview asks only for the rows it shows, so the first request is page_to (2), not 100, and the
+    # last asks for the remainder. (Edited from {0, 100, 200} at size 100: that encoded the old fixed size.)
+    srv = server("find_authored_elements", {0: [], 2: [ROW(1)], 4: [ROW(2), ROW(3)]})
     r = run("DICT", page_to=2)
     assert [x["GUID"] for x in r["data"]] == ["g1", "g2"] and r["end"] == "capped"
-    assert {size for _, size in srv.calls} == {100}
+    assert [size for _, size in srv.calls] == [2, 2, 1]
 
 
 def test_page_to_with_fewer_rows_ends_confirmed_on_a_trusted_path(server):

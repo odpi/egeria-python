@@ -120,6 +120,10 @@ notes and are not repeated here.
   before anything is sent, with "<call> needs a name; use <find> to list all", because the Egeria 6.4 by-name and by-type
   endpoints refuse it (each one checked answered HTTP 400; "*" there is an exact match). `hey_egeria ... deployed-servers` now
   defaults to `View Server` instead of `*`.
+- **A preview asks Egeria only for the rows it shows** (PY-19). A report run with `page_to=N` made its first request
+  for `min(N, 100)` rows, not always 100, and its last request for the remainder, so no page is read past `N`. Paging is
+  unchanged otherwise: a short or empty page does not end the read, only Egeria's null does, and a run that stopped at
+  `N` still says so ("stopped at the N rows asked for; there may be more"). Full reads are untouched.
 - **`find_digital_product_catalogs` lists catalogs** (PY-71). It sent no type filter and so listed every Collection
   (a live `find("*")` returned Agreements). It now asks for `DigitalProductCatalog` unless you pass
   `metadata_element_subtypes`, and it and `get_digital_product_catalogs_by_name` format `output_format="DICT"`, `"MD"` and

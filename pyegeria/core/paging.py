@@ -449,6 +449,8 @@ class _Pager:
     key: Callable[[Any], Hashable]
     start: int = 0
     stall_pages: int = 1                # consecutive pages of only rows already read before "stalled"
+    trim_to_want: bool = False          # ask for no more rows than `want` still needs (a preview's last page)
+    asked: int = 0                      # the size of the request in flight
     no_new: int = 0
     last_keys: Optional[list] = None    # the previous page's row keys: the same page again is a stall
     pages: int = 0
@@ -466,12 +468,15 @@ class _Pager:
             self._finish("capped", f"stopped after {self.pages} pages of {self.size}; there may be more",
                          "max_pages")
             return None
-        return self.start, self.size
+        self.asked = self.size
+        if self.trim_to_want and self.want is not None:
+            self.asked = max(1, min(self.size, self.want - len(self.items)))
+        return self.start, self.asked
 
     def feed(self, page: Any) -> None:
         self.pages += 1
         at = self.start
-        self.start += self.size
+        self.start += self.asked or self.size
         if not isinstance(page, list):
             self._null(at)
         elif not page:
@@ -497,10 +502,10 @@ class _Pager:
 
     def _empty(self, at: int) -> None:
         self.probes_left = None   # an empty page means the server has rows here: not the end
-        self.empty_rows += self.size
+        self.empty_rows += self.asked or self.size
         if self.empty_rows >= self.max_empty_rows:
             self._finish("not_confirmed",
-                         f"{self.empty_rows} consecutive positions (up to {at + self.size}) were filtered out "
+                         f"{self.empty_rows} consecutive positions (up to {at + (self.asked or self.size)}) were filtered out "
                          f"for you; there may be more", "empty_run_cap")
 
     def _rows(self, page: list, at: int) -> None:
@@ -536,7 +541,7 @@ class _Pager:
 
 
 def _pager(want, fetch_page_size, end_policy, probe_pages, max_empty_rows, max_pages, key,
-           start_from=0, stall_pages=1) -> _Pager:
+           start_from=0, stall_pages=1, trim_to_want=False) -> _Pager:
     if end_policy not in END_POLICIES:
         raise ValueError(f"end_policy must be one of {END_POLICIES}, not {end_policy!r}")
     for name, value, low in (("fetch_page_size", fetch_page_size, 1), ("probe_pages", probe_pages, 1),
@@ -550,7 +555,7 @@ def _pager(want, fetch_page_size, end_policy, probe_pages, max_empty_rows, max_p
         raise ValueError(f"start_from must be a whole number of at least 0, not {start_from!r}")
     return _Pager(want=want, size=fetch_page_size, policy=end_policy, probe_pages=probe_pages,
                   max_empty_rows=max_empty_rows, max_pages=max_pages, key=key or default_key, start=start_from,
-                  stall_pages=stall_pages)
+                  stall_pages=stall_pages, trim_to_want=trim_to_want)
 
 
 @contextmanager
@@ -586,7 +591,8 @@ def page_all(fetch: Callable[[int, int], Any], *, want: Optional[int] = None,
              fetch_page_size: int = DEFAULT_FETCH_PAGE_SIZE, end_policy: str = "suspect",
              probe_pages: int = DEFAULT_PROBE_PAGES, max_empty_rows: int = DEFAULT_MAX_EMPTY_ROWS,
              max_pages: int = DEFAULT_MAX_PAGES, key: Optional[Callable[[Any], Hashable]] = None,
-             start_from: int = 0, stall_pages: int = 1, null_not_end: bool = False) -> PageResult:
+             start_from: int = 0, stall_pages: int = 1, null_not_end: bool = False,
+             trim_to_want: bool = False) -> PageResult:
     """Read every row ``fetch(start, size)`` gives (or the first ``want``), paging until the end is known
     or a limit stops it, starting at ``start_from``. See the module docstring for ``end_policy`` and the
     ``end`` states.
@@ -603,9 +609,12 @@ def page_all(fetch: Callable[[int, int], Any], *, want: Optional[int] = None,
     (default 1; a path known to return overlapping short pages may allow 2).
 
     ``null_not_end`` (a NULL_NOT_END method: pass ``**paging_for(method)``) marks the result so that a null
-    followed by empty probes is not ``reached_end``."""
+    followed by empty probes is not ``reached_end``.
+
+    ``trim_to_want`` (a preview) asks for no more rows than ``want`` still needs, so the last request is the
+    remainder and no page is read past ``want``; a short or empty page still does not end the read."""
     pager = _pager(want, fetch_page_size, end_policy, probe_pages, max_empty_rows, max_pages, key, start_from,
-                   stall_pages)
+                   stall_pages, trim_to_want)
     while (req := pager.request()) is not None:
         with _end_signal() as record:
             page = fetch(*req)
@@ -618,10 +627,11 @@ async def async_page_all(fetch: Callable[[int, int], Awaitable[Any]], *, want: O
                          probe_pages: int = DEFAULT_PROBE_PAGES, max_empty_rows: int = DEFAULT_MAX_EMPTY_ROWS,
                          max_pages: int = DEFAULT_MAX_PAGES,
                          key: Optional[Callable[[Any], Hashable]] = None, start_from: int = 0,
-                         stall_pages: int = 1, null_not_end: bool = False) -> PageResult:
+                         stall_pages: int = 1, null_not_end: bool = False,
+                         trim_to_want: bool = False) -> PageResult:
     """``page_all`` for an async ``fetch`` (same ``key`` and end-signal rules)."""
     pager = _pager(want, fetch_page_size, end_policy, probe_pages, max_empty_rows, max_pages, key, start_from,
-                   stall_pages)
+                   stall_pages, trim_to_want)
     while (req := pager.request()) is not None:
         with _end_signal() as record:
             page = await fetch(*req)
