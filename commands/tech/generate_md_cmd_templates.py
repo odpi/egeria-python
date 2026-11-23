@@ -279,6 +279,7 @@ def main():
             client.create_egeria_bearer_token(args.userid, args.user_pass)
             logger.info(f"Connected to Egeria at {args.url} for dynamic valid values")
         except Exception as e:
+            client = None  # PY-52: a client whose sign-in failed reads no values; the templates say so
             logger.warning(f"Could not connect to Egeria: {e}. Falling back to static values.")
 
     commands = md_processing_constants.COMMAND_DEFINITIONS.get("Command Specifications", {})
