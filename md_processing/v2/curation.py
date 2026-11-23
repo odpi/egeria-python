@@ -357,6 +357,7 @@ class CurationClassifyProcessor(AsyncBaseCommandProcessor):
         element_guid = _guid(attributes, "Target Element")
         if not element_guid:
             raise PyegeriaException(f"Could not resolve 'Target Element' for {verb} {object_type}")
+        self.parsed_output["guid"] = element_guid  # the element the classification is on names the write (PY-48)
 
         client = getattr(self.client, CURATION_CLASSIFICATION_CLIENTS.get(om_type, "classification_manager"))
 
@@ -411,6 +412,8 @@ class CurationLinkProcessor(AsyncBaseCommandProcessor):
         attributes = self.parsed_output.get("attributes", {})
         om_type = self.get_command_spec().get("OM_TYPE")
         target_guid = _guid(attributes, "Target Element")
+        if target_guid:
+            self.parsed_output["guid"] = target_guid  # the element the relationship is on names the write (PY-48)
         is_link = verb in ("Link", "Attach", "Add")
 
         if om_type == "ScopedBy":

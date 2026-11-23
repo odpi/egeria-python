@@ -30,6 +30,8 @@ async def async_run_markdown(client: Any, markdown: str, directive: str) -> Dict
     detail, failed = [], 0
     errors = []
     for r in results or []:
+        if (r or {}).get("is_command") is False:
+            continue  # a block kept as prose is not a command: it is neither run nor counted (PY-48)
         status = (r or {}).get("status") or "unknown"
         detail.append({"command": f"{r.get('verb', '')} {r.get('object_type', '')}".strip(), "status": status,
                        "message": r.get("message"), "display_name": r.get("display_name"),
@@ -39,8 +41,17 @@ async def async_run_markdown(client: Any, markdown: str, directive: str) -> Dict
             for e in r.get("errors") or [r.get("message") or status]:
                 errors.append({"command": detail[-1]["command"], "message": e})
     key = "validation_errors" if directive == "validate" else "execution_errors"
-    return {"success": failed == 0, "commands_total": len(detail), "commands_succeeded": len(detail) - failed,
-            "commands_failed": failed, "commands_detail": detail, key: errors}
+    out = {"success": failed == 0 and bool(detail), "commands_total": len(detail), "commands_succeeded": len(detail) - failed,
+           "commands_failed": failed, "commands_detail": detail, key: errors}
+    if failed or not detail:
+        # PY-48: say what looks wrong with the document's headings (an H1 command, an attribute written as H2).
+        try:
+            hints = UniversalExtractor(markdown).diagnose()
+        except Exception:  # advisory only
+            hints = []
+        if hints:
+            out["hints"] = hints
+    return out
 
 
 def inprocess_runner(client: Any) -> Callable[[str, str], Dict[str, Any]]:
