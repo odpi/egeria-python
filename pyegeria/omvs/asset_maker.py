@@ -1983,7 +1983,7 @@ class AssetMaker(ServerClient):
     async def _async_find_data_assets(
         self,
         search_string: str = "*",
-        content_status_list: list[str] = ["ACTIVE"],
+        content_status_list: Optional[list[str]] = None,
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
@@ -2016,8 +2016,9 @@ class AssetMaker(ServerClient):
         ----------
         search_string: str, default = "*"
             - the search string to use to find matching data assets
-        content_status_list: list[str], default = ["ACTIVE"]
-            - optional content status list to filter by
+        content_status_list: list[str], default = None
+            - optional content status list to filter by. Default: any content status (Egeria treats a null
+              filter as any; elements created without a status store null). Pass ["ACTIVE"] to limit to active ones.
         starts_with: bool, default = False
             - if True, the search string must match the start of the property value
         ends_with: bool, default = False
@@ -2114,7 +2115,7 @@ class AssetMaker(ServerClient):
     def find_data_assets(
         self,
         search_string: str = "*",
-        content_status_list: list[str] = ["ACTIVE"],
+        content_status_list: Optional[list[str]] = None,
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = True,
@@ -2147,8 +2148,9 @@ class AssetMaker(ServerClient):
         ----------
         search_string: str, default = "*"
             - the search string to use to find matching data assets
-        content_status_list: list[str], default = ["ACTIVE"]
-            - optional content status list to filter by
+        content_status_list: list[str], default = None
+            - optional content status list to filter by. Default: any content status (Egeria treats a null
+              filter as any; elements created without a status store null). Pass ["ACTIVE"] to limit to active ones.
         starts_with: bool, default = False
             - if True, the search string must match the start of the property value
         ends_with: bool, default = False
@@ -2253,7 +2255,7 @@ class AssetMaker(ServerClient):
     async def _async_get_data_assets_by_category(
         self,
         category: str,
-        content_status_list: list[str] = ["ACTIVE"],
+        content_status_list: Optional[list[str]] = None,
         graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
@@ -2269,8 +2271,9 @@ class AssetMaker(ServerClient):
         ----------
         category: str
             - the category to filter by
-        content_status_list: list[str], default = ["ACTIVE"]
-            - optional content status list to filter by
+        content_status_list: list[str], default = None
+            - optional content status list to filter by. Default: any content status (Egeria treats a null
+              filter as any; elements created without a status store null). Pass ["ACTIVE"] to limit to active ones.
         graph_query_depth: int, default = 3
             - depth for relationship traversal
         start_from: int, default = 0
@@ -2322,7 +2325,7 @@ class AssetMaker(ServerClient):
     def get_data_assets_by_category(
         self,
         category: str,
-        content_status_list: list[str] = ["ACTIVE"],
+        content_status_list: Optional[list[str]] = None,
         graph_query_depth: int = 3,
         start_from: int = 0,
         page_size: int = 0,
@@ -2338,8 +2341,9 @@ class AssetMaker(ServerClient):
         ----------
         category: str
             - category name to filter by
-        content_status_list: list[str], default = ["ACTIVE"]
-            - optional content status list to filter by
+        content_status_list: list[str], default = None
+            - optional content status list to filter by. Default: any content status (Egeria treats a null
+              filter as any; elements created without a status store null). Pass ["ACTIVE"] to limit to active ones.
         graph_query_depth: int, default = 3
             - depth for relationship traversal
         start_from: int, default = 0

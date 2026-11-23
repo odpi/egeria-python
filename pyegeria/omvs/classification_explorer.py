@@ -12911,7 +12911,7 @@ class ClassificationExplorer(ServerClient):
     async def _async_find_authored_elements(
         self,
         search_string: str = "*",
-        content_status_list: list[str] = ["ACTIVE"],
+        content_status_list: Optional[list[str]] = None,
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = False,
@@ -12943,8 +12943,9 @@ class ClassificationExplorer(ServerClient):
         ----------
         search_string: str, default = "*"
             - the search string to use to find matching authored elements
-        content_status_list: list[str], default = ["ACTIVE"]
-            - optional content status list to filter by
+        content_status_list: list[str], default = None
+            - optional content status list to filter by. Default: any content status (Egeria treats a null
+              filter as any; elements created without a status store null). Pass ["ACTIVE"] to limit to active ones.
         starts_with: bool, default = True
             - if True, the search string must match the start of the property value
         ends_with: bool, default = False
@@ -13023,7 +13024,7 @@ class ClassificationExplorer(ServerClient):
     def find_authored_elements(
         self,
         search_string: str = "*",
-        content_status_list: list[str] = ["ACTIVE"],
+        content_status_list: Optional[list[str]] = None,
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = False,
@@ -13054,8 +13055,9 @@ class ClassificationExplorer(ServerClient):
         ----------
         search_string: str, default = "*"
             - the search string to use to find matching authored elements
-        content_status_list: list[str], default = ["ACTIVE"]
-            - optional content status list to filter by
+        content_status_list: list[str], default = None
+            - optional content status list to filter by. Default: any content status (Egeria treats a null
+              filter as any; elements created without a status store null). Pass ["ACTIVE"] to limit to active ones.
         starts_with: bool, default = True
             - if True, the search string must match the start of the property value
         ends_with: bool, default = False
@@ -13115,7 +13117,7 @@ class ClassificationExplorer(ServerClient):
     async def _async_find_authored_elements_by_category(
         self,
         search_string: str = "*",
-        content_status_list: list[str] = ["ACTIVE"],
+        content_status_list: Optional[list[str]] = None,
         start_from: int = 0,
         page_size: int = 0,
         graph_query_depth: int = 3, output_format: str = "JSON",
@@ -13130,8 +13132,9 @@ class ClassificationExplorer(ServerClient):
         ----------
         filter_string: str, default = "*"
             - the category value to use to find matching authored elements
-        content_status_list: list[str], default = ["ACTIVE"]
-            - optional content status list to filter by
+        content_status_list: list[str], default = None
+            - optional content status list to filter by. Default: any content status (Egeria treats a null
+              filter as any; elements created without a status store null). Pass ["ACTIVE"] to limit to active ones.
         start_from: int, default = 0
             - the starting point in the results list
         page_size: int, default = 0
@@ -13191,7 +13194,7 @@ class ClassificationExplorer(ServerClient):
     def find_authored_elements_by_category(
         self,
         search_string: str = "*",
-        content_status_list: list[str] = ["ACTIVE"],
+        content_status_list: Optional[list[str]] = None,
         start_from: int = 0,
         page_size: int = 0,
         graph_query_depth: int = 3, output_format: str = "JSON",
@@ -13205,8 +13208,9 @@ class ClassificationExplorer(ServerClient):
         ----------
         filter_string: str, default = "*"
             - the category value to use to find matching authored elements
-        content_status_list: list[str], default = ["ACTIVE"]
-            - optional content status list to filter by
+        content_status_list: list[str], default = None
+            - optional content status list to filter by. Default: any content status (Egeria treats a null
+              filter as any; elements created without a status store null). Pass ["ACTIVE"] to limit to active ones.
         start_from: int, default = 0
             - the starting point in the results list
         page_size: int, default = 0
