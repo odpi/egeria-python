@@ -124,3 +124,24 @@ def test_a_command_whose_attributes_are_all_request_only_still_gets_the_universa
     attrs = {"Template GUID": _attr("template_guid", level="Advanced"), "Parent GUID": _attr("parent_guid", level="Advanced")}
     keys = _keys(tmp_path, attrs, "Widget", "Referenceable", level="Advanced")
     assert keys == {"display_name", "qualified_name", "description", "guid"}
+
+
+def _technology_keys(tmp_path, command, display_name):
+    payload = _payload({**BASE}, display_name, "")
+    cmd = payload["commands"].pop(next(iter(payload["commands"])))
+    cmd = {**cmd, "display_name": display_name, "find_method": "ClassificationExplorer.find_elements_by_property_value"}
+    payload["commands"][command] = cmd
+    path = tmp_path / "commands_t.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    fs = g.build_format_sets_from_commands(path)[display_name.replace(" ", "-") + "-DrE-Advanced"]
+    return fs.target_type, {c.key for f in fs.formats for c in f.attributes}
+
+
+def test_the_technology_column_is_added_where_the_target_type_has_the_attribute(tmp_path):
+    target, keys = _technology_keys(tmp_path, "Create UC Server Element", "UC Server Element")
+    assert target == "SoftwareServer" and "deployed_implementation_type" in keys
+
+
+def test_the_technology_column_is_not_added_where_the_target_type_lacks_it(tmp_path):
+    target, keys = _technology_keys(tmp_path, "Create UC Catalog Element", "UC Catalog Element")
+    assert target == "Namespace" and "deployed_implementation_type" not in keys

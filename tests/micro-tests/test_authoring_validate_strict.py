@@ -146,10 +146,7 @@ def _shipped_find_specs():
 #: instead of as Egeria's type name ('DataClass'); once it was normalised, 41 columns of 12 shipped specs were refused.
 #: PY-49 settled each of them (client-derived keys accepted, wrong names fixed, subtype fields moved, targets corrected),
 #: so the list is empty. It stays as the shrink-only pin: a shipped find spec that gains an unknown column fails here.
-#: One column is still pending a decision: `parent_glossary` on Glossary-Terms (Dan: fill from TermAnchor). The term carries only
-#: the Anchors classification's anchorScopeGUID, so the glossary's NAME needs a lookup per distinct glossary, and the
-#: extractor that fills columns is synchronous.
-KNOWN_UNKNOWN_COLUMNS: dict = {"Glossary-Terms": ['parent_glossary']}
+KNOWN_UNKNOWN_COLUMNS: dict = {}
 
 
 def test_strict_validation_refuses_no_shipped_find_spec_column():

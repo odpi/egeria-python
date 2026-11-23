@@ -80,7 +80,7 @@ def test_my_user_projects_detail_has_no_project_type():
     ("Actor-Roles", "ActorRole"), ("Glossary-Terms", "GlossaryTerm"), ("Help-Terms", "GlossaryTerm"),
     ("ExternalIdentifier", "ExternalId"), ("Folders", "CollectionFolder"), ("Data-Specifications", "DataSpec"),
     ("Governance-Process", "GovernanceActionProcess"),
-    ("Secrets-Collection-User-Profile-Charts", "GovernanceZone"),
+    ("Secrets-Collection-User-Profile-Charts", "SecretsCollection"),
 ])
 def test_the_target_type_is_the_type_the_find_returns(label, target):
     fs = get_report_registry()[label]

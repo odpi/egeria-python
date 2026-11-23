@@ -3282,7 +3282,27 @@ class GlossaryManager(CollectionManager):
                         break
         except Exception:
             pass
+        # PY-49: the glossary a term is in. 6.4 has no TermAnchor, and anchorScopeGUIDs is a list most terms lack; the
+        # term's own memberOfCollections carries the Glossary at end 1 of its CollectionMembership, with its names.
+        for column in columns_list:
+            if column.get('key') == 'parent_glossary':
+                column['value'] = self._glossary_names_of(element)
         return col_data
+
+    @staticmethod
+    def _glossary_names_of(element: dict) -> str:
+        """The names of the glossaries (any Glossary subtype) the term is a member of, joined; "" when there are none."""
+        names: list[str] = []
+        for membership in element.get("memberOfCollections") or []:
+            related = (membership or {}).get("relatedElement") or {}
+            type_name = ((related.get("elementHeader") or {}).get("type") or {}).get("typeName") or ""
+            if not type_name.endswith("Glossary"):
+                continue
+            props = related.get("properties") or {}
+            name = props.get("displayName") or props.get("qualifiedName")
+            if name and name not in names:
+                names.append(name)
+        return ", ".join(names)
 
     @dynamic_catch
     def _get_term_additional_properties(self, element: dict, term_guid: str, output_format: str = None) -> dict:

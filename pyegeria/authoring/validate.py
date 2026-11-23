@@ -76,6 +76,8 @@ CLIENT_DERIVED_COLUMNS: Dict[str, frozenset] = {
     # pyegeria/omvs/actor_manager.py:1212,1226 (the related-element summary's sideLinks)
     "ActorManager.find_actor_profiles": frozenset({"sideLinks"}),
     # pyegeria/omvs/data_designer.py get_data_rel_elements_dict (:1615-1655), overlaid by _extract_data_*_properties
+    # pyegeria/omvs/glossary_manager.py _extract_term_properties: the glossaries in the term's memberOfCollections
+    "GlossaryManager.find_glossary_terms": frozenset({"parent_glossary"}),
     "DataDesigner.find_data_structures": frozenset({"in_data_dictionary", "in_data_spec", "member_data_fields"}),
     "DataDesigner.find_data_fields": frozenset({"in_data_dictionary", "in_data_structure", "member_data_fields"}),
     "DataDesigner.find_data_value_specifications": frozenset({
