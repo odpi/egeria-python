@@ -7,7 +7,7 @@ Set/Clear Branch (Devops Pipeline), odpi/egeria#9463.
 Each command's sample document goes through the real extractor, dispatcher and processor, into the real A6 wrapper
 (ProjectManager, SchemaMaker, DevopsPipeline), whose HTTP call is captured (tests/micro-tests/e64_dre_harness.py).
 The test checks the exact body the wrapper sends. Also: whole numbers for Position and the cardinalities, values
-sent only when given, and the version gate ("needs Egeria 6.4", a WARNING row, nothing sent) for each family.
+sent only when given, and the version gate ("needs Egeria 6.4", a FAILURE row since PY-48, nothing sent) for each family.
 
 No live server.
 """
@@ -183,7 +183,7 @@ B3_DOCS = {
 async def test_before_egeria_6_4_every_b3_command_says_needs_6_4(monkeypatch, command, directive):
     fake = h.FakeEgeria(monkeypatch, about=h.ABOUT_6_3)
     [result] = await h.run_doc(fake, B3_DOCS[command], directive=directive)
-    assert result["status"] == "warning"
+    assert result["status"] == "failure"
     assert result["message"].startswith(f"{command} needs Egeria 6.4")
     assert "runs Egeria 6.3" in result["message"] and "Nothing was sent" in result["message"]
     assert fake.calls == []
