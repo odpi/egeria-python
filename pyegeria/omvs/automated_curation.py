@@ -7,6 +7,7 @@ Copyright Contributors to the ODPi Egeria project.
 """
 
 from pyegeria.core._no_password import NO_PASSWORD, carried_password, password_as_given, resolve_password
+import functools
 import asyncio
 import warnings
 from datetime import datetime
@@ -20,7 +21,7 @@ from pyegeria.core.request_filters import GetFilters, ListFilters, SearchFilters
 from pyegeria.core._globals import NO_ELEMENTS_FOUND
 from pyegeria.core._server_client import ServerClient
 from pyegeria.core._validators import validate_guid, validate_name, validate_search_string
-from pyegeria.core._exceptions import PyegeriaException
+from pyegeria.core._exceptions import PyegeriaException, PyegeriaInvalidParameterException
 # from pyegeria._exceptions import (
 #     PyegeriaInvalidParameterException,
 #     PyegeriaAPIException,
@@ -379,29 +380,63 @@ class AutomatedCuration(ServerClient):
             **kwargs,
         )
 
-    def _extract_catalog_target_properties(self, element: dict, columns_struct: dict) -> dict:
+    #: The CatalogTarget relationship properties a catalog-target row shows: column key -> Egeria property.
+    CATALOG_TARGET_RELATIONSHIP_COLUMNS = {
+        "catalog_target_name": "catalogTargetName",
+        "metadata_collection_qualified_name": "metadataCollectionQualifiedName",
+        "permitted_synchronization": "permittedSynchronization",
+        "templates": "templates",
+        "metadata_source_qualified_name": "metadataSourceQualifiedName",
+        "connection_name": "connectionName",
+        "delete_method": "deleteMethod",
+        "configuration_properties": "configurationProperties",
+    }
+
+    @staticmethod
+    def _catalog_target_relationship_properties(element: dict, connector_guid: Optional[str]) -> dict:
+        """The CatalogTarget relationshipProperties of the entry in the row's refreshedByConnectors whose
+        connector is `connector_guid` (PY-53 Q2). A target is refreshed by several connectors, each with its own
+        entry, so the first is never taken; no match (or no connector guid) is {}."""
+        if not connector_guid:
+            return {}
+        for entry in element.get("refreshedByConnectors") or []:
+            if not isinstance(entry, dict):
+                continue
+            related = entry.get("relatedElement") or {}
+            if (related.get("elementHeader") or {}).get("guid") == connector_guid:
+                return entry.get("relationshipProperties") or {}
+        return {}
+
+    def _extract_catalog_target_properties(self, element: dict, columns_struct: dict,
+                                           integ_connector_guid: Optional[str] = None) -> dict:
+        """A catalog-target row is the TARGET element (get_catalog_targets): its own name, type and description
+        come from the row's properties and header; the CatalogTarget relationship properties come from the entry
+        of refreshedByConnectors for `integ_connector_guid`."""
         col_data = populate_columns_from_properties(element, columns_struct)
         columns_list = col_data.get("formats", {}).get("attributes", [])
         header_props = _extract_referenceable_properties(element)
 
-        # Namespace target properties
-        related_props = element.get('relatedElement', {}).get('properties', {})
-        target_display_name = related_props.get('displayName')
-        target_qualified_name = related_props.get('qualifiedName')
-        target_description = related_props.get('description')
+        props = element.get('properties') or {}
+        header_type = (element.get('elementHeader') or {}).get('type') or {}
+        rel_props = self._catalog_target_relationship_properties(element, integ_connector_guid)
 
         for column in columns_list:
             key = column.get("key")
-            if key in header_props:
+            if key in self.CATALOG_TARGET_RELATIONSHIP_COLUMNS:
+                value = rel_props.get(self.CATALOG_TARGET_RELATIONSHIP_COLUMNS[key])
+                column["value"] = "" if value is None else value
+            elif key == "target_display_name":
+                column["value"] = props.get('displayName') or ""
+            elif key == "target_qualified_name":
+                column["value"] = props.get('qualifiedName') or ""
+            elif key == "target_description":
+                column["value"] = props.get('description') or ""
+            elif key == "target_type_name":
+                column["value"] = header_type.get('typeName') or ""
+            elif key in header_props:
                 column["value"] = header_props.get(key)
             elif isinstance(key, str) and key.lower() == "guid":
                 column["value"] = header_props.get("GUID")
-            elif key == "target_display_name":
-                column["value"] = target_display_name
-            elif key == "target_qualified_name":
-                column["value"] = target_qualified_name
-            elif key == "target_description":
-                column["value"] = target_description
 
         col_data = get_required_relationships(element, col_data)
         mermaid_val = element.get("mermaidGraph", "") or ""
@@ -418,6 +453,7 @@ class AutomatedCuration(ServerClient):
         element_type_name: Optional[str] = None,
         output_format: str = "DICT",
         report_spec: dict | str | None = None,
+        integ_connector_guid: Optional[str] = None,
         **kwargs,
     ) -> str | list[dict]:
         return self._generate_formatted_output(
@@ -426,7 +462,8 @@ class AutomatedCuration(ServerClient):
             element_type_name=element_type_name or self.CATALOG_TARGET_LABEL,
             output_format=output_format,
             report_spec=report_spec,
-            extract_properties_func=self._extract_catalog_target_properties,
+            extract_properties_func=functools.partial(self._extract_catalog_target_properties,
+                                                      integ_connector_guid=integ_connector_guid),
             **kwargs,
         )
 
@@ -3372,21 +3409,22 @@ class AutomatedCuration(ServerClient):
     #   Initiate surveys
     #
 
-    async def _async_get_supported_action_target_names(self, action_type_qualified_name: str) -> list[str]:
+    async def _async_get_supported_action_target_names(self, action_type_qualified_name: str) -> list[str] | None:
         """Return the action target names a governance action type declares it accepts
-        (its specification's supportedActionTarget entries), or [] if they can't be read."""
+        (its specification's supportedActionTarget entries): [] when it was read and declares none, and None
+        when it could not be read (PY-22: a failed read is not "none declared")."""
         try:
             guid = await self.__async_get_guid__(qualified_name=action_type_qualified_name)
             if not guid or guid == NO_ELEMENTS_FOUND:
-                return []
+                return None
             url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
                    f"classification-explorer/elements/{guid}")
             response = await self._async_make_request("POST", url, {"class": "GetRequestBody"})
             spec = (response.json().get("element") or {}).get("specification") or {}
             return [t.get("name") for t in spec.get("supportedActionTarget") or [] if t.get("name")]
         except Exception as e:
-            logger.debug(f"Could not read supported action targets for {action_type_qualified_name}: {e}")
-            return []
+            logger.warning(f"Could not read supported action targets for {action_type_qualified_name}: {e}")
+            return None
 
     async def _async_initiate_survey(
             self,
@@ -3432,7 +3470,12 @@ class AutomatedCuration(ServerClient):
             # Each survey type expects its own target name; a single hardcoded name
             # ("serverToSurvey") was wrong for e.g. database and folder surveys.
             # "*" means the survey accepts any name (e.g. the Kafka server survey).
-            supported = [n for n in await self._async_get_supported_action_target_names(survey_name) if n != "*"]
+            declared = await self._async_get_supported_action_target_names(survey_name)
+            if declared is None:
+                raise PyegeriaInvalidParameterException(None, {"caller": "_async_initiate_survey"}, {
+                    "reason": f"The action targets of survey {survey_name} could not be read, so the target name "
+                              f"is not known. Pass action_target_name to name it."})
+            supported = [n for n in declared if n != "*"]
             action_target_name = supported[0] if len(supported) == 1 else "serverToSurvey"
 
         url = f"{self.ref_curation_command_base}/governance-action-types/initiate"
@@ -3999,8 +4042,10 @@ class AutomatedCuration(ServerClient):
 
         url = f"{self.ref_curation_command_base}/integration-connectors/{integ_connector_guid}/catalog-targets"
 
-        response = await self._async_get_name_request(url, _type=self.CATALOG_TARGET_LABEL,
-                                                      _gen_output=self._generate_catalog_target_output,
+        response = await self._async_get_name_request(url, name_required=False, _type=self.CATALOG_TARGET_LABEL,
+                                                      _gen_output=functools.partial(
+                                                          self._generate_catalog_target_output,
+                                                          integ_connector_guid=integ_connector_guid),
                                                       start_from=start_from, page_size=page_size,
                                                       output_format=output_format, report_spec=report_spec, body=body, **{"filter_string": None, **kwargs})
 
@@ -4533,7 +4578,7 @@ class AutomatedCuration(ServerClient):
         """
 
         url = f"{self.ref_curation_command_base}/open-metadata-types/{type_name}/technology-types"
-        response = await self._async_get_name_request(url, _type=self.TECH_TYPE_ENTITY_LABEL,
+        response = await self._async_get_name_request(url, name_required=False, _type=self.TECH_TYPE_ENTITY_LABEL,
                                                       _gen_output=self._generate_tech_type_output,
                                                       start_from=start_from,
                                                       page_size=page_size, output_format=output_format,

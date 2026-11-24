@@ -89,6 +89,159 @@ GENERATED_REPORT_EXCLUDED_KEYS = {
     "search_keywords",
 }
 
+# PY-49: columns a find report can never fill. These are parameters of the Create REQUEST (the element's anchor,
+# the template a copy is made from, the instance a raw create names, the parent a new element hangs from), so the
+# stored element has nothing under them. Never emitted.
+REQUEST_ONLY_KEYS = {
+    "effective_time", "is_own_anchor", "parent_guid", "initial_classifications", "initial_status", "deep_copy",
+    "placeholder_property_values", "parent_rel_type_name", "parent_end1",
+}
+REQUEST_ONLY_PREFIXES = ("anchor_", "template_", "instance_")
+
+# PY-49: the payload of a classification the Create command sets. The formatter exposes classifications only as the
+# one `classifications` column, so a plain column under these keys is never filled. PY-53 emits the ones in
+# CLASSIFICATION_SOURCES as a `source` column; the rest stay unemitted.
+CLASSIFICATION_PAYLOAD_KEYS = {
+    "confidence_classification", "confidentiality_classification", "criticality_classification",
+    "impact_classification", "retention_classification", "security_tags", "policy_management_point",
+    "supplementary_properties", "class_word_classification", "prime_word_classification",
+    "modifier_classification", "is_abstract_concept", "is_activity_description", "is_data_value",
+    "term_activity_type",
+}
+
+# PY-53: the classification payloads that can be shown, as the `source` (Column.source) of the column that
+# shows them: key -> (key of the column, source). Each property is in the 6.4 Properties-class table
+# (test_py53_generator_sources checks that). A payload not listed here stays unemitted: `is_data_value` (DataValue
+# is an entity in 6.4, not a classification) and `supplementary_properties` (no classification table).
+CLASSIFICATION_SOURCES = {
+    "confidence_classification": "class:Confidence.confidenceLevel",
+    "confidentiality_classification": "class:Confidentiality.confidentialityLevel",
+    "criticality_classification": "class:Criticality.criticalityLevel",
+    "impact_classification": "class:Impact.severityLevel",
+    "retention_classification": "class:Retention.retentionBasis",
+    "security_tags": "class:SecurityTags.securityLabels",
+    "policy_management_point": "class:PolicyManagementPoint.pointType",
+    "class_word_classification": "class:ClassWord",
+    "prime_word_classification": "class:PrimeWord",
+    "modifier_classification": "class:Modifier",
+    "is_abstract_concept": "class:AbstractConcept",
+    "is_activity_description": "class:ActivityDescription",
+    "term_activity_type": "class:ActivityDescription.activityType",
+}
+
+# PY-57: the inputs of a "create from its catalog template" command that name a FILE, not a property of the element
+# the spec finds. "Create Secrets Store Element" creates a SecretsCollection (a DataSet; the 6.4 table has no file_*
+# property for it: fileName, fileExtension, fileType and pathName belong to DataFile, which is the secrets store
+# FILE, a different element), so a column under these keys never fills.
+TEMPLATE_PLACEHOLDER_KEYS = {
+    "Create Secrets Store Element": {
+        "file_path_name", "file_name", "file_system_name", "file_type", "file_extension", "file_encoding",
+    },
+}
+
+# PY-56: a Unity Catalog "create from its template" command takes the NAMES of the catalog, schema, table ... and the
+# endpoint (host, port, network address) as inputs for the template; none is a property of the element the spec finds
+# (a catalog is a Namespace, a schema a DeployedDatabaseSchema ...), so a column under these keys never fills.
+UC_CREATE_ONLY_PREFIX = "uc_"
+UC_CREATE_ONLY_KEYS = {"network_address", "host_url", "port"}
+
+
+# PY-62: a generated spec always leads with the columns that name an element, when the target type has them.
+LEADING_COLUMNS = (("display_name", "Display Name"), ("qualified_name", "Qualified Name"), ("guid", "GUID"))
+
+
+def _lead_with_universal_columns(columns: List[Column], target_attrs: Optional[set]) -> List[Column]:
+    """Prepend display_name, qualified_name and guid (in that order) to `columns` for each the spec lacks and the
+    target type has (guid is on every element header; a type unknown to the catalog gets none)."""
+    if target_attrs is None:
+        return columns
+    have = {c.key for c in columns}
+    lead = [Column(name=name, key=key) for key, name in LEADING_COLUMNS
+            if key not in have and (key == "guid" or key in target_attrs)]
+    return [*lead, *columns]
+
+
+# PY-49: Reference Name / Reference Name List attributes. The Create command takes the NAME of another element;
+# a find report shows the relationship list the view service attaches (RELATIONSHIP_FIELDS, in camelCase), which is
+# the column the formatter fills. Only the attributes whose relationship is known are mapped; any other Reference
+# Name attribute is not emitted (it named no column the formatter fills).
+ATTRIBUTE_RELATIONSHIP_LISTS = {
+    # "Term that provides meaning": the SemanticDefinition relationship
+    "glossary_term": "semanticDefinitions",
+    # DataClassComposition; the data class this one is part of (end 1 is the whole)
+    "containing_data_class": "partOfDataClasses",
+    # DataValueHierarchy parent. Dr.Egeria treats the two attributes as aliases of one relationship
+    # (md_processing/v2/data_designer.py:133-142), so they are one column.
+    "specializes_data_value_specification": "superDataValueSpecification",
+    "in_data_value_specification": "superDataValueSpecification",
+    # NestedDataField
+    "in_data_field": "parentDataFields",
+    # ProjectHierarchy
+    "sub_projects": "managedProjects",
+    # SolutionComposition
+    "solution_sub_components": "nestedSolutionComponents",
+    "in_components": "usedInSolutionComponents",
+    # ValidValueMember
+    "in_reference_data_set": "memberOfValidValueSets",
+}
+
+# PY-49 Q6: a generated spec's target_type is a real Egeria type, not the command's name for people. Explicit cases
+# first; otherwise the display name when it names an entity (spaces, punctuation and case ignored), otherwise the
+# command's own OM_TYPE when that is an entity. A classification targets the entity it classifies, and its find
+# keeps filtering on the classification (the spec's include_only_classified_elements / classification_names).
+TARGET_TYPE_OVERRIDES = {
+    # classifications -> the entity they classify
+    "Campaign": "Project", "Experiment": "Project", "Glossary Project": "Project", "Governance Project": "Project",
+    "Personal Project": "Project", "Study Project": "Project", "Task": "Project",
+    "Data Sharing Agreement": "Collection", "Question": "GlossaryTerm",
+    # friendly names whose command has no entity OM_TYPE
+    "Solution Role": "SolutionActorRole",
+    # Unity Catalog elements: the entity each is made as. A catalog is a Namespace (the Java constant
+    # NAMESPACE_COLLECTION has the type name "Namespace", OpenMetadataType.java:702)
+    "UC Catalog Element": "Namespace", "UC Server Element": "SoftwareServer", "UC Schema Element": "DeployedDatabaseSchema",
+    "UC Table Element": "VirtualRelationalTable", "UC Function Element": "DeployedAPI", "UC Volume Element": "DataFolder",
+    # the generic root: universal columns only
+    "Element": "Referenceable", "Instance": "Referenceable",
+    # the supertypes: universal columns only
+    "Schema Attribute From Template": "SchemaAttribute", "Schema Type From Template": "SchemaType",
+    # type-system definitions
+    "Enum Def": "OpenMetadataTypeDef", "Type Def": "OpenMetadataTypeDef",
+}
+
+
+def _spec_target_type(display_name: str, cmd_obj: dict) -> str:
+    """The target_type of a command's generated spec (see TARGET_TYPE_OVERRIDES)."""
+    if display_name in TARGET_TYPE_OVERRIDES:
+        return TARGET_TYPE_OVERRIDES[display_name]
+    if _target_attributes(display_name) is not None:
+        return display_name
+    om_type = str(cmd_obj.get("OM_TYPE") or "").strip()
+    if om_type and _target_attributes(om_type) is not None:
+        return om_type
+    return display_name
+
+
+# The Create commands for types that exist only from Egeria 6.4 (odpi/egeria#9463): their generated specs carry
+# min_egeria_version, so the report runner refuses them in words on an older platform (PY-49).
+NEW_IN_6_4_TYPES = {"Decision", "Data Value", "Literal Data Value"}
+
+# The columns every element has; what a generated spec shows when the Create command has nothing else a find can fill.
+UNIVERSAL_COLUMNS = [
+    Column(name="Display Name", key="display_name"),
+    Column(name="Qualified Name", key="qualified_name"),
+    Column(name="Description", key="description"),
+    Column(name="GUID", key="guid"),
+]
+
+# Keys the data designer's extractors fill themselves (pyegeria/omvs/data_designer.py get_data_rel_elements_dict,
+# overlaid by _extract_data_*_properties). The attribute keeps its column; a different attribute name is renamed to the
+# key the client fills.
+CLIENT_DERIVED_KEYS = {
+    "in_data_dictionary": "in_data_dictionary",
+    "in_data_structure": "in_data_structure",
+    "in_data_specification": "in_data_spec",
+}
+
 LIST_PRIORITY_KEYS = ["display_name", "qualified_name", "guid"]
 LIST_DEMOTED_KEYS = {"version_identifier"}
 LIST_LAST_KEY = "category"
@@ -228,23 +381,50 @@ def _safe_parse_constraints(s) -> dict:
     logger.debug(f"Could not parse find_constraints: {s!r} -> {{}}")
     return {}
 
-def _extract_columns_from_attributes(attributes: Iterable[dict], usage_level: str = None) -> List[Column]:
+def _is_request_only(key: str) -> bool:
+    return key in REQUEST_ONLY_KEYS or key.startswith(REQUEST_ONLY_PREFIXES) or key in GENERATED_REPORT_EXCLUDED_KEYS
+
+
+def _target_attributes(display_name: str, om_type: str = "") -> Optional[set]:
+    """The snake_case attribute names of the Egeria entity type a spec is about, or None when none is known.
+
+    The display name is tried first (case-insensitive, spaces and punctuation ignored), then the command's OM_TYPE."""
+    from md_processing.md_processing_utils.properties_class_fields import PROPERTIES_CLASS_FIELDS
+    from pyegeria.authoring.validate import _snake
+    for name in (display_name, om_type):
+        squashed = re.sub(r"[^A-Za-z0-9]", "", name or "").lower()
+        if not squashed:
+            continue
+        for cls, entry in PROPERTIES_CLASS_FIELDS.items():
+            if cls.endswith("Properties") and cls[:-10].lower() == squashed and entry[0] == "entity":
+                return {_snake(f) for f in entry[1]}
+    return None
+
+
+def _extract_columns_from_attributes(attributes: Iterable[dict], usage_level: str = None,
+                                     target_attrs: Optional[set] = None) -> List[Column]:
     """Extract Columns from a command's Attributes list.
 
     Parameters
     - attributes: iterable of dict entries. Support both old single-key
       mapping (Label -> metadata) and new flat mapping (name, variable_name, level, etc.).
     - usage_level: Egeria usage level (Basic or Advanced). If None, uses EGERIA_USAGE_LEVEL.
+    - target_attrs: the attribute names (snake_case) of the spec's Egeria type, when known; decides whether
+      `user_defined_status` can become `user_defined_content_status`.
 
     Behavior
     - Visibility is determined by common_md_proc_utils._level_visible
     - Duplicate variable_name values are de-duplicated
     - Column.name is the label; Column.key is the variable_name
+    - PY-49: request-only parameters and classification payloads are not emitted; `user_defined_status` becomes
+      `user_defined_content_status` where the target has it; a Reference Name attribute becomes its relationship-list
+      column (ATTRIBUTE_RELATIONSHIP_LISTS), or the key the client fills (CLIENT_DERIVED_KEYS), or is not emitted.
 
     Returns
     - List[Column]
     """
     from md_processing.md_processing_utils.common_md_proc_utils import _level_visible, EGERIA_USAGE_LEVEL
+    from pyegeria.authoring.validate import _snake
     target_usage = usage_level or EGERIA_USAGE_LEVEL
 
     cols: List[Column] = []
@@ -256,18 +436,39 @@ def _extract_columns_from_attributes(attributes: Iterable[dict], usage_level: st
         if not _level_visible(details.get("level"), target_usage):
             return
         key = details.get("variable_name")
-        if not key or key in seen:
+        if not key:
+            return
+        key, label = str(key), str(label)
+        if key in CLASSIFICATION_SOURCES:
+            if key not in seen:
+                seen.add(key)
+                cols.append(Column(name=label, key=key, source=CLASSIFICATION_SOURCES[key]))
+            return
+        if _is_request_only(key) or key in CLASSIFICATION_PAYLOAD_KEYS:
+            return
+        if key == "user_defined_status":
+            if not (target_attrs and "user_defined_content_status" in target_attrs):
+                return
+            key, label = "user_defined_content_status", "User Defined Content Status"
+        elif str(details.get("style") or "").startswith("Reference Name"):
+            if key in CLIENT_DERIVED_KEYS:
+                key = CLIENT_DERIVED_KEYS[key]
+            elif key in ATTRIBUTE_RELATIONSHIP_LISTS:
+                key = _snake(ATTRIBUTE_RELATIONSHIP_LISTS[key])
+            else:
+                return
+        if key in seen:
             return
         seen.add(key)
         valid_values = details.get("valid_values")
         if not isinstance(valid_values, (list, dict)):
             valid_values = None
-        cols.append(Column(name=str(label), key=str(key), valid_values=valid_values))
+        cols.append(Column(name=label, key=key, valid_values=valid_values))
 
     for entry in attributes or []:
         if not isinstance(entry, dict) or not entry:
             continue
-        
+
         if "name" in entry and "variable_name" in entry:
             # New flat structure
             process_attr(entry["name"], entry)
@@ -323,11 +524,26 @@ def _technology_for_command(cmd_key: str) -> Optional[str]:
     return ELEMENT_TEMPLATE_TECHNOLOGY.get(re.sub(r"\s+", "_", m.group(1).strip().lower()))
 
 
+# PY-49: elements of a technology that carry no deployedImplementationType are found by the prefix of their qualified
+# name instead (live check on a 6.4 platform: a Unity Catalog catalog is a Namespace with no deployedImplementationType;
+# its qualified name starts "Unity Catalog Catalog::"). The command -> (type, qualified-name prefix).
+QUALIFIED_NAME_PREFIX_SPECS = {
+    "Create UC Catalog Element": ("Namespace", "Unity Catalog Catalog::"),
+}
+
+
 def _generic_search_constraints(cmd_key: str, cmd_obj: dict, find_method: str, constraints: dict) -> dict:
     """spec_params for a generic-search spec: the command's type (and technology), derived here."""
     if find_method not in GENERIC_SEARCH_METHODS:
         return constraints
     out = dict(constraints or {})
+    if cmd_key in QUALIFIED_NAME_PREFIX_SPECS:
+        element_type, prefix = QUALIFIED_NAME_PREFIX_SPECS[cmd_key]
+        out.setdefault("metadata_element_type", element_type)
+        # PY-56: the prefix constrains qualifiedName and the caller's search_string still applies (it used to be
+        # pinned as the search string, which ignored the caller's)
+        out.setdefault("qualified_name_prefix", prefix)
+        return out
     if not _TYPE_FILTER_KEYS & set(out):
         out["metadata_element_type"] = (cmd_obj.get("OM_TYPE") or "").strip() or "OpenMetadataRoot"
     if find_method.startswith("ClassificationExplorer."):
@@ -428,21 +644,40 @@ def build_format_sets_from_commands(
             continue
 
         levels_to_generate = [usage_level.capitalize()] if usage_level else ["Basic", "Advanced"]
-        
+        spec_target = _spec_target_type(display_name, cmd_obj)
+        target_attrs = _target_attributes(spec_target, str(cmd_obj.get("OM_TYPE") or ""))
+
+        skip_keys = TEMPLATE_PLACEHOLDER_KEYS.get(cmd_key, set())
+        is_uc_create = cmd_key.startswith("Create UC ")
+
+        def _extract(usage_level, _skip=skip_keys):
+            cols = _extract_columns_from_attributes(cmd_obj.get("Attributes", []), usage_level=usage_level,
+                                                    target_attrs=target_attrs)
+            return [c for c in cols if c.key not in _skip and not (
+                is_uc_create and (c.key.startswith(UC_CREATE_ONLY_PREFIX) or c.key in UC_CREATE_ONLY_KEYS)
+                and (target_attrs is None or c.key not in target_attrs))]
+
         for lvl in levels_to_generate:
-            columns = _extract_columns_from_attributes(cmd_obj.get("Attributes", []), usage_level=lvl)
+            columns = _extract(lvl)
             if not columns:
                 if lvl == "Basic":
-                    columns = _extract_columns_from_attributes(cmd_obj.get("Attributes", []), usage_level="Advanced")
+                    columns = _extract("Advanced")
+                if not columns and cmd_obj.get("Attributes"):
+                    # PY-49: every attribute was request-only or a classification payload (Element, Instance, the
+                    # "From Template" commands), so the spec shows the universal columns only.
+                    columns = [Column(**c.model_dump()) for c in UNIVERSAL_COLUMNS]
                 if not columns:
                     logger.debug(f"Skip {set_name}-{lvl}: no attributes")
                     continue
 
+            columns = _lead_with_universal_columns(columns, target_attrs)
             find_method = cmd_obj.get("find_method") or ""
             constraints = _generic_search_constraints(
                 cmd_key, cmd_obj, find_method, _safe_parse_constraints(cmd_obj.get("find_constraints")))
             technology_spec = "default_deployed_implementation_type" in constraints
-            if technology_spec and all(c.key != TECHNOLOGY_COLUMN.key for c in columns):
+            # PY-49: the technology column only where the target type has the attribute (a Namespace does not)
+            if technology_spec and all(c.key != TECHNOLOGY_COLUMN.key for c in columns) and (
+                    target_attrs is None or "deployed_implementation_type" in target_attrs):
                 columns = [*columns, Column(**TECHNOLOGY_COLUMN.model_dump())]
             extra_find = cmd_obj.get("extra_find") or ""
             extra_constraints = _safe_parse_constraints(cmd_obj.get("extra_constraints"))
@@ -468,12 +703,13 @@ def build_format_sets_from_commands(
                 continue
 
             fs = FormatSet(
-                target_type=display_name,
+                target_type=spec_target,
                 heading=f"{set_name}-{lvl} Attributes",
                 description=f"Auto-generated format for {display_name} (Create, {lvl}).",
                 family=cmd_obj.get("family"),
                 formats=formats,
-                action=action
+                action=action,
+                annotations={"min_egeria_version": ["6.4"]} if display_name in NEW_IN_6_4_TYPES else {},
             )
             results[f"{set_name}-{lvl}"] = fs
 
@@ -602,7 +838,10 @@ def _format_column(col: Column) -> str:
     valid_values = getattr(col, "valid_values", None)
     if valid_values:
         parts.append(f"valid_values={_py_literal(valid_values)}")
-        
+    source = getattr(col, "source", None)
+    if source:
+        parts.append(f"source={_py_literal(source)}")
+
     return "Column(" + ", ".join(parts) + ")"
 
 

@@ -152,11 +152,43 @@ ___
 
 >	**Attribute Type**: Dictionary
 
->	**Description**: Map of element identifiers defining the scope of the data lens.
+>	**Description**: Map of element identifiers defining the scope of the data lens or data scope.
 
 >	| Parameter Name | Parameter Value |
 >	|---|---|
 >	| example_key | example_value |
+
+
+### Data Validity Start Time
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: Start of the period for which the data is valid, ISO 8601 (dataValidityStartTime).
+
+
+### Data Validity End Time
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: End of the period for which the data is valid, ISO 8601 (dataValidityEndTime).
+
+
+### Data Coverage Start Time
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: Start of the period the data covers, ISO 8601 (dataCoverageStartTime).
+
+
+### Data Coverage End Time
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: End of the period the data covers, ISO 8601 (dataCoverageEndTime).
 
 
 ### Journal Entry
@@ -437,6 +469,8 @@ ___
 >	**Attribute Type**: Simple
 
 >	**Description**: Repository or element header status for an element.
+
+>	**Valid Values**: ACTIVE; DELETED; INVALID; OTHER; UNKNOWN
 
 >	**Default Value**: ACTIVE
 

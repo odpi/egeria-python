@@ -14,6 +14,11 @@ from typing import Any, Callable, Dict
 
 DIRECTIVES = ("validate", "process")
 
+#: The only statuses that count as succeeded (PY-48 W2). Anything else, a new status or a missing one included, is a
+#: failure, so the next status somebody adds cannot be a silent success. "warning" is not here: it means the command
+#: did not do what it was asked.
+GOOD_STATUSES = ("success", "deferred", "read")
+
 
 async def async_run_markdown(client: Any, markdown: str, directive: str) -> Dict[str, Any]:
     if directive not in DIRECTIVES:
@@ -30,17 +35,34 @@ async def async_run_markdown(client: Any, markdown: str, directive: str) -> Dict
     detail, failed = [], 0
     errors = []
     for r in results or []:
-        status = (r or {}).get("status") or "unknown"
-        detail.append({"command": f"{r.get('verb', '')} {r.get('object_type', '')}".strip(), "status": status,
+        if (r or {}).get("is_command") is False:
+            continue  # a block kept as prose is not a command: it is neither run nor counted (PY-48)
+        status = (r or {}).get("status")
+        detail.append({"command": f"{r.get('verb', '')} {r.get('object_type', '')}".strip(), "status": status or "unknown",
                        "message": r.get("message"), "display_name": r.get("display_name"),
                        "qualified_name": r.get("qualified_name"), "warnings": r.get("warnings") or []})
-        if status in ("failure", "error", "unknown"):
+        if status not in GOOD_STATUSES:
             failed += 1
-            for e in r.get("errors") or [r.get("message") or status]:
+            if status == "failure":
+                found = r.get("errors") or [r.get("message") or status]
+            else:
+                shown = f"status {status!r}" if status else "no status"
+                found = [f"{detail[-1]['command'] or 'A command'} came back with {shown}, which is not a known good "
+                         f"status (success, deferred, read), so it is counted as failed. {r.get('message') or ''}".strip()]
+            for e in found:
                 errors.append({"command": detail[-1]["command"], "message": e})
     key = "validation_errors" if directive == "validate" else "execution_errors"
-    return {"success": failed == 0, "commands_total": len(detail), "commands_succeeded": len(detail) - failed,
-            "commands_failed": failed, "commands_detail": detail, key: errors}
+    out = {"success": failed == 0 and bool(detail), "commands_total": len(detail), "commands_succeeded": len(detail) - failed,
+           "commands_failed": failed, "commands_detail": detail, key: errors}
+    if failed or not detail:
+        # PY-48: say what looks wrong with the document's headings (an H1 command, an attribute written as H2).
+        try:
+            hints = UniversalExtractor(markdown).diagnose()
+        except Exception:  # advisory only
+            hints = []
+        if hints:
+            out["hints"] = hints
+    return out
 
 
 def inprocess_runner(client: Any) -> Callable[[str, str], Dict[str, Any]]:

@@ -138,6 +138,10 @@ FIND_METHOD_ADDITIONS: frozenset = frozenset({
     # Read only (Egeria 6.4): POSTs a SearchStringRequestBody to data-engineer/data-values/by-search-string
     # through _async_find_request and returns the data values. Named by the generated Data-Value-DrE specs.
     "DataEngineer.find_data_values",
+    # Read only (PY-53 Q2): the catalog targets of one integration connector (automated-curation
+    # integration-connectors/{guid}/catalog-targets, through _async_get_name_request); returns the target
+    # elements. Named by the "Catalog-Target" spec, whose one required parameter is integ_connector_guid.
+    "AutomatedCuration.get_catalog_targets",
 })
 
 FIND_METHOD_ALLOWLIST: frozenset = _CENSUS_FIND_METHODS | FIND_METHOD_ADDITIONS
@@ -550,7 +554,7 @@ def _to_column(item: ColumnItem, cache: Optional[Dict[Any, Any]] = None):
         key = item if isinstance(item, str) else (item.get("field"), item.get("label"), item.get("format"),
                                                   item.get("detail_spec"), repr(item.get("valid_values")),
                                                   item.get("render"), item.get("max_items"), item.get("max_lines"),
-                                                  item.get(RELATED_LABEL_KEY))
+                                                  item.get(RELATED_LABEL_KEY), item.get("source"))
         col = cache.get(key)
         if col is None:
             col = cache[key] = _to_column(item)
@@ -563,7 +567,7 @@ def _to_column(item: ColumnItem, cache: Optional[Dict[Any, Any]] = None):
         return Column(name=_title(item), key=item)
     data: Dict[str, Any] = {"key": item["field"], "name": item.get("label") or
                             _column_catalog().get(item["field"], {}).get("name") or _title(item["field"])}
-    for k in ("format", "detail_spec", "valid_values", "render", "max_items", "max_lines"):
+    for k in ("format", "detail_spec", "valid_values", "render", "max_items", "max_lines", "source"):
         if k in item and item[k] is not None:
             data[k] = item[k]
     if item.get(RELATED_LABEL_KEY) is not None:  # Column.label; "label" is the column's title here
@@ -774,6 +778,8 @@ def _formatters_of(fs) -> Dict[str, Dict[str, Any]]:
                     item[k] = c[k]
             if c.get("label") is not None:
                 item[RELATED_LABEL_KEY] = c["label"]
+            if c.get("source"):
+                item["source"] = c["source"]
             cols.append(item)
         first: Optional[str] = None
         for t in fmt["types"]:

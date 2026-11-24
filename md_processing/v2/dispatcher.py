@@ -141,10 +141,16 @@ class V2Dispatcher:
 
         if not processor_cls:
             logger.warning(f"v2Dispatcher: No processor registered for '{command_key}'")
+            # PY-48: a command nothing handles ran nothing; it is a failure, never a pass with a warning. The usual
+            # cause is a heading written one level off (an attribute as '## Display Name'): see the hints.
+            words = (f"No processor registered for '{command_key}', so nothing was run for it. If '{command_key}' is "
+                     f"not a command, check the heading levels: a command is '## <Verb> <Object>' and its attributes "
+                     f"are '### <Attribute>'.")
             return {
                 "output": command.raw_block,
-                "status": "warning",
-                "message": f"No processor registered for '{command_key}'",
+                "status": "failure",
+                "message": words,
+                "errors": [words],
                 "verb": command.verb,
                 "object_type": command.object_type
             }

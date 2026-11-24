@@ -2159,8 +2159,10 @@ def karma_leaderboard(mgr, as_of: Optional[str] = None, top_n: int = 10,
     trips.
 
     Returns a list of {"name": str, "karmaPoints": int, "anchorGuid": str,
-    "anchorType": str}, longest-karma first, length ≤ top_n. Empty list on
-    total failure (never raises).
+    "anchorType": str}, longest-karma first, length ≤ top_n. [] means the
+    scan was read in full and nobody qualifies. None means the scan failed or
+    could not be read in full (unknown), so a caller shows "couldn't be read",
+    never "no contributors" (PY-22). Never raises.
     """
     try:
         body: Dict[str, Any] = {"class": "FindRequestBody", "limitResultsByStatus": ["ACTIVE"],
@@ -2171,9 +2173,9 @@ def karma_leaderboard(mgr, as_of: Optional[str] = None, top_n: int = 10,
         records = _all_elements(mgr, body)
     except Exception as exc:  # noqa: BLE001
         logger.debug(f"karma_leaderboard: find failed: {exc}")
-        return []
-    if records is None:  # failed, or incomplete (noted): no leaderboard rather than a wrong one
-        return []
+        return None
+    if records is None:  # failed, or incomplete (noted): no leaderboard rather than a wrong one -- unknown, not empty
+        return None
 
     entries: List[Dict[str, Any]] = []
     for el in records:

@@ -152,7 +152,7 @@ ___
 
 >	**Description**: The style of layout used to arrange the reports in a dashboard. Validated against Egeria's valid metadata values for layoutStyle.
 
->	**Valid Values**: tabs; single-column; grid
+>	**Valid Values**: grid; single-column; tabs
 
 
 ### Effective From
@@ -317,6 +317,8 @@ ___
 >	**Attribute Type**: Simple
 
 >	**Description**: Repository or element header status for an element.
+
+>	**Valid Values**: ACTIVE; DELETED; INVALID; OTHER; UNKNOWN
 
 >	**Default Value**: ACTIVE
 

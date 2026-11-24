@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright Contributors to the ODPi Egeria project.
-"""Every name the Egeria 6.4 additions (odpi/egeria#9463, process variables and decisions) introduce.
+"""Every name the Egeria 6.4 additions (odpi/egeria#9463, configuration values and decisions) introduce.
 
 The names were reviewed as the PR went in, so they are kept here and only here. Wrappers, Dr.Egeria
 commands and the Egeria Explorer cards import them instead of typing them, which makes a rename one edit

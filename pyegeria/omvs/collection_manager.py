@@ -14,10 +14,12 @@ from loguru import logger
 from pydantic import Field, HttpUrl
 
 from typing import Unpack
+from pyegeria.core._route_all import routes_all_to
 from pyegeria.core.request_filters import deprecated_names
 from pyegeria.core.request_filters import ListFilters
 from pyegeria.core.request_filters import filter_body_kwargs
-from pyegeria.core._exceptions import PyegeriaInvalidParameterException, PyegeriaNotFoundException
+from pyegeria.core._exceptions import (PyegeriaBadRequestException, PyegeriaInvalidParameterException,
+                                       PyegeriaNotFoundException)
 from pyegeria.core._globals import NO_ELEMENTS_FOUND, NO_GUID_RETURNED
 from pyegeria.view.base_report_formats import select_report_spec, get_report_spec_match
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
@@ -853,6 +855,7 @@ class CollectionManager(ServerClient):
     @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
     @dynamic_catch
+    @routes_all_to("_async_find_collections")
     async def _async_get_collections_by_name(
         self,
         name: str = None,
@@ -1203,6 +1206,8 @@ class CollectionManager(ServerClient):
         if collection_qname:
             try:
                 guid = await self.__async_get_guid__(None, None, "qualifiedName", collection_qname, None)
+            except PyegeriaBadRequestException:
+                raise         # PY-58: Egeria refused the request (HTTP 400); that is not "the collection is absent"
             except PyegeriaInvalidParameterException:
                 guid = None   # not found: the helper falls through to its "nothing given" error
         if (not guid or guid == NO_ELEMENTS_FOUND) and collection_name:

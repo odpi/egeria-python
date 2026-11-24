@@ -15,6 +15,7 @@
         "ACTIVATING",
         "IN_PROGRESS",
         "PAUSED",
+        "FOR_INFO",
         "COMPLETED",
         "INVALID",
         "IGNORED",
@@ -2962,21 +2963,6 @@
         "GUID"
       ]
     },
-    "Subscription Type Base": {
-      "inherits": "Request Base",
-      "own_attributes": [
-        "Digital Product",
-        "Subscription Kind",
-        "Display Name",
-        "Description",
-        "Identifier",
-        "Minimum Notification Interval",
-        "Monitored Resources",
-        "Subscription Manager",
-        "Subscription License Type",
-        "Subscription Service Level Objective"
-      ]
-    },
     "Import Data Document Base": {
       "inherits": "Request Base",
       "own_attributes": [
@@ -3238,25 +3224,6 @@
       "bundle": "Digital Subscriber",
       "custom_attributes": [],
       "Journal Entry": ""
-    },
-    "Create Subscription Type": {
-      "display_name": "create_subscription_type",
-      "qn_prefix": "",
-      "alternate_names": [],
-      "family": "Digital Product Manager",
-      "description": "Add a subscription type to a digital product: a one-time, periodic or ongoing-update way to subscribe. Creates the product's notification type and returns the governance action process that Initiate Subscription runs to provision a subscription of this type. Safe to re-run: an existing subscription type is brought into line with the request rather than duplicated.",
-      "verb": "Create",
-      "upsert": false,
-      "attach": false,
-      "level": "Basic",
-      "find_method": "",
-      "find_constraints": "",
-      "extra_find": "",
-      "extra_constraints": "",
-      "OM_TYPE": "SubscribingActionProcess",
-      "bundle": "Subscription Type Base",
-      "custom_attributes": [],
-      "Journal Entry": "Added 2026-10-05 -- product-manager subscription types and ODCS/ODPS documents."
     },
     "Import Data Contract": {
       "display_name": "import_data_contract",

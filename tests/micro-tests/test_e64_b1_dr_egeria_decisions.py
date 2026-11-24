@@ -8,7 +8,7 @@ GovernanceOfficer wrapper, whose HTTP call is captured (tests/micro-tests/e64_dr
 exact body the wrapper sends, so the wrapper's own checks (properties class, unread keys) passed too.
 
 Also: how Update/Detach Assessment pick one assessment (the Architect's §2 ruling), and the version gate
-("needs Egeria 6.4", a WARNING row, nothing sent) for the family.
+("needs Egeria 6.4", a FAILURE row since PY-48, nothing sent) for the family.
 
 No live server.
 """
@@ -443,7 +443,7 @@ B1_DOCS = {
 async def test_before_egeria_6_4_every_b1_command_says_needs_6_4(monkeypatch, command, directive):
     fake = h.FakeEgeria(monkeypatch, about=h.ABOUT_6_3)
     [result] = await h.run_doc(fake, B1_DOCS[command], directive=directive)
-    assert result["status"] == "warning"                  # not an error, and not "none"
+    assert result["status"] == "failure"                  # PY-48: not run, so never counted as succeeded
     assert result["message"].startswith(f"{command} needs Egeria 6.4")
     assert "runs Egeria 6.3" in result["message"] and "Nothing was sent" in result["message"]
     assert "Needs Egeria 6.4" in result["output"]
@@ -455,7 +455,7 @@ async def test_a_6_4_snapshot_built_before_the_merge_also_needs_6_4(monkeypatch)
     early = '{"version": "6.4-SNAPSHOT", "time": "2026-11-20T23:00:00Z"}'
     fake = h.FakeEgeria(monkeypatch, about=early)
     [result] = await h.run_doc(fake, B1_DOCS["Detach Assessment"])
-    assert result["status"] == "warning" and "needs Egeria 6.4" in result["message"]
+    assert result["status"] == "failure" and "needs Egeria 6.4" in result["message"]
     assert fake.calls == []
 
 
@@ -474,7 +474,7 @@ async def test_unknown_version_and_a_bare_404_reads_as_needs_6_4(monkeypatch):
 
     fake = h.FakeEgeria(monkeypatch, about="not json", respond=respond)
     [result] = await h.run_doc(fake, B1_DOCS["Link Decision Outcome"])
-    assert result["status"] == "warning"
+    assert result["status"] == "failure"
     assert "needs Egeria 6.4" in result["message"] and "does not serve this request (HTTP 404)" in result["message"]
     assert "Nothing was sent" not in result["message"]       # N1: it was sent, and refused
 

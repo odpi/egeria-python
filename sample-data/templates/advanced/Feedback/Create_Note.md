@@ -88,7 +88,7 @@ ___
 
 >	**Description**: The status of an activity - one of an enumerated set of values.
 
->	**Valid Values**: REQUESTED,APPROVED,WAITING,ACTIVATING,IN_PROGRESS,PAUSED,COMPLETED,INVALID,IGNORED,FAILED,CANCELLED,ABANDONED,OTHER
+>	**Valid Values**: REQUESTED,APPROVED,WAITING,ACTIVATING,IN_PROGRESS,PAUSED,FOR_INFO,COMPLETED,INVALID,IGNORED,FAILED,CANCELLED,ABANDONED,OTHER
 
 >	**Default Value**: REQUESTED
 
@@ -211,6 +211,8 @@ ___
 >	**Attribute Type**: Valid Value
 
 >	**Description**: The status of the digital product. There is a list of valid values that this conforms to.
+
+>	**Valid Values**: ACTIVE; DELETED; INVALID; OTHER; UNKNOWN
 
 >	**Default Value**: ACTIVE
 

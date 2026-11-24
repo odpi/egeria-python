@@ -6,6 +6,7 @@ The Connection Maker OMVS provides APIs for supporting the creation and editing 
 connectorTypes and endpoints.
 """
 
+from pyegeria.core._route_all import routes_all_to
 from pyegeria.core._server_client import ServerClient
 from pyegeria.core.utils import dynamic_catch
 from pyegeria.models.models import (
@@ -119,6 +120,7 @@ class ConnectionMaker(ServerClient):
             )
         )
 
+    @routes_all_to("_async_find_connections")
     async def _async_get_connections_by_name(
         self,
         name: str | None = None,
@@ -349,6 +351,7 @@ class ConnectionMaker(ServerClient):
             )
         )
 
+    @routes_all_to("_async_find_connector_types")
     async def _async_get_connector_types_by_name(
         self,
         name: str | None = None,
@@ -640,6 +643,7 @@ class ConnectionMaker(ServerClient):
             )
         )
 
+    @routes_all_to("_async_find_endpoints")
     async def _async_get_endpoints_by_name(
         self,
         name: str | None = None,
@@ -881,6 +885,7 @@ class ConnectionMaker(ServerClient):
             output_format=output_format,
             report_spec=report_spec,
             body=body,
+            name_required=False,  # PY-63: the asset is in the URL path; the name is an optional filter
             **{"filter_string": name, **kwargs},
         )
 

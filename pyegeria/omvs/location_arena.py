@@ -9,6 +9,7 @@ Copyright Contributors to the ODPi Egeria project.
 import asyncio
 from typing import Optional
 
+from pyegeria.core._route_all import routes_all_to
 from pyegeria.core.request_filters import deprecated_names
 from pyegeria.core._server_client import ServerClient
 from pyegeria.view.base_report_formats import get_report_spec_match
@@ -1152,6 +1153,7 @@ class LocationArena(ServerClient):
 
     @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
+    @routes_all_to("_async_find_locations")
     async def _async_get_locations_by_name(
         self,
         name: str = None,

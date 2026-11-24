@@ -1539,7 +1539,8 @@ class ProductManager(CollectionManager):
         if "filter_string" in kwargs:
             name = kwargs.pop("filter_string")
         url = f"{self.product_manager_command_root}/collections/by-name"
-        response = await self._async_get_name_request(url, _type="DigitalProductCatalog", _gen_output=None,
+        response = await self._async_get_name_request(url, _type="DigitalProductCatalog",
+                                                      _gen_output=self._generate_collection_output,
                                                       classification_names=classification_names, start_from=start_from,
                                                       page_size=page_size, graph_query_depth=graph_query_depth,
                                                       output_format=output_format,
@@ -1678,6 +1679,8 @@ class ProductManager(CollectionManager):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
+        # PY-71: the by-search-string endpoint lists every Collection, so ask for catalogs unless the caller says
+        metadata_element_subtypes = kwargs.pop("metadata_element_subtypes", None) or ["DigitalProductCatalog"]
         url = f"{self.product_manager_command_root}/collections/by-search-string"
         
         # Merge explicit parameters with kwargs
@@ -1691,14 +1694,16 @@ class ProductManager(CollectionManager):
             'start_from': start_from,
             'page_size': page_size,
             'output_format': output_format,
-            'report_spec': report_spec
+            'report_spec': report_spec,
+            'metadata_element_subtypes': metadata_element_subtypes
         }
         params.update(kwargs)
         
         # Filter out None values, but keep search_string even if None (it's required)
         params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
         
-        response = await self._async_find_request(url, _type="DigitalProductCatalog", _gen_output=None, **params)
+        response = await self._async_find_request(url, _type="DigitalProductCatalog",
+                                                  _gen_output=self._generate_collection_output, **params)
         return response
 
     def find_digital_product_catalogs(

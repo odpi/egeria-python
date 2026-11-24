@@ -47,7 +47,6 @@
        {"field": "reference_abstract", "label": "Reference Abstract"},
        {"field": "authors", "label": "Authors"},
        {"field": "organization", "label": "Organization"},
-       {"field": "reference_url", "label": "Reference URL"},
        {"field": "sources", "label": "Sources"},
        {"field": "license", "label": "License"},
        {"field": "copyright", "label": "Copyright"},
@@ -63,7 +62,7 @@
     "heading": "External Identifier Attributes",
     "description": "Attributes that apply to External Identifiers.",
     "family": "External References",
-    "target_type_name": "External Identifier",
+    "target_type_name": "ExternalId",
     "aliases": []
    },
    "microflow": {
@@ -84,7 +83,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "External Identifier",
+      "type": "ExternalId",
       "function": "ExternalReference.find_external_identifiers",
       "params": {"search_string": "$search_string"}
      }
@@ -157,7 +156,6 @@
        {"field": "reference_abstract", "label": "Reference Abstract"},
        {"field": "authors", "label": "Authors"},
        {"field": "organization", "label": "Organization"},
-       {"field": "reference_url", "label": "Reference URL"},
        {"field": "sources", "label": "Sources"},
        {"field": "license", "label": "License"},
        {"field": "copyright", "label": "Copyright"},
@@ -220,7 +218,6 @@
        {"field": "reference_abstract", "label": "Reference Abstract"},
        {"field": "authors", "label": "Authors"},
        {"field": "organization", "label": "Organization"},
-       {"field": "reference_url", "label": "Reference URL"},
        {"field": "sources", "label": "Sources"},
        {"field": "license", "label": "License"},
        {"field": "copyright", "label": "Copyright"},
@@ -248,7 +245,7 @@
     "heading": "Common Folder Information",
     "description": "Attributes generic to all Folders.",
     "family": "External References",
-    "target_type_name": "Folder",
+    "target_type_name": "CollectionFolder",
     "aliases": [],
     "annotations": {
      "wikilinks": ["[[Commons]]"]
@@ -272,7 +269,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Folder",
+      "type": "CollectionFolder",
       "function": "CollectionManager.find_collections",
       "params": {"search_string": "$search_string", "metadata_element_type": "FolderCollection"}
      }
@@ -403,21 +400,11 @@
        {"field": "reference_abstract", "label": "Reference Abstract"},
        {"field": "authors", "label": "Authors"},
        {"field": "organization", "label": "Organization"},
-       {"field": "reference_url", "label": "URL"},
-       {"field": "reference_sources", "label": "Sources"},
+       {"field": "url", "label": "URL"},
+       {"field": "sources", "label": "Sources"},
        {"field": "license", "label": "License"},
        {"field": "copyright", "label": "Copyright"},
-       {"field": "number_of_pages", "label": "Number of Pages"},
-       {"field": "page_range", "label": "Page Range"},
-       {"field": "publication_series", "label": "Publication Series"},
-       {"field": "pub_series_volume", "label": "Publication Series Volume"},
-       {"field": "publisher", "label": "Publisher"},
-       {"field": "first_pub_date", "label": "First Publication Date"},
-       {"field": "pub_date", "label": "Publication Date"},
-       {"field": "pub_city", "label": "Publication City"},
-       {"field": "pub_year", "label": "Publication Year"},
-       {"field": "pub_numbers", "label": "Publication Numbers"},
-       {"field": "current_version", "label": "Version Identifier"},
+       {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "classifications", "label": "Classifications"},
        {"field": "qualified_name", "label": "Qualified Name"},
        {"field": "guid", "label": "GUID"}
@@ -430,7 +417,7 @@
        {"field": "display_name", "label": "Display Name"},
        {"field": "category", "label": "Category"},
        {"field": "reference_title", "label": "Reference Title"},
-       {"field": "reference_sources", "label": "Sources"},
+       {"field": "sources", "label": "Sources"},
        {"field": "license", "label": "License"},
        {"field": "qualified_name", "label": "Qualified Name"}
       ]
@@ -444,8 +431,8 @@
        {"field": "reference_title", "label": "Reference Title"},
        {"field": "reference_abstract", "label": "Reference Abstract"},
        {"field": "organization", "label": "Organization"},
-       {"field": "reference_url", "label": "URL"},
-       {"field": "reference_sources", "label": "Sources"},
+       {"field": "url", "label": "URL"},
+       {"field": "sources", "label": "Sources"},
        {"field": "license", "label": "License"},
        {"field": "qualified_name", "label": "Qualified Name"},
        {"field": "mermaidGraph", "label": "Mermaid"}

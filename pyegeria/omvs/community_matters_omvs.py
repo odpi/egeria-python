@@ -11,6 +11,7 @@ and project_manager.py), reusing the ServerClient helper methods for request
 validation and transport.
 """
 
+from pyegeria.core._route_all import routes_all_to
 from pyegeria.core._no_password import NO_PASSWORD, carried_password, password_as_given, resolve_password
 import asyncio
 from typing import Any, Optional
@@ -154,6 +155,7 @@ class CommunityMatters(ServerClient):
 
     @dynamic_catch
     @dynamic_catch
+    @routes_all_to("_async_find_communities")
     async def _async_get_communities_by_name(
         self,
         filter_string: str | None = None,

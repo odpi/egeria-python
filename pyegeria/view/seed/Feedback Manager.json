@@ -84,8 +84,8 @@
     "formatters": {
      "ALL": {
       "columns": [
-       {"field": "note_log_name", "label": "Journal Name"},
-       {"field": "note_log_qualified_name", "label": "Journal Qualified Name"},
+       {"field": "note_log_name", "label": "Journal Name", "source": "of:presentInNoteLogs.displayName"},
+       {"field": "note_log_qualified_name", "label": "Journal Qualified Name", "source": "of:presentInNoteLogs.qualifiedName"},
        {"field": "qualified_name", "label": "Journal Entry Qualified Name"},
        {"field": "guid", "label": "Journal Entry GUID"},
        {"field": "description", "label": "Journal Entry"}

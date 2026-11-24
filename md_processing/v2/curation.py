@@ -59,7 +59,7 @@ from typing import Any, Dict, Optional
 
 from loguru import logger
 
-from pyegeria import PyegeriaException
+from pyegeria import PyegeriaException, PyegeriaInvalidParameterException
 from md_processing.v2.processors import AsyncBaseCommandProcessor
 
 
@@ -110,6 +110,9 @@ class ClassificationSpec:
     # Declassify must both resolve its Target Element and send the clear request with
     # forLineage=true -- Egeria rejects/cannot see it otherwise.
     declassify_for_lineage: bool = False
+    # Attribute names whose value is a number (a double in Egeria): the parsed "Simple Float" arrives as text, and a
+    # string where Egeria reads a double is refused or coerced, so the builder sends a float (PY-25).
+    number_fields: tuple = ()
 
 
 # Shared governance-classification fields (Impact/Confidence/Confidentiality/Criticality/Retention)
@@ -161,10 +164,28 @@ CLASSIFICATION_METHODS: Dict[str, ClassificationSpec] = {
         "_async_set_accounting_codes_classification", "_async_clear_accounting_codes_classification", "AccountingCodesProperties",
         fields={"Accounting Code": "accountingCode", "Description": "description",
                 "Accounting Code List": "accountingCodeList", "Accounting Code Map": "accountingCodeMap"}),
+    # PY-25: every DataScopeProperties field the 6.4 table holds (0210). The old Description -> additionalProperties
+    # mapping sent a string into a map and is gone: the class has no description, and the map is "Additional Properties".
     "DataScope": ClassificationSpec(
         "_async_add_data_scope", "_async_clear_data_scope", "DataScopeProperties",
         update_method="_async_update_data_scope",
-        fields={"Description": "additionalProperties"}),
+        fields={
+            "Data Collection Start Time": "dataCollectionStartTime",
+            "Data Collection End Time": "dataCollectionEndTime",
+            "Data Validity Start Time": "dataValidityStartTime",
+            "Data Validity End Time": "dataValidityEndTime",
+            "Data Coverage Start Time": "dataCoverageStartTime",
+            "Data Coverage End Time": "dataCoverageEndTime",
+            "Min Longitude": "minLongitude",
+            "Max Longitude": "maxLongitude",
+            "Min Latitude": "minLatitude",
+            "Max Latitude": "maxLatitude",
+            "Min Height": "minHeight",
+            "Max Height": "maxHeight",
+            "Scope Elements": "scopeElements",
+            "Additional Properties": "additionalProperties",
+        },
+        number_fields=("Min Longitude", "Max Longitude", "Min Latitude", "Max Latitude", "Min Height", "Max Height")),
     "GovernanceExpectations": ClassificationSpec(
         "_async_set_governance_expectation", "_async_clear_governance_expectation", "GovernanceExpectationsProperties",
         update_method="_async_update_governance_expectation",
@@ -297,6 +318,11 @@ CURATION_CLASSIFICATION_CLIENTS = {
 }
 
 
+#: Sent for every classification (ClassificationProperties holds them): attribute -> property
+CLASSIFICATION_COMMON_FIELDS = {"Effective From": "effectiveFrom", "Effective To": "effectiveTo",
+                                "Extended Properties": "extendedProperties"}
+
+
 def _build_classification_properties(spec: ClassificationSpec, attributes: dict) -> dict:
     props: dict = {"class": spec.props_class}
     if spec.level_field:
@@ -309,6 +335,21 @@ def _build_classification_properties(spec: ClassificationSpec, attributes: dict)
         val = attributes.get(attr_name, {}).get("guid")
         if val is None:
             val = _v(attributes, attr_name)
+        if val is not None and attr_name in spec.number_fields:
+            try:
+                val = float(val)
+            except (TypeError, ValueError):
+                raise PyegeriaInvalidParameterException(
+                    None, {"caller": "_build_classification_properties"},
+                    {"reason": f"{attr_name} must be a number, not {val!r}."})
+        if val is not None:
+            props[prop_name] = val
+    # PY-69: every classification's properties carry effectivity and extended properties, and every classification
+    # command inherits the three attributes from Request Base: one rule for all, not a field per spec.
+    for attr_name, prop_name in CLASSIFICATION_COMMON_FIELDS.items():
+        if prop_name in props or attr_name in spec.fields:
+            continue
+        val = _v(attributes, attr_name)
         if val is not None:
             props[prop_name] = val
     return props
@@ -357,6 +398,7 @@ class CurationClassifyProcessor(AsyncBaseCommandProcessor):
         element_guid = _guid(attributes, "Target Element")
         if not element_guid:
             raise PyegeriaException(f"Could not resolve 'Target Element' for {verb} {object_type}")
+        self.parsed_output["guid"] = element_guid  # the element the classification is on names the write (PY-48)
 
         client = getattr(self.client, CURATION_CLASSIFICATION_CLIENTS.get(om_type, "classification_manager"))
 
@@ -411,6 +453,8 @@ class CurationLinkProcessor(AsyncBaseCommandProcessor):
         attributes = self.parsed_output.get("attributes", {})
         om_type = self.get_command_spec().get("OM_TYPE")
         target_guid = _guid(attributes, "Target Element")
+        if target_guid:
+            self.parsed_output["guid"] = target_guid  # the element the relationship is on names the write (PY-48)
         is_link = verb in ("Link", "Attach", "Add")
 
         if om_type == "ScopedBy":

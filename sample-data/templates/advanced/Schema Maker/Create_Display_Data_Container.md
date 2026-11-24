@@ -170,7 +170,7 @@ ___
 
 >	**Description**: The type of renderer used to display this container. Validated against Egeria's valid metadata values for renderer.
 
->	**Valid Values**: FORM; REPORT; MERMAID; BAR; REPORT-GRAPH; HTML; PIE; SERIES; JSON; LIST; MD; DICT; KPI; TABLE; GRAPH
+>	**Valid Values**: BAR; DICT; FORM; GRAPH; HTML; JSON; KPI; LIST; MD; MERMAID; PIE; REPORT; REPORT-GRAPH; SERIES; TABLE
 
 
 ### Placement Kind
@@ -349,6 +349,8 @@ ___
 >	**Attribute Type**: Valid Value
 
 >	**Description**: The status of the digital product. There is a list of valid values that this conforms to.
+
+>	**Valid Values**: ACTIVE; DELETED; INVALID; OTHER; UNKNOWN
 
 >	**Default Value**: ACTIVE
 

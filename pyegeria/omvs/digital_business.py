@@ -12,6 +12,7 @@ import asyncio
 from typing import Optional
 
 from typing import Unpack
+from pyegeria.core._route_all import routes_all_to
 from pyegeria.core.request_filters import deprecated_names
 from pyegeria.core.request_filters import GetFilters
 from pyegeria.omvs.collection_manager import CollectionManager
@@ -420,6 +421,7 @@ class DigitalBusiness(CollectionManager):
 
     @deprecated_names(metadata_element_type_name="metadata_element_type")
     @dynamic_catch
+    @routes_all_to("_async_find_business_capabilities")
     async def _async_get_business_capabilities_by_name(
         self,
         name: str = None,

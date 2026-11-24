@@ -8,7 +8,7 @@
     "heading": "Campaign-DrE-Advanced Attributes",
     "description": "Auto-generated format for Campaign (Create, Advanced).",
     "family": "Projects",
-    "target_type_name": "Campaign",
+    "target_type_name": "Project",
     "aliases": ["Campaign DrE Advanced"]
    },
    "microflow": {
@@ -29,7 +29,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Campaign",
+      "type": "Project",
       "function": "ProjectManager.find_projects",
       "params": {
        "search_string": "$search_string",
@@ -44,22 +44,20 @@
        {"field": "qualified_name", "label": "Qualified Name"},
        {"field": "guid", "label": "GUID"},
        {"field": "effective_from", "label": "Effective From"},
-       {"field": "effective_time", "label": "Effective Time"},
        {"field": "effective_to", "label": "Effective To"},
-       {"field": "glossary_term", "label": "Glossary Term"},
-       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "semantic_definitions", "label": "Glossary Term"},
        {"field": "zone_membership", "label": "Zone Membership"},
        {"field": "additional_properties", "label": "Additional Properties"},
-       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
-       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
-       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "confidence_classification", "label": "Confidence Classification", "source": "class:Confidence.confidenceLevel"},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "source": "class:Confidentiality.confidentialityLevel"},
+       {"field": "criticality_classification", "label": "Criticality Classification", "source": "class:Criticality.criticalityLevel"},
        {"field": "description", "label": "Description"},
        {"field": "identifier", "label": "Identifier"},
-       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "impact_classification", "label": "Impact Classification", "source": "class:Impact.severityLevel"},
        {"field": "legal", "label": "Legal"},
-       {"field": "policy_management_point", "label": "Policy Management Point"},
-       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
-       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "policy_management_point", "label": "Policy Management Point", "source": "class:PolicyManagementPoint.pointType"},
+       {"field": "retention_classification", "label": "Retention Classification", "source": "class:Retention.retentionBasis"},
+       {"field": "security_tags", "label": "Security Tags", "source": "class:SecurityTags.securityLabels"},
        {"field": "authors", "label": "Authors"},
        {"field": "actual_completion_date", "label": "Actual Completion Date"},
        {"field": "actual_start_date", "label": "Actual Start Date"},
@@ -76,44 +74,39 @@
        {"field": "scope", "label": "Project Scope"},
        {"field": "project_type", "label": "Project Type", "valid_values": ["Project", "Campaign", "Task", "PersonalProject", "StudyProject", "Experiment"]},
        {"field": "purposes", "label": "Purposes"},
-       {"field": "sub_projects", "label": "Sub-Projects"},
+       {"field": "managed_projects", "label": "Sub-Projects"},
        {"field": "success_criteria", "label": "Success Criteria"},
        {"field": "classifications", "label": "Classifications"},
-       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
-       {"field": "supplementary_properties", "label": "Supplementary Properties"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "status", "label": "Status"},
        {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
        {"field": "user_defined_content_status", "label": "User Defined Content Status"},
        {"field": "project_status", "label": "Project Status"},
-       {"field": "user_defined_status", "label": "User Defined Status"},
        {"field": "category", "label": "Category"}
       ]
      },
      "ALL": {
       "columns": [
        {"field": "effective_from", "label": "Effective From"},
-       {"field": "effective_time", "label": "Effective Time"},
        {"field": "effective_to", "label": "Effective To"},
-       {"field": "glossary_term", "label": "Glossary Term"},
-       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "semantic_definitions", "label": "Glossary Term"},
        {"field": "status", "label": "Status"},
        {"field": "zone_membership", "label": "Zone Membership"},
        {"field": "additional_properties", "label": "Additional Properties"},
        {"field": "category", "label": "Category"},
-       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
-       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
-       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "confidence_classification", "label": "Confidence Classification", "source": "class:Confidence.confidenceLevel"},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "source": "class:Confidentiality.confidentialityLevel"},
+       {"field": "criticality_classification", "label": "Criticality Classification", "source": "class:Criticality.criticalityLevel"},
        {"field": "description", "label": "Description"},
        {"field": "display_name", "label": "Display Name"},
        {"field": "guid", "label": "GUID"},
        {"field": "identifier", "label": "Identifier"},
-       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "impact_classification", "label": "Impact Classification", "source": "class:Impact.severityLevel"},
        {"field": "legal", "label": "Legal"},
-       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "policy_management_point", "label": "Policy Management Point", "source": "class:PolicyManagementPoint.pointType"},
        {"field": "qualified_name", "label": "Qualified Name"},
-       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
-       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "retention_classification", "label": "Retention Classification", "source": "class:Retention.retentionBasis"},
+       {"field": "security_tags", "label": "Security Tags", "source": "class:SecurityTags.securityLabels"},
        {"field": "url", "label": "URL"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "authors", "label": "Authors"},
@@ -135,12 +128,9 @@
        {"field": "project_status", "label": "Project Status"},
        {"field": "project_type", "label": "Project Type", "valid_values": ["Project", "Campaign", "Task", "PersonalProject", "StudyProject", "Experiment"]},
        {"field": "purposes", "label": "Purposes"},
-       {"field": "sub_projects", "label": "Sub-Projects"},
+       {"field": "managed_projects", "label": "Sub-Projects"},
        {"field": "success_criteria", "label": "Success Criteria"},
-       {"field": "user_defined_status", "label": "User Defined Status"},
-       {"field": "classifications", "label": "Classifications"},
-       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
-       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+       {"field": "classifications", "label": "Classifications"}
       ]
      }
     }
@@ -152,7 +142,7 @@
     "heading": "Campaign-DrE-Basic Attributes",
     "description": "Auto-generated format for Campaign (Create, Basic).",
     "family": "Projects",
-    "target_type_name": "Campaign",
+    "target_type_name": "Project",
     "aliases": ["Campaign DrE Basic"]
    },
    "microflow": {
@@ -173,7 +163,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Campaign",
+      "type": "Project",
       "function": "ProjectManager.find_projects",
       "params": {
        "search_string": "$search_string",
@@ -206,7 +196,7 @@
        {"field": "scope", "label": "Project Scope"},
        {"field": "project_type", "label": "Project Type", "valid_values": ["Project", "Campaign", "Task", "PersonalProject", "StudyProject", "Experiment"]},
        {"field": "purposes", "label": "Purposes"},
-       {"field": "sub_projects", "label": "Sub-Projects"},
+       {"field": "managed_projects", "label": "Sub-Projects"},
        {"field": "success_criteria", "label": "Success Criteria"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
@@ -243,7 +233,7 @@
        {"field": "project_status", "label": "Project Status"},
        {"field": "project_type", "label": "Project Type", "valid_values": ["Project", "Campaign", "Task", "PersonalProject", "StudyProject", "Experiment"]},
        {"field": "purposes", "label": "Purposes"},
-       {"field": "sub_projects", "label": "Sub-Projects"},
+       {"field": "managed_projects", "label": "Sub-Projects"},
        {"field": "success_criteria", "label": "Success Criteria"}
       ]
      }
@@ -256,7 +246,7 @@
     "heading": "Experiment-DrE-Advanced Attributes",
     "description": "Auto-generated format for Experiment (Create, Advanced).",
     "family": "Projects",
-    "target_type_name": "Experiment",
+    "target_type_name": "Project",
     "aliases": ["Experiment DrE Advanced"]
    },
    "microflow": {
@@ -277,7 +267,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Experiment",
+      "type": "Project",
       "function": "ProjectManager.find_projects",
       "params": {
        "search_string": "$search_string",
@@ -292,22 +282,20 @@
        {"field": "qualified_name", "label": "Qualified Name"},
        {"field": "guid", "label": "GUID"},
        {"field": "effective_from", "label": "Effective From"},
-       {"field": "effective_time", "label": "Effective Time"},
        {"field": "effective_to", "label": "Effective To"},
-       {"field": "glossary_term", "label": "Glossary Term"},
-       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "semantic_definitions", "label": "Glossary Term"},
        {"field": "zone_membership", "label": "Zone Membership"},
        {"field": "additional_properties", "label": "Additional Properties"},
-       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
-       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
-       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "confidence_classification", "label": "Confidence Classification", "source": "class:Confidence.confidenceLevel"},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "source": "class:Confidentiality.confidentialityLevel"},
+       {"field": "criticality_classification", "label": "Criticality Classification", "source": "class:Criticality.criticalityLevel"},
        {"field": "description", "label": "Description"},
        {"field": "identifier", "label": "Identifier"},
-       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "impact_classification", "label": "Impact Classification", "source": "class:Impact.severityLevel"},
        {"field": "legal", "label": "Legal"},
-       {"field": "policy_management_point", "label": "Policy Management Point"},
-       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
-       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "policy_management_point", "label": "Policy Management Point", "source": "class:PolicyManagementPoint.pointType"},
+       {"field": "retention_classification", "label": "Retention Classification", "source": "class:Retention.retentionBasis"},
+       {"field": "security_tags", "label": "Security Tags", "source": "class:SecurityTags.securityLabels"},
        {"field": "authors", "label": "Authors"},
        {"field": "actual_completion_date", "label": "Actual Completion Date"},
        {"field": "actual_start_date", "label": "Actual Start Date"},
@@ -324,44 +312,39 @@
        {"field": "scope", "label": "Project Scope"},
        {"field": "project_type", "label": "Project Type", "valid_values": ["Project", "Campaign", "Task", "PersonalProject", "StudyProject", "Experiment"]},
        {"field": "purposes", "label": "Purposes"},
-       {"field": "sub_projects", "label": "Sub-Projects"},
+       {"field": "managed_projects", "label": "Sub-Projects"},
        {"field": "success_criteria", "label": "Success Criteria"},
        {"field": "classifications", "label": "Classifications"},
-       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
-       {"field": "supplementary_properties", "label": "Supplementary Properties"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "status", "label": "Status"},
        {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
        {"field": "user_defined_content_status", "label": "User Defined Content Status"},
        {"field": "project_status", "label": "Project Status"},
-       {"field": "user_defined_status", "label": "User Defined Status"},
        {"field": "category", "label": "Category"}
       ]
      },
      "ALL": {
       "columns": [
        {"field": "effective_from", "label": "Effective From"},
-       {"field": "effective_time", "label": "Effective Time"},
        {"field": "effective_to", "label": "Effective To"},
-       {"field": "glossary_term", "label": "Glossary Term"},
-       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "semantic_definitions", "label": "Glossary Term"},
        {"field": "status", "label": "Status"},
        {"field": "zone_membership", "label": "Zone Membership"},
        {"field": "additional_properties", "label": "Additional Properties"},
        {"field": "category", "label": "Category"},
-       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
-       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
-       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "confidence_classification", "label": "Confidence Classification", "source": "class:Confidence.confidenceLevel"},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "source": "class:Confidentiality.confidentialityLevel"},
+       {"field": "criticality_classification", "label": "Criticality Classification", "source": "class:Criticality.criticalityLevel"},
        {"field": "description", "label": "Description"},
        {"field": "display_name", "label": "Display Name"},
        {"field": "guid", "label": "GUID"},
        {"field": "identifier", "label": "Identifier"},
-       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "impact_classification", "label": "Impact Classification", "source": "class:Impact.severityLevel"},
        {"field": "legal", "label": "Legal"},
-       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "policy_management_point", "label": "Policy Management Point", "source": "class:PolicyManagementPoint.pointType"},
        {"field": "qualified_name", "label": "Qualified Name"},
-       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
-       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "retention_classification", "label": "Retention Classification", "source": "class:Retention.retentionBasis"},
+       {"field": "security_tags", "label": "Security Tags", "source": "class:SecurityTags.securityLabels"},
        {"field": "url", "label": "URL"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "authors", "label": "Authors"},
@@ -383,12 +366,9 @@
        {"field": "project_status", "label": "Project Status"},
        {"field": "project_type", "label": "Project Type", "valid_values": ["Project", "Campaign", "Task", "PersonalProject", "StudyProject", "Experiment"]},
        {"field": "purposes", "label": "Purposes"},
-       {"field": "sub_projects", "label": "Sub-Projects"},
+       {"field": "managed_projects", "label": "Sub-Projects"},
        {"field": "success_criteria", "label": "Success Criteria"},
-       {"field": "user_defined_status", "label": "User Defined Status"},
-       {"field": "classifications", "label": "Classifications"},
-       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
-       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+       {"field": "classifications", "label": "Classifications"}
       ]
      }
     }
@@ -400,7 +380,7 @@
     "heading": "Experiment-DrE-Basic Attributes",
     "description": "Auto-generated format for Experiment (Create, Basic).",
     "family": "Projects",
-    "target_type_name": "Experiment",
+    "target_type_name": "Project",
     "aliases": ["Experiment DrE Basic"]
    },
    "microflow": {
@@ -421,7 +401,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Experiment",
+      "type": "Project",
       "function": "ProjectManager.find_projects",
       "params": {
        "search_string": "$search_string",
@@ -454,7 +434,7 @@
        {"field": "scope", "label": "Project Scope"},
        {"field": "project_type", "label": "Project Type", "valid_values": ["Project", "Campaign", "Task", "PersonalProject", "StudyProject", "Experiment"]},
        {"field": "purposes", "label": "Purposes"},
-       {"field": "sub_projects", "label": "Sub-Projects"},
+       {"field": "managed_projects", "label": "Sub-Projects"},
        {"field": "success_criteria", "label": "Success Criteria"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
@@ -491,7 +471,7 @@
        {"field": "project_status", "label": "Project Status"},
        {"field": "project_type", "label": "Project Type", "valid_values": ["Project", "Campaign", "Task", "PersonalProject", "StudyProject", "Experiment"]},
        {"field": "purposes", "label": "Purposes"},
-       {"field": "sub_projects", "label": "Sub-Projects"},
+       {"field": "managed_projects", "label": "Sub-Projects"},
        {"field": "success_criteria", "label": "Success Criteria"}
       ]
      }
@@ -504,7 +484,7 @@
     "heading": "Glossary-Project-DrE-Advanced Attributes",
     "description": "Auto-generated format for Glossary Project (Create, Advanced).",
     "family": "Projects",
-    "target_type_name": "Glossary Project",
+    "target_type_name": "Project",
     "aliases": ["Glossary Project DrE Advanced"]
    },
    "microflow": {
@@ -525,7 +505,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Glossary Project",
+      "type": "Project",
       "function": "ProjectManager.find_projects",
       "params": {
        "search_string": "$search_string",
@@ -540,22 +520,20 @@
        {"field": "qualified_name", "label": "Qualified Name"},
        {"field": "guid", "label": "GUID"},
        {"field": "effective_from", "label": "Effective From"},
-       {"field": "effective_time", "label": "Effective Time"},
        {"field": "effective_to", "label": "Effective To"},
-       {"field": "glossary_term", "label": "Glossary Term"},
-       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "semantic_definitions", "label": "Glossary Term"},
        {"field": "zone_membership", "label": "Zone Membership"},
        {"field": "additional_properties", "label": "Additional Properties"},
-       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
-       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
-       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "confidence_classification", "label": "Confidence Classification", "source": "class:Confidence.confidenceLevel"},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "source": "class:Confidentiality.confidentialityLevel"},
+       {"field": "criticality_classification", "label": "Criticality Classification", "source": "class:Criticality.criticalityLevel"},
        {"field": "description", "label": "Description"},
        {"field": "identifier", "label": "Identifier"},
-       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "impact_classification", "label": "Impact Classification", "source": "class:Impact.severityLevel"},
        {"field": "legal", "label": "Legal"},
-       {"field": "policy_management_point", "label": "Policy Management Point"},
-       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
-       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "policy_management_point", "label": "Policy Management Point", "source": "class:PolicyManagementPoint.pointType"},
+       {"field": "retention_classification", "label": "Retention Classification", "source": "class:Retention.retentionBasis"},
+       {"field": "security_tags", "label": "Security Tags", "source": "class:SecurityTags.securityLabels"},
        {"field": "authors", "label": "Authors"},
        {"field": "actual_completion_date", "label": "Actual Completion Date"},
        {"field": "actual_start_date", "label": "Actual Start Date"},
@@ -572,44 +550,39 @@
        {"field": "scope", "label": "Project Scope"},
        {"field": "project_type", "label": "Project Type", "valid_values": ["Project", "Campaign", "Task", "PersonalProject", "StudyProject", "Experiment"]},
        {"field": "purposes", "label": "Purposes"},
-       {"field": "sub_projects", "label": "Sub-Projects"},
+       {"field": "managed_projects", "label": "Sub-Projects"},
        {"field": "success_criteria", "label": "Success Criteria"},
        {"field": "classifications", "label": "Classifications"},
-       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
-       {"field": "supplementary_properties", "label": "Supplementary Properties"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "status", "label": "Status"},
        {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
        {"field": "user_defined_content_status", "label": "User Defined Content Status"},
        {"field": "project_status", "label": "Project Status"},
-       {"field": "user_defined_status", "label": "User Defined Status"},
        {"field": "category", "label": "Category"}
       ]
      },
      "ALL": {
       "columns": [
        {"field": "effective_from", "label": "Effective From"},
-       {"field": "effective_time", "label": "Effective Time"},
        {"field": "effective_to", "label": "Effective To"},
-       {"field": "glossary_term", "label": "Glossary Term"},
-       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "semantic_definitions", "label": "Glossary Term"},
        {"field": "status", "label": "Status"},
        {"field": "zone_membership", "label": "Zone Membership"},
        {"field": "additional_properties", "label": "Additional Properties"},
        {"field": "category", "label": "Category"},
-       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
-       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
-       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "confidence_classification", "label": "Confidence Classification", "source": "class:Confidence.confidenceLevel"},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "source": "class:Confidentiality.confidentialityLevel"},
+       {"field": "criticality_classification", "label": "Criticality Classification", "source": "class:Criticality.criticalityLevel"},
        {"field": "description", "label": "Description"},
        {"field": "display_name", "label": "Display Name"},
        {"field": "guid", "label": "GUID"},
        {"field": "identifier", "label": "Identifier"},
-       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "impact_classification", "label": "Impact Classification", "source": "class:Impact.severityLevel"},
        {"field": "legal", "label": "Legal"},
-       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "policy_management_point", "label": "Policy Management Point", "source": "class:PolicyManagementPoint.pointType"},
        {"field": "qualified_name", "label": "Qualified Name"},
-       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
-       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "retention_classification", "label": "Retention Classification", "source": "class:Retention.retentionBasis"},
+       {"field": "security_tags", "label": "Security Tags", "source": "class:SecurityTags.securityLabels"},
        {"field": "url", "label": "URL"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "authors", "label": "Authors"},
@@ -631,12 +604,9 @@
        {"field": "project_status", "label": "Project Status"},
        {"field": "project_type", "label": "Project Type", "valid_values": ["Project", "Campaign", "Task", "PersonalProject", "StudyProject", "Experiment"]},
        {"field": "purposes", "label": "Purposes"},
-       {"field": "sub_projects", "label": "Sub-Projects"},
+       {"field": "managed_projects", "label": "Sub-Projects"},
        {"field": "success_criteria", "label": "Success Criteria"},
-       {"field": "user_defined_status", "label": "User Defined Status"},
-       {"field": "classifications", "label": "Classifications"},
-       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
-       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+       {"field": "classifications", "label": "Classifications"}
       ]
      }
     }
@@ -648,7 +618,7 @@
     "heading": "Glossary-Project-DrE-Basic Attributes",
     "description": "Auto-generated format for Glossary Project (Create, Basic).",
     "family": "Projects",
-    "target_type_name": "Glossary Project",
+    "target_type_name": "Project",
     "aliases": ["Glossary Project DrE Basic"]
    },
    "microflow": {
@@ -669,7 +639,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Glossary Project",
+      "type": "Project",
       "function": "ProjectManager.find_projects",
       "params": {
        "search_string": "$search_string",
@@ -702,7 +672,7 @@
        {"field": "scope", "label": "Project Scope"},
        {"field": "project_type", "label": "Project Type", "valid_values": ["Project", "Campaign", "Task", "PersonalProject", "StudyProject", "Experiment"]},
        {"field": "purposes", "label": "Purposes"},
-       {"field": "sub_projects", "label": "Sub-Projects"},
+       {"field": "managed_projects", "label": "Sub-Projects"},
        {"field": "success_criteria", "label": "Success Criteria"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
@@ -739,7 +709,7 @@
        {"field": "project_status", "label": "Project Status"},
        {"field": "project_type", "label": "Project Type", "valid_values": ["Project", "Campaign", "Task", "PersonalProject", "StudyProject", "Experiment"]},
        {"field": "purposes", "label": "Purposes"},
-       {"field": "sub_projects", "label": "Sub-Projects"},
+       {"field": "managed_projects", "label": "Sub-Projects"},
        {"field": "success_criteria", "label": "Success Criteria"}
       ]
      }
@@ -752,7 +722,7 @@
     "heading": "Governance-Project-DrE-Advanced Attributes",
     "description": "Auto-generated format for Governance Project (Create, Advanced).",
     "family": "Projects",
-    "target_type_name": "Governance Project",
+    "target_type_name": "Project",
     "aliases": ["Governance Project DrE Advanced"]
    },
    "microflow": {
@@ -773,7 +743,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Governance Project",
+      "type": "Project",
       "function": "ProjectManager.find_projects",
       "params": {
        "search_string": "$search_string",
@@ -788,22 +758,20 @@
        {"field": "qualified_name", "label": "Qualified Name"},
        {"field": "guid", "label": "GUID"},
        {"field": "effective_from", "label": "Effective From"},
-       {"field": "effective_time", "label": "Effective Time"},
        {"field": "effective_to", "label": "Effective To"},
-       {"field": "glossary_term", "label": "Glossary Term"},
-       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "semantic_definitions", "label": "Glossary Term"},
        {"field": "zone_membership", "label": "Zone Membership"},
        {"field": "additional_properties", "label": "Additional Properties"},
-       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
-       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
-       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "confidence_classification", "label": "Confidence Classification", "source": "class:Confidence.confidenceLevel"},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "source": "class:Confidentiality.confidentialityLevel"},
+       {"field": "criticality_classification", "label": "Criticality Classification", "source": "class:Criticality.criticalityLevel"},
        {"field": "description", "label": "Description"},
        {"field": "identifier", "label": "Identifier"},
-       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "impact_classification", "label": "Impact Classification", "source": "class:Impact.severityLevel"},
        {"field": "legal", "label": "Legal"},
-       {"field": "policy_management_point", "label": "Policy Management Point"},
-       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
-       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "policy_management_point", "label": "Policy Management Point", "source": "class:PolicyManagementPoint.pointType"},
+       {"field": "retention_classification", "label": "Retention Classification", "source": "class:Retention.retentionBasis"},
+       {"field": "security_tags", "label": "Security Tags", "source": "class:SecurityTags.securityLabels"},
        {"field": "authors", "label": "Authors"},
        {"field": "actual_completion_date", "label": "Actual Completion Date"},
        {"field": "actual_start_date", "label": "Actual Start Date"},
@@ -820,44 +788,39 @@
        {"field": "scope", "label": "Project Scope"},
        {"field": "project_type", "label": "Project Type", "valid_values": ["Project", "Campaign", "Task", "PersonalProject", "StudyProject", "Experiment"]},
        {"field": "purposes", "label": "Purposes"},
-       {"field": "sub_projects", "label": "Sub-Projects"},
+       {"field": "managed_projects", "label": "Sub-Projects"},
        {"field": "success_criteria", "label": "Success Criteria"},
        {"field": "classifications", "label": "Classifications"},
-       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
-       {"field": "supplementary_properties", "label": "Supplementary Properties"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "status", "label": "Status"},
        {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
        {"field": "user_defined_content_status", "label": "User Defined Content Status"},
        {"field": "project_status", "label": "Project Status"},
-       {"field": "user_defined_status", "label": "User Defined Status"},
        {"field": "category", "label": "Category"}
       ]
      },
      "ALL": {
       "columns": [
        {"field": "effective_from", "label": "Effective From"},
-       {"field": "effective_time", "label": "Effective Time"},
        {"field": "effective_to", "label": "Effective To"},
-       {"field": "glossary_term", "label": "Glossary Term"},
-       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "semantic_definitions", "label": "Glossary Term"},
        {"field": "status", "label": "Status"},
        {"field": "zone_membership", "label": "Zone Membership"},
        {"field": "additional_properties", "label": "Additional Properties"},
        {"field": "category", "label": "Category"},
-       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
-       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
-       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "confidence_classification", "label": "Confidence Classification", "source": "class:Confidence.confidenceLevel"},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "source": "class:Confidentiality.confidentialityLevel"},
+       {"field": "criticality_classification", "label": "Criticality Classification", "source": "class:Criticality.criticalityLevel"},
        {"field": "description", "label": "Description"},
        {"field": "display_name", "label": "Display Name"},
        {"field": "guid", "label": "GUID"},
        {"field": "identifier", "label": "Identifier"},
-       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "impact_classification", "label": "Impact Classification", "source": "class:Impact.severityLevel"},
        {"field": "legal", "label": "Legal"},
-       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "policy_management_point", "label": "Policy Management Point", "source": "class:PolicyManagementPoint.pointType"},
        {"field": "qualified_name", "label": "Qualified Name"},
-       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
-       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "retention_classification", "label": "Retention Classification", "source": "class:Retention.retentionBasis"},
+       {"field": "security_tags", "label": "Security Tags", "source": "class:SecurityTags.securityLabels"},
        {"field": "url", "label": "URL"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "authors", "label": "Authors"},
@@ -879,12 +842,9 @@
        {"field": "project_status", "label": "Project Status"},
        {"field": "project_type", "label": "Project Type", "valid_values": ["Project", "Campaign", "Task", "PersonalProject", "StudyProject", "Experiment"]},
        {"field": "purposes", "label": "Purposes"},
-       {"field": "sub_projects", "label": "Sub-Projects"},
+       {"field": "managed_projects", "label": "Sub-Projects"},
        {"field": "success_criteria", "label": "Success Criteria"},
-       {"field": "user_defined_status", "label": "User Defined Status"},
-       {"field": "classifications", "label": "Classifications"},
-       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
-       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+       {"field": "classifications", "label": "Classifications"}
       ]
      }
     }
@@ -896,7 +856,7 @@
     "heading": "Governance-Project-DrE-Basic Attributes",
     "description": "Auto-generated format for Governance Project (Create, Basic).",
     "family": "Projects",
-    "target_type_name": "Governance Project",
+    "target_type_name": "Project",
     "aliases": ["Governance Project DrE Basic"]
    },
    "microflow": {
@@ -917,7 +877,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Governance Project",
+      "type": "Project",
       "function": "ProjectManager.find_projects",
       "params": {
        "search_string": "$search_string",
@@ -950,7 +910,7 @@
        {"field": "scope", "label": "Project Scope"},
        {"field": "project_type", "label": "Project Type", "valid_values": ["Project", "Campaign", "Task", "PersonalProject", "StudyProject", "Experiment"]},
        {"field": "purposes", "label": "Purposes"},
-       {"field": "sub_projects", "label": "Sub-Projects"},
+       {"field": "managed_projects", "label": "Sub-Projects"},
        {"field": "success_criteria", "label": "Success Criteria"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
@@ -987,7 +947,7 @@
        {"field": "project_status", "label": "Project Status"},
        {"field": "project_type", "label": "Project Type", "valid_values": ["Project", "Campaign", "Task", "PersonalProject", "StudyProject", "Experiment"]},
        {"field": "purposes", "label": "Purposes"},
-       {"field": "sub_projects", "label": "Sub-Projects"},
+       {"field": "managed_projects", "label": "Sub-Projects"},
        {"field": "success_criteria", "label": "Success Criteria"}
       ]
      }
@@ -1011,27 +971,29 @@
      "LIST": {
       "columns": [
        {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
        {"field": "effective_from", "label": "Effective From"},
-       {"field": "effective_time", "label": "Effective Time"},
        {"field": "effective_to", "label": "Effective To"},
        {"field": "description", "label": "Description"},
        {"field": "situation", "label": "Situation"},
        {"field": "objective", "label": "Objective"},
        {"field": "priority", "label": "Priority"},
-       {"field": "activity_status", "label": "Activity Status", "valid_values": ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRESS", "PAUSED", "COMPLETED", "INVALID", "IGNORED", "FAILED", "CANCELLED", "ABANDONED", "OTHER"]}
+       {"field": "activity_status", "label": "Activity Status", "valid_values": ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRESS", "PAUSED", "FOR_INFO", "COMPLETED", "INVALID", "IGNORED", "FAILED", "CANCELLED", "ABANDONED", "OTHER"]}
       ]
      },
      "ALL": {
       "columns": [
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
        {"field": "effective_from", "label": "Effective From"},
-       {"field": "effective_time", "label": "Effective Time"},
        {"field": "effective_to", "label": "Effective To"},
        {"field": "display_name", "label": "Display Name"},
        {"field": "description", "label": "Description"},
        {"field": "situation", "label": "Situation"},
        {"field": "objective", "label": "Objective"},
        {"field": "priority", "label": "Priority"},
-       {"field": "activity_status", "label": "Activity Status", "valid_values": ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRESS", "PAUSED", "COMPLETED", "INVALID", "IGNORED", "FAILED", "CANCELLED", "ABANDONED", "OTHER"]}
+       {"field": "activity_status", "label": "Activity Status", "valid_values": ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRESS", "PAUSED", "FOR_INFO", "COMPLETED", "INVALID", "IGNORED", "FAILED", "CANCELLED", "ABANDONED", "OTHER"]}
       ]
      }
     }
@@ -1054,21 +1016,25 @@
      "LIST": {
       "columns": [
        {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
        {"field": "description", "label": "Description"},
        {"field": "situation", "label": "Situation"},
        {"field": "objective", "label": "Objective"},
        {"field": "priority", "label": "Priority"},
-       {"field": "activity_status", "label": "Activity Status", "valid_values": ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRESS", "PAUSED", "COMPLETED", "INVALID", "IGNORED", "FAILED", "CANCELLED", "ABANDONED", "OTHER"]}
+       {"field": "activity_status", "label": "Activity Status", "valid_values": ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRESS", "PAUSED", "FOR_INFO", "COMPLETED", "INVALID", "IGNORED", "FAILED", "CANCELLED", "ABANDONED", "OTHER"]}
       ]
      },
      "ALL": {
       "columns": [
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "guid", "label": "GUID"},
        {"field": "display_name", "label": "Display Name"},
        {"field": "description", "label": "Description"},
        {"field": "situation", "label": "Situation"},
        {"field": "objective", "label": "Objective"},
        {"field": "priority", "label": "Priority"},
-       {"field": "activity_status", "label": "Activity Status", "valid_values": ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRESS", "PAUSED", "COMPLETED", "INVALID", "IGNORED", "FAILED", "CANCELLED", "ABANDONED", "OTHER"]}
+       {"field": "activity_status", "label": "Activity Status", "valid_values": ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRESS", "PAUSED", "FOR_INFO", "COMPLETED", "INVALID", "IGNORED", "FAILED", "CANCELLED", "ABANDONED", "OTHER"]}
       ]
      }
     }
@@ -1080,7 +1046,7 @@
     "heading": "Personal-Project-DrE-Advanced Attributes",
     "description": "Auto-generated format for Personal Project (Create, Advanced).",
     "family": "Projects",
-    "target_type_name": "Personal Project",
+    "target_type_name": "Project",
     "aliases": ["Personal Project DrE Advanced"]
    },
    "microflow": {
@@ -1101,7 +1067,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Personal Project",
+      "type": "Project",
       "function": "ProjectManager.find_projects",
       "params": {
        "search_string": "$search_string",
@@ -1116,22 +1082,20 @@
        {"field": "qualified_name", "label": "Qualified Name"},
        {"field": "guid", "label": "GUID"},
        {"field": "effective_from", "label": "Effective From"},
-       {"field": "effective_time", "label": "Effective Time"},
        {"field": "effective_to", "label": "Effective To"},
-       {"field": "glossary_term", "label": "Glossary Term"},
-       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "semantic_definitions", "label": "Glossary Term"},
        {"field": "zone_membership", "label": "Zone Membership"},
        {"field": "additional_properties", "label": "Additional Properties"},
-       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
-       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
-       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "confidence_classification", "label": "Confidence Classification", "source": "class:Confidence.confidenceLevel"},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "source": "class:Confidentiality.confidentialityLevel"},
+       {"field": "criticality_classification", "label": "Criticality Classification", "source": "class:Criticality.criticalityLevel"},
        {"field": "description", "label": "Description"},
        {"field": "identifier", "label": "Identifier"},
-       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "impact_classification", "label": "Impact Classification", "source": "class:Impact.severityLevel"},
        {"field": "legal", "label": "Legal"},
-       {"field": "policy_management_point", "label": "Policy Management Point"},
-       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
-       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "policy_management_point", "label": "Policy Management Point", "source": "class:PolicyManagementPoint.pointType"},
+       {"field": "retention_classification", "label": "Retention Classification", "source": "class:Retention.retentionBasis"},
+       {"field": "security_tags", "label": "Security Tags", "source": "class:SecurityTags.securityLabels"},
        {"field": "authors", "label": "Authors"},
        {"field": "actual_completion_date", "label": "Actual Completion Date"},
        {"field": "actual_start_date", "label": "Actual Start Date"},
@@ -1148,44 +1112,39 @@
        {"field": "scope", "label": "Project Scope"},
        {"field": "project_type", "label": "Project Type", "valid_values": ["Project", "Campaign", "Task", "PersonalProject", "StudyProject", "Experiment"]},
        {"field": "purposes", "label": "Purposes"},
-       {"field": "sub_projects", "label": "Sub-Projects"},
+       {"field": "managed_projects", "label": "Sub-Projects"},
        {"field": "success_criteria", "label": "Success Criteria"},
        {"field": "classifications", "label": "Classifications"},
-       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
-       {"field": "supplementary_properties", "label": "Supplementary Properties"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "status", "label": "Status"},
        {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
        {"field": "user_defined_content_status", "label": "User Defined Content Status"},
        {"field": "project_status", "label": "Project Status"},
-       {"field": "user_defined_status", "label": "User Defined Status"},
        {"field": "category", "label": "Category"}
       ]
      },
      "ALL": {
       "columns": [
        {"field": "effective_from", "label": "Effective From"},
-       {"field": "effective_time", "label": "Effective Time"},
        {"field": "effective_to", "label": "Effective To"},
-       {"field": "glossary_term", "label": "Glossary Term"},
-       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "semantic_definitions", "label": "Glossary Term"},
        {"field": "status", "label": "Status"},
        {"field": "zone_membership", "label": "Zone Membership"},
        {"field": "additional_properties", "label": "Additional Properties"},
        {"field": "category", "label": "Category"},
-       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
-       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
-       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "confidence_classification", "label": "Confidence Classification", "source": "class:Confidence.confidenceLevel"},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "source": "class:Confidentiality.confidentialityLevel"},
+       {"field": "criticality_classification", "label": "Criticality Classification", "source": "class:Criticality.criticalityLevel"},
        {"field": "description", "label": "Description"},
        {"field": "display_name", "label": "Display Name"},
        {"field": "guid", "label": "GUID"},
        {"field": "identifier", "label": "Identifier"},
-       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "impact_classification", "label": "Impact Classification", "source": "class:Impact.severityLevel"},
        {"field": "legal", "label": "Legal"},
-       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "policy_management_point", "label": "Policy Management Point", "source": "class:PolicyManagementPoint.pointType"},
        {"field": "qualified_name", "label": "Qualified Name"},
-       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
-       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "retention_classification", "label": "Retention Classification", "source": "class:Retention.retentionBasis"},
+       {"field": "security_tags", "label": "Security Tags", "source": "class:SecurityTags.securityLabels"},
        {"field": "url", "label": "URL"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "authors", "label": "Authors"},
@@ -1207,12 +1166,9 @@
        {"field": "project_status", "label": "Project Status"},
        {"field": "project_type", "label": "Project Type", "valid_values": ["Project", "Campaign", "Task", "PersonalProject", "StudyProject", "Experiment"]},
        {"field": "purposes", "label": "Purposes"},
-       {"field": "sub_projects", "label": "Sub-Projects"},
+       {"field": "managed_projects", "label": "Sub-Projects"},
        {"field": "success_criteria", "label": "Success Criteria"},
-       {"field": "user_defined_status", "label": "User Defined Status"},
-       {"field": "classifications", "label": "Classifications"},
-       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
-       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+       {"field": "classifications", "label": "Classifications"}
       ]
      }
     }
@@ -1224,7 +1180,7 @@
     "heading": "Personal-Project-DrE-Basic Attributes",
     "description": "Auto-generated format for Personal Project (Create, Basic).",
     "family": "Projects",
-    "target_type_name": "Personal Project",
+    "target_type_name": "Project",
     "aliases": ["Personal Project DrE Basic"]
    },
    "microflow": {
@@ -1245,7 +1201,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Personal Project",
+      "type": "Project",
       "function": "ProjectManager.find_projects",
       "params": {
        "search_string": "$search_string",
@@ -1278,7 +1234,7 @@
        {"field": "scope", "label": "Project Scope"},
        {"field": "project_type", "label": "Project Type", "valid_values": ["Project", "Campaign", "Task", "PersonalProject", "StudyProject", "Experiment"]},
        {"field": "purposes", "label": "Purposes"},
-       {"field": "sub_projects", "label": "Sub-Projects"},
+       {"field": "managed_projects", "label": "Sub-Projects"},
        {"field": "success_criteria", "label": "Success Criteria"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
@@ -1315,7 +1271,7 @@
        {"field": "project_status", "label": "Project Status"},
        {"field": "project_type", "label": "Project Type", "valid_values": ["Project", "Campaign", "Task", "PersonalProject", "StudyProject", "Experiment"]},
        {"field": "purposes", "label": "Purposes"},
-       {"field": "sub_projects", "label": "Sub-Projects"},
+       {"field": "managed_projects", "label": "Sub-Projects"},
        {"field": "success_criteria", "label": "Success Criteria"}
       ]
      }
@@ -1361,22 +1317,20 @@
        {"field": "qualified_name", "label": "Qualified Name"},
        {"field": "guid", "label": "GUID"},
        {"field": "effective_from", "label": "Effective From"},
-       {"field": "effective_time", "label": "Effective Time"},
        {"field": "effective_to", "label": "Effective To"},
-       {"field": "glossary_term", "label": "Glossary Term"},
-       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "semantic_definitions", "label": "Glossary Term"},
        {"field": "zone_membership", "label": "Zone Membership"},
        {"field": "additional_properties", "label": "Additional Properties"},
-       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
-       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
-       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "confidence_classification", "label": "Confidence Classification", "source": "class:Confidence.confidenceLevel"},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "source": "class:Confidentiality.confidentialityLevel"},
+       {"field": "criticality_classification", "label": "Criticality Classification", "source": "class:Criticality.criticalityLevel"},
        {"field": "description", "label": "Description"},
        {"field": "identifier", "label": "Identifier"},
-       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "impact_classification", "label": "Impact Classification", "source": "class:Impact.severityLevel"},
        {"field": "legal", "label": "Legal"},
-       {"field": "policy_management_point", "label": "Policy Management Point"},
-       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
-       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "policy_management_point", "label": "Policy Management Point", "source": "class:PolicyManagementPoint.pointType"},
+       {"field": "retention_classification", "label": "Retention Classification", "source": "class:Retention.retentionBasis"},
+       {"field": "security_tags", "label": "Security Tags", "source": "class:SecurityTags.securityLabels"},
        {"field": "authors", "label": "Authors"},
        {"field": "actual_completion_date", "label": "Actual Completion Date"},
        {"field": "actual_start_date", "label": "Actual Start Date"},
@@ -1393,44 +1347,39 @@
        {"field": "scope", "label": "Project Scope"},
        {"field": "project_type", "label": "Project Type", "valid_values": ["Project", "Campaign", "Task", "PersonalProject", "StudyProject", "Experiment"]},
        {"field": "purposes", "label": "Purposes"},
-       {"field": "sub_projects", "label": "Sub-Projects"},
+       {"field": "managed_projects", "label": "Sub-Projects"},
        {"field": "success_criteria", "label": "Success Criteria"},
        {"field": "classifications", "label": "Classifications"},
-       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
-       {"field": "supplementary_properties", "label": "Supplementary Properties"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "status", "label": "Status"},
        {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
        {"field": "user_defined_content_status", "label": "User Defined Content Status"},
        {"field": "project_status", "label": "Project Status"},
-       {"field": "user_defined_status", "label": "User Defined Status"},
        {"field": "category", "label": "Category"}
       ]
      },
      "ALL": {
       "columns": [
        {"field": "effective_from", "label": "Effective From"},
-       {"field": "effective_time", "label": "Effective Time"},
        {"field": "effective_to", "label": "Effective To"},
-       {"field": "glossary_term", "label": "Glossary Term"},
-       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "semantic_definitions", "label": "Glossary Term"},
        {"field": "status", "label": "Status"},
        {"field": "zone_membership", "label": "Zone Membership"},
        {"field": "additional_properties", "label": "Additional Properties"},
        {"field": "category", "label": "Category"},
-       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
-       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
-       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "confidence_classification", "label": "Confidence Classification", "source": "class:Confidence.confidenceLevel"},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "source": "class:Confidentiality.confidentialityLevel"},
+       {"field": "criticality_classification", "label": "Criticality Classification", "source": "class:Criticality.criticalityLevel"},
        {"field": "description", "label": "Description"},
        {"field": "display_name", "label": "Display Name"},
        {"field": "guid", "label": "GUID"},
        {"field": "identifier", "label": "Identifier"},
-       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "impact_classification", "label": "Impact Classification", "source": "class:Impact.severityLevel"},
        {"field": "legal", "label": "Legal"},
-       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "policy_management_point", "label": "Policy Management Point", "source": "class:PolicyManagementPoint.pointType"},
        {"field": "qualified_name", "label": "Qualified Name"},
-       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
-       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "retention_classification", "label": "Retention Classification", "source": "class:Retention.retentionBasis"},
+       {"field": "security_tags", "label": "Security Tags", "source": "class:SecurityTags.securityLabels"},
        {"field": "url", "label": "URL"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "authors", "label": "Authors"},
@@ -1452,12 +1401,9 @@
        {"field": "project_status", "label": "Project Status"},
        {"field": "project_type", "label": "Project Type", "valid_values": ["Project", "Campaign", "Task", "PersonalProject", "StudyProject", "Experiment"]},
        {"field": "purposes", "label": "Purposes"},
-       {"field": "sub_projects", "label": "Sub-Projects"},
+       {"field": "managed_projects", "label": "Sub-Projects"},
        {"field": "success_criteria", "label": "Success Criteria"},
-       {"field": "user_defined_status", "label": "User Defined Status"},
-       {"field": "classifications", "label": "Classifications"},
-       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
-       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+       {"field": "classifications", "label": "Classifications"}
       ]
      }
     }
@@ -1520,7 +1466,7 @@
        {"field": "scope", "label": "Project Scope"},
        {"field": "project_type", "label": "Project Type", "valid_values": ["Project", "Campaign", "Task", "PersonalProject", "StudyProject", "Experiment"]},
        {"field": "purposes", "label": "Purposes"},
-       {"field": "sub_projects", "label": "Sub-Projects"},
+       {"field": "managed_projects", "label": "Sub-Projects"},
        {"field": "success_criteria", "label": "Success Criteria"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
@@ -1557,7 +1503,7 @@
        {"field": "project_status", "label": "Project Status"},
        {"field": "project_type", "label": "Project Type", "valid_values": ["Project", "Campaign", "Task", "PersonalProject", "StudyProject", "Experiment"]},
        {"field": "purposes", "label": "Purposes"},
-       {"field": "sub_projects", "label": "Sub-Projects"},
+       {"field": "managed_projects", "label": "Sub-Projects"},
        {"field": "success_criteria", "label": "Success Criteria"}
       ]
      }
@@ -1570,7 +1516,7 @@
     "heading": "Study-Project-DrE-Advanced Attributes",
     "description": "Auto-generated format for Study Project (Create, Advanced).",
     "family": "Projects",
-    "target_type_name": "Study Project",
+    "target_type_name": "Project",
     "aliases": ["Study Project DrE Advanced"]
    },
    "microflow": {
@@ -1591,7 +1537,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Study Project",
+      "type": "Project",
       "function": "ProjectManager.find_projects",
       "params": {
        "search_string": "$search_string",
@@ -1606,22 +1552,20 @@
        {"field": "qualified_name", "label": "Qualified Name"},
        {"field": "guid", "label": "GUID"},
        {"field": "effective_from", "label": "Effective From"},
-       {"field": "effective_time", "label": "Effective Time"},
        {"field": "effective_to", "label": "Effective To"},
-       {"field": "glossary_term", "label": "Glossary Term"},
-       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "semantic_definitions", "label": "Glossary Term"},
        {"field": "zone_membership", "label": "Zone Membership"},
        {"field": "additional_properties", "label": "Additional Properties"},
-       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
-       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
-       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "confidence_classification", "label": "Confidence Classification", "source": "class:Confidence.confidenceLevel"},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "source": "class:Confidentiality.confidentialityLevel"},
+       {"field": "criticality_classification", "label": "Criticality Classification", "source": "class:Criticality.criticalityLevel"},
        {"field": "description", "label": "Description"},
        {"field": "identifier", "label": "Identifier"},
-       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "impact_classification", "label": "Impact Classification", "source": "class:Impact.severityLevel"},
        {"field": "legal", "label": "Legal"},
-       {"field": "policy_management_point", "label": "Policy Management Point"},
-       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
-       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "policy_management_point", "label": "Policy Management Point", "source": "class:PolicyManagementPoint.pointType"},
+       {"field": "retention_classification", "label": "Retention Classification", "source": "class:Retention.retentionBasis"},
+       {"field": "security_tags", "label": "Security Tags", "source": "class:SecurityTags.securityLabels"},
        {"field": "authors", "label": "Authors"},
        {"field": "actual_completion_date", "label": "Actual Completion Date"},
        {"field": "actual_start_date", "label": "Actual Start Date"},
@@ -1638,44 +1582,39 @@
        {"field": "scope", "label": "Project Scope"},
        {"field": "project_type", "label": "Project Type", "valid_values": ["Project", "Campaign", "Task", "PersonalProject", "StudyProject", "Experiment"]},
        {"field": "purposes", "label": "Purposes"},
-       {"field": "sub_projects", "label": "Sub-Projects"},
+       {"field": "managed_projects", "label": "Sub-Projects"},
        {"field": "success_criteria", "label": "Success Criteria"},
        {"field": "classifications", "label": "Classifications"},
-       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
-       {"field": "supplementary_properties", "label": "Supplementary Properties"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "status", "label": "Status"},
        {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
        {"field": "user_defined_content_status", "label": "User Defined Content Status"},
        {"field": "project_status", "label": "Project Status"},
-       {"field": "user_defined_status", "label": "User Defined Status"},
        {"field": "category", "label": "Category"}
       ]
      },
      "ALL": {
       "columns": [
        {"field": "effective_from", "label": "Effective From"},
-       {"field": "effective_time", "label": "Effective Time"},
        {"field": "effective_to", "label": "Effective To"},
-       {"field": "glossary_term", "label": "Glossary Term"},
-       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "semantic_definitions", "label": "Glossary Term"},
        {"field": "status", "label": "Status"},
        {"field": "zone_membership", "label": "Zone Membership"},
        {"field": "additional_properties", "label": "Additional Properties"},
        {"field": "category", "label": "Category"},
-       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
-       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
-       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "confidence_classification", "label": "Confidence Classification", "source": "class:Confidence.confidenceLevel"},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "source": "class:Confidentiality.confidentialityLevel"},
+       {"field": "criticality_classification", "label": "Criticality Classification", "source": "class:Criticality.criticalityLevel"},
        {"field": "description", "label": "Description"},
        {"field": "display_name", "label": "Display Name"},
        {"field": "guid", "label": "GUID"},
        {"field": "identifier", "label": "Identifier"},
-       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "impact_classification", "label": "Impact Classification", "source": "class:Impact.severityLevel"},
        {"field": "legal", "label": "Legal"},
-       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "policy_management_point", "label": "Policy Management Point", "source": "class:PolicyManagementPoint.pointType"},
        {"field": "qualified_name", "label": "Qualified Name"},
-       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
-       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "retention_classification", "label": "Retention Classification", "source": "class:Retention.retentionBasis"},
+       {"field": "security_tags", "label": "Security Tags", "source": "class:SecurityTags.securityLabels"},
        {"field": "url", "label": "URL"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "authors", "label": "Authors"},
@@ -1697,12 +1636,9 @@
        {"field": "project_status", "label": "Project Status"},
        {"field": "project_type", "label": "Project Type", "valid_values": ["Project", "Campaign", "Task", "PersonalProject", "StudyProject", "Experiment"]},
        {"field": "purposes", "label": "Purposes"},
-       {"field": "sub_projects", "label": "Sub-Projects"},
+       {"field": "managed_projects", "label": "Sub-Projects"},
        {"field": "success_criteria", "label": "Success Criteria"},
-       {"field": "user_defined_status", "label": "User Defined Status"},
-       {"field": "classifications", "label": "Classifications"},
-       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
-       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+       {"field": "classifications", "label": "Classifications"}
       ]
      }
     }
@@ -1714,7 +1650,7 @@
     "heading": "Study-Project-DrE-Basic Attributes",
     "description": "Auto-generated format for Study Project (Create, Basic).",
     "family": "Projects",
-    "target_type_name": "Study Project",
+    "target_type_name": "Project",
     "aliases": ["Study Project DrE Basic"]
    },
    "microflow": {
@@ -1735,7 +1671,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Study Project",
+      "type": "Project",
       "function": "ProjectManager.find_projects",
       "params": {
        "search_string": "$search_string",
@@ -1768,7 +1704,7 @@
        {"field": "scope", "label": "Project Scope"},
        {"field": "project_type", "label": "Project Type", "valid_values": ["Project", "Campaign", "Task", "PersonalProject", "StudyProject", "Experiment"]},
        {"field": "purposes", "label": "Purposes"},
-       {"field": "sub_projects", "label": "Sub-Projects"},
+       {"field": "managed_projects", "label": "Sub-Projects"},
        {"field": "success_criteria", "label": "Success Criteria"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
@@ -1805,7 +1741,7 @@
        {"field": "project_status", "label": "Project Status"},
        {"field": "project_type", "label": "Project Type", "valid_values": ["Project", "Campaign", "Task", "PersonalProject", "StudyProject", "Experiment"]},
        {"field": "purposes", "label": "Purposes"},
-       {"field": "sub_projects", "label": "Sub-Projects"},
+       {"field": "managed_projects", "label": "Sub-Projects"},
        {"field": "success_criteria", "label": "Success Criteria"}
       ]
      }
@@ -1818,7 +1754,7 @@
     "heading": "Task-DrE-Advanced Attributes",
     "description": "Auto-generated format for Task (Create, Advanced).",
     "family": "Projects",
-    "target_type_name": "Task",
+    "target_type_name": "Project",
     "aliases": ["Task DrE Advanced"]
    },
    "microflow": {
@@ -1839,7 +1775,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Task",
+      "type": "Project",
       "function": "ProjectManager.find_projects",
       "params": {
        "search_string": "$search_string",
@@ -1854,22 +1790,20 @@
        {"field": "qualified_name", "label": "Qualified Name"},
        {"field": "guid", "label": "GUID"},
        {"field": "effective_from", "label": "Effective From"},
-       {"field": "effective_time", "label": "Effective Time"},
        {"field": "effective_to", "label": "Effective To"},
-       {"field": "glossary_term", "label": "Glossary Term"},
-       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "semantic_definitions", "label": "Glossary Term"},
        {"field": "zone_membership", "label": "Zone Membership"},
        {"field": "additional_properties", "label": "Additional Properties"},
-       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
-       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
-       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "confidence_classification", "label": "Confidence Classification", "source": "class:Confidence.confidenceLevel"},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "source": "class:Confidentiality.confidentialityLevel"},
+       {"field": "criticality_classification", "label": "Criticality Classification", "source": "class:Criticality.criticalityLevel"},
        {"field": "description", "label": "Description"},
        {"field": "identifier", "label": "Identifier"},
-       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "impact_classification", "label": "Impact Classification", "source": "class:Impact.severityLevel"},
        {"field": "legal", "label": "Legal"},
-       {"field": "policy_management_point", "label": "Policy Management Point"},
-       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
-       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "policy_management_point", "label": "Policy Management Point", "source": "class:PolicyManagementPoint.pointType"},
+       {"field": "retention_classification", "label": "Retention Classification", "source": "class:Retention.retentionBasis"},
+       {"field": "security_tags", "label": "Security Tags", "source": "class:SecurityTags.securityLabels"},
        {"field": "authors", "label": "Authors"},
        {"field": "actual_completion_date", "label": "Actual Completion Date"},
        {"field": "actual_start_date", "label": "Actual Start Date"},
@@ -1886,44 +1820,39 @@
        {"field": "scope", "label": "Project Scope"},
        {"field": "project_type", "label": "Project Type", "valid_values": ["Project", "Campaign", "Task", "PersonalProject", "StudyProject", "Experiment"]},
        {"field": "purposes", "label": "Purposes"},
-       {"field": "sub_projects", "label": "Sub-Projects"},
+       {"field": "managed_projects", "label": "Sub-Projects"},
        {"field": "success_criteria", "label": "Success Criteria"},
        {"field": "classifications", "label": "Classifications"},
-       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
-       {"field": "supplementary_properties", "label": "Supplementary Properties"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "status", "label": "Status"},
        {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
        {"field": "user_defined_content_status", "label": "User Defined Content Status"},
        {"field": "project_status", "label": "Project Status"},
-       {"field": "user_defined_status", "label": "User Defined Status"},
        {"field": "category", "label": "Category"}
       ]
      },
      "ALL": {
       "columns": [
        {"field": "effective_from", "label": "Effective From"},
-       {"field": "effective_time", "label": "Effective Time"},
        {"field": "effective_to", "label": "Effective To"},
-       {"field": "glossary_term", "label": "Glossary Term"},
-       {"field": "is_own_anchor", "label": "Is Own Anchor"},
+       {"field": "semantic_definitions", "label": "Glossary Term"},
        {"field": "status", "label": "Status"},
        {"field": "zone_membership", "label": "Zone Membership"},
        {"field": "additional_properties", "label": "Additional Properties"},
        {"field": "category", "label": "Category"},
-       {"field": "confidence_classification", "label": "Confidence Classification", "valid_values": ["UNCLASSIFIED", "AD_HOC", "TRANSACTIONAL", "AUTHORITATIVE", "DERIVED", "OBSOLETE", "OTHER"]},
-       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "valid_values": ["UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "SENSITIVE", "RESTRICTED", "OTHER"]},
-       {"field": "criticality_classification", "label": "Criticality Classification", "valid_values": ["UNCLASSIFIED", "MARGINAL", "IMPORTANT", "CRITICAL", "CATASTROPHIC", "OTHER"]},
+       {"field": "confidence_classification", "label": "Confidence Classification", "source": "class:Confidence.confidenceLevel"},
+       {"field": "confidentiality_classification", "label": "Confidentiality Classification", "source": "class:Confidentiality.confidentialityLevel"},
+       {"field": "criticality_classification", "label": "Criticality Classification", "source": "class:Criticality.criticalityLevel"},
        {"field": "description", "label": "Description"},
        {"field": "display_name", "label": "Display Name"},
        {"field": "guid", "label": "GUID"},
        {"field": "identifier", "label": "Identifier"},
-       {"field": "impact_classification", "label": "Impact Classification", "valid_values": ["UNCLASSIFIED", "LOW", "MEDIUM", "HIGH", "OTHER"]},
+       {"field": "impact_classification", "label": "Impact Classification", "source": "class:Impact.severityLevel"},
        {"field": "legal", "label": "Legal"},
-       {"field": "policy_management_point", "label": "Policy Management Point"},
+       {"field": "policy_management_point", "label": "Policy Management Point", "source": "class:PolicyManagementPoint.pointType"},
        {"field": "qualified_name", "label": "Qualified Name"},
-       {"field": "retention_classification", "label": "Retention Classification", "valid_values": ["UNCLASSIFIED", "TEMPORARY", "PROJECT_LIFETIME", "TEAM_LIFETIME", "CONTRACT_LIFETIME", "REGULATED_LIFETIME", "TIMEBOXED_LIFETIME", "OTHER"]},
-       {"field": "security_tags", "label": "Security Tags"},
+       {"field": "retention_classification", "label": "Retention Classification", "source": "class:Retention.retentionBasis"},
+       {"field": "security_tags", "label": "Security Tags", "source": "class:SecurityTags.securityLabels"},
        {"field": "url", "label": "URL"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "authors", "label": "Authors"},
@@ -1945,12 +1874,9 @@
        {"field": "project_status", "label": "Project Status"},
        {"field": "project_type", "label": "Project Type", "valid_values": ["Project", "Campaign", "Task", "PersonalProject", "StudyProject", "Experiment"]},
        {"field": "purposes", "label": "Purposes"},
-       {"field": "sub_projects", "label": "Sub-Projects"},
+       {"field": "managed_projects", "label": "Sub-Projects"},
        {"field": "success_criteria", "label": "Success Criteria"},
-       {"field": "user_defined_status", "label": "User Defined Status"},
-       {"field": "classifications", "label": "Classifications"},
-       {"field": "anchor_scope_guid", "label": "Anchor Scope Name"},
-       {"field": "supplementary_properties", "label": "Supplementary Properties"}
+       {"field": "classifications", "label": "Classifications"}
       ]
      }
     }
@@ -1962,7 +1888,7 @@
     "heading": "Task-DrE-Basic Attributes",
     "description": "Auto-generated format for Task (Create, Basic).",
     "family": "Projects",
-    "target_type_name": "Task",
+    "target_type_name": "Project",
     "aliases": ["Task DrE Basic"]
    },
    "microflow": {
@@ -1983,7 +1909,7 @@
     "stages": [
      {
       "stage": "producer/find",
-      "type": "Task",
+      "type": "Project",
       "function": "ProjectManager.find_projects",
       "params": {
        "search_string": "$search_string",
@@ -2016,7 +1942,7 @@
        {"field": "scope", "label": "Project Scope"},
        {"field": "project_type", "label": "Project Type", "valid_values": ["Project", "Campaign", "Task", "PersonalProject", "StudyProject", "Experiment"]},
        {"field": "purposes", "label": "Purposes"},
-       {"field": "sub_projects", "label": "Sub-Projects"},
+       {"field": "managed_projects", "label": "Sub-Projects"},
        {"field": "success_criteria", "label": "Success Criteria"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
@@ -2053,7 +1979,7 @@
        {"field": "project_status", "label": "Project Status"},
        {"field": "project_type", "label": "Project Type", "valid_values": ["Project", "Campaign", "Task", "PersonalProject", "StudyProject", "Experiment"]},
        {"field": "purposes", "label": "Purposes"},
-       {"field": "sub_projects", "label": "Sub-Projects"},
+       {"field": "managed_projects", "label": "Sub-Projects"},
        {"field": "success_criteria", "label": "Success Criteria"}
       ]
      }

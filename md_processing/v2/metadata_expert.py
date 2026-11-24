@@ -276,6 +276,7 @@ class TypeDefProcessor(MetadataExpertProcessor):
         if supplied:
             await self.check_guid_matches_echo(supplied, "Confirm Type Def Name", f"{verb} Type Def")
         guid = supplied or (await self._type_def(name))["guid"]
+        self.parsed_output["guid"] = guid  # the write is named (PY-48)
         if verb == "Delete":
             await self.expert._async_delete_type_def(guid, name)
             return self._result(f"Deleted type definition '{name}'", guid)
