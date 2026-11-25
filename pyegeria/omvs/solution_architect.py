@@ -3566,6 +3566,1030 @@ class SolutionArchitect(ServerClient):
             self._async_get_solution_blueprints_by_name(name=name, body=body, start_from=start_from, page_size=page_size, graph_query_depth=graph_query_depth, output_format=output_format, report_spec=report_spec, **kwargs))
         return response
 
+    # ── Solution boundaries (odpi/egeria#9465) ─────────────────────────────────────────────────────────────
+    # The 7 requests of the solution-architect view service for /solution-boundaries, in the style of the blueprint methods above.
+    # A solution boundary is a collection (of boundaries, components and roles); membership uses the Collection Manager's
+    # add/remove-member calls, as blueprints do, so there is no membership method here.
+
+    def _extract_solution_boundary_properties(self, element: dict, columns_struct: dict) -> dict:
+        """Extract the columns of a solution boundary element (the same common columns as a blueprint: header,
+        relationships and subject area, and the mermaid graph, which shows member boundaries as subgraphs)."""
+        return populate_common_columns(
+            element,
+            columns_struct,
+            include_header=True,
+            include_relationships=True,
+            include_subject_area=True,
+            mermaid_source_key='mermaidGraph',
+            mermaid_dest_key='mermaid',
+        )
+
+    def generate_solution_boundary_output(self, elements: list | dict, search_string: Optional[str] = None,
+                                          element_type_name: Optional[str] = None, output_format: str = 'MD',
+                                          report_spec: dict | str | None = None, **kwargs) -> str | list:
+        """Generate output for solution boundaries using the centralized formatter."""
+        if output_format == "MERMAID":
+            return extract_mermaid_only(elements)
+        return self._generate_formatted_output(
+            elements=elements,
+            query_string=search_string,
+            element_type_name=element_type_name or "Solution Boundary",
+            output_format=output_format,
+            report_spec=report_spec,
+            extract_properties_func=self._extract_solution_boundary_properties,
+            **kwargs,
+        )
+
+    @dynamic_catch
+    async def _async_create_solution_boundary(self, body: dict | NewElementRequestBody) -> str:
+        """ Create a solution boundary. To set a lifecycle status other than the
+            server's default (ACTIVE), set `contentStatus` inside `properties`;
+            `NewElementRequestBody` is the only body this endpoint accepts.
+            Async version.
+
+            Parameters
+            ----------
+            body: dict | NewElementRequestBody
+                A dictionary containing the definition of the boundary to create.
+
+            Returns
+            -------
+            str - guid of the solution boundary created.
+
+            Raises
+            ------
+            PyegeriaInvalidParameterException
+                one of the parameters is null or invalid or
+            PyegeriaAPIException
+                There is a problem adding the element properties to the metadata repository or
+            PyegeriaUnauthorizedException
+                the requesting user is not authorized to issue this request.
+
+            Notes
+            ----
+
+            Body structure:
+            {
+              "class": "NewElementRequestBody",
+              "externalSourceGUID": "add guid here",
+              "externalSourceName": "add qualified name here",
+              "effectiveTime": {{isotime}},
+              "forLineage": false,
+              "forDuplicateProcessing": false,
+              "anchorGUID": "add guid here",
+              "isOwnAnchor": false,
+              "parentGUID": "add guid here",
+              "parentRelationshipTypeName": "add type name here",
+              "parentRelationshipProperties": {
+                "class": "RelationshipElementProperties",
+                "propertyValueMap": {
+                  "description": {
+                    "class": "PrimitiveTypePropertyValue",
+                    "typeName": "string",
+                    "primitiveValue": "New description"
+                  }
+                }
+              },
+              "parentAtEnd1": false,
+              "properties": {
+                "class" : "SolutionBoundaryProperties",
+                "qualifiedName": "add unique name here",
+                "displayName": "add short name here",
+                "description": "add description here",
+                "versionIdentifier": "add version here",
+                "additionalProperties": {
+                  "property1": "propertyValue1",
+                  "property2": "propertyValue2"
+                },
+                "effectiveFrom": {{isotime}},
+                "effectiveTo": {{isotime}}
+              }
+            }
+       """
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
+               f"solution-boundaries")
+
+        return await self._async_create_element_body_request(url, ["SolutionBoundaryProperties"], body)
+
+    @dynamic_catch
+    def create_solution_boundary(self, body: dict | NewElementRequestBody) -> str:
+        """ Create a solution boundary. To set a lifecycle status other than the
+            server's default (ACTIVE), set `contentStatus` inside `properties`;
+            `NewElementRequestBody` is the only body this endpoint accepts.
+
+            Parameters
+            ----------
+            body: dict | NewElementRequestBody
+                A dictionary containing the definition of the boundary to create.
+
+            Returns
+            -------
+            str - guid of the solution boundary created.
+
+            Raises
+            ------
+            PyegeriaInvalidParameterException
+                one of the parameters is null or invalid or
+            PyegeriaAPIException
+                There is a problem adding the element properties to the metadata repository or
+            PyegeriaUnauthorizedException
+                the requesting user is not authorized to issue this request.
+
+            Notes
+            ----
+
+            Body structure:
+            {
+              "class": "NewElementRequestBody",
+              "externalSourceGUID": "add guid here",
+              "externalSourceName": "add qualified name here",
+              "effectiveTime": {{isotime}},
+              "forLineage": false,
+              "forDuplicateProcessing": false,
+              "anchorGUID": "add guid here",
+              "isOwnAnchor": false,
+              "parentGUID": "add guid here",
+              "parentRelationshipTypeName": "add type name here",
+              "parentRelationshipProperties": {
+                "class": "RelationshipElementProperties",
+                "propertyValueMap": {
+                  "description": {
+                    "class": "PrimitiveTypePropertyValue",
+                    "typeName": "string",
+                    "primitiveValue": "New description"
+                  }
+                }
+              },
+              "parentAtEnd1": false,
+              "properties": {
+                "class" : "SolutionBoundaryProperties",
+                "qualifiedName": "add unique name here",
+                "displayName": "add short name here",
+                "description": "add description here",
+                "versionIdentifier": "add version here",
+                "additionalProperties": {
+                  "property1": "propertyValue1",
+                  "property2": "propertyValue2"
+                },
+                "effectiveFrom": {{isotime}},
+                "effectiveTo": {{isotime}}
+              }
+            }
+        """
+
+        response = run_sync(self._async_create_solution_boundary(body))
+        return response
+
+    @dynamic_catch
+    async def _async_create_solution_boundary_from_template(self, body: dict | TemplateRequestBody) -> str:
+        """ Create a new solution boundary using an existing metadata element
+         as a template.  The template defines additional classifications and relationships that should be added to
+          the new element. Async Version.
+
+
+        Parameters
+        ----------
+        body: dict | TemplateRequestBody
+            A dictionary containing the definition of the solution boundary to create.
+
+        Returns
+        -------
+
+        str - guid of the solution boundary created.
+
+        Raises
+        ------
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            one of the parameters is null or invalid or
+        PyegeriaAPIException
+            There is a problem adding the element properties to the metadata repository or
+        PyegeriaUnauthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Notes
+        ----
+
+        Body structure:
+        {
+          "class": "TemplateRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": {{isotime}},
+          "forLineage": false,
+          "forDuplicateProcessing": false,
+          "anchorGUID": "add guid here",
+          "isOwnAnchor": false,
+          "parentGUID": "add guid here",
+          "parentRelationshipTypeName": "add type name here",
+          "parentRelationshipProperties": {
+            "class": "RelationshipElementProperties",
+            "propertyValueMap": {
+              "description": {
+                "class": "PrimitiveTypePropertyValue",
+                "typeName": "string",
+                "primitiveValue": "New description"
+              }
+            }
+          },
+          "parentAtEnd1": false,
+          "templateGUID": "add guid here",
+          "replacementProperties": {
+            "class": "EntityElementProperties",
+            "propertyValueMap": {
+              "description": {
+                "class": "PrimitiveTypePropertyValue",
+                "typeName": "string",
+                "primitiveValue": "New description"
+              }
+            }
+          },
+          "placeholderPropertyValues":  {
+            "placeholder1": "propertyValue1",
+            "placeholder2": "propertyValue2"
+          }
+        }
+
+       """
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
+               f"solution-boundaries/from-template")
+        if isinstance(body, TemplateRequestBody):
+            validated_body = body
+
+        elif isinstance(body, dict):
+            validated_body = self._template_request_adapter.validate_python(body)
+
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True, by_alias=True)
+        logger.info(json_body)
+        resp = await self._async_make_request("POST", url, json_body, is_json=True)
+        logger.info(f"Create Boundary from template with GUID: {resp.json().get('guid')}")
+        return resp.json().get("guid", NO_GUID_RETURNED)
+
+    @dynamic_catch
+    def create_solution_boundary_from_template(self, body: dict | TemplateRequestBody) -> str:
+        """ Create a new solution boundary using an existing metadata element
+         as a template.  The template defines additional classifications and relationships that should be added to
+          the new element.
+
+        Parameters
+        ----------
+        body: dict | TemplateRequestBody
+            A dictionary containing the definition of the solution boundary to create.
+
+        Returns
+        -------
+
+        str - guid of the solution boundary created.
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            one of the parameters is null or invalid or
+        PyegeriaAPIException
+            There is a problem adding the element properties to the metadata repository or
+        PyegeriaUnauthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Notes
+        ----
+
+        Body structure:
+        {
+          "class": "TemplateRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": {{isotime}},
+          "forLineage": false,
+          "forDuplicateProcessing": false,
+          "anchorGUID": "add guid here",
+          "isOwnAnchor": false,
+          "parentGUID": "add guid here",
+          "parentRelationshipTypeName": "add type name here",
+          "parentRelationshipProperties": {
+            "class": "RelationshipElementProperties",
+            "propertyValueMap": {
+              "description": {
+                "class": "PrimitiveTypePropertyValue",
+                "typeName": "string",
+                "primitiveValue": "New description"
+              }
+            }
+          },
+          "parentAtEnd1": false,
+          "templateGUID": "add guid here",
+          "replacementProperties": {
+            "class": "EntityElementProperties",
+            "propertyValueMap": {
+              "description": {
+                "class": "PrimitiveTypePropertyValue",
+                "typeName": "string",
+                "primitiveValue": "New description"
+              }
+            }
+          },
+          "placeholderPropertyValues":  {
+            "placeholder1": "propertyValue1",
+            "placeholder2": "propertyValue2"
+          }
+        }
+       """
+
+        response = run_sync(self._async_create_solution_boundary_from_template(body))
+        return response
+
+    @dynamic_catch
+    async def _async_update_solution_boundary(self, guid: str, body: dict | UpdateElementRequestBody) -> None:
+        """ Update a solution boundary. Async Version.
+
+        Parameters
+        ----------
+        guid: str
+            guid of the solution boundary to update.
+        body: dict | UpdateElementRequestBody
+            A dictionary containing the updates to the solution boundary.
+        Returns
+        -------
+
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            one of the parameters is null or invalid or
+        PyegeriaAPIException
+            There is a problem adding the element properties to the metadata repository or
+        PyegeriaUnauthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Notes
+        ----
+
+        Body structure:
+        {
+          "class": "UpdateElementRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": {{isotime}},
+          "forLineage": false,
+          "forDuplicateProcessing": false,
+          "properties": {
+            "class" : "SolutionBoundaryProperties",
+            "qualifiedName": "add unique name here",
+            "displayName": "add short name here",
+            "description": "add description here",
+            "versionIdentifier": "add version identifier here",
+            "additionalProperties": {
+              "property1": "propertyValue1",
+              "property2": "propertyValue2"
+            },
+            "effectiveFrom": {{isotime}},
+            "effectiveTo": {{isotime}}
+           }
+        }
+        """
+
+        validate_guid(guid)  # a missing guid would otherwise be sent as ".../None/update"
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
+               f"solution-boundaries/{guid}/update")
+
+        await self._async_update_element_body_request(url, ["SolutionBoundaryProperties"],body)
+
+    @dynamic_catch
+    def update_solution_boundary(self, guid: str, body: dict | UpdateElementRequestBody) -> None:
+        """ Update the properties of a solution boundary. Async Version.
+
+            Parameters
+            ----------
+            guid: str
+                guid of the solution boundary to update.
+            body: dict | UpdateElementRequestBody
+                A dictionary containing the updates to the boundary.
+
+            Returns
+            -------
+
+            None
+
+            Raises
+            ------
+            Raises
+            ------
+            PyegeriaInvalidParameterException
+                one of the parameters is null or invalid or
+            PyegeriaAPIException
+                There is a problem adding the element properties to the metadata repository or
+            PyegeriaUnauthorizedException
+                the requesting user is not authorized to issue this request.
+
+            Notes
+            ----
+
+            Body structure:
+            {
+              "class": "UpdateElementRequestBody",
+              "externalSourceGUID": "add guid here",
+              "externalSourceName": "add qualified name here",
+              "effectiveTime": {{isotime}},
+              "forLineage": false,
+              "forDuplicateProcessing": false,
+              "properties": {
+                "class" : "SolutionBoundaryProperties",
+                "qualifiedName": "add unique name here",
+                "displayName": "add short name here",
+                "description": "add description here",
+                "versionIdentifier": "add version identifier here",
+                "purposes": ["purpose1", "purpose2"],
+                "additionalProperties": {
+                  "property1": "propertyValue1",
+                  "property2": "propertyValue2"
+                },
+                "effectiveFrom": {{isotime}},
+                "effectiveTo": {{isotime}}
+               }
+            }
+            """
+        run_sync(self._async_update_solution_boundary(guid, body))
+
+    @dynamic_catch
+    async def _async_delete_solution_boundary(self, boundary_guid: str, cascade_delete: bool = False,
+                                               body: Optional[dict | DeleteElementRequestBody] = None) -> None:
+        """Delete a solution boundary. Async Version.
+
+           Parameters
+           ----------
+           boundary_guid: str
+               guid of the solution boundary to delete.
+           cascade_delete: bool, optional, default: False
+               Cascade the delete to dependent objects?
+           body: dict, optional
+               A dictionary containing parameters for the deletion.
+
+           Returns
+           -------
+           None
+
+           Raises
+           ------
+           Raises
+           ------
+           PyegeriaInvalidParameterException
+               one of the parameters is null or invalid or
+           PyegeriaAPIException
+               There is a problem adding the element properties to the metadata repository or
+           PyegeriaUnauthorizedException
+               the requesting user is not authorized to issue this request.
+
+           Notes
+           ----
+
+           Body structure:
+            {
+              "class": "MetadataSourceRequestBody",
+              "externalSourceGUID": "add guid here",
+              "externalSourceName": "add qualified name here",
+              "effectiveTime": {{isotime}},
+              "forLineage": false,
+              "forDuplicateProcessing": false
+            }
+           """
+        validate_guid(boundary_guid)
+
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
+               f"solution-boundaries/{boundary_guid}/delete")
+        await self._async_delete_element_request(url, body, cascade_delete=cascade_delete)
+        logger.info(f"Deleted Boundary  {boundary_guid} with cascade {cascade_delete}")
+
+    @dynamic_catch
+    def delete_solution_boundary(self, boundary_guid: str, cascade_delete: bool = False, body: Optional[dict | DeleteElementRequestBody] = None) -> None:
+        """ Delete a solution boundary.
+            Parameters
+            ----------
+            boundary_guid: str
+                guid of the solution boundary to delete.
+            cascade_delete: bool, optional, default: False
+                Cascade the delete to dependent objects?
+            body: dict, optional
+                A dictionary containing parameters of the deletion.
+
+            Returns
+            -------
+            None
+
+            Raises
+            ------
+            PyegeriaInvalidParameterException
+                one of the parameters is null or invalid or
+            PyegeriaAPIException
+                There is a problem adding the element properties to the metadata repository or
+            PyegeriaUnauthorizedException
+                the requesting user is not authorized to issue this request.
+
+            Notes
+            ----
+
+            Body structure:
+            {
+              "class": "MetadataSourceRequestBody",
+              "externalSourceGUID": "add guid here",
+              "externalSourceName": "add qualified name here",
+              "effectiveTime": {{isotime}},
+              "forLineage": false,
+              "forDuplicateProcessing": false
+            }
+            """
+        run_sync(self._async_delete_solution_boundary(boundary_guid, cascade_delete, body))
+
+    async def _async_find_solution_boundaries(
+        self,
+        search_string: str = "*",
+        body: Optional[dict | SearchStringRequestBody] = None,
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        start_from: int = 0,
+        page_size: int = 100,
+        graph_query_depth: int = 3, output_format: str = "JSON",
+        report_spec: str | dict = "Solution-Boundary",
+        **kwargs: Unpack[SearchFilters]
+    ) -> list[dict] | str:
+        """Retrieve the solution boundary elements that contain the search string.
+           https://egeria-project.org/concepts/solution-boundary
+           Async version.
+
+        Parameters
+        ----------
+        search_filter : str
+            - search_filter string to search for.
+        starts_with : bool, [default=True], optional
+            Starts with the supplied string.
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=False], optional
+            Ignore case when searching
+        anchor_domain: str, optional
+            The anchor domain to search in.
+        metadata_element_type: str, optional
+            The type of metadata element to search for.
+        metadata_element_subtypes: list[str], optional
+            The subtypes of metadata element to search for.
+        skip_relationships: list[str], optional
+            The types of relationships to skip.
+        include_only_relationships: list[str], optional
+            The types of relationships to include.
+        skip_classified_elements: list[str], optional
+            The types of classified elements to skip.
+        include_only_classified_elements: list[str], optional
+            The types of classified elements to include.
+        graph_query_depth: int, [default=3], optional
+            The depth of the graph query.
+        governance_zone_filter: list[str], optional
+            The governance zones to search in.
+        as_of_time: str, optional
+            The time to search as of.
+        effective_time: str, optional
+            The effective time to search at.
+        relationship_page_size: int, [default=0], optional
+            The page size for relationships.
+        limit_results_by_status: list[str], optional
+            The statuses to limit results by.
+        sequencing_order: str, optional
+            The order to sequence results by.
+        sequencing_property: str, optional
+            The property to sequence results by.
+        output_format: str, default = 'JSON'
+            Type of output to produce:
+                JSON - output standard json
+                MD - output standard markdown with no preamble
+                FORM - output markdown with a preamble for a form
+                REPORT - output markdown with a preamble for a report
+                Mermaid - output markdown with a mermaid graph
+        report_spec: str | dict, optional
+            The report specification to use.
+        start_from: int, [default=0], optional
+            The page number to start from.
+        page_size: int, [default=100], optional
+            The number of items to return in a single page.
+        property_names: list[str], optional
+            The names of properties to search for.
+        body: dict, optional, default = None
+            - additional optional specifications for the search.
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
+        Returns
+        -------
+        list[dict] | str
+            A list of solution boundary structures or a string if there are no elements found.
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            one of the parameters is null or invalid or
+        PyegeriaAPIException
+            There is a problem adding the element properties to the metadata repository or
+        PyegeriaUnauthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Notes:
+        {
+          "class" : "FilterRequestBody",
+          "filter" : "add name",
+          "asOfTime" : "{{$isoTimestamp}}",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "limitResultsByStatus" : ["ACTIVE"],
+          "sequencingOrder" : "PROPERTY_ASCENDING",
+          "sequencingProperty" : "qualifiedName"
+        }
+
+        """
+
+        url = f"{self.solution_architect_command_root}/solution-boundaries/by-search-string"
+        
+        # Merge explicit parameters with kwargs
+        params = {
+            'graph_query_depth': graph_query_depth,
+            'search_string': search_string,
+            'body': body,
+            'starts_with': starts_with,
+            'ends_with': ends_with,
+            'ignore_case': ignore_case,
+            'start_from': start_from,
+            'page_size': page_size,
+            'output_format': output_format,
+            'report_spec': report_spec
+        }
+        params.update(kwargs)
+        
+        # Filter out None values, but keep search_string even if None (it's required)
+        params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
+        
+        return await self._async_find_request(url, _type="SolutionBoundary",
+                                              _gen_output=self.generate_solution_boundary_output, **params)
+
+    def find_solution_boundaries(
+        self,
+        search_string: str = "*",
+        body: Optional[dict | SearchStringRequestBody] = None,
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        start_from: int = 0,
+        page_size: int = 100,
+        graph_query_depth: int = 3, output_format: str = "JSON",
+        report_spec: str | dict = "Solution-Boundary",
+        **kwargs: Unpack[SearchFilters]
+    ) -> list[dict] | str:
+        """Retrieve the list of solution boundary elements that contain the search string.
+           https://egeria-project.org/concepts/solution-boundary
+
+        Parameters
+        ----------
+        filter_string : str
+            - search_filterstring to search for.
+        starts_with : bool, [default=False], optional
+            Starts with the supplied string.
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=False], optional
+            Ignore case when searching
+        start_from: int, [default=0], optional
+            When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=max_paging_size], optional
+            The number of items to return in a single page. If not specified, the default will be taken from
+            the class instance.
+        body: dict, optional, default = None
+            - additional optional specifications for the search.
+        output_format: str, default = 'JSON'
+                Type of output to produce:
+                JSON - output standard json
+                MD - output standard markdown with no preamble
+                FORM - output markdown with a preamble for a form
+                REPORT - output markdown with a preamble for a report
+                MERMAID - output mermaid markdown
+
+        Accepts the standard search filters as keyword arguments (see ``SearchFilters``
+        in ``pyegeria.core.request_filters``), e.g. ``metadata_element_subtypes=[...]``.
+
+        Returns
+        -------
+        list[dict] | str
+            A list of solution boundary structures or a string if there are no elements found.
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            one of the parameters is null or invalid or
+        PyegeriaAPIException
+            There is a problem adding the element properties to the metadata repository or
+        PyegeriaUnauthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Notes:
+        {
+          "class" : "FilterRequestBody",
+          "filter" : "add name",
+          "asOfTime" : "{{$isoTimestamp}}",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "limitResultsByStatus" : ["ACTIVE"],
+          "sequencingOrder" : "PROPERTY_ASCENDING",
+          "sequencingProperty" : "qualifiedName"
+        }
+
+        """
+
+        response = run_sync(
+            self._async_find_solution_boundaries(
+                search_string=search_string,
+                graph_query_depth=graph_query_depth,
+                body=body,
+                starts_with=starts_with,
+                ends_with=ends_with,
+                ignore_case=ignore_case,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                **kwargs
+            )
+        )
+        return response
+
+    async def _async_get_solution_boundary_by_guid(self, guid: str = None, body: dict = None,
+                                                    graph_query_depth: int = 3, max_mermaid_node_count: int = 10,
+                                                    output_format: str = "JSON",
+                                                    report_spec: str| Dict = "Solution-Boundary", **kwargs) -> dict | str:
+        """Return the properties of a specific solution boundary. Async Version.
+
+            Parameters
+            ----------
+            guid: str
+                guid of the solution boundary to retrieve.
+            body: dict, optional
+                A dictionary containing parameters of the retrieval.
+            output_format: str, default = 'JSON'
+                Type of output to produce:
+                JSON - output standard json
+                MD - output standard markdown with no preamble
+                FORM - output markdown with a preamble for a form
+                REPORT - output markdown with a preamble for a report
+                MERMAID - output mermaid markdown
+            report_spec: str|Dict, optional
+                Structure of content to return.
+
+            Returns
+            -------
+            None
+
+            Raises
+            ------
+            PyegeriaInvalidParameterException
+                one of the parameters is null or invalid or
+            PyegeriaAPIException
+                There is a problem adding the element properties to the metadata repository or
+            PyegeriaUnauthorizedException
+                the requesting user is not authorized to issue this request.
+
+            Notes
+            -----
+            Body structure:
+            {
+              "class": "AnyTimeRequestBody",
+              "asOfTime": {{isotime}},
+              "effectiveTime": {{isotime}},
+              "forLineage": false,
+              "forDuplicateProcessing : false
+            }
+
+        """
+        if guid is None and "solution_boundary_guid" in kwargs:
+            guid = kwargs.pop("solution_boundary_guid")
+        validate_guid(guid)
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
+               f"solution-boundaries/{guid}/retrieve")
+
+        if body is None:
+            # graph_query_depth/max_mermaid_node_count were previously dead here -
+            # this endpoint's own **kwargs parameter was never used at all, and no
+            # body means _async_make_request got nothing (or stray kwargs it
+            # doesn't accept). Build an AnyTimeRequestBody so callers can actually
+            # control the mermaid graph (see PYEGERIA_ISSUES.md ISSUE-23/26).
+            body = {
+                "class": "AnyTimeRequestBody",
+                "graphQueryDepth": graph_query_depth,
+                "maxMermaidNodeCount": max_mermaid_node_count,
+            }
+            response = await self._async_make_request("POST", url, body_slimmer(body))
+        else:
+            response = await self._async_make_request("POST", url, body_slimmer(body), **kwargs)
+        element = response.json().get("element", NO_ELEMENTS_FOUND)
+        if element == NO_ELEMENTS_FOUND:
+            return NO_ELEMENTS_FOUND
+        if output_format != 'JSON':  # return a simplified markdown representation
+            return self.generate_solution_boundary_output(element, guid, "SolutionBoundary",
+                                                           output_format, report_spec=report_spec)
+        return response.json().get("element", NO_ELEMENTS_FOUND)
+
+    def get_solution_boundary_by_guid(self, guid: str = None, body: dict = None, graph_query_depth: int = 3,
+                                       max_mermaid_node_count: int = 10, output_format: str = "JSON",
+                                       report_spec: str| Dict = "Solution-Boundary", **kwargs) -> dict | str:
+        """ Return the properties of a specific solution boundary.
+
+            Parameters
+            ----------
+            guid: str
+                guid of the solution boundary to retrieve.
+            body: dict, optional
+                A dictionary containing parameters of the retrieval.
+            output_format: str, default = 'JSON'
+                Type of output to produce:
+                JSON - output standard json
+                MD - output standard markdown with no preamble
+                FORM - output markdown with a preamble for a form
+                REPORT - output markdown with a preamble for a report
+                MERMAID - output mermaid markdown
+            report_spec: str|Dict, optional
+                Structure of content to return.
+
+            Returns
+            -------
+            None
+
+            Raises
+            ------
+            PyegeriaInvalidParameterException
+                one of the parameters is null or invalid or
+            PyegeriaAPIException
+                There is a problem adding the element properties to the metadata repository or
+            PyegeriaUnauthorizedException
+                the requesting user is not authorized to issue this request.
+
+            Notes
+            -----
+            Body structure:
+            {
+              "class": "AnyTimeRequestBody",
+              "asOfTime": {{isotime}},
+              "effectiveTime": {{isotime}},
+              "forLineage": false,
+              "forDuplicateProcessing : false
+            }
+
+        """
+        response = run_sync(self._async_get_solution_boundary_by_guid(guid=guid, body=body,
+                                                                                      graph_query_depth=graph_query_depth,
+                                                                                      max_mermaid_node_count=max_mermaid_node_count,
+                                                                                      output_format=output_format, report_spec=report_spec, **kwargs))
+        return response
+
+    async def _async_get_solution_boundaries_by_name(self, name: Optional[str] = None, body: dict = None, start_from: int = 0,
+                                                     page_size: int = max_paging_size,
+                                                     graph_query_depth: int = 3, output_format: str = "JSON", report_spec: str| Dict = "Solution-Boundary", **kwargs) -> dict | str:
+        """ Returns the list of solution boundaries with a particular name. Async Version.
+
+            Parameters
+            ----------
+            search_filter: str
+                name of the solution boundary to retrieve.
+            body: dict, optional
+                A dictionary containing parameters of the retrieval.
+            output_format: str, default = 'JSON'
+                Type of output to produce:
+                JSON - output standard json
+                MD - output standard markdown with no preamble
+                FORM - output markdown with a preamble for a form
+                REPORT - output markdown with a preamble for a report
+                MERMAID - output mermaid markdown
+            report_spec: str|Dict, optional
+                Structure of content to return.
+
+            Returns
+            -------
+            [dict] | str
+                A list of solution boundarys matching the name.
+
+            Raises
+            ------
+            PyegeriaInvalidParameterException
+                one of the parameters is null or invalid or
+            PyegeriaAPIException
+                There is a problem adding the element properties to the metadata repository or
+            PyegeriaUnauthorizedException
+                the requesting user is not authorized to issue this request.
+
+            Notes
+            -----
+            Body structure:
+            {
+              "class": "FilterRequestBody",
+              "asOfTime": {{isotime}},
+              "effectiveTime": {{isotime}},
+              "forLineage": false,
+              "forDuplicateProcessing": false,
+              "limitResultsByStatus": ["ACTIVE"],
+              "sequencingOrder": "PROPERTY_ASCENDING",
+              "sequencingProperty": "qualifiedName",
+              "filter": "Add name here"
+            }
+
+        """
+        if name is None and "search_filter" in kwargs:
+            name = kwargs.pop("search_filter")
+        if name is None and "filter_string" in kwargs:
+            name = kwargs.pop("filter_string")
+
+        if body is None:
+            body = {
+                'graphQueryDepth': graph_query_depth,
+                "filter": name,
+                }
+        else:
+            # Copy, so the caller's dict is not changed, and keep the body's own filter on a body-only call
+            # (ISSUE-135).
+            body = dict(body)
+            if name is not None:
+                body["filter"] = name
+        # The server reads paging from the body only; it ignores startFrom/pageSize query parameters.
+        body.setdefault("startFrom", start_from)
+        body.setdefault("pageSize", page_size)
+
+        url = f"{self.solution_architect_command_root}/solution-boundaries/by-name"
+
+        response: Response = await self._async_make_request("POST", url, body_slimmer(body))
+        element = response.json().get("elements", NO_ELEMENTS_FOUND)
+        if element == NO_ELEMENTS_FOUND:
+            return NO_ELEMENTS_FOUND
+        if output_format != 'JSON':  # return a simplified markdown representation
+            return self.generate_solution_boundary_output(element, search_string=name, element_type_name="SolutionBoundary",
+                                                          output_format=output_format, report_spec=report_spec)
+        return response.json().get("elements", NO_ELEMENTS_FOUND)
+
+    def get_solution_boundaries_by_name(self, name: Optional[str] = None, body: dict = None, start_from: int = 0,
+                                        page_size: int = max_paging_size, graph_query_depth: int = 3, output_format: str = "JSON",
+                                        report_spec: str| Dict = "Solution-Boundary", **kwargs) -> dict | str:
+        """ Returns the list of solution boundaries with a particular name.
+
+            Parameters
+            ----------
+            search_filter: str
+                name of the solution boundary to retrieve.
+            body: dict, optional
+                A dictionary containing parameters of the retrieval.
+            start_from: int, [default=0], optional
+                When multiple pages of results are available, the page number to start from.
+            page_size: int, [default=max_paging_size], optional
+                The number of items to return in a single page. If not specified, the default will be taken from
+                the class instance.
+            output_format: str, default = 'JSON'
+                Type of output to produce:
+                JSON - output standard json
+                MD - output standard markdown with no preamble
+                FORM - output markdown with a preamble for a form
+                REPORT - output markdown with a preamble for a report
+                MERMAID - output mermaid markdown
+            report_spec: str|Dict, optional
+                Structure of content to return.
+
+            Returns
+            -------
+            [dict] | str
+                A list of solution boundarys matching the name.
+
+            Raises
+            ------
+            PyegeriaInvalidParameterException
+                one of the parameters is null or invalid or
+            PyegeriaAPIException
+                There is a problem adding the element properties to the metadata repository or
+            PyegeriaUnauthorizedException
+                the requesting user is not authorized to issue this request.
+
+            Notes
+            -----
+            Body structure:
+            {
+              "class": "FilterRequestBody",
+              "asOfTime": {{isotime}},
+              "effectiveTime": {{isotime}},
+              "forLineage": false,
+              "forDuplicateProcessing": false,
+              "limitResultsByStatus": ["ACTIVE"],
+              "sequencingOrder": "PROPERTY_ASCENDING",
+              "sequencingProperty": "qualifiedName",
+              "filter": "Add name here"
+            }
+
+        """
+        response = run_sync(
+            self._async_get_solution_boundaries_by_name(name=name, body=body, start_from=start_from, page_size=page_size, graph_query_depth=graph_query_depth, output_format=output_format, report_spec=report_spec, **kwargs))
+        return response
+
+
 
 
     #

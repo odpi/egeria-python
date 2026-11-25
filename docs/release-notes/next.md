@@ -73,8 +73,13 @@ notes and are not repeated here.
   the report-spec allowlist.
 - **Property classes for the new solution boundaries** (odpi/egeria #9465): `SolutionBoundaryProperties` and
   `DesignModelBoundaryProperties` in `pyegeria.models`. They are collections like `SolutionBlueprintProperties` and add no
-  property of their own. The client methods, formatters and Dr.Egeria commands come in later changes, and a platform needs the
-  #9465 build before any of it answers.
+  property of their own.
+- **Solution boundaries in `SolutionArchitect`** (odpi/egeria #9465): `create_solution_boundary`,
+  `create_solution_boundary_from_template`, `update_solution_boundary`, `delete_solution_boundary`,
+  `find_solution_boundaries`, `get_solution_boundary_by_guid` and `get_solution_boundaries_by_name`, each as a sync and an
+  `_async_` pair, one for each of the 7 requests the solution-architect view service has for `/solution-boundaries`. Membership uses
+  the Collection Manager's add and remove member calls, as for blueprints. `generate_solution_boundary_output` formats the
+  results. These need a platform with the #9465 build; the Dr.Egeria commands and report specs come in later changes.
 
 ## Planned for pyegeria 6.4 or the next release
 
