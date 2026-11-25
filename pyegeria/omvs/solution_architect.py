@@ -67,6 +67,50 @@ def base_path(client, view_server: str):
     return f"{client.platform_url}/servers/{view_server}/api/open-metadata/metadata-expert"
 
 
+def solution_boundary_member_hierarchy(element: dict, max_depth: int = 8, max_nodes: int = 500) -> list[str]:
+    """The members of a solution boundary (or a blueprint) as indented lines "Type: name", following nested boundaries.
+
+    Egeria returns a member that is itself a boundary as an item with `nestedElements` (its own members, each the same shape and
+    possibly with `nestedElements` of its own) and `sideLinks` (memberships that lead elsewhere, e.g. to another parent): the field
+    names are those of RelatedMetadataHierarchySummary in odpi/egeria #9465 (read in the Java source; not yet seen on a platform).
+    Membership can be shared and in principle cyclic, so the walk keeps the guids on the current path and does not follow a member
+    already on it, stops at `max_depth` levels and at `max_nodes` lines, and says so in the output instead of cutting silently.
+    """
+    lines: list[str] = []
+
+    def describe(item):
+        related = (item.get("relatedElement") or {}) if isinstance(item, dict) else {}
+        header, props = related.get("elementHeader") or {}, related.get("properties") or {}
+        return (header.get("guid") or "", (header.get("type") or {}).get("typeName") or "?",
+                props.get("displayName") or props.get("qualifiedName") or props.get("name") or "(no name)")
+
+    def walk(items, depth, path):
+        for item in items or []:
+            if len(lines) >= max_nodes:
+                lines.append("... more members not shown (limit of %d lines)" % max_nodes)
+                return True
+            guid, type_name, name = describe(item)
+            pad = "  " * depth
+            if guid and guid in path:
+                lines.append(f"{pad}{type_name}: {name} (already above: not followed again)")
+                continue
+            lines.append(f"{pad}{type_name}: {name}")
+            links = [describe(s) for s in (item.get("sideLinks") or [])] if isinstance(item, dict) else []
+            if links:
+                lines.append(f"{pad}  also linked to: " + ", ".join(f"{t}: {n}" for _, t, n in links))
+            nested = item.get("nestedElements") if isinstance(item, dict) else None
+            if nested:
+                if depth + 1 >= max_depth:
+                    lines.append(f"{pad}  ... deeper members not shown (limit of {max_depth} levels)")
+                elif walk(nested, depth + 1, path | {guid}):
+                    return True
+        return False
+
+    root = ((element or {}).get("elementHeader") or {}).get("guid") or ""
+    walk((element or {}).get("collectionMembers"), 0, {root} if root else set())
+    return lines
+
+
 class SolutionArchitect(ServerClient):
     """SolutionArchitect is a class that extends the Client class. The Solution Architect OMVS provides APIs for
       searching for architectural elements such as information supply chains, solution blueprints, solution components,
@@ -3574,7 +3618,7 @@ class SolutionArchitect(ServerClient):
     def _extract_solution_boundary_properties(self, element: dict, columns_struct: dict) -> dict:
         """Extract the columns of a solution boundary element (the same common columns as a blueprint: header,
         relationships and subject area, and the mermaid graph, which shows member boundaries as subgraphs)."""
-        return populate_common_columns(
+        col_data = populate_common_columns(
             element,
             columns_struct,
             include_header=True,
@@ -3583,6 +3627,15 @@ class SolutionArchitect(ServerClient):
             mermaid_source_key='mermaidGraph',
             mermaid_dest_key='mermaid',
         )
+        # "Member Hierarchy": the members with their nested boundaries, as indented lines (see solution_boundary_member_hierarchy)
+        try:
+            columns = ((col_data.get('formats') or {}).get('attributes')) if isinstance(col_data, dict) else None
+            for col in columns or []:
+                if isinstance(col, dict) and col.get('key') == 'member_hierarchy' and col.get('value') in (None, ""):
+                    col['value'] = "\n".join(solution_boundary_member_hierarchy(element))
+        except Exception as exc:  # keep extraction resilient, as the other extractors do
+            logger.debug(f"_extract_solution_boundary_properties: member hierarchy not built: {exc}")
+        return col_data
 
     def generate_solution_boundary_output(self, elements: list | dict, search_string: Optional[str] = None,
                                           element_type_name: Optional[str] = None, output_format: str = 'MD',

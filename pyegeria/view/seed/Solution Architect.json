@@ -176,6 +176,181 @@
    }
   },
   {
+   "label": "Solution-Boundary-Mermaid",
+   "envelope": {
+    "heading": "Solution Boundary Mermaid",
+    "description": "The graph of a Solution Boundary: its components and roles, with nested boundaries as subgraphs (odpi/egeria #9465).",
+    "family": "Solution Architect",
+    "target_type_name": "SolutionBoundary",
+    "aliases": ["Solution Boundary Mermaid"],
+    "annotations": {
+     "Wikilinks": ["[[Solution-Boundary-Mermaid]]"]
+    }
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "SolutionBoundary",
+      "function": "SolutionArchitect.find_solution_boundaries",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "DICT": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "created_by", "label": "Created By"},
+       {"field": "create_time", "label": "Create Time"},
+       {"field": "updated_by", "label": "Updated By"},
+       {"field": "update_time", "label": "Update Time"},
+       {"field": "collection_members", "label": "Containing Members"},
+       {"field": "member_of_collections", "label": "Member Of"}
+      ]
+     },
+     "TABLE": {"same_as": "DICT"},
+     "LIST": {"same_as": "DICT"},
+     "MD": {"same_as": "DICT"},
+     "FORM": {"same_as": "DICT"},
+     "REPORT": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "created_by", "label": "Created By"},
+       {"field": "create_time", "label": "Create Time"},
+       {"field": "updated_by", "label": "Updated By"},
+       {"field": "update_time", "label": "Update Time"},
+       {"field": "collection_members", "label": "Containing Members"},
+       {"field": "member_of_collections", "label": "Member Of"},
+       {"field": "GUID", "label": "GUID"},
+       {"field": "mermaidGraph", "label": "Mermaid"},
+       {"field": "solutionBlueprintMermaidGraph", "label": "Solution Boundary Mermaid Graph"}
+      ]
+     },
+     "HTML": {"same_as": "REPORT"},
+     "MERMAID": {
+      "columns": [
+       {"field": "solutionBlueprintMermaidGraph", "label": "Solution Boundary Mermaid Graph"}
+      ]
+     }
+    }
+   }
+  },
+  {
+   "label": "Solution-Boundary",
+   "envelope": {
+    "heading": "Solution Boundary Report",
+    "description": "Details of a Solution Boundary: a collection of boundaries, components and roles (odpi/egeria #9465).",
+    "family": "Solution Architect",
+    "target_type_name": "SolutionBoundary",
+    "aliases": ["Solution Boundary"],
+    "annotations": {
+     "Wikilinks": ["[[Solution-Boundary]]"]
+    }
+   },
+   "microflow": {
+    "format": "microflow/1",
+    "params": {
+     "search_string": {"type": "string", "required": true},
+     "sequencing_order": {"type": "string", "required": false},
+     "sequencing_property": {"type": "string", "required": false},
+     "page_size": {"type": "string", "required": false},
+     "start_from": {"type": "string", "required": false},
+     "starts_with": {"type": "string", "required": false},
+     "ends_with": {"type": "string", "required": false},
+     "ignore_case": {"type": "string", "required": false},
+     "classification_names": {"type": "string", "required": false},
+     "metadata_element_subtypes": {"type": "string", "required": false},
+     "metadata_element_type": {"type": "string", "required": false}
+    },
+    "stages": [
+     {
+      "stage": "producer/find",
+      "type": "SolutionBoundary",
+      "function": "SolutionArchitect.find_solution_boundaries",
+      "params": {"search_string": "$search_string"}
+     }
+    ],
+    "formatters": {
+     "DICT": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "created_by", "label": "Created By"},
+       {"field": "create_time", "label": "Create Time"},
+       {"field": "updated_by", "label": "Updated By"},
+       {"field": "update_time", "label": "Update Time"},
+       {"field": "collection_members", "label": "Containing Members"},
+       {"field": "member_of_collections", "label": "Member Of"},
+       {"field": "member_hierarchy", "label": "Member Hierarchy"}
+      ]
+     },
+     "TABLE": {"same_as": "DICT"},
+     "LIST": {"same_as": "DICT"},
+     "MD": {"same_as": "DICT"},
+     "FORM": {"same_as": "DICT"},
+     "REPORT": {
+      "columns": [
+       {"field": "display_name", "label": "Display Name"},
+       {"field": "qualified_name", "label": "Qualified Name"},
+       {"field": "category", "label": "Category"},
+       {"field": "description", "label": "Description", "format": true},
+       {"field": "type_name", "label": "Type Name"},
+       {"field": "url", "label": "URL"},
+       {"field": "classifications", "label": "Classifications"},
+       {"field": "created_by", "label": "Created By"},
+       {"field": "create_time", "label": "Create Time"},
+       {"field": "updated_by", "label": "Updated By"},
+       {"field": "update_time", "label": "Update Time"},
+       {"field": "collection_members", "label": "Containing Members"},
+       {"field": "member_of_collections", "label": "Member Of"},
+       {"field": "member_hierarchy", "label": "Member Hierarchy"},
+       {"field": "GUID", "label": "GUID"},
+       {"field": "mermaidGraph", "label": "Mermaid"},
+       {"field": "solutionBlueprintMermaidGraph", "label": "Solution Boundary Mermaid Graph"}
+      ]
+     },
+     "HTML": {"same_as": "REPORT"},
+     "MERMAID": {
+      "columns": [
+       {"field": "mermaidGraph", "label": "Mermaid"},
+       {"field": "solutionBlueprintMermaidGraph", "label": "Solution Boundary Mermaid Graph"}
+      ]
+     }
+    }
+   }
+  },
+  {
    "label": "Concept-Bead-Attribute-DrE-Advanced",
    "envelope": {
     "heading": "Concept-Bead-Attribute-DrE-Advanced Attributes",

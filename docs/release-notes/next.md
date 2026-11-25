@@ -79,7 +79,12 @@ notes and are not repeated here.
   `find_solution_boundaries`, `get_solution_boundary_by_guid` and `get_solution_boundaries_by_name`, each as a sync and an
   `_async_` pair, one for each of the 7 requests the solution-architect view service has for `/solution-boundaries`. Membership uses
   the Collection Manager's add and remove member calls, as for blueprints. `generate_solution_boundary_output` formats the
-  results. These need a platform with the #9465 build; the Dr.Egeria commands and report specs come in later changes.
+  results. These need a platform with the #9465 build; the Dr.Egeria commands come in a later change.
+- **Report specs `Solution-Boundary` and `Solution-Boundary-Mermaid`** (odpi/egeria #9465), and a "Member Hierarchy" column: the
+  members of a boundary, with nested boundaries as indented lines (`solution_boundary_member_hierarchy`). It follows the
+  `nestedElements` and `sideLinks` of each member, does not follow a member already above it, and says when it stops at 8 levels or
+  500 lines. The find method is on the report-spec allowlist. The solution-boundary methods must not be released without these specs:
+  their default `report_spec` is `Solution-Boundary`.
 
 ## Planned for pyegeria 6.4 or the next release
 

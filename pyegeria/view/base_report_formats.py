@@ -2611,6 +2611,75 @@ formats=[
             spec_params={},
         ),
     ),
+    "Solution-Boundary-Mermaid": FormatSet(
+        target_type="SolutionBoundary",
+        heading="Solution Boundary Mermaid",
+        description="The graph of a Solution Boundary: its components and roles, with nested boundaries as subgraphs (odpi/egeria #9465).",
+        aliases=[],
+        annotations={"Wikilinks": ["[[Solution-Boundary-Mermaid]]"]},
+        family="Solution Architect",
+        formats=[
+            Format(
+                types=["DICT", "TABLE", "LIST", "MD", "FORM"],
+                attributes=COLLECTIONS_MEMBERS_COLUMNS
+            ),
+            Format(
+                types=["REPORT", "HTML"],
+                attributes=COLLECTIONS_MEMBERS_COLUMNS + [
+                    Column(name="GUID", key='GUID'),
+                    Column(name="Mermaid", key='mermaidGraph'),
+                    # the same element field as a blueprint's: Egeria's doc comment for it now says "(or solution boundary)"
+                    Column(name="Solution Boundary Mermaid Graph", key='solutionBlueprintMermaidGraph'),
+                ]),
+            Format(
+                types=["MERMAID"],
+                attributes=[
+                    Column(name="Solution Boundary Mermaid Graph", key='solutionBlueprintMermaidGraph'),
+                ])
+        ],
+        action=ActionParameter(
+            function="SolutionArchitect.find_solution_boundaries",
+            required_params=["search_string"],
+            optional_params=OPTIONAL_SEARCH_PARAMS,
+            spec_params={},
+        ),
+    ),
+    "Solution-Boundary": FormatSet(
+        target_type="SolutionBoundary",
+        heading="Solution Boundary Report",
+        description="Details of a Solution Boundary: a collection of boundaries, components and roles (odpi/egeria #9465).",
+        aliases=[],
+        annotations={"Wikilinks": ["[[Solution-Boundary]]"]},
+        family="Solution Architect",
+        formats=[
+            Format(
+                types=["DICT", "TABLE", "LIST", "MD", "FORM"],
+                attributes=COLLECTIONS_MEMBERS_COLUMNS + [
+                    Column(name="Member Hierarchy", key='member_hierarchy'),
+                ]
+            ),
+            Format(
+                types=["REPORT", "HTML"],
+                attributes=COLLECTIONS_MEMBERS_COLUMNS + [
+                    Column(name="Member Hierarchy", key='member_hierarchy'),
+                    Column(name="GUID", key='GUID'),
+                    Column(name="Mermaid", key='mermaidGraph'),
+                    Column(name="Solution Boundary Mermaid Graph", key='solutionBlueprintMermaidGraph'),
+                ]),
+            Format(
+                types=["MERMAID"],
+                attributes=[
+                    Column(name="Mermaid", key='mermaidGraph'),
+                    Column(name="Solution Boundary Mermaid Graph", key='solutionBlueprintMermaidGraph'),
+                ])
+        ],
+        action=ActionParameter(
+            function="SolutionArchitect.find_solution_boundaries",
+            required_params=["search_string"],
+            optional_params=OPTIONAL_SEARCH_PARAMS,
+            spec_params={},
+        ),
+    ),
     "Registered-Services": FormatSet(
         target_type="Registered-Services",
         heading="Registered Services",
