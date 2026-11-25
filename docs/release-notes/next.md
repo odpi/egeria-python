@@ -71,6 +71,10 @@ notes and are not repeated here.
   synchronization, delete method, templates, configuration properties), and the target's own name and type come
   from the target. The spec runs `get_catalog_targets`, which needs the integration connector's GUID and is now on
   the report-spec allowlist.
+- **Property classes for the new solution boundaries** (odpi/egeria #9465): `SolutionBoundaryProperties` and
+  `DesignModelBoundaryProperties` in `pyegeria.models`. They are collections like `SolutionBlueprintProperties` and add no
+  property of their own. The client methods, formatters and Dr.Egeria commands come in later changes, and a platform needs the
+  #9465 build before any of it answers.
 
 ## Planned for pyegeria 6.4 or the next release
 
