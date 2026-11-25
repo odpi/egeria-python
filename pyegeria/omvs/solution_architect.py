@@ -72,7 +72,10 @@ def solution_boundary_member_hierarchy(element: dict, max_depth: int = 8, max_no
 
     Egeria returns a member that is itself a boundary as an item with `nestedElements` (its own members, each the same shape and
     possibly with `nestedElements` of its own) and `sideLinks` (memberships that lead elsewhere, e.g. to another parent): the field
-    names are those of RelatedMetadataHierarchySummary in odpi/egeria #9465 (read in the Java source; not yet seen on a platform).
+    names are those of RelatedMetadataHierarchySummary in odpi/egeria #9465, confirmed on a platform running the first build with it
+    (2026-11-25, window P: a blueprint > boundary > boundary > role tree, three levels of `nestedElements`).
+    A side link is the member's membership leading UP: on that platform every member's side link was just the link back to its
+    own parent, so a side link is shown ("also linked to") only when it names something other than the parent it is listed under.
     Membership can be shared and in principle cyclic, so the walk keeps the guids on the current path and does not follow a member
     already on it, stops at `max_depth` levels and at `max_nodes` lines, and says so in the output instead of cutting silently.
     """
@@ -84,7 +87,7 @@ def solution_boundary_member_hierarchy(element: dict, max_depth: int = 8, max_no
         return (header.get("guid") or "", (header.get("type") or {}).get("typeName") or "?",
                 props.get("displayName") or props.get("qualifiedName") or props.get("name") or "(no name)")
 
-    def walk(items, depth, path):
+    def walk(items, depth, path, parent):
         for item in items or []:
             if len(lines) >= max_nodes:
                 lines.append("... more members not shown (limit of %d lines)" % max_nodes)
@@ -95,19 +98,19 @@ def solution_boundary_member_hierarchy(element: dict, max_depth: int = 8, max_no
                 lines.append(f"{pad}{type_name}: {name} (already above: not followed again)")
                 continue
             lines.append(f"{pad}{type_name}: {name}")
-            links = [describe(s) for s in (item.get("sideLinks") or [])] if isinstance(item, dict) else []
+            links = [d for d in (describe(s) for s in (item.get("sideLinks") or [])) if d[0] != parent] if isinstance(item, dict) else []
             if links:
                 lines.append(f"{pad}  also linked to: " + ", ".join(f"{t}: {n}" for _, t, n in links))
             nested = item.get("nestedElements") if isinstance(item, dict) else None
             if nested:
                 if depth + 1 >= max_depth:
                     lines.append(f"{pad}  ... deeper members not shown (limit of {max_depth} levels)")
-                elif walk(nested, depth + 1, path | {guid}):
+                elif walk(nested, depth + 1, path | {guid}, guid):
                     return True
         return False
 
     root = ((element or {}).get("elementHeader") or {}).get("guid") or ""
-    walk((element or {}).get("collectionMembers"), 0, {root} if root else set())
+    walk((element or {}).get("collectionMembers"), 0, {root} if root else set(), root)
     return lines
 
 

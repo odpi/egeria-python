@@ -82,7 +82,8 @@ notes and are not repeated here.
   results. These need a platform with the #9465 build; the Dr.Egeria commands come in a later change.
 - **Report specs `Solution-Boundary` and `Solution-Boundary-Mermaid`** (odpi/egeria #9465), and a "Member Hierarchy" column: the
   members of a boundary, with nested boundaries as indented lines (`solution_boundary_member_hierarchy`). It follows the
-  `nestedElements` and `sideLinks` of each member, does not follow a member already above it, and says when it stops at 8 levels or
+  `nestedElements` and `sideLinks` of each member (the field names were confirmed on a platform with the #9465 build), shows a side
+  link only when it is not the member's own parent, does not follow a member already above it, and says when it stops at 8 levels or
   500 lines. The find method is on the report-spec allowlist. The solution-boundary methods must not be released without these specs:
   their default `report_spec` is `Solution-Boundary`.
 

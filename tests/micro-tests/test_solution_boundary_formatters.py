@@ -81,10 +81,32 @@ def test_a_nested_boundary_shows_its_members_indented_and_a_third_level_too():
                      "  SolutionActorRole: Role A", "SolutionComponent: Comp A"]
 
 
-def test_side_links_are_named_not_followed():
-    side = [member("p2", "SolutionBlueprint", "Other blueprint")]
-    lines = hierarchy(boundary([member("b2", "SolutionBoundary", "Middle", nested=[], side=side)]))
+def test_a_side_link_that_is_only_the_parent_is_not_shown():
+    # what a platform returns: each member's side link is its link back up to the parent it is listed under
+    parent_link = [member("root", "SolutionBoundary", "Root")]
+    lines = hierarchy(boundary([member("b2", "SolutionBoundary", "Middle", side=parent_link,
+                                       nested=[member("c1", "SolutionComponent", "Comp A", side=[member("b2", "SolutionBoundary", "Middle")])])]))
+    assert lines == ["SolutionBoundary: Middle", "  SolutionComponent: Comp A"]
+
+
+def test_a_side_link_to_another_parent_is_named_not_followed():
+    other = [member("p2", "SolutionBlueprint", "Other blueprint")]
+    lines = hierarchy(boundary([member("b2", "SolutionBoundary", "Middle", nested=[], side=[member("root", "SolutionBoundary", "Root")] + other)]))
     assert lines == ["SolutionBoundary: Middle", "  also linked to: SolutionBlueprint: Other blueprint"]
+
+
+def test_the_real_nested_retrieval_from_a_platform_with_the_boundaries_build():
+    """REAL SHAPE (window P, 2026-11-25): blueprint > boundary > nested boundary > role, as the first #9465 build returns it."""
+    import glob
+    import json
+    from pathlib import Path
+    fixtures = Path(__file__).resolve().parent.parent / "fixtures"
+    [bp_path] = glob.glob(str(fixtures / "solution_blueprint_nested_boundaries_real_shape_2026_11_25_5a8d6a12.json"))
+    [bd_path] = glob.glob(str(fixtures / "solution_boundary_retrieve_real_shape_2026_11_25_5a8d6a12.json"))
+    assert hierarchy(json.loads(Path(bp_path).read_text())) == ["SolutionBoundary: probe-boundary-1-renamed",
+                                                                 "  SolutionBoundary: probe-boundary-2",
+                                                                 "    SolutionActorRole: probe-role-1"]
+    assert hierarchy(json.loads(Path(bd_path).read_text())) == ["SolutionBoundary: probe-boundary-2", "  SolutionActorRole: probe-role-1"]
 
 
 def test_a_cycle_is_not_followed():
