@@ -7,15 +7,16 @@ commands and the Egeria Explorer cards import them instead of typing them, which
 here plus a regeneration of the generated tables.
 
 Source: odpi/egeria#9463, head 0dbf468774c7f3dc102dd677b720b670ed6a8e09 (branch oak2026), merged to
-odpi/egeria main as 90232870b2 with the same tree. The `.http` sample collections at that sha are in
-tests/fixtures/egeria-6.4/ (see its SOURCE file); tests/micro-tests/test_egeria_6_4_names.py checks this
+odpi/egeria main as 90232870b2 with the same tree. The source sha below is now odpi/egeria main at 2e22b1e85b
+(the #9465 merge, which adds SolutionBoundary and DesignModelBoundary); the five `.http` sample collections are
+byte-identical there and at the #9463 head. They are in tests/fixtures/egeria-6.4/ (see its SOURCE file); tests/micro-tests/test_egeria_6_4_names.py checks this
 module against them and against the generated tables.
 
 URL paths are relative to ``/servers/{server}/api/open-metadata/`` and use the `.http` placeholder names in
 single braces. Every request is a POST.
 """
 
-EGERIA_6_4_SOURCE_SHA = "0dbf468774c7f3dc102dd677b720b670ed6a8e09"
+EGERIA_6_4_SOURCE_SHA = "2e22b1e85b952bbe490ff19b8dcdc9f28ec260ed"
 
 # --- Type names (11) ---------------------------------------------------------------------------------------
 DECISION = "Decision"                                # entity, 0018 (AuthoredReferenceable)

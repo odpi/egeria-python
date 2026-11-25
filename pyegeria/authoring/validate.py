@@ -240,6 +240,7 @@ FIND_ELEMENT_TYPES: Dict[str, Optional[str]] = {
     "SolutionArchitect.find_design_patterns": "DesignPattern",
     "SolutionArchitect.find_information_supply_chains": "InformationSupplyChain",
     "SolutionArchitect.find_solution_blueprints": "SolutionBlueprint",
+    "SolutionArchitect.find_solution_boundaries": "SolutionBoundary",
     "SolutionArchitect.find_solution_components": "SolutionComponent",
     "SolutionArchitect.find_solution_roles": "SolutionActorRole",
     "reference_data.find_valid_value_definitions": "ValidValueDefinition",

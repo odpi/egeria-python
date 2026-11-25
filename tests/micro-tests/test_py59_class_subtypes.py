@@ -132,7 +132,7 @@ def test_a_governance_project_fills_a_project_kind_column():
 
 def test_the_table_equals_a_typedef_parse_of_the_6_4_source():
     """Needs the odpi/egeria source the table was made from: EGERIA_6_4_SRC=<checkout> EGERIA_6_4_REF=<sha>."""
-    src, ref = os.environ.get("EGERIA_6_4_SRC"), os.environ.get("EGERIA_6_4_REF", "90232870b2")
+    src, ref = os.environ.get("EGERIA_6_4_SRC"), os.environ.get("EGERIA_6_4_REF", "2e22b1e85b")
     if not src:
         pytest.skip("set EGERIA_6_4_SRC to a checkout of odpi/egeria at the table's sha")
     from md_processing.md_processing_utils.properties_class_fields import CLASSIFICATION_SUPERTYPES as table
@@ -145,4 +145,4 @@ def test_the_table_equals_a_typedef_parse_of_the_6_4_source():
 
 def test_the_header_names_the_source_sha_in_the_same_form():
     import md_processing.md_processing_utils.properties_class_fields as pcf
-    assert "from Egeria 90232870b2 at 90232870b2 " in pcf.__doc__
+    assert "from Egeria 2e22b1e85b at 2e22b1e85b " in pcf.__doc__
