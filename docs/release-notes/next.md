@@ -79,13 +79,25 @@ notes and are not repeated here.
   `find_solution_boundaries`, `get_solution_boundary_by_guid` and `get_solution_boundaries_by_name`, each as a sync and an
   `_async_` pair, one for each of the 7 requests the solution-architect view service has for `/solution-boundaries`. Membership uses
   the Collection Manager's add and remove member calls, as for blueprints. `generate_solution_boundary_output` formats the
-  results. These need a platform with the #9465 build; the Dr.Egeria commands come in a later change.
+  results. These need a platform with the #9465 build. The Dr.Egeria commands are below.
 - **Report specs `Solution-Boundary` and `Solution-Boundary-Mermaid`** (odpi/egeria #9465), and a "Member Hierarchy" column: the
   members of a boundary, with nested boundaries as indented lines (`solution_boundary_member_hierarchy`). It follows the
   `nestedElements` and `sideLinks` of each member (the field names were confirmed on a platform with the #9465 build), shows a side
   link only when it is not the member's own parent, does not follow a member already above it, and says when it stops at 8 levels or
   500 lines. The find method is on the report-spec allowlist. The solution-boundary methods must not be released without these specs:
   their default `report_spec` is `Solution-Boundary`.
+- **The generated Properties catalog knows the boundary classes** (odpi/egeria #9465): it is now generated from Egeria
+  2e22b1e85b, which adds `SolutionBoundaryProperties` and `DesignModelBoundaryProperties`, and strict validation maps
+  `SolutionArchitect.find_solution_boundaries` to `SolutionBoundary`.
+- **Dr.Egeria: Create Solution Boundary and Create Design Model Boundary** (odpi/egeria #9465), in the Solution Architect
+  family, with Basic and Advanced templates and report specs. Members are added with the existing Collection Membership
+  command. Design Model Boundary has no request of its own in the solution-architect view service, so it is created, read
+  and updated through the collection requests. Its find also returns solution boundaries, because a solution boundary is
+  a design model boundary.
+- **Dr.Egeria: a boundary command does not change the other kind of boundary.** When an Update (or a Create that found an
+  existing element) would change an element of the other boundary type, the command is refused with a message naming
+  both types and the GUID, and nothing is written. If the element's type can't be read, the command is refused the same
+  way.
 
 ## Planned for pyegeria 6.4 or the next release
 
@@ -215,6 +227,8 @@ notes and are not repeated here.
 
 ## Fixes
 
+- **Dr.Egeria: Create Solution Role no longer offers Title and Role Domain Identifier.** Egeria does not store either
+  for a solution role, so the templates no longer show them. They are still accepted if given, and reported as not stored.
 - **Authoring validation is strict** (PY-15). A spec's find method must return its target type (or a super type),
   and every column key must be an attribute of the target type, a key the output formatter derives, a documented
   related-element or annotation field, or (for a generated -DrE- spec) a Dr.Egeria command attribute. An unknown
