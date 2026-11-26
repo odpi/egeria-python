@@ -233,6 +233,12 @@ notes and are not repeated here.
 
 ## Fixes
 
+- **Dr.Egeria: an Update of a boundary with an explicit GUID updates that element or is refused.** `Update Solution
+  Boundary` aimed at the GUID of a Design Model Boundary used to create a new Solution Boundary: the boundary read
+  found nothing for the other type, the lookup fell back to the name, and the Update became a Create. Now, when an
+  Update Solution Boundary or Update Design Model Boundary names a GUID its own read can't find, the element is read
+  by GUID and the command is refused if it is the other type, missing or unreadable. Nothing is written or created.
+  Other commands, and boundary commands without a GUID, look up as before (found in the 6.3.4 live check).
 - **Dr.Egeria: Create Solution Role no longer offers Title and Role Domain Identifier.** Egeria does not store either
   for a solution role, so the templates no longer show them. They are still accepted if given, and reported as not stored.
 - **Authoring validation is strict** (PY-15). A spec's find method must return its target type (or a super type),
