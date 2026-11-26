@@ -4068,6 +4068,44 @@
         "Transformation"
       ],
       "Journal Entry": "Added 2026-09-13 -- ImplementedBy relationship (0737) support, requested by the user: Solution Architect had no command for governance_officer's linkDesignToImplementation/detachDesignFromImplementation, and Create Information Supply Chain had no way to record implementation elements. Confirmed live 2026-09-13 that 'Link Information Supply Chain Child' already correctly uses CollectionMembership (not ImplementedBy) -- no fix needed there. Detach/Unlink/Attach/Add/Remove variants are auto-derived by build_command_variants() from this one 'Link' definition, matching every other Solution Architect link command -- no separate Detach compact entry needed."
+    },
+    "Create Solution Boundary": {
+      "qn_prefix": "SolutionBoundary",
+      "alternate_names": [],
+      "family": "Solution Architect",
+      "verb": "Create",
+      "upsert": true,
+      "attach": false,
+      "level": "Basic",
+      "extra_find": "",
+      "extra_constraints": "",
+      "bundle": "Collection Base",
+      "custom_attributes": [],
+      "Journal Entry": "",
+      "display_name": "Create Solution Boundary",
+      "description": "Creates or updates a solution boundary: a collection that organizes the solution components, roles and other solution boundaries of a solution blueprint into a hierarchy (odpi/egeria#9465, model 0740). It has no attributes of its own beyond a collection's. Members are added with the Collection Membership commands (for example Link Blueprint Child).",
+      "find_method": "SolutionArchitect.find_solution_boundaries",
+      "find_constraints": "",
+      "OM_TYPE": "SolutionBoundary"
+    },
+    "Create Design Model Boundary": {
+      "qn_prefix": "DesignModelBoundary",
+      "alternate_names": [],
+      "family": "Solution Architect",
+      "verb": "Create",
+      "upsert": true,
+      "attach": false,
+      "level": "Basic",
+      "extra_find": "",
+      "extra_constraints": "",
+      "bundle": "Collection Base",
+      "custom_attributes": [],
+      "Journal Entry": "",
+      "display_name": "Create Design Model Boundary",
+      "description": "Creates or updates a design model boundary: the parent type of the solution boundary, a collection that organizes the content of a design model into a hierarchy (odpi/egeria#9465, model 0565). The solution-architect view service has no request of its own for this type; it is created through the generic collection create, which the platform accepted for this type in a probe on 2026-11-25. Members are added with the Collection Membership commands. Searching for this type also returns solution boundaries, which are its subtype, because the repository answers a type search from each element's stored supertype chain; the qualified name is unique, so an update still reaches one element.",
+      "find_method": "CollectionManager.find_collections",
+      "find_constraints": "{\"metadata_element_type\": \"DesignModelBoundary\"}",
+      "OM_TYPE": "DesignModelBoundary"
     }
   }
 }
