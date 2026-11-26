@@ -219,6 +219,12 @@ notes and are not repeated here.
 - **Status attributes offer all five element statuses** (PY-68). The Dr.Egeria `Status` attribute looked up the valid
   metadata property `Status`, whose valid-value set in Egeria holds no values, so the templates listed none. It now looks up `status`
   and the templates offer ACTIVE, DELETED, INVALID, OTHER and UNKNOWN.
+  - **Behaviour change: use Content Status for DRAFT and other lifecycle values.** On the 12 commands whose `Status` is
+    the element status Dr.Egeria adds by default, the value is now checked against those five, so `Status: DRAFT` is
+    refused where it used to be accepted and stored as the content status. On Create Schema Type, Schema Attribute,
+    Display Data Container and Display Data Field, write `Content Status: DRAFT`; the error now says so ("'Status' here
+    is the element status; to set DRAFT, use 'Content Status' instead"). Create Rating, Create Like and the six
+    glossary Classify/Declassify commands have no content status, so DRAFT has no place there.
 - **The spec-cache says "not effective for this read"** (PY-70). When Egeria answers OMAG-REPOSITORY-HANDLER-400-010 for a
   pinned spec, the entry is still dropped from the cache, but its reason no longer says the element is gone or "no longer visible". `karma_leaderboard` is declared to
   return `list[dict] | None` (None when its find failed).
