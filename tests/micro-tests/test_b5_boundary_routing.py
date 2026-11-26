@@ -9,7 +9,9 @@ Collection Membership command, so nothing here syncs members.
 
 The command specs come with B4; these tests use synthetic specs with the pinned command names. The SolutionBoundary
 read uses the real shape captured in window P (5a8d6a12); the DesignModelBoundary read shape is SYNTHETIC (no real
-capture exists). No live claim.
+capture exists). An Update of a boundary goes ahead only on an element of exactly the command's type; the
+other boundary type is refused before any write. That SolutionBoundary is found by a DesignModelBoundary lookup is
+from source (it is a subtype) until a read-only live find is done. No live claim.
 """
 import json
 from pathlib import Path
@@ -126,18 +128,54 @@ async def test_create_calls_the_right_request_with_the_typed_properties(command_
         assert kwargs["prop"] == ["DesignModelBoundaryProperties"]
 
 
+READS = {SOLUTION_BOUNDARY: "_async_get_solution_boundary_by_guid", DESIGN_MODEL_BOUNDARY: "_async_get_collection_by_guid"}
+
+
+def _element(guid: str, type_name: str) -> dict:
+    return {"elementHeader": {"guid": guid, "type": {"typeName": type_name}},
+            "properties": {"class": f"{type_name}Properties", "displayName": "B5 Boundary"}}
+
+
 @pytest.mark.parametrize("command_name, method", [
     (SOLUTION_BOUNDARY, "_async_update_solution_boundary"),
     (DESIGN_MODEL_BOUNDARY, "_async_update_collection"),
 ])
 async def test_update_calls_the_right_request_for_the_known_guid(command_name, method):
-    client = _RecordingClient()
+    # The element's type is read first and matches the command's, so the update goes ahead.
+    client = _RecordingClient(read_result=_element("existing-guid", OM_TYPES[command_name]))
     out = await _processor(command_name, "Update", client, guid="existing-guid").apply_changes()
     assert out == "rendered existing-guid"
-    assert [c[0] for c in client.calls] == [method]
-    _, args, _ = client.calls[0]
+    assert [c[0] for c in client.calls] == [READS[command_name], method]
+    _, args, _ = client.calls[1]
     assert args[0] == "existing-guid"
     assert args[1]["properties"]["class"] == f"{OM_TYPES[command_name]}Properties"
+
+
+# ── the type guard: an update goes ahead only on an element of exactly the command's type ──
+
+async def test_design_model_boundary_upsert_that_found_a_solution_boundary_is_refused():
+    # A DesignModelBoundary lookup can find a SolutionBoundary (its subtype): the upsert became an Update.
+    client = _RecordingClient()
+    p = _processor(DESIGN_MODEL_BOUNDARY, "Update", client, guid="sb-guid")
+    p.as_is_element = _element("sb-guid", "SolutionBoundary")
+    with pytest.raises(ValueError) as refused:
+        await p.apply_changes()
+    message = str(refused.value)
+    assert "sb-guid" in message and "SolutionBoundary" in message and "DesignModelBoundary" in message
+    assert "nothing was written" in message
+    assert client.calls == []          # no update, no retype, no journal note
+
+
+async def test_solution_boundary_lookup_that_returned_a_design_model_boundary_is_refused():
+    # No as-is element: the guard reads the element, and the SolutionBoundary read hands back the other type.
+    client = _RecordingClient(read_result=_element("dmb-guid", "DesignModelBoundary"))
+    p = _processor(SOLUTION_BOUNDARY, "Update", client, guid="dmb-guid")
+    with pytest.raises(ValueError) as refused:
+        await p.apply_changes()
+    message = str(refused.value)
+    assert "dmb-guid" in message and "SolutionBoundary" in message and "DesignModelBoundary" in message
+    assert "nothing was written" in message
+    assert [c[0] for c in client.calls] == ["_async_get_solution_boundary_by_guid"]   # the read only; no update
 
 
 async def test_solution_boundary_is_read_back_with_the_boundary_request_real_shape():

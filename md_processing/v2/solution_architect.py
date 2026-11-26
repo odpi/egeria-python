@@ -576,6 +576,10 @@ class SupplyChainProcessor(AsyncBaseCommandProcessor):
 
         return res
 
+#: The boundary types an Update must match exactly (SolutionBoundary is a subtype of DesignModelBoundary).
+BOUNDARY_TYPES = ("SolutionBoundary", "DesignModelBoundary")
+
+
 class SolutionArchitectProcessor(AsyncBaseCommandProcessor):
     """
     Generic Processor for Solution Architect elements (Supply Chain, Blueprint, Component, Role, Boundary).
@@ -608,6 +612,26 @@ class SolutionArchitectProcessor(AsyncBaseCommandProcessor):
         except PyegeriaException:
             return None
 
+    async def _refuse_other_boundary_type(self, om_type: str, guid: str) -> None:
+        """An update of a boundary goes ahead only on an element of exactly the command's type.
+
+        SolutionBoundary is a subtype of DesignModelBoundary, so a DesignModelBoundary lookup can find a
+        SolutionBoundary (and a SolutionBoundary read can be handed the other type). Updating it through the
+        other type's request would send the wrong properties class. Such a command is refused before any
+        request is built: nothing is written and the element is not retyped.
+        """
+        element = self.as_is_element
+        if not (isinstance(element, dict) and element.get("elementHeader", {}).get("guid") == guid):
+            element = await self.fetch_element(guid)
+        type_name = ((element or {}).get("elementHeader", {}).get("type", {}) or {}).get("typeName")
+        if type_name == om_type:
+            return
+        if type_name is None:
+            raise ValueError(f"Couldn't read the type of element {guid}, so the Update {om_type} was not sent; "
+                             f"nothing was written.")
+        raise ValueError(f"Element {guid} is a {type_name}, not a {om_type}: the Update {om_type} was refused and "
+                         f"nothing was written. Use the {type_name} command to change it.")
+
     async def apply_changes(self) -> str:
         verb = self.command.verb
         attributes = self.parsed_output["attributes"]
@@ -622,6 +646,9 @@ class SolutionArchitectProcessor(AsyncBaseCommandProcessor):
             guid = self.parsed_output.get("guid") or (self.as_is_element['elementHeader']['guid'] if self.as_is_element else None)
             if not guid:
                 return self.command.raw_block
+
+            if om_type in BOUNDARY_TYPES:
+                await self._refuse_other_boundary_type(om_type, guid)
 
             body = set_update_body(om_type, attributes)
             prop_body = set_solution_architect_body(om_type, qualified_name, attributes)
