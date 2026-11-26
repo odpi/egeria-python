@@ -576,9 +576,16 @@ class SupplyChainProcessor(AsyncBaseCommandProcessor):
 
         return res
 
+#: The boundary types an Update must match exactly (SolutionBoundary is a subtype of DesignModelBoundary).
+BOUNDARY_TYPES = ("SolutionBoundary", "DesignModelBoundary")
+
+
 class SolutionArchitectProcessor(AsyncBaseCommandProcessor):
     """
-    Generic Processor for Solution Architect elements (Supply Chain, Blueprint, Component, Role).
+    Generic Processor for Solution Architect elements (Supply Chain, Blueprint, Component, Role, Boundary).
+
+    SolutionBoundary uses the solution-architect boundary requests. DesignModelBoundary has no request of its own in
+    that view service, so it is created, updated and read through the generic collection requests.
     """
 
     async def fetch_element(self, guid: str) -> Optional[Dict[str, Any]]:
@@ -593,6 +600,10 @@ class SolutionArchitectProcessor(AsyncBaseCommandProcessor):
                 return await self.client._async_get_solution_component_by_guid(guid)
             elif om_type == "SolutionRole" or om_type == "SolutionActorRole":
                 return await self.client._async_get_solution_role_by_guid(guid)
+            elif om_type == "SolutionBoundary":
+                return await self.client._async_get_solution_boundary_by_guid(guid)
+            elif om_type == "DesignModelBoundary":
+                return await self.client._async_get_collection_by_guid(guid)
             elif om_type == "DesignPattern":
                 return await self.client._async_get_design_pattern_by_guid(guid)
             elif om_type in ("ConceptBead", "ConceptBeadAttribute", "ConceptBeadRelationship"):
@@ -600,6 +611,26 @@ class SolutionArchitectProcessor(AsyncBaseCommandProcessor):
             return None
         except PyegeriaException:
             return None
+
+    async def _refuse_other_boundary_type(self, om_type: str, guid: str) -> None:
+        """An update of a boundary goes ahead only on an element of exactly the command's type.
+
+        SolutionBoundary is a subtype of DesignModelBoundary, so a DesignModelBoundary lookup can find a
+        SolutionBoundary (and a SolutionBoundary read can be handed the other type). Updating it through the
+        other type's request would send the wrong properties class. Such a command is refused before any
+        request is built: nothing is written and the element is not retyped.
+        """
+        element = self.as_is_element
+        if not (isinstance(element, dict) and element.get("elementHeader", {}).get("guid") == guid):
+            element = await self.fetch_element(guid)
+        type_name = ((element or {}).get("elementHeader", {}).get("type", {}) or {}).get("typeName")
+        if type_name == om_type:
+            return
+        if type_name is None:
+            raise ValueError(f"Couldn't read the type of element {guid}, so the Update {om_type} was not sent; "
+                             f"nothing was written.")
+        raise ValueError(f"Element {guid} is a {type_name}, not a {om_type}: the Update {om_type} was refused and "
+                         f"nothing was written. Use the {type_name} command to change it.")
 
     async def apply_changes(self) -> str:
         verb = self.command.verb
@@ -616,6 +647,9 @@ class SolutionArchitectProcessor(AsyncBaseCommandProcessor):
             if not guid:
                 return self.command.raw_block
 
+            if om_type in BOUNDARY_TYPES:
+                await self._refuse_other_boundary_type(om_type, guid)
+
             body = set_update_body(om_type, attributes)
             prop_body = set_solution_architect_body(om_type, qualified_name, attributes)
             body['properties'] = self.filter_update_properties(prop_body, body.get('mergeUpdate', True))
@@ -628,6 +662,10 @@ class SolutionArchitectProcessor(AsyncBaseCommandProcessor):
                 await self.client._async_update_solution_component(guid, body)
             elif om_type == "SolutionActorRole":
                 await self.client._async_update_solution_role(guid, body)
+            elif om_type == "SolutionBoundary":
+                await self.client._async_update_solution_boundary(guid, body)
+            elif om_type == "DesignModelBoundary":
+                await self.client._async_update_collection(guid, body)
             elif om_type == "DesignPattern":
                 await self.client._async_update_design_pattern(guid, body)
             elif om_type in ("ConceptBead", "ConceptBeadAttribute", "ConceptBeadRelationship"):
@@ -656,6 +694,12 @@ class SolutionArchitectProcessor(AsyncBaseCommandProcessor):
                 raw_guid = await self.client._async_create_solution_component(body)
             elif om_type == "SolutionActorRole":
                 raw_guid = await self.client._async_create_solution_role(body)
+            elif om_type == "SolutionBoundary":
+                raw_guid = await self.client._async_create_solution_boundary(body)
+            elif om_type == "DesignModelBoundary":
+                # The call window P made against odpi/egeria-platform 5a8d6a12 (it returned a DesignModelBoundary GUID).
+                # With a body, create_collection sends the body as given; `prop` is not used.
+                raw_guid = await self.client._async_create_collection(body=body, prop=["DesignModelBoundaryProperties"])
             elif om_type == "DesignPattern":
                 raw_guid = await self.client._async_create_design_pattern(body)
             elif om_type in ("ConceptBead", "ConceptBeadAttribute", "ConceptBeadRelationship"):
