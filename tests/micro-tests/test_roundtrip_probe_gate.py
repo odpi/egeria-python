@@ -230,6 +230,38 @@ def test_status_plan_uses_the_types_own_field():
     assert kind == "SKIPPED (no status property)" and md is None
 
 
+ELEMENT_STATUS_COMMANDS = ("Create Schema Type", "Create Schema Attribute", "Create Display Data Container",
+                           "Create Display Data Field")
+
+
+def _status_probe_block(command: str, tmp_path) -> tuple[list[str], dict]:
+    """The Status-only element the probe writes for `command` (real specs), and its plan row."""
+    found = [(fam, cmd, spec) for fam, cmd, spec in probe.create_commands() if cmd == command]
+    assert found and found[0][2] is not None, f"{command} not in the specs"
+    doc, plans = probe.build_family_doc(found[0][0], found[:1], tmp_path, "T")
+    plan = next(p for p in plans if p.get("status_probe"))
+    text = doc.read_text().split(f"### Qualified Name\n{plan['qualified_name']}\n", 1)[1].split("___", 1)[0]
+    return text.splitlines(), plan["rows"][0]
+
+
+@pytest.mark.parametrize("command", ELEMENT_STATUS_COMMANDS)
+def test_draft_goes_to_content_status_where_status_is_the_element_status(command, tmp_path):
+    # These commands' Status is the element status Dr.Egeria adds by default (a Valid Value looked up as Egeria's
+    # `status`, which has no DRAFT), so the contentStatus probe value is sent as Content Status (owner, 2026-11-26).
+    lines, row = _status_probe_block(command, tmp_path)
+    assert "### Content Status" in lines and lines[lines.index("### Content Status") + 1] == "DRAFT"
+    assert "### Status" not in lines                      # Status is left to its default
+    assert row["attribute"] == "Status" and row["sent_as"] == "Content Status"
+    assert row["variable"] == "element_status" and row["location"] == "properties.contentStatus"
+
+
+@pytest.mark.parametrize("command", ["Create Collection", "Create Glossary Term"])
+def test_a_commands_own_status_still_gets_draft_as_status(command, tmp_path):
+    lines, row = _status_probe_block(command, tmp_path)
+    assert "### Status" in lines and lines[lines.index("### Status") + 1] == "DRAFT"
+    assert "### Content Status" not in lines and "sent_as" not in row
+
+
 # ── the digest pin (read-back follow-up a) ──
 
 def test_full_digest_is_accepted():

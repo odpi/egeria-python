@@ -3,7 +3,7 @@
 """The relationship lists an Egeria 6 element can carry, and the relationship type(s) each one reads.
 
 Generated from Egeria's `AttributedMetadataElement.java` and `OpenMetadataRootElement.java`
-(open-metadata-framework, metadataelements; egeria commit 0dbf468774c7f3dc102dd677b720b670ed6a8e09; files last changed in fa9625f1d0, 2026-11-21): every
+(open-metadata-framework, metadataelements; egeria commit 2e22b1e85b952bbe490ff19b8dcdc9f28ec260ed; files last changed in 3f362c36a7, 2026-11-25): every
 `RelatedMetadataElementSummary` field, with the relationship type names its comment gives. An empty tuple
 means the comment names none.
 

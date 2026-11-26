@@ -154,6 +154,10 @@ def register_solution_architect_processors(register_processor: Callable[[str, Ty
         # Determine processor class
         if base_name.split(" ", 1)[0] in link_verbs:
             processor_cls = SolutionLinkProcessor
+        elif "Boundary" in base_name:
+            # Create Solution Boundary / Create Design Model Boundary (odpi/egeria#9465). Members are added with the
+            # existing Collection Membership command, so the boundary needs no member sync of its own.
+            processor_cls = SolutionArchitectProcessor
         elif "Blueprint" in base_name:
             processor_cls = BlueprintProcessor
         elif "Component" in base_name and "Link" not in base_name:

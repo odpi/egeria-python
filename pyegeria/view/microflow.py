@@ -142,6 +142,9 @@ FIND_METHOD_ADDITIONS: frozenset = frozenset({
     # integration-connectors/{guid}/catalog-targets, through _async_get_name_request); returns the target
     # elements. Named by the "Catalog-Target" spec, whose one required parameter is integ_connector_guid.
     "AutomatedCuration.get_catalog_targets",
+    # Read only (odpi/egeria#9465): POSTs a SearchStringRequestBody to solution-architect/solution-boundaries/by-search-string
+    # through _async_find_request and returns the solution boundaries. Named by the Solution-Boundary specs.
+    "SolutionArchitect.find_solution_boundaries",
 })
 
 FIND_METHOD_ALLOWLIST: frozenset = _CENSUS_FIND_METHODS | FIND_METHOD_ADDITIONS

@@ -219,6 +219,22 @@ class SolutionBlueprintProperties(AuthoredReferenceableProperties):
     class_: Annotated[Literal["SolutionBlueprintProperties"], Field(alias="class")]
 
 
+class DesignModelBoundaryProperties(AuthoredReferenceableProperties):
+    """A design model boundary organizes the content of a design model into a hierarchy (Egeria model 0565, odpi/egeria#9465).
+
+    The Java class (DesignModelBoundaryProperties extends CollectionProperties) adds no property of its own, so neither does this one;
+    it is a collection like SolutionBlueprintProperties. The solution-architect view service has no request for this type itself,
+    only for SolutionBoundary.
+    """
+    class_: Annotated[Literal["DesignModelBoundaryProperties"], Field(alias="class")]
+
+
+class SolutionBoundaryProperties(DesignModelBoundaryProperties):
+    """A solution boundary organizes the components and roles of a solution blueprint into a hierarchy (model 0740, #9465).
+    Members are solution components, roles, and other solution boundaries (added with the collection membership relationship)."""
+    class_: Annotated[Literal["SolutionBoundaryProperties"], Field(alias="class")]
+
+
 class StatementOfApplicabilityProperties(AuthoredReferenceableProperties):
     class_: Annotated[Literal["StatementOfApplicabilityProperties"], Field(alias="class")]
     scope: str | None = None

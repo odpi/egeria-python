@@ -1,7 +1,7 @@
 ___
 
 ## Create Solution Role
-> Creates or updates a solution role — a collection of responsibilities associated with a solution component.
+> Creates or updates a solution role — a collection of responsibilities associated with a solution component. Role Domain Identifier and Title are accepted but not stored for solution roles: SolutionActorRoleProperties has neither property, so a value is reported as 'not applied'. They are hidden from the template and still accepted so older documents keep working.
 
 ### Display Name
 >	**Input Required**: True
@@ -11,26 +11,6 @@ ___
 >	**Description**: The common name of an element.
 
 >	**Alternative Labels**: "Term Name"
-
-
-### Role Domain Identifier
->	**Input Required**: False
-
->	**Attribute Type**: Valid Value
-
->	**Description**: The governance domain this role belongs to, looked up from the domainIdentifier valid value set (deployments may extend this set without rebuilding Egeria). All domains is "All Domains". Accepts either the current display name or a preferred-value integer; old-style ALL_CAPS enum names (e.g. IT_INFRASTRUCTURE) are still accepted for backward compatibility.
-
->	**Valid Values**: All Domains,Data,Privacy,Security,IT Infrastructure,Software Development,Corporate,Asset Management,Other
-
->	**Default Value**: All Domains
-
-
-### Title
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: Title of the solution role.
 
 
 ### Journal Entry

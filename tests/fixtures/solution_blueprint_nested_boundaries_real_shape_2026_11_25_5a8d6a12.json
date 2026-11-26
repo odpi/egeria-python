@@ -1,0 +1,799 @@
+{
+ "class": "OpenMetadataRootElement",
+ "elementHeader": {
+  "class": "ElementHeader",
+  "headerVersion": 0,
+  "status": "ACTIVE",
+  "type": {
+   "typeId": "4aa47799-5128-4eeb-bd72-e357b49f8bfe",
+   "typeName": "SolutionBlueprint",
+   "superTypeNames": [
+    "DesignModel",
+    "Collection",
+    "AuthoredReferenceable",
+    "Referenceable",
+    "OpenMetadataRoot"
+   ],
+   "typeVersion": 1,
+   "typeDescription": "Collection of solution components that make up a solution for digital services such as digital products.",
+   "typeCategory": "ENTITY_DEF"
+  },
+  "origin": {
+   "sourceServer": "simple-metadata-store",
+   "originCategory": "LOCAL_COHORT",
+   "homeMetadataCollectionId": "16512ec6-044b-4f80-bf7e-b6376d1f2bbe",
+   "homeMetadataCollectionName": "simple-metadata-store"
+  },
+  "versions": {
+   "createdBy": "garygeeke",
+   "updatedBy": "garygeeke",
+   "maintainedBy": [
+    "garygeeke"
+   ],
+   "createTime": "2026-11-25T21:52:28.404+00:00",
+   "updateTime": "2026-11-25T21:52:28.404+00:00",
+   "version": 1,
+   "lastRequestId": "cafb8212-f77a-473e-bcc2-92bb2cabc5be"
+  },
+  "guid": "SolutionBlueprint-9151a3a9-dfd4-41e4-b2be-a96b04fa1635",
+  "anchor": {
+   "class": "ElementClassification",
+   "headerVersion": 0,
+   "status": "ACTIVE",
+   "type": {
+    "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+    "typeName": "Anchors",
+    "typeVersion": 1,
+    "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+    "typeCategory": "CLASSIFICATION_DEF"
+   },
+   "origin": {
+    "sourceServer": "simple-metadata-store",
+    "originCategory": "LOCAL_COHORT",
+    "homeMetadataCollectionId": "16512ec6-044b-4f80-bf7e-b6376d1f2bbe",
+    "homeMetadataCollectionName": "simple-metadata-store"
+   },
+   "versions": {
+    "createdBy": "garygeeke",
+    "updatedBy": "garygeeke",
+    "maintainedBy": [
+     "garygeeke"
+    ],
+    "createTime": "2026-11-25T21:52:28.396+00:00",
+    "updateTime": "2026-11-25T21:52:28.396+00:00",
+    "version": 1,
+    "lastRequestId": "cafb8212-f77a-473e-bcc2-92bb2cabc5be"
+   },
+   "classificationOrigin": "ASSIGNED",
+   "classificationName": "Anchors",
+   "classificationProperties": {
+    "class": "AnchorsProperties",
+    "typeName": "Anchors",
+    "anchorTypeName": "SolutionBlueprint",
+    "anchorDomainName": "AuthoredReferenceable"
+   }
+  }
+ },
+ "collectionMembers": [
+  {
+   "class": "RelatedMetadataHierarchySummary",
+   "relationshipHeader": {
+    "class": "ElementHeader",
+    "headerVersion": 0,
+    "status": "ACTIVE",
+    "type": {
+     "typeId": "5cabb76a-e25b-4bb5-8b93-768bbac005af",
+     "typeName": "CollectionMembership",
+     "typeVersion": 1,
+     "typeDescription": "Identifies a member of a collection.",
+     "typeCategory": "RELATIONSHIP_DEF"
+    },
+    "origin": {
+     "sourceServer": "simple-metadata-store",
+     "originCategory": "LOCAL_COHORT",
+     "homeMetadataCollectionId": "16512ec6-044b-4f80-bf7e-b6376d1f2bbe",
+     "homeMetadataCollectionName": "simple-metadata-store"
+    },
+    "versions": {
+     "createdBy": "garygeeke",
+     "updatedBy": "garygeeke",
+     "maintainedBy": [
+      "garygeeke"
+     ],
+     "createTime": "2026-11-25T21:52:28.451+00:00",
+     "updateTime": "2026-11-25T21:52:28.451+00:00",
+     "version": 1,
+     "lastRequestId": "d770f504-a681-45e3-ba26-14e2bec05a5c"
+    },
+    "guid": "CollectionMembership-3df43161-d157-48ef-b3c4-75d0dbf26ec9"
+   },
+   "relatedElement": {
+    "elementHeader": {
+     "class": "ElementHeader",
+     "headerVersion": 0,
+     "status": "ACTIVE",
+     "type": {
+      "typeId": "54ede817-8583-4e17-9df1-1956a381a378",
+      "typeName": "SolutionBoundary",
+      "superTypeNames": [
+       "DesignModelBoundary",
+       "Collection",
+       "AuthoredReferenceable",
+       "Referenceable",
+       "OpenMetadataRoot"
+      ],
+      "typeVersion": 1,
+      "typeDescription": "Collection of solution components and roles that are grouped together within a solution blueprint to help understanding.",
+      "typeCategory": "ENTITY_DEF"
+     },
+     "origin": {
+      "sourceServer": "simple-metadata-store",
+      "originCategory": "LOCAL_COHORT",
+      "homeMetadataCollectionId": "16512ec6-044b-4f80-bf7e-b6376d1f2bbe",
+      "homeMetadataCollectionName": "simple-metadata-store"
+     },
+     "versions": {
+      "createdBy": "garygeeke",
+      "updatedBy": "garygeeke",
+      "maintainedBy": [
+       "garygeeke"
+      ],
+      "createTime": "2026-11-25T21:52:27.615+00:00",
+      "updateTime": "2026-11-25T21:52:27.845+00:00",
+      "version": 2,
+      "lastRequestId": "29efd218-99f9-4a87-8e30-919b44c2e6b8"
+     },
+     "guid": "SolutionBoundary-671fc58f-ff3a-4a31-8c44-826b2055e0c2",
+     "anchor": {
+      "class": "ElementClassification",
+      "headerVersion": 0,
+      "status": "ACTIVE",
+      "type": {
+       "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+       "typeName": "Anchors",
+       "typeVersion": 1,
+       "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+       "typeCategory": "CLASSIFICATION_DEF"
+      },
+      "origin": {
+       "sourceServer": "simple-metadata-store",
+       "originCategory": "LOCAL_COHORT",
+       "homeMetadataCollectionId": "16512ec6-044b-4f80-bf7e-b6376d1f2bbe",
+       "homeMetadataCollectionName": "simple-metadata-store"
+      },
+      "versions": {
+       "createdBy": "garygeeke",
+       "updatedBy": "garygeeke",
+       "maintainedBy": [
+        "garygeeke"
+       ],
+       "createTime": "2026-11-25T21:52:27.605+00:00",
+       "updateTime": "2026-11-25T21:52:27.605+00:00",
+       "version": 1,
+       "lastRequestId": "2c2d4259-3836-407a-8088-03e4c004440e"
+      },
+      "classificationOrigin": "ASSIGNED",
+      "classificationName": "Anchors",
+      "classificationProperties": {
+       "class": "AnchorsProperties",
+       "typeName": "Anchors",
+       "anchorTypeName": "SolutionBoundary",
+       "anchorDomainName": "AuthoredReferenceable"
+      }
+     }
+    },
+    "properties": {
+     "class": "SolutionBoundaryProperties",
+     "typeName": "SolutionBoundary",
+     "qualifiedName": "probe::boundary::1",
+     "displayName": "probe-boundary-1-renamed",
+     "description": "window P probe element, renamed"
+    }
+   },
+   "relatedElementAtEnd1": false,
+   "nestedElements": [
+    {
+     "class": "RelatedMetadataHierarchySummary",
+     "relationshipHeader": {
+      "class": "ElementHeader",
+      "headerVersion": 0,
+      "status": "ACTIVE",
+      "type": {
+       "typeId": "5cabb76a-e25b-4bb5-8b93-768bbac005af",
+       "typeName": "CollectionMembership",
+       "typeVersion": 1,
+       "typeDescription": "Identifies a member of a collection.",
+       "typeCategory": "RELATIONSHIP_DEF"
+      },
+      "origin": {
+       "sourceServer": "simple-metadata-store",
+       "originCategory": "LOCAL_COHORT",
+       "homeMetadataCollectionId": "16512ec6-044b-4f80-bf7e-b6376d1f2bbe",
+       "homeMetadataCollectionName": "simple-metadata-store"
+      },
+      "versions": {
+       "createdBy": "garygeeke",
+       "updatedBy": "garygeeke",
+       "maintainedBy": [
+        "garygeeke"
+       ],
+       "createTime": "2026-11-25T21:52:28.363+00:00",
+       "updateTime": "2026-11-25T21:52:28.363+00:00",
+       "version": 1,
+       "lastRequestId": "245e2ebc-c8d2-4265-8270-a0fb983a62f9"
+      },
+      "guid": "CollectionMembership-a9a855ce-d4b1-4d2b-a874-dbe954ee9ead"
+     },
+     "relatedElement": {
+      "elementHeader": {
+       "class": "ElementHeader",
+       "headerVersion": 0,
+       "status": "ACTIVE",
+       "type": {
+        "typeId": "54ede817-8583-4e17-9df1-1956a381a378",
+        "typeName": "SolutionBoundary",
+        "superTypeNames": [
+         "DesignModelBoundary",
+         "Collection",
+         "AuthoredReferenceable",
+         "Referenceable",
+         "OpenMetadataRoot"
+        ],
+        "typeVersion": 1,
+        "typeDescription": "Collection of solution components and roles that are grouped together within a solution blueprint to help understanding.",
+        "typeCategory": "ENTITY_DEF"
+       },
+       "origin": {
+        "sourceServer": "simple-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "homeMetadataCollectionId": "16512ec6-044b-4f80-bf7e-b6376d1f2bbe",
+        "homeMetadataCollectionName": "simple-metadata-store"
+       },
+       "versions": {
+        "createdBy": "garygeeke",
+        "updatedBy": "garygeeke",
+        "maintainedBy": [
+         "garygeeke"
+        ],
+        "createTime": "2026-11-25T21:52:27.906+00:00",
+        "updateTime": "2026-11-25T21:52:27.906+00:00",
+        "version": 1,
+        "lastRequestId": "c45681b6-5a4f-4709-b001-b4cfa64ff367"
+       },
+       "guid": "SolutionBoundary-a298445a-4337-4879-958d-fd690d4d4510",
+       "anchor": {
+        "class": "ElementClassification",
+        "headerVersion": 0,
+        "status": "ACTIVE",
+        "type": {
+         "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+         "typeName": "Anchors",
+         "typeVersion": 1,
+         "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+         "typeCategory": "CLASSIFICATION_DEF"
+        },
+        "origin": {
+         "sourceServer": "simple-metadata-store",
+         "originCategory": "LOCAL_COHORT",
+         "homeMetadataCollectionId": "16512ec6-044b-4f80-bf7e-b6376d1f2bbe",
+         "homeMetadataCollectionName": "simple-metadata-store"
+        },
+        "versions": {
+         "createdBy": "garygeeke",
+         "updatedBy": "garygeeke",
+         "maintainedBy": [
+          "garygeeke"
+         ],
+         "createTime": "2026-11-25T21:52:27.895+00:00",
+         "updateTime": "2026-11-25T21:52:27.895+00:00",
+         "version": 1,
+         "lastRequestId": "c45681b6-5a4f-4709-b001-b4cfa64ff367"
+        },
+        "classificationOrigin": "ASSIGNED",
+        "classificationName": "Anchors",
+        "classificationProperties": {
+         "class": "AnchorsProperties",
+         "typeName": "Anchors",
+         "anchorTypeName": "SolutionBoundary",
+         "anchorDomainName": "AuthoredReferenceable"
+        }
+       }
+      },
+      "properties": {
+       "class": "SolutionBoundaryProperties",
+       "typeName": "SolutionBoundary",
+       "qualifiedName": "probe::boundary::2",
+       "displayName": "probe-boundary-2",
+       "description": "window P probe element"
+      }
+     },
+     "relatedElementAtEnd1": false,
+     "nestedElements": [
+      {
+       "class": "RelatedMetadataHierarchySummary",
+       "relationshipHeader": {
+        "class": "ElementHeader",
+        "headerVersion": 0,
+        "status": "ACTIVE",
+        "type": {
+         "typeId": "5cabb76a-e25b-4bb5-8b93-768bbac005af",
+         "typeName": "CollectionMembership",
+         "typeVersion": 1,
+         "typeDescription": "Identifies a member of a collection.",
+         "typeCategory": "RELATIONSHIP_DEF"
+        },
+        "origin": {
+         "sourceServer": "simple-metadata-store",
+         "originCategory": "LOCAL_COHORT",
+         "homeMetadataCollectionId": "16512ec6-044b-4f80-bf7e-b6376d1f2bbe",
+         "homeMetadataCollectionName": "simple-metadata-store"
+        },
+        "versions": {
+         "createdBy": "garygeeke",
+         "updatedBy": "garygeeke",
+         "maintainedBy": [
+          "garygeeke"
+         ],
+         "createTime": "2026-11-25T21:52:28.897+00:00",
+         "updateTime": "2026-11-25T21:52:28.897+00:00",
+         "version": 1,
+         "lastRequestId": "e4e82265-68f6-4195-b1f6-661aefc66dc7"
+        },
+        "guid": "CollectionMembership-e47df92a-7bf8-4455-a968-ae48e01b5655"
+       },
+       "relatedElement": {
+        "elementHeader": {
+         "class": "ElementHeader",
+         "headerVersion": 0,
+         "status": "ACTIVE",
+         "type": {
+          "typeId": "cb3e6866-9ab5-4d95-9921-ff1b9fbe4d29",
+          "typeName": "SolutionActorRole",
+          "superTypeNames": [
+           "ActorRole",
+           "Actor",
+           "Referenceable",
+           "OpenMetadataRoot"
+          ],
+          "typeVersion": 1,
+          "typeDescription": "An actor role that is designed for interacting with a solution.",
+          "typeCategory": "ENTITY_DEF"
+         },
+         "origin": {
+          "sourceServer": "simple-metadata-store",
+          "originCategory": "LOCAL_COHORT",
+          "homeMetadataCollectionId": "16512ec6-044b-4f80-bf7e-b6376d1f2bbe",
+          "homeMetadataCollectionName": "simple-metadata-store"
+         },
+         "versions": {
+          "createdBy": "garygeeke",
+          "updatedBy": "garygeeke",
+          "maintainedBy": [
+           "garygeeke"
+          ],
+          "createTime": "2026-11-25T21:52:28.832+00:00",
+          "updateTime": "2026-11-25T21:52:28.832+00:00",
+          "version": 1,
+          "lastRequestId": "3e8824be-ccc4-4dc4-8ce1-0a727739636b"
+         },
+         "guid": "SolutionActorRole-f7c4fc0f-854e-41fe-b31b-03013844110a",
+         "anchor": {
+          "class": "ElementClassification",
+          "headerVersion": 0,
+          "status": "ACTIVE",
+          "type": {
+           "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+           "typeName": "Anchors",
+           "typeVersion": 1,
+           "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+           "typeCategory": "CLASSIFICATION_DEF"
+          },
+          "origin": {
+           "sourceServer": "simple-metadata-store",
+           "originCategory": "LOCAL_COHORT",
+           "homeMetadataCollectionId": "16512ec6-044b-4f80-bf7e-b6376d1f2bbe",
+           "homeMetadataCollectionName": "simple-metadata-store"
+          },
+          "versions": {
+           "createdBy": "garygeeke",
+           "updatedBy": "garygeeke",
+           "maintainedBy": [
+            "garygeeke"
+           ],
+           "createTime": "2026-11-25T21:52:28.822+00:00",
+           "updateTime": "2026-11-25T21:52:28.822+00:00",
+           "version": 1,
+           "lastRequestId": "3e8824be-ccc4-4dc4-8ce1-0a727739636b"
+          },
+          "classificationOrigin": "ASSIGNED",
+          "classificationName": "Anchors",
+          "classificationProperties": {
+           "class": "AnchorsProperties",
+           "typeName": "Anchors",
+           "anchorTypeName": "SolutionActorRole",
+           "anchorDomainName": "Actor"
+          }
+         }
+        },
+        "properties": {
+         "class": "SolutionActorRoleProperties",
+         "typeName": "SolutionActorRole",
+         "qualifiedName": "probe::role::1",
+         "displayName": "probe-role-1",
+         "description": "window P probe element"
+        }
+       },
+       "relatedElementAtEnd1": false,
+       "sideLinks": [
+        {
+         "class": "RelatedMetadataElementSummary",
+         "relationshipHeader": {
+          "class": "ElementHeader",
+          "headerVersion": 0,
+          "status": "ACTIVE",
+          "type": {
+           "typeId": "5cabb76a-e25b-4bb5-8b93-768bbac005af",
+           "typeName": "CollectionMembership",
+           "typeVersion": 1,
+           "typeDescription": "Identifies a member of a collection.",
+           "typeCategory": "RELATIONSHIP_DEF"
+          },
+          "origin": {
+           "sourceServer": "simple-metadata-store",
+           "originCategory": "LOCAL_COHORT",
+           "homeMetadataCollectionId": "16512ec6-044b-4f80-bf7e-b6376d1f2bbe",
+           "homeMetadataCollectionName": "simple-metadata-store"
+          },
+          "versions": {
+           "createdBy": "garygeeke",
+           "updatedBy": "garygeeke",
+           "maintainedBy": [
+            "garygeeke"
+           ],
+           "createTime": "2026-11-25T21:52:28.897+00:00",
+           "updateTime": "2026-11-25T21:52:28.897+00:00",
+           "version": 1,
+           "lastRequestId": "e4e82265-68f6-4195-b1f6-661aefc66dc7"
+          },
+          "guid": "CollectionMembership-e47df92a-7bf8-4455-a968-ae48e01b5655"
+         },
+         "relatedElement": {
+          "elementHeader": {
+           "class": "ElementHeader",
+           "headerVersion": 0,
+           "status": "ACTIVE",
+           "type": {
+            "typeId": "54ede817-8583-4e17-9df1-1956a381a378",
+            "typeName": "SolutionBoundary",
+            "superTypeNames": [
+             "DesignModelBoundary",
+             "Collection",
+             "AuthoredReferenceable",
+             "Referenceable",
+             "OpenMetadataRoot"
+            ],
+            "typeVersion": 1,
+            "typeDescription": "Collection of solution components and roles that are grouped together within a solution blueprint to help understanding.",
+            "typeCategory": "ENTITY_DEF"
+           },
+           "origin": {
+            "sourceServer": "simple-metadata-store",
+            "originCategory": "LOCAL_COHORT",
+            "homeMetadataCollectionId": "16512ec6-044b-4f80-bf7e-b6376d1f2bbe",
+            "homeMetadataCollectionName": "simple-metadata-store"
+           },
+           "versions": {
+            "createdBy": "garygeeke",
+            "updatedBy": "garygeeke",
+            "maintainedBy": [
+             "garygeeke"
+            ],
+            "createTime": "2026-11-25T21:52:27.906+00:00",
+            "updateTime": "2026-11-25T21:52:27.906+00:00",
+            "version": 1,
+            "lastRequestId": "c45681b6-5a4f-4709-b001-b4cfa64ff367"
+           },
+           "guid": "SolutionBoundary-a298445a-4337-4879-958d-fd690d4d4510",
+           "anchor": {
+            "class": "ElementClassification",
+            "headerVersion": 0,
+            "status": "ACTIVE",
+            "type": {
+             "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+             "typeName": "Anchors",
+             "typeVersion": 1,
+             "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+             "typeCategory": "CLASSIFICATION_DEF"
+            },
+            "origin": {
+             "sourceServer": "simple-metadata-store",
+             "originCategory": "LOCAL_COHORT",
+             "homeMetadataCollectionId": "16512ec6-044b-4f80-bf7e-b6376d1f2bbe",
+             "homeMetadataCollectionName": "simple-metadata-store"
+            },
+            "versions": {
+             "createdBy": "garygeeke",
+             "updatedBy": "garygeeke",
+             "maintainedBy": [
+              "garygeeke"
+             ],
+             "createTime": "2026-11-25T21:52:27.895+00:00",
+             "updateTime": "2026-11-25T21:52:27.895+00:00",
+             "version": 1,
+             "lastRequestId": "c45681b6-5a4f-4709-b001-b4cfa64ff367"
+            },
+            "classificationOrigin": "ASSIGNED",
+            "classificationName": "Anchors",
+            "classificationProperties": {
+             "class": "AnchorsProperties",
+             "typeName": "Anchors",
+             "anchorTypeName": "SolutionBoundary",
+             "anchorDomainName": "AuthoredReferenceable"
+            }
+           }
+          },
+          "properties": {
+           "class": "SolutionBoundaryProperties",
+           "typeName": "SolutionBoundary",
+           "qualifiedName": "probe::boundary::2",
+           "displayName": "probe-boundary-2",
+           "description": "window P probe element"
+          }
+         },
+         "relatedElementAtEnd1": true
+        }
+       ]
+      }
+     ],
+     "sideLinks": [
+      {
+       "class": "RelatedMetadataElementSummary",
+       "relationshipHeader": {
+        "class": "ElementHeader",
+        "headerVersion": 0,
+        "status": "ACTIVE",
+        "type": {
+         "typeId": "5cabb76a-e25b-4bb5-8b93-768bbac005af",
+         "typeName": "CollectionMembership",
+         "typeVersion": 1,
+         "typeDescription": "Identifies a member of a collection.",
+         "typeCategory": "RELATIONSHIP_DEF"
+        },
+        "origin": {
+         "sourceServer": "simple-metadata-store",
+         "originCategory": "LOCAL_COHORT",
+         "homeMetadataCollectionId": "16512ec6-044b-4f80-bf7e-b6376d1f2bbe",
+         "homeMetadataCollectionName": "simple-metadata-store"
+        },
+        "versions": {
+         "createdBy": "garygeeke",
+         "updatedBy": "garygeeke",
+         "maintainedBy": [
+          "garygeeke"
+         ],
+         "createTime": "2026-11-25T21:52:28.363+00:00",
+         "updateTime": "2026-11-25T21:52:28.363+00:00",
+         "version": 1,
+         "lastRequestId": "245e2ebc-c8d2-4265-8270-a0fb983a62f9"
+        },
+        "guid": "CollectionMembership-a9a855ce-d4b1-4d2b-a874-dbe954ee9ead"
+       },
+       "relatedElement": {
+        "elementHeader": {
+         "class": "ElementHeader",
+         "headerVersion": 0,
+         "status": "ACTIVE",
+         "type": {
+          "typeId": "54ede817-8583-4e17-9df1-1956a381a378",
+          "typeName": "SolutionBoundary",
+          "superTypeNames": [
+           "DesignModelBoundary",
+           "Collection",
+           "AuthoredReferenceable",
+           "Referenceable",
+           "OpenMetadataRoot"
+          ],
+          "typeVersion": 1,
+          "typeDescription": "Collection of solution components and roles that are grouped together within a solution blueprint to help understanding.",
+          "typeCategory": "ENTITY_DEF"
+         },
+         "origin": {
+          "sourceServer": "simple-metadata-store",
+          "originCategory": "LOCAL_COHORT",
+          "homeMetadataCollectionId": "16512ec6-044b-4f80-bf7e-b6376d1f2bbe",
+          "homeMetadataCollectionName": "simple-metadata-store"
+         },
+         "versions": {
+          "createdBy": "garygeeke",
+          "updatedBy": "garygeeke",
+          "maintainedBy": [
+           "garygeeke"
+          ],
+          "createTime": "2026-11-25T21:52:27.615+00:00",
+          "updateTime": "2026-11-25T21:52:27.845+00:00",
+          "version": 2,
+          "lastRequestId": "29efd218-99f9-4a87-8e30-919b44c2e6b8"
+         },
+         "guid": "SolutionBoundary-671fc58f-ff3a-4a31-8c44-826b2055e0c2",
+         "anchor": {
+          "class": "ElementClassification",
+          "headerVersion": 0,
+          "status": "ACTIVE",
+          "type": {
+           "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+           "typeName": "Anchors",
+           "typeVersion": 1,
+           "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+           "typeCategory": "CLASSIFICATION_DEF"
+          },
+          "origin": {
+           "sourceServer": "simple-metadata-store",
+           "originCategory": "LOCAL_COHORT",
+           "homeMetadataCollectionId": "16512ec6-044b-4f80-bf7e-b6376d1f2bbe",
+           "homeMetadataCollectionName": "simple-metadata-store"
+          },
+          "versions": {
+           "createdBy": "garygeeke",
+           "updatedBy": "garygeeke",
+           "maintainedBy": [
+            "garygeeke"
+           ],
+           "createTime": "2026-11-25T21:52:27.605+00:00",
+           "updateTime": "2026-11-25T21:52:27.605+00:00",
+           "version": 1,
+           "lastRequestId": "2c2d4259-3836-407a-8088-03e4c004440e"
+          },
+          "classificationOrigin": "ASSIGNED",
+          "classificationName": "Anchors",
+          "classificationProperties": {
+           "class": "AnchorsProperties",
+           "typeName": "Anchors",
+           "anchorTypeName": "SolutionBoundary",
+           "anchorDomainName": "AuthoredReferenceable"
+          }
+         }
+        },
+        "properties": {
+         "class": "SolutionBoundaryProperties",
+         "typeName": "SolutionBoundary",
+         "qualifiedName": "probe::boundary::1",
+         "displayName": "probe-boundary-1-renamed",
+         "description": "window P probe element, renamed"
+        }
+       },
+       "relatedElementAtEnd1": true
+      }
+     ]
+    }
+   ],
+   "sideLinks": [
+    {
+     "class": "RelatedMetadataElementSummary",
+     "relationshipHeader": {
+      "class": "ElementHeader",
+      "headerVersion": 0,
+      "status": "ACTIVE",
+      "type": {
+       "typeId": "5cabb76a-e25b-4bb5-8b93-768bbac005af",
+       "typeName": "CollectionMembership",
+       "typeVersion": 1,
+       "typeDescription": "Identifies a member of a collection.",
+       "typeCategory": "RELATIONSHIP_DEF"
+      },
+      "origin": {
+       "sourceServer": "simple-metadata-store",
+       "originCategory": "LOCAL_COHORT",
+       "homeMetadataCollectionId": "16512ec6-044b-4f80-bf7e-b6376d1f2bbe",
+       "homeMetadataCollectionName": "simple-metadata-store"
+      },
+      "versions": {
+       "createdBy": "garygeeke",
+       "updatedBy": "garygeeke",
+       "maintainedBy": [
+        "garygeeke"
+       ],
+       "createTime": "2026-11-25T21:52:28.451+00:00",
+       "updateTime": "2026-11-25T21:52:28.451+00:00",
+       "version": 1,
+       "lastRequestId": "d770f504-a681-45e3-ba26-14e2bec05a5c"
+      },
+      "guid": "CollectionMembership-3df43161-d157-48ef-b3c4-75d0dbf26ec9"
+     },
+     "relatedElement": {
+      "elementHeader": {
+       "class": "ElementHeader",
+       "headerVersion": 0,
+       "status": "ACTIVE",
+       "type": {
+        "typeId": "4aa47799-5128-4eeb-bd72-e357b49f8bfe",
+        "typeName": "SolutionBlueprint",
+        "superTypeNames": [
+         "DesignModel",
+         "Collection",
+         "AuthoredReferenceable",
+         "Referenceable",
+         "OpenMetadataRoot"
+        ],
+        "typeVersion": 1,
+        "typeDescription": "Collection of solution components that make up a solution for digital services such as digital products.",
+        "typeCategory": "ENTITY_DEF"
+       },
+       "origin": {
+        "sourceServer": "simple-metadata-store",
+        "originCategory": "LOCAL_COHORT",
+        "homeMetadataCollectionId": "16512ec6-044b-4f80-bf7e-b6376d1f2bbe",
+        "homeMetadataCollectionName": "simple-metadata-store"
+       },
+       "versions": {
+        "createdBy": "garygeeke",
+        "updatedBy": "garygeeke",
+        "maintainedBy": [
+         "garygeeke"
+        ],
+        "createTime": "2026-11-25T21:52:28.404+00:00",
+        "updateTime": "2026-11-25T21:52:28.404+00:00",
+        "version": 1,
+        "lastRequestId": "cafb8212-f77a-473e-bcc2-92bb2cabc5be"
+       },
+       "guid": "SolutionBlueprint-9151a3a9-dfd4-41e4-b2be-a96b04fa1635",
+       "anchor": {
+        "class": "ElementClassification",
+        "headerVersion": 0,
+        "status": "ACTIVE",
+        "type": {
+         "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+         "typeName": "Anchors",
+         "typeVersion": 1,
+         "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+         "typeCategory": "CLASSIFICATION_DEF"
+        },
+        "origin": {
+         "sourceServer": "simple-metadata-store",
+         "originCategory": "LOCAL_COHORT",
+         "homeMetadataCollectionId": "16512ec6-044b-4f80-bf7e-b6376d1f2bbe",
+         "homeMetadataCollectionName": "simple-metadata-store"
+        },
+        "versions": {
+         "createdBy": "garygeeke",
+         "updatedBy": "garygeeke",
+         "maintainedBy": [
+          "garygeeke"
+         ],
+         "createTime": "2026-11-25T21:52:28.396+00:00",
+         "updateTime": "2026-11-25T21:52:28.396+00:00",
+         "version": 1,
+         "lastRequestId": "cafb8212-f77a-473e-bcc2-92bb2cabc5be"
+        },
+        "classificationOrigin": "ASSIGNED",
+        "classificationName": "Anchors",
+        "classificationProperties": {
+         "class": "AnchorsProperties",
+         "typeName": "Anchors",
+         "anchorTypeName": "SolutionBlueprint",
+         "anchorDomainName": "AuthoredReferenceable"
+        }
+       }
+      },
+      "properties": {
+       "class": "SolutionBlueprintProperties",
+       "typeName": "SolutionBlueprint",
+       "qualifiedName": "probe::blueprint::1",
+       "displayName": "probe-blueprint-1",
+       "description": "window P probe element"
+      }
+     },
+     "relatedElementAtEnd1": true
+    }
+   ]
+  }
+ ],
+ "properties": {
+  "class": "SolutionBlueprintProperties",
+  "typeName": "SolutionBlueprint",
+  "qualifiedName": "probe::blueprint::1",
+  "displayName": "probe-blueprint-1",
+  "description": "window P probe element"
+ },
+ "mermaidGraph": "---\ntitle: SolutionBlueprint - probe-blueprint-1 [SolutionBlueprint-9151a3a9-dfd4-41e4-b2be-a96b04fa1635]\n---\nflowchart TD\n%%{init: {\"flowchart\": {\"htmlLabels\": false}} }%%\n\n1@{ shape: rounded, label: \"*Solution Blueprint*\n**probe-blueprint-1**\"}\n2@{ shape: rect, label: \"*Solution Boundary*\n**probe-boundary-1-renamed**\"}\n1==>|\"Collection Membership\"|2\n3@{ shape: rect, label: \"*Solution Boundary*\n**probe-boundary-2**\"}\n2==>|\"Collection Membership\"|3\n4@{ shape: trap-t, label: \"*Solution Actor Role*\n**probe-role-1**\"}\n3==>|\"Collection Membership\"|4\nstyle 1 color:#000000, fill:#e0ab18, stroke:#004563\nstyle 2 color:#000000, fill:#f5fffa, stroke:#000000\nstyle 3 color:#000000, fill:#f5fffa, stroke:#000000\nstyle 4 color:#000000, fill:#FFE599, stroke:#000000\n",
+ "collectionMermaidMindMap": "mindmap\n**SolutionBlueprint** probe-blueprint-1\n    **SolutionBoundary** probe-boundary-1-renamed\n        **SolutionBoundary** probe-boundary-2\n"
+}
