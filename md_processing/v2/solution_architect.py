@@ -632,6 +632,50 @@ class SolutionArchitectProcessor(AsyncBaseCommandProcessor):
         raise ValueError(f"Element {guid} is a {type_name}, not a {om_type}: the Update {om_type} was refused and "
                          f"nothing was written. Use the {type_name} command to change it.")
 
+    async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
+        """An Update of a boundary that names an explicit GUID targets that element or nothing.
+
+        The generic lookup only warns when an explicit GUID can't be read through the command's own getter, then falls
+        back to the derived qualified name; when that finds nothing the Update is rewritten to a Create. For a boundary
+        that turned "Update Solution Boundary" aimed at a DesignModelBoundary GUID into a NEW SolutionBoundary (the
+        solution-architect getter answers not-found for the other boundary type), so the type guard in apply_changes
+        was never reached (live check 2026-11-26, D2). Here the element is read generically by GUID instead, and the
+        command is refused, before any fallback or rewrite, when it is another type or can't be read. Other commands,
+        Create, and boundary Updates without an explicit GUID keep the generic lookup.
+        """
+        spec = self.get_command_spec() or {}
+        om_type = spec.get("OM_TYPE")
+        attributes = (self.parsed_output or {}).get("attributes", {})
+        explicit_guid = (attributes.get("GUID") or {}).get("value")
+        if not (om_type in BOUNDARY_TYPES and self.command.verb == "Update"
+                and isinstance(explicit_guid, str) and explicit_guid.strip()):
+            return await super().fetch_as_is()
+        guid = explicit_guid.strip()
+        try:
+            element = await self.fetch_element(guid)
+        except Exception:  # noqa: BLE001 - as the generic lookup: an unreadable GUID is handled below, not raised raw
+            element = None
+        if isinstance(element, dict) and element.get("elementHeader"):
+            return element  # a wrong type found through the subtype lookup is refused in apply_changes
+        await self._refuse_unreadable_boundary_guid(om_type, guid)
+
+    async def _refuse_unreadable_boundary_guid(self, om_type: str, guid: str) -> None:
+        """The command's own getter found no element for this GUID: read its type generically and refuse."""
+        try:
+            element = await self.client._async_get_element_by_guid_(guid)
+        except Exception:  # noqa: BLE001 - not found, or not readable: both refuse below
+            element = None
+        type_name = ((element or {}).get("elementHeader", {}).get("type", {}) or {}).get("typeName") \
+            if isinstance(element, dict) else None
+        if type_name is None:
+            raise ValueError(f"Couldn't read element {guid}, so the Update {om_type} was not sent; nothing was "
+                             f"written and nothing was created.")
+        if type_name != om_type:
+            raise ValueError(f"Element {guid} is a {type_name}, not a {om_type}: the Update {om_type} was refused and "
+                             f"nothing was written. Use the {type_name} command to change it.")
+        raise ValueError(f"The {om_type} request could not read element {guid}, so the Update {om_type} was not "
+                         f"sent; nothing was written and nothing was created.")
+
     async def apply_changes(self) -> str:
         verb = self.command.verb
         attributes = self.parsed_output["attributes"]
