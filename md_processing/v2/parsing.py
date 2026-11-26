@@ -12,6 +12,7 @@ import pyegeria.core._globals as pyeg_globals
 from md_processing.md_processing_utils.md_processing_constants import get_command_spec, load_commands
 import md_processing.md_processing_utils.md_processing_constants as md_constants
 from md_processing.md_processing_utils.common_md_utils import normalize_value, split_list_value
+from md_processing.md_processing_utils.element_status import EXPLICIT_STATUS_ATTRIBUTES, VALID_STATUS_VALUES
 from .extraction import DrECommand
 from .utils import parse_key_value, parse_line_list, parse_table
 
@@ -29,6 +30,7 @@ class AttributeFirstParser:
         self.parsed_attributes = {}
         self.errors = []
         self.warnings = []
+        self._label_map: Dict[str, Any] = {}
 
     async def parse(self) -> Dict[str, Any]:
         if not self.spec:
@@ -62,6 +64,7 @@ class AttributeFirstParser:
                         self._add_to_label_map(label_map, canonical_name, details)
 
         logger.debug(f"Label map keys: {list(label_map.keys())}")
+        self._label_map = label_map
 
         # Map provided attributes
         for raw_label, raw_value in self.command.attributes.items():
@@ -392,7 +395,8 @@ class AttributeFirstParser:
                                 return pref_val
                         
                         # Not in the Egeria list - fatal error
-                        self.errors.append(f"Value '{v}' is not a valid metadata value for '{details.get('name')}' (Validated by Egeria)")
+                        self.errors.append(f"Value '{v}' is not a valid metadata value for '{details.get('name')}' (Validated by Egeria)"
+                                           + self._element_status_hint(v, details))
                         return v
 
                 except Exception as e:
@@ -423,6 +427,23 @@ class AttributeFirstParser:
             return split_list_value(value)
 
         return value
+
+    def _element_status_hint(self, value: Any, details: dict) -> str:
+        """Point a value Egeria refuses as the element status to the command's own status attribute.
+
+        The `Status` that `add_default_upsert_attributes` adds (variable `element_status`) is checked against
+        Egeria's element statuses (ACTIVE, DELETED, ...). A lifecycle value such as DRAFT belongs in the command's
+        Content / Activity / Deployment Status, if it has one that accepts the value.
+        """
+        if details.get("variable_name") != "element_status":
+            return ""
+        upper = str(value).strip().upper().replace(" ", "_")
+        names = [attr for attr, field in EXPLICIT_STATUS_ATTRIBUTES.items()
+                 if upper in VALID_STATUS_VALUES[field] and attr.lower() in self._label_map]
+        if not names:
+            return ""
+        use = " or ".join(f"'{n}'" for n in names)
+        return f". '{details.get('name')}' here is the element status; to set {upper}, use {use} instead"
 
     def _local_enum_list(self, value: str, details: dict) -> list:
         """A list attribute with spec valid_values, checked locally -- Egeria is never asked.
