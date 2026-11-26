@@ -2688,7 +2688,7 @@
       "inUpdate": true,
       "attr_labels": "",
       "examples": "",
-      "default_value": "All Domains",
+      "default_value": "",
       "valid_values": [
         "All Domains",
         "Data",
@@ -2703,15 +2703,15 @@
       "existing_element": "",
       "property_name": "domainIdentifier",
       "legacy_enum_type": "GovernanceDomains",
-      "description": "The governance domain this role belongs to, looked up from the domainIdentifier valid value set (deployments may extend this set without rebuilding Egeria). All domains is \"All Domains\". Accepts either the current display name or a preferred-value integer; old-style ALL_CAPS enum names (e.g. IT_INFRASTRUCTURE) are still accepted for backward compatibility.",
+      "description": "The governance domain this role belongs to, looked up from the domainIdentifier valid value set (deployments may extend this set without rebuilding Egeria). All domains is \"All Domains\". Accepts either the current display name or a preferred-value integer; old-style ALL_CAPS enum names (e.g. IT_INFRASTRUCTURE) are still accepted for backward compatibility. For solution roles this is accepted but not stored: SolutionActorRoleProperties has no domainIdentifier property, so a value is reported as 'not applied'. It is hidden from the Create Solution Role template and still accepted so older documents keep working.",
       "generated": false,
       "style": "Valid Value",
       "user_specified": true,
       "unique": false,
       "input_required": false,
-      "min_cardinality": 1,
+      "min_cardinality": 0,
       "max_cardinality": 1,
-      "level": "Domain",
+      "level": "Invisible",
       "Journal Entry": "Migrated 2026-08-15 from a hardcoded GovernanceDomain Java enum to the live domainIdentifier Valid Metadata Value set (same underlying concept as governance-officer's Domain Identifier, just labeled for a Solution Role). See parsing.py Valid Value style + legacy_enum_type for the old-enum backward-compat path."
     },
     "Role List": {
@@ -2874,7 +2874,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "Title of the solution role.",
+      "description": "Title of the solution role. For solution roles this is accepted but not stored: SolutionActorRoleProperties has no title property, so a value is reported as 'not applied'. It is hidden from the Create Solution Role template and still accepted so older documents keep working.",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -2882,7 +2882,7 @@
       "input_required": false,
       "min_cardinality": 0,
       "max_cardinality": 1,
-      "level": "Domain",
+      "level": "Invisible",
       "Journal Entry": ""
     },
     "Wire GUID": {
@@ -3511,7 +3511,7 @@
       "qn_prefix": "",
       "alternate_names": [],
       "family": "Solution Architect",
-      "description": "Creates or updates a solution role \u2014 a collection of responsibilities associated with a solution component.",
+      "description": "Creates or updates a solution role \u2014 a collection of responsibilities associated with a solution component. Role Domain Identifier and Title are accepted but not stored for solution roles: SolutionActorRoleProperties has neither property, so a value is reported as 'not applied'. They are hidden from the template and still accepted so older documents keep working.",
       "verb": "Create",
       "upsert": true,
       "attach": false,
@@ -4068,6 +4068,44 @@
         "Transformation"
       ],
       "Journal Entry": "Added 2026-09-13 -- ImplementedBy relationship (0737) support, requested by the user: Solution Architect had no command for governance_officer's linkDesignToImplementation/detachDesignFromImplementation, and Create Information Supply Chain had no way to record implementation elements. Confirmed live 2026-09-13 that 'Link Information Supply Chain Child' already correctly uses CollectionMembership (not ImplementedBy) -- no fix needed there. Detach/Unlink/Attach/Add/Remove variants are auto-derived by build_command_variants() from this one 'Link' definition, matching every other Solution Architect link command -- no separate Detach compact entry needed."
+    },
+    "Create Solution Boundary": {
+      "qn_prefix": "SolutionBoundary",
+      "alternate_names": [],
+      "family": "Solution Architect",
+      "verb": "Create",
+      "upsert": true,
+      "attach": false,
+      "level": "Basic",
+      "extra_find": "",
+      "extra_constraints": "",
+      "bundle": "Collection Base",
+      "custom_attributes": [],
+      "Journal Entry": "",
+      "display_name": "Create Solution Boundary",
+      "description": "Creates or updates a solution boundary: a collection that organizes the solution components, roles and other solution boundaries of a solution blueprint into a hierarchy (odpi/egeria#9465, model 0740). It has no attributes of its own beyond a collection's. Members are added with the Collection Membership commands (for example Link Blueprint Child).",
+      "find_method": "SolutionArchitect.find_solution_boundaries",
+      "find_constraints": "",
+      "OM_TYPE": "SolutionBoundary"
+    },
+    "Create Design Model Boundary": {
+      "qn_prefix": "DesignModelBoundary",
+      "alternate_names": [],
+      "family": "Solution Architect",
+      "verb": "Create",
+      "upsert": true,
+      "attach": false,
+      "level": "Basic",
+      "extra_find": "",
+      "extra_constraints": "",
+      "bundle": "Collection Base",
+      "custom_attributes": [],
+      "Journal Entry": "",
+      "display_name": "Create Design Model Boundary",
+      "description": "Creates or updates a design model boundary: the parent type of the solution boundary, a collection that organizes the content of a design model into a hierarchy (odpi/egeria#9465, model 0565). The solution-architect view service has no request of its own for this type; it is created through the generic collection create, which the platform accepted for this type in a probe on 2026-11-25. Members are added with the Collection Membership commands. Searching for this type also returns solution boundaries, which are its subtype, because the repository answers a type search from each element's stored supertype chain; the qualified name is unique, so an update still reaches one element.",
+      "find_method": "CollectionManager.find_collections",
+      "find_constraints": "{\"metadata_element_type\": \"DesignModelBoundary\"}",
+      "OM_TYPE": "DesignModelBoundary"
     }
   }
 }

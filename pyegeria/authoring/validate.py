@@ -83,6 +83,9 @@ CLIENT_DERIVED_COLUMNS: Dict[str, frozenset] = {
     # PY-55: glossary_manager.py (_extract_glossary_properties, ~:3239): the display names of the CollectionFolder
     # entries in the glossary's collectionMembers (a type filter, which a plain related-element column cannot express)
     "GlossaryManager.find_glossaries": frozenset({"folder_display_names"}),
+    # odpi/egeria#9465: solution_architect.py _extract_solution_boundary_properties fills it from the nested members
+    # (solution_boundary_member_hierarchy: nestedElements and sideLinks of each collection member)
+    "SolutionArchitect.find_solution_boundaries": frozenset({"member_hierarchy"}),
     "DataDesigner.find_data_structures": frozenset({"in_data_dictionary", "in_data_spec", "member_data_fields"}),
     "DataDesigner.find_data_fields": frozenset({"in_data_dictionary", "in_data_structure", "member_data_fields"}),
     "DataDesigner.find_data_value_specifications": frozenset({
@@ -237,6 +240,7 @@ FIND_ELEMENT_TYPES: Dict[str, Optional[str]] = {
     "SolutionArchitect.find_design_patterns": "DesignPattern",
     "SolutionArchitect.find_information_supply_chains": "InformationSupplyChain",
     "SolutionArchitect.find_solution_blueprints": "SolutionBlueprint",
+    "SolutionArchitect.find_solution_boundaries": "SolutionBoundary",
     "SolutionArchitect.find_solution_components": "SolutionComponent",
     "SolutionArchitect.find_solution_roles": "SolutionActorRole",
     "reference_data.find_valid_value_definitions": "ValidValueDefinition",

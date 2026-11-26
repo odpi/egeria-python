@@ -135,7 +135,7 @@ def test_the_four_ends_the_parser_used_to_miss_now_have_types():
 def test_the_parser_finds_every_enum_entry_in_the_6_4_source():
     import os
     import re
-    src, ref = os.environ.get("EGERIA_6_4_SRC"), os.environ.get("EGERIA_6_4_REF", "90232870b2")
+    src, ref = os.environ.get("EGERIA_6_4_SRC"), os.environ.get("EGERIA_6_4_REF", "2e22b1e85b")
     if not src:
         pytest.skip("set EGERIA_6_4_SRC to a checkout of odpi/egeria at the table's sha")
     gen = _gen()

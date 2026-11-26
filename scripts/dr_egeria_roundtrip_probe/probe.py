@@ -333,6 +333,20 @@ STATUS_PROBE_VALUES = {"contentStatus": "DRAFT", "activityStatus": "IN_PROGRESS"
                        "deploymentStatus": "UNDER_DEVELOPMENT"}
 
 
+def status_sent_as(attr: dict, location: str | None, attribute_names: set) -> str:
+    """The attribute the Status-only element writes its value to.
+
+    Normally the generic `Status`. But where the command's `Status` is the element status Dr.Egeria adds by
+    default (variable `element_status`, a Valid Value looked up as Egeria's `status`: ACTIVE, DELETED, INVALID,
+    OTHER, UNKNOWN), a content-status value such as DRAFT is not one of its values, so the contentStatus probe
+    value goes to `Content Status` instead and `Status` is left to its default (owner's decision, 2026-11-26).
+    """
+    if (attr.get("variable_name") == "element_status" and (location or "").startswith("properties.contentStatus")
+            and "Content Status" in attribute_names):
+        return "Content Status"
+    return "Status"
+
+
 def status_plan(spec: dict, attribute_names: set):
     """Where Dr.Egeria puts the generic `Status` for this command's type, and the value to send.
 
@@ -370,11 +384,13 @@ def build_family_doc(family: str, commands, out_dir: Path, tag: str = ""):
             if attr["name"] == "Status" and attr["name"] not in CONTROL_ATTRIBUTES:
                 planned = {a["name"] for a in spec.get("Attributes", []) if plan(a, cslug)[1] is not None}
                 kind, md, expected, location = status_plan(spec, planned)
+                sent_as = status_sent_as(attr, location, {a["name"] for a in spec.get("Attributes", [])})
                 status_row = ({"attribute": "Status", "style": attr.get("style"), "kind": kind,
                                "sent": expected if md is not None else None,
                                "reason": expected if md is None else None, "property": None,
                                "variable": attr.get("variable_name"), "default": attr.get("default_value"),
-                               "location": location}, md)
+                               "location": location,
+                               **({"sent_as": sent_as} if sent_as != "Status" else {})}, md)
                 continue
             kind, md, expected = plan(attr, cslug)
             rows.append({"attribute": attr["name"], "style": attr.get("style"), "kind": kind,
@@ -402,7 +418,7 @@ def build_family_doc(family: str, commands, out_dir: Path, tag: str = ""):
                         kept.append(line)
                 sqn, sdisplay = f"{qn}::Status", f"RTP {cslug} StatusProbe {tag}".rstrip()
                 lines += ["___", "", f"## {command}", "", "### Display Name", sdisplay, "", "### Qualified Name",
-                          sqn, ""] + kept + ["### Status", md, ""]
+                          sqn, ""] + kept + [f"### {row.get('sent_as', 'Status')}", md, ""]
                 plans.append({"family": family, "command": command, "qualified_name": sqn,
                               "display_name": sdisplay, "rows": [row], "status_probe": True})
     lines += ["___", ""]

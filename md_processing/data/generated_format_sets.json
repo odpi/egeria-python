@@ -263200,36 +263200,8 @@
             "source": null
           },
           {
-            "name": "Role Domain Identifier",
-            "key": "role_domain_identifier",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "All Domains",
-              "Data",
-              "Privacy",
-              "Security",
-              "IT Infrastructure",
-              "Software Development",
-              "Corporate",
-              "Asset Management",
-              "Other"
-            ],
-            "source": null
-          },
-          {
             "name": "Scope",
             "key": "scope",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Title",
-            "key": "title",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -263338,36 +263310,8 @@
             "source": null
           },
           {
-            "name": "Role Domain Identifier",
-            "key": "role_domain_identifier",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "All Domains",
-              "Data",
-              "Privacy",
-              "Security",
-              "IT Infrastructure",
-              "Software Development",
-              "Corporate",
-              "Asset Management",
-              "Other"
-            ],
-            "source": null
-          },
-          {
             "name": "Scope",
             "key": "scope",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Title",
-            "key": "title",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -263526,36 +263470,8 @@
             "source": null
           },
           {
-            "name": "Role Domain Identifier",
-            "key": "role_domain_identifier",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "All Domains",
-              "Data",
-              "Privacy",
-              "Security",
-              "IT Infrastructure",
-              "Software Development",
-              "Corporate",
-              "Asset Management",
-              "Other"
-            ],
-            "source": null
-          },
-          {
             "name": "Scope",
             "key": "scope",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Title",
-            "key": "title",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -263673,36 +263589,8 @@
             "source": null
           },
           {
-            "name": "Role Domain Identifier",
-            "key": "role_domain_identifier",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "All Domains",
-              "Data",
-              "Privacy",
-              "Security",
-              "IT Infrastructure",
-              "Software Development",
-              "Corporate",
-              "Asset Management",
-              "Other"
-            ],
-            "source": null
-          },
-          {
             "name": "Scope",
             "key": "scope",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Title",
-            "key": "title",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -263921,36 +263809,8 @@
             "source": null
           },
           {
-            "name": "Role Domain Identifier",
-            "key": "role_domain_identifier",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "All Domains",
-              "Data",
-              "Privacy",
-              "Security",
-              "IT Infrastructure",
-              "Software Development",
-              "Corporate",
-              "Asset Management",
-              "Other"
-            ],
-            "source": null
-          },
-          {
             "name": "Scope",
             "key": "scope",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Title",
-            "key": "title",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -264194,36 +264054,8 @@
             "source": null
           },
           {
-            "name": "Role Domain Identifier",
-            "key": "role_domain_identifier",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "All Domains",
-              "Data",
-              "Privacy",
-              "Security",
-              "IT Infrastructure",
-              "Software Development",
-              "Corporate",
-              "Asset Management",
-              "Other"
-            ],
-            "source": null
-          },
-          {
             "name": "Scope",
             "key": "scope",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Title",
-            "key": "title",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -264535,36 +264367,8 @@
             "source": null
           },
           {
-            "name": "Role Domain Identifier",
-            "key": "role_domain_identifier",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "All Domains",
-              "Data",
-              "Privacy",
-              "Security",
-              "IT Infrastructure",
-              "Software Development",
-              "Corporate",
-              "Asset Management",
-              "Other"
-            ],
-            "source": null
-          },
-          {
             "name": "Scope",
             "key": "scope",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Title",
-            "key": "title",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -264817,36 +264621,8 @@
             "source": null
           },
           {
-            "name": "Role Domain Identifier",
-            "key": "role_domain_identifier",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "All Domains",
-              "Data",
-              "Privacy",
-              "Security",
-              "IT Infrastructure",
-              "Software Development",
-              "Corporate",
-              "Asset Management",
-              "Other"
-            ],
-            "source": null
-          },
-          {
             "name": "Scope",
             "key": "scope",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Title",
-            "key": "title",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -270190,6 +269966,3094 @@
       ],
       "spec_params": {
         "metadata_element_type": "ConceptModel"
+      },
+      "analytic_function": null,
+      "analytic_spec_params": {}
+    },
+    "get_additional_props": null,
+    "question_spec": null
+  },
+  "Solution-Boundary-DrE-Basic": {
+    "target_type": "Solution Boundary",
+    "heading": "Solution-Boundary-DrE-Basic Attributes",
+    "description": "Auto-generated format for Solution Boundary (Create, Basic).",
+    "aliases": [],
+    "annotations": {},
+    "family": "Solution Architect",
+    "formats": [
+      {
+        "types": [
+          "LIST"
+        ],
+        "attributes": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Zone Membership",
+            "key": "zone_membership",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Legal",
+            "key": "legal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Authors",
+            "key": "authors",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Purpose",
+            "key": "purpose",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Content Status",
+            "key": "content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "DRAFT",
+              "PREPARED",
+              "PROPOSED",
+              "APPROVED",
+              "REJECTED",
+              "ACTIVE",
+              "DEPRECATED",
+              "OTHER"
+            ],
+            "source": null
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          }
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Zone Membership",
+            "key": "zone_membership",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Legal",
+            "key": "legal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Authors",
+            "key": "authors",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Purpose",
+            "key": "purpose",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Content Status",
+            "key": "content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "DRAFT",
+              "PREPARED",
+              "PROPOSED",
+              "APPROVED",
+              "REJECTED",
+              "ACTIVE",
+              "DEPRECATED",
+              "OTHER"
+            ],
+            "source": null
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          }
+        ]
+      },
+      {
+        "types": [
+          "ALL"
+        ],
+        "attributes": [
+          {
+            "name": "Zone Membership",
+            "key": "zone_membership",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Legal",
+            "key": "legal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "URL",
+            "key": "url",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Authors",
+            "key": "authors",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Content Status",
+            "key": "content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "DRAFT",
+              "PREPARED",
+              "PROPOSED",
+              "APPROVED",
+              "REJECTED",
+              "ACTIVE",
+              "DEPRECATED",
+              "OTHER"
+            ],
+            "source": null
+          },
+          {
+            "name": "Purpose",
+            "key": "purpose",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          }
+        ],
+        "columns": [
+          {
+            "name": "Zone Membership",
+            "key": "zone_membership",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Legal",
+            "key": "legal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "URL",
+            "key": "url",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Authors",
+            "key": "authors",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Content Status",
+            "key": "content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "DRAFT",
+              "PREPARED",
+              "PROPOSED",
+              "APPROVED",
+              "REJECTED",
+              "ACTIVE",
+              "DEPRECATED",
+              "OTHER"
+            ],
+            "source": null
+          },
+          {
+            "name": "Purpose",
+            "key": "purpose",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "SolutionArchitect.find_solution_boundaries",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case",
+        "classification_names",
+        "metadata_element_subtypes",
+        "metadata_element_type"
+      ],
+      "spec_params": {},
+      "analytic_function": null,
+      "analytic_spec_params": {}
+    },
+    "get_additional_props": null,
+    "question_spec": null
+  },
+  "Solution-Boundary-DrE-Advanced": {
+    "target_type": "Solution Boundary",
+    "heading": "Solution-Boundary-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Solution Boundary (Create, Advanced).",
+    "aliases": [],
+    "annotations": {},
+    "family": "Solution Architect",
+    "formats": [
+      {
+        "types": [
+          "LIST"
+        ],
+        "attributes": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Effective From",
+            "key": "effective_from",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Effective To",
+            "key": "effective_to",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Glossary Term",
+            "key": "semantic_definitions",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Zone Membership",
+            "key": "zone_membership",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Additional Properties",
+            "key": "additional_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Confidence Classification",
+            "key": "confidence_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Confidence.confidenceLevel"
+          },
+          {
+            "name": "Confidentiality Classification",
+            "key": "confidentiality_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Confidentiality.confidentialityLevel"
+          },
+          {
+            "name": "Criticality Classification",
+            "key": "criticality_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Criticality.criticalityLevel"
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Impact Classification",
+            "key": "impact_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Impact.severityLevel"
+          },
+          {
+            "name": "Legal",
+            "key": "legal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Policy Management Point",
+            "key": "policy_management_point",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:PolicyManagementPoint.pointType"
+          },
+          {
+            "name": "Retention Classification",
+            "key": "retention_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Retention.retentionBasis"
+          },
+          {
+            "name": "Security Tags",
+            "key": "security_tags",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:SecurityTags.securityLabels"
+          },
+          {
+            "name": "Authors",
+            "key": "authors",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Purpose",
+            "key": "purpose",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Classifications",
+            "key": "classifications",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": null
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Status",
+            "key": "status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Content Status",
+            "key": "content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "DRAFT",
+              "PREPARED",
+              "PROPOSED",
+              "APPROVED",
+              "REJECTED",
+              "ACTIVE",
+              "DEPRECATED",
+              "OTHER"
+            ],
+            "source": null
+          },
+          {
+            "name": "User Defined Content Status",
+            "key": "user_defined_content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          }
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Effective From",
+            "key": "effective_from",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Effective To",
+            "key": "effective_to",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Glossary Term",
+            "key": "semantic_definitions",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Zone Membership",
+            "key": "zone_membership",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Additional Properties",
+            "key": "additional_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Confidence Classification",
+            "key": "confidence_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Confidence.confidenceLevel"
+          },
+          {
+            "name": "Confidentiality Classification",
+            "key": "confidentiality_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Confidentiality.confidentialityLevel"
+          },
+          {
+            "name": "Criticality Classification",
+            "key": "criticality_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Criticality.criticalityLevel"
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Impact Classification",
+            "key": "impact_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Impact.severityLevel"
+          },
+          {
+            "name": "Legal",
+            "key": "legal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Policy Management Point",
+            "key": "policy_management_point",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:PolicyManagementPoint.pointType"
+          },
+          {
+            "name": "Retention Classification",
+            "key": "retention_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Retention.retentionBasis"
+          },
+          {
+            "name": "Security Tags",
+            "key": "security_tags",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:SecurityTags.securityLabels"
+          },
+          {
+            "name": "Authors",
+            "key": "authors",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Purpose",
+            "key": "purpose",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Classifications",
+            "key": "classifications",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": null
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Status",
+            "key": "status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Content Status",
+            "key": "content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "DRAFT",
+              "PREPARED",
+              "PROPOSED",
+              "APPROVED",
+              "REJECTED",
+              "ACTIVE",
+              "DEPRECATED",
+              "OTHER"
+            ],
+            "source": null
+          },
+          {
+            "name": "User Defined Content Status",
+            "key": "user_defined_content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          }
+        ]
+      },
+      {
+        "types": [
+          "ALL"
+        ],
+        "attributes": [
+          {
+            "name": "Effective From",
+            "key": "effective_from",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Effective To",
+            "key": "effective_to",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Glossary Term",
+            "key": "semantic_definitions",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Status",
+            "key": "status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Zone Membership",
+            "key": "zone_membership",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Additional Properties",
+            "key": "additional_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Confidence Classification",
+            "key": "confidence_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Confidence.confidenceLevel"
+          },
+          {
+            "name": "Confidentiality Classification",
+            "key": "confidentiality_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Confidentiality.confidentialityLevel"
+          },
+          {
+            "name": "Criticality Classification",
+            "key": "criticality_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Criticality.criticalityLevel"
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Impact Classification",
+            "key": "impact_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Impact.severityLevel"
+          },
+          {
+            "name": "Legal",
+            "key": "legal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Policy Management Point",
+            "key": "policy_management_point",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:PolicyManagementPoint.pointType"
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Retention Classification",
+            "key": "retention_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Retention.retentionBasis"
+          },
+          {
+            "name": "Security Tags",
+            "key": "security_tags",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:SecurityTags.securityLabels"
+          },
+          {
+            "name": "URL",
+            "key": "url",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Authors",
+            "key": "authors",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Content Status",
+            "key": "content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "DRAFT",
+              "PREPARED",
+              "PROPOSED",
+              "APPROVED",
+              "REJECTED",
+              "ACTIVE",
+              "DEPRECATED",
+              "OTHER"
+            ],
+            "source": null
+          },
+          {
+            "name": "User Defined Content Status",
+            "key": "user_defined_content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Purpose",
+            "key": "purpose",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Classifications",
+            "key": "classifications",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": null
+          }
+        ],
+        "columns": [
+          {
+            "name": "Effective From",
+            "key": "effective_from",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Effective To",
+            "key": "effective_to",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Glossary Term",
+            "key": "semantic_definitions",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Status",
+            "key": "status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Zone Membership",
+            "key": "zone_membership",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Additional Properties",
+            "key": "additional_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Confidence Classification",
+            "key": "confidence_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Confidence.confidenceLevel"
+          },
+          {
+            "name": "Confidentiality Classification",
+            "key": "confidentiality_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Confidentiality.confidentialityLevel"
+          },
+          {
+            "name": "Criticality Classification",
+            "key": "criticality_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Criticality.criticalityLevel"
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Impact Classification",
+            "key": "impact_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Impact.severityLevel"
+          },
+          {
+            "name": "Legal",
+            "key": "legal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Policy Management Point",
+            "key": "policy_management_point",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:PolicyManagementPoint.pointType"
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Retention Classification",
+            "key": "retention_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Retention.retentionBasis"
+          },
+          {
+            "name": "Security Tags",
+            "key": "security_tags",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:SecurityTags.securityLabels"
+          },
+          {
+            "name": "URL",
+            "key": "url",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Authors",
+            "key": "authors",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Content Status",
+            "key": "content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "DRAFT",
+              "PREPARED",
+              "PROPOSED",
+              "APPROVED",
+              "REJECTED",
+              "ACTIVE",
+              "DEPRECATED",
+              "OTHER"
+            ],
+            "source": null
+          },
+          {
+            "name": "User Defined Content Status",
+            "key": "user_defined_content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Purpose",
+            "key": "purpose",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Classifications",
+            "key": "classifications",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": null
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "SolutionArchitect.find_solution_boundaries",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case",
+        "classification_names",
+        "metadata_element_subtypes",
+        "metadata_element_type"
+      ],
+      "spec_params": {},
+      "analytic_function": null,
+      "analytic_spec_params": {}
+    },
+    "get_additional_props": null,
+    "question_spec": null
+  },
+  "Design-Model-Boundary-DrE-Basic": {
+    "target_type": "Design Model Boundary",
+    "heading": "Design-Model-Boundary-DrE-Basic Attributes",
+    "description": "Auto-generated format for Design Model Boundary (Create, Basic).",
+    "aliases": [],
+    "annotations": {},
+    "family": "Solution Architect",
+    "formats": [
+      {
+        "types": [
+          "LIST"
+        ],
+        "attributes": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Zone Membership",
+            "key": "zone_membership",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Legal",
+            "key": "legal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Authors",
+            "key": "authors",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Purpose",
+            "key": "purpose",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Content Status",
+            "key": "content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "DRAFT",
+              "PREPARED",
+              "PROPOSED",
+              "APPROVED",
+              "REJECTED",
+              "ACTIVE",
+              "DEPRECATED",
+              "OTHER"
+            ],
+            "source": null
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          }
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Zone Membership",
+            "key": "zone_membership",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Legal",
+            "key": "legal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Authors",
+            "key": "authors",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Purpose",
+            "key": "purpose",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Content Status",
+            "key": "content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "DRAFT",
+              "PREPARED",
+              "PROPOSED",
+              "APPROVED",
+              "REJECTED",
+              "ACTIVE",
+              "DEPRECATED",
+              "OTHER"
+            ],
+            "source": null
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          }
+        ]
+      },
+      {
+        "types": [
+          "ALL"
+        ],
+        "attributes": [
+          {
+            "name": "Zone Membership",
+            "key": "zone_membership",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Legal",
+            "key": "legal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "URL",
+            "key": "url",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Authors",
+            "key": "authors",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Content Status",
+            "key": "content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "DRAFT",
+              "PREPARED",
+              "PROPOSED",
+              "APPROVED",
+              "REJECTED",
+              "ACTIVE",
+              "DEPRECATED",
+              "OTHER"
+            ],
+            "source": null
+          },
+          {
+            "name": "Purpose",
+            "key": "purpose",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          }
+        ],
+        "columns": [
+          {
+            "name": "Zone Membership",
+            "key": "zone_membership",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Legal",
+            "key": "legal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "URL",
+            "key": "url",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Authors",
+            "key": "authors",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Content Status",
+            "key": "content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "DRAFT",
+              "PREPARED",
+              "PROPOSED",
+              "APPROVED",
+              "REJECTED",
+              "ACTIVE",
+              "DEPRECATED",
+              "OTHER"
+            ],
+            "source": null
+          },
+          {
+            "name": "Purpose",
+            "key": "purpose",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "CollectionManager.find_collections",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case",
+        "classification_names",
+        "metadata_element_subtypes",
+        "metadata_element_type"
+      ],
+      "spec_params": {
+        "metadata_element_type": "DesignModelBoundary"
+      },
+      "analytic_function": null,
+      "analytic_spec_params": {}
+    },
+    "get_additional_props": null,
+    "question_spec": null
+  },
+  "Design-Model-Boundary-DrE-Advanced": {
+    "target_type": "Design Model Boundary",
+    "heading": "Design-Model-Boundary-DrE-Advanced Attributes",
+    "description": "Auto-generated format for Design Model Boundary (Create, Advanced).",
+    "aliases": [],
+    "annotations": {},
+    "family": "Solution Architect",
+    "formats": [
+      {
+        "types": [
+          "LIST"
+        ],
+        "attributes": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Effective From",
+            "key": "effective_from",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Effective To",
+            "key": "effective_to",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Glossary Term",
+            "key": "semantic_definitions",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Zone Membership",
+            "key": "zone_membership",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Additional Properties",
+            "key": "additional_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Confidence Classification",
+            "key": "confidence_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Confidence.confidenceLevel"
+          },
+          {
+            "name": "Confidentiality Classification",
+            "key": "confidentiality_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Confidentiality.confidentialityLevel"
+          },
+          {
+            "name": "Criticality Classification",
+            "key": "criticality_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Criticality.criticalityLevel"
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Impact Classification",
+            "key": "impact_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Impact.severityLevel"
+          },
+          {
+            "name": "Legal",
+            "key": "legal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Policy Management Point",
+            "key": "policy_management_point",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:PolicyManagementPoint.pointType"
+          },
+          {
+            "name": "Retention Classification",
+            "key": "retention_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Retention.retentionBasis"
+          },
+          {
+            "name": "Security Tags",
+            "key": "security_tags",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:SecurityTags.securityLabels"
+          },
+          {
+            "name": "Authors",
+            "key": "authors",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Purpose",
+            "key": "purpose",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Classifications",
+            "key": "classifications",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": null
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Status",
+            "key": "status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Content Status",
+            "key": "content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "DRAFT",
+              "PREPARED",
+              "PROPOSED",
+              "APPROVED",
+              "REJECTED",
+              "ACTIVE",
+              "DEPRECATED",
+              "OTHER"
+            ],
+            "source": null
+          },
+          {
+            "name": "User Defined Content Status",
+            "key": "user_defined_content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          }
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Effective From",
+            "key": "effective_from",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Effective To",
+            "key": "effective_to",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Glossary Term",
+            "key": "semantic_definitions",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Zone Membership",
+            "key": "zone_membership",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Additional Properties",
+            "key": "additional_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Confidence Classification",
+            "key": "confidence_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Confidence.confidenceLevel"
+          },
+          {
+            "name": "Confidentiality Classification",
+            "key": "confidentiality_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Confidentiality.confidentialityLevel"
+          },
+          {
+            "name": "Criticality Classification",
+            "key": "criticality_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Criticality.criticalityLevel"
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Impact Classification",
+            "key": "impact_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Impact.severityLevel"
+          },
+          {
+            "name": "Legal",
+            "key": "legal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Policy Management Point",
+            "key": "policy_management_point",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:PolicyManagementPoint.pointType"
+          },
+          {
+            "name": "Retention Classification",
+            "key": "retention_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Retention.retentionBasis"
+          },
+          {
+            "name": "Security Tags",
+            "key": "security_tags",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:SecurityTags.securityLabels"
+          },
+          {
+            "name": "Authors",
+            "key": "authors",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Purpose",
+            "key": "purpose",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Classifications",
+            "key": "classifications",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": null
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Status",
+            "key": "status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Content Status",
+            "key": "content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "DRAFT",
+              "PREPARED",
+              "PROPOSED",
+              "APPROVED",
+              "REJECTED",
+              "ACTIVE",
+              "DEPRECATED",
+              "OTHER"
+            ],
+            "source": null
+          },
+          {
+            "name": "User Defined Content Status",
+            "key": "user_defined_content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          }
+        ]
+      },
+      {
+        "types": [
+          "ALL"
+        ],
+        "attributes": [
+          {
+            "name": "Effective From",
+            "key": "effective_from",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Effective To",
+            "key": "effective_to",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Glossary Term",
+            "key": "semantic_definitions",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Status",
+            "key": "status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Zone Membership",
+            "key": "zone_membership",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Additional Properties",
+            "key": "additional_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Confidence Classification",
+            "key": "confidence_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Confidence.confidenceLevel"
+          },
+          {
+            "name": "Confidentiality Classification",
+            "key": "confidentiality_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Confidentiality.confidentialityLevel"
+          },
+          {
+            "name": "Criticality Classification",
+            "key": "criticality_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Criticality.criticalityLevel"
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Impact Classification",
+            "key": "impact_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Impact.severityLevel"
+          },
+          {
+            "name": "Legal",
+            "key": "legal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Policy Management Point",
+            "key": "policy_management_point",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:PolicyManagementPoint.pointType"
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Retention Classification",
+            "key": "retention_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Retention.retentionBasis"
+          },
+          {
+            "name": "Security Tags",
+            "key": "security_tags",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:SecurityTags.securityLabels"
+          },
+          {
+            "name": "URL",
+            "key": "url",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Authors",
+            "key": "authors",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Content Status",
+            "key": "content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "DRAFT",
+              "PREPARED",
+              "PROPOSED",
+              "APPROVED",
+              "REJECTED",
+              "ACTIVE",
+              "DEPRECATED",
+              "OTHER"
+            ],
+            "source": null
+          },
+          {
+            "name": "User Defined Content Status",
+            "key": "user_defined_content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Purpose",
+            "key": "purpose",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Classifications",
+            "key": "classifications",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": null
+          }
+        ],
+        "columns": [
+          {
+            "name": "Effective From",
+            "key": "effective_from",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Effective To",
+            "key": "effective_to",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Glossary Term",
+            "key": "semantic_definitions",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Status",
+            "key": "status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Zone Membership",
+            "key": "zone_membership",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Additional Properties",
+            "key": "additional_properties",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Confidence Classification",
+            "key": "confidence_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Confidence.confidenceLevel"
+          },
+          {
+            "name": "Confidentiality Classification",
+            "key": "confidentiality_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Confidentiality.confidentialityLevel"
+          },
+          {
+            "name": "Criticality Classification",
+            "key": "criticality_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Criticality.criticalityLevel"
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Impact Classification",
+            "key": "impact_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Impact.severityLevel"
+          },
+          {
+            "name": "Legal",
+            "key": "legal",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Policy Management Point",
+            "key": "policy_management_point",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:PolicyManagementPoint.pointType"
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Retention Classification",
+            "key": "retention_classification",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:Retention.retentionBasis"
+          },
+          {
+            "name": "Security Tags",
+            "key": "security_tags",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": "class:SecurityTags.securityLabels"
+          },
+          {
+            "name": "URL",
+            "key": "url",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Authors",
+            "key": "authors",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Content Status",
+            "key": "content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [
+              "DRAFT",
+              "PREPARED",
+              "PROPOSED",
+              "APPROVED",
+              "REJECTED",
+              "ACTIVE",
+              "DEPRECATED",
+              "OTHER"
+            ],
+            "source": null
+          },
+          {
+            "name": "User Defined Content Status",
+            "key": "user_defined_content_status",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Purpose",
+            "key": "purpose",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": [],
+            "source": null
+          },
+          {
+            "name": "Classifications",
+            "key": "classifications",
+            "value": null,
+            "format": false,
+            "detail_spec": null,
+            "valid_values": null,
+            "source": null
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "CollectionManager.find_collections",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case",
+        "classification_names",
+        "metadata_element_subtypes",
+        "metadata_element_type"
+      ],
+      "spec_params": {
+        "metadata_element_type": "DesignModelBoundary"
       },
       "analytic_function": null,
       "analytic_spec_params": {}
