@@ -263200,36 +263200,8 @@
             "source": null
           },
           {
-            "name": "Role Domain Identifier",
-            "key": "role_domain_identifier",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "All Domains",
-              "Data",
-              "Privacy",
-              "Security",
-              "IT Infrastructure",
-              "Software Development",
-              "Corporate",
-              "Asset Management",
-              "Other"
-            ],
-            "source": null
-          },
-          {
             "name": "Scope",
             "key": "scope",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Title",
-            "key": "title",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -263338,36 +263310,8 @@
             "source": null
           },
           {
-            "name": "Role Domain Identifier",
-            "key": "role_domain_identifier",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "All Domains",
-              "Data",
-              "Privacy",
-              "Security",
-              "IT Infrastructure",
-              "Software Development",
-              "Corporate",
-              "Asset Management",
-              "Other"
-            ],
-            "source": null
-          },
-          {
             "name": "Scope",
             "key": "scope",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Title",
-            "key": "title",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -263526,36 +263470,8 @@
             "source": null
           },
           {
-            "name": "Role Domain Identifier",
-            "key": "role_domain_identifier",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "All Domains",
-              "Data",
-              "Privacy",
-              "Security",
-              "IT Infrastructure",
-              "Software Development",
-              "Corporate",
-              "Asset Management",
-              "Other"
-            ],
-            "source": null
-          },
-          {
             "name": "Scope",
             "key": "scope",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Title",
-            "key": "title",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -263673,36 +263589,8 @@
             "source": null
           },
           {
-            "name": "Role Domain Identifier",
-            "key": "role_domain_identifier",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "All Domains",
-              "Data",
-              "Privacy",
-              "Security",
-              "IT Infrastructure",
-              "Software Development",
-              "Corporate",
-              "Asset Management",
-              "Other"
-            ],
-            "source": null
-          },
-          {
             "name": "Scope",
             "key": "scope",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Title",
-            "key": "title",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -263921,36 +263809,8 @@
             "source": null
           },
           {
-            "name": "Role Domain Identifier",
-            "key": "role_domain_identifier",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "All Domains",
-              "Data",
-              "Privacy",
-              "Security",
-              "IT Infrastructure",
-              "Software Development",
-              "Corporate",
-              "Asset Management",
-              "Other"
-            ],
-            "source": null
-          },
-          {
             "name": "Scope",
             "key": "scope",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Title",
-            "key": "title",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -264194,36 +264054,8 @@
             "source": null
           },
           {
-            "name": "Role Domain Identifier",
-            "key": "role_domain_identifier",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "All Domains",
-              "Data",
-              "Privacy",
-              "Security",
-              "IT Infrastructure",
-              "Software Development",
-              "Corporate",
-              "Asset Management",
-              "Other"
-            ],
-            "source": null
-          },
-          {
             "name": "Scope",
             "key": "scope",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Title",
-            "key": "title",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -264535,36 +264367,8 @@
             "source": null
           },
           {
-            "name": "Role Domain Identifier",
-            "key": "role_domain_identifier",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "All Domains",
-              "Data",
-              "Privacy",
-              "Security",
-              "IT Infrastructure",
-              "Software Development",
-              "Corporate",
-              "Asset Management",
-              "Other"
-            ],
-            "source": null
-          },
-          {
             "name": "Scope",
             "key": "scope",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Title",
-            "key": "title",
             "value": null,
             "format": false,
             "detail_spec": null,
@@ -264817,36 +264621,8 @@
             "source": null
           },
           {
-            "name": "Role Domain Identifier",
-            "key": "role_domain_identifier",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [
-              "All Domains",
-              "Data",
-              "Privacy",
-              "Security",
-              "IT Infrastructure",
-              "Software Development",
-              "Corporate",
-              "Asset Management",
-              "Other"
-            ],
-            "source": null
-          },
-          {
             "name": "Scope",
             "key": "scope",
-            "value": null,
-            "format": false,
-            "detail_spec": null,
-            "valid_values": [],
-            "source": null
-          },
-          {
-            "name": "Title",
-            "key": "title",
             "value": null,
             "format": false,
             "detail_spec": null,

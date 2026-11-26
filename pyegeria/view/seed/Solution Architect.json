@@ -2096,9 +2096,7 @@
        {"field": "retention_classification", "label": "Retention Classification", "source": "class:Retention.retentionBasis"},
        {"field": "security_tags", "label": "Security Tags", "source": "class:SecurityTags.securityLabels"},
        {"field": "authors", "label": "Authors"},
-       {"field": "role_domain_identifier", "label": "Role Domain Identifier", "valid_values": ["All Domains", "Data", "Privacy", "Security", "IT Infrastructure", "Software Development", "Corporate", "Asset Management", "Other"]},
        {"field": "scope", "label": "Scope"},
-       {"field": "title", "label": "Title"},
        {"field": "classifications", "label": "Classifications"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "status", "label": "Status"},
@@ -2134,9 +2132,7 @@
        {"field": "authors", "label": "Authors"},
        {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
        {"field": "user_defined_content_status", "label": "User Defined Content Status"},
-       {"field": "role_domain_identifier", "label": "Role Domain Identifier", "valid_values": ["All Domains", "Data", "Privacy", "Security", "IT Infrastructure", "Software Development", "Corporate", "Asset Management", "Other"]},
        {"field": "scope", "label": "Scope"},
-       {"field": "title", "label": "Title"},
        {"field": "classifications", "label": "Classifications"}
       ]
      }
@@ -2185,9 +2181,7 @@
        {"field": "description", "label": "Description"},
        {"field": "legal", "label": "Legal"},
        {"field": "authors", "label": "Authors"},
-       {"field": "role_domain_identifier", "label": "Role Domain Identifier", "valid_values": ["All Domains", "Data", "Privacy", "Security", "IT Infrastructure", "Software Development", "Corporate", "Asset Management", "Other"]},
        {"field": "scope", "label": "Scope"},
-       {"field": "title", "label": "Title"},
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
        {"field": "category", "label": "Category"}
@@ -2206,9 +2200,7 @@
        {"field": "version_identifier", "label": "Version Identifier"},
        {"field": "authors", "label": "Authors"},
        {"field": "content_status", "label": "Content Status", "valid_values": ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]},
-       {"field": "role_domain_identifier", "label": "Role Domain Identifier", "valid_values": ["All Domains", "Data", "Privacy", "Security", "IT Infrastructure", "Software Development", "Corporate", "Asset Management", "Other"]},
-       {"field": "scope", "label": "Scope"},
-       {"field": "title", "label": "Title"}
+       {"field": "scope", "label": "Scope"}
       ]
      }
     }
